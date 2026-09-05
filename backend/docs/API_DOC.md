@@ -13,3 +13,6 @@ Pseudo Code:
 req.body = full_name, institute_name, institute_type, email, phone, message
 POST api/v1/inquiries
 
+## Swagger for API Documentation
+It's getting difficult for me to manually create api documentation for me, so I would use Swagger for it.
+
