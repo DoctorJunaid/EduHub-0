@@ -7,15 +7,7 @@ import generateToken from "../../utils/generateToken.js";
 // ─────────────────────────────────────────────
 export const registerSuperAdmin = async (req, res) => {
   try {
-    const { name, email, password, secretKey } = req.body;
-
-    // Guard: require the server-side secret to prevent unauthorized registrations
-    if (!secretKey || secretKey !== process.env.SUPER_ADMIN_SECRET) {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid or missing Super Admin secret key",
-      });
-    }
+    const { name, email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
