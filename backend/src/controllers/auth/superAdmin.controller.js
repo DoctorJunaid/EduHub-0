@@ -1,50 +1,74 @@
 import User from "../../models/user.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import generateToken from "../../utils/generateToken.js";
 
+// ─────────────────────────────────────────────
+// POST /api/v1/auth/super-admin/register
+// Protected by SUPER_ADMIN_SECRET in request body
+// ─────────────────────────────────────────────
 export const registerSuperAdmin = async (req, res) => {
   try {
-    const { email, password, role = "super_admin" } = req.body;
+    const { name, email, password, secretKey } = req.body;
+
+    // Guard: require the server-side secret to prevent unauthorized registrations
+    if (!secretKey || secretKey !== process.env.SUPER_ADMIN_SECRET) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid or missing Super Admin secret key",
+      });
+    }
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password are required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
     }
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+      return res.status(409).json({
+        success: false,
+        message: "A user with this email already exists",
+      });
     }
 
     const user = await User.create({
+      name,
       email,
       passwordHash: password,
-      role,
+      role: "super_admin",
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "secretkey", {
-      expiresIn: "7d",
-    });
+    const token = generateToken({ id: user._id, role: user.role });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
+      message: "Super Admin registered successfully",
       token,
       data: {
         id: user._id,
+        name: user.name,
         email: user.email,
         role: user.role,
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
+// ─────────────────────────────────────────────
+// POST /api/v1/auth/super-admin/login
+// ─────────────────────────────────────────────
 export const loginSuperAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password are required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
     }
 
     const user = await User.findOne({ email }).select("+passwordHash");
@@ -52,109 +76,96 @@ export const loginSuperAdmin = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    // Role guard — campus admin must use /campus-admin/login
+    if (user.role !== "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Use the appropriate login endpoint for your role.",
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: "Account is deactivated" });
+    }
+
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "secretkey", {
-      expiresIn: "7d",
-    });
+    const token = generateToken({ id: user._id, role: user.role });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
+      message: "Login successful",
       token,
       data: {
         id: user._id,
+        name: user.name,
         email: user.email,
         role: user.role,
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
-export const createSuperAdmin = async (req, res) => {
-  return registerSuperAdmin(req, res);
-};
+// ─────────────────────────────────────────────
+// CRUD helpers (used by superAdminRoutes.js)
+// ─────────────────────────────────────────────
+
+export const createSuperAdmin = registerSuperAdmin;
 
 export const getAllSuperAdmins = async (req, res) => {
   try {
-    const users = await User.find().select("-passwordHash");
-    res.status(200).json({ success: true, count: users.length, data: users });
+    const users = await User.find({ role: "super_admin" });
+    return res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
 export const getSuperAdminById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("-passwordHash");
+    const user = await User.findOne({ _id: req.params.id, role: "super_admin" });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "Super Admin not found" });
     }
-
-    res.status(200).json({ success: true, data: user });
+    return res.status(200).json({ success: true, data: user });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
 export const updateSuperAdmin = async (req, res) => {
   try {
-    const { password, ...updateData } = req.body;
+    // Never allow role or passwordHash to be patched via this route
+    const { password, role, passwordHash, ...updateData } = req.body;
+
     const user = await User.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
-    }).select("-passwordHash");
+    });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "Super Admin not found" });
     }
 
-    res.status(200).json({ success: true, data: user });
+    return res.status(200).json({ success: true, data: user });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
 export const deleteSuperAdmin = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "Super Admin not found" });
     }
-
-    await User.findByIdAndDelete(req.params.id);
-    res.status(200).json({ success: true, message: "User deleted successfully" });
+    return res.status(200).json({ success: true, message: "Super Admin deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
-
-export const getAllUsers = getAllSuperAdmins;
-export const getUserById = getSuperAdminById;
-export const updateUser = updateSuperAdmin;
-export const changeUserRole = async (req, res) => {
-  try {
-    const { role } = req.body;
-    if (!role || !["super_admin", "campus_admin", "user"].includes(role)) {
-      return res.status(400).json({ success: false, message: "Invalid role provided" });
-    }
-
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    user.role = role;
-    const updatedUser = await user.save();
-
-    res.status(200).json({ success: true, data: updatedUser });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server Error" });
-  }
-};
-
-export const deleteUser = deleteSuperAdmin;

@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
@@ -21,6 +25,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["super_admin", "campus_admin"],
       required: true,
+    },
+    // Only campus_admin accounts have a campusId.
+    // Super Admins assign this when registering a Campus Admin.
+    // All campus-scoped routes filter data using req.user.campusId.
+    campusId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Campus",
+      default: null,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
