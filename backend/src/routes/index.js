@@ -1,11 +1,12 @@
 import express from "express";
-// import inquiryRoutes from "./inquiryRoutes.js";
+import authRoutes from "./authRoutes.js";
+import superAdminRoutes from "./superAdminRoutes.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Mount individual route files
-// Endpoints will be available at: /api/v1/inquiries
-// router.use("/inquiries", inquiryRoutes);
+router.use("/auth", authRoutes);
+router.use("/super-admin", protect, superAdminRoutes);
 router.use("/inquiries", (req, res) => {
   res.send("working");
 });
