@@ -1,0 +1,331 @@
+openapi: 3.0.3
+info:
+  title: EduHub Management API
+  description: RESTful API specification for EduHub landing page inquiries and Super Admin management endpoints.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local Development Server
+
+paths:
+  /create-inquiry:
+    post:
+      summary: Submit Landing Page Inquiry
+      description: Captures public user inquiries from the landing page.
+      operationId: createInquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InquiryInput"
+      responses:
+        "201":
+          description: Inquiry created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Inquiry submitted successfully
+                  data:
+                    $ref: "#/components/schemas/Inquiry"
+        "400":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /super-admin/institutes:
+    post:
+      summary: Create Institute
+      operationId: createInstitute
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstituteInput"
+      responses:
+        "201":
+          description: Institute created
+        "400":
+          description: Name collision or invalid data
+    get:
+      summary: Get All Institutes
+      operationId: getInstitutes
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Array of institutes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Institute"
+
+  /super-admin/institutes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Institute MongoDB ObjectId
+    get:
+      summary: Get Institute by ID
+      operationId: getInstituteById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Institute found
+        "404":
+          description: Institute not found
+    put:
+      summary: Update Institute
+      operationId: updateInstitute
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstituteInput"
+      responses:
+        "200":
+          description: Institute updated
+    delete:
+      summary: Delete Institute
+      operationId: deleteInstitute
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Institute deleted
+
+  /super-admin/campus-admins:
+    post:
+      summary: Create Campus Admin
+      operationId: createCampusAdmin
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampusAdminInput"
+      responses:
+        "201":
+          description: Campus Admin created
+    get:
+      summary: Get All Campus Admins
+      operationId: getCampusAdmins
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of campus admins with populated institute details
+
+  /super-admin/campus-admins/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: User MongoDB ObjectId
+    get:
+      summary: Get Campus Admin by ID
+      operationId: getCampusAdminById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Campus Admin found
+    put:
+      summary: Update Campus Admin
+      operationId: updateCampusAdmin
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                email:
+                  type: string
+                instituteId:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, suspended]
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Campus Admin updated
+    delete:
+      summary: Delete Campus Admin
+      operationId: deleteCampusAdmin
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Campus Admin deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    InquiryInput:
+      type: object
+      required:
+        - fullName
+        - instituteName
+        - instituteType
+        - email
+        - phone
+      properties:
+        fullName:
+          type: string
+          example: Habil Aris
+        instituteName:
+          type: string
+          example: SMIT Campus
+        instituteType:
+          type: string
+          enum: [School, College, University, Academy, Other]
+          example: Academy
+        email:
+          type: string
+          format: email
+          example: habil@example.com
+        phone:
+          type: string
+          example: "+923001234567"
+        message:
+          type: string
+          example: Looking for LMS setup details.
+
+    Inquiry:
+      allOf:
+        - $ref: "#/components/schemas/InquiryInput"
+        - type: object
+          properties:
+            _id:
+              type: string
+              example: 64f8c12a8a7c2b0012a45678
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    InstituteInput:
+      type: object
+      required:
+        - name
+        - type
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          example: City Grammar School
+        type:
+          type: string
+          enum: [School, College, University, Coaching / Academy, Other]
+          example: School
+        email:
+          type: string
+          example: admin@citygrammar.edu
+        phone:
+          type: string
+          example: "+923009876543"
+        address:
+          type: string
+          example: Main Campus, Block B
+
+    Institute:
+      allOf:
+        - $ref: "#/components/schemas/InstituteInput"
+        - type: object
+          properties:
+            _id:
+              type: string
+            status:
+              type: string
+              enum: [active, inactive]
+            createdAt:
+              type: string
+            updatedAt:
+              type: string
+
+    CampusAdminInput:
+      type: object
+      required:
+        - fullName
+        - email
+        - password
+        - instituteId
+      properties:
+        fullName:
+          type: string
+          example: Idrees Khan
+        email:
+          type: string
+          example: idrees@citygrammar.edu
+        password:
+          type: string
+          format: password
+          example: SecretPass123!
+        instituteId:
+          type: string
+          description: MongoDB ObjectId of the associated Institute
+          example: 64f8c12a8a7c2b0012a45678
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Validation Error
+        errors:
+          type: array
+          items:
+            type: string
