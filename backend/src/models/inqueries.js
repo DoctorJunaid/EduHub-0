@@ -19,13 +19,7 @@ const inquirySchema = new mongoose.Schema(
       required: [true, "Institute type is required"],
       trim: true,
       enum: {
-        values: [
-          "School",
-          "College",
-          "University",
-          "Coaching / Academy",
-          "Other",
-        ],
+        values: ["School", "College", "University", "Academy", "Other"],
         message: "{VALUE} is not a valid institute type",
       },
     },

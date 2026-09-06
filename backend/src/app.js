@@ -6,6 +6,11 @@ const app = express();
 // Parse incoming JSON body data
 app.use(express.json());
 
+// Also health
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
 // Health Check route
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK" });
