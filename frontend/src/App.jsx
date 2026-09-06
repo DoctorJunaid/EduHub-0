@@ -1,16 +1,22 @@
-import React from "react";
+import { Route, Routes } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+
+const DashboardContent = () => (
+  <>
+    <h1 className="text-2xl font-bold">Campus Admin Dashboard</h1>
+    <p className="mt-4 text-secondary">
+      Select an item from the sidebar to navigate.
+    </p>
+  </>
+);
 
 const App = () => {
   return (
-    <div>
-      <h1>Dev Team:</h1>
-      <ul>
-        <li>Muham</li>
-        <li></li>
-        <li></li>
-        <li></li>
-      </ul>
-    </div>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="*" element={<DashboardContent />} />
+      </Route>
+    </Routes>
   );
 };
 
