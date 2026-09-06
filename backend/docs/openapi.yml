@@ -9,7 +9,7 @@ servers:
     description: Local Development Server
 
 paths:
-  /create-inquiry:
+  /inquiries/create-inquiry:
     post:
       summary: Submit Landing Page Inquiry
       description: Captures public user inquiries from the landing page.

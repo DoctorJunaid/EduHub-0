@@ -5,8 +5,7 @@ import {
   getInstituteById,
   updateInstitute,
   deleteInstitute,
-} from "../controllers/institute.controller.js";
-
+} from "../controllers/institute.conntroller.js";
 import {
   createCampusAdmin,
   getCampusAdmins,
@@ -17,6 +16,11 @@ import {
 
 // Note: Add your verifyToken & authorizeRoles("super_admin") middlewares here
 const router = express.Router();
+
+// Add health check route for super admin
+router.get("/health", (req, res) => {
+  res.status(200).json({ status: "Super Admin API is healthy" });
+});
 
 // --- Institute CRUD ---
 router.route("/institutes").post(createInstitute).get(getInstitutes);

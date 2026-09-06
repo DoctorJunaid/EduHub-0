@@ -1,5 +1,6 @@
 import express from "express";
 import inquiryRoutes from "./inquiry.routes.js";
+import superAdminRoutes from "./superAdmin.routes.js";
 
 const router = express.Router();
 
@@ -10,6 +11,8 @@ router.get("/", (req, res) => {
 
 // Mount individual route files
 // Endpoints will be available at: /api/v1/inquiries
-router.use(inquiryRoutes);
+router.use("/inquiries", inquiryRoutes);
+// Endpoints will be available at: /api/v1/super-admin
+router.use("/super-admin", superAdminRoutes);
 
 export default router;
