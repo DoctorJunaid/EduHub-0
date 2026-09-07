@@ -35,6 +35,10 @@ export const CAMPUS_ADMIN_NAV = [
   { label: "Students Directory", path: "/students", group: "People", icon: <Users size={20} /> },
   { label: "Class Timetable", path: "/timetable", group: "Academics", icon: <Calendar size={20} /> },
   { label: "Exam Schedules", path: "/exams", group: "Academics", icon: <Calendar size={20} /> },
+  { label: "Faculty & Staff Attendance", path: "/faculty-attendance", group: "Academics", icon: <Users size={20} /> },
+  { label: "Student Attendance", path: "/student-attendance", group: "Academics", icon: <Users size={20} /> },
+  { label: "Exam Results & GPA", path: "/results", group: "Academics", icon: <Award size={20} /> },
+  { label: "Fee Management", path: "/fees", group: "Finance", icon: <ClipboardList size={20} /> },
 ];
 
 export const TEACHER_NAV = [

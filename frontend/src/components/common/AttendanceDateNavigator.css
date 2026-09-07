@@ -1,0 +1,6 @@
+.attendance-date-controls, .attendance-date-controls > div { display: flex; align-items: center; gap: 9px; }
+.attendance-date-controls > div { gap: 0; border: 1px solid var(--border); border-radius: 7px; }
+.attendance-date-controls button { height: 33px; font-size: 11px; }
+.attendance-date-controls > div > button { border: 0; box-shadow: none; padding: 0 8px; }
+.attendance-date-controls .date-picker-trigger { min-width: 184px; justify-content: flex-start; }
+@media (max-width: 650px) { .attendance-date-controls { gap: 5px; flex-wrap: wrap; } .attendance-date-controls .date-picker-trigger { min-width: 163px; } }

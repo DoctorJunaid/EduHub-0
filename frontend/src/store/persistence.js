@@ -1,20 +1,48 @@
 import { validateExam } from '../Admins/Campus Admin/Exams/examData.js';
+import { validateAttendance } from '../Admins/Campus Admin/Attendance/attendanceData.js';
+import { studentAttendanceKey, validStudentAttendance } from '../Admins/Campus Admin/Attendance/Students/studentAttendanceData.js';
+import { resultKey, validateResult } from '../Admins/Campus Admin/Results/resultsData.js';
+import { validateVoucher } from '../Admins/Campus Admin/Fees/feeData.js';
 const fields = {
+  fees: ['studentId', 'voucherNo', 'feeCategory', 'semester', 'dueDate', 'paymentStatus', 'paymentDate', 'createdAt', 'updatedAt'],
+  results: ['studentId', 'examId', 'academicYear', 'semester', 'grade', 'courseCode', 'remarks', 'createdAt', 'updatedAt'],
+  studentAttendance: ['studentId', 'classId', 'date', 'status'],
+  attendance: ['facultyId', 'date', 'checkInTime', 'checkOutTime', 'status'],
   exams: ['subject', 'examType', 'department', 'section', 'date', 'startTime', 'endTime', 'room', 'invigilator'],
   faculty: ['name', 'email', 'designation', 'qualification', 'department', 'phone', 'subjects', 'campus', 'status', 'initials'],
   students: ['name', 'roll', 'email', 'studentPhone', 'program', 'section', 'semester', 'subjects', 'campus', 'status', 'guardian', 'guardianPhone', 'initials'],
   timetable: ['subject', 'program', 'section', 'instructor', 'room', 'startTime', 'endTime', 'status'],
 };
-export const storageKeys = { faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams' };
+export const storageKeys = { faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
 const statuses = { faculty: ['Active', 'Pending', 'Inactive'], students: ['Active', 'Pending', 'Graduated', 'Suspended'], timetable: ['Active', 'Pending'] };
 
 function validRecords(collection, records) {
   if (!Array.isArray(records)) return false;
   const ids = new Set();
+  const attendanceDays = new Set();
   return records.every((record) => {
     if (!record || typeof record !== 'object' || typeof record.id !== 'string' || !record.id || ids.has(record.id)) return false;
     ids.add(record.id);
     if (!fields[collection].every((field) => typeof record[field] === 'string')) return false;
+    if (collection === 'fees') return !validateVoucher(record) && [record.createdAt, record.updatedAt].every((value) => Number.isFinite(Date.parse(value)));
+    if (collection === 'results') {
+      const key = resultKey(record);
+      if (attendanceDays.has(key) || validateResult(record) || ![record.createdAt, record.updatedAt].every((value) => Number.isFinite(Date.parse(value)))) return false;
+      attendanceDays.add(key);
+      return true;
+    }
+    if (collection === 'studentAttendance') {
+      const key = studentAttendanceKey(record);
+      if (attendanceDays.has(key) || !validStudentAttendance(record)) return false;
+      attendanceDays.add(key);
+      return true;
+    }
+    if (collection === 'attendance') {
+      const key = JSON.stringify([record.facultyId, record.date]);
+      if (attendanceDays.has(key) || validateAttendance(record)) return false;
+      attendanceDays.add(key);
+      return true;
+    }
     if (collection === 'exams') return typeof record.totalMarks === 'number' && !validateExam(record);
     if (!statuses[collection].includes(record.status)) return false;
     if (collection === 'timetable') {

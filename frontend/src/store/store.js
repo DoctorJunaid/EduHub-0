@@ -4,6 +4,18 @@ import studentsReducer from './Slices/studentsSlice.js';
 import { loadDemoState, persistDemoState } from './persistence.js';
 import timetableReducer from './Slices/timetableSlice.js';
 import examsReducer from './Slices/examsSlice.js';
+import attendanceReducer from './Slices/attendanceSlice.js';
+import studentAttendanceReducer from './Slices/studentAttendanceSlice.js';
+import resultsReducer from './Slices/resultsSlice.js';
+import feesReducer from './Slices/feesSlice.js';
+import { resultSaved } from './Slices/resultsSlice.js';
+import { makeDemoResults } from '../Admins/Campus Admin/Results/demoResults.js';
 
-export const store = configureStore({ reducer: { faculty: facultyReducer, students: studentsReducer, timetable: timetableReducer, exams: examsReducer }, preloadedState: loadDemoState() });
+export const store = configureStore({ reducer: { faculty: facultyReducer, students: studentsReducer, timetable: timetableReducer, exams: examsReducer, attendance: attendanceReducer, studentAttendance: studentAttendanceReducer, results: resultsReducer, fees: feesReducer }, preloadedState: loadDemoState() });
+// Populate an empty results collection, including previously persisted empty state.
+// Existing saved results and user edits remain intact.
+if (!store.getState().results.records.length) {
+  const state = store.getState();
+  for (const result of makeDemoResults(state.students.records, state.exams.records)) store.dispatch(resultSaved(result));
+}
 persistDemoState(store);

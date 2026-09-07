@@ -1,4 +1,8 @@
 import DashboardContent from './Admins/Campus Admin/Dashboard/DashboardContent';
+import FacultyAttendance from './Admins/Campus Admin/Attendance/FacultyAttendance';
+import StudentAttendance from './Admins/Campus Admin/Attendance/Students/StudentAttendance';
+import ExamResults from './Admins/Campus Admin/Results/ExamResults';
+import FeeManagement from './Admins/Campus Admin/Fees/FeeManagement';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import CampusOverview from './Admins/Campus Admin/Dashboard/CampusOverview';
@@ -17,6 +21,10 @@ const App = () => {
         <Route path="students" element={<StudentsDirectory />} />
         <Route path="timetable" element={<ClassTimetable />} />
         <Route path="exams" element={<ExamSchedules />} />
+        <Route path="faculty-attendance" element={<FacultyAttendance />} />
+        <Route path="student-attendance" element={<StudentAttendance />} />
+        <Route path="results" element={<ExamResults />} />
+        <Route path="fees" element={<FeeManagement />} />
         <Route path="*" element={<DashboardContent />} />
       </Route>
     </Routes>
