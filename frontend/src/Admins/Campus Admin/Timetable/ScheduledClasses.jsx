@@ -18,7 +18,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import { dayLabel, timeLabel } from "./timetableData.js";
+import { dayLabel, timeLabel } from "../../../lib/schedule.js";
 
 export default function ScheduledClasses({
   records,

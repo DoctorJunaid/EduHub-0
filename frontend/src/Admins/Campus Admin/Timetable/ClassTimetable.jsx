@@ -13,12 +13,8 @@ import {
 } from "@/store/Slices/timetableSlice.js";
 import { selectFaculty } from "@/store/Slices/facultySlice.js";
 import { selectStudents } from "@/store/Slices/studentsSlice.js";
-import {
-  initialSchedules,
-  filterSchedules,
-  mondayOf,
-  shiftDays,
-} from "./timetableData.js";
+import { initialSchedules } from "./timetableData.js";
+import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
 import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
 import ScheduleClassForm from "./ScheduleClassForm";

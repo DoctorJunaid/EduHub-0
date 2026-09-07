@@ -7,7 +7,7 @@ import reducer, {
   facultyDeleted,
   selectFaculty,
 } from "./facultySlice.js";
-import { filterFaculty } from "../../components/faculty/facultyData.js";
+import { filterFaculty } from "../../Admins/Campus Admin/Faculty/facultyData.js";
 
 const makeStore = () => configureStore({ reducer: { faculty: reducer } });
 const values = {

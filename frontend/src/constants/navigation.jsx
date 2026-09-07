@@ -34,6 +34,7 @@ export const CAMPUS_ADMIN_NAV = [
   { label: "Faculty Directory", path: "/faculty", group: "People", icon: <Users size={20} /> },
   { label: "Students Directory", path: "/students", group: "People", icon: <Users size={20} /> },
   { label: "Class Timetable", path: "/timetable", group: "Academics", icon: <Calendar size={20} /> },
+  { label: "Exam Schedules", path: "/exams", group: "Academics", icon: <Calendar size={20} /> },
 ];
 
 export const TEACHER_NAV = [

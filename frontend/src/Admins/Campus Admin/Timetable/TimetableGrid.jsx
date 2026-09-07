@@ -1,13 +1,6 @@
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import {
-  weekdays,
-  shiftDays,
-  gridRange,
-  dayBlocks,
-  minutes,
-  timeLabel,
-} from "./timetableData.js";
+import { weekdays, shiftDays, gridRange, dayBlocks, minutes, timeLabel } from "../../../lib/schedule.js";
 
 export default function TimetableGrid({ records, week, onView }) {
   const { start, end } = gridRange(records);

@@ -1,5 +1,5 @@
 import { createSlice, nanoid } from "@reduxjs/toolkit";
-import { facultyRecords } from "../../components/faculty/facultyData.js";
+import { facultyRecords } from "../../Admins/Campus Admin/Faculty/facultyData.js";
 
 const initialsFor = (name) =>
   name

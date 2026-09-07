@@ -9,7 +9,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
-import { weekdays, scheduleStatuses } from "./timetableData.js";
+import { scheduleStatuses } from "./timetableData.js";
+import { weekdays } from "../../../lib/schedule.js";
 
 export default function ScheduleClassForm({
   record,

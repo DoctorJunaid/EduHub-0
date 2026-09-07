@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, { studentAdded, studentUpdated, studentDeleted, selectStudents } from './studentsSlice.js';
-import { filterStudents, paginateStudents, studentStatuses } from '../../components/students/studentData.js';
+import { filterStudents, paginateStudents, studentStatuses } from '../../Admins/Campus Admin/Students/studentData.js';
 
 const makeStore = () => configureStore({ reducer: { students: reducer } });
 const values = { name: 'Test Student', roll: 'TEST-1', email: 'test@example.com', studentPhone: '', program: 'BS Computer Science', section: 'CS-4A', semester: '4th Semester', subjects: 'Data Structures', campus: 'NUST Main Campus (H-12)', status: 'Active', guardian: '', guardianPhone: '' };

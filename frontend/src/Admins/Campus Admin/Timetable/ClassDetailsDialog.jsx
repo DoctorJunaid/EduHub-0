@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button";
-import { dayLabel, timeLabel } from "./timetableData.js";
+import { dayLabel, timeLabel } from "../../../lib/schedule.js";
 export default function ClassDetailsDialog({ record, onClose }) {
   return (
     <Dialog

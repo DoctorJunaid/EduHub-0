@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import reducer, { classScheduled, classUpdated, classDeleted } from './timetableSlice.js';
-import { initialSchedules, mondayOf, shiftDays, filterSchedules, dayBlocks, gridRange, minutes } from '../../components/timetable/timetableData.js';
+import { initialSchedules } from '../../Admins/Campus Admin/Timetable/timetableData.js';
+import { mondayOf, shiftDays, filterSchedules, dayBlocks, gridRange, minutes } from '../../lib/schedule.js';
 
 test('schedule/edit/delete update the shared records used by both views', () => {
   let state = reducer(undefined, { type: 'init' });

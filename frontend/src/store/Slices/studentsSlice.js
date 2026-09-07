@@ -1,5 +1,5 @@
 import { createSlice, nanoid } from '@reduxjs/toolkit';
-import { studentRecords } from '../../components/students/studentData.js';
+import { studentRecords } from '../../Admins/Campus Admin/Students/studentData.js';
 
 const initialsFor = (name) => name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
 const studentsSlice = createSlice({

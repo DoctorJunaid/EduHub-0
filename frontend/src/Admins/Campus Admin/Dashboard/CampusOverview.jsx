@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import FacultyForm from '@/components/faculty/FacultyForm';
-import { facultyRecords as demoRecords } from '@/components/faculty/facultyData.js';
+import FacultyForm from '@/Admins/Campus Admin/Faculty/FacultyForm';
+import { facultyRecords as demoRecords } from '@/Admins/Campus Admin/Faculty/facultyData.js';
 import { selectFaculty, facultyAdded } from '@/store/Slices/facultySlice.js';
 import {
   ArrowRight,
@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import OverviewStatCard from "./components/OverviewStatCard";
+import OverviewStatCard from "../../../components/campus-overview/components/OverviewStatCard";
 import CampusTimetable from "./components/CampusTimetable";
 import CampusStudentTable from "./components/CampusStudentTable";
 import "./CampusOverview.css";

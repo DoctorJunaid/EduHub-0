@@ -4,12 +4,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import faculty, { facultyAdded, facultyUpdated, facultyDeleted } from './Slices/facultySlice.js';
 import students, { studentAdded, studentUpdated, studentDeleted } from './Slices/studentsSlice.js';
 import timetable, { classScheduled, classUpdated, classDeleted } from './Slices/timetableSlice.js';
+import exams, { addExam, updateExam, deleteExam } from './Slices/examsSlice.js';
 import { loadDemoState, persistDemoState, storageKeys } from './persistence.js';
 
 const memory = () => { const data = new Map(); return { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), data }; };
-const create = (storage) => { const store = configureStore({ reducer: { faculty, students, timetable }, preloadedState: loadDemoState(storage) }); persistDemoState(store, storage); return store; };
+const create = (storage) => { const store = configureStore({ reducer: { faculty, students, timetable, exams }, preloadedState: loadDemoState(storage) }); persistDemoState(store, storage); return store; };
 
 for (const [key, add, update, remove, edit] of [
+  ['exams', addExam, updateExam, deleteExam, { subject: 'Changed Exam', examType: 'Final', date: '2026-09-10', totalMarks: 75 }],
   ['faculty', facultyAdded, facultyUpdated, facultyDeleted, { name: 'Changed Teacher' }],
   ['students', studentAdded, studentUpdated, studentDeleted, { name: 'Changed Student' }],
   ['timetable', classScheduled, classUpdated, classDeleted, { subject: 'Changed Class', days: [1, 5], startTime: '08:30', endTime: '09:30' }],
@@ -33,7 +35,7 @@ for (const [key, add, update, remove, edit] of [
 
 test('empty collections stay empty after refresh; seed records are not resurrected', () => {
   const storage = memory(); const store = create(storage);
-  for (const [key, action] of [['faculty', facultyDeleted], ['students', studentDeleted], ['timetable', classDeleted]]) {
+  for (const [key, action] of [['faculty', facultyDeleted], ['students', studentDeleted], ['timetable', classDeleted], ['exams', deleteExam]]) {
     for (const record of store.getState()[key].records) store.dispatch(action(record.id));
   }
   const refreshed = create(storage);

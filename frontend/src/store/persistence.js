@@ -1,9 +1,11 @@
+import { validateExam } from '../Admins/Campus Admin/Exams/examData.js';
 const fields = {
+  exams: ['subject', 'examType', 'department', 'section', 'date', 'startTime', 'endTime', 'room', 'invigilator'],
   faculty: ['name', 'email', 'designation', 'qualification', 'department', 'phone', 'subjects', 'campus', 'status', 'initials'],
   students: ['name', 'roll', 'email', 'studentPhone', 'program', 'section', 'semester', 'subjects', 'campus', 'status', 'guardian', 'guardianPhone', 'initials'],
   timetable: ['subject', 'program', 'section', 'instructor', 'room', 'startTime', 'endTime', 'status'],
 };
-export const storageKeys = { faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable' };
+export const storageKeys = { faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams' };
 const statuses = { faculty: ['Active', 'Pending', 'Inactive'], students: ['Active', 'Pending', 'Graduated', 'Suspended'], timetable: ['Active', 'Pending'] };
 
 function validRecords(collection, records) {
@@ -12,7 +14,9 @@ function validRecords(collection, records) {
   return records.every((record) => {
     if (!record || typeof record !== 'object' || typeof record.id !== 'string' || !record.id || ids.has(record.id)) return false;
     ids.add(record.id);
-    if (!fields[collection].every((field) => typeof record[field] === 'string') || !statuses[collection].includes(record.status)) return false;
+    if (!fields[collection].every((field) => typeof record[field] === 'string')) return false;
+    if (collection === 'exams') return typeof record.totalMarks === 'number' && !validateExam(record);
+    if (!statuses[collection].includes(record.status)) return false;
     if (collection === 'timetable') {
       const time = /^([01]\d|2[0-3]):[0-5]\d$/;
       return Array.isArray(record.days) && record.days.length > 0 && record.days.every((day) => Number.isInteger(day) && day >= 1 && day <= 5) && time.test(record.startTime) && time.test(record.endTime) && record.endTime > record.startTime;

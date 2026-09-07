@@ -1,5 +1,5 @@
-import { campusStudents } from "../campus-overview/campusOverviewData.js";
-import { facultyRecords } from "../faculty/facultyData.js";
+import { campusStudents } from "../Dashboard/campusOverviewData.js";
+import { facultyRecords } from "../Faculty/facultyData.js";
 
 export const studentStatuses = ["Active", "Pending", "Graduated", "Suspended"];
 export const studentPrograms = [

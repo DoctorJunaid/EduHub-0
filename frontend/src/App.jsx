@@ -1,18 +1,11 @@
+import DashboardContent from './Admins/Campus Admin/Dashboard/DashboardContent';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
-import CampusOverview from './components/campus-overview/CampusOverview';
-import FacultyDirectory from './components/faculty/FacultyDirectory';
-import StudentsDirectory from './components/students/StudentsDirectory';
-import ClassTimetable from './components/timetable/ClassTimetable';
-
-const DashboardContent = () => (
-  <>
-    <h1 className="text-2xl font-bold">Campus Admin Dashboard</h1>
-    <p className="mt-4 text-secondary">
-      Select an item from the sidebar to navigate.
-    </p>
-  </>
-);
+import CampusOverview from './Admins/Campus Admin/Dashboard/CampusOverview';
+import FacultyDirectory from './Admins/Campus Admin/Faculty/FacultyDirectory';
+import StudentsDirectory from './Admins/Campus Admin/Students/StudentsDirectory';
+import ClassTimetable from './Admins/Campus Admin/Timetable/ClassTimetable';
+import ExamSchedules from './Admins/Campus Admin/Exams/ExamSchedules';
 
 const App = () => {
   return (
@@ -23,6 +16,7 @@ const App = () => {
         <Route path="faculty" element={<FacultyDirectory />} />
         <Route path="students" element={<StudentsDirectory />} />
         <Route path="timetable" element={<ClassTimetable />} />
+        <Route path="exams" element={<ExamSchedules />} />
         <Route path="*" element={<DashboardContent />} />
       </Route>
     </Routes>

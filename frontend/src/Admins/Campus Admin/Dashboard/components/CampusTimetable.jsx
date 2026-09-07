@@ -13,8 +13,8 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import OverviewPanel from "./OverviewPanel";
-import OverviewStatusBadge from "./OverviewStatusBadge";
+import OverviewPanel from "../../../../components/campus-overview/components/OverviewPanel";
+import OverviewStatusBadge from "../../../../components/campus-overview/components/OverviewStatusBadge";
 import { campusClasses } from "../campusOverviewData.js";
 
 export default function CampusTimetable() {

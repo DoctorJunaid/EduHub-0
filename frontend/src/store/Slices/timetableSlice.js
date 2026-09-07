@@ -1,5 +1,5 @@
 import { createSlice, nanoid } from '@reduxjs/toolkit';
-import { initialSchedules } from '../../components/timetable/timetableData.js';
+import { initialSchedules } from '../../Admins/Campus Admin/Timetable/timetableData.js';
 const slice = createSlice({
   name: 'timetable', initialState: { records: initialSchedules },
   reducers: {
