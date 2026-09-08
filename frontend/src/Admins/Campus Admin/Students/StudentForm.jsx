@@ -15,6 +15,7 @@ export default function StudentForm({
   student,
   programs,
   campuses,
+  editAllFields = false,
   onSave,
   onClose,
 }) {
@@ -29,7 +30,7 @@ export default function StudentForm({
     section: student?.section ?? "",
     semester: student?.semester ?? "",
     subjects: student?.subjects ?? "",
-    campus: student?.campus ?? campuses[0] ?? "",
+    campus: student?.campus ?? (typeof campuses[0] === 'object' ? campuses[0].value : campuses[0]) ?? "",
     status: student?.status ?? "Active",
     guardian: student?.guardian ?? "",
     guardianPhone: student?.guardianPhone ?? "",
@@ -59,7 +60,7 @@ export default function StudentForm({
         {options ? (
           <select {...props}>
             {options.map((option) => (
-              <option key={option}>{option}</option>
+              <option key={typeof option === 'object' ? option.value : option} value={typeof option === 'object' ? option.value : option}>{typeof option === 'object' ? option.label : option}</option>
             ))}
           </select>
         ) : (
@@ -74,7 +75,7 @@ export default function StudentForm({
       Object.entries(values).map(([key, value]) => [key, value.trim()]),
     );
     // Preserve hidden fields byte-for-byte in Edit mode, including optional contact data.
-    if (editing) {
+    if (editing && !editAllFields) {
       saved.campus = student.campus;
       saved.guardianPhone = student.guardianPhone;
     }
@@ -137,7 +138,7 @@ export default function StudentForm({
               placeholder: "Advanced Web Design, Data Structures, AI",
             })}
           </div>
-          {editing ? (
+          {editing && !editAllFields ? (
             <div className="student-form-row">
               {field("status", "Status", { options: studentStatuses })}
               {field("guardian", "Guardian Name", { optional: true })}

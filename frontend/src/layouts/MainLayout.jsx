@@ -8,7 +8,7 @@ import Header from "../components/common/Header";
 import { CAMPUS_ADMIN_NAV } from "../constants/navigation";
 import { useTheme } from "../hooks/useTheme";
 
-const MainLayout = () => {
+const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV }) => {
   const dispatch = useDispatch(), navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const profile = { ...user, initials: user.name.slice(0, 2).toUpperCase(), role: ROLE_LABELS[user.role] };
@@ -31,7 +31,7 @@ const MainLayout = () => {
       <Sidebar
         user={profile}
         onSignOut={() => { dispatch(loggedOut()); navigate('/login', { replace: true }); }}
-        items={CAMPUS_ADMIN_NAV}
+        items={navigation}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
         theme={theme}

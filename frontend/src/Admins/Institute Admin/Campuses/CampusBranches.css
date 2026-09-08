@@ -1,0 +1,167 @@
+.campus-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  color: var(--foreground);
+}
+.campuses-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.campuses-heading h1 {
+  font-size: 36px;
+  line-height: 1.25;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.campuses-heading p {
+  color: var(--muted-foreground);
+  font-size: 18px;
+}
+.campuses-heading > button {
+  height: 50px;
+  padding-inline: 22px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.campuses-card {
+  padding: 28px;
+  gap: 26px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.campuses-search {
+  display: block;
+  position: relative;
+  width: min(100%, 390px);
+}
+.campuses-search svg {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  color: var(--muted-foreground);
+}
+.campuses-search input {
+  height: 48px;
+  padding-left: 48px;
+  border-radius: 9px;
+  background: var(--color-background);
+}
+.campuses-card th {
+  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  height: 60px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+}
+.campuses-card td {
+  height: 100px;
+  color: var(--muted-foreground);
+  font-size: 15px;
+}
+.campuses-card th:last-child {
+  text-align: right;
+}
+.campus-name {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.campus-name strong {
+  display: block;
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 600;
+}
+.campus-name small {
+  display: block;
+  margin-top: 5px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.campus-building {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.campuses-card .campus-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 24px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 14px;
+}
+.campus-active > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.campus-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+.campus-actions button {
+  height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.campus-actions .campus-manage {
+  padding-inline: 20px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-color: var(--color-border-green);
+  opacity: 1;
+}
+.campus-actions .campus-delete {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-color: color-mix(in srgb, var(--color-danger) 15%, var(--border));
+}
+.campuses-empty {
+  text-align: center;
+}
+.campus-form {
+  display: grid;
+  gap: 10px;
+}
+.campus-form label:not(:first-child) {
+  margin-top: 10px;
+}
+.campus-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+.campus-error {
+  color: var(--color-danger);
+}
+@media (max-width: 650px) {
+  .campuses-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .campuses-heading h1 {
+    font-size: 28px;
+  }
+  .campuses-card {
+    padding: 16px;
+  }
+}
