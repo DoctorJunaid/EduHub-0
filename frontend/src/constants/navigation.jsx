@@ -39,6 +39,7 @@ export const CAMPUS_ADMIN_NAV = [
   { label: "Student Attendance", path: "/student-attendance", group: "Academics", icon: <Users size={20} /> },
   { label: "Exam Results & GPA", path: "/results", group: "Academics", icon: <Award size={20} /> },
   { label: "Fee Management", path: "/fees", group: "Finance", icon: <ClipboardList size={20} /> },
+  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
 ];
 
 export const TEACHER_NAV = [

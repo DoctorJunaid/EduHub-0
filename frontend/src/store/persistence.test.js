@@ -9,10 +9,11 @@ import attendance from './Slices/attendanceSlice.js';
 import studentAttendance from './Slices/studentAttendanceSlice.js';
 import results from './Slices/resultsSlice.js';
 import fees from './Slices/feesSlice.js';
+import messages from './Slices/messagesSlice.js';
 import { loadDemoState, persistDemoState, storageKeys } from './persistence.js';
 
 const memory = () => { const data = new Map(); return { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), data }; };
-const create = (storage) => { const store = configureStore({ reducer: { faculty, students, timetable, exams, attendance, studentAttendance, results, fees }, preloadedState: loadDemoState(storage) }); persistDemoState(store, storage); return store; };
+const create = (storage) => { const store = configureStore({ reducer: { faculty, students, timetable, exams, attendance, studentAttendance, results, fees, messages }, preloadedState: loadDemoState(storage) }); persistDemoState(store, storage); return store; };
 
 for (const [key, add, update, remove, edit] of [
   ['exams', addExam, updateExam, deleteExam, { subject: 'Changed Exam', examType: 'Final', date: '2026-09-10', totalMarks: 75 }],

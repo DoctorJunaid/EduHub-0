@@ -3,6 +3,7 @@ import { validateAttendance } from '../Admins/Campus Admin/Attendance/attendance
 import { studentAttendanceKey, validStudentAttendance } from '../Admins/Campus Admin/Attendance/Students/studentAttendanceData.js';
 import { resultKey, validateResult } from '../Admins/Campus Admin/Results/resultsData.js';
 import { validateVoucher } from '../Admins/Campus Admin/Fees/feeData.js';
+import { validConversations } from './Slices/messagesSlice.js';
 const fields = {
   fees: ['studentId', 'voucherNo', 'feeCategory', 'semester', 'dueDate', 'paymentStatus', 'paymentDate', 'createdAt', 'updatedAt'],
   results: ['studentId', 'examId', 'academicYear', 'semester', 'grade', 'courseCode', 'remarks', 'createdAt', 'updatedAt'],
@@ -13,10 +14,11 @@ const fields = {
   students: ['name', 'roll', 'email', 'studentPhone', 'program', 'section', 'semester', 'subjects', 'campus', 'status', 'guardian', 'guardianPhone', 'initials'],
   timetable: ['subject', 'program', 'section', 'instructor', 'room', 'startTime', 'endTime', 'status'],
 };
-export const storageKeys = { faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
+export const storageKeys = { messages: 'eduhub_messages', faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
 const statuses = { faculty: ['Active', 'Pending', 'Inactive'], students: ['Active', 'Pending', 'Graduated', 'Suspended'], timetable: ['Active', 'Pending'] };
 
 function validRecords(collection, records) {
+  if (collection === 'messages') return validConversations(records);
   if (!Array.isArray(records)) return false;
   const ids = new Set();
   const attendanceDays = new Set();

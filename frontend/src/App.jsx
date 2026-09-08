@@ -3,6 +3,7 @@ import FacultyAttendance from './Admins/Campus Admin/Attendance/FacultyAttendanc
 import StudentAttendance from './Admins/Campus Admin/Attendance/Students/StudentAttendance';
 import ExamResults from './Admins/Campus Admin/Results/ExamResults';
 import FeeManagement from './Admins/Campus Admin/Fees/FeeManagement';
+import Messages from './Admins/Campus Admin/Messages/Messages';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import CampusOverview from './Admins/Campus Admin/Dashboard/CampusOverview';
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="student-attendance" element={<StudentAttendance />} />
         <Route path="results" element={<ExamResults />} />
         <Route path="fees" element={<FeeManagement />} />
+        <Route path="messages" element={<Messages />} />
         <Route path="*" element={<DashboardContent />} />
       </Route>
     </Routes>
