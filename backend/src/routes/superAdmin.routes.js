@@ -5,7 +5,7 @@ import {
   getInstituteById,
   updateInstitute,
   deleteInstitute,
-} from "../controllers/institute.conntroller.js";
+} from "../controllers/institute.controller.js";
 import {
   createCampusAdmin,
   getCampusAdmins,
@@ -24,7 +24,7 @@ router.get("/health", (req, res) => {
 
 // --- Institute CRUD ---
 router.route("/institutes").post(createInstitute).get(getInstitutes);
-
+router.route("//:id/toggle-status").put(toggleUserStatus);
 router
   .route("/institutes/:id")
   .get(getInstituteById)
