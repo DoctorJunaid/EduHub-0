@@ -123,7 +123,7 @@ export default function CampusOverview() {
       </Card>
       <div className="overview-stats">
         {stats.map((stat) => (
-          <OverviewStatCard key={stat.label} {...stat} />
+          <OverviewStatCard key={stat.label} {...stat} showTrend={false} />
         ))}
       </div>
       <div className="overview-shortcuts">
