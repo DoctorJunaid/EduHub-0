@@ -4,6 +4,8 @@ import StudentAttendance from './Admins/Campus Admin/Attendance/Students/Student
 import ExamResults from './Admins/Campus Admin/Results/ExamResults';
 import FeeManagement from './Admins/Campus Admin/Fees/FeeManagement';
 import Messages from './Admins/Campus Admin/Messages/Messages';
+import Signup from './auth/Signup';
+import Login from './auth/Login';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import CampusOverview from './Admins/Campus Admin/Dashboard/CampusOverview';
@@ -15,6 +17,8 @@ import ExamSchedules from './Admins/Campus Admin/Exams/ExamSchedules';
 const App = () => {
   return (
     <Routes>
+      <Route path="signup" element={<Signup />} />
+      <Route path="login" element={<Login />} />
       <Route element={<MainLayout />}>
         <Route index element={<CampusOverview />} />
         <Route path="dashboard" element={<CampusOverview />} />
