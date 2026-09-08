@@ -24,5 +24,6 @@ test('demo session refresh, credential exclusion and logout preserve other data'
   }
 });
 test('missing destinations and malformed users cannot create an active session', () => {
-  for (const role of ['super-admin', 'institute-admin', 'student', 'bad']) assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role }).isAuthenticated, false);
+  for (const role of ['super-admin', 'student', 'bad']) assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role }).isAuthenticated, false);
+  assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role: 'institute-admin' }).isAuthenticated, true);
 });

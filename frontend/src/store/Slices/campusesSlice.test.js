@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import reducer, { campusAdded, campusUpdated, campusDeleted, selectInstituteCampuses } from './campusesSlice.js';
+import { filterCampuses, validCampuses } from '../../Admins/Institute Admin/Campuses/campusData.js';
+import { loadDemoState, storageKeys } from '../persistence.js';
+test('campus CRUD validates, retains stable IDs, searches source and scopes actions', () => {
+  let state = reducer(undefined, {});
+  state = reducer(state, campusAdded({ name: ' ', address: 'A', status: 'Active' }));
+  assert.equal(state.records.length, 2);
+  state = reducer(state, campusAdded({ name: ' New Campus ', address: ' New Address ', status: 'Active' }));
+  const added = state.records.at(-1);
+  assert.equal(added.name, 'New Campus');
+  for (const query of ['NEW campus', 'address', added.id]) assert.ok(filterCampuses(state.records, query).some((item) => item.id === added.id));
+  assert.equal(filterCampuses(state.records, '').length, 3);
+  state = reducer(state, campusUpdated({ ...added, name: 'Renamed' }));
+  assert.equal(state.records.at(-1).id, added.id);
+  const foreign = { ...added, id: 'foreign', instituteId: 'another-institute' };
+  state = { records: [...state.records, foreign] };
+  assert.equal(selectInstituteCampuses({ campuses: state }).length, 3);
+  state = reducer(state, campusDeleted('foreign'));
+  assert.ok(state.records.some((item) => item.id === 'foreign'));
+  state = reducer(state, campusDeleted(added.id));
+  assert.equal(selectInstituteCampuses({ campuses: state }).length, 2);
+});
+test('invalid/corrupt hydration falls back; intentionally empty campus list survives', () => {
+  const seed = reducer(undefined, {}).records[0];
+  for (const records of [[seed, seed], [{ ...seed, address: '' }], [{ ...seed, status: 'Unknown' }], null]) assert.equal(validCampuses(records), false);
+  for (const text of ['broken', JSON.stringify({ version: 1, records: [{}] })]) assert.equal(loadDemoState({ getItem: (key) => key === storageKeys.campuses ? text : null }).campuses, undefined);
+  assert.deepEqual(loadDemoState({ getItem: (key) => key === storageKeys.campuses ? '{"version":1,"records":[]}' : null }).campuses.records, []);
+});

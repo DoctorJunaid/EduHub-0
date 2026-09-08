@@ -1,3 +1,4 @@
+import BroadcastAlerts from './Admins/Institute Admin/Alerts/BroadcastAlerts';
 import DashboardContent from './Admins/Campus Admin/Dashboard/DashboardContent';
 import FacultyAttendance from './Admins/Campus Admin/Attendance/FacultyAttendance';
 import StudentAttendance from './Admins/Campus Admin/Attendance/Students/StudentAttendance';
@@ -6,6 +7,10 @@ import FeeManagement from './Admins/Campus Admin/Fees/FeeManagement';
 import Messages from './Admins/Campus Admin/Messages/Messages';
 import Signup from './auth/Signup';
 import Login from './auth/Login';
+import InstituteDashboard from './Admins/Institute Admin/InstituteDashboard';
+import CampusBranches from './Admins/Institute Admin/Campuses/CampusBranches';
+import InstituteStudents from './Admins/Institute Admin/Students/InstituteStudents';
+import { instituteNavigation } from './Admins/Institute Admin/navigation';
 import ProtectedRoute, { AuthEntry } from './auth/ProtectedRoute';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
@@ -21,6 +26,14 @@ const App = () => {
       <Route path="/" element={<AuthEntry />} />
       <Route path="signup" element={<AuthEntry><Signup /></AuthEntry>} />
       <Route path="login" element={<AuthEntry><Login /></AuthEntry>} />
+      <Route element={<ProtectedRoute allowedRoles={['institute-admin']} />}>
+        <Route element={<MainLayout navigation={instituteNavigation} />}>
+          <Route path="institute-admin" element={<InstituteDashboard />} />
+          <Route path="institute-admin/campuses" element={<CampusBranches />} />
+          <Route path="institute-admin/alerts" element={<BroadcastAlerts />} />
+          <Route path="institute-admin/students" element={<InstituteStudents />} />
+        </Route>
+      </Route>
       <Route element={<ProtectedRoute allowedRoles={['campus-admin']} />}>
       <Route element={<MainLayout />}>
         <Route path="dashboard" element={<CampusOverview />} />
@@ -41,3 +54,4 @@ const App = () => {
 };
 
 export default App;
+
