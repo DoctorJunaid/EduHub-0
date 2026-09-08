@@ -1,0 +1,562 @@
+.class-timetable {
+  min-width: 0;
+  color: var(--foreground);
+}
+.tt-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.class-timetable h1 {
+  font-size: 29px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+}
+.tt-page-heading p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.class-timetable .tt-primary {
+  height: 39px;
+  padding: 0 18px;
+  gap: 10px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: 7px;
+  font-size: 11px;
+}
+.class-timetable [data-slot="tabs"] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.class-timetable .tt-card {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 13px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+}
+.class-timetable .tt-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 12px;
+  margin-bottom: 0;
+}
+.tt-toolbar [data-slot="tabs-list"] {
+  display: inline-flex;
+  padding: 0;
+  height: 36px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: var(--background);
+}
+.tt-toolbar [data-slot="tabs-trigger"] {
+  height: 35px;
+  padding: 0 25px;
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-size: 11px;
+  border-radius: 7px;
+}
+.tt-toolbar [data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.tt-date-controls,
+.tt-date-controls > div,
+.tt-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tt-date-controls > div {
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.tt-date-controls span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  padding: 0 8px;
+  font-weight: 500;
+}
+.class-timetable .tt-date-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 33px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 11px;
+}
+.class-timetable .tt-date-controls > button {
+  padding: 0 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.class-timetable select {
+  width: auto;
+  min-width: 105px;
+  max-width: 175px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 10px;
+}
+.tt-filters {
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.tt-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 3px 0 16px;
+}
+.class-timetable h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.tt-legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.tt-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tt-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+}
+.tt-legend span:nth-child(2) i {
+  background: var(--color-border-green);
+}
+.tt-legend span:nth-child(3) i {
+  background: var(--border);
+}
+.class-timetable .tt-week-panel {
+  margin-bottom: 12px;
+  padding-bottom: 25px;
+}
+.tt-grid-scroll {
+  overflow-x: auto;
+}
+.tt-grid {
+  min-width: 850px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.tt-grid-heading,
+.tt-grid-body {
+  display: grid;
+  grid-template-columns: 68px repeat(5, minmax(0, 1fr));
+}
+.tt-grid-heading {
+  min-height: 46px;
+  background: var(--background);
+  border-bottom: 1px solid var(--color-border-light);
+}
+.tt-grid-heading > span {
+  padding: 14px 8px;
+  font-size: 10px;
+}
+.tt-grid-heading > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-left: 1px solid var(--color-border-light);
+  font-size: 10px;
+}
+.tt-grid-heading strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+.tt-grid-heading span {
+  color: var(--color-text-secondary);
+}
+.tt-time-axis,
+.tt-day-column {
+  position: relative;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 39px,
+    var(--color-border-light) 39px,
+    var(--color-border-light) 40px
+  );
+}
+.tt-day-column {
+  border-left: 1px solid var(--color-border-light);
+}
+.tt-time-axis > span {
+  position: absolute;
+  left: 8px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  transform: translateY(-50%);
+}
+.tt-time-axis > span:first-child {
+  transform: none;
+  top: 3px !important;
+}
+.tt-time-axis > span:last-child {
+  transform: translateY(-100%);
+}
+.class-timetable .tt-class-block {
+  position: absolute;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 7px 9px;
+  min-height: 0;
+  white-space: normal;
+  overflow: auto;
+  border: 0;
+  border-left: 3px solid var(--color-success);
+  border-radius: 4px;
+  background: var(--color-success-bg);
+  color: var(--foreground);
+  text-align: left;
+  box-shadow: none;
+}
+.tt-class-block > svg {
+  flex-shrink: 0;
+  color: var(--color-success);
+  margin-top: 1px;
+}
+.tt-class-block strong {
+  display: block;
+  font-size: 9px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.tt-class-block small {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+.class-timetable .tt-class-block:hover {
+  background: var(--accent);
+}
+.tt-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tt-pagination > span {
+  margin-right: 18px;
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.class-timetable .tt-pagination button,
+.class-timetable .tt-row-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted-foreground);
+}
+.class-timetable .tt-pagination button[aria-current="page"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+.class-timetable .tt-pagination select {
+  height: 30px;
+  min-width: 82px;
+}
+.class-timetable [data-slot="table-container"] {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+}
+.class-timetable table {
+  min-width: 900px;
+  width: 100%;
+}
+.class-timetable th {
+  padding: 12px 14px;
+  font-size: 9px;
+  color: var(--muted-foreground);
+  background: var(--background);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.class-timetable td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--color-border-light);
+  font-size: 10px;
+  color: var(--foreground);
+}
+.class-timetable td strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+}
+.class-timetable td small {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.tt-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tt-avatar,
+.tt-instructor-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 11px;
+  font-weight: 600;
+}
+.tt-instructor-avatar {
+  width: 31px;
+  height: 31px;
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+.tt-status {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 4px 9px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-radius: 15px;
+  font-size: 10px;
+}
+.tt-status > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.tt-status.tt-pending {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.tt-row-actions {
+  display: flex;
+  gap: 10px;
+}
+.class-timetable .tt-row-actions .tt-edit {
+  color: var(--color-success);
+}
+.class-timetable .tt-row-actions .tt-delete {
+  color: var(--color-danger);
+}
+.tt-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.tt-empty svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+.tt-overlay {
+  background: rgb(0 0 0 / 0.48);
+  backdrop-filter: blur(5px);
+}
+.tt-dialog {
+  display: block;
+  width: calc(100% - 32px);
+  max-width: 750px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--foreground);
+}
+.tt-dialog [data-slot="dialog-title"] {
+  font-size: 24px;
+  font-weight: 600;
+}
+.tt-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.tt-dialog-heading button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.tt-form-grid,
+.tt-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 16px;
+}
+.tt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.tt-field label,
+.tt-days legend {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.tt-field input,
+.tt-field select {
+  height: 46px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 14px;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font: inherit;
+  box-shadow: none;
+}
+.tt-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+  border: none;
+  padding: 0;
+}
+.tt-days legend {
+  margin-bottom: 10px;
+}
+.tt-days label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+.tt-days input {
+  appearance: auto;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  accent-color: var(--primary);
+}
+.tt-error {
+  margin-top: 12px;
+  color: var(--destructive);
+  font-size: 13px;
+}
+.tt-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 28px;
+}
+.tt-dialog-actions button {
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 14px;
+}
+.tt-dialog-actions button[data-variant="outline"] {
+  background: var(--card);
+  color: var(--foreground);
+}
+.tt-details {
+  margin-top: 24px;
+}
+.tt-details dt {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.tt-details dd {
+  margin: 5px 0 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  .tt-page-heading {
+    flex-wrap: wrap;
+  }
+  .tt-panel-heading {
+    flex-wrap: wrap;
+  }
+  .tt-filters {
+    width: 100%;
+  }
+}
+@media (max-width: 650px) {
+  .class-timetable h1 {
+    font-size: 24px;
+  }
+  .tt-date-controls {
+    flex-wrap: wrap;
+  }
+  .tt-filters select {
+    flex: 1;
+  }
+  .tt-pagination {
+    flex-wrap: wrap;
+  }
+  .tt-pagination > span {
+    width: 100%;
+  }
+  .tt-form-grid,
+  .tt-details {
+    grid-template-columns: 1fr;
+  }
+  .tt-dialog {
+    padding: 22px;
+  }
+}

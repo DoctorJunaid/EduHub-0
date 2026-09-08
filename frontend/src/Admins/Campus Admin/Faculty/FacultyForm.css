@@ -1,0 +1,126 @@
+.faculty-form-overlay {
+  background: rgb(0 0 0 / 0.48);
+  backdrop-filter: blur(5px);
+}
+.faculty-form-dialog {
+  display: block;
+  width: calc(100% - 32px);
+  max-width: 750px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 36px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  color: var(--foreground);
+}
+.faculty-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+.faculty-form-heading [data-slot="dialog-title"] {
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.faculty-form-heading .faculty-form-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.faculty-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 16px;
+}
+.faculty-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.faculty-form-wide {
+  grid-column: 1 / -1;
+}
+.faculty-form-field label {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.faculty-form-field input,
+.faculty-form-field select {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 16px;
+  box-shadow: none;
+}
+.faculty-form-field input::placeholder {
+  color: var(--muted-foreground);
+}
+.faculty-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 34px;
+}
+.faculty-form-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+  font-weight: 500;
+  background: var(--background);
+  color: var(--foreground);
+}
+.faculty-form-actions button[type="submit"] {
+  min-width: 165px;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+}
+@media (max-width: 600px) {
+  .faculty-form-dialog {
+    padding: 22px;
+  }
+  .faculty-form-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .faculty-form-heading [data-slot="dialog-title"] {
+    font-size: 21px;
+  }
+  .faculty-form-field input,
+  .faculty-form-field select {
+    font-size: 14px;
+  }
+  .faculty-form-actions button {
+    padding: 0 16px;
+  }
+  .faculty-form-actions button[type="submit"] {
+    min-width: 0;
+  }
+}

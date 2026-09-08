@@ -11,7 +11,7 @@ import {
   MessageSquare,
   Settings,
   Building2,
-  Bell,
+  Home,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -30,45 +30,16 @@ export const ADMIN_NAV = [
 ];
 
 export const CAMPUS_ADMIN_NAV = [
-  {
-    label: "Campus Overview",
-    path: "/dashboard",
-    icon: <LayoutDashboard size={20} />,
-  },
-  {
-    label: "Faculty Directory",
-    path: "/faculty",
-    icon: <Building2 size={20} />,
-  },
-  { label: "Students", path: "/students", icon: <Users size={20} /> },
-  {
-    label: "Class Timetable",
-    path: "/timetable",
-    icon: <GraduationCap size={20} />,
-  },
-  { label: "Exam Schedule", path: "/exams", icon: <BookOpen size={20} /> },
-  {
-    label: "Teacher Attendance",
-    path: "/teacher-attendance",
-    icon: <ClipboardList size={20} />,
-  },
-  {
-    label: "Student Attendance",
-    path: "/student-attendance",
-    icon: <Calendar size={20} />,
-  },
-  {
-    label: "Fee Management",
-    path: "/fee-management",
-    icon: <Settings size={20} />,
-  },
-  { label: "Fee Voucher", path: "/fee-voucher", icon: <Settings size={20} /> },
-  {
-    label: "Reports & Analytics",
-    path: "/reports",
-    icon: <Settings size={20} />,
-  },
-  { label: "Announcements", path: "/announcements", icon: <Bell size={20} /> },
+  { label: "Campus Overview", path: "/dashboard", icon: <Home size={20} /> },
+  { label: "Faculty Directory", path: "/faculty", group: "People", icon: <Users size={20} /> },
+  { label: "Students Directory", path: "/students", group: "People", icon: <Users size={20} /> },
+  { label: "Class Timetable", path: "/timetable", group: "Academics", icon: <Calendar size={20} /> },
+  { label: "Exam Schedules", path: "/exams", group: "Academics", icon: <Calendar size={20} /> },
+  { label: "Faculty & Staff Attendance", path: "/faculty-attendance", group: "Academics", icon: <Users size={20} /> },
+  { label: "Student Attendance", path: "/student-attendance", group: "Academics", icon: <Users size={20} /> },
+  { label: "Exam Results & GPA", path: "/results", group: "Academics", icon: <Award size={20} /> },
+  { label: "Fee Management", path: "/fees", group: "Finance", icon: <ClipboardList size={20} /> },
+  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
 ];
 
 export const TEACHER_NAV = [

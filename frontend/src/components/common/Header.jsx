@@ -1,5 +1,5 @@
 import { Search, ChevronDown } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
   const location = useLocation();
@@ -8,7 +8,7 @@ const Header = () => {
   return (
     <header className="header">
       <nav className="breadcrumbs" aria-label="Breadcrumb">
-        <span>Home</span>
+        <Link to="/dashboard">Home</Link>
         {segments.map((segment) => (
           <span key={segment} className="breadcrumb-current">
             / {segment.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}

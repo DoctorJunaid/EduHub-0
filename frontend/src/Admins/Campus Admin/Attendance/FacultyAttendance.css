@@ -1,0 +1,46 @@
+.faculty-attendance h1 { font-size: 30px; line-height: 1.3; letter-spacing: -.7px; }
+.faculty-attendance .tt-page-heading { margin: 4px 0 28px; }
+.faculty-attendance .tt-page-heading p { font-size: 14px; margin-top: 5px; }
+.attendance-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 18px; }
+.attendance-summary .summary-card { display: flex; flex-direction: row; align-items: flex-start; min-height: 108px; padding: 19px 17px; gap: 17px; border: 1px solid var(--color-border-light); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
+.attendance-summary .summary-icon { display: grid; place-items: center; flex-shrink: 0; width: 45px; height: 45px; border-radius: 17px; color: var(--color-success); background: var(--color-success-bg); }
+.attendance-summary .summary-card strong { display: block; font-size: 22px; line-height: 1.2; font-weight: 700; }
+.attendance-summary .summary-card div > span { display: block; margin-top: 8px; font-size: 11px; color: var(--muted-foreground); }
+.attendance-summary .summary-card > svg { display: none; }
+.faculty-attendance .attendance-panel { padding: 0; }
+.attendance-toolbar, .attendance-filters, .attendance-log-heading, .attendance-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; }
+.attendance-toolbar, .attendance-filters { border-bottom: 1px solid var(--color-border-light); }
+.attendance-toolbar [data-slot="tabs-list"] { height: 35px; padding: 0; background: transparent; border: 1px solid var(--border); }
+.attendance-toolbar [data-slot="tabs-trigger"] { height: 34px; padding: 0 15px; font-size: 11px; }
+.attendance-toolbar [data-slot="tabs-trigger"][data-state="active"] { background: var(--primary); color: var(--primary-foreground); }
+.attendance-search { position: relative; flex: 1.7; min-width: 230px; }
+.attendance-search > svg { position: absolute; top: 10px; left: 12px; color: var(--muted-foreground); }
+.attendance-search input { padding-left: 37px; font-size: 11px; height: 35px; box-shadow: none; }
+.faculty-attendance .attendance-filters select { flex: 1; max-width: none; min-width: 130px; font-size: 11px; height: 35px; }
+.attendance-filters select:disabled { opacity: .6; cursor: not-allowed; }
+.attendance-history-filters { display: flex; gap: 14px; flex-wrap: wrap; padding: 14px 18px 0; }
+.attendance-history-filters label { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.attendance-history-filters input { width: 155px; font-size: 12px; }
+.attendance-log-heading { padding-top: 17px; padding-bottom: 8px; }
+.faculty-attendance h2 { font-size: 15px; }
+.attendance-log-heading button { font-size: 11px; height: 31px; }
+.attendance-note { padding: 0 18px 14px; font-size: 10px; color: var(--muted-foreground); }
+.attendance-table-wrap { padding: 0 18px; }
+.faculty-attendance table { min-width: 900px; }
+.faculty-attendance th { font-size: 9px; text-transform: uppercase; padding: 11px 12px; }
+.faculty-attendance td { padding: 9px 12px; font-size: 11px; }
+.attendance-person { display: flex; align-items: center; gap: 14px; }
+.attendance-person [data-slot="avatar"] { width: 35px; height: 35px; flex-shrink: 0; }
+.attendance-person [data-slot="avatar-fallback"] { color: var(--color-success); background: var(--color-success-bg); font-size: 12px; }
+.faculty-attendance .attendance-person strong { font-size: 11px; }
+.faculty-attendance .attendance-person small { font-size: 9px; margin-top: 3px; }
+.attendance-actions { display: flex; gap: 6px; align-items: center; }
+.attendance-actions button { height: 29px; font-size: 10px; padding: 0 10px; }
+.attendance-actions > button:first-child { min-width: 75px; justify-content: flex-start; }
+.attendance-footer { flex-wrap: wrap; padding-top: 9px; padding-bottom: 10px; }
+.attendance-footer > span { font-size: 11px; color: var(--color-success); }
+.faculty-attendance .tt-pagination { flex-wrap: wrap; }
+.faculty-attendance .tt-pagination > span { font-size: 10px; }
+.attendance-form-help { color: var(--muted-foreground); font-size: 12px; margin: -8px 0 20px; }
+@media (max-width: 1050px) { .attendance-toolbar, .attendance-filters { flex-wrap: wrap; } .attendance-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .faculty-attendance h1 { font-size: 24px; } .attendance-summary { gap: 10px; } .attendance-summary .summary-card { gap: 10px; padding: 14px 10px; } .attendance-summary .summary-icon { width: 34px; height: 34px; border-radius: 12px; } .attendance-summary .summary-card strong { font-size: 19px; } .attendance-toolbar, .attendance-filters, .attendance-log-heading { padding-left: 12px; padding-right: 12px; } .attendance-log-heading { flex-wrap: wrap; } .attendance-date-controls { gap: 5px; flex-wrap: wrap; } .attendance-date-controls .date-picker-trigger { min-width: 163px; } .attendance-table-wrap { padding: 0 12px; } }
