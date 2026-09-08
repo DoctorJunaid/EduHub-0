@@ -33,11 +33,11 @@ test("signup validates required fields, email, minimal password, confirmation an
 });
 test("login requires email and password without imposing a new password policy", () => {
   assert.deepEqual(
-    validateLogin({ email: " test@example.com ", password: "short" }),
+    validateLogin({ role: 'campus-admin', email: " test@example.com ", password: "short" }),
     {},
   );
-  assert.ok(validateLogin({ email: "invalid", password: "valid" }).email);
-  assert.deepEqual(Object.keys(validateLogin({ email: "", password: "" })), [
+  assert.ok(validateLogin({ role: 'campus-admin', email: "invalid", password: "valid" }).email);
+  assert.deepEqual(Object.keys(validateLogin({ role: 'campus-admin', email: "", password: "" })), [
     "email",
     "password",
   ]);

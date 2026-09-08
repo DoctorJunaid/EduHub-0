@@ -1,3 +1,4 @@
+import authReducer from './Slices/authSlice.js';
 import { configureStore } from "@reduxjs/toolkit";
 import facultyReducer from "./Slices/facultySlice.js";
 import studentsReducer from './Slices/studentsSlice.js';
@@ -12,7 +13,7 @@ import messagesReducer from './Slices/messagesSlice.js';
 import { resultSaved } from './Slices/resultsSlice.js';
 import { makeDemoResults } from '../Admins/Campus Admin/Results/demoResults.js';
 
-export const store = configureStore({ reducer: { messages: messagesReducer, faculty: facultyReducer, students: studentsReducer, timetable: timetableReducer, exams: examsReducer, attendance: attendanceReducer, studentAttendance: studentAttendanceReducer, results: resultsReducer, fees: feesReducer }, preloadedState: loadDemoState() });
+export const store = configureStore({ reducer: { auth: authReducer, messages: messagesReducer, faculty: facultyReducer, students: studentsReducer, timetable: timetableReducer, exams: examsReducer, attendance: attendanceReducer, studentAttendance: studentAttendanceReducer, results: resultsReducer, fees: feesReducer }, preloadedState: loadDemoState() });
 // Populate an empty results collection, including previously persisted empty state.
 // Existing saved results and user edits remain intact.
 if (!store.getState().results.records.length) {

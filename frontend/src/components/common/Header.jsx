@@ -1,7 +1,7 @@
 import { Search, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
-const Header = () => {
+const Header = ({ user }) => {
   const location = useLocation();
   const segments = location.pathname.split('/').filter(Boolean);
 
@@ -23,8 +23,8 @@ const Header = () => {
       </label>
 
       <button type="button" className="profile-button" aria-label="Open profile menu">
-        <span className="profile-avatar">A</span>
-        <span className="profile-name">Admin User</span>
+        <span className="profile-avatar">{user?.initials}</span>
+        <span className="profile-name" title={user?.role}>{user?.name}</span>
         <ChevronDown size={16} aria-hidden="true" />
       </button>
     </header>

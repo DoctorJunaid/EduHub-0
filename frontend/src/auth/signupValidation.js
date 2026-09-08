@@ -4,6 +4,7 @@ export function validateLogin(values) {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
     errors.email = "Enter a valid email address.";
   if (!values.password) errors.password = "Enter your password.";
+  if (!['super-admin', 'campus-admin', 'institute-admin', 'student'].includes(values.role)) errors.role = 'Choose a login role.';
   return errors;
 }
 
