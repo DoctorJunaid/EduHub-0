@@ -6,6 +6,7 @@ import FeeManagement from './Admins/Campus Admin/Fees/FeeManagement';
 import Messages from './Admins/Campus Admin/Messages/Messages';
 import Signup from './auth/Signup';
 import Login from './auth/Login';
+import ProtectedRoute, { AuthEntry } from './auth/ProtectedRoute';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import CampusOverview from './Admins/Campus Admin/Dashboard/CampusOverview';
@@ -17,10 +18,11 @@ import ExamSchedules from './Admins/Campus Admin/Exams/ExamSchedules';
 const App = () => {
   return (
     <Routes>
-      <Route path="signup" element={<Signup />} />
-      <Route path="login" element={<Login />} />
+      <Route path="/" element={<AuthEntry />} />
+      <Route path="signup" element={<AuthEntry><Signup /></AuthEntry>} />
+      <Route path="login" element={<AuthEntry><Login /></AuthEntry>} />
+      <Route element={<ProtectedRoute allowedRoles={['campus-admin']} />}>
       <Route element={<MainLayout />}>
-        <Route index element={<CampusOverview />} />
         <Route path="dashboard" element={<CampusOverview />} />
         <Route path="faculty" element={<FacultyDirectory />} />
         <Route path="students" element={<StudentsDirectory />} />
@@ -32,6 +34,7 @@ const App = () => {
         <Route path="fees" element={<FeeManagement />} />
         <Route path="messages" element={<Messages />} />
         <Route path="*" element={<DashboardContent />} />
+      </Route>
       </Route>
     </Routes>
   );

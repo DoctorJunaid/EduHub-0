@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { demoLoggedIn } from '@/store/Slices/authSlice';
+import { roleHome } from './roles';
 import { Mail, UserRound, Building2, Landmark, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import RoleSelector from './components/RoleSelector';
@@ -13,6 +16,8 @@ import { validateLogin } from "./signupValidation";
 const roles = [['super-admin', 'Super Admin', UserRound], ['campus-admin', 'Campus Admin', Building2], ['institute-admin', 'Institute Admin', Landmark], ['student', 'Student', UserRound]];
 
 export default function Login() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [values, setValues] = useState({ email: "", password: "", role: 'super-admin' });
   const roleLabel = roles.find(([id]) => id === values.role)?.[1];
   const [errors, setErrors] = useState({});
@@ -32,9 +37,10 @@ export default function Login() {
       document.getElementById(`login-${Object.keys(next)[0]}`)?.focus();
       return;
     }
-    setNotice(
-      `Your ${roleLabel} form is valid. Login is not connected yet; you have not been signed in.`,
-    );
+    const home = roleHome(values.role);
+    if (!home) { setNotice(`${roleLabel} workspace is pending approval. Choose Campus Admin to enter the available demo.`); return; }
+    dispatch(demoLoggedIn({ email: values.email, role: values.role }));
+    navigate(home, { replace: true });
   };
   const props = (field) => ({
     id: `login-${field}`,

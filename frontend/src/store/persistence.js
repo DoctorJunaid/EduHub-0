@@ -4,6 +4,8 @@ import { studentAttendanceKey, validStudentAttendance } from '../Admins/Campus A
 import { resultKey, validateResult } from '../Admins/Campus Admin/Results/resultsData.js';
 import { validateVoucher } from '../Admins/Campus Admin/Fees/feeData.js';
 import { validConversations } from './Slices/messagesSlice.js';
+import { sessionState } from './Slices/authSlice.js';
+export const authStorageKey = 'eduhub_auth';
 const fields = {
   fees: ['studentId', 'voucherNo', 'feeCategory', 'semester', 'dueDate', 'paymentStatus', 'paymentDate', 'createdAt', 'updatedAt'],
   results: ['studentId', 'examId', 'academicYear', 'semester', 'grade', 'courseCode', 'remarks', 'createdAt', 'updatedAt'],
@@ -61,6 +63,10 @@ function browserStorage() {
 
 export function loadDemoState(storage = browserStorage()) {
   const state = {};
+  try {
+    const saved = JSON.parse(storage?.getItem(authStorageKey) ?? 'null');
+    if (saved !== null) state.auth = sessionState(saved?.version === 1 ? saved.user : null);
+  } catch { state.auth = sessionState(null); }
   for (const [collection, key] of Object.entries(storageKeys)) {
     try {
       const stored = JSON.parse(storage?.getItem(key) ?? 'null');
@@ -74,6 +80,13 @@ export function persistDemoState(store, storage = browserStorage()) {
   const previous = {};
   const sync = () => {
     const state = store.getState();
+    if (state.auth && previous.auth !== state.auth) {
+      try {
+        if (state.auth.isAuthenticated) storage?.setItem(authStorageKey, JSON.stringify({ version: 1, user: sessionState(state.auth.user).user }));
+        else storage?.removeItem(authStorageKey);
+        previous.auth = state.auth;
+      } catch { /* Keep in-memory auth usable if browser storage is unavailable. */ }
+    }
     for (const [collection, key] of Object.entries(storageKeys)) {
       const records = state[collection]?.records;
       if (!records || records === previous[collection]) continue;
