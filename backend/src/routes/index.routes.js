@@ -1,6 +1,9 @@
 import express from "express";
 import inquiryRoutes from "./inquiry.routes.js";
 import superAdminRoutes from "./superAdmin.routes.js";
+import authRoutes from "./auth.routes.js"
+import campusAdminRoutes from "./campusAdmin.routes.js"
+
 
 const router = express.Router();
 
@@ -14,5 +17,7 @@ router.get("/", (req, res) => {
 router.use("/inquiries", inquiryRoutes);
 // Endpoints will be available at: /api/v1/super-admin
 router.use("/super-admin", superAdminRoutes);
+router.use("/auth", authRoutes);
+router.use("/campus-admin", campusAdminRoutes);
 
 export default router;
