@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -29,9 +30,11 @@ const userSchema = new mongoose.Schema(
       enum: ["super_admin", "campus_admin"],
       required: true,
     },
+    // Required dynamically when role is campus_admin
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Institute",
+      default: null,
       required: function () {
         return this.role === "campus_admin";
       },
@@ -44,10 +47,23 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
-// Fix for runtime re-registration
+// Hash password before saving if modified
+userSchema.pre("save", async function () {
+  if (!this.isModified("passwordHash")) return;
+
+  const salt = await bcrypt.genSalt(10);
+  this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+});
+
+// Instance method for password verification
+userSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.passwordHash);
+};
+
+// Prevent re-compilation of model during hot-reloads (Next.js / Express development)
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;
