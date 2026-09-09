@@ -17,7 +17,7 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize("super_admin"));
 
-router.get(getAllUsers);
+router.get("/all", getAllUsers);
 
 router.route("/:id").get(getUserById).put(updateUser).delete(deleteUser);
 
