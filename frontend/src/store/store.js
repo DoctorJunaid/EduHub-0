@@ -1,3 +1,4 @@
+import assignmentsReducer, { submissionsReducer } from './Slices/assignmentsSlice.js';
 import broadcastsReducer from './Slices/broadcastsSlice.js';
 import campusesReducer from './Slices/campusesSlice.js';
 import authReducer from './Slices/authSlice.js';
@@ -15,7 +16,7 @@ import messagesReducer from './Slices/messagesSlice.js';
 import { resultSaved } from './Slices/resultsSlice.js';
 import { makeDemoResults } from '../Admins/Campus Admin/Results/demoResults.js';
 
-export const store = configureStore({ reducer: { broadcasts: broadcastsReducer, campuses: campusesReducer, auth: authReducer, messages: messagesReducer, faculty: facultyReducer, students: studentsReducer, timetable: timetableReducer, exams: examsReducer, attendance: attendanceReducer, studentAttendance: studentAttendanceReducer, results: resultsReducer, fees: feesReducer }, preloadedState: loadDemoState() });
+export const store = configureStore({ reducer: { assignments: assignmentsReducer, submissions: submissionsReducer, broadcasts: broadcastsReducer, campuses: campusesReducer, auth: authReducer, messages: messagesReducer, faculty: facultyReducer, students: studentsReducer, timetable: timetableReducer, exams: examsReducer, attendance: attendanceReducer, studentAttendance: studentAttendanceReducer, results: resultsReducer, fees: feesReducer }, preloadedState: loadDemoState() });
 // Populate an empty results collection, including previously persisted empty state.
 // Existing saved results and user edits remain intact.
 if (!store.getState().results.records.length) {
