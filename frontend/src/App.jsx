@@ -10,6 +10,8 @@ import Login from './auth/Login';
 import InstituteDashboard from './Admins/Institute Admin/InstituteDashboard';
 import CampusBranches from './Admins/Institute Admin/Campuses/CampusBranches';
 import InstituteStudents from './Admins/Institute Admin/Students/InstituteStudents';
+import InstituteStaff from './Admins/Institute Admin/Staff/InstituteStaff';
+import './Admins/Institute Admin/InstituteAdmin.css';
 import { instituteNavigation } from './Admins/Institute Admin/navigation';
 import ProtectedRoute, { AuthEntry } from './auth/ProtectedRoute';
 import { Route, Routes } from 'react-router-dom';
@@ -19,6 +21,7 @@ import FacultyDirectory from './Admins/Campus Admin/Faculty/FacultyDirectory';
 import StudentsDirectory from './Admins/Campus Admin/Students/StudentsDirectory';
 import ClassTimetable from './Admins/Campus Admin/Timetable/ClassTimetable';
 import ExamSchedules from './Admins/Campus Admin/Exams/ExamSchedules';
+import { StudentLayout, StudentDashboard } from './Users/Student';
 
 const App = () => {
   return (
@@ -26,12 +29,18 @@ const App = () => {
       <Route path="/" element={<AuthEntry />} />
       <Route path="signup" element={<AuthEntry><Signup /></AuthEntry>} />
       <Route path="login" element={<AuthEntry><Login /></AuthEntry>} />
+      <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+        <Route element={<StudentLayout />}>
+          <Route path="student/dashboard" element={<StudentDashboard />} />
+        </Route>
+      </Route>
       <Route element={<ProtectedRoute allowedRoles={['institute-admin']} />}>
-        <Route element={<MainLayout navigation={instituteNavigation} />}>
+        <Route element={<MainLayout navigation={instituteNavigation} className="institute-admin-shell" />}>
           <Route path="institute-admin" element={<InstituteDashboard />} />
           <Route path="institute-admin/campuses" element={<CampusBranches />} />
           <Route path="institute-admin/alerts" element={<BroadcastAlerts />} />
           <Route path="institute-admin/students" element={<InstituteStudents />} />
+          <Route path="institute-admin/staff" element={<InstituteStaff />} />
         </Route>
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['campus-admin']} />}>

@@ -15,10 +15,11 @@ export const initialCampuses = [
     status: "Active",
   },
 ];
+export const campusStatuses = ['Active'];
 export function validateCampus(values) {
   if (!values.name?.trim()) return "Campus name is required.";
   if (!values.address?.trim()) return "Address is required.";
-  if (values.status !== "Active") return "Select a supported campus status.";
+  if (!campusStatuses.includes(values.status)) return "Select a supported campus status.";
   return "";
 }
 export function filterCampuses(records, search) {

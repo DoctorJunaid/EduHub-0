@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { configureStore } from '@reduxjs/toolkit';
+import faculty, { facultyAdded, facultyUpdated, facultyDeleted } from '../../../store/Slices/facultySlice.js';
+import campuses, { campusAdded, campusUpdated, campusDeleted } from '../../../store/Slices/campusesSlice.js';
+import { loadDemoState, persistDemoState } from '../../../store/persistence.js';
+import { demoInstitute } from '../instituteData.js';
+import { selectInstituteFaculty } from './staffData.js';
+
+test('Institute faculty follows campus CRUD, scoped edits, counts and refresh', () => {
+  const data = new Map();
+  const storage = { getItem: (key) => data.get(key), setItem: (key, value) => data.set(key, value) };
+  const store = configureStore({ reducer: { faculty, campuses } });
+  const unsubscribe = persistDemoState(store, storage);
+  const original = selectInstituteFaculty(store.getState())[0];
+  store.dispatch(campusUpdated({ id: 'camp_1', name: 'Renamed Main Campus', address: 'Islamabad', status: 'Active' }));
+  assert.equal(selectInstituteFaculty(store.getState())[0].campus, 'Renamed Main Campus');
+  const branch = store.dispatch(campusAdded({ name: 'New Branch', address: 'Lahore', status: 'Active' })).payload;
+  const teacher = store.dispatch(facultyAdded({ ...original, name: 'New Teacher', campusId: branch.id, campus: branch.name, instituteId: demoInstitute.id })).payload;
+  store.dispatch(facultyAdded({ ...original, name: 'Other Institute', instituteId: 'other' }));
+  assert.equal(selectInstituteFaculty(store.getState()).length, 2);
+  store.dispatch(facultyUpdated({ ...teacher, status: 'Inactive' }));
+  assert.equal(selectInstituteFaculty(store.getState()).filter((record) => record.status === 'Active').length, 1);
+  store.dispatch(campusDeleted(branch.id));
+  assert.equal(selectInstituteFaculty(store.getState()).find((record) => record.id === teacher.id).campus, 'Campus unavailable');
+  const restored = configureStore({ reducer: { faculty, campuses }, preloadedState: loadDemoState(storage) });
+  assert.deepEqual(selectInstituteFaculty(restored.getState()), selectInstituteFaculty(store.getState()));
+  store.dispatch(facultyDeleted(teacher.id));
+  assert.equal(selectInstituteFaculty(store.getState()).length, 1);
+  unsubscribe();
+});

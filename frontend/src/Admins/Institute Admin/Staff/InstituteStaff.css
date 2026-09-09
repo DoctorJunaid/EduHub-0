@@ -1,0 +1,43 @@
+.institute-staff-directory { display: flex; flex-direction: column; gap: 30px; min-width: 0; color: var(--foreground); }
+.ist-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.ist-heading h1 { margin-bottom: 8px; font-size: 36px; font-weight: 700; line-height: 1.25; }
+.ist-heading p { color: var(--muted-foreground); font-size: 18px; }
+.ist-heading > button { height: 50px; padding-inline: 22px; }
+.ist-card { min-width: 0; padding: 26px; gap: 24px; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
+.ist-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.ist-toolbar > span { color: var(--muted-foreground); white-space: nowrap; font-size: 16px; }
+.ist-search { position: relative; width: min(100%, 430px); }
+.ist-search svg { position: absolute; top: 15px; left: 18px; color: var(--muted-foreground); pointer-events: none; }
+.ist-search input { height: 52px; padding-left: 58px; background: var(--background); border-radius: var(--radius-lg); }
+.ist-card table { min-width: 1080px; }
+.ist-card th { height: 62px; border-top: 1px solid var(--border); background: var(--card); color: var(--muted-foreground); text-transform: uppercase; font-size: 12px; font-weight: 600; }
+.ist-card td { height: 96px; color: var(--muted-foreground); font-size: 14px; }
+.ist-card th:first-child, .ist-card td:first-child { padding-left: 0; }
+.ist-card th:last-child, .ist-card td:last-child { padding-right: 0; }
+.ist-card th:last-child { text-align: center; }
+.ist-card td strong { display: block; color: var(--foreground); font-weight: 600; }
+.ist-card td small { display: block; margin-top: 5px; font-size: 13px; color: var(--muted-foreground); }
+.ist-card td .ist-qualification { color: var(--color-success); }
+.ist-person { display: flex; align-items: center; gap: 16px; }
+.ist-person strong { font-size: 16px; }
+.ist-person [data-slot="avatar"] { width: 48px; height: 48px; }
+.ist-person [data-slot="avatar-fallback"] { background: var(--color-border-light); color: var(--foreground); font-size: 16px; }
+.ist-card .ist-subjects { min-width: 220px; max-width: 260px; white-space: normal; overflow-wrap: anywhere; }
+.ist-status { padding: 7px 14px; gap: 8px; font-size: 14px; }
+.ist-status > span { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.ist-status-active { background: var(--color-success-bg); color: var(--color-success); }
+.ist-status-pending { background: var(--color-warning-bg); color: var(--color-warning); }
+.ist-status-inactive { background: var(--muted); color: var(--muted-foreground); }
+.ist-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.ist-actions button { width: 44px; height: 44px; border: 1px solid var(--border); background: var(--background); color: var(--muted-foreground); border-radius: var(--radius-md); }
+.ist-actions .ist-delete { background: var(--color-danger-bg); color: var(--color-danger); }
+.ist-actions button:hover { border-color: currentColor; }
+.ist-empty { text-align: center; }
+@media (max-width: 1100px) { .ist-heading { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 650px) {
+  .ist-heading h1 { font-size: 28px; }
+  .ist-heading p { font-size: 16px; }
+  .ist-card { padding: 16px; }
+  .ist-toolbar { align-items: flex-start; flex-direction: column; }
+  .ist-search { width: 100%; }
+}

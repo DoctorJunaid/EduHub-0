@@ -28,8 +28,8 @@ import StudentProfileDialog from "../Campus Admin/Students/StudentProfileDialog"
 import StudentStatusBadge from "../Campus Admin/Students/StudentStatusBadge";
 import { filterStudents } from "../Campus Admin/Students/studentData";
 import { selectInstituteStudents } from '@/store/selectors/instituteStudents';
-import { selectFaculty } from "@/store/Slices/facultySlice";
-import { demoInstitute, instituteRecords } from "./instituteData";
+import { selectInstituteFaculty } from './Staff/staffData';
+import { demoInstitute } from "./instituteData";
 import "../Campus Admin/Students/StudentsDirectory.css";
 import "./InstituteDashboard.css";
 
@@ -37,7 +37,7 @@ export default function InstituteDashboard() {
   const navigate = useNavigate();
   const campuses = useSelector(selectInstituteCampuses);
   const students = useSelector(selectInstituteStudents);
-  const faculty = instituteRecords(useSelector(selectFaculty));
+  const faculty = useSelector(selectInstituteFaculty);
   const [profileId, setProfileId] = useState(null),
     [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState(""),
@@ -94,16 +94,14 @@ export default function InstituteDashboard() {
       </div>
       <div className="institute-actions">
         {[
-          [Plus, "Add New Campus"],
-          [Users, "View Staff Directory"],
-          [Megaphone, "Broadcast Message"],
-        ].map(([Icon, label]) => (
+          [Plus, "Add New Campus", '/institute-admin/campuses?add=1'],
+          [Users, "View Staff Directory", '/institute-admin/staff'],
+          [Megaphone, "Broadcast Message", '/institute-admin/alerts'],
+        ].map(([Icon, label, destination]) => (
           <Button
             key={label}
             variant="outline"
-            disabled={label !== 'Add New Campus'}
-            onClick={label === 'Add New Campus' ? () => navigate('/institute-admin/campuses?add=1') : undefined}
-            title={label === 'Add New Campus' ? undefined : `${label} is not implemented yet`}
+            onClick={() => navigate(destination)}
           >
             <Icon size={20} />
             {label}
