@@ -1,0 +1,160 @@
+.institute-student-directory {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  color: var(--foreground);
+}
+.isd-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+.isd-heading h1 {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.isd-heading p {
+  font-size: 18px;
+  color: var(--muted-foreground);
+}
+.isd-heading > button {
+  height: 50px;
+  padding-inline: 22px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  flex-shrink: 0;
+}
+.isd-card {
+  padding: 26px;
+  gap: 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.isd-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.isd-toolbar > span {
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.isd-search {
+  position: relative;
+  width: min(100%, 400px);
+}
+.isd-search svg {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  color: var(--muted-foreground);
+}
+.isd-search input {
+  height: 48px;
+  padding-left: 48px;
+  background: var(--color-background);
+  border-radius: 8px;
+}
+.isd-card th {
+  height: 60px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.isd-card td {
+  height: 100px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+.isd-card td strong {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--foreground);
+}
+.isd-card td small {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.isd-person {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.isd-person [data-slot="avatar"] {
+  width: 48px;
+  height: 48px;
+}
+.isd-person [data-slot="avatar-fallback"] {
+  background: var(--color-border-light);
+  color: var(--foreground);
+  font-size: 16px;
+}
+.isd-card td .isd-roll {
+  color: var(--color-success);
+}
+.isd-card .isd-subjects {
+  white-space: normal;
+  min-width: 200px;
+  max-width: 260px;
+  line-height: 1.6;
+}
+.isd-card .student-status {
+  border-radius: 24px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+.isd-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.isd-actions button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted-foreground);
+}
+.isd-actions .isd-edit {
+  background: var(--color-surface-green);
+  color: var(--color-success);
+}
+.isd-actions .isd-delete {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+.isd-empty {
+  text-align: center;
+}
+@media (max-width: 1100px) {
+  .isd-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 650px) {
+  .isd-heading h1 {
+    font-size: 28px;
+  }
+  .isd-card {
+    padding: 16px;
+  }
+  .isd-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .isd-search {
+    width: 100%;
+  }
+}

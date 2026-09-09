@@ -8,10 +8,11 @@ import Header from "../components/common/Header";
 import { CAMPUS_ADMIN_NAV } from "../constants/navigation";
 import { useTheme } from "../hooks/useTheme";
 
-const MainLayout = () => {
+const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV, className = '', profile: suppliedProfile, headerProps = {} }) => {
   const dispatch = useDispatch(), navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
-  const profile = { ...user, initials: user.name.slice(0, 2).toUpperCase(), role: ROLE_LABELS[user.role] };
+  const profile = suppliedProfile || { ...user, initials: user.name.slice(0, 2).toUpperCase(), role: ROLE_LABELS[user.role] };
+  const signOut = () => { dispatch(loggedOut()); navigate('/login', { replace: true }); };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     window.matchMedia('(max-width: 768px)').matches
   );
@@ -27,11 +28,11 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className="dashboard-shell">
+    <div className={`dashboard-shell ${className}`}>
       <Sidebar
         user={profile}
-        onSignOut={() => { dispatch(loggedOut()); navigate('/login', { replace: true }); }}
-        items={CAMPUS_ADMIN_NAV}
+        onSignOut={signOut}
+        items={navigation}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
         theme={theme}
@@ -39,7 +40,7 @@ const MainLayout = () => {
       />
 
       <div className="main-area">
-        <Header user={profile} />
+        <Header user={profile} {...headerProps} onSignOut={headerProps.onViewProfile ? signOut : undefined} />
         <main className="content-area">
           <Outlet />
         </main>

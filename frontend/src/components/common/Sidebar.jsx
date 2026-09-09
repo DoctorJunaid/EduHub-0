@@ -26,18 +26,18 @@ const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
         {items.map((item, index) => {
           const isActive = pathname === item.path ||
             (item.path === '/dashboard' && pathname === '/') ||
-            (item.path !== '/dashboard' && pathname.startsWith(`${item.path}/`));
+            (!item.exact && item.path !== '/dashboard' && pathname.startsWith(`${item.path}/`));
           return (
-            <Fragment key={item.path}>
+            <Fragment key={item.path || item.label}>
               {item.group && item.group !== items[index - 1]?.group && (
                 <div className="sidebar-section-heading">{item.group}</div>
               )}
-              <Link to={item.path} className={`sidebar-item ${isActive ? 'active' : ''}`}
+              {!item.path ? <span className="sidebar-item" aria-disabled="true" title={`${item.label} is not available yet`}><span className="sidebar-item-icon" aria-hidden="true">{item.icon}</span><span className="sidebar-label">{item.label}</span></span> : <Link to={item.path} className={`sidebar-item ${isActive ? 'active' : ''}`}
                 aria-current={isActive ? 'page' : undefined} aria-label={item.label}
                 title={collapsed ? item.label : undefined}>
                 {item.icon && <span className="sidebar-item-icon" aria-hidden="true">{item.icon}</span>}
                 <span className="sidebar-label">{item.label}</span>
-              </Link>
+              </Link>}
             </Fragment>
           );
         })}
@@ -55,6 +55,7 @@ const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
           <span className="sidebar-profile-avatar">{user.initials}</span>
           <div className="sidebar-label sidebar-profile-copy">
             <span className="sidebar-profile-name">{user.name}</span>
+            {(user.role === 'Institute Admin' || user.role === 'Student') && <span className="sidebar-profile-role">{user.email}</span>}
             {user.role && <span className="sidebar-profile-role">{user.role}</span>}
           </div>
         </div>

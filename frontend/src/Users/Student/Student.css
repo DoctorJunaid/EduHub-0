@@ -1,0 +1,82 @@
+/* Role-scoped adjustments only; the shared layout remains the single shell. */
+.student-shell .main-area {
+  height: 100dvh;
+}
+.student-shell .content-area {
+  padding: 24px;
+}
+.student-shell .header {
+  gap: 20px;
+  padding-inline: 28px;
+}
+.student-shell .header-search {
+  max-width: 480px;
+  background: var(--background);
+}
+.student-shell .profile-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+.student-shell .profile-name small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+}
+.student-shell .sidebar-item {
+  min-height: 44px;
+  font-size: 14px;
+}
+.student-shell .sidebar-item[aria-disabled="true"] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.student-shell .sidebar-footer {
+  display: flex;
+  flex-direction: column;
+}
+.student-shell .sidebar-profile {
+  order: -1;
+  margin-bottom: 12px;
+}
+.student-shell .sidebar-profile-role:last-child:not(:first-of-type) {
+  display: none;
+}
+.student-shell .sidebar-profile-avatar {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+.student-shell .sidebar-profile-role {
+  overflow-wrap: anywhere;
+}
+.student-profile-menu {
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  background: var(--popover);
+  border-radius: var(--radius-md);
+}
+.student-profile-menu [data-slot="dropdown-menu-item"],
+.student-profile-menu [data-slot="dropdown-menu-label"] {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+@media (max-width: 768px) {
+  .student-shell .content-area {
+    padding: 20px 16px;
+  }
+  .student-shell .header {
+    gap: 12px;
+    padding-inline: 16px;
+  }
+  .student-shell .header-search {
+    display: none;
+  }
+  .student-shell .breadcrumbs {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+}

@@ -1,0 +1,207 @@
+.institute-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--foreground);
+}
+.institute-heading h1 {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+.institute-heading p {
+  font-size: 18px;
+  color: var(--muted-foreground);
+}
+.institute-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.institute-dashboard .institute-stat {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  padding: 22px 18px;
+  align-items: flex-start;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: none;
+  background: var(--card);
+  min-width: 0;
+}
+.institute-stat .summary-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+.institute-stat .summary-icon svg {
+  width: 30px;
+  height: 30px;
+}
+.institute-stat.blue .summary-icon {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+.institute-stat.amber .summary-icon {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.institute-stat.purple .summary-icon {
+  background: color-mix(in srgb, rebeccapurple 10%, var(--card));
+  color: rebeccapurple;
+}
+.institute-stat > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.institute-stat .summary-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+.institute-dashboard .institute-stat strong {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.institute-stat small {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+}
+.institute-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.institute-actions button {
+  height: 60px;
+  border: 1px dashed var(--border);
+  background: var(--card);
+  font-size: 15px;
+  opacity: 1;
+}
+.institute-actions button:first-child {
+  color: var(--color-success);
+}
+.institute-students {
+  padding: 24px;
+  gap: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+}
+.institute-table-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.institute-table-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 23px;
+  font-weight: 600;
+}
+.institute-table-heading h2 > span {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.institute-table-heading > button {
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+}
+.institute-students th {
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  height: 44px;
+  background: var(--card);
+}
+.institute-students td {
+  height: 82px;
+  font-size: 15px;
+  color: var(--muted-foreground);
+}
+.institute-student-name {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--foreground);
+}
+.institute-student-name [data-slot="avatar"] {
+  width: 48px;
+  height: 48px;
+}
+.institute-student-name [data-slot="avatar-fallback"] {
+  background: var(--color-border-light);
+  color: var(--foreground);
+  font-size: 16px;
+}
+.institute-students td button {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding-inline: 22px;
+  background: var(--card);
+  color: var(--foreground);
+}
+.institute-students .student-status {
+  border-radius: 24px;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+.institute-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.institute-filters input {
+  flex: 1;
+  min-width: 180px;
+}
+.institute-filters select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--card);
+}
+.institute-empty {
+  text-align: center;
+}
+@media (max-width: 1200px) {
+  .institute-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .institute-stats,
+  .institute-actions {
+    grid-template-columns: 1fr;
+  }
+  .institute-heading h1 {
+    font-size: 24px;
+  }
+  .institute-students {
+    padding: 16px;
+  }
+  .institute-table-heading h2 {
+    font-size: 19px;
+  }
+}

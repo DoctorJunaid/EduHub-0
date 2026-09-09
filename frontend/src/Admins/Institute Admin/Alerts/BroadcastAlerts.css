@@ -1,0 +1,27 @@
+.institute-broadcast { color: var(--foreground); max-width: 875px; }
+.iba-heading { display: block; }
+.iba-heading p { color: var(--muted-foreground); }
+.iba-card form { display: flex; flex-direction: column; gap: 20px; }
+.iba-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.iba-field > label, .iba-field legend { font-size: 14px; font-weight: 600; color: var(--foreground); }
+.iba-field legend { margin-bottom: 8px; }
+.iba-card .iba-select { width: 100%; height: 42px; padding: 0 12px; font-size: 14px; border: 1px solid var(--border); background: var(--background); border-radius: var(--radius-md); }
+.iba-select [data-slot="select-value"] { flex: 1; min-width: 0; text-align: left; }
+.iba-severities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.iba-severity { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 14px; cursor: pointer; transition: background var(--transition-fast), border-color var(--transition-fast); }
+.iba-severity > svg { width: 22px; height: 22px; flex-shrink: 0; color: var(--severity-color); stroke-width: 1.75; }
+.iba-info { --severity-color: var(--color-info); --severity-bg: var(--color-info-bg); }
+.iba-warning { --severity-color: var(--color-warning); --severity-bg: var(--color-warning-bg); }
+.iba-critical { --severity-color: var(--color-danger); --severity-bg: var(--color-danger-bg); }
+.iba-severity input { width: 16px; height: 16px; padding: 0; margin-left: auto; accent-color: var(--severity-color); flex-shrink: 0; }
+.iba-severity:hover, .iba-severity.is-selected { border-color: var(--severity-color); background: var(--severity-bg); }
+.iba-severity:focus-within { outline: 2px solid var(--severity-color); outline-offset: 3px; }
+.iba-message { position: relative; }
+.iba-message > svg { position: absolute; top: 13px; left: 14px; color: var(--muted-foreground); width: 18px; height: 18px; pointer-events: none; }
+.iba-message textarea { min-height: 112px; height: 112px; field-sizing: fixed; padding: 12px 14px 12px 42px; font-size: 14px; line-height: 1.5; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); resize: vertical; }
+.iba-actions { display: flex; justify-content: flex-end; }
+.iba-success-toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; width: min(420px, calc(100vw - 32px)); padding: 14px 16px; box-shadow: var(--shadow-md); background: var(--card); border: 1px solid var(--color-border-green); border-radius: var(--radius-md); }
+.dark .iba-info { --severity-color: color-mix(in srgb, var(--color-info) 70%, var(--foreground)); }
+.dark .iba-warning { --severity-color: color-mix(in srgb, var(--color-warning) 70%, var(--foreground)); }
+.dark .iba-critical { --severity-color: color-mix(in srgb, var(--color-danger) 70%, var(--foreground)); }
+@media (max-width: 600px) { .iba-severities { grid-template-columns: 1fr; gap: 10px; } .iba-actions button { width: 100%; } .iba-success-toast { right: 16px; bottom: 16px; } }

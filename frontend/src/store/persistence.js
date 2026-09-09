@@ -1,3 +1,5 @@
+import { validBroadcasts } from '../Admins/Institute Admin/Alerts/broadcastData.js';
+import { validCampuses } from '../Admins/Institute Admin/Campuses/campusData.js';
 import { validateExam } from '../Admins/Campus Admin/Exams/examData.js';
 import { validateAttendance } from '../Admins/Campus Admin/Attendance/attendanceData.js';
 import { studentAttendanceKey, validStudentAttendance } from '../Admins/Campus Admin/Attendance/Students/studentAttendanceData.js';
@@ -16,10 +18,12 @@ const fields = {
   students: ['name', 'roll', 'email', 'studentPhone', 'program', 'section', 'semester', 'subjects', 'campus', 'status', 'guardian', 'guardianPhone', 'initials'],
   timetable: ['subject', 'program', 'section', 'instructor', 'room', 'startTime', 'endTime', 'status'],
 };
-export const storageKeys = { messages: 'eduhub_messages', faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
+export const storageKeys = { broadcasts: 'eduhub_broadcasts', campuses: 'eduhub_campuses', messages: 'eduhub_messages', faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
 const statuses = { faculty: ['Active', 'Pending', 'Inactive'], students: ['Active', 'Pending', 'Graduated', 'Suspended'], timetable: ['Active', 'Pending'] };
 
 function validRecords(collection, records) {
+  if (collection === 'broadcasts') return validBroadcasts(records);
+  if (collection === 'campuses') return validCampuses(records);
   if (collection === 'messages') return validConversations(records);
   if (!Array.isArray(records)) return false;
   const ids = new Set();
@@ -28,6 +32,7 @@ function validRecords(collection, records) {
     if (!record || typeof record !== 'object' || typeof record.id !== 'string' || !record.id || ids.has(record.id)) return false;
     ids.add(record.id);
     if (!fields[collection].every((field) => typeof record[field] === 'string')) return false;
+    if (collection === 'students' && ['campusId', 'instituteId'].some((field) => record[field] !== undefined && (typeof record[field] !== 'string' || !record[field]))) return false;
     if (collection === 'fees') return !validateVoucher(record) && [record.createdAt, record.updatedAt].every((value) => Number.isFinite(Date.parse(value)));
     if (collection === 'results') {
       const key = resultKey(record);
@@ -97,3 +102,4 @@ export function persistDemoState(store, storage = browserStorage()) {
   sync();
   return store.subscribe(sync);
 }
+
