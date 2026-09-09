@@ -55,7 +55,7 @@ const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
           <span className="sidebar-profile-avatar">{user.initials}</span>
           <div className="sidebar-label sidebar-profile-copy">
             <span className="sidebar-profile-name">{user.name}</span>
-            {user.role === 'Institute Admin' && <span className="sidebar-profile-role">{user.email}</span>}
+            {(user.role === 'Institute Admin' || user.role === 'Student') && <span className="sidebar-profile-role">{user.email}</span>}
             {user.role && <span className="sidebar-profile-role">{user.role}</span>}
           </div>
         </div>
