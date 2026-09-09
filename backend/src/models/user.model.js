@@ -27,7 +27,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["super_admin", "campus_admin"],
+      enum: ["super_admin", "campus_admin", "student"],
+      default: "student",
       required: true,
     },
     // Required dynamically when role is campus_admin
@@ -44,6 +45,37 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "suspended"],
       default: "active",
     },
+
+    // profile fields
+    phone: {
+      type: String,
+      trim: true,
+      match: [/^[0-9+\-\s()]{7,20}$/, "Please enter a valid phone number"],
+    },
+    address: {
+      type: String,
+      trim: true,
+      maxlength: [200, "Address cannot exceed 200 characters"],
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: [150, "Bio cannot exceed 150 characters"],
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+    dateOfBirth: {
+      type: Date,
+      validate: {
+        validator: function (value) {
+          // Ensure date is in the past
+          return value < new Date();
+        },
+        message: "Date of birth must be in the past",
+      }
+    }
   },
   {
     timestamps: true,

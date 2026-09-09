@@ -20,4 +20,5 @@ router.use("/super-admin", superAdminRoutes);
 router.use("/auth", authRoutes);
 router.use("/campus-admin", campusAdminRoutes);
 
+
 export default router;
