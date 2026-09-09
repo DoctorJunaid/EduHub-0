@@ -21,4 +21,4 @@ It's getting difficult for me to manually create api documentation for me, so I 
 
 1. User Authentication but we have a confusion on that because "All roles arent suppose to register"
 2. Super Admin can activate or deactivate any user account
-> Created User APIs
+   > Created User APIs

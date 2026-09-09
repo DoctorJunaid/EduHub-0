@@ -17,9 +17,6 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize("campus_admin"));
 
-router
-  .route("/students")
-  .get(getCampusStudents)
-  .post(addStudentToCampus);
+router.route("/students").get(getCampusStudents).post(addStudentToCampus);
 
 export default router;

@@ -1,14 +1,14 @@
 import express from "express";
-
 import {
   getAllUsers,
   getUserById,
   updateUser,
   changeUserRole,
   deleteUser,
-} from "../controllers/userController.js";
+  toggleUserStatus,
+} from "../controllers/user.controller.js";
 
-import { protect } from "../middleware/auth.js";
+import { protect } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
 
 const router = express.Router();
@@ -17,14 +17,12 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize("super_admin"));
 
-router.get("/", getAllUsers);
+router.get(getAllUsers);
 
-router
-  .route("/:id")
-  .get(getUserById)
-  .put(updateUser)
-  .delete(deleteUser);
+router.route("/:id").get(getUserById).put(updateUser).delete(deleteUser);
 
 router.put("/:id/role", changeUserRole);
+
+router.put("/:id/status", toggleUserStatus);
 
 export default router;

@@ -1,8 +1,10 @@
-import User from "../models/user";
+import User from "../models/user.model.js";
 
-// @desc    Get all users (super admin)
-// @route   GET /api/v1/users
-// @access  Private/Super Admin
+/**
+ * TODO: Add OpenAPI documentation for user management endpoints
+ */
+
+// Get all users
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -16,9 +18,7 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// @desc    Get single user by ID
-// @route   GET /api/v1/users/:id
-// @access  Private/Super Admin
+// Get user by ID
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -33,9 +33,7 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// @desc    Update user
-// @route   PUT /api/v1/users/:id
-// @access  Private/Super Admin
+// Update user details (excluding password)
 export const updateUser = async (req, res) => {
   try {
     // Prevent password update here
@@ -58,9 +56,7 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// @desc    Change user role
-// @route   PUT /api/v1/users/:id/role
-// @access  Private/Super Admin
+// Change user role (super_admin, campus_admin, student)
 export const changeUserRole = async (req, res) => {
   try {
     const { role } = req.body;
@@ -85,9 +81,7 @@ export const changeUserRole = async (req, res) => {
   }
 };
 
-// @desc    Delete user
-// @route   DELETE /api/v1/users/:id
-// @access  Private/Super Admin
+// Toggle user status (active/suspended)
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -112,8 +106,16 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export const toggleUserStatus = async (req, res, status) => {
+// Toggle user status (active/suspended)
+export const toggleUserStatus = async (req, res) => {
   try {
+    const { status } = req.body;
+    if (typeof status !== "boolean") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Status must be a boolean" });
+    }
+
     const user = await User.findById(req.params.id);
     if (!user) {
       return res
