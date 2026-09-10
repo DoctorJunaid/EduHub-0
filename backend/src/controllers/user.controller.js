@@ -105,3 +105,53 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowedStatuses = ["active", "suspended"];
+
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be either active or suspended",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true },
+    ).select("-passwordHash");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateUserProfileById = async (req, res) => {
+  try {
+    const { password, ...updateData } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-passwordHash");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

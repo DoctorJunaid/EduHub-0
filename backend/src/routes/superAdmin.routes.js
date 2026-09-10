@@ -15,7 +15,7 @@ import {
 } from "../controllers/campusAdmin.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
-import { isSuperAdmin } from "../middleware/superAdmin.js";
+import { isSuperAdmin } from "../middleware/superAdmin.middleware.js";
 
 const router = express.Router();
 
