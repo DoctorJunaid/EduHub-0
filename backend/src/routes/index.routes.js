@@ -1,24 +1,31 @@
+/**
+ * API Root Router
+ * Mounts all module-level routes under /api/v1.
+ */
 import express from "express";
-import inquiryRoutes from "./inquiry.routes.js";
+import authRoutes from "./auth.routes.js";
 import superAdminRoutes from "./superAdmin.routes.js";
-import authRoutes from "./auth.routes.js"
-import campusAdminRoutes from "./campusAdmin.routes.js"
-
+import instituteAdminRoutes from "./instituteAdmin.routes.js";
+import inquiryRoutes from "./inquiry.routes.js";
+import campusAdminRoutes from "./campusAdmin.routes.js";
 
 const router = express.Router();
 
-// Health Check route
-router.get("/", (req, res) => {
-  res.status(200).json({ status: "OK" });
+// Health check
+router.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "EduHub API is running and healthy.",
+  });
 });
 
-// Mount individual route files
-// Endpoints will be available at: /api/v1/inquiries
-router.use("/inquiries", inquiryRoutes);
-// Endpoints will be available at: /api/v1/super-admin
-router.use("/super-admin", superAdminRoutes);
+// Mount Track A governance & authentication routes
 router.use("/auth", authRoutes);
-router.use("/campus-admin", campusAdminRoutes);
+router.use("/super-admin", superAdminRoutes);
+router.use("/institute-admin", instituteAdminRoutes);
 
+// Optional existing tracks / services
+router.use("/inquiries", inquiryRoutes);
+router.use("/campus-admin", campusAdminRoutes);
 
 export default router;
