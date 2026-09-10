@@ -9,3 +9,7 @@ export { default as StudentAttendancePage } from './pages/Attendance/StudentAtte
 export { default as StudentDiary } from './pages/Diary/StudentDiary';
 
 export { default as StudentGrades } from './pages/Grades/StudentGrades';
+
+export { default as StudentFees } from './pages/Fees/StudentFees';
+
+export { default as StudentMessages } from './pages/Messages/StudentMessages';

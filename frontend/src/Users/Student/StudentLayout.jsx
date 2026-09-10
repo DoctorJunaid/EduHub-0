@@ -10,7 +10,7 @@ export default function StudentLayout() {
   const profile = useSelector(selectStudentProfile);
   const location = useLocation();
   const navigate = useNavigate();
-  const pageLabel = { '/student/courses': 'Courses', '/student/assignments': 'Assignments', '/student/attendance': 'Attendance', '/student/diary': 'Diary', '/student/grades': 'Results' }[location.pathname];
+  const pageLabel = { '/student/courses': 'Courses', '/student/assignments': 'Assignments', '/student/attendance': 'Attendance', '/student/diary': 'Diary', '/student/grades': 'Results', '/student/fees': 'Fees', '/student/messages': 'Messages' }[location.pathname];
   const focusSummary = () => {
     const summary = document.getElementById('student-profile-summary');
     summary?.scrollIntoView({ block: 'nearest' });

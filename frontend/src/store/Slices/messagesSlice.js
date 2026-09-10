@@ -1,4 +1,5 @@
 import { createSelector, createSlice, nanoid } from '@reduxjs/toolkit';
+import { validParticipantConversation } from '../participantConversations.js';
 
 // A local sender marker, not an invented authenticated account.
 export const LOCAL_SENDER_ID = 'local-demo-sender';
@@ -7,6 +8,17 @@ const slice = createSlice({
   name: 'messages',
   initialState: { records: [] },
   reducers: {
+    participantMessageSent: {
+      prepare: ({ conversationId, senderId, body }) => ({ payload: { conversationId, senderId, body: typeof body === 'string' ? body.trim() : '', id: nanoid(), createdAt: new Date().toISOString() } }),
+      reducer: (state, { payload }) => {
+        const conversation = state.records.find((record) => record.id === payload.conversationId);
+        if (!payload.body || !validParticipantConversation(conversation) || !conversation.participantIds.includes(payload.senderId)) return;
+        const receiverId = conversation.participantIds.find((id) => id !== payload.senderId);
+        const createdAt = new Date(Math.max(Date.parse(payload.createdAt), Date.parse(conversation.updatedAt))).toISOString();
+        conversation.messages.push({ id: payload.id, conversationId: conversation.id, senderId: payload.senderId, receiverId, body: payload.body, createdAt });
+        conversation.updatedAt = createdAt;
+      },
+    },
     messageSent: {
       prepare: ({ participantId, participantType, body }) => ({ payload: {
         participantId, participantType, body: typeof body === 'string' ? body.trim() : '',
@@ -27,7 +39,7 @@ const slice = createSlice({
     },
   },
 });
-export const { messageSent } = slice.actions;
+export const { messageSent, participantMessageSent } = slice.actions;
 export default slice.reducer;
 
 export const selectConversations = createSelector(
@@ -52,6 +64,10 @@ export function validConversations(records) {
   if (!Array.isArray(records)) return false;
   const ids = new Set(), messageIds = new Set();
   return records.every((record) => {
+    if (record?.participantIds !== undefined) {
+      if (!validParticipantConversation(record) || ids.has(record.id) || record.messages.some((message) => messageIds.has(message.id))) return false;
+      ids.add(record.id); record.messages.forEach((message) => messageIds.add(message.id)); return true;
+    }
     if (!record || !['student', 'faculty'].includes(record.participantType) || typeof record.participantId !== 'string' || !record.participantId || record.id !== conversationIdFor(record.participantType, record.participantId) || ids.has(record.id) || !Array.isArray(record.messages) || !Number.isFinite(Date.parse(record.updatedAt))) return false;
     ids.add(record.id);
     let previousTime = -Infinity;
