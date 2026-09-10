@@ -149,14 +149,7 @@ export default function StudentDashboard() {
         </div>
         <div className="sd-quick-actions">
           <Button asChild><Link to="/student/assignments"><ClipboardList aria-hidden="true" />My Assignments</Link></Button>
-          <Button
-            variant="outline"
-            disabled
-            title="The Student Fee Vouchers page is not available yet"
-          >
-            <WalletCards aria-hidden="true" />
-            Fee Vouchers
-          </Button>
+          <Button variant="outline" asChild><Link to="/student/fees"><WalletCards aria-hidden="true" />Fee Vouchers</Link></Button>
         </div>
       </Card>
       {!student && (
