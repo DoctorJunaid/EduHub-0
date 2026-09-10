@@ -10,6 +10,7 @@ import {
 
 import { protect } from "../middleware/auth.js";
 import { authorize } from "../middleware/role.middleware.js";
+import { updateUserProfileById } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -23,7 +24,8 @@ router
   .route("/:id")
   .get(getUserById)
   .put(updateUser)
-  .delete(deleteUser);
+  .delete(deleteUser)
+  .put("/:id/profile", updateUserProfileById)
 
 router.put("/:id/role", changeUserRole);
 

@@ -10,6 +10,8 @@ import Login from "./auth/Login";
 import InstituteDashboard from "./Admins/Institute Admin/InstituteDashboard";
 import CampusBranches from "./Admins/Institute Admin/Campuses/CampusBranches";
 import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStudents";
+import InstituteStaff from "./Admins/Institute Admin/Staff/InstituteStaff";
+import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
 import { Route, Routes } from "react-router-dom";
@@ -22,6 +24,17 @@ import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
 import SuperAdminDashboard from "./Admins/Super Admin/Dashboard/SuperAdminDashboard";
 import Institutes from "./Admins/Super Admin/Institutes/Institutes";
 import { ADMIN_NAV } from "./constants/navigation";
+import {
+  StudentLayout,
+  StudentDashboard,
+  StudentCourses,
+  StudentAssignments,
+  StudentAttendancePage,
+  StudentDiary,
+  StudentGrades,
+  StudentFees,
+  StudentMessages,
+} from "./Users/Student";
 
 const App = () => {
   return (
@@ -44,15 +57,31 @@ const App = () => {
         }
       />
 
-      <Route element={<ProtectedRoute allowedRoles={["super-admin"]} />}>
-        <Route element={<MainLayout navigation={ADMIN_NAV} />}>
-          <Route path="super-admin" element={<SuperAdminDashboard />} />
-          <Route path="institutes" element={<Institutes />} />
+      <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+        <Route element={<StudentLayout />}>
+          <Route path="student/dashboard" element={<StudentDashboard />} />
+          <Route path="student/courses" element={<StudentCourses />} />
+          <Route path="student/assignments" element={<StudentAssignments />} />
+          <Route
+            path="student/attendance"
+            element={<StudentAttendancePage />}
+          />
+          <Route path="student/diary" element={<StudentDiary />} />
+          <Route path="student/grades" element={<StudentGrades />} />
+          <Route path="student/fees" element={<StudentFees />} />
+          <Route path="student/messages" element={<StudentMessages />} />
         </Route>
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["institute-admin"]} />}>
-        <Route element={<MainLayout navigation={instituteNavigation} />}>
+        <Route
+          element={
+            <MainLayout
+              navigation={instituteNavigation}
+              className="institute-admin-shell"
+            />
+          }
+        >
           <Route path="institute-admin" element={<InstituteDashboard />} />
           <Route path="institute-admin/campuses" element={<CampusBranches />} />
           <Route path="institute-admin/alerts" element={<BroadcastAlerts />} />
@@ -60,6 +89,7 @@ const App = () => {
             path="institute-admin/students"
             element={<InstituteStudents />}
           />
+          <Route path="institute-admin/staff" element={<InstituteStaff />} />
         </Route>
       </Route>
 
@@ -76,6 +106,13 @@ const App = () => {
           <Route path="fees" element={<FeeManagement />} />
           <Route path="messages" element={<Messages />} />
           <Route path="*" element={<DashboardContent />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={["super-admin"]} />}>
+        <Route element={<MainLayout navigation={ADMIN_NAV} />}>
+          <Route path="super-admin" element={<SuperAdminDashboard />} />
+          <Route path="institutes" element={<Institutes />} />
         </Route>
       </Route>
     </Routes>

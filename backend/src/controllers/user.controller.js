@@ -103,3 +103,62 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Update user profile by ID (excluding email)
+// @route   PUT /api/v1/users/:id/profile
+// @access  Private/Super Admin
+export const updateUserProfileById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fullName, phone, address, bio, gender, dateOfBirth } = req.body;
+
+    const updateFields = {};
+
+    if (fullName !== undefined) updateFields.fullName = fullName.trim();
+    if (phone !== undefined) updateFields.phone = phone.trim();
+    if (address !== undefined) updateFields.address = address.trim();
+    if (bio !== undefined) updateFields.bio = bio.trim();
+    if (gender !== undefined) updateFields.gender = gender;
+    if (dateOfBirth !== undefined) {
+      const dob = new Date(dateOfBirth);
+      if (isNaN(dob.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date of birth format",
+        });
+      }
+      updateFields.dateOfBirth = dob;
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No profile fields provided to update",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      updateFields,
+      { new: true, runValidators: true }
+    ).select("-passwordHash");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error",
+    });
+  }
+};

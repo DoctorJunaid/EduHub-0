@@ -9,7 +9,8 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/Button";
-import { validateCampus } from "./campusData";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { validateCampus, campusStatuses } from "./campusData";
 
 export default function CampusForm({ campus, onSave, onClose }) {
   const [values, setValues] = useState({
@@ -44,33 +45,46 @@ export default function CampusForm({ campus, onSave, onClose }) {
             Enter the campus name and physical address.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="campus-form">
+        <form onSubmit={submit} className="campus-form" noValidate aria-describedby={error ? 'campus-form-error' : undefined}>
+          <div className="campus-form-field">
           <Label htmlFor="campus-name">Campus Name</Label>
           <Input
             id="campus-name"
             name="name"
             required
+            placeholder="e.g. Main Campus"
+            aria-invalid={!!error && !values.name.trim()}
             value={values.name}
             onChange={(event) => {
               setValues({ ...values, name: event.target.value });
               setError("");
             }}
           />
+          </div>
+          <div className="campus-form-field">
           <Label htmlFor="campus-address">Address</Label>
           <Input
             id="campus-address"
             name="address"
             required
+            placeholder="Street, area, city"
+            aria-invalid={!!error && !values.address.trim()}
             value={values.address}
             onChange={(event) => {
               setValues({ ...values, address: event.target.value });
               setError("");
             }}
           />
+          </div>
+          <div className="campus-form-field">
           <Label htmlFor="campus-status">Status</Label>
-          <Input id="campus-status" value={values.status} readOnly />
+          <Select value={values.status} onValueChange={(status) => { setValues({ ...values, status }); setError(''); }}>
+            <SelectTrigger id="campus-status" aria-required="true"><SelectValue placeholder="Select status" /></SelectTrigger>
+            <SelectContent>{campusStatuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent>
+          </Select>
+          </div>
           {error && (
-            <p className="campus-error" role="alert">
+            <p id="campus-form-error" className="campus-error" role="alert">
               {error}
             </p>
           )}
