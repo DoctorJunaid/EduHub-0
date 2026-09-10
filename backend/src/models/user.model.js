@@ -40,6 +40,14 @@ const userSchema = new mongoose.Schema(
         return this.role === "campus_admin";
       },
     },
+
+    // Campus this user is assigned to (campus_admin & student)
+    campusId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Campus",
+      default: null,
+    },
+
     status: {
       type: String,
       enum: ["active", "suspended"],
@@ -92,6 +100,9 @@ userSchema.pre("save", async function () {
 
 // Instance method for password verification
 userSchema.methods.comparePassword = async function (password) {
+  if (!password || typeof password !== "string" || !this.passwordHash) {
+    return false;
+  }
   return await bcrypt.compare(password, this.passwordHash);
 };
 
