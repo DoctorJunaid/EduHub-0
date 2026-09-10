@@ -1,103 +1,69 @@
+/**
+ * Authentication & Role Authorization Middleware
+ * Verifies JWT access tokens and enforces role-based permissions.
+ */
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 /**
- * Middleware: Verify JWT and attach authenticated user to req.user.
- *
- * Responsibilities:
- * 1. Read JWT from Authorization header
- * 2. Verify JWT
- * 3. Find the current user from database
- * 4. Check account status
- * 5. Attach current database user to req.user
+ * Middleware: Verify JWT and attach authenticated active user to req.user
  */
 export const protect = async (req, res, next) => {
   try {
-    // --------------------------------------------------
-    // 1. Get token from Authorization header
-    // --------------------------------------------------
+    let token;
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
+
+    if (!token) {
       return res.status(401).json({
         success: false,
         message: "Not authorized. Authentication token required.",
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_jwt_secret_key");
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized. Invalid authentication token.",
-      });
-    }
-
-    // --------------------------------------------------
-    // 2. Verify JWT
-    // --------------------------------------------------
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
-    if (!decoded?.id) {
+    if (!decoded || !decoded.id) {
       return res.status(401).json({
         success: false,
         message: "Not authorized. Invalid token payload.",
       });
     }
 
-    // --------------------------------------------------
-    // 3. Get CURRENT user from database
-    // --------------------------------------------------
-    const user = await User.findById(decoded.id).select(
-      "-passwordHash"
-    );
+    const currentUser = await User.findById(decoded.id).select("-passwordHash");
 
-    if (!user) {
+    if (!currentUser) {
       return res.status(401).json({
         success: false,
-        message: "User account no longer exists.",
+        message: "User account belonging to this token no longer exists.",
       });
     }
 
-    // --------------------------------------------------
-    // 4. Check account status
-    // --------------------------------------------------
-    if (user.isActive === false) {
+    if (currentUser.isActive === false) {
       return res.status(403).json({
         success: false,
-        message: "Your account has been deactivated.",
+        message: "Your account has been deactivated. Please contact an administrator.",
       });
     }
 
-    // --------------------------------------------------
-    // 5. Attach CURRENT database information
-    // --------------------------------------------------
-    req.user = user;
-
+    req.user = currentUser;
     next();
   } catch (error) {
-    // JWT expired
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         success: false,
-        message: "Authentication token has expired.",
+        message: "Authentication token has expired. Please log in again.",
       });
     }
-
-    // JWT invalid
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({
         success: false,
         message: "Invalid authentication token.",
       });
     }
-
-    console.error("Authentication Middleware Error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Authentication service error.",
@@ -105,4 +71,28 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export default protect;
+/**
+ * Middleware: Restrict access to specific roles
+ * @param  {...string} roles - Allowed roles e.g. 'super_admin', 'institute_admin'
+ */
+export const restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You do not have permission to perform this action.",
+      });
+    }
+
+    next();
+  };
+};
+
+export default { protect, restrictTo };
