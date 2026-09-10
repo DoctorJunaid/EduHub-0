@@ -19,9 +19,5 @@ router.use("/inquiries", inquiryRoutes);
 router.use("/super-admin", superAdminRoutes);
 router.use("/auth", authRoutes);
 router.use("/campus-admin", campusAdminRoutes);
-/**
- *  TODO: Add users routes in openapi.yml
- */
-router.use("/users", userRoutes);
 
 export default router;

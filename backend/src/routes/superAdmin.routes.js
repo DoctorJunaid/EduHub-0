@@ -14,13 +14,19 @@ import {
   deleteCampusAdmin,
 } from "../controllers/campusAdmin.controller.js";
 
-// Note: Add your verifyToken & authorizeRoles("super_admin") middlewares here
+import { protect } from "../middleware/auth.middleware.js";
+import { isSuperAdmin } from "../middleware/superAdmin.js";
+
 const router = express.Router();
 
-// Add health check route for super admin
+// Public health check route for super admin
 router.get("/health", (req, res) => {
   res.status(200).json({ status: "Super Admin API is healthy" });
 });
+
+// All routes below require valid JWT authentication & Super Admin role
+router.use(protect);
+router.use(isSuperAdmin);
 
 // --- Institute CRUD ---
 router.route("/institutes").post(createInstitute).get(getInstitutes);

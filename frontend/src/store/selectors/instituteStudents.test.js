@@ -1,38 +1,101 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { configureStore } from '@reduxjs/toolkit';
-import students, { studentAdded, studentUpdated, studentDeleted } from '../Slices/studentsSlice.js';
-import campuses, { campusAdded, campusUpdated, campusDeleted } from '../Slices/campusesSlice.js';
-import { selectInstituteStudents } from './instituteStudents.js';
-import { searchInstituteStudents } from '../../Admins/Institute Admin/Students/studentDirectoryData.js';
-import { loadDemoState, persistDemoState } from '../persistence.js';
-import { demoInstitute } from '../../Admins/Institute Admin/instituteData.js';
+import test from "node:test";
+import assert from "node:assert/strict";
+import { configureStore } from "@reduxjs/toolkit";
+import students, {
+  studentAdded,
+  studentUpdated,
+  studentDeleted,
+} from "../Slices/studentsSlice.js";
+import campuses, {
+  campusAdded,
+  campusUpdated,
+  campusDeleted,
+} from "../Slices/campusesSlice.js";
+import { selectInstituteStudents } from "./instituteStudents.js";
+import { searchInstituteStudents } from "../../Admins/Institute Admin/Students/studentDirectoryData.js";
+import { loadDemoState, persistDemoState } from "../persistence.js";
+import { demoInstitute } from "../../Admins/Institute Admin/instituteData.js";
 
-test('shared student CRUD, campus renames/deletion, institute scoping and refresh stay consistent', () => {
-  const data = new Map(); const storage = { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
-  const create = () => { const loaded = loadDemoState(storage); const store = configureStore({ reducer: { students, campuses }, preloadedState: loaded }); persistDemoState(store, storage); return store; };
+test("shared student CRUD, campus renames/deletion, institute scoping and refresh stay consistent", () => {
+  const data = new Map();
+  const storage = {
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => data.set(key, value),
+  };
+  const create = () => {
+    const loaded = loadDemoState(storage);
+    const store = configureStore({
+      reducer: { students, campuses },
+      preloadedState: loaded,
+    });
+    persistDemoState(store, storage);
+    return store;
+  };
   let store = create();
   assert.equal(selectInstituteStudents(store.getState()).length, 2);
   const campus = store.getState().campuses.records[0];
-  store.dispatch(campusUpdated({ ...campus, name: 'Renamed Main Campus' }));
-  assert.equal(selectInstituteStudents(store.getState())[0].campus, 'Renamed Main Campus');
-  store.dispatch(campusAdded({ name: 'New branch', address: 'New address', status: 'Active' }));
+  store.dispatch(campusUpdated({ ...campus, name: "Renamed Main Campus" }));
+  assert.equal(
+    selectInstituteStudents(store.getState())[0].campus,
+    "Renamed Main Campus",
+  );
+  store.dispatch(
+    campusAdded({
+      name: "New branch",
+      address: "New address",
+      status: "Active",
+    }),
+  );
   const branch = store.getState().campuses.records.at(-1);
   const seed = store.getState().students.records[0];
-  store.dispatch(studentAdded({ ...seed, name: 'New Student', email: 'new@example.com', campusId: branch.id, campus: branch.name, instituteId: demoInstitute.id }));
+  store.dispatch(
+    studentAdded({
+      ...seed,
+      name: "New Student",
+      email: "new@example.com",
+      campusId: branch.id,
+      campus: branch.name,
+      instituteId: demoInstitute.id,
+    }),
+  );
   const added = store.getState().students.records.at(-1);
   assert.equal(selectInstituteStudents(store.getState()).length, 3);
   store = create();
-  assert.equal(selectInstituteStudents(store.getState()).at(-1).campus, 'New branch');
-  store.dispatch(studentUpdated({ ...added, subjects: 'Updated subjects' }));
-  for (const query of ['new student', added.roll, added.program, added.section, 'updated SUBJECTS', 'new branch']) assert.ok(searchInstituteStudents(selectInstituteStudents(store.getState()), query).some((item) => item.id === added.id));
+  assert.equal(
+    selectInstituteStudents(store.getState()).at(-1).campus,
+    "New branch",
+  );
+  store.dispatch(studentUpdated({ ...added, subjects: "Updated subjects" }));
+  for (const query of [
+    "new student",
+    added.roll,
+    added.program,
+    added.section,
+    "updated SUBJECTS",
+    "new branch",
+  ])
+    assert.ok(
+      searchInstituteStudents(
+        selectInstituteStudents(store.getState()),
+        query,
+      ).some((item) => item.id === added.id),
+    );
   store.dispatch(campusDeleted(branch.id));
-  assert.equal(selectInstituteStudents(store.getState()).at(-1).campus, 'Campus unavailable');
+  assert.equal(
+    selectInstituteStudents(store.getState()).at(-1).campus,
+    "Campus unavailable",
+  );
   assert.equal(selectInstituteStudents(store.getState()).length, 3);
-  store.dispatch(studentAdded({ ...seed, instituteId: 'foreign' }));
+  store.dispatch(studentAdded({ ...seed, instituteId: "foreign" }));
   assert.equal(selectInstituteStudents(store.getState()).length, 3);
   store.dispatch(studentDeleted(added.id));
   store = create();
   assert.equal(selectInstituteStudents(store.getState()).length, 2);
-  assert.equal(searchInstituteStudents(selectInstituteStudents(store.getState()), 'no-such-record').length, 0);
+  assert.equal(
+    searchInstituteStudents(
+      selectInstituteStudents(store.getState()),
+      "no-such-record",
+    ).length,
+    0,
+  );
 });

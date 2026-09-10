@@ -10,6 +10,7 @@ import {
 
 import { protect } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
+import { updateUserProfileById } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -19,7 +20,11 @@ router.use(authorize("super_admin"));
 
 router.get("/all", getAllUsers);
 
-router.route("/:id").get(getUserById).put(updateUser).delete(deleteUser);
+router
+  .route("/:id")
+  .get(getUserById)
+  .put(updateUser)
+  .delete(deleteUser);
 
 router.put("/:id/role", changeUserRole);
 

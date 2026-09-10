@@ -1,5 +1,10 @@
+import { selectStudentDiary, diaryEntriesForDate } from '@/store/selectors/studentDiary';
+import StudentDiaryEntry from '../../components/StudentDiaryEntry';
+import { selectStudentAssignments } from '@/store/selectors/studentAssignments';
+import AssignmentStatusBadge from '../../components/AssignmentStatusBadge';
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { Link } from 'react-router-dom';
 import {
   BookOpen,
   ChartNoAxesColumnIncreasing,
@@ -37,6 +42,8 @@ export default function StudentDashboard() {
   const { student, courses, timetable, attendance, cgpa, results } =
     useSelector(selectStudentDashboard);
   const profile = useSelector(selectStudentProfile);
+  const diary = useSelector(selectStudentDiary);
+  const assignments = useSelector(selectStudentAssignments);
   const [today, setToday] = useState(() => dateKey(new Date()));
   useEffect(() => {
     let timer;
@@ -97,8 +104,8 @@ export default function StudentDashboard() {
     {
       label: "Pending Tasks",
       icon: FileText,
-      value: "—",
-      description: "Assignments not available yet",
+      value: student ? assignments.filter((assignment) => assignment.status === 'Pending Submission').length : '—',
+      description: "Assignments awaiting submission",
     },
   ];
 
@@ -141,21 +148,8 @@ export default function StudentDashboard() {
           </div>
         </div>
         <div className="sd-quick-actions">
-          <Button
-            disabled
-            title="The Student Assignments page is not available yet"
-          >
-            <ClipboardList aria-hidden="true" />
-            My Assignments
-          </Button>
-          <Button
-            variant="outline"
-            disabled
-            title="The Student Fee Vouchers page is not available yet"
-          >
-            <WalletCards aria-hidden="true" />
-            Fee Vouchers
-          </Button>
+          <Button asChild><Link to="/student/assignments"><ClipboardList aria-hidden="true" />My Assignments</Link></Button>
+          <Button variant="outline" asChild><Link to="/student/fees"><WalletCards aria-hidden="true" />Fee Vouchers</Link></Button>
         </div>
       </Card>
       {!student && (
@@ -195,11 +189,9 @@ export default function StudentDashboard() {
           </div>
           <Button
             variant="outline"
-            disabled
-            title="The Student My Courses page is not available yet"
+            asChild
           >
-            View All Courses
-            <ArrowRight aria-hidden="true" />
+            <Link to="/student/courses">View All Courses<ArrowRight aria-hidden="true" /></Link>
           </Button>
         </div>
         <Table aria-label="Today's class timetable">
@@ -266,22 +258,9 @@ export default function StudentDashboard() {
               </span>
               <h2>Upcoming Assignments</h2>
             </div>
-            <Button
-              variant="ghost"
-              disabled
-              title="The Student Assignments page is not available yet"
-            >
-              View All
-              <ArrowRight aria-hidden="true" />
-            </Button>
+            <Button variant="ghost" asChild><Link to="/student/assignments">View All<ArrowRight aria-hidden="true" /></Link></Button>
           </div>
-          <div className="sd-empty">
-            <span className="sd-empty-icon">
-              <FileText aria-hidden="true" />
-            </span>
-            <h3>No assignments available</h3>
-            <p>Published assignments and their due dates will appear here.</p>
-          </div>
+          {assignments.some((assignment) => assignment.dueDate >= today) ? <div className="sd-assignment-list">{assignments.filter((assignment) => assignment.dueDate >= today).slice(0, 3).map((assignment) => <Link to="/student/assignments" key={assignment.id}><FileText aria-hidden="true" /><div><strong>{assignment.title}</strong><small>{assignment.subject} &middot; Due: {assignment.dueDate}</small></div><AssignmentStatusBadge status={assignment.status} /></Link>)}</div> : <div className="sd-empty"><span className="sd-empty-icon"><FileText aria-hidden="true" /></span><h3>No upcoming assignments</h3><p>Assignments with upcoming due dates will appear here.</p></div>}
         </Card>
         <Card className="sd-bottom-card">
           <div className="sd-section-heading">
@@ -291,24 +270,9 @@ export default function StudentDashboard() {
               </span>
               <h2>Today's Class Diary</h2>
             </div>
-            <Button
-              variant="ghost"
-              disabled
-              title="The Student Daily Diary page is not available yet"
-            >
-              All Notes
-              <ArrowRight aria-hidden="true" />
-            </Button>
+            <Button variant="ghost" asChild><Link to="/student/diary">All Notes<ArrowRight aria-hidden="true" /></Link></Button>
           </div>
-          <div className="sd-empty">
-            <span className="sd-empty-icon">
-              <BookOpen aria-hidden="true" />
-            </span>
-            <h3>No class notes available</h3>
-            <p>
-              Class topics, notes, and homework will appear here when available.
-            </p>
-          </div>
+          {diaryEntriesForDate(diary, today).length ? <div className="sd-diary-list">{diaryEntriesForDate(diary, today).slice(0, 2).map((entry) => <StudentDiaryEntry key={entry.id} entry={entry} compact />)}</div> : <div className="sd-empty"><span className="sd-empty-icon"><BookOpen aria-hidden="true" /></span><h3>No class notes for today</h3><p>Use All Notes to view your lecture history.</p></div>}
         </Card>
       </div>
     </section>
