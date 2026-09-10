@@ -1,0 +1,15 @@
+import { createSlice } from '@reduxjs/toolkit';
+import { validDate } from '../../lib/dates.js';
+
+export function validDiaryEntry(entry) {
+  return Boolean(entry && ['id', 'classId', 'title'].every((field) => typeof entry[field] === 'string' && entry[field].trim()) && validDate(entry.date)
+    && ['recap', 'homework', 'resources', 'assignmentId'].every((field) => entry[field] === undefined || typeof entry[field] === 'string'));
+}
+export function validDiaryRecords(records) {
+  return Array.isArray(records) && records.every(validDiaryEntry) && new Set(records.map((entry) => entry.id)).size === records.length;
+}
+// Shared read source for Student and future Teacher integration; no fabricated seed or Student write actions.
+const slice = createSlice({ name: 'diary', initialState: { records: [] }, reducers: {} });
+export default slice.reducer;
+const empty = [];
+export const selectDiary = (state) => state.diary?.records ?? empty;

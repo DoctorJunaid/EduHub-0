@@ -1,3 +1,5 @@
+import { selectStudentDiary, diaryEntriesForDate } from '@/store/selectors/studentDiary';
+import StudentDiaryEntry from '../../components/StudentDiaryEntry';
 import { selectStudentAssignments } from '@/store/selectors/studentAssignments';
 import AssignmentStatusBadge from '../../components/AssignmentStatusBadge';
 import { useEffect, useState } from "react";
@@ -40,6 +42,7 @@ export default function StudentDashboard() {
   const { student, courses, timetable, attendance, cgpa, results } =
     useSelector(selectStudentDashboard);
   const profile = useSelector(selectStudentProfile);
+  const diary = useSelector(selectStudentDiary);
   const assignments = useSelector(selectStudentAssignments);
   const [today, setToday] = useState(() => dateKey(new Date()));
   useEffect(() => {
@@ -274,24 +277,9 @@ export default function StudentDashboard() {
               </span>
               <h2>Today's Class Diary</h2>
             </div>
-            <Button
-              variant="ghost"
-              disabled
-              title="The Student Daily Diary page is not available yet"
-            >
-              All Notes
-              <ArrowRight aria-hidden="true" />
-            </Button>
+            <Button variant="ghost" asChild><Link to="/student/diary">All Notes<ArrowRight aria-hidden="true" /></Link></Button>
           </div>
-          <div className="sd-empty">
-            <span className="sd-empty-icon">
-              <BookOpen aria-hidden="true" />
-            </span>
-            <h3>No class notes available</h3>
-            <p>
-              Class topics, notes, and homework will appear here when available.
-            </p>
-          </div>
+          {diaryEntriesForDate(diary, today).length ? <div className="sd-diary-list">{diaryEntriesForDate(diary, today).slice(0, 2).map((entry) => <StudentDiaryEntry key={entry.id} entry={entry} compact />)}</div> : <div className="sd-empty"><span className="sd-empty-icon"><BookOpen aria-hidden="true" /></span><h3>No class notes for today</h3><p>Use All Notes to view your lecture history.</p></div>}
         </Card>
       </div>
     </section>
