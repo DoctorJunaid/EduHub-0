@@ -9,7 +9,12 @@ const generateToken = (id) => {
 
 export const register = async (req, res) => {
   try {
-    const { fullName, email, password, role = "student" } = req.body;
+    const { fullName, email, role = "student" } = req.body;
+    const password = req.body.password || req.body.passwordHash;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Email and password are required" });
+    }
 
     const existingUser = await user.findOne({ email });
     if (existingUser) {
@@ -45,7 +50,15 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = req.body.email;
+    const password = req.body.password || req.body.passwordHash;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
 
     const existingUser = await user.findOne({ email }).select("+passwordHash");
     if (!existingUser) {
