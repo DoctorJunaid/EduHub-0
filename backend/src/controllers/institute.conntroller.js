@@ -51,6 +51,9 @@ export const getInstituteById = async (req, res) => {
     }
     return res.status(200).json({ success: true, data: institute });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid Institute ID format" });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -73,6 +76,12 @@ export const updateInstitute = async (req, res) => {
     }
     return res.status(200).json({ success: true, data: institute });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid Institute ID format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ success: false, message: error.message });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -90,6 +99,9 @@ export const deleteInstitute = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Institute deleted successfully" });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid Institute ID format" });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
