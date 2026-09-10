@@ -52,7 +52,6 @@ export const getCampusStudents = async (req, res) => {
   }
 };
 
-
 // @desc    Assign student to campus admin's campus
 // @route   POST /api/v1/campus-admin/students
 // @access  Private / Campus Admin
