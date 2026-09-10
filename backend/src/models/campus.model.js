@@ -1,52 +1,64 @@
-import mongoose from "mongoose";
-
 /**
  * Campus Model
- *
- * A Campus belongs to an Institute. Campus Admins are assigned to a campus,
- * and Students are enrolled in a campus within that institute.
+ * Represents an individual branch/campus belonging to an Institute.
+ * Overseen by a Campus Manager and isolated by instituteId.
  */
+import mongoose from "mongoose";
+
+const addressSchema = new mongoose.Schema(
+  {
+    street: { type: String, trim: true, default: "" },
+    city: { type: String, trim: true, default: "" },
+    province: { type: String, trim: true, default: "" },
+    postalCode: { type: String, trim: true, default: "" },
+    country: { type: String, trim: true, default: "Pakistan" },
+  },
+  { _id: false }
+);
+
 const campusSchema = new mongoose.Schema(
   {
+    instituteId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institute",
+      required: [true, "instituteId is required — campus must belong to an institute"],
+      index: true,
+    },
     name: {
       type: String,
       required: [true, "Campus name is required"],
       trim: true,
       maxlength: [150, "Campus name cannot exceed 150 characters"],
     },
-
-    // Parent institute this campus belongs to
-    instituteId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Institute",
-      required: [true, "instituteId is required — a campus must belong to an institute"],
-    },
-
     address: {
+      type: addressSchema,
+      default: () => ({}),
+    },
+    phone: {
       type: String,
       trim: true,
       default: "",
     },
-
-    phone: {
-      type: String,
-      trim: true,
-      match: [/^[0-9+\-\s()]{7,20}$/, "Please enter a valid phone number"],
-    },
-
     email: {
       type: String,
-      trim: true,
       lowercase: true,
+      trim: true,
+      default: "",
     },
-
+    managerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     status: {
       type: String,
-      enum: ["active", "inactive"],
-      default: "active",
+      enum: ["Active", "Pending", "Inactive"],
+      default: "Pending",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 const Campus =

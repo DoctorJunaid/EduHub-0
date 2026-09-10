@@ -1,48 +1,71 @@
+/**
+ * Super Admin Routes
+ * Exposes platform-level governance and administrative endpoints.
+ * Strictly protected by protect and restrictTo('super_admin').
+ */
 import express from "express";
 import {
-  createInstitute,
+  getStats,
   getInstitutes,
+  createInstitute,
   getInstituteById,
   updateInstitute,
   deleteInstitute,
-} from "../controllers/institute.controller.js";
-import {
-  createCampusAdmin,
-  getCampusAdmins,
-  getCampusAdminById,
-  updateCampusAdmin,
-  deleteCampusAdmin,
-} from "../controllers/campusAdmin.controller.js";
+  assignInstituteAdmin,
+  getInstituteAdmins,
+  createInstituteAdmin,
+  getCampuses,
+  createCampus,
+  updateCampus,
+  deleteCampus,
+  getUsers,
+  toggleUserStatus,
+} from "../controllers/superAdmin.controller.js";
 
-import { protect } from "../middleware/auth.middleware.js";
-import { isSuperAdmin } from "../middleware/superAdmin.middleware.js";
+import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Public health check route for super admin
-router.get("/health", (req, res) => {
-  res.status(200).json({ status: "Super Admin API is healthy" });
-});
-
-// All routes below require valid JWT authentication & Super Admin role
+// Guard all Super Admin endpoints
 router.use(protect);
-router.use(isSuperAdmin);
+router.use(restrictTo("super_admin"));
 
-// --- Institute CRUD ---
-router.route("/institutes").post(createInstitute).get(getInstitutes);
+// Analytics
+router.get("/stats", getStats);
+
+// Institute Management
+router
+  .route("/institutes")
+  .get(getInstitutes)
+  .post(createInstitute);
+
 router
   .route("/institutes/:id")
   .get(getInstituteById)
   .put(updateInstitute)
   .delete(deleteInstitute);
 
-// --- Campus Admin CRUD ---
-router.route("/campus-admins").post(createCampusAdmin).get(getCampusAdmins);
+router.post("/institutes/:id/assign-admin", assignInstituteAdmin);
+
+// Institute Admins Standalone
+router
+  .route("/institute-admins")
+  .get(getInstituteAdmins)
+  .post(createInstituteAdmin);
+
+// Campus Management
+router
+  .route("/campuses")
+  .get(getCampuses)
+  .post(createCampus);
 
 router
-  .route("/campus-admins/:id")
-  .get(getCampusAdminById)
-  .put(updateCampusAdmin)
-  .delete(deleteCampusAdmin);
+  .route("/campuses/:id")
+  .put(updateCampus)
+  .delete(deleteCampus);
+
+// Global User Governance
+router.get("/users", getUsers);
+router.patch("/users/:id/toggle-status", toggleUserStatus);
 
 export default router;

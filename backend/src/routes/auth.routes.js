@@ -1,3 +1,7 @@
+/**
+ * Authentication Routes
+ * Handles user login, registration, and profile management.
+ */
 import express from "express";
 import {
   register,
@@ -15,8 +19,6 @@ router.post("/login", login);
 
 // Protected routes
 router.get("/me", protect, getMe);
-
-//update profile
 router.put("/profile", protect, updateProfile);
 
 export default router;
