@@ -1,3 +1,4 @@
+import { validDiaryRecords } from './Slices/diarySlice.js';
 import { validAssignmentRecords } from './assignmentData.js';
 import { validBroadcasts } from '../Admins/Institute Admin/Alerts/broadcastData.js';
 import { validCampuses } from '../Admins/Institute Admin/Campuses/campusData.js';
@@ -19,10 +20,11 @@ const fields = {
   students: ['name', 'roll', 'email', 'studentPhone', 'program', 'section', 'semester', 'subjects', 'campus', 'status', 'guardian', 'guardianPhone', 'initials'],
   timetable: ['subject', 'program', 'section', 'instructor', 'room', 'startTime', 'endTime', 'status'],
 };
-export const storageKeys = { assignments: 'eduhub_assignments', submissions: 'eduhub_submissions', broadcasts: 'eduhub_broadcasts', campuses: 'eduhub_campuses', messages: 'eduhub_messages', faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
+export const storageKeys = { diary: 'eduhub_diary', assignments: 'eduhub_assignments', submissions: 'eduhub_submissions', broadcasts: 'eduhub_broadcasts', campuses: 'eduhub_campuses', messages: 'eduhub_messages', faculty: 'eduhub_faculty', students: 'eduhub_students', timetable: 'eduhub_timetable', exams: 'eduhub_exams', attendance: 'eduhub_attendance', studentAttendance: 'eduhub_student_attendance', results: 'eduhub_results', fees: 'eduhub_fees' };
 const statuses = { faculty: ['Active', 'Pending', 'Inactive'], students: ['Active', 'Pending', 'Graduated', 'Suspended'], timetable: ['Active', 'Pending'] };
 
 function validRecords(collection, records) {
+  if (collection === 'diary') return validDiaryRecords(records);
   if (collection === 'assignments' || collection === 'submissions') return validAssignmentRecords(records, collection === 'submissions');
   if (collection === 'broadcasts') return validBroadcasts(records);
   if (collection === 'campuses') return validCampuses(records);

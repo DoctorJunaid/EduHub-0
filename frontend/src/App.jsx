@@ -21,7 +21,7 @@ import FacultyDirectory from './Admins/Campus Admin/Faculty/FacultyDirectory';
 import StudentsDirectory from './Admins/Campus Admin/Students/StudentsDirectory';
 import ClassTimetable from './Admins/Campus Admin/Timetable/ClassTimetable';
 import ExamSchedules from './Admins/Campus Admin/Exams/ExamSchedules';
-import { StudentLayout, StudentDashboard, StudentCourses, StudentAssignments, StudentAttendancePage } from './Users/Student';
+import { StudentLayout, StudentDashboard, StudentCourses, StudentAssignments, StudentAttendancePage, StudentDiary, StudentGrades } from './Users/Student';
 
 const App = () => {
   return (
@@ -35,6 +35,8 @@ const App = () => {
           <Route path="student/courses" element={<StudentCourses />} />
           <Route path="student/assignments" element={<StudentAssignments />} />
           <Route path="student/attendance" element={<StudentAttendancePage />} />
+          <Route path="student/diary" element={<StudentDiary />} />
+          <Route path="student/grades" element={<StudentGrades />} />
         </Route>
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['institute-admin']} />}>
