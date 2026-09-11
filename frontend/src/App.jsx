@@ -23,6 +23,8 @@ import ClassTimetable from "./Admins/Campus Admin/Timetable/ClassTimetable";
 import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
 import SuperAdminDashboard from "./Admins/Super Admin/Dashboard/SuperAdminDashboard";
 import Institutes from "./Admins/Super Admin/Institutes/Institutes";
+import EditInstitute from "./Admins/Super Admin/Institutes/EditInstitute";
+import InstituteDetails from "./Admins/Super Admin/Institutes/InstituteDetails";
 import { ADMIN_NAV } from "./constants/navigation";
 import {
   StudentLayout,
@@ -113,6 +115,14 @@ const App = () => {
         <Route element={<MainLayout navigation={ADMIN_NAV} />}>
           <Route path="super-admin" element={<SuperAdminDashboard />} />
           <Route path="institutes" element={<Institutes />} />
+          <Route
+            path="institutes/:instituteId"
+            element={<InstituteDetails />}
+          />
+          <Route
+            path="institutes/:instituteId/edit"
+            element={<EditInstitute />}
+          />
         </Route>
       </Route>
     </Routes>

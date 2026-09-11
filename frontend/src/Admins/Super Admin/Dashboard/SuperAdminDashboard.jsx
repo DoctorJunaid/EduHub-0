@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SuperAdminDashboard.css";
+import { loadInstitutes } from "../Institutes/instituteData";
 
 const stats = [
   {
@@ -38,186 +39,6 @@ const stats = [
   },
 ];
 
-const institutes = [
-  {
-    name: "NUST (National University of Sciences and Technology)",
-    location: "University · Federal",
-    type: "University",
-    campuses: 2,
-    campusesDetails: [
-      {
-        name: "NUST Main Campus (H-12)",
-        location: "Islamabad, Federal",
-        status: "Active",
-      },
-      {
-        name: "Risale Campus",
-        location: "Rawalpindi, Punjab",
-        status: "Active",
-      },
-    ],
-    students: "1200 Students",
-    studentRecords: [
-      {
-        name: "Ali Raza",
-        program: "BS Computer Science",
-        status: "Active",
-        roll: "NUST-CS-2023-042",
-        campus: "NUST Main Campus (H-12)",
-      },
-      {
-        name: "Maryam Ahmed",
-        program: "BS Software Engineering",
-        status: "Active",
-        roll: "NUST-SE-2023-110",
-        campus: "NUST Main Campus (H-12)",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image:
-      "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80",
-  },
-  {
-    name: "National College of Arts (NCA)",
-    location: "College · Punjab Board",
-    type: "College",
-    campuses: 3,
-    campusesDetails: [
-      { name: "NCA Main Campus", location: "Lahore, Punjab", status: "Active" },
-      {
-        name: "NCA Heritage Wing",
-        location: "Lahore, Punjab",
-        status: "Pending",
-      },
-      {
-        name: "NCA Multimedia Wing",
-        location: "Karachi, Sindh",
-        status: "Active",
-      },
-    ],
-    students: "1700 Students",
-    studentRecords: [
-      {
-        name: "Areeba Khan",
-        program: "Fine Arts",
-        status: "Active",
-        roll: "NCA-FA-2023-018",
-        campus: "NCA Main Campus",
-      },
-      {
-        name: "Hafsa Tariq",
-        program: "Design",
-        status: "Pending",
-        roll: "NCA-DES-2023-089",
-        campus: "NCA Heritage Wing",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image:
-      "https://www.nca.edu.pk/images/home_banner/6_sm.jpg?time=1788912000151",
-  },
-  {
-    name: "LUMS (Lahore University of Management Sciences)",
-    location: "University · HEC",
-    type: "University",
-    campuses: 4,
-    campusesDetails: [
-      {
-        name: "LUMS Main Campus",
-        location: "Lahore, Punjab",
-        status: "Active",
-      },
-      { name: "SDSB Campus", location: "Lahore, Punjab", status: "Active" },
-      {
-        name: "LUMS Executive Campus",
-        location: "Faisalabad, Punjab",
-        status: "Suspended",
-      },
-      {
-        name: "LUMS Digital Campus",
-        location: "Islamabad, Federal",
-        status: "Active",
-      },
-    ],
-    students: "2200 Students",
-    studentRecords: [
-      {
-        name: "Sana Javed",
-        program: "MBA",
-        status: "Active",
-        roll: "LUMS-MBA-2023-223",
-        campus: "LUMS Main Campus",
-      },
-      {
-        name: "Bilal Iqbal",
-        program: "Economics",
-        status: "Active",
-        roll: "LUMS-ECO-2023-101",
-        campus: "SDSB Campus",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image:
-      "https://www.lums.edu.pk/sites/default/files/styles/416x396/public/2022-10/thumb_school_SDSB.jpg",
-  },
-  {
-    name: "Aga Khan University",
-    location: "University · Sindh Board",
-    type: "University",
-    campuses: 5,
-    campusesDetails: [
-      {
-        name: "Aga Khan University Medical Campus",
-        location: "Karachi, Sindh",
-        status: "Active",
-      },
-      {
-        name: "AKU Campus Nairobi",
-        location: "Nairobi, Kenya",
-        status: "Active",
-      },
-      {
-        name: "AKU Campus Kampala",
-        location: "Kampala, Uganda",
-        status: "Pending",
-      },
-      {
-        name: "AKU Campus Dhaka",
-        location: "Dhaka, Bangladesh",
-        status: "Active",
-      },
-      {
-        name: "AKU Rural Campus",
-        location: "Gilgit, Gilgit-Baltistan",
-        status: "Active",
-      },
-    ],
-    students: "2700 Students",
-    studentRecords: [
-      {
-        name: "Amina Karim",
-        program: "MBBS",
-        status: "Active",
-        roll: "AKU-MBBS-2023-014",
-        campus: "Aga Khan University Medical Campus",
-      },
-      {
-        name: "Hamza Noor",
-        program: "Nursing",
-        status: "Active",
-        roll: "AKU-NUR-2023-205",
-        campus: "Aga Khan University Medical Campus",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image: "https://www.aku.edu/about/PublishingImages/campuses.jpg",
-  },
-];
-
 function normalizeStatus(status) {
   if (status === "Suspended") return "Suspended";
   if (status === "Pending") return "Pending";
@@ -232,10 +53,9 @@ export default function SuperAdminDashboard() {
     () => localStorage.getItem("eduHubSuperSearch") || "",
   );
   const [showUniversityOnly, setShowUniversityOnly] = useState(false);
-  const [instituteData, setInstituteData] = useState(institutes);
+  const [instituteData, setInstituteData] = useState(() => loadInstitutes());
   const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
   const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
-  const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
 
   useEffect(() => {
@@ -264,7 +84,7 @@ export default function SuperAdminDashboard() {
   });
 
   const handleManage = (institute) => {
-    setManageDrawerInstitute(institute);
+    navigate(`/institutes/${institute.id}`);
   };
 
   const handleCampusClick = (institute) => {
@@ -444,7 +264,11 @@ export default function SuperAdminDashboard() {
               </button>
             </div>
             <div className="super-admin-drawer-body">
-              {(campusDrawerInstitute.campusesDetails || campusDrawerInstitute.campusDetails || []).map((campus, idx) => (
+              {(
+                campusDrawerInstitute.campusesDetails ||
+                campusDrawerInstitute.campusDetails ||
+                []
+              ).map((campus, idx) => (
                 <div
                   className="super-admin-drawer-row"
                   key={`${campus.name}-${idx}`}
@@ -515,69 +339,6 @@ export default function SuperAdminDashboard() {
                   </span>
                 </div>
               ))}
-            </div>
-          </aside>
-        </div>
-      )}
-
-      {manageDrawerInstitute && (
-        <div
-          className="super-admin-drawer-backdrop"
-          onClick={() => setManageDrawerInstitute(null)}
-        >
-          <aside
-            className="super-admin-manage-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="super-admin-drawer-head">
-              <div>
-                <span className="super-admin-drawer-kicker">
-                  Institute Management
-                </span>
-                <h3>{manageDrawerInstitute.name}</h3>
-              </div>
-              <button
-                className="super-admin-drawer-close"
-                onClick={() => setManageDrawerInstitute(null)}
-                aria-label="Close institute management drawer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="super-admin-manage-body">
-              <div className="super-admin-manage-card">
-                <span className="super-admin-manage-card-icon">C</span>
-                <div>
-                  <span className="super-admin-manage-card-label">
-                    Credentials
-                  </span>
-                  <span className="super-admin-manage-card-value">
-                    Admin portal access
-                  </span>
-                </div>
-              </div>
-              <div className="super-admin-manage-card">
-                <span className="super-admin-manage-card-icon">B</span>
-                <div>
-                  <span className="super-admin-manage-card-label">
-                    Billing Status
-                  </span>
-                  <span className="super-admin-manage-card-value">
-                    Monthly plan · Active
-                  </span>
-                </div>
-              </div>
-              <div className="super-admin-manage-card">
-                <span className="super-admin-manage-card-icon">A</span>
-                <div>
-                  <span className="super-admin-manage-card-label">
-                    Assigned Admins
-                  </span>
-                  <span className="super-admin-manage-card-value">
-                    Institute Admin
-                  </span>
-                </div>
-              </div>
             </div>
           </aside>
         </div>
