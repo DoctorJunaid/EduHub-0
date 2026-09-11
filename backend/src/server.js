@@ -1,31 +1,30 @@
-import "dotenv/config"; // Loads .env BEFORE importing relative modules
+/**
+ * Server Entry Point
+ * Initializes MongoDB connection and starts Express HTTP listener.
+ */
+import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 
 const PORT = process.env.PORT || 5000;
 
-/**
- * Start the application server
- */
 const startServer = async () => {
   try {
-    // 1. Connect to the database first
+    // 1. Establish database connection
     await connectDB();
 
-    // 2. Start listening on the configured port
+    // 2. Start HTTP server
     const server = app.listen(PORT, () => {
-      console.log(
-        `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`,
-      );
+      console.log(`EduHub Backend running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
+      console.log(`API Base URL: http://localhost:${PORT}/api/v1`);
     });
 
-    // 3. Handle unhandled promise rejections
+    // 3. Graceful rejection handling
     process.on("unhandledRejection", (err) => {
       console.error(`Unhandled Rejection Error: ${err.message}`);
       server.close(() => process.exit(1));
     });
 
-    // 4. Handle uncaught exceptions
     process.on("uncaughtException", (err) => {
       console.error(`Uncaught Exception Error: ${err.message}`);
       process.exit(1);

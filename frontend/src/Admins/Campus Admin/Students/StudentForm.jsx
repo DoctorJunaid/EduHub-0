@@ -1,4 +1,7 @@
 import { useId, useState } from "react";
+import { useSelector } from 'react-redux';
+import { selectStudents } from '@/store/Slices/studentsSlice';
+import { studentIdentityErrors, hasStudentIdentityConflicts } from '@/store/studentIdentity';
 import { X } from "lucide-react";
 import {
   Dialog,
@@ -21,6 +24,8 @@ export default function StudentForm({
 }) {
   const id = useId();
   const editing = Boolean(student);
+  const records = useSelector(selectStudents);
+  const [errors, setErrors] = useState({});
   const [values, setValues] = useState(() => ({
     name: student?.name ?? "",
     roll: student?.roll ?? "",
@@ -45,7 +50,10 @@ export default function StudentForm({
       name: key,
       value: values[key],
       required: !optional,
+      'aria-invalid': Boolean(errors[key]),
+      'aria-describedby': errors[key] ? `${id}-${key}-error` : undefined,
       onChange: (event) => {
+        setErrors(previous => ({ ...previous, [key]: undefined }));
         event.target.setCustomValidity(
           !optional && !event.target.value.trim()
             ? `${label} is required.`
@@ -66,6 +74,7 @@ export default function StudentForm({
         ) : (
           <Input {...props} type={type} placeholder={placeholder} />
         )}
+        {errors[key] && <p id={`${id}-${key}-error`} role="alert" className="student-identity-error">{errors[key]}</p>}
       </div>
     );
   };
@@ -79,6 +88,9 @@ export default function StudentForm({
       saved.campus = student.campus;
       saved.guardianPhone = student.guardianPhone;
     }
+    const problems = studentIdentityErrors(saved, records, student?.id);
+    setErrors(problems);
+    if (Object.keys(problems).length) { document.getElementById(`${id}-${Object.keys(problems)[0]}`)?.focus(); return; }
     onSave(saved);
   };
   return (
@@ -109,6 +121,7 @@ export default function StudentForm({
           </DialogClose>
         </div>
         <form onSubmit={submit}>
+          {hasStudentIdentityConflicts(records) && <p role="status" className="student-identity-error">Some existing student records share an email or roll number. Resolve these identities by editing the records; no records have been merged or removed.</p>}
           <div className="student-form-row">
             {field("name", "Full Name", { placeholder: "e.g. Ali Raza" })}
             {field("roll", editing ? "Roll Number" : "Roll Number / ID", {

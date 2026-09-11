@@ -40,6 +40,11 @@ export const selectStudentCourses = createSelector(
       );
       return {
         title,
+        creditHours:
+          sessions.find((session) => Number.isFinite(session.creditHours))
+            ?.creditHours ??
+          dashboard.student.courseCredits?.[title] ??
+          null,
         section: dashboard.student.section,
         semester: dashboard.student.semester,
         routines: sessions.map((session) => {

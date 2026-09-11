@@ -28,7 +28,7 @@ export default function StudentCourseCard({ course }) {
         <Badge variant="secondary" className="sc-section">
           {course.section ? `Sec ${course.section}` : "Section unavailable"}
         </Badge>
-        <span className="sc-credits">Credits not available</span>
+        <span className="sc-credits">{course.creditHours == null ? "Credits not available" : `${course.creditHours} Credit Hours`}</span>
       </div>
       <h2>{course.title}</h2>
       <div className="sc-routines">
