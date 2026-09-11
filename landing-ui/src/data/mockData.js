@@ -945,6 +945,28 @@ export function getInstituteData(instituteId) {
   };
 }
 
+export function getAlumniData(alumniId) {
+  if (!alumniId) return null;
+  const target = String(alumniId).toLowerCase().trim();
+
+  const alumnus = top_alumni.find(a => 
+    a.id.toLowerCase() === target ||
+    a.id.toLowerCase() === `al_${target}` ||
+    (target === '1' && a.id === 'al_1') ||
+    a.name.toLowerCase().replace(/\s+/g, '-').includes(target)
+  ) || top_alumni[0];
+
+  const institute = institutes.find(i => i.id === alumnus.instituteId) || institutes[0];
+  const peerAlumni = top_alumni.filter(a => a.id !== alumnus.id && (a.instituteId === alumnus.instituteId || a.category === alumnus.category)).slice(0, 3);
+
+  return {
+    ...alumnus,
+    institute,
+    peerAlumni
+  };
+}
+
+
 export function getCampusFullData(campusId) {
   const campus = campus_branches.find(c => c.id === campusId);
   if (!campus) return null;
@@ -1011,39 +1033,586 @@ export function getCampusFullData(campusId) {
 
 export const top_alumni = [
   // NUST (inst_1)
-  { id: 'al_1', name: 'Sadia Hassan', role: 'Staff Software Engineer', company: 'Google', location: 'Mountain View, CA', badge: 'Distributed Systems', year: 'Class of 2018', picture: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80', successStory: 'Secured a core distributed systems role at Google after building her undergraduate AI thesis at SEECS.', instituteId: 'inst_1' },
-  { id: 'al_3', name: 'Dr. Ayesha Khan', role: 'Lead AI Scientist', company: 'DeepMind', location: 'London, UK', badge: 'AI & Neural Systems', year: 'Class of 2016', picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80', successStory: 'Published 14+ top tier NeurIPS & CVPR papers on multimodal neural systems and low-resource NLP.', instituteId: 'inst_1' },
-  { id: 'al_6', name: 'Zain Ul Abideen', role: 'Founder & CEO', company: 'Orbit EdTech', location: 'San Francisco, CA', badge: 'Unicorn Founder', year: 'Class of 2020', picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', successStory: 'Raised $2.4M seed round from Silicon Valley VCs to revolutionize 3D gamified STEM learning across developing nations.', instituteId: 'inst_1' },
+  { 
+    id: 'al_1', 
+    name: 'Sadia Hassan', 
+    role: 'Staff Software Engineer', 
+    company: 'Google', 
+    location: 'Mountain View, CA', 
+    badge: 'Distributed Systems', 
+    year: 'Class of 2018', 
+    degree: 'BS Computer Science',
+    department: 'School of Electrical Engineering & Computer Science (SEECS)',
+    campus: 'Sector H-12 Main Campus, Islamabad',
+    cgpa: '3.94 / 4.00',
+    honors: 'Rector’s Gold Medal • Summa Cum Laude',
+    thesis: 'High-Throughput Byzantine Fault-Tolerant Consensus in Sharded Distributed Systems',
+    category: 'Tech & AI',
+    skills: ['Distributed Systems', 'Go / C++', 'Kubernetes', 'Cloud Infrastructure', 'RPC Microservices'],
+    verifiedId: 'EDU-PK-2018-SEECS-0492',
+    picture: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80', 
+    successStory: 'Secured a core distributed systems role at Google after building her undergraduate AI thesis at SEECS.',
+    advice: 'NUST taught me that world-class engineering is about relentless curiosity and mathematical foundation. If you want to solve planetary-scale problems, SEECS is second to none.',
+    careerJourney: [
+      { year: '2014 - 2018', role: 'Undergraduate Scholar', org: 'NUST SEECS', desc: 'Conducted high-performance networking research, President ACM Student Chapter.' },
+      { year: '2018 - 2020', role: 'Software Engineer', org: 'Systems Ltd', desc: 'Engineered cloud messaging pipelines for fintech clients.' },
+      { year: '2020 - 2023', role: 'Senior Systems Engineer', org: 'Google Cloud', desc: 'Maintained global storage cluster coordination protocols.' },
+      { year: '2023 - Present', role: 'Staff Software Engineer', org: 'Google Core Infra', desc: 'Leading next-generation data routing architecture in Silicon Valley.' }
+    ],
+    instituteId: 'inst_1' 
+  },
+  { 
+    id: 'al_3', 
+    name: 'Dr. Ayesha Khan', 
+    role: 'Lead AI Scientist', 
+    company: 'Google DeepMind', 
+    location: 'London, UK', 
+    badge: 'AI & Neural Systems', 
+    year: 'Class of 2016', 
+    degree: 'BS Software Engineering',
+    department: 'School of Electrical Engineering & Computer Science (SEECS)',
+    campus: 'Sector H-12 Main Campus, Islamabad',
+    cgpa: '3.98 / 4.00',
+    honors: 'President’s Gold Medal • Chancellor’s Citation',
+    thesis: 'Attention-based Multi-modal Representation Learning for Cross-lingual Understanding',
+    category: 'Tech & AI',
+    skills: ['Deep Learning', 'PyTorch', 'Transformer Architectures', 'Multimodal LLMs', 'Reinforcement Learning'],
+    verifiedId: 'EDU-PK-2016-SEECS-0108',
+    picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80', 
+    successStory: 'Published 14+ top tier NeurIPS & CVPR papers on multimodal neural systems and low-resource NLP.',
+    advice: 'Don’t treat coursework as just exams—dive into the research labs at NUST early. The mentors at NCAI and SEECS opened doors that led directly to Oxford and DeepMind.',
+    careerJourney: [
+      { year: '2012 - 2016', role: 'BS Software Engineering', org: 'NUST SEECS', desc: 'Published 2 undergraduate IEEE conference papers on neural speech parsing.' },
+      { year: '2016 - 2020', role: 'DPhil in Machine Learning', org: 'University of Oxford', desc: 'Clarendon Scholar, doctoral research on attention mechanisms.' },
+      { year: '2020 - Present', role: 'Lead AI Scientist', org: 'Google DeepMind', desc: 'Spearheading frontier multimodal model alignment and reasoning.' }
+    ],
+    instituteId: 'inst_1' 
+  },
+  { 
+    id: 'al_6', 
+    name: 'Zain Ul Abideen', 
+    role: 'Founder & CEO', 
+    company: 'Orbit EdTech', 
+    location: 'San Francisco, CA', 
+    badge: 'Unicorn Founder', 
+    year: 'Class of 2020', 
+    degree: 'BS Electrical Engineering',
+    department: 'School of Mechanical & Manufacturing Engineering (SMME)',
+    campus: 'Sector H-12 Main Campus, Islamabad',
+    cgpa: '3.82 / 4.00',
+    honors: 'Technology Incubation Center (TICE) Innovator of the Year',
+    thesis: 'Low-cost 3D Spatial Audio & Haptic Tele-education Interfaces for Remote Classrooms',
+    category: 'Tech & AI',
+    skills: ['Product Strategy', 'Venture Capital', '3D Graphics', 'EdTech Scale', 'Hardware-Software Co-Design'],
+    verifiedId: 'EDU-PK-2020-SMME-0784',
+    picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', 
+    successStory: 'Raised $2.4M seed round from Silicon Valley VCs to revolutionize 3D gamified STEM learning across developing nations.',
+    advice: 'NUST provides a startup launchpad that is unmatched in South Asia. Take full advantage of TICE and build real hardware prototypes before you graduate.',
+    careerJourney: [
+      { year: '2016 - 2020', role: 'BS Electrical Engineering', org: 'NUST', desc: 'Won National Startup Cup at NUST TICE incubation wing.' },
+      { year: '2020 - 2021', role: 'Y Combinator Fellow', org: 'Y Combinator (W21)', desc: 'Accelerated Orbit from Islamabad into a global SaaS platform.' },
+      { year: '2021 - Present', role: 'CEO & Founder', org: 'Orbit EdTech', desc: 'Serving 450,000+ students across 12 countries with 3D interactive learning.' }
+    ],
+    instituteId: 'inst_1' 
+  },
 
   // LUMS (inst_3)
-  { id: 'al_4', name: 'Fahad Mustafa', role: 'Co-Founder & Chief Product Officer', company: 'FinPulse', location: 'Dubai, UAE', badge: 'FinTech Leadership', year: 'Class of 2017', picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', successStory: 'Built one of the fastest growing digital payment gateways processing $80M+ annually across MENA.', instituteId: 'inst_3' },
-  { id: 'al_7', name: 'Mahnoor Tariq', role: 'Engagement Manager', company: 'McKinsey & Co', location: 'Riyadh, KSA', badge: 'Global Strategy', year: 'Class of 2019', picture: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80', successStory: 'Advising sovereign wealth funds and Fortune 500 tech enterprises on emerging market expansion and digital governance.', instituteId: 'inst_3' },
-  { id: 'al_16', name: 'Ali Raza Khan', role: 'Partner & Private Equity Lead', company: 'Indus Capital', location: 'Singapore', badge: 'Venture Capital', year: 'Class of 2015', picture: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80', successStory: 'Orchestrating multi-million dollar venture syndications and early-stage capital deployment across high-growth frontier tech startups.', instituteId: 'inst_3' },
+  { 
+    id: 'al_4', 
+    name: 'Fahad Mustafa', 
+    role: 'Co-Founder & CPO', 
+    company: 'FinPulse', 
+    location: 'Dubai, UAE', 
+    badge: 'FinTech Leadership', 
+    year: 'Class of 2017', 
+    degree: 'BSc (Hons) Management Science',
+    department: 'Suleman Dawood School of Business (SDSB)',
+    campus: 'D.H.A. Phase 5, Lahore',
+    cgpa: '3.89 / 4.00',
+    honors: 'Dean’s Honor Roll • Best Business Plan Award',
+    thesis: 'Democratizing Cross-Border Peer-to-Peer Settlement Rails in MENA',
+    category: 'Business & Finance',
+    skills: ['FinTech Infrastructure', 'Product Management', 'Cross-Border Payments', 'MENA Regulatory Affairs', 'Scale-up Growth'],
+    verifiedId: 'EDU-PK-2017-LUMS-0912',
+    picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', 
+    successStory: 'Built one of the fastest growing digital payment gateways processing $80M+ annually across MENA.',
+    advice: 'LUMS gave me a worldview where ambiguity is an opportunity, not a roadblock. The case-study method in SDSB directly prepared me for the chaos of scaling a multi-million-dollar fintech.',
+    careerJourney: [
+      { year: '2013 - 2017', role: 'BSc Management Science', org: 'LUMS SDSB', desc: 'President LUMS Entrepreneurial Society (LES).' },
+      { year: '2017 - 2019', role: 'Product Manager', org: 'Careem Pay', desc: 'Built wallet infrastructure for 10M+ riders across UAE & Pakistan.' },
+      { year: '2019 - Present', role: 'Co-Founder & Chief Product Officer', org: 'FinPulse', desc: 'Scaled gateway to 14,000 active enterprise merchants in GCC.' }
+    ],
+    instituteId: 'inst_3' 
+  },
+  { 
+    id: 'al_7', 
+    name: 'Mahnoor Tariq', 
+    role: 'Engagement Manager', 
+    company: 'McKinsey & Company', 
+    location: 'Riyadh, KSA', 
+    badge: 'Global Strategy', 
+    year: 'Class of 2019', 
+    degree: 'BSc (Hons) Economics & Mathematics',
+    department: 'Mushtaq Ahmad Gurmani School of Humanities & Social Sciences (MGSHSS)',
+    campus: 'D.H.A. Phase 5, Lahore',
+    cgpa: '3.96 / 4.00',
+    honors: 'Valedictorian • Highest Academic Standing Award',
+    thesis: 'Empirical Assessment of Macro-Fiscal Transfer Mechanisms on Household Capital Formation',
+    category: 'Business & Finance',
+    skills: ['Strategic Transformation', 'Sovereign Advisory', 'Macroeconomic Modeling', 'Public Sector Reform', 'Executive Communication'],
+    verifiedId: 'EDU-PK-2019-LUMS-0331',
+    picture: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80', 
+    successStory: 'Advising sovereign wealth funds and Fortune 500 tech enterprises on emerging market expansion and digital governance.',
+    advice: 'The interdisciplinary curriculum at LUMS gives you intellectual flexibility. You learn to connect quantitative economics with human behavior—the exact skill needed in top tier consulting.',
+    careerJourney: [
+      { year: '2015 - 2019', role: 'BSc Economics & Mathematics', org: 'LUMS', desc: 'Research assistant to Dr. Ali Cheema at IDEAS research lab.' },
+      { year: '2019 - 2021', role: 'Business Analyst', org: 'McKinsey & Company Dubai', desc: 'Conducted commercial due diligence for regional sovereign entities.' },
+      { year: '2021 - Present', role: 'Engagement Manager', org: 'McKinsey Riyadh', desc: 'Leading national digital strategy and economic development programs.' }
+    ],
+    instituteId: 'inst_3' 
+  },
+  { 
+    id: 'al_16', 
+    name: 'Ali Raza Khan', 
+    role: 'Partner & Private Equity Lead', 
+    company: 'Indus Capital', 
+    location: 'Singapore', 
+    badge: 'Venture Capital', 
+    year: 'Class of 2015', 
+    degree: 'BSc (Hons) Accounting & Finance',
+    department: 'Suleman Dawood School of Business (SDSB)',
+    campus: 'D.H.A. Phase 5, Lahore',
+    cgpa: '3.91 / 4.00',
+    honors: 'CFA Charterholder • Dean’s Medal for Outstanding Leadership',
+    thesis: 'Private Equity Value Creation Metrics in Frontier Emerging Markets',
+    category: 'Business & Finance',
+    skills: ['LBO Financial Modeling', 'Mergers & Acquisitions', 'Syndicated Debt', 'Portfolio Value Creation', 'Emerging Markets'],
+    verifiedId: 'EDU-PK-2015-LUMS-0619',
+    picture: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80', 
+    successStory: 'Orchestrating multi-million dollar venture syndications and early-stage capital deployment across high-growth frontier tech startups.',
+    advice: 'LUMS alumni network in Dubai, Singapore, and London is like a global brotherhood. No matter where you land, you will find senior leaders ready to mentor you.',
+    careerJourney: [
+      { year: '2011 - 2015', role: 'BSc Accounting & Finance', org: 'LUMS', desc: 'Captain of LUMS Finance Olympiad team.' },
+      { year: '2015 - 2018', role: 'Investment Banking Associate', org: 'Credit Suisse Singapore', desc: 'Cross-border M&A in Southeast Asian tech and renewables.' },
+      { year: '2018 - Present', role: 'Partner', org: 'Indus Capital', desc: 'Directing $250M Southeast Asia Frontier Growth Fund.' }
+    ],
+    instituteId: 'inst_3' 
+  },
 
   // GIKI (inst_5)
-  { id: 'al_8', name: 'Hamza Farooq', role: 'Autonomous Flight Engineer', company: 'Airbus', location: 'Toulouse, France', badge: 'Aerospace Engineering', year: 'Class of 2015', picture: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80', successStory: 'Led the GIKI Team Invictus to win top international honors in the prestigious AIAA Design-Build-Fly contest in Wichita.', instituteId: 'inst_5' },
-  { id: 'al_9', name: 'Sarah Bilal', role: 'Senior Hardware Architect', company: 'NVIDIA', location: 'Santa Clara, CA', badge: 'Silicon Architecture', year: 'Class of 2018', picture: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=400&q=80', successStory: 'Designing next-generation tensor cores and ultra-high-throughput interconnect fabrics for hyperscale AI computing clusters.', instituteId: 'inst_5' },
-  { id: 'al_17', name: 'Danish Qureshi', role: 'Propulsion Systems Specialist', company: 'Rolls-Royce', location: 'Derby, UK', badge: 'Thermal Dynamics', year: 'Class of 2016', picture: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80', successStory: 'Key engineer developing computational thermal models and aerodynamic durability simulations for next-generation civil aviation turbines.', instituteId: 'inst_5' },
+  { 
+    id: 'al_8', 
+    name: 'Hamza Farooq', 
+    role: 'Autonomous Flight Engineer', 
+    company: 'Airbus', 
+    location: 'Toulouse, France', 
+    badge: 'Aerospace Engineering', 
+    year: 'Class of 2015', 
+    degree: 'BSc Mechanical Engineering',
+    department: 'Faculty of Mechanical Engineering (FME)',
+    campus: 'Topi, Swabi, Khyber Pakhtunkhwa',
+    cgpa: '3.87 / 4.00',
+    honors: 'AIAA Design-Build-Fly Global Top 5 • GIKI Gold Medal',
+    thesis: 'Computational Aerodynamic Drag Minimization on Composite UAV Airframes',
+    category: 'Engineering & Aerospace',
+    skills: ['Computational Fluid Dynamics (CFD)', 'Aerodynamic Modeling', 'Autopilot Control Systems', 'Composite Structures', 'Avionics'],
+    verifiedId: 'EDU-PK-2015-GIKI-0245',
+    picture: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80', 
+    successStory: 'Led the GIKI Team Invictus to win top international honors in the prestigious AIAA Design-Build-Fly contest in Wichita.',
+    advice: 'Living on GIKI’s 400-acre residential campus in Topi cuts off all distractions. You live, breathe, and build engineering 24/7 with teammates who become your lifelong brothers.',
+    careerJourney: [
+      { year: '2011 - 2015', role: 'BSc Mechanical Engineering', org: 'GIKI', desc: 'Team Lead Invictus UAV, designed composite autonomous gliders.' },
+      { year: '2015 - 2017', role: 'MSc Aerospace Dynamics', org: 'Cranfield University UK', desc: 'Autonomous flight control modeling.' },
+      { year: '2017 - Present', role: 'Autonomous Flight Engineer', org: 'Airbus R&D', desc: 'Developing next-generation zero-emission autonomous commercial aircraft.' }
+    ],
+    instituteId: 'inst_5' 
+  },
+  { 
+    id: 'al_9', 
+    name: 'Sarah Bilal', 
+    role: 'Senior Hardware Architect', 
+    company: 'NVIDIA', 
+    location: 'Santa Clara, CA', 
+    badge: 'Silicon Architecture', 
+    year: 'Class of 2018', 
+    degree: 'BSc Computer Engineering',
+    department: 'Faculty of Computer Sciences and Engineering (FCSE)',
+    campus: 'Topi, Swabi, Khyber Pakhtunkhwa',
+    cgpa: '3.95 / 4.00',
+    honors: 'Valedictorian • IEEE Women in Engineering Champion',
+    thesis: 'Low-Power Hardware Accelerators for Quantized Deep Neural Inference on FPGAs',
+    category: 'Engineering & Aerospace',
+    skills: ['VLSI Silicon Design', 'Verilog / SystemVerilog', 'GPU Microarchitecture', 'High-Speed Interconnects', 'ASIC Verification'],
+    verifiedId: 'EDU-PK-2018-GIKI-0129',
+    picture: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=400&q=80', 
+    successStory: 'Designing next-generation tensor cores and ultra-high-throughput interconnect fabrics for hyperscale AI computing clusters.',
+    advice: 'GIKI’s computer engineering program demands uncompromising hardware discipline. If you want to understand how bits move through silicon, GIKI is world-class.',
+    careerJourney: [
+      { year: '2014 - 2018', role: 'BSc Computer Engineering', org: 'GIKI', desc: 'Conducted FPGA acceleration research in collaboration with CERN.' },
+      { year: '2018 - 2020', role: 'MS Electrical & Computer Eng', org: 'Purdue University', desc: 'High-performance silicon computing systems.' },
+      { year: '2020 - Present', role: 'Senior Hardware Architect', org: 'NVIDIA Silicon Valley', desc: 'Designing Tensor Core interconnects for Blackwell and future AI GPUs.' }
+    ],
+    instituteId: 'inst_5' 
+  },
+  { 
+    id: 'al_17', 
+    name: 'Danish Qureshi', 
+    role: 'Propulsion Systems Specialist', 
+    company: 'Rolls-Royce', 
+    location: 'Derby, UK', 
+    badge: 'Thermal Dynamics', 
+    year: 'Class of 2016', 
+    degree: 'BSc Materials & Chemical Engineering',
+    department: 'Faculty of Materials Science and Chemical Engineering',
+    campus: 'Topi, Swabi, Khyber Pakhtunkhwa',
+    cgpa: '3.88 / 4.00',
+    honors: 'PEC Gold Medal for Metallurgy & Material Innovation',
+    thesis: 'High-Temperature Nickel-Based Superalloy Fatigue Analysis in High-Pressure Turbines',
+    category: 'Engineering & Aerospace',
+    skills: ['Superalloy Metallurgy', 'Combustion Modeling', 'FEA Structural Stress', 'Thermal Barrier Coatings', 'Gas Turbine Engines'],
+    verifiedId: 'EDU-PK-2016-GIKI-0330',
+    picture: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80', 
+    successStory: 'Key engineer developing computational thermal models and aerodynamic durability simulations for next-generation civil aviation turbines.',
+    advice: 'The materials research laboratories at GIKI rival top European universities. Don’t hesitate to get your hands dirty in the high-temperature foundry labs.',
+    careerJourney: [
+      { year: '2012 - 2016', role: 'BSc Materials Engineering', org: 'GIKI', desc: 'Best Senior Design Project in composite alloy stress modeling.' },
+      { year: '2016 - 2018', role: 'MSc Advanced Materials', org: 'University of Sheffield', desc: 'Additive manufacturing of aerospace components.' },
+      { year: '2018 - Present', role: 'Propulsion Systems Specialist', org: 'Rolls-Royce Civil Aerospace', desc: 'Designing thermal barrier coatings for UltraFan jet engines.' }
+    ],
+    instituteId: 'inst_5' 
+  },
 
   // FAST (inst_6)
-  { id: 'al_10', name: 'Osman Butt', role: 'VP of Engineering', company: 'Careem / Uber', location: 'Dubai, UAE', badge: 'Platform Architecture', year: 'Class of 2012', picture: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80', successStory: 'Engineered the high-concurrency real-time dispatch and routing engines that scaled Careem to Middle East unicorn status.', instituteId: 'inst_6' },
-  { id: 'al_11', name: 'Nimra Saeed', role: 'Principal Security Architect', company: 'Cloudflare', location: 'San Francisco, CA', badge: 'Cyber Security', year: 'Class of 2019', picture: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80', successStory: 'Specializes in terabit-scale DDoS defense, zero-trust edge networks, and ultra-fast kernel packet filtering algorithms.', instituteId: 'inst_6' },
-  { id: 'al_18', name: 'Bilal Ahmed', role: 'Staff Systems Engineer', company: 'Stripe', location: 'Seattle, WA', badge: 'Distributed Ledgers', year: 'Class of 2017', picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', successStory: 'Spearheading ultra-low-latency financial ledger synchronization and fault-tolerant consensus systems across global multi-region clusters.', instituteId: 'inst_6' },
+  { 
+    id: 'al_10', 
+    name: 'Osman Butt', 
+    role: 'VP of Engineering', 
+    company: 'Careem / Uber', 
+    location: 'Dubai, UAE', 
+    badge: 'Platform Architecture', 
+    year: 'Class of 2012', 
+    degree: 'BS Computer Science',
+    department: 'Department of Computer Science',
+    campus: 'H-11 Campus, Islamabad',
+    cgpa: '3.86 / 4.00',
+    honors: 'FAST Speed Programming National Champion',
+    thesis: 'Low-Latency Geospatial Indexing and Dynamic Dispatch Algorithms for Ride-Hailing Fleets',
+    category: 'Tech & AI',
+    skills: ['Distributed Microservices', 'High-Concurrency Systems', 'Kafka / Redis', 'Geo-spatial Indexing', 'Engineering Leadership'],
+    verifiedId: 'EDU-PK-2012-FAST-0511',
+    picture: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80', 
+    successStory: 'Engineered the high-concurrency real-time dispatch and routing engines that scaled Careem to Middle East unicorn status.',
+    advice: 'FAST code discipline is brutal, and that’s precisely why companies hire FASTians on day one. When millions of users are waiting for an instant response, that discipline pays off.',
+    careerJourney: [
+      { year: '2008 - 2012', role: 'BS Computer Science', org: 'FAST NUCES', desc: 'Lead algorithmist, ICPC World Finals regional qualifier.' },
+      { year: '2012 - 2016', role: 'Senior Lead Architect', org: 'Careem Karachi/Dubai', desc: 'Built first dispatch core handling 100k rides per day.' },
+      { year: '2016 - Present', role: 'VP of Engineering', org: 'Careem / Uber MENA', desc: 'Leading 350+ engineers across 12 countries.' }
+    ],
+    instituteId: 'inst_6' 
+  },
+  { 
+    id: 'al_11', 
+    name: 'Nimra Saeed', 
+    role: 'Principal Security Architect', 
+    company: 'Cloudflare', 
+    location: 'San Francisco, CA', 
+    badge: 'Cyber Security', 
+    year: 'Class of 2019', 
+    degree: 'BS Cyber Security & Computer Science',
+    department: 'Faculty of Computing & Cyber Security',
+    campus: 'Main Faisal Town Campus, Lahore',
+    cgpa: '3.97 / 4.00',
+    honors: 'National Cyber Security Hackathon Winner • Rector’s List',
+    thesis: 'Kernel eBPF Packet Filtering for High-Volume DDoS Mitigation at Edge Gateways',
+    category: 'Tech & AI',
+    skills: ['eBPF / Linux Kernel', 'Zero-Trust Architecture', 'DDoS Mitigation', 'Rust / C', 'Cryptographic Protocols'],
+    verifiedId: 'EDU-PK-2019-FAST-0994',
+    picture: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80', 
+    successStory: 'Specializes in terabit-scale DDoS defense, zero-trust edge networks, and ultra-fast kernel packet filtering algorithms.',
+    advice: 'FAST pushes you to write code from first principles. When you understand the Linux network stack at byte level, cybersecurity becomes second nature.',
+    careerJourney: [
+      { year: '2015 - 2019', role: 'BS Computer Science', org: 'FAST NUCES Lahore', desc: 'Head of FAST Cyber Defense Society.' },
+      { year: '2019 - 2021', role: 'Security Engineer', org: 'FireEye / Mandiant', desc: 'Threat intelligence analysis on APT infrastructure.' },
+      { year: '2021 - Present', role: 'Principal Security Architect', org: 'Cloudflare', desc: 'Defending 20% of global internet traffic from volumetric attacks.' }
+    ],
+    instituteId: 'inst_6' 
+  },
+  { 
+    id: 'al_18', 
+    name: 'Bilal Ahmed', 
+    role: 'Staff Systems Engineer', 
+    company: 'Stripe', 
+    location: 'Seattle, WA', 
+    badge: 'Distributed Ledgers', 
+    year: 'Class of 2017', 
+    degree: 'BS Computer Science',
+    department: 'Department of Computer Science',
+    campus: 'Malir City Campus, Karachi',
+    cgpa: '3.92 / 4.00',
+    honors: 'ACM ICPC Regional Silver Medalist',
+    thesis: 'Fault-Tolerant Distributed Financial Ledgers with Multi-Region Synchronous Replication',
+    category: 'Tech & AI',
+    skills: ['Distributed Databases', 'Raft Consensus', 'Zero-Downtime Migration', 'Java / Rust', 'Transaction Semantics'],
+    verifiedId: 'EDU-PK-2017-FAST-0210',
+    picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', 
+    successStory: 'Spearheading ultra-low-latency financial ledger synchronization and fault-tolerant consensus systems across global multi-region clusters.',
+    advice: 'Code every day. FAST gave me an appetite for hard software problems. Don’t chase buzzwords—master algorithms, databases, and network fundamentals.',
+    careerJourney: [
+      { year: '2013 - 2017', role: 'BS Computer Science', org: 'FAST NUCES Karachi', desc: 'Graduated top 1% of cohort.' },
+      { year: '2017 - 2020', role: 'Infrastructure Engineer', org: 'Amazon AWS', desc: 'DynamoDB partition routing team in Seattle.' },
+      { year: '2020 - Present', role: 'Staff Systems Engineer', org: 'Stripe', desc: 'Architecting core multi-region ledger for Stripe Billing and Payments.' }
+    ],
+    instituteId: 'inst_6' 
+  },
 
   // IBA (inst_7)
-  { id: 'al_12', name: 'Asad Umar Qureshi', role: 'Head of Investment Banking', company: 'Standard Chartered', location: 'Karachi, Pakistan', badge: 'Corporate Finance', year: 'Class of 2014', picture: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80', successStory: 'Structured landmark multi-billion rupee syndicated sovereign sukuks and mega-scale green energy infrastructure funds.', instituteId: 'inst_7' },
-  { id: 'al_13', name: 'Hira Siddiqui', role: 'Director of Brand Strategy', company: 'Unilever', location: 'Singapore', badge: 'Consumer Marketing', year: 'Class of 2018', picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80', successStory: 'Spearheading regional omnichannel campaigns with 40M+ reach across South Asian consumer brands and digital ecosystems.', instituteId: 'inst_7' },
-  { id: 'al_19', name: 'Omair Mansoor', role: 'Managing Director', company: 'Goldman Sachs MENA', location: 'Doha, Qatar', badge: 'Global Banking', year: 'Class of 2013', picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', successStory: 'Directs cross-border structured debt advisory and sovereign wealth syndication across the Gulf Cooperation Council.', instituteId: 'inst_7' },
+  { 
+    id: 'al_12', 
+    name: 'Asad Umar Qureshi', 
+    role: 'Head of Investment Banking', 
+    company: 'Standard Chartered', 
+    location: 'Karachi, Pakistan', 
+    badge: 'Corporate Finance', 
+    year: 'Class of 2014', 
+    degree: 'BBA (Hons) Corporate Finance',
+    department: 'School of Business Studies (SBS)',
+    campus: 'Main Campus, University Road, Karachi',
+    cgpa: '3.88 / 4.00',
+    honors: 'Dean’s Honor Roll • CFA Society Pakistan Outstanding Student',
+    thesis: 'Syndicated Green Sukuk Debt Structuring for South Asian Renewable Energy Mega-Projects',
+    category: 'Business & Finance',
+    skills: ['Syndicated Lending', 'Sukuk Structuring', 'Project Finance', 'M&A Advisory', 'Debt Capital Markets'],
+    verifiedId: 'EDU-PK-2014-IBA-0721',
+    picture: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80', 
+    successStory: 'Structured landmark multi-billion rupee syndicated sovereign sukuks and mega-scale green energy infrastructure funds.',
+    advice: 'IBA Karachi is the historic cradle of Pakistan’s financial leadership. The rigor of corporate finance here prepares you to sit across boardroom tables with utter confidence.',
+    careerJourney: [
+      { year: '2010 - 2014', role: 'BBA (Hons)', org: 'IBA Karachi', desc: 'Finance Society President, winner of National Investment Banking Challenge.' },
+      { year: '2014 - 2018', role: 'VP Corporate Banking', org: 'Habib Bank Limited', desc: 'Structured PKR 40B CPEC power projects.' },
+      { year: '2018 - Present', role: 'Head of Investment Banking', org: 'Standard Chartered Pakistan', desc: 'Overseeing sovereign advisory and infrastructure syndications.' }
+    ],
+    instituteId: 'inst_7' 
+  },
+  { 
+    id: 'al_13', 
+    name: 'Hira Siddiqui', 
+    role: 'Director of Brand Strategy', 
+    company: 'Unilever', 
+    location: 'Singapore', 
+    badge: 'Consumer Marketing', 
+    year: 'Class of 2018', 
+    degree: 'BBA (Hons) Marketing & Brand Management',
+    department: 'School of Business Studies (SBS)',
+    campus: 'City Campus, Garden Road, Karachi',
+    cgpa: '3.92 / 4.00',
+    honors: 'Gold Medalist in Strategic Marketing • Best Female Leader Award',
+    thesis: 'Omnichannel Digital Consumer Journey Mapping across Emerging E-Commerce Ecosystems',
+    category: 'Business & Finance',
+    skills: ['Brand Architecture', 'Omnichannel Strategy', 'Consumer Insights', 'Digital Media Planning', 'P&L Management'],
+    verifiedId: 'EDU-PK-2018-IBA-0348',
+    picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80', 
+    successStory: 'Spearheading regional omnichannel campaigns with 40M+ reach across South Asian consumer brands and digital ecosystems.',
+    advice: 'IBA taught me that marketing without financial discipline is vanity. Knowing how to read a balance sheet while creating emotional brand loyalty is a superpower.',
+    careerJourney: [
+      { year: '2014 - 2018', role: 'BBA Marketing', org: 'IBA Karachi', desc: 'President IBA Marketing Club, L’Oreal Brandstorm National Winner.' },
+      { year: '2018 - 2021', role: 'Brand Manager', org: 'Unilever Pakistan', desc: 'Led Sunsilk campaign reaching 25M households.' },
+      { year: '2021 - Present', role: 'Director Brand Strategy', org: 'Unilever Global HQ Singapore', desc: 'Overseeing beauty & personal care brand growth across Asia-Pacific.' }
+    ],
+    instituteId: 'inst_7' 
+  },
+  { 
+    id: 'al_19', 
+    name: 'Omair Mansoor', 
+    role: 'Managing Director', 
+    company: 'Goldman Sachs MENA', 
+    location: 'Doha, Qatar', 
+    badge: 'Global Banking', 
+    year: 'Class of 2013', 
+    degree: 'MBA (Executive) Finance & Strategy',
+    department: 'School of Business Studies (SBS)',
+    campus: 'Main Campus, University Road, Karachi',
+    cgpa: '3.90 / 4.00',
+    honors: 'IBA Distinguished Alumni Citation for International Finance',
+    thesis: 'Cross-Border Capital Arbitrage and Sovereign Wealth Allocation Frameworks',
+    category: 'Business & Finance',
+    skills: ['Sovereign Wealth Advisory', 'Cross-Border M&A', 'Derivatives Structuring', 'Private Markets', 'Macro Liquidity'],
+    verifiedId: 'EDU-PK-2013-IBA-0112',
+    picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', 
+    successStory: 'Directs cross-border structured debt advisory and sovereign wealth syndication across the Gulf Cooperation Council.',
+    advice: 'The discipline instilled by IBA faculty remains unmatched. We were held to Wall Street standards from our very first case presentation.',
+    careerJourney: [
+      { year: '2011 - 2013', role: 'MBA Finance', org: 'IBA Karachi', desc: 'Executive cohort, focused on cross-border debt syndication.' },
+      { year: '2013 - 2018', role: 'VP Investment Banking', org: 'J.P. Morgan Dubai', desc: 'GCC energy bond issuances totaling $12B+.' },
+      { year: '2018 - Present', role: 'Managing Director', org: 'Goldman Sachs MENA', desc: 'Directing sovereign advisory and sovereign wealth partnerships in Qatar & UAE.' }
+    ],
+    instituteId: 'inst_7' 
+  },
 
   // NCA (inst_2)
-  { id: 'al_2', name: 'Zohaib Sheikh', role: 'Principal Architectural Designer', company: 'MorphStudio', location: 'Lahore, Pakistan', badge: 'Sustainable Architecture', year: 'Class of 2015', picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', successStory: 'Recipient of the Aga Khan Award for Architecture nominee citation for vernacular rammed-earth environmental design.', instituteId: 'inst_2' },
-  { id: 'al_14', name: 'Fatima Jamil', role: 'Lead Production Designer', company: 'BBC & HBO Series', location: 'London, UK', badge: 'Cinematic Design', year: 'Class of 2017', picture: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80', successStory: 'BAFTA-nominated art director renowned for intricate historical heritage sets and immersive architectural cinematic conservation.', instituteId: 'inst_2' },
-  { id: 'al_20', name: 'Sheroz Gill', role: 'Creative Director', company: 'Pentagram', location: 'London, UK', badge: 'Visual Identity', year: 'Class of 2016', picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', successStory: 'Crafting identity systems and museum visual guidelines for major European cultural foundations and galleries.', instituteId: 'inst_2' },
+  { 
+    id: 'al_2', 
+    name: 'Zohaib Sheikh', 
+    role: 'Principal Architectural Designer', 
+    company: 'MorphStudio', 
+    location: 'Lahore, Pakistan', 
+    badge: 'Sustainable Architecture', 
+    year: 'Class of 2015', 
+    degree: 'B.Arch (Bachelor of Architecture)',
+    department: 'Department of Architecture',
+    campus: 'Mall Road Historic Campus, Lahore',
+    cgpa: '3.89 / 4.00',
+    honors: 'Aga Khan Award for Architecture Nominee Citation • Sir Percy Brown Award',
+    thesis: 'Thermal Vernacularism: Modern Rammed-Earth High-Density Urban Courtyard Housing',
+    category: 'Design & Architecture',
+    skills: ['Vernacular Architecture', 'Parametric Design', 'Sustainable Materials', 'Heritage Conservation', 'Bioclimatic Engineering'],
+    verifiedId: 'EDU-PK-2015-NCA-0043',
+    picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', 
+    successStory: 'Recipient of the Aga Khan Award for Architecture nominee citation for vernacular rammed-earth environmental design.',
+    advice: 'NCA Mall Road is an institution with a soul. It forces you to question why you build before you touch a pencil. That cultural consciousness is what sets NCA architects apart globally.',
+    careerJourney: [
+      { year: '2010 - 2015', role: 'B.Arch', org: 'NCA Lahore', desc: 'Awarded highest distinction in architectural design studio.' },
+      { year: '2015 - 2018', role: 'Senior Designer', org: 'Nayyar Ali Dada & Associates', desc: 'Worked on Lahore Arts Council and historic civic centers.' },
+      { year: '2018 - Present', role: 'Founder & Principal', org: 'MorphStudio', desc: 'Pioneering carbon-negative rammed-earth architecture across Pakistan.' }
+    ],
+    instituteId: 'inst_2' 
+  },
+  { 
+    id: 'al_14', 
+    name: 'Fatima Jamil', 
+    role: 'Lead Production Designer', 
+    company: 'BBC & HBO Series', 
+    location: 'London, UK', 
+    badge: 'Cinematic Design', 
+    year: 'Class of 2017', 
+    degree: 'B.Des (Film & Television Production Design)',
+    department: 'Department of Film and Television',
+    campus: 'Mall Road Historic Campus, Lahore',
+    cgpa: '3.94 / 4.00',
+    honors: 'BAFTA Nominated Production Designer • NCA Gold Medal',
+    thesis: 'Temporal Spatial Construction in South Asian Period Cinema',
+    category: 'Design & Architecture',
+    skills: ['Production Design', 'Art Direction', 'Period Set Construction', 'Cinematic World-Building', 'Costume History'],
+    verifiedId: 'EDU-PK-2017-NCA-0088',
+    picture: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80', 
+    successStory: 'BAFTA-nominated art director renowned for intricate historical heritage sets and immersive architectural cinematic conservation.',
+    advice: 'NCA teaches you that every visual detail has a story. Whether designing a 16th-century Mughal fort or a futuristic dystopia, the historical research skills from NCA stay with you.',
+    careerJourney: [
+      { year: '2013 - 2017', role: 'B.Des Film & TV', org: 'NCA Lahore', desc: 'Designed 6 award-winning short films screened at Clermont-Ferrand.' },
+      { year: '2017 - 2020', role: 'Art Director', org: 'BBC Drama UK', desc: 'Lead set designer for historical drama productions.' },
+      { year: '2020 - Present', role: 'Lead Production Designer', org: 'HBO Max Originals', desc: 'Directing global art crews on landmark period television series.' }
+    ],
+    instituteId: 'inst_2' 
+  },
+  { 
+    id: 'al_20', 
+    name: 'Sheroz Gill', 
+    role: 'Creative Director', 
+    company: 'Pentagram', 
+    location: 'London, UK', 
+    badge: 'Visual Identity', 
+    year: 'Class of 2016', 
+    degree: 'B.Des (Visual Communication Design)',
+    department: 'Department of Visual Communication Design',
+    campus: 'Mall Road Historic Campus, Lahore',
+    cgpa: '3.91 / 4.00',
+    honors: 'D&AD Yellow Pencil Award • Shakir Ali Excellence in Design',
+    thesis: 'Typographic Heritage & Decolonized Identity Systems for Digital Museums',
+    category: 'Design & Architecture',
+    skills: ['Brand Identity Systems', 'Custom Typography', 'Editorial Design', 'Museum Signage', 'Creative Direction'],
+    verifiedId: 'EDU-PK-2016-NCA-0019',
+    picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80', 
+    successStory: 'Crafting identity systems and museum visual guidelines for major European cultural foundations and galleries.',
+    advice: 'Surround yourself with poets, sculptors, and printmakers. NCA’s greatest gift is that you don’t just study graphic design in isolation—you breathe art in every courtyard.',
+    careerJourney: [
+      { year: '2012 - 2016', role: 'B.Des Visual Communication', org: 'NCA Lahore', desc: 'Designed Lahore Biennale visual identity as student scholar.' },
+      { year: '2016 - 2019', role: 'Senior Identity Designer', org: 'Wolff Olins London', desc: 'Rebranded global cultural institutions.' },
+      { year: '2019 - Present', role: 'Creative Director', org: 'Pentagram London', desc: 'Partnering with world-renowned galleries, publishing houses, and luxury brands.' }
+    ],
+    instituteId: 'inst_2' 
+  },
 
   // AKU (inst_4)
-  { id: 'al_5', name: 'Dr. Yasmin Rashid', role: 'Chief of Pediatric Surgery', company: 'Johns Hopkins Hospital', location: 'Baltimore, MD', badge: 'Pediatric Surgery', year: 'Class of 2011', picture: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&q=80', successStory: 'Pioneering minimally invasive fetal cardiac surgeries with worldwide clinical research and surgical accolades.', instituteId: 'inst_4' },
-  { id: 'al_15', name: 'Dr. Bilawal Shah', role: 'Director of Global Health', company: 'WHO Geneva', location: 'Geneva, Switzerland', badge: 'Epidemiology', year: 'Class of 2014', picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', successStory: 'Oversees regional disease surveillance protocols and emergency healthcare distribution in crisis-hit emerging nations.', instituteId: 'inst_4' },
-  { id: 'al_21', name: 'Dr. Mehreen Farooq', role: 'Associate Professor of Neurosurgery', company: 'Harvard Medical', location: 'Boston, MA', badge: 'Neuro-Oncology', year: 'Class of 2013', picture: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80', successStory: 'Groundbreaking research in neuro-oncology immunotherapy and targeted blood-brain barrier drug delivery models.', instituteId: 'inst_4' }
+  { 
+    id: 'al_5', 
+    name: 'Dr. Yasmin Rashid', 
+    role: 'Chief of Pediatric Surgery', 
+    company: 'Johns Hopkins Hospital', 
+    location: 'Baltimore, MD', 
+    badge: 'Pediatric Surgery', 
+    year: 'Class of 2011', 
+    degree: 'MBBS (Bachelor of Medicine & Surgery)',
+    department: 'Medical College & Hospital',
+    campus: 'Stadium Road Main Campus, Karachi',
+    cgpa: '3.98 / 4.00',
+    honors: 'Best Graduate Gold Medal • American College of Surgeons International Fellow',
+    thesis: 'Minimally Invasive Thoracoscopic Correction of Congenital Diaphragmatic Hernia in Neonates',
+    category: 'Medicine & Healthcare',
+    skills: ['Neonatal Surgery', 'Thoracoscopic Surgery', 'Congenital Cardiac Repair', 'Pediatric Trauma', 'Clinical Protocol Research'],
+    verifiedId: 'EDU-PK-2011-AKU-0012',
+    picture: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&q=80', 
+    successStory: 'Pioneering minimally invasive fetal cardiac surgeries with worldwide clinical research and surgical accolades.',
+    advice: 'Aga Khan University instills a culture of clinical perfection and boundless compassion from your first year on wards. You learn that a doctor’s greatest virtue is meticulous discipline.',
+    careerJourney: [
+      { year: '2006 - 2011', role: 'MBBS', org: 'Aga Khan University', desc: 'Ranked 1st in all professional examinations, Chief Surgical Intern.' },
+      { year: '2011 - 2017', role: 'Surgical Residency', org: 'Massachusetts General Hospital / Harvard', desc: 'General Surgery & Pediatric Fellowship.' },
+      { year: '2017 - Present', role: 'Chief of Pediatric Surgery', org: 'Johns Hopkins Hospital', desc: 'Pioneering minimally invasive neonatal procedures worldwide.' }
+    ],
+    instituteId: 'inst_4' 
+  },
+  { 
+    id: 'al_15', 
+    name: 'Dr. Bilawal Shah', 
+    role: 'Director of Global Health', 
+    company: 'WHO Geneva', 
+    location: 'Geneva, Switzerland', 
+    badge: 'Epidemiology', 
+    year: 'Class of 2014', 
+    degree: 'MBBS & MSc Clinical Research',
+    department: 'Community Health Sciences & Medical College',
+    campus: 'Stadium Road Main Campus, Karachi',
+    cgpa: '3.91 / 4.00',
+    honors: 'Distinction in Community Medicine • WHO Emerging Health Leader',
+    thesis: 'Surveillance Strategies for Poliomyelitis and Water-Borne Pathogens in Dense Urban Settlements',
+    category: 'Medicine & Healthcare',
+    skills: ['Epidemiological Surveillance', 'Vaccine Distribution Logistics', 'Global Health Policy', 'Infectious Disease Control', 'Biostatistics'],
+    verifiedId: 'EDU-PK-2014-AKU-0067',
+    picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', 
+    successStory: 'Oversees regional disease surveillance protocols and emergency healthcare distribution in crisis-hit emerging nations.',
+    advice: 'AKU’s emphasis on Community Health Sciences teaches you to look beyond hospital beds and understand social determinants of health. That community perspective is vital on the world stage.',
+    careerJourney: [
+      { year: '2009 - 2014', role: 'MBBS', org: 'Aga Khan University', desc: 'Conducted field epidemiology across interior Sindh and Balochistan.' },
+      { year: '2014 - 2016', role: 'MPH Global Health', org: 'London School of Hygiene & Tropical Medicine', desc: 'Chevening Scholar.' },
+      { year: '2016 - Present', role: 'Director of Global Health', org: 'World Health Organization (Geneva)', desc: 'Managing international epidemic response teams in vulnerable territories.' }
+    ],
+    instituteId: 'inst_4' 
+  },
+  { 
+    id: 'al_21', 
+    name: 'Dr. Mehreen Farooq', 
+    role: 'Associate Professor of Neurosurgery', 
+    company: 'Harvard Medical School', 
+    location: 'Boston, MA', 
+    badge: 'Neuro-Oncology', 
+    year: 'Class of 2013', 
+    degree: 'MBBS (Bachelor of Medicine & Surgery)',
+    department: 'Department of Surgery & Neurosurgery Division',
+    campus: 'Stadium Road Main Campus, Karachi',
+    cgpa: '3.96 / 4.00',
+    honors: 'Sir Frank Dobie Surgical Prize • Best Clinical Researcher',
+    thesis: 'Immunotherapy Delivery Modalities Across the Blood-Brain Barrier for Glioblastoma Multiforme',
+    category: 'Medicine & Healthcare',
+    skills: ['Awake Craniotomy', 'Neuro-Oncology', 'Stereotactic Radiosurgery', 'Blood-Brain Drug Delivery', 'Clinical Trials'],
+    verifiedId: 'EDU-PK-2013-AKU-0034',
+    picture: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80', 
+    successStory: 'Groundbreaking research in neuro-oncology immunotherapy and targeted blood-brain barrier drug delivery models.',
+    advice: 'AKU gives you the clinical confidence to stand as an equal in Harvard or Oxford rounds. Trust your training—the patient care ethics you learn in Karachi are world standard.',
+    careerJourney: [
+      { year: '2008 - 2013', role: 'MBBS', org: 'Aga Khan University', desc: 'Highest scores in Surgery and Pathology, Clinical Research Trainee.' },
+      { year: '2013 - 2019', role: 'Neurosurgery Resident', org: 'Brigham and Women’s Hospital / Harvard', desc: 'Specialized in complex skull-base tumors.' },
+      { year: '2019 - Present', role: 'Associate Professor of Neurosurgery', org: 'Harvard Medical School', desc: 'Leading glioblastoma clinical trial laboratories in Boston.' }
+    ],
+    instituteId: 'inst_4' 
+  }
 ];
 
 export const events = [

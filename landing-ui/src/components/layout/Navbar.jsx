@@ -1,151 +1,165 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { 
-  GraduationCap, 
-  ArrowUpRight, 
-  Sun, 
-  Moon, 
-  List, 
-  X
-} from '@phosphor-icons/react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
 
-export default function Navbar({ isDark, setIsDark, onGetStarted }) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [isNavVisible, setIsNavVisible] = useState(true)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const lastScrollY = useRef(0)
+export default function Navbar({ onGetStarted }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const lastScrollY = useRef(0);
 
   // Intelligent Hide on Scroll Down, Show on Scroll Up
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0
-      const clampedScrollY = Math.max(0, currentScrollY)
-      const diff = clampedScrollY - lastScrollY.current
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const clampedScrollY = Math.max(0, currentScrollY);
+      const diff = clampedScrollY - lastScrollY.current;
 
       if (clampedScrollY <= 40) {
-        setIsNavVisible(true)
+        setIsNavVisible(true);
       } else if (diff > 6) {
-        // Scrolling down -> hide navbar
-        setIsNavVisible(false)
+        setIsNavVisible(false);
       } else if (diff < -6) {
-        // Scrolling up -> show navbar
-        setIsNavVisible(true)
+        setIsNavVisible(true);
       }
 
-      lastScrollY.current = clampedScrollY
+      lastScrollY.current = clampedScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleNavClick = (item) => {
+    setMobileMenuOpen(false);
+    const id = item.toLowerCase();
+
+    if (id === 'home') {
+      if (location.pathname === '/') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        navigate('/');
+      }
+      return;
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    if (id === 'alumni') {
+      if (location.pathname === '/alumni') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        navigate('/alumni');
+      }
+      return;
+    }
 
-  const scrollToSection = (id) => {
-    setMobileMenuOpen(false)
-    if (location.pathname !== '/') {
-      navigate('/')
-      setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-      }, 150)
+    if (id === 'rankings') {
+      if (location.pathname === '/rankings') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        navigate('/rankings');
+      }
+      return;
+    }
+
+    if (id === 'institutes') {
+      if (location.pathname === '/institutes') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        navigate('/institutes');
+      }
+      return;
+    }
+
+    // For other sections on landing page (Solutions)
+    if (location.pathname === '/') {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     } else {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      navigate('/');
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
     }
-  }
+  };
+
+  const handleLogoClick = () => {
+    if (location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <>
       <header 
-        className={`fixed top-4 left-0 right-0 z-50 flex justify-center px-4 transition-all duration-300 pointer-events-none ${
-          isNavVisible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0'
+        className={`fixed top-4 left-0 right-0 z-50 flex justify-center px-4 md:px-6 transition-transform duration-500 pointer-events-none ${
+          isNavVisible ? 'translate-y-0' : '-translate-y-32'
         }`}
       >
         <nav 
-          className="pointer-events-auto flex items-center justify-between gap-4 md:gap-8 px-4 md:px-6 py-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_36px_-8px_rgba(0,0,0,0.6)] transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg max-w-4xl w-full"
+          className="pointer-events-auto flex items-center justify-between gap-4 md:gap-8 px-5 py-3 md:py-3.5 rounded-full bg-white/95 backdrop-blur-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.08)] max-w-5xl w-full transition-all duration-300"
           aria-label="Main Navigation"
         >
           {/* Brand Logo */}
           <div 
-            className="flex items-center gap-2.5 cursor-pointer select-none group" 
-            onClick={() => scrollToSection('top')}
+            className="flex items-center gap-2 cursor-pointer select-none group" 
+            onClick={handleLogoClick}
           >
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/80 p-1 flex items-center justify-center border border-slate-200/80 dark:border-slate-700/60 shadow-sm group-hover:scale-105 group-hover:border-emerald-500/50 transition-all">
-              <img 
-                src="/brand/eduhub-logo.png" 
-                alt="EduHub Logo" 
-                className="w-full h-full object-contain" 
-              />
+            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center shadow-md shadow-slate-900/20 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-white font-black text-lg leading-none">E</span>
             </div>
-            <span className="font-display font-black text-lg tracking-tight text-slate-900 dark:text-white">
-              EduHub
+            <span className="font-black text-xl tracking-tighter text-slate-900">
+              EduHub.
             </span>
           </div>
 
-          {/* Navigation Section Links */}
-          <div className="hidden md:flex items-center gap-1">
-            <button 
-              type="button" 
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
-              onClick={() => scrollToSection('top')}
-            >
-              Home
-            </button>
-            <button 
-              type="button" 
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
-              onClick={() => scrollToSection('institutes')}
-            >
-              Institutes
-            </button>
-            <button 
-              type="button" 
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
-              onClick={() => scrollToSection('features')}
-            >
-              Features
-            </button>
-            <button 
-              type="button" 
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
-              onClick={() => scrollToSection('alumni')}
-            >
-              Alumni
-            </button>
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center gap-1.5">
+            {['Home', 'Alumni', 'Rankings', 'Institutes'].map((item) => {
+              const isAlumniActive = item === 'Alumni' && (location.pathname === '/alumni' || location.pathname.startsWith('/alumni/'));
+              const isHomeActive = item === 'Home' && location.pathname === '/';
+              const isRankingsActive = item === 'Rankings' && location.pathname === '/rankings';
+              const isInstitutesActive = item === 'Institutes' && (location.pathname === '/institutes' || location.pathname.startsWith('/institute/'));
+              const isActive = isAlumniActive || isHomeActive || isRankingsActive || isInstitutesActive;
+
+              return (
+                <button 
+                  key={item}
+                  type="button" 
+                  className={`px-4 py-2 rounded-full text-sm font-bold tracking-tight transition-all ${
+                    isActive
+                      ? 'text-white bg-slate-900 shadow-sm'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => handleNavClick(item)}
+                >
+                  {item}
+                </button>
+              );
+            })}
           </div>
 
           {/* Nav Actions */}
           <div className="flex items-center gap-2">
-            {/* Theme Toggle */}
+            {/* Get Started Clean CTA */}
             <button 
-              type="button"
-              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-transform active:scale-95"
-              onClick={() => setIsDark(!isDark)} 
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              type="button" 
+              className="hidden sm:inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-md shadow-slate-900/10 transition-all active:scale-95"
+              onClick={onGetStarted}
             >
-              {isDark ? (
-                <Sun size={17} weight="bold" className="text-amber-400 hover:rotate-45 transition-transform" />
-              ) : (
-                <Moon size={17} weight="bold" className="text-emerald-600 hover:-rotate-12 transition-transform" />
-              )}
+              <span>Get Started</span>
+              <ArrowUpRight size={16} strokeWidth={2.5} />
             </button>
 
             {/* Mobile Menu Toggle */}
             <button
               type="button"
-              className="md:hidden p-1.5 text-slate-600 dark:text-slate-300"
+              className="md:hidden p-2 text-slate-700 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X size={20} /> : <List size={20} />}
-            </button>
-
-            {/* Get Started Gradient CTA */}
-            <button 
-              type="button" 
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/30 hover:shadow-emerald-600/50 hover:-translate-y-0.5 transition-all active:translate-y-0"
-              onClick={onGetStarted}
-            >
-              <span>Get Started</span>
-              <ArrowUpRight size={13} weight="bold" />
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </nav>
@@ -155,46 +169,44 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-20 left-4 right-4 z-40 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl md:hidden flex flex-col gap-2"
+            initial={{ opacity: 0, y: -20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed top-24 left-4 right-4 z-40 p-5 rounded-[2rem] bg-white/90 backdrop-blur-3xl border border-white/50 shadow-2xl md:hidden flex flex-col gap-2"
           >
-            <button 
-              className="text-left px-3 py-2 text-sm font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => scrollToSection('top')}
-            >
-              Home
-            </button>
-            <button 
-              className="text-left px-3 py-2 text-sm font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => scrollToSection('institutes')}
-            >
-              Institutes
-            </button>
-            <button 
-              className="text-left px-3 py-2 text-sm font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => scrollToSection('features')}
-            >
-              Features
-            </button>
-            <button 
-              className="text-left px-3 py-2 text-sm font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => scrollToSection('alumni')}
-            >
-              Alumni
-            </button>
-            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+            {['Home', 'Alumni', 'Rankings', 'Institutes'].map((item) => {
+              const isAlumniActive = item === 'Alumni' && (location.pathname === '/alumni' || location.pathname.startsWith('/alumni/'));
+              const isHomeActive = item === 'Home' && location.pathname === '/';
+              const isRankingsActive = item === 'Rankings' && location.pathname === '/rankings';
+              const isInstitutesActive = item === 'Institutes' && (location.pathname === '/institutes' || location.pathname.startsWith('/institute/'));
+              const isActive = isAlumniActive || isHomeActive || isRankingsActive || isInstitutesActive;
+
+              return (
+                <button 
+                  key={item}
+                  className={`text-left px-5 py-3.5 text-xl font-bold tracking-tight rounded-2xl transition-all ${
+                    isActive
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => handleNavClick(item)}
+                >
+                  {item}
+                </button>
+              );
+            })}
+            <div className="pt-4 border-t border-slate-100 mt-2">
               <button 
-                className="w-full py-2.5 rounded-xl text-center text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md"
+                className="w-full py-4 rounded-2xl text-center text-lg font-bold text-white bg-slate-900 shadow-lg active:scale-95 transition-transform"
                 onClick={() => { setMobileMenuOpen(false); onGetStarted(); }}
               >
-                Get Started Free
+                Get Started
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </>
-  )
+  );
 }

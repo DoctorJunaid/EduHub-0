@@ -1,545 +1,603 @@
-import React, { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import React, { useState, useMemo, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Star, 
-  MapPin, 
   ArrowLeft, 
-  ArrowRight,
-  GraduationCap,
-  CheckCircle,
-  Phone,
-  Envelope,
-  DownloadSimple,
-  Buildings,
-  ShieldCheck,
+  ArrowUpRight, 
+  GraduationCap, 
+  Award, 
+  BookOpen, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Share2, 
+  Download, 
+  Calendar, 
+  Coins, 
   X
-} from '@phosphor-icons/react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { institutes, getInstituteData } from '@/data/mockData'
-import Navbar from '@/components/layout/Navbar'
-import WebGLBackground from '@/components/WebGLBackground'
-import GetStartedModal from '@/components/GetStartedModal'
+} from 'lucide-react';
+import Navbar from '@/components/layout/Navbar';
+import FooterHuge from '@/components/landing/FooterHuge';
+import GetStartedModal from '@/components/GetStartedModal';
+import { getInstituteData, institutes } from '@/data/mockData';
 
 export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted }) {
-  const { id: instituteId } = useParams()
-  const navigate = useNavigate()
-  const [partnerModalOpen, setPartnerModalOpen] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  // Always resolve to a valid institute, defaulting to NUST if unmatched
+  // Scroll to top on load or ID change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [id]);
+
   const inst = useMemo(() => {
-    return getInstituteData(instituteId) || getInstituteData('inst_1') || institutes[0]
-  }, [instituteId])
+    return getInstituteData(id) || getInstituteData('inst_1') || institutes[0];
+  }, [id]);
+
+  // Find next institute for continuous exploration
+  const nextInstitute = useMemo(() => {
+    if (!inst) return institutes[0];
+    const currentIndex = institutes.findIndex(i => i.id === inst.id);
+    const nextIndex = (currentIndex + 1) % institutes.length;
+    return institutes[nextIndex];
+  }, [inst]);
 
   // Interactive Apply Modal state
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
-  const [selectedProgram, setSelectedProgram] = useState(null)
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [applyForm, setApplyForm] = useState({
     name: '',
     email: '',
     phone: '',
     program: '',
     qualification: 'FSc Pre-Engineering'
-  })
-  const [applySuccess, setApplySuccess] = useState(false)
-  const [applicationId, setApplicationId] = useState('')
+  });
+  const [applySuccess, setApplySuccess] = useState(false);
+  const [applicationId, setApplicationId] = useState('');
 
   // Prospectus notification
-  const [prospectusDownloaded, setProspectusDownloaded] = useState(false)
+  const [prospectusDownloaded, setProspectusDownloaded] = useState(false);
+  const [partnerModalOpen, setPartnerModalOpen] = useState(false);
 
   const handleOpenPartnerModal = () => {
     if (onGetStarted) {
-      onGetStarted()
+      onGetStarted();
     } else {
-      setPartnerModalOpen(true)
+      setPartnerModalOpen(true);
     }
-  }
+  };
 
   const handleOpenApply = (prog = null) => {
-    const progName = prog?.name || (inst.programs && inst.programs[0]?.name) || 'BS Computer Science'
-    setSelectedProgram(prog)
-    setApplyForm(prev => ({ ...prev, program: progName }))
-    setApplySuccess(false)
-    setIsApplyModalOpen(true)
-  }
+    const progName = prog?.name || (inst.programs && inst.programs[0]?.name) || 'BS Computer Science';
+    setApplyForm(prev => ({ ...prev, program: progName }));
+    setApplySuccess(false);
+    setIsApplyModalOpen(true);
+  };
 
   const handleApplySubmit = (e) => {
-    e.preventDefault()
-    if (!applyForm.name || !applyForm.email || !applyForm.phone) return
-    const randomId = `EDU-2026-${inst.shortName}-${Math.floor(1000 + Math.random() * 9000)}`
-    setApplicationId(randomId)
-    setApplySuccess(true)
-  }
+    e.preventDefault();
+    if (!applyForm.name || !applyForm.email || !applyForm.phone) return;
+    const randomId = `EDU-2026-${inst.shortName}-${Math.floor(1000 + Math.random() * 9000)}`;
+    setApplicationId(randomId);
+    setApplySuccess(true);
+  };
 
   const handleDownloadProspectus = () => {
-    setProspectusDownloaded(true)
-    setTimeout(() => setProspectusDownloaded(false), 4000)
+    setProspectusDownloaded(true);
+    setTimeout(() => setProspectusDownloaded(false), 4000);
+  };
+
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Institute monograph link copied to clipboard!');
+    }
+  };
+
+  if (!inst) {
+    return (
+      <div className="min-h-screen bg-[#fafbfc] flex flex-col justify-between">
+        <Navbar onGetStarted={handleOpenPartnerModal} isDark={isDark} setIsDark={setIsDark} />
+        <div className="pt-40 pb-20 text-center px-6">
+          <h1 className="text-5xl font-black tracking-tighter text-slate-900 mb-4">Record Not Found.</h1>
+          <p className="text-xl text-slate-500 mb-8">The requested institutional monograph could not be resolved.</p>
+          <button
+            onClick={() => navigate('/institutes')}
+            className="px-8 py-4 bg-slate-900 text-white rounded-full font-bold text-sm"
+          >
+            Return to Institutions Directory
+          </button>
+        </div>
+        <FooterHuge />
+      </div>
+    );
   }
 
-  const otherInstitutes = institutes.filter(i => i.id !== inst.id)
-
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen bg-transparent text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white">
-      {/* 3D Particle Background */}
-      <WebGLBackground isDark={isDark} />
+    <div className="relative w-full min-h-screen bg-[#fafbfc] text-slate-900 selection:bg-slate-900 selection:text-white flex flex-col justify-between overflow-x-hidden">
+      {/* Top Floating Dynamic Navbar */}
+      <Navbar onGetStarted={handleOpenPartnerModal} isDark={isDark} setIsDark={setIsDark} />
 
-      {/* Floating Dynamic Navbar */}
-      <Navbar
-        isDark={isDark}
-        setIsDark={setIsDark}
-        onGetStarted={handleOpenPartnerModal}
-      />
+      <main className="flex-1 pt-28 md:pt-36 pb-32">
+        {/* ============================================================ */}
+        {/* TOP EDITORIAL BREADCRUMB */}
+        {/* ============================================================ */}
+        <div className="max-w-7xl mx-auto px-6 mb-10">
+          <div className="flex items-center justify-between py-4 border-b border-slate-200">
+            <button
+              type="button"
+              onClick={() => navigate('/institutes')}
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors group"
+            >
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              <span>All Institutions.</span>
+            </button>
 
-      <div className="relative z-10 pt-24 pb-16">
-        
-        {/* ─── Top Breadcrumb Navigation ─── */}
-        <div className="max-w-7xl mx-auto px-6 mb-6">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-            <button 
-              onClick={() => navigate('/')} 
-              className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 transition-colors"
-            >
-              <ArrowLeft size={13} /> EduHub
-            </button>
-            <span>/</span>
-            <button 
-              onClick={() => navigate('/#institutes')} 
-              className="hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Institutions
-            </button>
-            <span>/</span>
-            <span className="font-bold text-slate-900 dark:text-white">
-              {inst.shortName}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-mono text-slate-400 hidden sm:inline-block">
+                INSTITUTE MONOGRAPH // {inst.id.toUpperCase()}
+              </span>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="p-2 text-slate-400 hover:text-slate-900 rounded-full hover:bg-slate-100 transition-colors"
+                title="Share Monograph"
+              >
+                <Share2 size={16} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ─── SECTION 1: HERO & ESSENTIALS ─── */}
-        <section className="max-w-7xl mx-auto px-6 mb-16">
-          <div className="rounded-3xl overflow-hidden bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)]">
-            
-            {/* Campus Panoramic Image Banner */}
-            <div className="relative h-72 sm:h-96 w-full overflow-hidden">
-              <img 
-                src={inst.image} 
-                alt={inst.name} 
-                onError={(e) => { e.currentTarget.src = '/universities/nust.jpg' }}
-                className="w-full h-full object-cover object-center" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-              {/* Minimal Clean Top Meta Bar */}
-              <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-md bg-slate-950/80 backdrop-blur-md border border-white/20 text-white font-mono text-xs font-bold">
-                    {inst.nationalRank || `#0${inst.rank} National Rank`}
-                  </span>
-                  <span className="px-3 py-1 rounded-md bg-slate-950/80 backdrop-blur-md border border-white/20 text-white font-mono text-xs font-medium hidden sm:inline-block">
-                    {inst.globalRank || 'QS Ranked'}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-950/80 backdrop-blur-md border border-white/20 text-white font-bold text-xs">
-                  <Star size={14} weight="fill" className="text-amber-400" />
-                  <span>{inst.rating}</span>
-                  <span className="text-white/60 font-normal">({inst.reviewsCount})</span>
-                </div>
-              </div>
-
-              {/* Hero Bottom Information */}
-              <div className="absolute bottom-6 left-6 right-6 z-20 text-white flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="flex items-start sm:items-center gap-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 border border-white/30 shadow-xl">
-                    <img 
-                      src={inst.logo} 
-                      alt={inst.shortName} 
-                      onError={(e) => { e.currentTarget.src = '/brand/eduhub-logo.png' }}
-                      className="w-full h-full object-contain" 
-                    />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-white leading-tight">
-                      {inst.fullName || inst.name}
-                    </h1>
-                    <p className="text-xs sm:text-sm text-white/80 font-medium mt-1">
-                      {inst.motto}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-white/70 mt-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin size={14} /> {inst.address}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Phone size={14} /> {inst.phone}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Envelope size={14} /> {inst.email}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Primary CTAs */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    onClick={() => handleOpenApply()}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
-                  >
-                    <GraduationCap size={16} weight="bold" />
-                    <span>Apply for Admission</span>
-                  </button>
-                  <button
-                    onClick={handleDownloadProspectus}
-                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm border border-white/30 transition-all flex items-center gap-1.5"
-                  >
-                    <DownloadSimple size={15} />
-                    <span>Prospectus</span>
-                  </button>
-                </div>
-              </div>
+        {/* ============================================================ */}
+        {/* SECTION 1: HUGE EDITORIAL MONOGRAPH HERO */}
+        {/* ============================================================ */}
+        <section className="max-w-7xl mx-auto px-6 mb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* Meta tags bar with clean pills like #01 National Rank */}
+            <div className="flex flex-wrap items-center gap-2.5 mb-6">
+              <span className="px-3.5 py-1.5 rounded-full bg-slate-900 text-white font-mono text-xs font-bold tracking-tight shadow-sm">
+                {inst.nationalRank || '#01 National Rank'}
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-900 text-xs font-bold uppercase tracking-widest border border-slate-200">
+                {inst.globalRank}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900 text-white font-mono text-xs font-bold tracking-tight shadow-sm">
+                <ShieldCheck size={14} className="text-slate-300" />
+                <span>HEC W4 Accredited</span>
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold font-mono">
+                EST. {inst.establishedYear}
+              </span>
             </div>
 
-            {/* Clean Monochromatic Key Metrics Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/70 dark:divide-slate-800 p-5 bg-slate-50/70 dark:bg-slate-900/60 text-center">
-              <div className="py-2 px-3">
-                <span className="text-[10px] font-mono uppercase text-slate-500 block font-semibold">Global Standing</span>
-                <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{inst.globalRank || 'Ranked'}</span>
-              </div>
-              <div className="py-2 px-3">
-                <span className="text-[10px] font-mono uppercase text-slate-500 block font-semibold">Employability</span>
-                <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{inst.placementRate || '98%'}</span>
-              </div>
-              <div className="py-2 px-3">
-                <span className="text-[10px] font-mono uppercase text-slate-500 block font-semibold">Enrollment</span>
-                <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{inst.studentEnrollment || '15,000+'}</span>
-              </div>
-              <div className="py-2 px-3">
-                <span className="text-[10px] font-mono uppercase text-slate-500 block font-semibold">Faculty</span>
-                <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{inst.facultyCount || '800+'}</span>
-              </div>
-              <div className="py-2 px-3">
-                <span className="text-[10px] font-mono uppercase text-slate-500 block font-semibold">Acceptance</span>
-                <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{inst.acceptanceRate || '8%'}</span>
-              </div>
-              <div className="py-2 px-3">
-                <span className="text-[10px] font-mono uppercase text-slate-500 block font-semibold">Campus Area</span>
-                <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{inst.campusArea || 'Main Campus'}</span>
+            {/* Massive Display Name */}
+            <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[11rem] font-black tracking-tighter text-slate-900 leading-[0.82] mb-6">
+              {inst.shortName}.
+            </h1>
+
+            {/* Official Title & Motto */}
+            <p className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-500 leading-tight mb-14 max-w-5xl">
+              {inst.fullName || inst.name}. <span className="text-slate-900">"{inst.motto}"</span>
+              {inst.address && <span className="block text-slate-400 text-xl sm:text-3xl mt-2">{inst.address}</span>}
+            </p>
+          </motion.div>
+
+          {/* Visual Presentation Split */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mt-12">
+            {/* Campus Panoramic Portrait in Clean Brutalist Frame */}
+            <div className="lg:col-span-5">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="relative rounded-[2.5rem] overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xl group"
+              >
+                <div className="aspect-[4/5] w-full overflow-hidden">
+                  <img
+                    src={inst.image}
+                    alt={inst.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out"
+                  />
+                </div>
+                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-black/75 backdrop-blur-md border border-white/20 text-white flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold tracking-wider">
+                    VERIFIED CAMPUS: {inst.id.toUpperCase()}
+                  </span>
+                  <CheckCircle2 size={18} className="text-white" />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Strategic Overview & Quick CTAs */}
+            <div className="lg:col-span-7 flex flex-col justify-between h-full pt-4">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-4">
+                  INSTITUTIONAL SYNOPSIS
+                </span>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 leading-snug mb-8">
+                  {inst.description}
+                </p>
+
+                {/* Primary Action Buttons */}
+                <div className="flex flex-wrap items-center gap-4 mb-12">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenApply()}
+                    className="px-8 py-5 rounded-full bg-slate-900 text-white font-black text-sm hover:bg-slate-800 shadow-2xl transition-all active:scale-95 inline-flex items-center gap-2"
+                  >
+                    <GraduationCap size={18} />
+                    <span>Apply for Admission Fall 2026</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDownloadProspectus}
+                    className="px-8 py-5 rounded-full bg-white text-slate-900 border border-slate-200 font-bold text-sm hover:bg-slate-50 shadow-sm transition-all inline-flex items-center gap-2"
+                  >
+                    <Download size={18} />
+                    <span>Download Syllabus Guide</span>
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Big Metric Pillars */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 pt-8 border-t border-slate-200">
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">
+                    Employability
+                  </span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">
+                    {inst.placementRate}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">
+                    Selectivity
+                  </span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">
+                    {inst.acceptanceRate}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">
+                    Scholars Enrolled
+                  </span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">
+                    {inst.studentEnrollment.split(' ')[0]}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">
+                    Faculty Body
+                  </span>
+                  <span className="text-2xl sm:text-3xl font-black text-slate-900">
+                    {inst.facultyCount.split(' ')[0]}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">
+                    Campus Grounds
+                  </span>
+                  <span className="text-2xl sm:text-3xl font-black text-slate-900">
+                    {inst.campusArea.split(' ')[0]} {inst.campusArea.split(' ')[1]}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">
+                    Accreditation
+                  </span>
+                  <span className="text-base font-black text-slate-900 truncate block">
+                    {inst.board} W4
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ─── Prospectus Download Toast ─── */}
+        {/* ============================================================ */}
+        {/* PROSPECTUS DOWNLOAD TOAST */}
+        {/* ============================================================ */}
         <AnimatePresence>
           {prospectusDownloaded && (
             <motion.div
-              initial={{ opacity: 0, y: -15 }}
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="max-w-7xl mx-auto px-6 mb-8"
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-7xl mx-auto px-6 mb-12"
             >
-              <div className="p-4 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-between gap-4 text-xs">
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle size={18} weight="fill" className="text-emerald-400" />
-                  <span>Official {inst.shortName} Prospectus &amp; Syllabus Guide 2026 downloaded.</span>
+              <div className="p-5 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-xl">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 size={20} className="text-white" />
+                  <span className="text-sm font-bold">
+                    Official {inst.shortName} Syllabus &amp; Prospectus 2026 downloaded.
+                  </span>
                 </div>
-                <button onClick={() => setProspectusDownloaded(false)}>
-                  <X size={16} />
+                <button 
+                  onClick={() => setProspectusDownloaded(false)}
+                  className="p-1 hover:bg-white/10 rounded-full"
+                >
+                  <X size={18} />
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ─── TOP SECTION: TOP ALUMNI OF THIS INSTITUTION ─── */}
-        {inst.alumniList && inst.alumniList.length > 0 && (
-          <section id="alumni" className="max-w-7xl mx-auto px-6 mb-20">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-              <div>
-                <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                  Distinguished Graduates // {inst.shortName} Network
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                  Top Alumni of {inst.shortName}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  Where {inst.shortName} graduates are leading today across international engineering, science, and global enterprise.
-                </p>
+        {/* ============================================================ */}
+        {/* SECTION 2: ADMISSIONS & FINANCIAL AID LEDGER */}
+        {/* ============================================================ */}
+        {inst.admissions && (
+          <section className="max-w-7xl mx-auto px-6 mb-28">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-[3rem] bg-[#0a0a0a] text-white p-8 sm:p-14 md:p-20 shadow-2xl relative overflow-hidden"
+            >
+              {/* Section Header */}
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-8 mb-12">
+                <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
+                  ADMISSIONS &amp; FINANCIAL ENDOWMENT // 01
+                </span>
+                <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-mono text-xs font-bold tracking-tight shadow-md">
+                  {inst.admissions.cycle}
+                </span>
               </div>
 
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold shrink-0">
-                <CheckCircle size={15} weight="fill" />
-                <span>HEC &amp; Institutional Registry Verified</span>
-              </div>
-            </div>
+              <h2 className="relative z-10 text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter text-white leading-[0.9] mb-14">
+                Admissions{' '}
+                <span style={{ color: '#8b5cf6' }}>
+                  Protocol.
+                </span>
+              </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {inst.alumniList.map((alumni) => (
-                <div
-                  key={alumni.id}
-                  className="rounded-3xl overflow-hidden relative bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)] p-6 sm:p-7 flex flex-col justify-between space-y-5 transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/50 hover:shadow-[0_20px_40px_-12px_rgba(16,185,129,0.15)] group"
-                >
-                  {/* Subtle decorative watermark quotation glyph */}
-                  <span className="absolute -top-3 right-6 text-7xl font-serif text-slate-200/50 dark:text-slate-800/60 select-none pointer-events-none transition-transform group-hover:scale-110">
-                    “
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                <div className="border-t border-white/10 pt-6">
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-bold block mb-2">
+                    APPLICATION DEADLINE
                   </span>
-
-                  <div className="space-y-4 relative z-10">
-                    {/* Header: Avatar, Verified Badge, and Company/Domain Tag */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="relative">
-                        <img 
-                          src={alumni.picture} 
-                          alt={alumni.name} 
-                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80' }}
-                          className="w-16 h-16 rounded-2xl object-cover border-2 border-white dark:border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 ring-2 ring-emerald-500/20 shrink-0" 
-                        />
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-white" title="Verified Alumnus">
-                          <CheckCircle size={12} weight="fill" />
-                        </div>
-                      </div>
-
-                      <div className="text-right space-y-1">
-                        {alumni.company && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[11px] font-bold tracking-tight">
-                            <Buildings size={12} className="text-emerald-500" />
-                            {alumni.company}
-                          </span>
-                        )}
-                        {alumni.badge && (
-                          <span className="block text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
-                            {alumni.badge}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Name, Role & Location */}
-                    <div>
-                      <h3 className="font-extrabold text-lg text-slate-900 dark:text-white font-display leading-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                        {alumni.name}
-                      </h3>
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1">
-                        {alumni.role}
-                      </p>
-                      {alumni.location && (
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-0.5">
-                          <MapPin size={11} /> {alumni.location}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Quote Narrative Pod */}
-                    <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50">
-                      <p className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed">
-                        "{alumni.successStory}"
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Editorial Card Footer */}
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 relative z-10">
-                    <span className="font-mono text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                      {alumni.year || 'Alumnus'}
-                    </span>
-                    <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                      <ShieldCheck size={13} weight="fill" />
-                      {inst.shortName} Verified Record
+                  <div className="flex items-center gap-3">
+                    <Calendar size={22} className="text-white shrink-0" />
+                    <span className="text-xl sm:text-2xl font-black text-white">
+                      {inst.admissions.deadline}
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="border-t border-white/10 pt-6">
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-bold block mb-2">
+                    MANDATORY ENTRY TEST
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <BookOpen size={22} className="text-white shrink-0" />
+                    <span className="text-lg sm:text-xl font-black text-white">
+                      {inst.admissions.entryTest}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/10 pt-6">
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-bold block mb-2">
+                    SEMESTER FEE TIER
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <Coins size={22} className="text-white shrink-0" />
+                    <span className="text-base sm:text-lg font-black text-white">
+                      {inst.admissions.feeRange}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/10 pt-6">
+                  <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-bold block mb-2">
+                    ENDOWMENT &amp; AID
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <Award size={22} className="text-white shrink-0" />
+                    <span className="text-sm sm:text-base font-bold text-slate-300">
+                      {inst.admissions.financialAid}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-sm text-slate-400">
+                  Admissions processed via HEC-recognized centralized aptitude protocols.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleOpenApply()}
+                  className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-slate-900 font-black text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors"
+                >
+                  Start Online Application
+                </button>
+              </div>
+            </motion.div>
           </section>
         )}
 
-        {/* ─── SECTION 2: ACADEMIC PROGRAMS & CURRICULA ─── */}
-        <section id="programs" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-            <div>
-              <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                Degree Offerings
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                Academic Programs &amp; Degrees
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                Official undergraduate, graduate, and doctoral degree paths offered at {inst.shortName}.
-              </p>
-            </div>
-            <button
-              onClick={() => handleOpenApply()}
-              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
-            >
-              <span>Apply for any program</span>
-              <ArrowRight size={12} weight="bold" />
-            </button>
+        {/* ============================================================ */}
+        {/* SECTION 3: ACADEMIC FACULTIES & PROGRAMS */}
+        {/* ============================================================ */}
+        <section className="max-w-7xl mx-auto px-6 mb-28">
+          <div className="mb-14">
+            <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block mb-3">
+              FACULTIES &amp; DEGREES // 02
+            </span>
+            <h2 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-slate-900 leading-[0.85]">
+              Academic{' '}
+              <span style={{ color: '#3b82f6' }}>
+                Programs.
+              </span>
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {inst.programs?.map((prog) => (
-              <div
-                key={prog.id}
-                className="rounded-3xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      {prog.degree}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {prog.duration}
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white font-display leading-snug">
-                    {prog.name}
-                  </h3>
-
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {prog.department}
-                  </p>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
-                    {prog.description}
-                  </p>
-
-                  <div className="pt-2 text-xs space-y-1 text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex justify-between py-1">
-                      <span>Tuition Fee:</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{prog.feePerSemester}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span>Credit Hours:</span>
-                      <span className="font-mono font-medium text-slate-700 dark:text-slate-300">{prog.creditHours} Credits</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">
-                    {prog.seats} Seats
-                  </span>
-                  <button
-                    onClick={() => handleOpenApply(prog)}
-                    className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold transition-colors"
-                  >
-                    Apply Now
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── SECTION 3: FACULTY & DEANS ─── */}
-        {inst.facultyList && inst.facultyList.length > 0 && (
-          <section id="faculty" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-            <div className="mb-10">
-              <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                Faculty Directory
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                Distinguished Deans &amp; Faculty
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                Leading researchers, educators, and chairs heading departments at {inst.shortName}.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-              {inst.facultyList.map((trainer) => (
+            {inst.programs && inst.programs.length > 0 ? (
+              inst.programs.map((program) => (
                 <div
-                  key={trainer.id}
-                  className="rounded-3xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 p-6 flex flex-col justify-between space-y-4 shadow-sm"
+                  key={program.id}
+                  className="bg-white rounded-3xl p-8 border border-slate-200/80 hover:border-slate-900 transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
                 >
-                  <div className="flex items-start gap-4">
-                    <img 
-                      src={trainer.avatar} 
-                      alt={trainer.name} 
-                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80' }}
-                      className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" 
-                    />
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                        {trainer.name}
-                      </h3>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                        {trainer.position}
-                      </p>
-                      <p className="text-xs font-mono text-slate-500 mt-1">
-                        {trainer.degrees}
-                      </p>
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <span className="px-3 py-1 rounded-full bg-slate-900 text-white font-mono text-[10px] font-bold tracking-tight">
+                        {program.degree}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-slate-400">
+                        {program.duration}
+                      </span>
                     </div>
+
+                    <h3 className="text-2xl font-black tracking-tight text-slate-900 mb-2">
+                      {program.name}
+                    </h3>
+                    <p className="text-xs font-mono text-slate-500 font-bold mb-4">
+                      {program.department}
+                    </p>
+                    <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
+                      {program.description}
+                    </p>
                   </div>
 
-                  {trainer.research && (
-                    <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 text-xs">
-                      <span className="text-slate-400 font-mono text-[10px] block uppercase font-semibold">Specialization</span>
-                      <span className="text-slate-700 dark:text-slate-300">{trainer.research}</span>
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase text-slate-400 block font-bold">Tuition Fee</span>
+                      <span className="text-sm font-black text-slate-900">{program.feePerSemester}</span>
                     </div>
-                  )}
-
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
-                    <span>{trainer.experience}</span>
-                    <button 
-                      onClick={() => handleOpenApply()} 
-                      className="text-xs font-semibold text-slate-900 dark:text-white hover:underline"
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApply(program)}
+                      className="px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-800 text-xs font-bold transition-all"
                     >
-                      Consult Advisor →
+                      Apply Now
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+            ) : (
+              inst.departments.map((dept, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-3xl p-8 border border-slate-200/80 hover:border-slate-900 transition-all shadow-sm flex flex-col justify-between"
+                >
+                  <div>
+                    <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-2">Faculty // 0{idx + 1}</span>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{dept}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenApply()}
+                    className="mt-6 text-xs font-bold uppercase tracking-wider text-slate-900 inline-flex items-center gap-1 hover:translate-x-1 transition-transform"
+                  >
+                    <span>View Curriculum</span>
+                    <ArrowUpRight size={14} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 4: RESEARCH CENTERS OF EXCELLENCE */}
+        {/* ============================================================ */}
+        {inst.researchCenters && inst.researchCenters.length > 0 && (
+          <section className="max-w-7xl mx-auto px-6 mb-28">
+            <div className="border-t-2 border-slate-900 pt-12">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block mb-3">
+                RESEARCH INSTITUTES // 03
+              </span>
+              <h2 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter text-slate-900 leading-[0.9] mb-12">
+                Centers of{' '}
+                <span style={{ color: '#10b981' }}>
+                  Excellence.
+                </span>
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {inst.researchCenters.map((center, idx) => (
+                  <div key={idx} className="p-6 rounded-3xl bg-slate-50 border border-slate-200">
+                    <span className="text-xs font-mono font-bold text-slate-400 block mb-2">LAB // 0{idx + 1}</span>
+                    <h4 className="text-lg font-black text-slate-900 leading-snug">{center}</h4>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         )}
 
-        {/* ─── SECTION 4: CAMPUS FACILITIES & INFRASTRUCTURE ─── */}
-        {inst.facilitiesList && inst.facilitiesList.length > 0 && (
-          <section id="facilities" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-            <div className="mb-10">
-              <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                Campus Infrastructure
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                Laboratories &amp; Facilities
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                State-of-the-art research centers and living spaces driving learning at {inst.shortName}.
-              </p>
+        {/* ============================================================ */}
+        {/* SECTION 5: DISTINGUISHED ALUMNI NETWORK */}
+        {/* ============================================================ */}
+        {inst.alumniList && inst.alumniList.length > 0 && (
+          <section className="max-w-7xl mx-auto px-6 mb-28">
+            <div className="mb-14 flex items-end justify-between">
+              <div>
+                <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block mb-3">
+                  FELLOWS NETWORK // 04
+                </span>
+                <h2 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-slate-900 leading-[0.85]">
+                  Alumni of{' '}
+                  <span style={{ color: '#ec4899' }}>
+                    {inst.shortName}.
+                  </span>
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/alumni')}
+                className="hidden sm:inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900 hover:text-slate-600 transition-colors"
+              >
+                <span>View Full Directory</span>
+                <ArrowUpRight size={16} />
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {inst.facilitiesList.map((fac) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {inst.alumniList.map((alumnus) => (
                 <div
-                  key={fac.id}
-                  className="rounded-3xl overflow-hidden bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between"
+                  key={alumnus.id}
+                  onClick={() => navigate(`/alumni/${alumnus.id}`)}
+                  className="cursor-pointer bg-white rounded-[2.5rem] overflow-hidden border border-slate-200/80 hover:border-slate-900 transition-all duration-300 shadow-sm hover:shadow-xl group flex flex-col justify-between"
                 >
-                  {fac.image && (
-                    <div className="relative h-48 sm:h-56 w-full overflow-hidden">
-                      <img 
-                        src={fac.image} 
-                        alt={fac.title} 
-                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=800&q=80' }}
-                        className="w-full h-full object-cover" 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-                      {fac.tag && (
-                        <span className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-white text-[10px] font-mono font-semibold">
-                          {fac.tag}
-                        </span>
-                      )}
+                  <div className="aspect-[4/5] w-full overflow-hidden bg-slate-100 relative">
+                    <img
+                      src={alumnus.picture}
+                      alt={alumnus.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                      <span className="px-3 py-1 rounded-full bg-slate-900 text-white font-mono text-xs font-bold tracking-tight shadow-sm">
+                        {alumnus.category}
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-bold">
+                        {alumnus.year}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
-                  <div className="p-6 space-y-2">
-                    <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                      {fac.title}
+                  <div className="p-6">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1 group-hover:underline">
+                      {alumnus.name}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {fac.description}
+                    <p className="text-sm font-bold text-slate-500">
+                      {alumnus.role} @ {alumnus.company}
                     </p>
                   </div>
                 </div>
@@ -548,402 +606,194 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
           </section>
         )}
 
-        {/* ─── SECTION 5: ADMISSIONS PROCESS & FEE STRUCTURE ─── */}
-        <section id="admissions" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-          <div className="mb-10">
-            <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-              Admissions Guide
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-              Admission Steps &amp; Fee Breakdown
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Standardized admission roadmap and financial schedules for Fall 2026.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            {[
-              { step: '01', title: 'Submit Online Profile', desc: 'Complete registration form with verified academic transcripts.' },
-              { step: '02', title: 'Aptitude & Entry Test', desc: 'Appear in institutional entrance exam or provide standardized SAT score.' },
-              { step: '03', title: 'Merit Declaration', desc: 'Check published merit ranks and program allocation lists.' },
-              { step: '04', title: 'Enrollment Deposit', desc: 'Submit initial dues and receive institutional student portal access.' }
-            ].map(item => (
-              <div key={item.step} className="p-6 rounded-3xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 space-y-2">
-                <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400">Step {item.step}</span>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">{item.title}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Fee Table Card */}
-          <div className="rounded-3xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white">
-                  Semester Tuition &amp; Access Fees
-                </h3>
-                <p className="text-xs text-slate-500">Official fee schedule approved for academic year 2026.</p>
-              </div>
-              <button
-                onClick={() => handleOpenApply()}
-                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs shrink-0"
-              >
-                Apply for Merit Aid
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-mono uppercase text-[10px]">
-                    <th className="py-2.5 px-3">Category</th>
-                    <th className="py-2.5 px-3">Undergraduate</th>
-                    <th className="py-2.5 px-3">Graduate</th>
-                    <th className="py-2.5 px-3">Frequency</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                  <tr>
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">Tuition (Course Work)</td>
-                    <td className="py-3 px-3 font-mono font-bold">PKR 145,000 – 195,000</td>
-                    <td className="py-3 px-3 font-mono font-bold">PKR 125,000 – 175,000</td>
-                    <td className="py-3 px-3 text-slate-400">Per Semester</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">Laboratory Dues</td>
-                    <td className="py-3 px-3 font-mono">PKR 18,000</td>
-                    <td className="py-3 px-3 font-mono">PKR 22,000</td>
-                    <td className="py-3 px-3 text-slate-400">Per Semester</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">Admission Registration</td>
-                    <td className="py-3 px-3 font-mono">PKR 35,000</td>
-                    <td className="py-3 px-3 font-mono">PKR 35,000</td>
-                    <td className="py-3 px-3 text-slate-400">One-Time Only</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">Security Deposit</td>
-                    <td className="py-3 px-3 font-mono">PKR 10,000</td>
-                    <td className="py-3 px-3 font-mono">PKR 10,000</td>
-                    <td className="py-3 px-3 text-slate-400">Refundable at Graduation</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── SECTION 6: AFFILIATED CAMPUSES ─── */}
-        {inst.branches && inst.branches.length > 0 && (
-          <section id="campuses" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-            <div className="mb-8">
-              <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                Campus Locations
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                Active Campuses &amp; Branches
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {inst.branches.map(branch => (
-                <div 
-                  key={branch.id} 
-                  className="p-5 rounded-3xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 space-y-2"
-                >
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    <MapPin size={15} />
-                    <span>Active Campus</span>
-                  </div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">{branch.name}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{branch.address}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ─── SECTION 7: CAMPUS ARCHITECTURE & RESEARCH SPACES ─── */}
+        {/* ============================================================ */}
+        {/* SECTION 6: CAMPUS GROUNDS GALLERY */}
+        {/* ============================================================ */}
         {inst.gallery && inst.gallery.length > 0 && (
-          <section id="gallery" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-              <div>
-                <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                  Visual Tour // Campus Environment
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                  Campus Spaces &amp; Architecture
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  Living, learning, and research facilities across the {inst.shortName} grounds.
-                </p>
-              </div>
+          <section className="max-w-7xl mx-auto px-6 mb-28">
+            <div className="mb-10">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block mb-2">
+                GROUNDS &amp; INFRASTRUCTURE // 05
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900">
+                Campus{' '}
+                <span style={{ color: '#f59e0b' }}>
+                  Architecture.
+                </span>
+              </h2>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {inst.gallery.map((imgUrl, idx) => (
-                <div key={idx} className="relative rounded-3xl overflow-hidden aspect-[4/3] bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-800 shadow-sm group">
+              {inst.gallery.map((img, idx) => (
+                <div key={idx} className="rounded-3xl overflow-hidden aspect-square bg-slate-100 shadow-sm">
                   <img
-                    src={imgUrl}
-                    alt={`${inst.shortName} space ${idx + 1}`}
-                    onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=800&q=80' }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src={img}
+                    alt={`${inst.shortName} Campus ${idx + 1}`}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                    <span className="text-[11px] font-mono text-white font-semibold">
-                      Campus Wing // 0{idx + 1}
-                    </span>
-                  </div>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* ─── SECTION 8: OTHER MEMBER INSTITUTIONS ─── */}
-        <section className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
-          <div className="flex items-center justify-between gap-4 mb-8">
-            <div>
-              <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
-                EduHub Network
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-                Explore Other Universities
-              </h2>
-            </div>
-            <button 
-              onClick={() => navigate('/#institutes')}
-              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+        {/* ============================================================ */}
+        {/* SECTION 7: NEXT INSTITUTION (CONTINUOUS EXPLORATION) */}
+        {/* ============================================================ */}
+        {nextInstitute && (
+          <section className="max-w-7xl mx-auto px-6">
+            <div 
+              onClick={() => navigate(`/institute/${nextInstitute.id}`)} 
+              className="cursor-pointer group py-16 border-t-2 border-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-8"
             >
-              <span>View Leaderboard</span>
-              <ArrowRight size={12} weight="bold" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {otherInstitutes.slice(0, 4).map(other => (
-              <div
-                key={other.id}
-                onClick={() => navigate(`/institute/${other.id}`)}
-                className="rounded-3xl overflow-hidden bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 cursor-pointer group shadow-sm hover:border-slate-400 dark:hover:border-slate-700 transition-all flex flex-col justify-between"
-              >
-                <div className="relative h-28 w-full overflow-hidden">
-                  <img 
-                    src={other.image} 
-                    alt={other.shortName} 
-                    onError={(e) => { e.currentTarget.src = '/universities/nust.jpg' }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 text-white text-[10px] font-mono font-bold">
-                    #{other.rank < 10 ? '0' + other.rank : other.rank}
+              <div>
+                <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block mb-2">
+                  NEXT MONOGRAPH //
+                </span>
+                <h3 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-slate-900 group-hover:underline leading-[0.9]">
+                  <span style={{ color: '#8b5cf6' }}>
+                    {nextInstitute.shortName}.
                   </span>
-                </div>
-
-                <div className="p-4 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <img 
-                      src={other.logo} 
-                      alt={other.shortName} 
-                      onError={(e) => { e.currentTarget.src = '/brand/eduhub-logo.png' }}
-                      className="w-7 h-7 rounded-lg p-0.5 bg-white shrink-0 border border-slate-200 object-contain" 
-                    />
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{other.shortName}</h3>
-                  </div>
-                  <p className="text-[11px] text-slate-500 truncate">{other.sector}</p>
-                </div>
+                </h3>
+                <p className="text-xl sm:text-2xl font-bold text-slate-500 mt-2">
+                  {nextInstitute.name}
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
 
-      </div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-900 text-white flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0 shadow-lg">
+                <ArrowUpRight size={28} />
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
 
-      {/* ─── Interactive Apply Modal ─── */}
+      {/* ============================================================ */}
+      {/* INTERACTIVE ADMISSION APPLICATION MODAL */}
+      {/* ============================================================ */}
       <AnimatePresence>
         {isApplyModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6"
+              className="bg-white rounded-[2.5rem] max-w-xl w-full p-8 sm:p-10 border border-slate-200 shadow-2xl relative"
             >
               <button
+                type="button"
                 onClick={() => setIsApplyModalOpen(false)}
-                className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 rounded-full hover:bg-slate-100 transition-colors"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
 
-              {!applySuccess ? (
-                <>
-                  <div className="space-y-1">
-                    <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase">
-                      Official Admission Docket // Fall 2026
-                    </div>
-                    <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">
-                      Apply to {inst.shortName}
-                    </h2>
-                    {selectedProgram && (
-                      <div className="text-xs text-slate-600 dark:text-slate-400">
-                        Selected: <strong className="text-slate-900 dark:text-white">{selectedProgram.name}</strong>
-                      </div>
-                    )}
+              {applySuccess ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-slate-900 text-white flex items-center justify-center mx-auto shadow-lg">
+                    <CheckCircle2 size={32} />
                   </div>
-
-                  <form onSubmit={handleApplySubmit} className="space-y-3.5 text-xs">
-                    <div>
-                      <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Degree Program
-                      </label>
-                      <select
-                        value={applyForm.program}
-                        onChange={(e) => setApplyForm({ ...applyForm, program: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                      >
-                        {inst.programs?.map(p => (
-                          <option key={p.id} value={p.name}>{p.name} ({p.degree})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Your Name"
-                          value={applyForm.name}
-                          onChange={(e) => setApplyForm({ ...applyForm, name: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          placeholder="email@example.com"
-                          value={applyForm.email}
-                          onChange={(e) => setApplyForm({ ...applyForm, email: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Phone / WhatsApp
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="+92 300 1234567"
-                        value={applyForm.phone}
-                        onChange={(e) => setApplyForm({ ...applyForm, phone: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                      />
-                    </div>
-
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <span>Submit Application</span>
-                        <ArrowRight size={14} weight="bold" />
-                      </button>
-                    </div>
-                  </form>
-                </>
-              ) : (
-                <div className="text-center py-4 space-y-3">
-                  <CheckCircle size={36} weight="fill" className="text-emerald-500 mx-auto" />
-                  <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white">
-                    Application Submitted
-                  </h3>
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-xs space-y-1">
-                    <div className="text-slate-400 font-mono">Reference Docket: {applicationId}</div>
-                    <div className="font-bold text-slate-800 dark:text-slate-200">{applyForm.program}</div>
+                  <h3 className="text-3xl font-black text-slate-900">Application Lodged.</h3>
+                  <p className="text-sm text-slate-600 font-medium">
+                    Your preliminary admissions docket for <strong>{applyForm.program}</strong> at <strong>{inst.shortName}</strong> has been registered.
+                  </p>
+                  <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 font-mono text-xs font-bold text-slate-800">
+                    TRACKING DOSSIER: {applicationId}
                   </div>
                   <button
+                    type="button"
                     onClick={() => setIsApplyModalOpen(false)}
-                    className="px-5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold"
+                    className="w-full py-4 rounded-full bg-slate-900 text-white font-bold text-xs uppercase tracking-wider mt-4"
                   >
                     Done
                   </button>
                 </div>
+              ) : (
+                <form onSubmit={handleApplySubmit} className="space-y-4">
+                  <div>
+                    <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block mb-1">
+                      ADMISSIONS APPLICATION // FALL 2026
+                    </span>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">
+                      Apply to {inst.shortName}.
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                      Desired Degree Program
+                    </label>
+                    <input
+                      type="text"
+                      value={applyForm.program}
+                      onChange={(e) => setApplyForm({ ...applyForm, program: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                      Full Legal Name
+                    </label>
+                    <input
+                      type="text"
+                      value={applyForm.name}
+                      onChange={(e) => setApplyForm({ ...applyForm, name: e.target.value })}
+                      required
+                      placeholder="e.g. Muhammad Ali"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={applyForm.email}
+                        onChange={(e) => setApplyForm({ ...applyForm, email: e.target.value })}
+                        required
+                        placeholder="applicant@domain.com"
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        Phone / WhatsApp
+                      </label>
+                      <input
+                        type="tel"
+                        value={applyForm.phone}
+                        onChange={(e) => setApplyForm({ ...applyForm, phone: e.target.value })}
+                        required
+                        placeholder="+92 300 1234567"
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-full bg-slate-900 text-white font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all mt-4"
+                  >
+                    Submit Application Docket
+                  </button>
+                </form>
               )}
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ─── EXACT SAME FOOTER AS LANDING PAGE ─── */}
-      <footer className="pt-20 bg-emerald-700 dark:bg-slate-950 text-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-12 relative z-10 pb-16">
-          <div className="max-w-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-white/10 rounded-xl p-1.5 flex items-center justify-center border border-white/20 shadow-sm">
-                <img src="/brand/eduhub-logo.png" alt="EduHub Logo" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-display font-black text-2xl tracking-tight">EduHub</span>
-            </div>
-            <p className="text-white/80 text-sm leading-relaxed">
-              The all-in-one educational platform and service driving institutional excellence, seamless academic records, and thriving campus cultures.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16 text-sm">
-            <div>
-              <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Product</h4>
-              <ul className="space-y-3 text-white/80">
-                <li><a href="/#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="/#institutes" className="hover:text-white transition-colors">Institutes</a></li>
-                <li><a href="/#alumni" className="hover:text-white transition-colors">Alumni Network</a></li>
-                <li><span onClick={handleOpenPartnerModal} className="hover:text-white cursor-pointer transition-colors">Register Campus</span></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Resources</h4>
-              <ul className="space-y-3 text-white/80">
-                <li><span className="hover:text-white cursor-pointer transition-colors">Documentation</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors">API Reference</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors">Support Portal</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Community</h4>
-              <ul className="space-y-3 text-white/80">
-                <li><span className="hover:text-white cursor-pointer transition-colors">Student Hub</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors">Teachers Guild</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors">Hackathons</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors">Careers</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Massive Text Background Brand Watermark */}
-        <div className="text-center relative overflow-hidden h-[18vw] pointer-events-none select-none">
-          <h1 className="text-[24vw] font-black leading-none bg-gradient-to-b from-white/20 to-transparent bg-clip-text text-transparent absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            EduHub
-          </h1>
-        </div>
-      </footer>
-
-      {/* Global Get Started Partner Modal */}
+      {/* Global Partner Modal */}
       <GetStartedModal isOpen={partnerModalOpen} onClose={() => setPartnerModalOpen(false)} />
+
+      {/* Massive Typography Footer */}
+      <FooterHuge />
     </div>
-  )
+  );
 }

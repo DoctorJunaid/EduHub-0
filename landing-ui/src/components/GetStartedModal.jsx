@@ -1,15 +1,12 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  CheckCircle, 
-  GraduationCap, 
   Buildings, 
   ArrowRight, 
   Phone, 
   Envelope, 
   User, 
-  MapPin, 
-  Users 
+  Check
 } from '@phosphor-icons/react'
 import { 
   Dialog, 
@@ -18,20 +15,14 @@ import {
   DialogTitle, 
   DialogDescription
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 
 export default function GetStartedModal({ isOpen, onClose }) {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     instituteName: '',
-    instituteType: 'University',
-    city: 'Islamabad',
     contactName: '',
     email: '',
-    phone: '',
-    studentCount: '1000+'
+    phone: ''
   })
 
   const handleChange = (e) => {
@@ -51,203 +42,158 @@ export default function GetStartedModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl">
-        <div className="relative">
-          {/* Top Emerald Accent Bar */}
-          <div className="h-2 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600" />
+      <DialogContent className="max-w-xl sm:max-w-2xl w-full p-0 overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl [&>button]:right-6 [&>button]:top-6 [&>button]:p-3 [&>button]:rounded-full [&>button]:bg-slate-100 dark:[&>button]:bg-slate-800 hover:[&>button]:bg-slate-200 dark:hover:[&>button]:bg-slate-700 [&>button]:text-slate-700 dark:[&>button]:text-slate-200 [&>button]:transition-colors">
+        <div className="p-7 sm:p-10 md:p-12">
+          <AnimatePresence mode="wait">
+            {!isSubmitted ? (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Monochromatic Pill Tag */}
+                <div className="flex items-center gap-2 mb-5">
+                  <span className="px-4 py-2 rounded-full bg-slate-900 text-white font-mono text-xs sm:text-sm font-bold tracking-tight shadow-sm">
+                    PARTNER ONBOARDING
+                  </span>
+                </div>
 
-          <div className="p-6 md:p-8">
-            <AnimatePresence mode="wait">
-              {!isSubmitted ? (
-                <motion.div
-                  key="form"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <DialogHeader className="text-left mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
-                        <GraduationCap size={20} weight="bold" />
-                      </div>
-                      <Badge variant="emerald" className="text-xs">Partner Registration</Badge>
-                    </div>
-                    <DialogTitle className="text-2xl md:text-3xl font-bold font-display text-slate-900 dark:text-white">
-                      Let's empower your campus.
-                    </DialogTitle>
-                    <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
-                      Join Pakistan's leading academic network. Tell us about your institution to begin your digital onboarding.
-                    </DialogDescription>
-                  </DialogHeader>
+                {/* Clean Big Headline */}
+                <DialogHeader className="text-left mb-8">
+                  <DialogTitle className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-slate-900 dark:text-white leading-[0.92]">
+                    Get Started<span style={{ color: '#3b82f6' }}>.</span>
+                  </DialogTitle>
+                  <DialogDescription className="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-medium leading-relaxed mt-2.5">
+                    Connect your institution with Pakistan's verified academic network.
+                  </DialogDescription>
+                </DialogHeader>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Institution Name */}
-                      <div className="space-y-1 md:col-span-2">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <Buildings size={14} weight="duotone" className="text-emerald-600" />
-                          Institution Name
-                        </label>
-                        <Input
-                          required
-                          name="instituteName"
-                          placeholder="e.g. National University of Sciences & Tech"
-                          value={formData.instituteName}
-                          onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
-                        />
-                      </div>
-
-                      {/* Institution Type */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          Institution Type
-                        </label>
-                        <select
-                          name="instituteType"
-                          value={formData.instituteType}
-                          onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        >
-                          <option value="University">University</option>
-                          <option value="College">College</option>
-                          <option value="School">School</option>
-                          <option value="Academy">Academy / Institute</option>
-                        </select>
-                      </div>
-
-                      {/* City */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <MapPin size={14} weight="duotone" className="text-emerald-600" />
-                          Primary City
-                        </label>
-                        <select
-                          name="city"
-                          value={formData.city}
-                          onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        >
-                          <option value="Islamabad">Islamabad</option>
-                          <option value="Lahore">Lahore</option>
-                          <option value="Karachi">Karachi</option>
-                          <option value="Rawalpindi">Rawalpindi</option>
-                          <option value="Peshawar">Peshawar</option>
-                          <option value="Quetta">Quetta</option>
-                          <option value="Multan">Multan</option>
-                          <option value="Faisalabad">Faisalabad</option>
-                        </select>
-                      </div>
-
-                      {/* Contact Person Name */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <User size={14} weight="duotone" className="text-emerald-600" />
-                          Authorized Representative
-                        </label>
-                        <Input
-                          required
-                          name="contactName"
-                          placeholder="Dr. / Prof. / Mr. Name"
-                          value={formData.contactName}
-                          onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
-                        />
-                      </div>
-
-                      {/* Official Email */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <Envelope size={14} weight="duotone" className="text-emerald-600" />
-                          Institutional Email
-                        </label>
-                        <Input
-                          required
-                          type="email"
-                          name="email"
-                          placeholder="registrar@institution.edu.pk"
-                          value={formData.email}
-                          onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
-                        />
-                      </div>
-
-                      {/* Phone Number */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <Phone size={14} weight="duotone" className="text-emerald-600" />
-                          Contact Phone
-                        </label>
-                        <Input
-                          required
-                          type="tel"
-                          name="phone"
-                          placeholder="+92 300 1234567"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
-                        />
-                      </div>
-
-                      {/* Approximate Students */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <Users size={14} weight="duotone" className="text-emerald-600" />
-                          Student Body Size
-                        </label>
-                        <select
-                          name="studentCount"
-                          value={formData.studentCount}
-                          onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        >
-                          <option value="100 - 500">100 - 500 Students</option>
-                          <option value="500 - 2,000">500 - 2,000 Students</option>
-                          <option value="2,000 - 10,000">2,000 - 10,000 Students</option>
-                          <option value="10,000+">10,000+ Students (Enterprise)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 flex items-center justify-end gap-3">
-                      <Button type="button" variant="ghost" onClick={handleClose}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" variant="glow" className="gap-2">
-                        <span>Submit Registration</span>
-                        <ArrowRight size={16} weight="bold" />
-                      </Button>
-                    </div>
-                  </form>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="py-8 text-center space-y-4"
-                >
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 flex items-center justify-center mx-auto">
-                    <CheckCircle size={38} weight="fill" />
+                {/* Simple 4-Field Form with Bigger Text and Inputs */}
+                <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+                  {/* Institution Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Buildings size={18} className="text-slate-400" />
+                      Institution Name
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      name="instituteName"
+                      placeholder="e.g. National University of Sciences & Technology"
+                      value={formData.instituteName}
+                      onChange={handleChange}
+                      className="w-full h-14 sm:h-15 px-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 text-base sm:text-lg font-semibold focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-100 transition-all shadow-sm"
+                    />
                   </div>
-                  <h3 className="text-2xl font-bold font-display text-slate-900 dark:text-white">
-                    Application Received!
+
+                  {/* Representative Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <User size={18} className="text-slate-400" />
+                      Your Name
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      name="contactName"
+                      placeholder="e.g. Dr. Tariq Mahmood"
+                      value={formData.contactName}
+                      onChange={handleChange}
+                      className="w-full h-14 sm:h-15 px-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 text-base sm:text-lg font-semibold focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-100 transition-all shadow-sm"
+                    />
+                  </div>
+
+                  {/* Email & Phone Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <Envelope size={18} className="text-slate-400" />
+                        Official Email
+                      </label>
+                      <input
+                        required
+                        type="email"
+                        name="email"
+                        placeholder="registrar@nust.edu.pk"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full h-14 sm:h-15 px-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 text-base sm:text-lg font-semibold focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-100 transition-all shadow-sm"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <Phone size={18} className="text-slate-400" />
+                        Contact Phone
+                      </label>
+                      <input
+                        required
+                        type="tel"
+                        name="phone"
+                        placeholder="+92 300 1234567"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full h-14 sm:h-15 px-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 text-base sm:text-lg font-semibold focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-100 transition-all shadow-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-4 sm:pt-6 flex items-center justify-end gap-3 sm:gap-4">
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="px-6 py-3.5 rounded-full border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-base font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-base sm:text-lg hover:bg-black dark:hover:bg-slate-100 transition-all active:scale-95 shadow-xl flex items-center gap-2.5 group cursor-pointer"
+                    >
+                      <span>Submit Request</span>
+                      <ArrowRight size={20} weight="bold" className="group-hover:translate-x-1.5 transition-transform" />
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            ) : (
+              /* Success State */
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25 }}
+                className="py-8 text-center space-y-5"
+              >
+                <div className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center mx-auto shadow-xl">
+                  <Check size={36} weight="bold" />
+                </div>
+
+                <div>
+                  <h3 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
+                    Request Received<span style={{ color: '#10b981' }}>.</span>
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                    Thank you, <strong className="text-slate-800 dark:text-slate-200">{formData.contactName || 'Representative'}</strong>. 
-                    Our institutional partnership team will review <strong className="text-slate-800 dark:text-slate-200">{formData.instituteName || 'your institution'}</strong> and connect with you at <strong className="text-emerald-600">{formData.email}</strong> within 24 business hours.
+                  <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-md mx-auto mt-3 leading-relaxed font-medium">
+                    Thank you, <strong className="text-slate-900 dark:text-white">{formData.contactName || 'Representative'}</strong>. Our team will review <strong className="text-slate-900 dark:text-white">{formData.instituteName}</strong> and contact you at <strong className="text-slate-900 dark:text-white">{formData.email}</strong> within 24 hours.
                   </p>
-                  <div className="pt-4">
-                    <Button variant="default" onClick={handleClose} className="px-8">
-                      Done
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="px-9 py-3.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-base hover:bg-black dark:hover:bg-slate-100 transition-all shadow-lg active:scale-95 cursor-pointer"
+                  >
+                    Done
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>

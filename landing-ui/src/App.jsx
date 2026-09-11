@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from '@/views/LandingPage'
 import PublicInstitutePage from '@/views/PublicInstitutePage'
+import AlumniPage from '@/views/AlumniPage'
+import AlumniDetailPage from '@/views/AlumniDetailPage'
+import RankingsPage from '@/views/RankingsPage'
+import InstitutesPage from '@/views/InstitutesPage'
 import GetStartedModal from '@/components/GetStartedModal'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackToTop from '@/components/BackToTop'
@@ -28,6 +32,27 @@ export default function App() {
     }
   }, [isDark])
 
+  // Initialize Lenis for smooth scrolling
+  useEffect(() => {
+    import('lenis').then((module) => {
+      const Lenis = module.default;
+      const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+
+      return () => {
+        lenis.destroy();
+      };
+    });
+  }, []);
+
   return (
     <Router>
       <ScrollToTop />
@@ -47,6 +72,46 @@ export default function App() {
             path="/institute/:id" 
             element={
               <PublicInstitutePage 
+                isDark={isDark} 
+                setIsDark={setIsDark} 
+                onGetStarted={() => setIsGetStartedOpen(true)} 
+              />
+            } 
+          />
+          <Route 
+            path="/rankings" 
+            element={
+              <RankingsPage 
+                isDark={isDark} 
+                setIsDark={setIsDark} 
+                onGetStarted={() => setIsGetStartedOpen(true)} 
+              />
+            } 
+          />
+          <Route 
+            path="/institutes" 
+            element={
+              <InstitutesPage 
+                isDark={isDark} 
+                setIsDark={setIsDark} 
+                onGetStarted={() => setIsGetStartedOpen(true)} 
+              />
+            } 
+          />
+          <Route 
+            path="/alumni" 
+            element={
+              <AlumniPage 
+                isDark={isDark} 
+                setIsDark={setIsDark} 
+                onGetStarted={() => setIsGetStartedOpen(true)} 
+              />
+            } 
+          />
+          <Route 
+            path="/alumni/:id" 
+            element={
+              <AlumniDetailPage 
                 isDark={isDark} 
                 setIsDark={setIsDark} 
                 onGetStarted={() => setIsGetStartedOpen(true)} 
