@@ -52,4 +52,3 @@ export const studentNavigation = [
     icon: <MessageCircle size={20} />,
   },
 ];
-s
