@@ -7,17 +7,10 @@ import { Mail, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import './Login.css';
 
-const roles = [
-  ['super_admin',     'Super Admin'],
-  ['campus_admin',    'Campus Admin'],
-  ['institute_admin', 'Institute Admin'],
-  ['student',         'Student'],
-];
-
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [values, setValues]   = useState({ email: '', password: '', role: 'super_admin' });
+  const [values, setValues]   = useState({ email: '', password: '' });
   const [errors, setErrors]   = useState({});
   const [remember, setRemember] = useState(false);
 
@@ -97,23 +90,6 @@ export default function Login() {
                 />
               </div>
               {errors.password && <p className="lp-error">{errors.password}</p>}
-            </div>
-
-            {/* Role selector */}
-            <div>
-              <div className="lp-roles-label">Demo Role</div>
-              <div className="lp-roles-grid">
-                {roles.map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`lp-role-btn${values.role === id ? ' selected' : ''}`}
-                    onClick={() => change('role', id)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Remember me */}
