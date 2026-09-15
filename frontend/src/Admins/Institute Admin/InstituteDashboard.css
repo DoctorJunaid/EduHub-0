@@ -29,14 +29,16 @@
 
 .institute-dashboard .institute-stat {
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
+  padding: 16px 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 104px;
+  align-items: stretch;
+  text-align: left;
+  min-height: 98px;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
   opacity: 0;
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -57,22 +59,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  width: 100%;
 }
 
 .institute-dashboard .institute-stat .edu-stat-label {
   color: #71717a;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
 .institute-dashboard .institute-stat .edu-stat-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
   background: #f4f4f5;
+  border: 1px solid #e4e4e7;
   color: #09090b;
   display: flex;
   align-items: center;
@@ -81,27 +85,18 @@
 }
 
 .institute-dashboard .institute-stat .edu-stat-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .institute-dashboard .institute-stat .edu-stat-value {
   color: #09090b;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
-  margin-top: 10px;
-}
-
-.institute-dashboard .institute-stat .edu-stat-detail {
-  color: #71717a;
-  font-size: 11px;
-  font-weight: 600;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  margin-top: 12px;
+  text-align: left;
 }
 
 .institute-actions {

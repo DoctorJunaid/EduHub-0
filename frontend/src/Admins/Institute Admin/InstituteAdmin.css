@@ -28,12 +28,58 @@
 .institute-admin-shell :is(.campus-actions, .ist-actions, .isd-actions) button:not(:disabled):hover { border-color: currentColor; }
 .institute-admin-shell .campus-manage:disabled { opacity: .5; }
 .institute-admin-shell table :is(.student-status, .ist-status, .campus-active) { padding: 3px 8px; font-size: 12px; }
-.institute-admin-shell .institute-stat { padding: 10px 14px; gap: 10px; align-items: center; }
-.institute-admin-shell .institute-stat .summary-icon { width: 32px; height: 32px; border-radius: 6px; }
-.institute-admin-shell .institute-stat .summary-icon svg { width: 16px; height: 16px; }
-.institute-admin-shell .institute-stat strong { font-size: 20px; font-weight: 700; color: #09090b; }
-.institute-admin-shell .institute-stat .summary-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-.institute-admin-shell .institute-stat small { margin-top: 1px; font-size: 11px; }
+.institute-admin-shell .institute-stat {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: stretch !important;
+  text-align: left !important;
+  padding: 16px 18px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+  min-height: 98px !important;
+}
+.institute-admin-shell .institute-stat .edu-stat-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+.institute-admin-shell .institute-stat .edu-stat-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #71717a !important;
+  line-height: 1 !important;
+}
+.institute-admin-shell .institute-stat .edu-stat-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 7px !important;
+  background: #f4f4f5 !important;
+  border: 1px solid #e4e4e7 !important;
+  color: #09090b !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.institute-admin-shell .institute-stat .edu-stat-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+.institute-admin-shell .institute-stat .edu-stat-value {
+  color: #09090b !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.02em !important;
+  margin-top: 10px !important;
+  text-align: left !important;
+}
 .institute-admin-shell .institute-actions button { height: 38px; font-size: 13px; border-radius: var(--radius-md); }
 .institute-admin-shell .institute-table-heading h2 { gap: 10px; font-size: 18px; }
 .institute-admin-shell .institute-table-heading h2 > span { width: 30px; height: 30px; border-radius: var(--radius-md); }

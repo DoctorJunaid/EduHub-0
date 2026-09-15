@@ -48,25 +48,21 @@ export default function InstituteDashboard() {
       icon: Users,
       label: "Total Students",
       value: students.length,
-      detail: "Enrolled in active terms",
     },
     {
       icon: GraduationCap,
       label: "Active Teachers",
       value: faculty.filter((record) => record.status === "Active").length,
-      detail: "Faculty & instructors on duty",
     },
     {
       icon: Building2,
       label: "Campus Branches",
       value: campuses.length,
-      detail: "Operational branches",
     },
     {
       icon: Layers,
       label: "Institute Type",
       value: demoInstitute.type,
-      detail: "Accredited educational tier",
     },
   ];
 
@@ -84,11 +80,10 @@ export default function InstituteDashboard() {
               <div className="edu-stat-head">
                 <span className="edu-stat-label">{stat.label}</span>
                 <span className="edu-stat-icon">
-                  <Icon size={14} />
+                  <Icon size={16} />
                 </span>
               </div>
               <div className="edu-stat-value">{stat.value}</div>
-              <div className="edu-stat-detail">{stat.detail}</div>
             </article>
           );
         })}
