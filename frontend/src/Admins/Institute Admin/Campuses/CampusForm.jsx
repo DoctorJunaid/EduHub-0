@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 export default function CampusForm({ campus, onSave, onCancel, loading }) {
   const [values, setValues] = useState({
     name: campus?.name ?? "",
-    address: campus?.address ?? "",
+    address: (typeof campus?.address === 'object' ? campus.address?.street : campus?.address) ?? "",
     status: campus?.status ?? "Active",
     managerName: "",
     managerEmail: "",
@@ -25,7 +25,7 @@ export default function CampusForm({ campus, onSave, onCancel, loading }) {
       onSave({
         ...values,
         name: values.name.trim(),
-        address: values.address.trim(),
+        address: { street: values.address.trim() },
         ...(campus ? { id: campus.id } : {}),
       });
   };

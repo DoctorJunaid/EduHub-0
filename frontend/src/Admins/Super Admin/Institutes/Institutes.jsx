@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   Search,
   SlidersHorizontal,
@@ -38,6 +39,7 @@ export default function Institutes() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [manageDrawer, setManageDrawer] = useState(null);
+
   const [statusMenuFor, setStatusMenuFor] = useState(null);
   const [instituteToDelete, setInstituteToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -94,6 +96,14 @@ export default function Institutes() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const openInstituteDetails = (institute) => {
+    navigate(`/institutes/${institute.id}`);
+  };
+
+  const openEditInstitute = (institute) => {
+    navigate(`/institutes/${institute.id}/edit`);
   };
 
   return (
@@ -327,7 +337,11 @@ export default function Institutes() {
             </thead>
             <tbody>
               {visible.map((institute) => (
-                <tr key={institute.id}>
+                <tr
+                  key={institute.id}
+                  onClick={() => openInstituteDetails(institute)}
+                  className="institute-list-row"
+                >
                   <td>
                     <div className="institute-name-cell">
                       <img
@@ -404,6 +418,11 @@ export default function Institutes() {
                         className="icon-button eye"
                         onClick={() => setManageDrawer({ ...institute, initialTab: "campuses" })}
                         title="Manage Campuses"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openInstituteDetails(institute);
+                        }}
+                        title="View profile"
                       >
                         <Eye size={16} />
                       </button>
@@ -411,6 +430,11 @@ export default function Institutes() {
                         className="icon-button edit"
                         onClick={() => setManageDrawer({ ...institute, initialTab: "details" })}
                         title="Manage Institute"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openEditInstitute(institute);
+                        }}
+                        title="Edit institute"
                       >
                         <Pencil size={16} />
                       </button>
@@ -418,6 +442,11 @@ export default function Institutes() {
                         className="icon-button students"
                         onClick={() => navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`)}
                         title="Open Global Users Directory"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setStudentsDrawer(institute);
+                        }}
+                        title="View students"
                       >
                         <Users size={16} />
                       </button>

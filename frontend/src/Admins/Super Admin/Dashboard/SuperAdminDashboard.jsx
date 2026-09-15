@@ -21,6 +21,34 @@ import InstituteForm from "../Institutes/InstituteForm";
 import ManageInstitute from "../Institutes/ManageInstitute";
 import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
+import { loadInstitutes } from "../Institutes/instituteData";
+
+const stats = [
+  {
+    label: "Registered Institutes",
+    value: "24",
+    detail: "Total networks in system",
+    icon: Building2,
+  },
+  {
+    label: "Total Users",
+    value: "12,450",
+    detail: "Across all institutes",
+    icon: Users,
+  },
+  {
+    label: "Total Campuses",
+    value: "142",
+    detail: "Branches globally",
+    icon: MapPin,
+  },
+  {
+    label: "Active Programs",
+    value: "850+",
+    detail: "Courses across networks",
+    icon: GraduationCap,
+  },
+];
 
 function normalizeStatus(status) {
   if (status === "Suspended") return "Suspended";
@@ -40,6 +68,9 @@ export default function SuperAdminDashboard() {
   );
   const [typeFilter, setTypeFilter] = useState("all");
   const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
+  const [showUniversityOnly, setShowUniversityOnly] = useState(false);
+  const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
+  const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
 
   useEffect(() => {
@@ -75,7 +106,7 @@ export default function SuperAdminDashboard() {
   });
 
   const handleManage = (institute) => {
-    setManageDrawerInstitute(institute);
+    navigate(`/institutes/${institute.id}`);
   };
 
   const handleCampusClick = (institute) => {
@@ -322,6 +353,109 @@ export default function SuperAdminDashboard() {
       </>
       )}
 
+
+      {campusDrawerInstitute && (
+        <div
+          className="super-admin-drawer-backdrop"
+          onClick={() => setCampusDrawerInstitute(null)}
+        >
+          <aside
+            className="super-admin-drawer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="super-admin-drawer-head">
+              <div>
+                <span className="super-admin-drawer-kicker">Campuses</span>
+                <h3>{campusDrawerInstitute.name}</h3>
+              </div>
+              <button
+                className="super-admin-drawer-close"
+                onClick={() => setCampusDrawerInstitute(null)}
+                aria-label="Close campuses drawer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="super-admin-drawer-body">
+              {(
+                campusDrawerInstitute.campusesDetails ||
+                campusDrawerInstitute.campusDetails ||
+                []
+              ).map((campus, idx) => (
+                <div
+                  className="super-admin-drawer-row"
+                  key={`${campus.name}-${idx}`}
+                >
+                  <div className="super-admin-drawer-row-main">
+                    <span className="super-admin-drawer-campus-name">
+                      {campus.name}
+                    </span>
+                    <span className="super-admin-drawer-campus-location">
+                      {campus.location}
+                    </span>
+                  </div>
+                  <span
+                    className={`super-admin-drawer-campus-status ${campus.status.toLowerCase()}`}
+                  >
+                    {campus.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {studentsDrawerInstitute && (
+        <div
+          className="super-admin-drawer-backdrop"
+          onClick={() => setStudentsDrawerInstitute(null)}
+        >
+          <aside
+            className="super-admin-student-drawer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="super-admin-drawer-head">
+              <div>
+                <span className="super-admin-drawer-kicker">Students</span>
+                <h3>{studentsDrawerInstitute.name}</h3>
+              </div>
+              <button
+                className="super-admin-drawer-close"
+                onClick={() => setStudentsDrawerInstitute(null)}
+                aria-label="Close students drawer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="super-admin-drawer-body">
+              {studentsDrawerInstitute.studentRecords.map((student, idx) => (
+                <div
+                  className="super-admin-student-drawer-row"
+                  key={`${student.roll}-${idx}`}
+                >
+                  <div className="super-admin-student-drawer-main">
+                    <span className="super-admin-student-name">
+                      {student.name}
+                    </span>
+                    <span className="super-admin-student-meta">
+                      {student.program} · {student.roll}
+                    </span>
+                    <span className="super-admin-student-campus">
+                      {student.campus}
+                    </span>
+                  </div>
+                  <span
+                    className={`super-admin-student-status ${student.status.toLowerCase()}`}
+                  >
+                    {student.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      )}
     </section>
   );
 }
