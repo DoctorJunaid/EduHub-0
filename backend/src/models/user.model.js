@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema(
         "campus_admin",
         "campus_manager",
         "teacher",
+        "faculty",
         "student",
       ],
       default: "student",
@@ -60,6 +61,7 @@ const userSchema = new mongoose.Schema(
           this.role === "campus_manager" ||
           this.role === "campus_admin" ||
           this.role === "teacher" ||
+          this.role === "faculty" ||
           this.role === "student"
         );
       },
@@ -71,6 +73,26 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
+      default: "",
+    },
+    department: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    designation: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    program: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    roll: {
+      type: String,
+      trim: true,
       default: "",
     },
     isActive: {

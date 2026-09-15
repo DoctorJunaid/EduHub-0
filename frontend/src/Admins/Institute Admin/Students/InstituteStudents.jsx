@@ -159,7 +159,7 @@ export default function InstituteStudents() {
             />
           </label>
           <span>
-            {students.length} {students.length === 1 ? "student" : "students"}{" "}
+            {studentsList.length} {studentsList.length === 1 ? "student" : "students"}{" "}
             enrolled
           </span>
         </div>

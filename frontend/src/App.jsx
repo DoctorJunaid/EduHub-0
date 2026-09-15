@@ -9,6 +9,7 @@ import Login from "./auth/Login";
 import SetPassword from "./auth/SetPassword";
 import InstituteDashboard from "./Admins/Institute Admin/InstituteDashboard";
 import CampusBranches from "./Admins/Institute Admin/Campuses/CampusBranches";
+import ManageCampusPage from "./Admins/Institute Admin/Campuses/ManageCampusPage";
 import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStudents";
 import InstituteStaff from "./Admins/Institute Admin/Staff/InstituteStaff";
 import "./Admins/Institute Admin/InstituteAdmin.css";
@@ -112,6 +113,8 @@ const App = () => {
         >
           <Route path="institute-admin" element={<InstituteDashboard />} />
           <Route path="institute-admin/campuses" element={<CampusBranches />} />
+          <Route path="institute-admin/campuses/new" element={<ManageCampusPage />} />
+          <Route path="institute-admin/campuses/:id" element={<ManageCampusPage />} />
           <Route path="institute-admin/alerts" element={<BroadcastAlerts />} />
           <Route
             path="institute-admin/students"
@@ -121,7 +124,7 @@ const App = () => {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["campus_admin"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager"]} />}>
         <Route element={<MainLayout />}>
           <Route path="dashboard" element={<CampusOverview />} />
           <Route path="faculty" element={<FacultyDirectory />} />
