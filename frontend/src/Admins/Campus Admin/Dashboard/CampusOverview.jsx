@@ -1,186 +1,195 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import FacultyForm from '@/Admins/Campus Admin/Faculty/FacultyForm';
-import { facultyRecords as demoRecords } from '@/Admins/Campus Admin/Faculty/facultyData.js';
-import { selectFaculty, facultyAdded } from '@/store/Slices/facultySlice.js';
 import {
-  ArrowRight,
-  Building2,
-  CalendarDays,
-  Check,
-  ChevronDown,
-  CreditCard,
-  Download,
   MapPin,
-  Megaphone,
+  Download,
   Plus,
-  ReceiptText,
-  UserRound,
-  UserRoundCheck,
-  Users,
-  Wallet,
-} from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import OverviewStatCard from "../../../components/campus-overview/components/OverviewStatCard";
-import CampusTimetable from "./components/CampusTimetable";
-import CampusStudentTable from "./components/CampusStudentTable";
-import "./CampusOverview.css";
+} from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
-const stats = [
-  {
-    icon: Users,
-    value: "1,248",
-    label: "Total Enrolled Students",
-    change: "14.2%",
-    period: "month",
-    trend:
-      "2,35 10,22 18,27 25,29 33,22 41,15 49,16 58,20 66,15 74,10 83,10 94,4",
-  },
-  {
-    icon: UserRound,
-    value: "86",
-    label: "Faculty Members",
-    change: "8.6%",
-    period: "month",
-    trend:
-      "2,35 12,25 22,30 30,24 38,10 46,18 55,23 63,18 72,12 81,7 88,10 97,4",
-  },
-  {
-    icon: CreditCard,
-    value: "PKR 4.82M",
-    label: "Tuition Collected",
-    change: "12.4%",
-    period: "term",
-    trend:
-      "2,35 10,23 18,25 26,30 34,25 43,17 51,21 59,16 67,13 75,18 83,15 89,3",
-  },
-  {
-    icon: CalendarDays,
-    value: "42",
-    label: "Active Class Schedules",
-    change: "5.1%",
-    period: "week",
-    trend:
-      "2,35 10,27 17,28 24,22 31,27 39,13 47,23 55,18 63,13 71,12 79,6 87,10 94,15",
-  },
-];
-const shortcuts = [
-  { label: "Students Directory", icon: Users },
-  { label: "Faculty Directory", icon: UserRoundCheck, path: '/faculty' },
-  { label: "Class Timetable", icon: CalendarDays },
-  { label: "Fee Management", icon: Wallet },
-];
+// Redux State Selectors & Actions
+import { selectStudents, addStudent, fetchStudents } from '@/store/Slices/studentsSlice.js';
+import { selectFaculty, addFaculty, fetchFaculty } from '@/store/Slices/facultySlice.js';
+import { selectTimetable } from '@/store/Slices/timetableSlice.js';
+
+// Demonstration Seed Data Fallbacks
+import { campusStudents as demoStudents, campusClasses as demoClasses } from './campusOverviewData.js';
+import { facultyRecords as demoFaculty } from '@/Admins/Campus Admin/Faculty/facultyData.js';
+
+// Forms & Modal Dialogs
+import FacultyForm from '@/Admins/Campus Admin/Faculty/FacultyForm';
+import StudentForm from '@/Admins/Campus Admin/Students/StudentForm';
+import StudentProfileDialog from '@/Admins/Campus Admin/Students/StudentProfileDialog';
+
+// Redesigned Components
+import CampusThinCards from './components/CampusThinCards';
+import CampusOperationsHub from './components/CampusOperationsHub';
+
+import './CampusOverview.css';
 
 export default function CampusOverview() {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const faculty = useSelector(selectFaculty);
+
+  React.useEffect(() => {
+    dispatch(fetchStudents());
+    dispatch(fetchFaculty());
+  }, [dispatch]);
+
+  // Redux Selectors with graceful fallbacks
+  const rawStudents = useSelector(selectStudents);
+  const rawFaculty = useSelector(selectFaculty);
+  const rawTimetable = useSelector(selectTimetable);
+
+  // Merged data
+  const students = rawStudents?.length ? rawStudents : demoStudents;
+  const faculty = rawFaculty?.length ? rawFaculty : demoFaculty;
+  const timetable = rawTimetable?.length ? rawTimetable : demoClasses;
+
+  // Modal Dialog states
+  const [addingStudent, setAddingStudent] = useState(false);
   const [addingTeacher, setAddingTeacher] = useState(false);
-  const options = Object.fromEntries(['designation', 'department', 'campus'].map((key) => [key, [...new Set([...demoRecords, ...faculty].map((teacher) => teacher[key]))]]));
+  const [inspectingStudent, setInspectingStudent] = useState(null);
+  const [activeCardId, setActiveCardId] = useState('students-card');
+
+  // Dynamic select options for faculty modal
+  const facultyOptions = useMemo(() => {
+    return Object.fromEntries(
+      ['designation', 'department', 'campus'].map((key) => [
+        key,
+        [...new Set([...demoFaculty, ...faculty].map((teacher) => teacher[key]))],
+      ])
+    );
+  }, [faculty]);
+
+  // Programs and campuses for Student form
+  const studentPrograms = [
+    'BS Computer Science',
+    'BS Software Engineering',
+    'BS Artificial Intelligence',
+    'BS Data Science',
+  ];
+
+  const studentCampuses = [
+    'NUST Main Campus (H-12)',
+    'FAST-NUCES Islamabad',
+    'LUMS Lahore',
+  ];
+
+  // Export summary
+  const handleExportSummary = () => {
+    const csvContent = [
+      'Category,Metric,Details',
+      'Campus,"NUST Main Campus (H-12)","Sector H-12, Islamabad"',
+      `Enrolled Students,"${students.length}","94.2% Attendance"`,
+      `Faculty Members,"${faculty.length}","98% On Duty"`,
+      `Active Classes,"${timetable.length}","18 Labs Active"`,
+      'Programs,"4 Programs","BS CS, SE, AI, DS"',
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('link');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'nust_campus_summary_2025.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <section
-      className="campus-overview"
-      aria-label="Campus overview demonstration"
-    >
-      <Card className="overview-card overview-hero">
-        <div>
-          <div className="overview-campus-meta">
-            <span className="overview-operational">
-              <i />
-              Operational Campus
-            </span>
-            <span className="overview-institute">
-              <Building2 size={12} />
-              NUST (National University of Sciences and Technology)
-            </span>
-          </div>
-          <h1>NUST Main Campus (H-12)</h1>
-          <p className="overview-location">
-            <MapPin size={15} />
-            Sector H-12, Islamabad
+    <div className="campus-overview" aria-label="Campus Executive Command Center">
+      {/* 1. Clean Top Executive Header */}
+      <section className="overview-hero-section">
+        <div className="overview-hero-details">
+          <h1 className="overview-hero-heading">NUST Main Campus (H-12)</h1>
+
+          <p className="overview-hero-subtext">
+            <MapPin size={14} className="icon-map" />
+            <span>Sector H-12, Islamabad</span>
+            <span className="dot-sep">•</span>
+            <span>Director: Erin Daniels</span>
+            <span className="dot-sep">•</span>
+            <span>Spring 2025 Semester</span>
           </p>
         </div>
-        <div className="overview-hero-actions">
-          <Button variant="outline" className="overview-button" disabled>
-            <Download size={16} />
+
+        {/* Clean Executive Actions on Far Right */}
+        <div className="overview-hero-actions-block">
+          <Button
+            variant="outline"
+            className="overview-action-btn"
+            onClick={handleExportSummary}
+            title="Export complete campus report as CSV"
+          >
+            <Download size={14} />
             Export
-            <ChevronDown size={13} />
           </Button>
-          <Button className="overview-button overview-primary" disabled>
-            <Plus size={17} />
+
+          <Button
+            variant="outline"
+            className="overview-action-btn"
+            onClick={() => setAddingStudent(true)}
+          >
+            <Plus size={14} />
             Add Student
           </Button>
+
           <Button
-            className="overview-button overview-primary overview-teacher"
+            className="overview-action-btn overview-primary-btn"
             onClick={() => setAddingTeacher(true)}
           >
-            <Plus size={17} />
+            <Plus size={14} />
             Add Teacher
           </Button>
         </div>
-      </Card>
-      <div className="overview-stats">
-        {stats.map((stat) => (
-          <OverviewStatCard key={stat.label} {...stat} showTrend={false} />
-        ))}
-      </div>
-      <div className="overview-shortcuts">
-        {shortcuts.map(({ label, icon: Icon, path }) => (
-          <Button
-            key={label}
-            variant="outline"
-            className="overview-shortcut"
-            disabled={!path}
-            onClick={path ? () => navigate(path) : undefined}
-          >
-            <Icon size={21} />
-            <span>{label}</span>
-            <ArrowRight size={17} />
-          </Button>
-        ))}
-      </div>
-      <div className="overview-tables">
-        <CampusTimetable />
-        <CampusStudentTable />
-      </div>
-      <div className="overview-bottom">
-        <Card className="overview-card overview-announcement">
-          <Megaphone size={27} />
-          <div>
-            <h2>Campus Announcement</h2>
-            <p>Mid-term examinations will start from 15th June 2025.</p>
-          </div>
-          <Button variant="ghost" className="overview-text-button" disabled>
-            View All
-            <ArrowRight size={13} />
-          </Button>
-        </Card>
-        <Card className="overview-card overview-fees">
-          <h2>
-            <ReceiptText size={19} />
-            Fee Collection
-          </h2>
-          <p>78% of term fee collected</p>
-          <div className="overview-progress-row">
-            <progress value={78} max={100} aria-label="Term fee collected">
-              78%
-            </progress>
-            <span>78%</span>
-          </div>
-        </Card>
-        <Card className="overview-card overview-system">
-          <span className="overview-check">
-            <Check size={12} />
-          </span>
-          <div>
-            <h2>System Status</h2>
-            <p>All systems operational</p>
-          </div>
-        </Card>
-      </div>
-      {addingTeacher && <FacultyForm options={options} onClose={() => setAddingTeacher(false)} onSave={(values) => { dispatch(facultyAdded(values)); setAddingTeacher(false); }} />}
-    </section>
+      </section>
+
+      {/* 2. 5 Clean, Thin KPI Cards (Logical Academic Metrics Only) */}
+      <CampusThinCards
+        activeCardId={activeCardId}
+        onSelectCard={(id) => setActiveCardId(id)}
+      />
+
+      {/* 3. All-In-One Unified Operations Hub (Students, Faculty, Timetable, Attendance, Programs) */}
+      <CampusOperationsHub
+        students={students}
+        faculty={faculty}
+        timetable={timetable}
+        onAddStudent={() => setAddingStudent(true)}
+        onAddTeacher={() => setAddingTeacher(true)}
+        onViewStudentProfile={(student) => setInspectingStudent(student)}
+      />
+
+      {/* In-Page Modals */}
+      {addingStudent && (
+        <StudentForm
+          programs={studentPrograms}
+          campuses={studentCampuses}
+          onClose={() => setAddingStudent(false)}
+          onSave={(values) => {
+            dispatch(addStudent(values));
+            setAddingStudent(false);
+          }}
+        />
+      )}
+
+      {addingTeacher && (
+        <FacultyForm
+          options={facultyOptions}
+          onClose={() => setAddingTeacher(false)}
+          onSave={(values) => {
+            dispatch(addFaculty(values));
+            setAddingTeacher(false);
+          }}
+        />
+      )}
+
+      {inspectingStudent && (
+        <StudentProfileDialog
+          student={inspectingStudent}
+          onClose={() => setInspectingStudent(null)}
+        />
+      )}
+    </div>
   );
 }

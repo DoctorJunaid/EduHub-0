@@ -109,6 +109,99 @@ export const createManager = asyncHandler(async (req, res) => {
   });
 });
 
+// --- Staff Directory ---
+export const getStaff = asyncHandler(async (req, res) => {
+  const staff = await instituteAdminService.getStaff(req.instituteId);
+  res.status(200).json({
+    success: true,
+    message: "Staff directory retrieved successfully.",
+    count: staff.length,
+    data: staff,
+  });
+});
+
+export const createStaff = asyncHandler(async (req, res) => {
+  const staff = await instituteAdminService.createStaff(req.instituteId, req.body);
+  res.status(201).json({
+    success: true,
+    message: "Staff member created successfully.",
+    data: staff,
+  });
+});
+
+export const deleteStaff = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.deleteStaff(req.instituteId, req.params.id);
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+});
+
+// --- Students Directory ---
+export const getStudents = asyncHandler(async (req, res) => {
+  const students = await instituteAdminService.getStudents(req.instituteId);
+  res.status(200).json({
+    success: true,
+    message: "Students directory retrieved successfully.",
+    count: students.length,
+    data: students,
+  });
+});
+
+export const createStudent = asyncHandler(async (req, res) => {
+  const student = await instituteAdminService.createStudent(req.instituteId, req.body);
+  res.status(201).json({
+    success: true,
+    message: "Student enrolled successfully.",
+    data: student,
+  });
+});
+
+export const updateStudent = asyncHandler(async (req, res) => {
+  const student = await instituteAdminService.updateStudent(
+    req.instituteId,
+    req.params.id,
+    req.body
+  );
+  res.status(200).json({
+    success: true,
+    message: "Student updated successfully.",
+    data: student,
+  });
+});
+
+export const deleteStudent = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.deleteStudent(req.instituteId, req.params.id);
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+});
+
+// --- Broadcast Alerts ---
+export const getAlerts = asyncHandler(async (req, res) => {
+  const alerts = await instituteAdminService.getAlerts(req.instituteId);
+  res.status(200).json({
+    success: true,
+    message: "Broadcast alerts retrieved successfully.",
+    count: alerts.length,
+    data: alerts,
+  });
+});
+
+export const createAlert = asyncHandler(async (req, res) => {
+  const alert = await instituteAdminService.createAlert(
+    req.instituteId,
+    req.body,
+    req.user?._id
+  );
+  res.status(201).json({
+    success: true,
+    message: "Broadcast alert dispatched successfully.",
+    data: alert,
+  });
+});
+
 export default {
   getStats,
   getProfile,
@@ -120,4 +213,13 @@ export default {
   assignCampusManager,
   getManagers,
   createManager,
+  getStaff,
+  createStaff,
+  deleteStaff,
+  getStudents,
+  createStudent,
+  updateStudent,
+  deleteStudent,
+  getAlerts,
+  createAlert,
 };

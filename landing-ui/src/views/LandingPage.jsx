@@ -17,11 +17,10 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { top_alumni, institutes, events } from '@/data/mockData'
 import Navbar from '@/components/layout/Navbar'
+import HeroCommand from '@/components/hero/HeroCommand'
 import HeroFanDeck from '@/components/HeroFanDeck/HeroFanDeck'
-import WebGLBackground from '@/components/WebGLBackground'
 import BentoCard from '@/components/shared/BentoCard'
 import GetStartedModal from '@/components/GetStartedModal'
-import DeviceShowcase from '@/components/showcase/DeviceShowcase'
 
 export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   const navigate = useNavigate()
@@ -46,9 +45,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   }
 
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen bg-transparent text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white">
-      {/* 3D WebGL Particle Background */}
-      <WebGLBackground isDark={isDark} />
+    <div className="relative w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
 
       {/* Floating Dynamic Navbar (Hides on scroll down, reveals on scroll up) */}
       <Navbar
@@ -57,9 +54,9 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
         onGetStarted={handleOpenGetStarted}
       />
 
-      <div className="relative z-10 pt-6">
-        {/* ─── Hero Section: Animated Fan Deck ─── */}
-        <HeroFanDeck onGetStarted={handleOpenGetStarted} navigate={navigate} />
+      <div className="relative z-10 pt-4 sm:pt-6">
+        {/* ─── Hero Section: Command Your Entire Campus (PC & Mobile Showcase + CTAs) ─── */}
+        <HeroCommand onGetStarted={handleOpenGetStarted} navigate={navigate} />
 
         {/* ─── Top Alumni List (Success Stories) ─── */}
         <section id="alumni" className="py-24 bg-transparent">
@@ -71,13 +68,13 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
             <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-2">
-              Alumni Network
+              Verified Alumni Intelligence
             </p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Where Our Graduates Are Now
+              Where our graduates work.
             </h2>
-            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 mt-3">
-              The network effect of Pakistan's finest institutions empowered by EduHub.
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 mt-3 max-w-xl mx-auto">
+              Institutions advertise placement rates — EduHub verifies them. Real alumni, real employers, real career trajectories.
             </p>
           </motion.div>
 
@@ -126,16 +123,16 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           >
             <div>
               <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase">
-                HEC &amp; QS Rankings // 2026 Official List
+                Institutional Intelligence Engine — HEC · QS · PEC · 2026
               </p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white mt-1 font-display">
-                Pakistan's Top-Ranked Institutions
+                Verified institutions. Transparent data.
               </h2>
             </div>
             
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xs font-medium">
-                Verified national centers of academic and research excellence connected on EduHub.
+                Accreditation tiers, real semester fees, verified placement rates, and alumni career data — all in one index.
               </p>
               <button
                 onClick={() => setShowAllInstitutes(prev => !prev)}
@@ -391,10 +388,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           </div>
         </section>
 
-        {/* ─── Cross-Platform OS: PC & Mobile Device Showcase ("What You Get") ─── */}
-        <DeviceShowcase onGetStarted={handleOpenGetStarted} navigate={navigate} />
+        {/* ─── Platform Pillars: 7 Core Ecosystem Cards Deck with Proper Context ─── */}
+        <HeroFanDeck onGetStarted={handleOpenGetStarted} navigate={navigate} />
 
-        {/* ─── Platform Capabilities: Bento Grid ("Built for everyone") ─── */}
+        {/* ─── Platform Capabilities: Bento Grid ─── */}
         <section id="roles" className="py-24 px-6 max-w-7xl mx-auto">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16"
@@ -404,13 +401,13 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-2">
-              Core Ecosystem
+              Five Governance Tiers
             </p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-              Built for everyone
+              Every role. One platform.
             </h2>
             <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
-              Thousands of users, from students to enterprise campus administrators, rely on EduHub to run their entire academic ecosystem.
+              EduHub is role-scoped by design — strict least-privilege access from Super Administrator down to enrolled students and their guardians.
             </p>
           </motion.div>
 
@@ -428,15 +425,15 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
               <div className="p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
-                  For Students & Learners
+                  Students &amp; Guardians
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Use a single cloud portal for course enrollments, verified biometric attendance, assignment submissions, and real-time GPA tracking.
+                  Read-only access to courses, attendance records, grades, daily diaries, and fee vouchers. Guardians are notified in real time via the parent broadcast channel.
                 </p>
               </div>
             </BentoCard>
 
-            {/* Bento 2: Teachers & Instructors */}
+            {/* Bento 2: Faculty & Instructors */}
             <BentoCard>
               <div className="relative h-56 w-full overflow-hidden">
                 <img
@@ -449,10 +446,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
               <div className="p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
-                  For Teachers & Trainers
+                  Faculty &amp; Instructors
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Always up-to-date classroom rosters, dynamic rubrics grading, student daily diaries, and integrated practical web labs.
+                  Scoped read/write access to assigned class rosters, gradebooks, assignment submission grading, and daily academic diaries — timetable collision detection included.
                 </p>
               </div>
             </BentoCard>
@@ -470,10 +467,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
               <div className="p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
-                  For Institute Admins
+                  Institute Admins &amp; Campus Managers
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Streamline statutory compliance, manage multi-campus branches, track fee settlements, and supervise campus operations.
+                  Institute Admins manage all branches with aggregate enrollment and fee metrics. Campus Managers control local timetables, rosters, exam invigilation, and admissions — scoped to their branch only.
                 </p>
               </div>
             </BentoCard>
@@ -483,10 +480,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 h-full">
                 <div className="max-w-md space-y-3">
                   <h3 className="text-2xl md:text-3xl font-extrabold font-display text-slate-900 dark:text-white tracking-tight">
-                    All campus data at once
+                    Multi-tenant isolation by design.
                   </h3>
                   <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Contact and personal records, past and upcoming events, career history, academic grades, and fee schedules all unified in one centralized ledger.
+                    Every query executes under parameter-enforced <code className="text-xs font-mono bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">institute_id</code> and <code className="text-xs font-mono bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">campus_id</code> constraints. Grades, fees, and staff records are cryptographically tenant-isolated — no cross-tenant data access is architecturally possible.
                   </p>
                 </div>
 
@@ -520,7 +517,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
             </BentoCard>
 
-            {/* Bento 5: Events */}
+            {/* Bento 5: Super Administrator */}
             <BentoCard>
               <div className="relative h-56 w-full overflow-hidden">
                 <img
@@ -533,10 +530,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
               <div className="p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
-                  Campus Events & Seminars
+                  Super Administrator
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Stay up to date with the latest seminars, webinars, and hackathons hosted across all affiliated institutions.
+                  System-level infrastructure governance: tenant provisioning, global directory verification, audit trail review, and cross-institutional analytics — accessible only to EduHub platform operators.
                 </p>
               </div>
             </BentoCard>
@@ -556,16 +553,16 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             className="max-w-3xl mx-auto mb-16"
           >
             <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-3">
-              Ecosystem Connectivity
+              Decoupled API Architecture
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
-              Integrate with your academic <br className="hidden sm:inline" />
+              Connect without surrendering <br className="hidden sm:inline" />
               <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 bg-clip-text text-transparent">
-                ecosystem in seconds
+                your data.
               </span>
             </h2>
             <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 mt-4 leading-relaxed max-w-xl mx-auto font-normal">
-              Connect your lecture halls, messaging channels, cloud repositories, assignments, and campus schedules seamlessly.
+              Route validated admission applications into your existing ERP via HMAC-signed webhooks. Keep your student database, financial ledgers, and faculty records behind your own firewall.
             </p>
           </motion.div>
 
@@ -728,7 +725,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
 
 
         {/* ─── Footer ─── */}
-        <footer className="pt-20 bg-emerald-700 dark:bg-slate-950 text-white relative overflow-hidden">
+        <footer className="pt-20 bg-emerald-700 dark:bg-[#060608] text-white relative overflow-hidden border-t border-emerald-800 dark:border-zinc-800/80">
           <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-12 relative z-10 pb-16">
             <div className="max-w-sm">
               <div className="flex items-center gap-3 mb-4">
@@ -738,7 +735,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 <span className="font-display font-black text-2xl tracking-tight">EduHub</span>
               </div>
               <p className="text-white/80 text-sm leading-relaxed">
-                The all-in-one educational platform and service driving institutional excellence, seamless academic records, and thriving campus cultures.
+                A hybrid educational technology ecosystem resolving information asymmetry for students and operational fragmentation for institutions — from coaching academies to chartered universities.
               </p>
             </div>
 

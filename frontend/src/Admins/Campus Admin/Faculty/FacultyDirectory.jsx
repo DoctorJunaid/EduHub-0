@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -30,16 +30,22 @@ import {
 } from "./facultyData";
 import {
   selectFaculty,
-  facultyAdded,
-  facultyUpdated,
-  facultyDeleted,
-} from "@/store/Slices/facultySlice.js";
+  addFaculty,
+  updateFaculty,
+  deleteFaculty,
+  fetchFaculty,
+} from "@/store/Slices/facultySlice";
 import FacultyForm from "./FacultyForm";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchFaculty());
+  }, [dispatch]);
+
   const facultyRecords = useSelector(selectFaculty);
   const [form, setForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -74,8 +80,8 @@ export default function FacultyDirectory() {
   };
   const saveTeacher = (values) => {
     if (form.teacher)
-      dispatch(facultyUpdated({ ...values, id: form.teacher.id }));
-    else dispatch(facultyAdded(values));
+      dispatch(updateFaculty({ ...values, id: form.teacher.id }));
+    else dispatch(addFaculty(values));
     // Reveal the saved record even if earlier filters would hide it.
     setFilters({ search: "", department: "", designation: "", status: "" });
     const index = form.teacher
@@ -289,7 +295,7 @@ export default function FacultyDirectory() {
         cancelText="Cancel"
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => {
-          if (deleteTarget) dispatch(facultyDeleted(deleteTarget.id));
+          if (deleteTarget) dispatch(deleteFaculty(deleteTarget.id));
           setDeleteTarget(null);
         }}
       />

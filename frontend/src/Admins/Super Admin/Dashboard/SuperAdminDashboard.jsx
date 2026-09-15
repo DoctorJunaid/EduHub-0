@@ -3,12 +3,23 @@ import {
   GraduationCap,
   Users,
   MapPin,
-  BarChart3,
-  Grid2X2,
-  X,
+  ArrowLeft,
+  Filter,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchGlobalStats, selectGlobalStats } from "@/store/Slices/superAdminSlice";
+import {
+  fetchInstitutes,
+  selectInstitutes,
+  addInstitute,
+  updateInstitute,
+  optimisticStatusChange,
+} from "@/store/Slices/institutesSlice";
+import InstituteForm from "../Institutes/InstituteForm";
+import ManageInstitute from "../Institutes/ManageInstitute";
+import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
 import { loadInstitutes } from "../Institutes/instituteData";
 
@@ -46,17 +57,26 @@ function normalizeStatus(status) {
 }
 
 export default function SuperAdminDashboard() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const globalStats = useSelector(selectGlobalStats);
+  const instituteData = useSelector(selectInstitutes) || [];
   const location = useLocation();
   const selectedInstitute = location.state?.selectedInstitute;
   const [searchTerm, setSearchTerm] = useState(
     () => localStorage.getItem("eduHubSuperSearch") || "",
   );
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
   const [showUniversityOnly, setShowUniversityOnly] = useState(false);
-  const [instituteData, setInstituteData] = useState(() => loadInstitutes());
   const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
   const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchGlobalStats());
+    dispatch(fetchInstitutes());
+  }, [dispatch]);
 
   useEffect(() => {
     const onSearch = (event) => {
@@ -71,14 +91,16 @@ export default function SuperAdminDashboard() {
   const searchValue = searchTerm.trim().toLowerCase();
 
   const visibleInstitutes = instituteData.filter((institute) => {
-    const matchesType = showUniversityOnly
-      ? institute.type === "University"
-      : true;
+    const matchesType =
+      typeFilter === "all" ||
+      institute.type?.toLowerCase() === typeFilter.toLowerCase();
+    
+    // Safely check strings before calling .toLowerCase() or .includes()
     const matchesSearch =
-      institute.name.toLowerCase().includes(searchValue) ||
-      institute.location.toLowerCase().includes(searchValue) ||
-      institute.students.toLowerCase().includes(searchValue) ||
-      String(institute.campuses).includes(searchValue);
+      (institute.name || "").toLowerCase().includes(searchValue) ||
+      (institute.type || "").toLowerCase().includes(searchValue) ||
+      (institute.board || "").toLowerCase().includes(searchValue) ||
+      String(institute.campusCount || 0).includes(searchValue);
 
     return matchesType && matchesSearch;
   });
@@ -88,39 +110,113 @@ export default function SuperAdminDashboard() {
   };
 
   const handleCampusClick = (institute) => {
-    setCampusDrawerInstitute(institute);
+    setManageDrawerInstitute({ ...institute, initialTab: "campuses" });
   };
 
   const handleStudentsClick = (institute) => {
-    setStudentsDrawerInstitute(institute);
+    navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`);
   };
 
-  const changeInstituteStatus = (instituteName, nextStatus) => {
-    const normalizedStatus = normalizeStatus(nextStatus);
-    setInstituteData((current) =>
-      current.map((institute) =>
-        institute.name === instituteName
-          ? { ...institute, status: normalizedStatus }
-          : institute,
-      ),
-    );
+  const changeInstituteStatus = async (institute, nextStatus) => {
+    const id = institute._id || institute.id;
+    dispatch(optimisticStatusChange({ id, status: nextStatus }));
     setStatusMenuFor(null);
+    try {
+      await dispatch(updateInstitute({ id, status: nextStatus })).unwrap();
+      toast.success(`${institute.name} status set to ${nextStatus}`);
+      dispatch(fetchGlobalStats());
+    } catch (error) {
+      toast.error(typeof error === "string" ? error : "Failed to update status");
+      dispatch(fetchInstitutes());
+    }
   };
+
+  const statsArray = [
+    { label: "Total Users", value: globalStats?.users?.total || 0, detail: "Across all active networks", icon: Users },
+    { label: "Registered Institutes", value: globalStats?.institutes?.total || 0, detail: "Total networks in system", icon: Building2 },
+    { label: "Total Campuses", value: globalStats?.campuses?.total || 0, detail: "Branches globally", icon: MapPin },
+    { label: "Active Programs", value: "-", detail: "Courses across networks", icon: GraduationCap },
+  ];
 
   return (
     <section className="super-admin-dashboard">
-      <div className="super-admin-topbar">
-        <span className="breadcrumb">
-          <span className="breadcrumb-icon">
-            <Grid2X2 size={16} />
-          </span>
-          <span>Home / Dashboard</span>
-        </span>
-        <span className="super-admin-title">Global System</span>
+      {manageDrawerInstitute ? (
+        <div className="super-admin-manage-fullscreen" style={{ animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+          <div className="super-admin-drawer-head" style={{ marginBottom: '12px', paddingBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none' }}>
+            <button
+              className="super-admin-back-button"
+              onClick={() => setManageDrawerInstitute(null)}
+              aria-label="Back to dashboard"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #e4e4e7', background: '#fff', cursor: 'pointer' }}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <span className="super-admin-drawer-kicker" style={{ fontSize: '10px' }}>
+                Institute Management
+              </span>
+              <h3 style={{ fontSize: '20px', margin: '0' }}>
+                {manageDrawerInstitute.mode === "new"
+                  ? "Add Institute"
+                  : manageDrawerInstitute.name}
+              </h3>
+            </div>
+          </div>
+          
+          <div className="super-admin-manage-card-wrap" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e4e4e7', padding: '16px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.02)', width: '100%', boxSizing: 'border-box' }}>
+            {manageDrawerInstitute.mode === "new" ? (
+              <InstituteForm
+                onSave={async (values) => {
+                  try {
+                    await dispatch(addInstitute(values)).unwrap();
+                    toast.success("Institute added successfully!");
+                    setManageDrawerInstitute(null);
+                  } catch (error) {
+                    toast.error(typeof error === 'string' ? error : "Failed to add institute");
+                    throw error;
+                  }
+                }}
+                onCancel={() => setManageDrawerInstitute(null)}
+              />
+            ) : (
+              <ManageInstitute
+                institute={manageDrawerInstitute}
+                onClose={() => setManageDrawerInstitute(null)}
+              />
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="super-admin-topbar">
+
+        <button
+          className="add-institute-button"
+          onClick={() => setManageDrawerInstitute({ mode: "new" })}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "8px",
+            background: "#09090b",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            fontWeight: "600",
+            fontSize: "13px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            alignSelf: "flex-end",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            transition: "all 0.15s ease",
+          }}
+        >
+          <span>+</span> Add Institute
+        </button>
       </div>
 
       <div className="super-admin-stats-grid">
-        {stats.map((stat, index) => {
+        {statsArray.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <article className="super-admin-stat-card" key={index}>
@@ -143,14 +239,27 @@ export default function SuperAdminDashboard() {
             <h2>Registered Institutes</h2>
             <p>Overview of top-performing networks</p>
           </div>
-          <button
-            className={`super-admin-filter ${showUniversityOnly ? "active" : ""}`}
-            aria-label="Filter institutes by university"
-            aria-pressed={showUniversityOnly}
-            onClick={() => setShowUniversityOnly(!showUniversityOnly)}
-          >
-            <BarChart3 size={16} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+            {["all", "University", "College", "School"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: "6px",
+                  border: typeFilter === type ? "1px solid #09090b" : "1px solid #e4e4e7",
+                  background: typeFilter === type ? "#09090b" : "#fff",
+                  color: typeFilter === type ? "#fff" : "#71717a",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {type === "all" ? "All Types" : `${type}s`}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="super-admin-institute-list">
@@ -168,12 +277,12 @@ export default function SuperAdminDashboard() {
               <div className="super-admin-institute-main">
                 <img
                   className="super-admin-institute-image"
-                  src={institute.image}
+                  src={institute.image || "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80"}
                   alt=""
                 />
                 <div className="super-admin-institute-copy">
                   <h3>{institute.name}</h3>
-                  <p>{institute.location}</p>
+                  <p>{institute.type} · {institute.board}</p>
                 </div>
               </div>
 
@@ -200,7 +309,7 @@ export default function SuperAdminDashboard() {
                       value={institute.status}
                       onChange={(event) =>
                         changeInstituteStatus(
-                          institute.name,
+                          institute,
                           event.target.value,
                         )
                       }
@@ -210,6 +319,7 @@ export default function SuperAdminDashboard() {
                       <option value="Active">Active</option>
                       <option value="Suspended">Suspended</option>
                       <option value="Pending">Pending</option>
+                      <option value="Inactive">Inactive</option>
                     </select>
                   )}
                 </div>
@@ -219,14 +329,14 @@ export default function SuperAdminDashboard() {
                   onClick={() => handleCampusClick(institute)}
                   aria-label={`Show campuses for ${institute.name}`}
                 >
-                  {institute.campuses} Campuses
+                  {institute.campusCount || 0} Campuses
                 </button>
                 <button
                   className="super-admin-student-count super-admin-clickable"
                   onClick={() => handleStudentsClick(institute)}
                   aria-label={`Show students for ${institute.name}`}
                 >
-                  {institute.students}
+                  View Users
                 </button>
                 <button
                   className="super-admin-manage-button"
@@ -240,6 +350,9 @@ export default function SuperAdminDashboard() {
           ))}
         </div>
       </section>
+      </>
+      )}
+
 
       {campusDrawerInstitute && (
         <div

@@ -1,7 +1,7 @@
-.attendance-status { display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 20px; padding: 5px 11px; font-size: 10px; background: var(--muted); color: var(--muted-foreground); }
-.attendance-status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.attendance-present { color: var(--color-success); background: var(--color-success-bg); }
-.attendance-late { color: var(--color-warning); background: var(--color-warning-bg); }
-.attendance-absent { color: var(--color-danger); background: var(--color-danger-bg); }
-.attendance-on-leave { color: var(--muted-foreground); background: var(--muted); }
-.attendance-unrecorded { color: var(--muted-foreground); }
+.attendance-status { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 600; line-height: 1.3; }
+.attendance-status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.attendance-present { background: #09090b; color: #ffffff; }
+.attendance-late { background: #f4f4f5; color: #09090b; border-color: #e4e4e7; }
+.attendance-absent { background: transparent; color: #09090b; border-color: #09090b; }
+.attendance-on-leave { background: #f4f4f5; color: #71717a; border-color: #e4e4e7; }
+.attendance-unrecorded { background: #f4f4f5; color: #a1a1aa; }

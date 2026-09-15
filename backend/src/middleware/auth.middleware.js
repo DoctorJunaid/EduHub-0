@@ -24,7 +24,9 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_jwt_secret_key");
+    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? undefined : "default_jwt_secret_key");
+    if (!secret) throw new Error("JWT_SECRET is missing in production");
+    const decoded = jwt.verify(token, secret);
 
     if (!decoded || !decoded.id) {
       return res.status(401).json({

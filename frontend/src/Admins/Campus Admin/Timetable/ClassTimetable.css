@@ -240,17 +240,17 @@
   min-height: 0;
   white-space: normal;
   overflow: auto;
-  border: 0;
-  border-left: 3px solid var(--color-success);
-  border-radius: 4px;
-  background: var(--color-success-bg);
-  color: var(--foreground);
+  border: 1px solid #e4e4e7;
+  border-left: 3px solid #09090b;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #09090b;
   text-align: left;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 .tt-class-block > svg {
   flex-shrink: 0;
-  color: var(--color-success);
+  color: #09090b;
   margin-top: 1px;
 }
 .tt-class-block strong {
@@ -349,47 +349,68 @@
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--color-success-bg);
-  color: var(--color-success);
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 .tt-instructor-avatar {
-  width: 31px;
-  height: 31px;
-  background: var(--color-info-bg);
-  color: var(--color-info);
+  width: 30px;
+  height: 30px;
+  background: #f4f4f5;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
 }
 .tt-status {
   display: inline-flex;
   gap: 5px;
   align-items: center;
-  padding: 4px 9px;
-  background: var(--color-success-bg);
-  color: var(--color-success);
-  border-radius: 15px;
+  padding: 3px 9px;
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 999px;
   font-size: 10px;
+  font-weight: 600;
 }
 .tt-status > span {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: currentColor;
 }
 .tt-status.tt-pending {
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
+  background: #f4f4f5;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
 }
 .tt-row-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
-.class-timetable .tt-row-actions .tt-edit {
-  color: var(--color-success);
+.class-timetable .tt-row-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
+.class-timetable .tt-row-actions button:hover {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+.class-timetable .tt-row-actions .tt-edit,
 .class-timetable .tt-row-actions .tt-delete {
-  color: var(--color-danger);
+  color: #09090b;
 }
 .tt-empty {
   padding: 20px;

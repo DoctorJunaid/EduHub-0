@@ -1,30 +1,109 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
-import { studentRecords } from '../../Admins/Campus Admin/Students/studentData.js';
-import { studentIdentityErrors } from '../studentIdentity.js';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from '../../api/axiosInstance.js';
 
 const initialsFor = (name) => name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+
+export const fetchStudents = createAsyncThunk('students/fetchAll', async (campusId, { rejectWithValue }) => {
+  try {
+    // Assuming backend has a route like /campus-admin/students or /user?role=Student
+    const response = await axiosInstance.get('/campus-admin/students');
+    return response.data.data || response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to fetch students');
+  }
+});
+
+export const addStudent = createAsyncThunk('students/add', async (studentData, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post('/campus-admin/students/new', studentData);
+    return response.data.data || response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to add student');
+  }
+});
+
+export const updateStudent = createAsyncThunk('students/update', async (studentData, { rejectWithValue }) => {
+  try {
+    const { id, ...data } = studentData;
+    const response = await axiosInstance.put(`/campus-admin/students/${id}`, data);
+    return response.data.data || response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to update student');
+  }
+});
+
+export const deleteStudent = createAsyncThunk('students/delete', async (studentId, { rejectWithValue }) => {
+  try {
+    await axiosInstance.delete(`/campus-admin/students/${studentId}`);
+    return studentId;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to delete student');
+  }
+});
+
 const studentsSlice = createSlice({
   name: 'students',
-  initialState: { records: studentRecords },
+  initialState: { 
+    records: [],
+    status: 'idle',
+    error: null
+  },
   reducers: {
-    studentAdded: {
-      prepare: (values) => ({ payload: { ...values, id: nanoid(), initials: initialsFor(values.name) } }),
-      reducer: (state, { payload }) => { if (!Object.keys(studentIdentityErrors(payload, state.records)).length) state.records.push(payload); },
-    },
+    studentAdded: (state, { payload }) => { state.records.push({ ...payload, id: payload.id || Math.random().toString() }); },
     studentUpdated: (state, { payload }) => {
       const student = state.records.find((record) => record.id === payload.id);
-      if (Object.keys(studentIdentityErrors({ ...student, ...payload }, state.records)).length) return;
-      if (student) {
-        Object.assign(student, payload);
-        student.initials = initialsFor(student.name);
-      }
+      if (student) Object.assign(student, payload);
     },
     studentDeleted: (state, { payload }) => {
       state.records = state.records.filter((student) => student.id !== payload);
     },
   },
+  extraReducers: (builder) => {
+    builder
+      // Fetch
+      .addCase(fetchStudents.pending, (state) => { state.status = 'loading'; })
+      .addCase(fetchStudents.fulfilled, (state, { payload }) => {
+        state.status = 'succeeded';
+        // Map backend _id to id and generate initials if needed
+        state.records = payload.map(student => ({
+          ...student,
+          id: student._id || student.id,
+          initials: student.initials || initialsFor(student.name || 'Unknown Student')
+        }));
+      })
+      .addCase(fetchStudents.rejected, (state, { payload }) => {
+        state.status = 'failed';
+        state.error = payload;
+      })
+      // Add
+      .addCase(addStudent.fulfilled, (state, { payload }) => {
+        const newStudent = {
+          ...payload,
+          id: payload._id || payload.id,
+          initials: payload.initials || initialsFor(payload.name || 'Unknown Student')
+        };
+        state.records.push(newStudent);
+      })
+      // Update
+      .addCase(updateStudent.fulfilled, (state, { payload }) => {
+        const index = state.records.findIndex(s => s.id === (payload._id || payload.id));
+        if (index !== -1) {
+          state.records[index] = {
+            ...state.records[index],
+            ...payload,
+            id: payload._id || payload.id,
+            initials: payload.initials || initialsFor(payload.name || 'Unknown Student')
+          };
+        }
+      })
+      // Delete
+      .addCase(deleteStudent.fulfilled, (state, { payload }) => {
+        state.records = state.records.filter((student) => student.id !== payload && student._id !== payload);
+      });
+  },
 });
 
 export const { studentAdded, studentUpdated, studentDeleted } = studentsSlice.actions;
 export const selectStudents = (state) => state.students.records;
+export const selectStudentsStatus = (state) => state.students.status;
 export default studentsSlice.reducer;

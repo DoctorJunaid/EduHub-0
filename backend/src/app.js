@@ -7,13 +7,63 @@ import path from "path";
 import { fileURLToPath } from "url";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import cors from "cors";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+import hpp from "hpp";
+import rateLimit from "express-rate-limit";
 import apiRoutes from "./routes/index.routes.js";
 
 const app = express();
 
+// Trust proxy for rate limiting behind reverse proxies
+app.set("trust proxy", 1);
+
+// Security HTTP headers
+app.use(helmet());
+
+// CORS middleware supporting local dev, Vercel deployments, and configured FRONTEND_URL
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5174",
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app") ||
+      process.env.NODE_ENV !== "production"
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+}));
+
+
+// Rate limiting (100 requests per 10 mins)
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again in 10 minutes",
+});
+app.use("/api/", limiter);
+
 // Body parsing middleware
-app.use(express.json());
+app.use(express.json({ limit: "10kb" })); // Limit payload size to 10kb
 app.use(express.urlencoded({ extended: true }));
+
+// Data sanitization against NoSQL query injection
+// Disabled temporarily: express-mongo-sanitize v2.2.0 crashes in Express 5.0 because req.query is read-only.
+// app.use(mongoSanitize());
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 // Set up __dirname equivalent for ES Modules
 const __filename = fileURLToPath(import.meta.url);

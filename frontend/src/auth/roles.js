@@ -1,14 +1,16 @@
 export const ROLE_LABELS = {
-  "super-admin": "Super Admin",
-  "campus-admin": "Campus Admin",
-  "institute-admin": "Institute Admin",
+  super_admin: "Super Admin",
+  campus_admin: "Campus Admin",
+  campus_manager: "Campus Manager",
+  institute_admin: "Institute Admin",
   student: "Student",
 };
 
 export const ROLE_HOME_ROUTES = {
-  "super-admin": "/super-admin",
-  "campus-admin": "/dashboard",
-  "institute-admin": "/institute-admin",
+  super_admin: "/super-admin",
+  campus_admin: "/dashboard",
+  campus_manager: "/dashboard",
+  institute_admin: "/institute-admin",
   student: "/student/dashboard",
 };
 

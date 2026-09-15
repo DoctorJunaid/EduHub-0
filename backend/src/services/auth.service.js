@@ -5,6 +5,7 @@
  */
 import User from "../models/user.model.js";
 import generateToken from "../utils/generateToken.js";
+import jwt from "jsonwebtoken";
 
 /**
  * Register a new public student user
@@ -134,9 +135,55 @@ export const updateProfile = async (userId, { name, phone, avatar }) => {
   return user;
 };
 
+/**
+ * Set password from reset token
+ */
+export const setPassword = async ({ token, password }) => {
+  if (!token || !password) {
+    const error = new Error("Token and password are required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.reset) {
+      throw new Error("Invalid token type");
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      const error = new Error("User not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    user.passwordHash = password;
+    await user.save();
+
+    const newToken = generateToken({
+      id: user._id,
+      role: user.role,
+      instituteId: user.instituteId,
+      campusId: user.campusId,
+    });
+
+    const userObj = user.toObject();
+    delete userObj.passwordHash;
+
+    return { token: newToken, user: userObj };
+  } catch (err) {
+    const error = new Error("Invalid or expired token");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+
 export default {
   registerUser,
   loginUser,
   getMe,
   updateProfile,
+  setPassword,
 };

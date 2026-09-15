@@ -27,8 +27,14 @@ export const getInstitutes = asyncHandler(async (req, res) => {
 });
 
 export const createInstitute = asyncHandler(async (req, res) => {
-  const { admin, ...instituteData } = req.body;
-  const institute = await superAdminService.createInstitute(instituteData, admin);
+  let adminData = req.body.admin;
+  if (typeof adminData === 'string') {
+    try { adminData = JSON.parse(adminData); } catch (e) {}
+  }
+  const instituteData = { ...req.body };
+  delete instituteData.admin;
+
+  const institute = await superAdminService.createInstitute(instituteData, adminData, req.file);
   res.status(201).json({
     success: true,
     message: "Institute registered successfully.",
@@ -46,7 +52,7 @@ export const getInstituteById = asyncHandler(async (req, res) => {
 });
 
 export const updateInstitute = asyncHandler(async (req, res) => {
-  const institute = await superAdminService.updateInstitute(req.params.id, req.body);
+  const institute = await superAdminService.updateInstitute(req.params.id, req.body, req.file);
   res.status(200).json({
     success: true,
     message: "Institute updated successfully.",

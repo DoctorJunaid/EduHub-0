@@ -1,112 +1,177 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
-import { demoLoggedIn } from '@/store/Slices/authSlice';
+import { loginUser } from '@/store/Slices/authSlice';
 import { roleHome } from './roles';
-import { Mail, UserRound, Building2, Landmark, ShieldCheck } from "lucide-react";
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import RoleSelector from './components/RoleSelector';
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/Button";
-import PasswordInput from "@/components/common/PasswordInput";
-import AuthLayout from "./components/AuthLayout";
-import { validateLogin } from "./signupValidation";
-
-const roles = [['super-admin', 'Super Admin', UserRound], ['campus-admin', 'Campus Admin', Building2], ['institute-admin', 'Institute Admin', Landmark], ['student', 'Student', UserRound]];
+import { Mail, Lock } from "lucide-react";
+import toast from "react-hot-toast";
+import './Login.css';
 
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [values, setValues] = useState({ email: "", password: "", role: 'super-admin' });
-  const roleLabel = roles.find(([id]) => id === values.role)?.[1];
-  const [errors, setErrors] = useState({});
-  const [notice, setNotice] = useState("");
+  const [values, setValues]   = useState({ email: '', password: '' });
+  const [errors, setErrors]   = useState({});
+  const [remember, setRemember] = useState(false);
+
   const change = (field, value) => {
-    setValues((previous) => ({ ...previous, [field]: value }));
-    setErrors((previous) => ({ ...previous, [field]: undefined }));
-    setNotice("");
+    setValues(p => ({ ...p, [field]: value }));
+    setErrors(p => ({ ...p, [field]: undefined }));
   };
-  const submit = (event) => {
-    event.preventDefault();
-    const next = validateLogin(values);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const next = {};
+    if (!values.email.trim())    next.email    = 'Email is required';
+    if (!values.password.trim()) next.password = 'Password is required';
     setErrors(next);
-    setValues((previous) => ({ ...previous, email: previous.email.trim() }));
-    if (Object.keys(next).length) {
-      setNotice("");
-      document.getElementById(`login-${Object.keys(next)[0]}`)?.focus();
-      return;
+    if (Object.keys(next).length) return;
+    
+    try {
+      // Dispatch real backend login
+      const resultAction = await dispatch(loginUser({ email: values.email, password: values.password })).unwrap();
+      
+      const home = roleHome(resultAction.role);
+      if (!home) { 
+        toast.error(`Role ${resultAction.role} workspace is pending.`); 
+        return; 
+      }
+      
+      navigate(home, { replace: true });
+    } catch (err) {
+      const msg = typeof err === 'string' ? err : (err?.message || 'Login failed. Please check credentials.');
+      toast.error(msg);
     }
-    const home = roleHome(values.role);
-    if (!home) { setNotice(`${roleLabel} workspace is pending approval. Choose Campus Admin to enter the available demo.`); return; }
-    dispatch(demoLoggedIn({ email: values.email, role: values.role }));
-    navigate(home, { replace: true });
   };
-  const props = (field) => ({
-    id: `login-${field}`,
-    name: field,
-    required: true,
-    value: values[field],
-    onChange: (event) => change(field, event.target.value),
-    "aria-invalid": Boolean(errors[field]),
-    "aria-describedby": errors[field] ? `login-${field}-error` : undefined,
-  });
+
   return (
-    <AuthLayout
-      login
-      eyebrow="SCHOOL ACCESS"
-      title="Welcome back"
-      subtitle="Select your role to continue to the right workspace."
-    >
-      <form noValidate onSubmit={submit} className="login-form">
-        <RoleSelector options={roles} value={values.role} onChange={(role) => change('role', role)} className="login-roles" />
-        <div className="signup-field">
-          <Label htmlFor="login-email">Email address</Label>
-          <div className="signup-icon-input">
-            <Mail size={18} aria-hidden="true" />
-            <Input
-              {...props("email")}
-              type="email"
-              autoComplete="email"
-              placeholder="Enter your email"
-            />
+    <div className="login-page">
+
+      {/* ════════════════════
+          LEFT — Form
+      ════════════════════ */}
+      <div className="lp-left">
+        <div className="lp-left-inner">
+
+
+          <h1>Login</h1>
+
+          <form onSubmit={submit} noValidate className="lp-form">
+
+            {/* Email */}
+            <div className="lp-field">
+              <label htmlFor="lp-email" className="lp-label">Email Address</label>
+              <div className="lp-input-wrap">
+                <span className="lp-input-icon"><Mail size={15} /></span>
+                <input
+                  id="lp-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="johndoe@gmail.com"
+                  value={values.email}
+                  onChange={e => change('email', e.target.value)}
+                />
+              </div>
+              {errors.email && <p className="lp-error">{errors.email}</p>}
+            </div>
+
+            {/* Password */}
+            <div className="lp-field">
+              <label htmlFor="lp-password" className="lp-label">Password</label>
+              <div className="lp-input-wrap">
+                <span className="lp-input-icon"><Lock size={15} /></span>
+                <input
+                  id="lp-password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={values.password}
+                  onChange={e => change('password', e.target.value)}
+                />
+              </div>
+              {errors.password && <p className="lp-error">{errors.password}</p>}
+            </div>
+
+            {/* Remember me */}
+            <div
+              className="lp-remember"
+              role="checkbox"
+              aria-checked={remember}
+              tabIndex={0}
+              onClick={() => setRemember(r => !r)}
+              onKeyDown={e => e.key === ' ' && setRemember(r => !r)}
+            >
+              <div className={`lp-checkbox${remember ? ' checked' : ''}`}>
+                {remember && (
+                  <svg viewBox="0 0 12 12" width="9" height="9" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <span className="lp-remember-label">Remember me</span>
+            </div>
+
+            <button type="submit" className="lp-submit">Login</button>
+          </form>
+
+          {/* Footer links */}
+          <div className="lp-footer">
+            <p>
+              New student?{' '}
+              <Link to="/signup">Sign up</Link>
+            </p>
+            <span style={{ cursor: 'pointer' }}>Forgot Password?</span>
           </div>
-          {errors.email && (
-            <p className="signup-error" id="login-email-error">
-              {errors.email}
-            </p>
-          )}
+
+
         </div>
-        <div className="signup-field">
-          <Label htmlFor="login-password">Password</Label>
-          <PasswordInput
-            {...props("password")}
-            label="password"
-            autoComplete="current-password"
-            placeholder="Enter your password"
-          />
-          {errors.password && (
-            <p className="signup-error" id="login-password-error">
-              {errors.password}
+      </div>
+
+      {/* ════════════════════
+          RIGHT — Showcase
+      ════════════════════ */}
+      <div className="lp-right">
+        <div className="lp-right-inner">
+
+          {/* Subtle dot accents */}
+          <div style={{ position: 'absolute', top: '4rem', right: '5rem', width: 3, height: 3, borderRadius: '50%', background: '#fff', opacity: 0.18, pointerEvents: 'none', zIndex: 3 }} />
+          <div style={{ position: 'absolute', top: '9rem', right: '28%', width: 2, height: 2, borderRadius: '50%', background: '#60a5fa', opacity: 0.15, pointerEvents: 'none', zIndex: 3 }} />
+          <div style={{ position: 'absolute', bottom: '37%', right: '3.5rem', width: 4, height: 4, borderRadius: '50%', background: '#10b981', opacity: 0.12, filter: 'blur(2px)', pointerEvents: 'none', zIndex: 3 }} />
+
+          {/* Giant E */}
+          <div className="lp-giant-e">
+            <span>E</span>
+          </div>
+
+          {/* Text */}
+          <div className="lp-panel-text">
+            <p className="lp-panel-brand">EduHub</p>
+            <h2>Discover. Learn.<br />Connect.</h2>
+            <p>
+              EduHub is the centralized management platform for college and school administration. Access dashboards, academic data, and multi-school modules. Streamline your institution today.
             </p>
-          )}
+            <small>Supporting over 500+ institutions, and counting</small>
+          </div>
+
+          {/* Floating card */}
+          <div className="lp-card">
+            <div>
+              <h3>Your Unified Educational Ecosystem</h3>
+              <p>Access the easiest way to manage, collaborate, and excel in modern education.</p>
+            </div>
+            <div className="lp-avatars">
+              {[11, 12, 13].map(i => (
+                <div key={i} className="lp-avatar">
+                  <img src={`https://i.pravatar.cc/68?img=${i}`} alt="" />
+                </div>
+              ))}
+              <div className="lp-avatar-count">+42</div>
+            </div>
+          </div>
+
         </div>
-        <Alert className="login-demo" role="note"><ShieldCheck aria-hidden="true" /><AlertDescription>Demo mode: no account or payment details are sent anywhere.</AlertDescription></Alert>
-        <Button type="submit" className="signup-submit">
-          Continue as {roleLabel}
-        </Button>
-        <p className="signup-notice" role="status">
-          {notice}
-        </p>
-        <div className="signup-divider"><span>OR</span></div>
-        <Button type="button" variant="outline" className="signup-google" disabled title="Google sign-in is not configured"><span className="signup-google-mark" aria-hidden="true">G</span>Continue with Google</Button>
-        <p className="login-footer">
-          <span className="signup-unavailable-link" aria-disabled="true" title="Password reset is not configured">Forgot password?</span>
-          <Link className="signup-link" to="/signup">
-            Create account
-          </Link>
-        </p>
-      </form>
-    </AuthLayout>
+      </div>
+
+    </div>
   );
 }

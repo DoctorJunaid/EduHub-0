@@ -13,82 +13,82 @@ import './heroFanDeck.css';
 
 const HERO_CARDS = [
   {
-    id: 'feature_universities',
-    title: 'Top Universities',
-    subtitle: 'Explore 50+ Campuses',
+    id: 'feature_discovery',
+    title: 'Institutional Discovery',
+    subtitle: 'Verified Intelligence Engine',
     category: 'Discover',
     accent: '#10b981',
-    stat: 'Accredited Institutes',
+    stat: '50+ Verified Institutions',
     image: '/hero/universities.jpg',
     instituteId: null,
-    description: 'Discover accredited degree programs and explore top-tier universities integrated into our ecosystem.'
+    description: 'Students navigate institutional selection without information deficits. EduHub aggregates HEC accreditation tiers, PEC Washington Accord alignments, QS World positions, and real graduate placement rates — all in one verified index.'
   },
   {
     id: 'feature_ranking',
-    title: 'Ranking System',
-    subtitle: 'Performance Metrics',
-    category: 'Leaderboard',
+    title: 'Fee Transparency',
+    subtitle: 'No Hidden Charges',
+    category: 'Verified Data',
     accent: '#3b82f6',
-    stat: 'Real-time Stats',
+    stat: 'Real Semester Fees',
     image: '/hero/ranking.jpg',
     instituteId: null,
-    description: 'Track and compare institutional performance, student achievements, and academic rankings dynamically.'
+    description: 'Published prospectuses routinely omit laboratory dues, exam surcharges, and security deposits. EduHub exposes the full per-semester cost breakdown — tuition, laboratory development fees, and available merit or need-based endowments.'
   },
   {
-    id: 'feature_centralized',
-    title: 'Centralize Record',
-    subtitle: 'Unified Data Vault',
-    category: 'Database',
+    id: 'feature_decoupled',
+    title: 'Decoupled Integration',
+    subtitle: 'Zero Data Surrender',
+    category: 'API Architecture',
     accent: '#f59e0b',
-    stat: '100% Secure Storage',
+    stat: 'HMAC-SHA256 Webhooks',
     image: '/hero/records.jpg',
     instituteId: null,
-    description: 'A single cloud system for your applications, attendance, grades, and personal information, all in one place.'
+    description: 'Institutions keep their internal ERP — SAP, Oracle, local SQL — and receive validated student admission payloads via encrypted HMAC-SHA256 webhooks. EduHub holds zero read permissions on internal records. No migration required.'
   },
   {
     id: 'hero_eduhub_platform',
-    title: 'EduHub Platform',
-    subtitle: 'Unified Campus Service',
-    category: 'Live Network',
+    title: 'EduHub IMS',
+    subtitle: 'Multi-Tenant Cloud ERP',
+    category: 'Core Platform',
     accent: '#10b981',
-    stat: '120k+ Active Students',
+    stat: '120,000+ Active Students',
     isCrown: true,
     image: '/hero/campus_platform.jpg',
     instituteId: null,
-    description: 'The central digital service for modern universities — streamlining admissions, grading, fee settlements, and student tracking.'
+    description: 'A full-stack, multi-tenant Institute Management System spanning five governance tiers: Super Admin, Institute Admin, Campus Branch Manager, Faculty, and Student. Attendance, GPA, fee vouchers, timetables, and diaries — unified.'
   },
   {
-    id: 'feature_student_manage',
-    title: 'Student Lifecycle',
-    subtitle: 'Track & Empower',
-    category: 'Administration',
+    id: 'feature_fee_lifecycle',
+    title: 'Fee & Billing Engine',
+    subtitle: 'KuickPay & 1Link Ready',
+    category: 'Financial Operations',
     accent: '#6366f1',
-    stat: 'Holistic Profiles',
+    stat: 'Cryptographic Vouchers',
     image: '/hero/students.jpg',
     instituteId: null,
-    description: 'Monitor student performance, manage classes, and utilize practical web labs to ensure academic success.'
+    description: 'Batch-generate semester and monthly fee vouchers with cryptographically unique invoice numbers compatible with KuickPay, 1Link, and local banking switches. Real-time collection dashboard: Total Expected vs. Paid vs. Overdue Arrears.'
   },
   {
     id: 'feature_alumni',
-    title: 'Alumni Network',
-    subtitle: 'Community & Connections',
-    category: 'Community',
+    title: 'Alumni Career Tracking',
+    subtitle: 'Verified Placement Data',
+    category: 'Public Intelligence',
     accent: '#8b5cf6',
-    stat: 'Global Reach',
+    stat: 'Employer-Verified Profiles',
     image: '/hero/alumni.jpg',
     instituteId: null,
-    description: 'Keep graduates engaged with exclusive networking events, career history tracking, and continuous learning.'
+    description: 'Institutions advertise placement rates without verifiable data. EduHub catalogs verified alumni profiles: employer names, functional roles, corporate badges, and graduation year — providing transparent career outcome data for prospective students.'
   },
   {
-    id: 'feature_events',
-    title: 'Upcoming Events',
-    subtitle: 'Campus Activities',
-    category: 'Events',
+    id: 'feature_diary',
+    title: 'Digital Academic Diary',
+    subtitle: 'Daily Classroom Log',
+    category: 'Classroom Delivery',
     accent: '#e11d48',
-    stat: 'Stay Updated',
+    stat: 'Parent Broadcast Ready',
     image: '/hero/events.jpg',
     instituteId: null,
-    description: 'Stay up to date with the latest seminars, conferences, and student activities across all campus branches.'
+    description: 'Instructors log lecture topics, assign homework tasks, and attach external resources daily. Students receive an aggregated chronological feed. Parents stay informed in real time — eliminating paper diaries and informal messaging groups entirely.'
   }
 ];
 
@@ -169,20 +169,27 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
   };
 
   return (
-    <section className="hero-fan-container" id="top">
+    <section className="hero-fan-container" id="features">
       {/* Ambient Radial Illumination */}
       <div className="hero-ambient-glow" />
 
-      {/* Main Headline matching video phrasing & rhythm */}
-      <motion.h1 
+      {/* Category Announcement Badge */}
+      <div className="hero-top-badge" onClick={handleReplay} title="Click to replay card unfurl animation">
+        <span className="badge-pulse" />
+        <span>CORE PLATFORM PILLARS · 7 INTEGRATED MODULES</span>
+      </div>
+
+      {/* Contextual Section Headline */}
+      <motion.h2 
         className="hero-headline"
         initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        <span className="headline-light">A place to empower your</span> <br />
-        <span className="headline-bold headline-highlight">academic future.</span>
-      </motion.h1>
+        <span className="headline-light">Everything you need to</span> <br />
+        <span className="headline-bold headline-highlight">run a world-class institution.</span>
+      </motion.h2>
 
       {/* ─── The Grand Fan Deck Stage (0.6s – 1.6s bloom) ─── */}
       <div 
@@ -222,38 +229,38 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
       <motion.p 
         className="hero-subtitle"
         initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       >
-        Automate and unify your institution's operations—from student enrollment and interactive grading, to seamless fee management and deep analytics, all in one intelligent portal.
+        Explore the seven core pillars powering admissions, accredited programs, verified student records, dynamic rankings, and global alumni networks. Click any card to inspect its module.
       </motion.p>
 
-      {/* Dual Pill CTA Buttons matching video styling */}
+      {/* Action Buttons */}
       <motion.div 
         className="hero-actions"
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.85 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
       >
-
-
         <button 
           className="hero-btn-primary"
           onClick={() => onGetStarted && onGetStarted()}
         >
-          <span>Get Started</span>
+          <span>Register Campus</span>
           <ArrowRight size={18} weight="bold" />
         </button>
 
         <button 
           className="hero-btn-secondary"
           onClick={() => {
-            // Placeholder for video modal or demo section scroll
-            alert("Demo video player would open here!");
+            const el = document.getElementById('institutes');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
         >
           <Play size={18} weight="bold" />
-          <span>Watch Demo</span>
+          <span>Explore Campuses</span>
         </button>
 
         {/* Replay button to trigger the unfurl sensation */}

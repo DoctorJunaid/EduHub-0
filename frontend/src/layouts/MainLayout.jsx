@@ -6,7 +6,6 @@ import { ROLE_LABELS } from '../auth/roles';
 import Sidebar from "../components/common/Sidebar";
 import Header from "../components/common/Header";
 import { CAMPUS_ADMIN_NAV } from "../constants/navigation";
-import { useTheme } from "../hooks/useTheme";
 
 const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV, className = '', profile: suppliedProfile, headerProps = {} }) => {
   const dispatch = useDispatch(), navigate = useNavigate();
@@ -16,7 +15,8 @@ const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV, className = '', profile: su
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     window.matchMedia('(max-width: 768px)').matches
   );
-  const { theme, toggleTheme } = useTheme();
+
+  const isSuperAdmin = user?.role === 'super_admin';
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 768px)');
@@ -35,12 +35,12 @@ const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV, className = '', profile: su
         items={navigation}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
-        theme={theme}
-        onThemeToggle={toggleTheme}
       />
 
       <div className="main-area">
-        <Header user={profile} {...headerProps} onSignOut={headerProps.onViewProfile ? signOut : undefined} />
+        {!isSuperAdmin && (
+          <Header user={profile} {...headerProps} onSignOut={headerProps.onViewProfile ? signOut : undefined} />
+        )}
         <main className="content-area">
           <Outlet />
         </main>

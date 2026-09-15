@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/Select";
+} from "@/components/ui/select";
 import { loadInstitutes, saveInstitutes } from "./instituteData";
 import "./Institutes.css";
 import { cn } from "@/lib/utils";
