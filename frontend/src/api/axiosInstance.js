@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-// Create a configured axios instance pointing to the hosted backend by default
+const defaultBaseUrl = import.meta.env.DEV
+  ? 'http://localhost:5000/api/v1'
+  : 'https://edu-hub-backend-blond.vercel.app/api/v1';
+
+// Create a configured axios instance pointing to the local dev or hosted backend
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://edu-hub-backend-blond.vercel.app/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },

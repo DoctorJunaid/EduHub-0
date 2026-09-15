@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Plus, Search, Eye, Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -18,58 +18,102 @@ import StudentForm from "../../Campus Admin/Students/StudentForm";
 import StudentProfileDialog from "../../Campus Admin/Students/StudentProfileDialog";
 import StudentStatusBadge from "../../Campus Admin/Students/StudentStatusBadge";
 import { studentPrograms } from "../../Campus Admin/Students/studentData";
-import {
-  studentAdded,
-  studentUpdated,
-  studentDeleted,
-} from "@/store/Slices/studentsSlice";
-import { selectInstituteCampuses } from "@/store/Slices/campusesSlice";
-import { selectInstituteStudents } from "@/store/selectors/instituteStudents";
-import { demoInstitute } from "../instituteData";
+import { fetchCampuses, selectInstituteCampuses } from "@/store/Slices/campusesSlice";
+import axiosInstance from "@/api/axiosInstance";
 import { searchInstituteStudents } from "./studentDirectoryData";
 import "../../Campus Admin/Students/StudentsDirectory.css";
 import "./InstituteStudents.css";
 
 export default function InstituteStudents() {
   const dispatch = useDispatch();
-  const students = useSelector(selectInstituteStudents),
-    campuses = useSelector(selectInstituteCampuses);
-  const [search, setSearch] = useState(""),
-    [modal, setModal] = useState(null),
-    [notice, setNotice] = useState("");
-  const selected = students.find((student) => student.id === modal?.id);
-  const visible = searchInstituteStudents(students, search);
+  const campuses = useSelector(selectInstituteCampuses);
+  const [studentsList, setStudentsList] = useState([]);
+  const [search, setSearch] = useState("");
+  const [modal, setModal] = useState(null);
+  const [notice, setNotice] = useState("");
+
+  const loadStudents = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get("/institute-admin/students");
+      const raw = res.data?.data || [];
+      setStudentsList(
+        raw.map((s) => ({
+          ...s,
+          id: s._id || s.id,
+          campus: s.campusId?.name || s.campus || "Main Campus",
+          campusId: s.campusId?._id || s.campusId?.id || s.campusId,
+          status: s.status || "Active",
+          program: s.program || "General",
+          roll: s.roll || s.rollNo || "—",
+          section: s.section || "A",
+          subjects: s.subjects || "Core Curriculum",
+          initials: s.name
+            ? s.name
+                .split(" ")
+                .map((p) => p[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)
+            : "ST",
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to load students directory:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    dispatch(fetchCampuses());
+    loadStudents();
+  }, [dispatch, loadStudents]);
+
+  const selected = studentsList.find((student) => student.id === modal?.id);
+  const visible = searchInstituteStudents(studentsList, search);
+
   const campusOptions = [
     { value: "", label: "Select a campus" },
     ...campuses.map((campus) => ({ value: campus.id, label: campus.name })),
   ];
+
   const programs = [
     ...new Set(
       [
         ...studentPrograms,
-        ...students.map((student) => student.program),
+        ...studentsList.map((student) => student.program),
       ].filter(Boolean),
     ),
   ];
-  const save = (values) => {
+
+  const save = async (values) => {
     const campus = campuses.find((record) => record.id === values.campus);
     if (!campus) {
       setNotice("Select an available campus before saving.");
       return;
     }
-    const record = {
-      ...values,
-      instituteId: demoInstitute.id,
-      campusId: campus.id,
-      campus: campus.name,
-    };
-    if (modal.type === "edit") {
-      if (!selected) return;
-      dispatch(studentUpdated({ ...record, id: selected.id }));
-    } else dispatch(studentAdded(record));
-    setSearch("");
-    setModal(null);
-    setNotice("Student saved.");
+    try {
+      if (modal.type === "edit") {
+        if (!selected) return;
+        await axiosInstance.put(`/institute-admin/students/${selected.id}`, {
+          ...values,
+          campusId: campus.id,
+        });
+        setNotice("Student updated successfully.");
+      } else {
+        await axiosInstance.post("/institute-admin/students", {
+          name: values.name,
+          email: values.email,
+          password: values.password || "Student@123",
+          campusId: campus.id,
+          phone: values.phone || "",
+        });
+        setNotice("Student enrolled successfully.");
+      }
+      await loadStudents();
+      setSearch("");
+      setModal(null);
+    } catch (err) {
+      setNotice(err.response?.data?.message || "Failed to save student.");
+    }
   };
   return (
     <section
@@ -213,7 +257,7 @@ export default function InstituteStudents() {
             {!visible.length && (
               <TableRow>
                 <TableCell colSpan={6} className="isd-empty">
-                  {students.length
+                  {studentsList.length
                     ? "No students match your search."
                     : "No students enrolled."}
                 </TableCell>
@@ -258,10 +302,17 @@ export default function InstituteStudents() {
         description={`Delete ${selected?.name || "this student"}? This action cannot be undone.`}
         confirmText="Delete Student"
         onCancel={() => setModal(null)}
-        onConfirm={() => {
-          if (selected) dispatch(studentDeleted(selected.id));
+        onConfirm={async () => {
+          if (selected) {
+            try {
+              await axiosInstance.delete(`/institute-admin/students/${selected.id}`);
+              await loadStudents();
+              setNotice("Student deleted successfully.");
+            } catch (err) {
+              setNotice(err.response?.data?.message || "Failed to delete student.");
+            }
+          }
           setModal(null);
-          setNotice("Student deleted.");
         }}
       />
     </section>

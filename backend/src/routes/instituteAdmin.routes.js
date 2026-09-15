@@ -15,6 +15,15 @@ import {
   assignCampusManager,
   getManagers,
   createManager,
+  getStaff,
+  createStaff,
+  deleteStaff,
+  getStudents,
+  createStudent,
+  updateStudent,
+  deleteStudent,
+  getAlerts,
+  createAlert,
 } from "../controllers/instituteAdmin.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -49,5 +58,32 @@ router
   .route("/managers")
   .get(getManagers)
   .post(createManager);
+
+// Staff Directory (Teachers, Managers, Admins)
+router
+  .route("/staff")
+  .get(getStaff)
+  .post(createStaff);
+
+router
+  .route("/staff/:id")
+  .delete(deleteStaff);
+
+// Students Directory
+router
+  .route("/students")
+  .get(getStudents)
+  .post(createStudent);
+
+router
+  .route("/students/:id")
+  .put(updateStudent)
+  .delete(deleteStudent);
+
+// Broadcast Alerts
+router
+  .route("/alerts")
+  .get(getAlerts)
+  .post(createAlert);
 
 export default router;

@@ -17,6 +17,8 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
+import axiosInstance from "@/api/axiosInstance";
+
 const Header = ({
   user,
   homePath,
@@ -33,32 +35,47 @@ const Header = ({
   const notificationRef = useRef(null);
   const searchInputRef = useRef(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Fee Schedule Published",
-      description: "Semester fees updated for Spring 2026 term.",
-      time: "10m ago",
-      unread: true,
-      type: "info",
-    },
-    {
-      id: 2,
-      title: "New Faculty Registered",
-      description: "Prof. Dr. Tariq enrolled in Computer Science faculty.",
-      time: "2h ago",
-      unread: true,
-      type: "success",
-    },
-    {
-      id: 3,
-      title: "Maintenance Advisory",
-      description: "Nightly synchronization scheduled tonight at 12:00 AM.",
-      time: "5h ago",
-      unread: false,
-      type: "warning",
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    const loadAlerts = async () => {
+      try {
+        const token = localStorage.getItem("eduHubToken");
+        if (!token) return;
+        const res = await axiosInstance.get("/institute-admin/alerts");
+        const list = res.data?.data || [];
+        if (active && Array.isArray(list) && list.length > 0) {
+          setNotifications(
+            list.map((item, idx) => ({
+              id: item._id || item.id || idx,
+              title: item.title || `${item.severity} Announcement`,
+              description: item.message,
+              time: item.createdAt
+                ? new Date(item.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "Recent",
+              unread: true,
+              type:
+                item.severity?.toLowerCase() === "critical"
+                  ? "warning"
+                  : item.severity?.toLowerCase() === "warning"
+                    ? "warning"
+                    : "info",
+            }))
+          );
+        }
+      } catch {
+        // Fallback gracefully if not logged in or offline
+      }
+    };
+    loadAlerts();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const institute = user?.role === "Institute Admin";
   const location = useLocation();

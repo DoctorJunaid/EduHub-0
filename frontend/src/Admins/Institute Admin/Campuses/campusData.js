@@ -1,20 +1,4 @@
-import { demoInstitute } from "../instituteData.js";
-export const initialCampuses = [
-  {
-    id: "camp_1",
-    instituteId: demoInstitute.id,
-    name: demoInstitute.campuses[0],
-    address: "Sector H-12, Islamabad",
-    status: "Active",
-  },
-  {
-    id: "camp_2",
-    instituteId: demoInstitute.id,
-    name: "EME College Campus",
-    address: "Peshawar Road, Rawalpindi",
-    status: "Active",
-  },
-];
+export const initialCampuses = [];
 export const campusStatuses = ['Active'];
 export function validateCampus(values) {
   if (!values.name?.trim()) return "Campus name is required.";
