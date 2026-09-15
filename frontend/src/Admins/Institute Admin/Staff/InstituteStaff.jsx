@@ -113,7 +113,7 @@ export default function InstituteStaff() {
               placeholder="Search by name, department, designation..." value={search}
               onChange={(event) => setSearch(event.target.value)} />
           </label>
-          <span>{records.length} faculty {records.length === 1 ? 'member' : 'members'} registered</span>
+          <span>{staffList.length} faculty {staffList.length === 1 ? 'member' : 'members'} registered</span>
         </div>
         <Table aria-label="Faculty and staff directory">
           <TableHeader><TableRow>

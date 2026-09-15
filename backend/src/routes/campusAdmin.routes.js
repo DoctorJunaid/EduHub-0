@@ -21,7 +21,7 @@ import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("campus_admin"));
+router.use(authorize("campus_admin", "campus_manager"));
 
 router.route("/students")
   .get(getCampusStudents)

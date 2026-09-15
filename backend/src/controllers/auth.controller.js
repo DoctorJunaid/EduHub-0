@@ -81,10 +81,23 @@ export const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Redirect to frontend set password page
+// @route   GET /api/v1/auth/set-password
+// @access  Public
+export const getSetPasswordPage = (req, res) => {
+  const token = req.query.token;
+  if (!token) {
+    return res.status(400).send("Token is required");
+  }
+  const frontendBaseUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+  res.redirect(`${frontendBaseUrl}/set-password?token=${token}`);
+};
+
 export default {
   register,
   login,
   getMe,
   updateProfile,
   setPassword,
+  getSetPasswordPage,
 };

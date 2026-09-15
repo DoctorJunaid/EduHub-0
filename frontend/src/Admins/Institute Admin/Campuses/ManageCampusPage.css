@@ -1,0 +1,65 @@
+.manage-campus-page {
+  padding: 24px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.manage-page-header {
+  margin-bottom: 24px;
+}
+
+.manage-page-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #71717a;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.manage-page-back-btn:hover {
+  color: #09090b;
+}
+
+.manage-page-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.breadcrumb-link {
+  color: #71717a;
+  cursor: pointer;
+}
+
+.breadcrumb-link:hover {
+  color: #09090b;
+  text-decoration: underline;
+}
+
+.breadcrumb-sep {
+  color: #d4d4d8;
+}
+
+.breadcrumb-current {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.manage-page-content {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.manage-page-main {
+  padding: 32px;
+}

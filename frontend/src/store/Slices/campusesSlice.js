@@ -127,10 +127,7 @@ const slice = createSlice({
 });
 
 export const { campusAdded, campusUpdated, campusDeleted } = slice.actions;
-export const selectInstituteCampuses = createSelector(
-  [(state) => state.campuses.records],
-  (records) => records
-);
+export const selectInstituteCampuses = (state) => state.campuses.records;
 export const selectCampusesStatus = (state) => state.campuses.status;
 export const selectCampusesError = (state) => state.campuses.error;
 

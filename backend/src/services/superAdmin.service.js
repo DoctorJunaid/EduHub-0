@@ -139,8 +139,8 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
       reset: true,
     });
     
-    const frontendBaseUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
-    const resetLink = `${frontendBaseUrl}/set-password?token=${token}`;
+    const baseUrl = (process.env.BACKEND_URL || process.env.FRONTEND_URL || "https://edu-hub-backend-blond.vercel.app").replace(/\/+$/, "");
+    const resetLink = `${baseUrl}/set-password?token=${token}`;
     
     try {
       await sendMail(
