@@ -9,6 +9,7 @@ import assignmentsReducer, {
 import broadcastsReducer from "./Slices/broadcastsSlice.js";
 import campusesReducer from "./Slices/campusesSlice.js";
 import authReducer from "./Slices/authSlice.js";
+import superAdminReducer from "./Slices/superAdminSlice.js";
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import facultyReducer from "./Slices/facultySlice.js";
 import studentsReducer from "./Slices/studentsSlice.js";
@@ -20,6 +21,7 @@ import studentAttendanceReducer from "./Slices/studentAttendanceSlice.js";
 import resultsReducer from "./Slices/resultsSlice.js";
 import feesReducer from "./Slices/feesSlice.js";
 import messagesReducer from "./Slices/messagesSlice.js";
+import institutesReducer from "./Slices/institutesSlice.js";
 import { resultSaved } from "./Slices/resultsSlice.js";
 import { makeDemoResults } from "../Admins/Campus Admin/Results/demoResults.js";
 import { preserveDemoEdits } from "./demoProvenance.js";
@@ -31,6 +33,8 @@ const reducers = combineReducers({
   submissions: submissionsReducer,
   broadcasts: broadcastsReducer,
   campuses: campusesReducer,
+  institutes: institutesReducer,
+  superAdmin: superAdminReducer,
   auth: authReducer,
   messages: messagesReducer,
   faculty: facultyReducer,

@@ -41,7 +41,7 @@ const instituteSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         "Please provide a valid institute email",
       ],
     },
@@ -66,7 +66,7 @@ const instituteSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Pending", "Inactive"],
+      enum: ["Active", "Pending", "Inactive", "Suspended"],
       default: "Pending",
     },
     adminId: {

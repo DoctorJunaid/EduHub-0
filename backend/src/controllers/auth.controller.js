@@ -37,6 +37,21 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Set password from email link
+ * @route   POST /api/v1/auth/set-password
+ * @access  Public
+ */
+export const setPassword = asyncHandler(async (req, res) => {
+  const result = await authService.setPassword(req.body);
+
+  res.status(200).json({
+    success: true,
+    message: "Password set successfully.",
+    data: result,
+  });
+});
+
+/**
  * @desc    Get current authenticated user profile
  * @route   GET /api/v1/auth/me
  * @access  Private
@@ -71,4 +86,5 @@ export default {
   login,
   getMe,
   updateProfile,
+  setPassword,
 };

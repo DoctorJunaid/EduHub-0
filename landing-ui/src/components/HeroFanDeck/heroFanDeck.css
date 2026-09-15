@@ -14,7 +14,7 @@
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: clamp(110px, 13vw, 160px) 20px 80px;
+  padding: clamp(60px, 8vw, 100px) 20px 80px;
   overflow: hidden;
   background: transparent;
   user-select: none;
@@ -40,6 +40,7 @@
   z-index: 0;
 }
 
+.dark .hero-ambient-glow,
 .dark-theme .hero-ambient-glow {
   background: radial-gradient(
     ellipse at 50% 25%,
@@ -253,6 +254,7 @@
   border-color: rgba(255, 255, 255, 0.6);
 }
 
+.dark .hero-card,
 .dark-theme .hero-card {
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 

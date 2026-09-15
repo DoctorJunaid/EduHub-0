@@ -17,21 +17,20 @@
 .ist-card th:last-child { text-align: center; }
 .ist-card td strong { display: block; color: var(--foreground); font-weight: 600; }
 .ist-card td small { display: block; margin-top: 5px; font-size: 13px; color: var(--muted-foreground); }
-.ist-card td .ist-qualification { color: var(--color-success); }
+.ist-card td .ist-qualification { color: #71717a; font-weight: 500; }
 .ist-person { display: flex; align-items: center; gap: 16px; }
 .ist-person strong { font-size: 16px; }
-.ist-person [data-slot="avatar"] { width: 48px; height: 48px; }
-.ist-person [data-slot="avatar-fallback"] { background: var(--color-border-light); color: var(--foreground); font-size: 16px; }
+.ist-person [data-slot="avatar"] { width: 40px; height: 40px; border-radius: 6px; border: 1px solid #e4e4e7; overflow: hidden; }
+.ist-person [data-slot="avatar-fallback"] { background: #f4f4f5; color: #09090b; font-size: 14px; font-weight: 700; }
 .ist-card .ist-subjects { min-width: 220px; max-width: 260px; white-space: normal; overflow-wrap: anywhere; }
-.ist-status { padding: 7px 14px; gap: 8px; font-size: 14px; }
-.ist-status > span { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-.ist-status-active { background: var(--color-success-bg); color: var(--color-success); }
-.ist-status-pending { background: var(--color-warning-bg); color: var(--color-warning); }
-.ist-status-inactive { background: var(--muted); color: var(--muted-foreground); }
-.ist-actions { display: flex; justify-content: flex-end; gap: 12px; }
-.ist-actions button { width: 44px; height: 44px; border: 1px solid var(--border); background: var(--background); color: var(--muted-foreground); border-radius: var(--radius-md); }
-.ist-actions .ist-delete { background: var(--color-danger-bg); color: var(--color-danger); }
-.ist-actions button:hover { border-color: currentColor; }
+.ist-status { padding: 4px 12px; gap: 6px; font-size: 12px; font-weight: 600; border-radius: 999px; }
+.ist-status > span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.ist-status-active { background: #09090b; color: #ffffff; }
+.ist-status-pending { background: #f4f4f5; color: #09090b; border: 1px solid #e4e4e7; }
+.ist-status-inactive { background: #f4f4f5; color: #71717a; border: 1px dashed #e4e4e7; }
+.ist-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.ist-actions button { width: 36px; height: 36px; border: 1px solid #e4e4e7; background: #ffffff; color: #09090b; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+.ist-actions button:hover { background: #09090b; color: #ffffff; border-color: #09090b; }
 .ist-empty { text-align: center; }
 @media (max-width: 1100px) { .ist-heading { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 650px) {

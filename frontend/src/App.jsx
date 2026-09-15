@@ -7,6 +7,7 @@ import FeeManagement from "./Admins/Campus Admin/Fees/FeeManagement";
 import Messages from "./Admins/Campus Admin/Messages/Messages";
 import Signup from "./auth/Signup";
 import Login from "./auth/Login";
+import SetPassword from "./auth/SetPassword";
 import InstituteDashboard from "./Admins/Institute Admin/InstituteDashboard";
 import CampusBranches from "./Admins/Institute Admin/Campuses/CampusBranches";
 import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStudents";
@@ -23,6 +24,9 @@ import ClassTimetable from "./Admins/Campus Admin/Timetable/ClassTimetable";
 import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
 import SuperAdminDashboard from "./Admins/Super Admin/Dashboard/SuperAdminDashboard";
 import Institutes from "./Admins/Super Admin/Institutes/Institutes";
+import ManageInstitutePage from "./Admins/Super Admin/Institutes/ManageInstitutePage";
+import GlobalUsers from "./Admins/Super Admin/Users/GlobalUsers";
+import SuperAdminBroadcasts from "./Admins/Super Admin/Broadcasts/SuperAdminBroadcasts";
 import { ADMIN_NAV } from "./constants/navigation";
 import {
   StudentLayout,
@@ -36,9 +40,25 @@ import {
   StudentMessages,
 } from "./Users/Student";
 
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCurrentUser, selectAuth } from "./store/Slices/authSlice";
+import { Toaster } from "react-hot-toast";
+
 const App = () => {
+  const dispatch = useDispatch();
+  const auth = useSelector(selectAuth);
+
+  useEffect(() => {
+    if (localStorage.getItem("eduHubToken") && !auth.user) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch, auth.user]);
+
   return (
-    <Routes>
+    <>
+      <Toaster position="top-center" reverseOrder={false} />
+      <Routes>
       <Route path="/" element={<AuthEntry />} />
       <Route
         path="signup"
@@ -53,6 +73,14 @@ const App = () => {
         element={
           <AuthEntry>
             <Login />
+          </AuthEntry>
+        }
+      />
+      <Route
+        path="set-password"
+        element={
+          <AuthEntry>
+            <SetPassword />
           </AuthEntry>
         }
       />
@@ -73,7 +101,7 @@ const App = () => {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["institute-admin"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["institute_admin"]} />}>
         <Route
           element={
             <MainLayout
@@ -93,7 +121,7 @@ const App = () => {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["campus-admin"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["campus_admin"]} />}>
         <Route element={<MainLayout />}>
           <Route path="dashboard" element={<CampusOverview />} />
           <Route path="faculty" element={<FacultyDirectory />} />
@@ -109,13 +137,18 @@ const App = () => {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["super-admin"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
         <Route element={<MainLayout navigation={ADMIN_NAV} />}>
           <Route path="super-admin" element={<SuperAdminDashboard />} />
           <Route path="institutes" element={<Institutes />} />
+          <Route path="institutes/new" element={<ManageInstitutePage />} />
+          <Route path="institutes/:id" element={<ManageInstitutePage />} />
+          <Route path="super-admin/users" element={<GlobalUsers />} />
+          <Route path="super-admin/broadcasts" element={<SuperAdminBroadcasts />} />
         </Route>
       </Route>
     </Routes>
+    </>
   );
 };
 

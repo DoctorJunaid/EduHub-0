@@ -17,7 +17,6 @@ import {
 import { useParams, useNavigate } from 'react-router-dom'
 import { institutes, getInstituteData } from '@/data/mockData'
 import Navbar from '@/components/layout/Navbar'
-import WebGLBackground from '@/components/WebGLBackground'
 import GetStartedModal from '@/components/GetStartedModal'
 
 export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted }) {
@@ -78,9 +77,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
   const otherInstitutes = institutes.filter(i => i.id !== inst.id)
 
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen bg-transparent text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white">
-      {/* 3D Particle Background */}
-      <WebGLBackground isDark={isDark} />
+    <div className="relative w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
 
       {/* Floating Dynamic Navbar */}
       <Navbar
@@ -889,7 +886,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
       </AnimatePresence>
 
       {/* ─── EXACT SAME FOOTER AS LANDING PAGE ─── */}
-      <footer className="pt-20 bg-emerald-700 dark:bg-slate-950 text-white relative overflow-hidden">
+      <footer className="pt-20 bg-emerald-700 dark:bg-[#060608] text-white relative overflow-hidden border-t border-emerald-800 dark:border-zinc-800/80">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-12 relative z-10 pb-16">
           <div className="max-w-sm">
             <div className="flex items-center gap-3 mb-4">

@@ -27,12 +27,12 @@
 .institute-admin-shell :is(.campus-actions, .ist-actions, .isd-actions) button:not(:disabled):hover { border-color: currentColor; }
 .institute-admin-shell .campus-manage:disabled { opacity: .5; }
 .institute-admin-shell table :is(.student-status, .ist-status, .campus-active) { padding: 5px 10px; font-size: 13px; }
-.institute-admin-shell .institute-stat { padding: 18px; gap: 14px; align-items: center; box-shadow: var(--shadow-sm); }
-.institute-admin-shell .institute-stat .summary-icon { width: 44px; height: 44px; border-radius: var(--radius-md); }
-.institute-admin-shell .institute-stat .summary-icon svg { width: 24px; height: 24px; }
-.institute-admin-shell .institute-stat strong { font-size: 26px; }
-.institute-admin-shell .institute-stat .summary-label { font-size: 14px; }
-.institute-admin-shell .institute-stat small { margin-top: 0; font-size: 13px; }
+.institute-admin-shell .institute-stat { padding: 14px 16px; gap: 14px; align-items: flex-start; }
+.institute-admin-shell .institute-stat .summary-icon { width: 32px; height: 32px; border-radius: 6px; }
+.institute-admin-shell .institute-stat .summary-icon svg { width: 16px; height: 16px; }
+.institute-admin-shell .institute-stat strong { font-size: 22px; font-weight: 700; color: #09090b; }
+.institute-admin-shell .institute-stat .summary-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+.institute-admin-shell .institute-stat small { margin-top: 2px; font-size: 11px; }
 .institute-admin-shell .institute-actions button { height: 44px; font-size: 14px; border-radius: var(--radius-md); }
 .institute-admin-shell .institute-table-heading h2 { gap: 12px; font-size: 20px; }
 .institute-admin-shell .institute-table-heading h2 > span { width: 36px; height: 36px; border-radius: var(--radius-md); }

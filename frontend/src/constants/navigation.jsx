@@ -1,4 +1,3 @@
-import React from "react";
 import {
   LayoutDashboard,
   Users,
@@ -10,15 +9,31 @@ import {
   MessageSquare,
   Building2,
   Home,
+  Radio,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
   {
     label: "Overview",
     path: "/super-admin",
+    exact: true,
     icon: <LayoutDashboard size={20} />,
   },
-  { label: "Institutes", path: "/institutes", icon: <Building2 size={20} /> },
+  {
+    label: "Institutes",
+    path: "/institutes",
+    icon: <Building2 size={20} />,
+  },
+  {
+    label: "Global Users",
+    path: "/super-admin/users",
+    icon: <Users size={20} />,
+  },
+  {
+    label: "Broadcast Alerts",
+    path: "/super-admin/broadcasts",
+    icon: <Radio size={20} />,
+  },
 ];
 
 export const CAMPUS_ADMIN_NAV = [

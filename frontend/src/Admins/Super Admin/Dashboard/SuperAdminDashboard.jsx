@@ -3,220 +3,24 @@ import {
   GraduationCap,
   Users,
   MapPin,
-  BarChart3,
-  Grid2X2,
-  X,
+  ArrowLeft,
+  Filter,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchGlobalStats, selectGlobalStats } from "@/store/Slices/superAdminSlice";
+import {
+  fetchInstitutes,
+  selectInstitutes,
+  addInstitute,
+  updateInstitute,
+  optimisticStatusChange,
+} from "@/store/Slices/institutesSlice";
+import InstituteForm from "../Institutes/InstituteForm";
+import ManageInstitute from "../Institutes/ManageInstitute";
+import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
-
-const stats = [
-  {
-    label: "Registered Institutes",
-    value: "24",
-    detail: "Total networks in system",
-    icon: Building2,
-  },
-  {
-    label: "Total Users",
-    value: "12,450",
-    detail: "Across all institutes",
-    icon: Users,
-  },
-  {
-    label: "Total Campuses",
-    value: "142",
-    detail: "Branches globally",
-    icon: MapPin,
-  },
-  {
-    label: "Active Programs",
-    value: "850+",
-    detail: "Courses across networks",
-    icon: GraduationCap,
-  },
-];
-
-const institutes = [
-  {
-    name: "NUST (National University of Sciences and Technology)",
-    location: "University · Federal",
-    type: "University",
-    campuses: 2,
-    campusesDetails: [
-      {
-        name: "NUST Main Campus (H-12)",
-        location: "Islamabad, Federal",
-        status: "Active",
-      },
-      {
-        name: "Risale Campus",
-        location: "Rawalpindi, Punjab",
-        status: "Active",
-      },
-    ],
-    students: "1200 Students",
-    studentRecords: [
-      {
-        name: "Ali Raza",
-        program: "BS Computer Science",
-        status: "Active",
-        roll: "NUST-CS-2023-042",
-        campus: "NUST Main Campus (H-12)",
-      },
-      {
-        name: "Maryam Ahmed",
-        program: "BS Software Engineering",
-        status: "Active",
-        roll: "NUST-SE-2023-110",
-        campus: "NUST Main Campus (H-12)",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image:
-      "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80",
-  },
-  {
-    name: "National College of Arts (NCA)",
-    location: "College · Punjab Board",
-    type: "College",
-    campuses: 3,
-    campusesDetails: [
-      { name: "NCA Main Campus", location: "Lahore, Punjab", status: "Active" },
-      {
-        name: "NCA Heritage Wing",
-        location: "Lahore, Punjab",
-        status: "Pending",
-      },
-      {
-        name: "NCA Multimedia Wing",
-        location: "Karachi, Sindh",
-        status: "Active",
-      },
-    ],
-    students: "1700 Students",
-    studentRecords: [
-      {
-        name: "Areeba Khan",
-        program: "Fine Arts",
-        status: "Active",
-        roll: "NCA-FA-2023-018",
-        campus: "NCA Main Campus",
-      },
-      {
-        name: "Hafsa Tariq",
-        program: "Design",
-        status: "Pending",
-        roll: "NCA-DES-2023-089",
-        campus: "NCA Heritage Wing",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image:
-      "https://www.nca.edu.pk/images/home_banner/6_sm.jpg?time=1788912000151",
-  },
-  {
-    name: "LUMS (Lahore University of Management Sciences)",
-    location: "University · HEC",
-    type: "University",
-    campuses: 4,
-    campusesDetails: [
-      {
-        name: "LUMS Main Campus",
-        location: "Lahore, Punjab",
-        status: "Active",
-      },
-      { name: "SDSB Campus", location: "Lahore, Punjab", status: "Active" },
-      {
-        name: "LUMS Executive Campus",
-        location: "Faisalabad, Punjab",
-        status: "Suspended",
-      },
-      {
-        name: "LUMS Digital Campus",
-        location: "Islamabad, Federal",
-        status: "Active",
-      },
-    ],
-    students: "2200 Students",
-    studentRecords: [
-      {
-        name: "Sana Javed",
-        program: "MBA",
-        status: "Active",
-        roll: "LUMS-MBA-2023-223",
-        campus: "LUMS Main Campus",
-      },
-      {
-        name: "Bilal Iqbal",
-        program: "Economics",
-        status: "Active",
-        roll: "LUMS-ECO-2023-101",
-        campus: "SDSB Campus",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image:
-      "https://www.lums.edu.pk/sites/default/files/styles/416x396/public/2022-10/thumb_school_SDSB.jpg",
-  },
-  {
-    name: "Aga Khan University",
-    location: "University · Sindh Board",
-    type: "University",
-    campuses: 5,
-    campusesDetails: [
-      {
-        name: "Aga Khan University Medical Campus",
-        location: "Karachi, Sindh",
-        status: "Active",
-      },
-      {
-        name: "AKU Campus Nairobi",
-        location: "Nairobi, Kenya",
-        status: "Active",
-      },
-      {
-        name: "AKU Campus Kampala",
-        location: "Kampala, Uganda",
-        status: "Pending",
-      },
-      {
-        name: "AKU Campus Dhaka",
-        location: "Dhaka, Bangladesh",
-        status: "Active",
-      },
-      {
-        name: "AKU Rural Campus",
-        location: "Gilgit, Gilgit-Baltistan",
-        status: "Active",
-      },
-    ],
-    students: "2700 Students",
-    studentRecords: [
-      {
-        name: "Amina Karim",
-        program: "MBBS",
-        status: "Active",
-        roll: "AKU-MBBS-2023-014",
-        campus: "Aga Khan University Medical Campus",
-      },
-      {
-        name: "Hamza Noor",
-        program: "Nursing",
-        status: "Active",
-        roll: "AKU-NUR-2023-205",
-        campus: "Aga Khan University Medical Campus",
-      },
-    ],
-    status: "Active",
-    active: true,
-    image: "https://www.aku.edu/about/PublishingImages/campuses.jpg",
-  },
-];
 
 function normalizeStatus(status) {
   if (status === "Suspended") return "Suspended";
@@ -225,18 +29,23 @@ function normalizeStatus(status) {
 }
 
 export default function SuperAdminDashboard() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const globalStats = useSelector(selectGlobalStats);
+  const instituteData = useSelector(selectInstitutes) || [];
   const location = useLocation();
   const selectedInstitute = location.state?.selectedInstitute;
   const [searchTerm, setSearchTerm] = useState(
     () => localStorage.getItem("eduHubSuperSearch") || "",
   );
-  const [showUniversityOnly, setShowUniversityOnly] = useState(false);
-  const [instituteData, setInstituteData] = useState(institutes);
-  const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
-  const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("all");
   const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchGlobalStats());
+    dispatch(fetchInstitutes());
+  }, [dispatch]);
 
   useEffect(() => {
     const onSearch = (event) => {
@@ -251,14 +60,16 @@ export default function SuperAdminDashboard() {
   const searchValue = searchTerm.trim().toLowerCase();
 
   const visibleInstitutes = instituteData.filter((institute) => {
-    const matchesType = showUniversityOnly
-      ? institute.type === "University"
-      : true;
+    const matchesType =
+      typeFilter === "all" ||
+      institute.type?.toLowerCase() === typeFilter.toLowerCase();
+    
+    // Safely check strings before calling .toLowerCase() or .includes()
     const matchesSearch =
-      institute.name.toLowerCase().includes(searchValue) ||
-      institute.location.toLowerCase().includes(searchValue) ||
-      institute.students.toLowerCase().includes(searchValue) ||
-      String(institute.campuses).includes(searchValue);
+      (institute.name || "").toLowerCase().includes(searchValue) ||
+      (institute.type || "").toLowerCase().includes(searchValue) ||
+      (institute.board || "").toLowerCase().includes(searchValue) ||
+      String(institute.campusCount || 0).includes(searchValue);
 
     return matchesType && matchesSearch;
   });
@@ -268,39 +79,113 @@ export default function SuperAdminDashboard() {
   };
 
   const handleCampusClick = (institute) => {
-    setCampusDrawerInstitute(institute);
+    setManageDrawerInstitute({ ...institute, initialTab: "campuses" });
   };
 
   const handleStudentsClick = (institute) => {
-    setStudentsDrawerInstitute(institute);
+    navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`);
   };
 
-  const changeInstituteStatus = (instituteName, nextStatus) => {
-    const normalizedStatus = normalizeStatus(nextStatus);
-    setInstituteData((current) =>
-      current.map((institute) =>
-        institute.name === instituteName
-          ? { ...institute, status: normalizedStatus }
-          : institute,
-      ),
-    );
+  const changeInstituteStatus = async (institute, nextStatus) => {
+    const id = institute._id || institute.id;
+    dispatch(optimisticStatusChange({ id, status: nextStatus }));
     setStatusMenuFor(null);
+    try {
+      await dispatch(updateInstitute({ id, status: nextStatus })).unwrap();
+      toast.success(`${institute.name} status set to ${nextStatus}`);
+      dispatch(fetchGlobalStats());
+    } catch (error) {
+      toast.error(typeof error === "string" ? error : "Failed to update status");
+      dispatch(fetchInstitutes());
+    }
   };
+
+  const statsArray = [
+    { label: "Total Users", value: globalStats?.users?.total || 0, detail: "Across all active networks", icon: Users },
+    { label: "Registered Institutes", value: globalStats?.institutes?.total || 0, detail: "Total networks in system", icon: Building2 },
+    { label: "Total Campuses", value: globalStats?.campuses?.total || 0, detail: "Branches globally", icon: MapPin },
+    { label: "Active Programs", value: "-", detail: "Courses across networks", icon: GraduationCap },
+  ];
 
   return (
     <section className="super-admin-dashboard">
-      <div className="super-admin-topbar">
-        <span className="breadcrumb">
-          <span className="breadcrumb-icon">
-            <Grid2X2 size={16} />
-          </span>
-          <span>Home / Dashboard</span>
-        </span>
-        <span className="super-admin-title">Global System</span>
+      {manageDrawerInstitute ? (
+        <div className="super-admin-manage-fullscreen" style={{ animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+          <div className="super-admin-drawer-head" style={{ marginBottom: '12px', paddingBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none' }}>
+            <button
+              className="super-admin-back-button"
+              onClick={() => setManageDrawerInstitute(null)}
+              aria-label="Back to dashboard"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #e4e4e7', background: '#fff', cursor: 'pointer' }}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <span className="super-admin-drawer-kicker" style={{ fontSize: '10px' }}>
+                Institute Management
+              </span>
+              <h3 style={{ fontSize: '20px', margin: '0' }}>
+                {manageDrawerInstitute.mode === "new"
+                  ? "Add Institute"
+                  : manageDrawerInstitute.name}
+              </h3>
+            </div>
+          </div>
+          
+          <div className="super-admin-manage-card-wrap" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e4e4e7', padding: '16px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.02)', width: '100%', boxSizing: 'border-box' }}>
+            {manageDrawerInstitute.mode === "new" ? (
+              <InstituteForm
+                onSave={async (values) => {
+                  try {
+                    await dispatch(addInstitute(values)).unwrap();
+                    toast.success("Institute added successfully!");
+                    setManageDrawerInstitute(null);
+                  } catch (error) {
+                    toast.error(typeof error === 'string' ? error : "Failed to add institute");
+                    throw error;
+                  }
+                }}
+                onCancel={() => setManageDrawerInstitute(null)}
+              />
+            ) : (
+              <ManageInstitute
+                institute={manageDrawerInstitute}
+                onClose={() => setManageDrawerInstitute(null)}
+              />
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="super-admin-topbar">
+
+        <button
+          className="add-institute-button"
+          onClick={() => setManageDrawerInstitute({ mode: "new" })}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "8px",
+            background: "#09090b",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            fontWeight: "600",
+            fontSize: "13px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            alignSelf: "flex-end",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            transition: "all 0.15s ease",
+          }}
+        >
+          <span>+</span> Add Institute
+        </button>
       </div>
 
       <div className="super-admin-stats-grid">
-        {stats.map((stat, index) => {
+        {statsArray.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <article className="super-admin-stat-card" key={index}>
@@ -323,14 +208,27 @@ export default function SuperAdminDashboard() {
             <h2>Registered Institutes</h2>
             <p>Overview of top-performing networks</p>
           </div>
-          <button
-            className={`super-admin-filter ${showUniversityOnly ? "active" : ""}`}
-            aria-label="Filter institutes by university"
-            aria-pressed={showUniversityOnly}
-            onClick={() => setShowUniversityOnly(!showUniversityOnly)}
-          >
-            <BarChart3 size={16} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+            {["all", "University", "College", "School"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: "6px",
+                  border: typeFilter === type ? "1px solid #09090b" : "1px solid #e4e4e7",
+                  background: typeFilter === type ? "#09090b" : "#fff",
+                  color: typeFilter === type ? "#fff" : "#71717a",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {type === "all" ? "All Types" : `${type}s`}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="super-admin-institute-list">
@@ -348,12 +246,12 @@ export default function SuperAdminDashboard() {
               <div className="super-admin-institute-main">
                 <img
                   className="super-admin-institute-image"
-                  src={institute.image}
+                  src={institute.image || "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80"}
                   alt=""
                 />
                 <div className="super-admin-institute-copy">
                   <h3>{institute.name}</h3>
-                  <p>{institute.location}</p>
+                  <p>{institute.type} · {institute.board}</p>
                 </div>
               </div>
 
@@ -380,7 +278,7 @@ export default function SuperAdminDashboard() {
                       value={institute.status}
                       onChange={(event) =>
                         changeInstituteStatus(
-                          institute.name,
+                          institute,
                           event.target.value,
                         )
                       }
@@ -390,6 +288,7 @@ export default function SuperAdminDashboard() {
                       <option value="Active">Active</option>
                       <option value="Suspended">Suspended</option>
                       <option value="Pending">Pending</option>
+                      <option value="Inactive">Inactive</option>
                     </select>
                   )}
                 </div>
@@ -399,14 +298,14 @@ export default function SuperAdminDashboard() {
                   onClick={() => handleCampusClick(institute)}
                   aria-label={`Show campuses for ${institute.name}`}
                 >
-                  {institute.campuses} Campuses
+                  {institute.campusCount || 0} Campuses
                 </button>
                 <button
                   className="super-admin-student-count super-admin-clickable"
                   onClick={() => handleStudentsClick(institute)}
                   aria-label={`Show students for ${institute.name}`}
                 >
-                  {institute.students}
+                  View Users
                 </button>
                 <button
                   className="super-admin-manage-button"
@@ -420,168 +319,9 @@ export default function SuperAdminDashboard() {
           ))}
         </div>
       </section>
-
-      {campusDrawerInstitute && (
-        <div
-          className="super-admin-drawer-backdrop"
-          onClick={() => setCampusDrawerInstitute(null)}
-        >
-          <aside
-            className="super-admin-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="super-admin-drawer-head">
-              <div>
-                <span className="super-admin-drawer-kicker">Campuses</span>
-                <h3>{campusDrawerInstitute.name}</h3>
-              </div>
-              <button
-                className="super-admin-drawer-close"
-                onClick={() => setCampusDrawerInstitute(null)}
-                aria-label="Close campuses drawer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="super-admin-drawer-body">
-              {(campusDrawerInstitute.campusesDetails || campusDrawerInstitute.campusDetails || []).map((campus, idx) => (
-                <div
-                  className="super-admin-drawer-row"
-                  key={`${campus.name}-${idx}`}
-                >
-                  <div className="super-admin-drawer-row-main">
-                    <span className="super-admin-drawer-campus-name">
-                      {campus.name}
-                    </span>
-                    <span className="super-admin-drawer-campus-location">
-                      {campus.location}
-                    </span>
-                  </div>
-                  <span
-                    className={`super-admin-drawer-campus-status ${campus.status.toLowerCase()}`}
-                  >
-                    {campus.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </aside>
-        </div>
+      </>
       )}
 
-      {studentsDrawerInstitute && (
-        <div
-          className="super-admin-drawer-backdrop"
-          onClick={() => setStudentsDrawerInstitute(null)}
-        >
-          <aside
-            className="super-admin-student-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="super-admin-drawer-head">
-              <div>
-                <span className="super-admin-drawer-kicker">Students</span>
-                <h3>{studentsDrawerInstitute.name}</h3>
-              </div>
-              <button
-                className="super-admin-drawer-close"
-                onClick={() => setStudentsDrawerInstitute(null)}
-                aria-label="Close students drawer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="super-admin-drawer-body">
-              {studentsDrawerInstitute.studentRecords.map((student, idx) => (
-                <div
-                  className="super-admin-student-drawer-row"
-                  key={`${student.roll}-${idx}`}
-                >
-                  <div className="super-admin-student-drawer-main">
-                    <span className="super-admin-student-name">
-                      {student.name}
-                    </span>
-                    <span className="super-admin-student-meta">
-                      {student.program} · {student.roll}
-                    </span>
-                    <span className="super-admin-student-campus">
-                      {student.campus}
-                    </span>
-                  </div>
-                  <span
-                    className={`super-admin-student-status ${student.status.toLowerCase()}`}
-                  >
-                    {student.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </aside>
-        </div>
-      )}
-
-      {manageDrawerInstitute && (
-        <div
-          className="super-admin-drawer-backdrop"
-          onClick={() => setManageDrawerInstitute(null)}
-        >
-          <aside
-            className="super-admin-manage-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="super-admin-drawer-head">
-              <div>
-                <span className="super-admin-drawer-kicker">
-                  Institute Management
-                </span>
-                <h3>{manageDrawerInstitute.name}</h3>
-              </div>
-              <button
-                className="super-admin-drawer-close"
-                onClick={() => setManageDrawerInstitute(null)}
-                aria-label="Close institute management drawer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="super-admin-manage-body">
-              <div className="super-admin-manage-card">
-                <span className="super-admin-manage-card-icon">C</span>
-                <div>
-                  <span className="super-admin-manage-card-label">
-                    Credentials
-                  </span>
-                  <span className="super-admin-manage-card-value">
-                    Admin portal access
-                  </span>
-                </div>
-              </div>
-              <div className="super-admin-manage-card">
-                <span className="super-admin-manage-card-icon">B</span>
-                <div>
-                  <span className="super-admin-manage-card-label">
-                    Billing Status
-                  </span>
-                  <span className="super-admin-manage-card-value">
-                    Monthly plan · Active
-                  </span>
-                </div>
-              </div>
-              <div className="super-admin-manage-card">
-                <span className="super-admin-manage-card-icon">A</span>
-                <div>
-                  <span className="super-admin-manage-card-label">
-                    Assigned Admins
-                  </span>
-                  <span className="super-admin-manage-card-value">
-                    Institute Admin
-                  </span>
-                </div>
-              </div>
-            </div>
-          </aside>
-        </div>
-      )}
     </section>
   );
 }

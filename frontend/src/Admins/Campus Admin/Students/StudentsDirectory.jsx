@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -26,9 +26,10 @@ import {
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   selectStudents,
-  studentAdded,
-  studentUpdated,
-  studentDeleted,
+  addStudent,
+  updateStudent,
+  deleteStudent,
+  fetchStudents,
 } from "@/store/Slices/studentsSlice.js";
 import {
   studentStatuses,
@@ -44,6 +45,11 @@ import "./StudentsDirectory.css";
 
 export default function StudentsDirectory() {
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchStudents());
+  }, [dispatch]);
+
   const students = useSelector(selectStudents);
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({
@@ -79,8 +85,8 @@ export default function StudentsDirectory() {
         ? students.findIndex((student) => student.id === selected.id)
         : students.length;
     if (modal.mode === "edit")
-      dispatch(studentUpdated({ ...values, id: selected.id }));
-    else dispatch(studentAdded(values));
+      dispatch(updateStudent({ ...values, id: selected.id }));
+    else dispatch(addStudent(values));
     setFilters({ search: "", program: "", status: "" });
     setPage(Math.floor(index / pageSize) + 1);
     close();
@@ -304,7 +310,7 @@ export default function StudentsDirectory() {
         cancelText="Cancel"
         onCancel={close}
         onConfirm={() => {
-          if (selected) dispatch(studentDeleted(selected.id));
+          if (selected) dispatch(deleteStudent(selected.id));
           close();
         }}
       />
