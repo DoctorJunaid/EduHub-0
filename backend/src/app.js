@@ -22,11 +22,29 @@ app.set("trust proxy", 1);
 // Security HTTP headers
 app.use(helmet());
 
-// CORS middleware
+// CORS middleware supporting local dev, Vercel deployments, and configured FRONTEND_URL
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5174",
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173", // Allow Vite default port
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app") ||
+      process.env.NODE_ENV !== "production"
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
+
 
 // Rate limiting (100 requests per 10 mins)
 const limiter = rateLimit({

@@ -1,5 +1,4 @@
 import BroadcastAlerts from "./Admins/Institute Admin/Alerts/BroadcastAlerts";
-import DashboardContent from "./Admins/Campus Admin/Dashboard/DashboardContent";
 import FacultyAttendance from "./Admins/Campus Admin/Attendance/FacultyAttendance";
 import StudentAttendance from "./Admins/Campus Admin/Attendance/Students/StudentAttendance";
 import ExamResults from "./Admins/Campus Admin/Results/ExamResults";
@@ -44,6 +43,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCurrentUser, selectAuth } from "./store/Slices/authSlice";
 import { Toaster } from "react-hot-toast";
+import NotFound from "./components/common/NotFound";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -133,7 +133,6 @@ const App = () => {
           <Route path="results" element={<ExamResults />} />
           <Route path="fees" element={<FeeManagement />} />
           <Route path="messages" element={<Messages />} />
-          <Route path="*" element={<DashboardContent />} />
         </Route>
       </Route>
 
@@ -147,6 +146,9 @@ const App = () => {
           <Route path="super-admin/broadcasts" element={<SuperAdminBroadcasts />} />
         </Route>
       </Route>
+
+      {/* Global 404 Not Found Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </>
   );
