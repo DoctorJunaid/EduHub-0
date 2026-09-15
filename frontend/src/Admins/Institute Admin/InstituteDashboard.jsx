@@ -23,7 +23,6 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import SummaryCard from "@/components/common/SummaryCard";
 import StudentProfileDialog from "../Campus Admin/Students/StudentProfileDialog";
 import StudentStatusBadge from "../Campus Admin/Students/StudentStatusBadge";
 import { filterStudents } from "../Campus Admin/Students/studentData";
@@ -45,46 +44,54 @@ export default function InstituteDashboard() {
   const visible = filterStudents(students, { search, status, program: "" });
   const profile = students.find((student) => student.id === profileId);
   const stats = [
-    [
-      Users,
-      "Total Students",
-      students.length,
-      "green",
-    ],
-    [
-      GraduationCap,
-      "Active Teachers",
-      faculty.filter((record) => record.status === "Active").length,
-      "blue",
-    ],
-    [
-      Building2,
-      "Campus Branches",
-      campuses.length,
-      "amber",
-    ],
-    [
-      Layers,
-      "Institute Type",
-      demoInstitute.type,
-      "purple",
-    ],
+    {
+      icon: Users,
+      label: "Total Students",
+      value: students.length,
+      detail: "Enrolled in active terms",
+    },
+    {
+      icon: GraduationCap,
+      label: "Active Teachers",
+      value: faculty.filter((record) => record.status === "Active").length,
+      detail: "Faculty & instructors on duty",
+    },
+    {
+      icon: Building2,
+      label: "Campus Branches",
+      value: campuses.length,
+      detail: "Operational branches",
+    },
+    {
+      icon: Layers,
+      label: "Institute Type",
+      value: demoInstitute.type,
+      detail: "Accredited educational tier",
+    },
   ];
+
   return (
     <section className="institute-dashboard" aria-labelledby="institute-title">
       <header className="institute-heading">
         <h1 id="institute-title">{demoInstitute.name}</h1>
       </header>
-      <div className="institute-stats">
-        {stats.map(([icon, label, value, tone]) => (
-          <SummaryCard
-            key={label}
-            icon={icon}
-            label={label}
-            value={value}
-            className={`institute-stat ${tone}`}
-          />
-        ))}
+
+      <div className="edu-stats-grid institute-stats">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <article className="edu-stat-card institute-stat" key={stat.label}>
+              <div className="edu-stat-head">
+                <span className="edu-stat-label">{stat.label}</span>
+                <span className="edu-stat-icon">
+                  <Icon size={14} />
+                </span>
+              </div>
+              <div className="edu-stat-value">{stat.value}</div>
+              <div className="edu-stat-detail">{stat.detail}</div>
+            </article>
+          );
+        })}
       </div>
       <div className="institute-actions">
         {[
