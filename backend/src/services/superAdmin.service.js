@@ -139,7 +139,8 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
       reset: true,
     });
     
-    const resetLink = `http://localhost:5173/set-password?token=${token}`;
+    const frontendBaseUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+    const resetLink = `${frontendBaseUrl}/set-password?token=${token}`;
     
     try {
       await sendMail(
