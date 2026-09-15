@@ -17,7 +17,7 @@ const roles = [
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [values, setValues]   = useState({ email: 'admin@smitlms.com', password: 'password', role: 'super_admin' });
+  const [values, setValues]   = useState({ email: '', password: '', role: 'super_admin' });
   const [errors, setErrors]   = useState({});
   const [remember, setRemember] = useState(false);
 
