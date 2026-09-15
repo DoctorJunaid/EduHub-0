@@ -17,6 +17,7 @@ const Header = ({
   breadcrumbItems,
   onViewProfile,
   onSignOut,
+  showProfile = false,
   searchPlaceholder = "Search students, faculty, classes...",
   handleSearch = () => {},
 }) => {
@@ -88,36 +89,38 @@ const Header = ({
         </button>
       )}
 
-      {onViewProfile ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>{profileButton}</DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="student-profile-menu"
-            onCloseAutoFocus={(event) => {
-              if (focusProfile.current) {
-                event.preventDefault();
-                focusProfile.current = false;
-                onViewProfile();
-              }
-            }}
-          >
-            <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => {
-                focusProfile.current = true;
+      {showProfile && (
+        onViewProfile ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>{profileButton}</DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="student-profile-menu"
+              onCloseAutoFocus={(event) => {
+                if (focusProfile.current) {
+                  event.preventDefault();
+                  focusProfile.current = false;
+                  onViewProfile();
+                }
               }}
             >
-              View Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={onSignOut}>
-              Sign Out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        profileButton
+              <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => {
+                  focusProfile.current = true;
+                }}
+              >
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={onSignOut}>
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          profileButton
+        )
       )}
     </header>
   );

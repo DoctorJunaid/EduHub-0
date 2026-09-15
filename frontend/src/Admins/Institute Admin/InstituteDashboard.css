@@ -6,42 +6,35 @@
 .institute-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   color: #09090b;
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .institute-heading h1 {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
   letter-spacing: -0.02em;
-  margin: 0 0 4px;
-  color: #09090b;
-}
-
-.institute-heading p {
-  font-size: 13px;
-  color: #71717a;
   margin: 0;
-  font-weight: 500;
+  color: #09090b;
 }
 
 .institute-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .institute-dashboard .institute-stat {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 12px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.02);
   background: #ffffff;
   min-width: 0;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
@@ -55,9 +48,9 @@
 .institute-stat:nth-child(4) { animation-delay: 0.2s; }
 
 .institute-dashboard .institute-stat:hover {
-  transform: translateY(-4px) scale(1.01);
+  transform: translateY(-2px) scale(1.005);
   border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .institute-stat .summary-icon {
@@ -94,7 +87,7 @@
 }
 
 .institute-dashboard .institute-stat strong {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.1;
   color: #09090b;
@@ -110,16 +103,16 @@
 .institute-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .institute-actions button {
-  height: 48px;
+  height: 38px;
   border: 1px dashed #e4e4e7;
   border-radius: 8px;
   background: #ffffff;
   color: #09090b;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.2s ease;
@@ -128,20 +121,20 @@
 .institute-actions button:hover {
   background: #fafafa;
   border-color: #09090b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .institute-actions button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .institute-students {
-  padding: 16px;
-  gap: 16px;
+  padding: 12px 14px;
+  gap: 10px;
   border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.02);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.02);
   background: #ffffff;
   opacity: 0;
   animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
@@ -151,8 +144,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .institute-table-heading h2 {
@@ -199,10 +192,10 @@
 }
 
 .institute-students td {
-  height: 64px;
+  height: 46px;
   font-size: 12px;
   color: #09090b;
-  padding: 10px 14px;
+  padding: 6px 12px;
   border-bottom: 1px solid #f4f4f5;
 }
 
@@ -295,7 +288,7 @@
 
 .institute-empty {
   text-align: center;
-  padding: 30px;
+  padding: 18px 12px;
   color: #71717a;
 }
 

@@ -49,28 +49,24 @@ export default function InstituteDashboard() {
       Users,
       "Total Students",
       students.length,
-      "Enrolled across branches",
       "green",
     ],
     [
       GraduationCap,
       "Active Teachers",
       faculty.filter((record) => record.status === "Active").length,
-      "Active faculty records",
       "blue",
     ],
     [
       Building2,
       "Campus Branches",
       campuses.length,
-      "Operating locations",
       "amber",
     ],
     [
       Layers,
       "Institute Type",
       demoInstitute.type,
-      `Board: ${demoInstitute.board}`,
       "purple",
     ],
   ];
@@ -78,16 +74,14 @@ export default function InstituteDashboard() {
     <section className="institute-dashboard" aria-labelledby="institute-title">
       <header className="institute-heading">
         <h1 id="institute-title">{demoInstitute.name}</h1>
-        <p>Administrative control center &amp; campus operations</p>
       </header>
       <div className="institute-stats">
-        {stats.map(([icon, label, value, description, tone]) => (
+        {stats.map(([icon, label, value, tone]) => (
           <SummaryCard
             key={label}
             icon={icon}
             label={label}
             value={value}
-            description={description}
             className={`institute-stat ${tone}`}
           />
         ))}
