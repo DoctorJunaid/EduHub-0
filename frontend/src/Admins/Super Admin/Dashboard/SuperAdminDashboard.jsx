@@ -69,7 +69,6 @@ export default function SuperAdminDashboard() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
   const [showUniversityOnly, setShowUniversityOnly] = useState(false);
-  const [instituteData, setInstituteData] = useState(() => loadInstitutes());
   const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
   const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
