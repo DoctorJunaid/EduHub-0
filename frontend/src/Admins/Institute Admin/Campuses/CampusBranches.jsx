@@ -90,7 +90,7 @@ export default function CampusBranches() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{campus.address}</TableCell>
+                <TableCell>{typeof campus.address === 'object' ? (campus.address?.street || '') : (campus.address || '')}</TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="campus-active">
                     <span aria-hidden="true" />
