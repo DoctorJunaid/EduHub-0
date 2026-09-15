@@ -27,6 +27,8 @@ import Institutes from "./Admins/Super Admin/Institutes/Institutes";
 import ManageInstitutePage from "./Admins/Super Admin/Institutes/ManageInstitutePage";
 import GlobalUsers from "./Admins/Super Admin/Users/GlobalUsers";
 import SuperAdminBroadcasts from "./Admins/Super Admin/Broadcasts/SuperAdminBroadcasts";
+import EditInstitute from "./Admins/Super Admin/Institutes/EditInstitute";
+import InstituteDetails from "./Admins/Super Admin/Institutes/InstituteDetails";
 import { ADMIN_NAV } from "./constants/navigation";
 import {
   StudentLayout,
@@ -147,6 +149,14 @@ const App = () => {
           <Route path="institutes/:id" element={<ManageInstitutePage />} />
           <Route path="super-admin/users" element={<GlobalUsers />} />
           <Route path="super-admin/broadcasts" element={<SuperAdminBroadcasts />} />
+          <Route
+            path="institutes/:instituteId"
+            element={<InstituteDetails />}
+          />
+          <Route
+            path="institutes/:instituteId/edit"
+            element={<EditInstitute />}
+          />
         </Route>
       </Route>
 

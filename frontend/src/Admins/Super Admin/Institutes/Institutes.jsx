@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   SlidersHorizontal,
@@ -33,11 +35,27 @@ export default function Institutes() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const institutes = useSelector(selectInstitutes);
+  Star,
+  X,
+  UserPlus,
+  CreditCard,
+  ShieldCheck,
+  Users,
+  MapPin,
+} from "lucide-react";
+import "./Institutes.css";
+import { instituteRecords, saveInstitutes } from "./instituteData";
+
+const seedInstitutes = instituteRecords;
+
+export default function Institutes() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [manageDrawer, setManageDrawer] = useState(null);
+  const [data, setData] = useState(seedInstitutes);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
   const [instituteToDelete, setInstituteToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -72,6 +90,12 @@ export default function Institutes() {
 
   const updateStatus = async (instituteId, nextStatus) => {
     dispatch(optimisticStatusChange({ id: instituteId, status: nextStatus }));
+  const updateStatus = (instituteId, nextStatus) => {
+    const nextItems = data.map((item) =>
+      item.id === instituteId ? { ...item, status: nextStatus } : item,
+    );
+    setData(nextItems);
+    saveInstitutes(nextItems);
     setStatusMenuFor(null);
     try {
       await dispatch(updateInstitute({ id: instituteId, status: nextStatus })).unwrap();
@@ -94,6 +118,14 @@ export default function Institutes() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const openInstituteDetails = (institute) => {
+    navigate(`/institutes/${institute.id}`);
+  };
+
+  const openEditInstitute = (institute) => {
+    navigate(`/institutes/${institute.id}/edit`);
   };
 
   return (
@@ -327,7 +359,11 @@ export default function Institutes() {
             </thead>
             <tbody>
               {visible.map((institute) => (
-                <tr key={institute.id}>
+                <tr
+                  key={institute.id}
+                  onClick={() => openInstituteDetails(institute)}
+                  className="institute-list-row"
+                >
                   <td>
                     <div className="institute-name-cell">
                       <img
@@ -404,6 +440,11 @@ export default function Institutes() {
                         className="icon-button eye"
                         onClick={() => setManageDrawer({ ...institute, initialTab: "campuses" })}
                         title="Manage Campuses"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openInstituteDetails(institute);
+                        }}
+                        title="View profile"
                       >
                         <Eye size={16} />
                       </button>
@@ -411,6 +452,11 @@ export default function Institutes() {
                         className="icon-button edit"
                         onClick={() => setManageDrawer({ ...institute, initialTab: "details" })}
                         title="Manage Institute"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openEditInstitute(institute);
+                        }}
+                        title="Edit institute"
                       >
                         <Pencil size={16} />
                       </button>
@@ -418,6 +464,11 @@ export default function Institutes() {
                         className="icon-button students"
                         onClick={() => navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`)}
                         title="Open Global Users Directory"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setStudentsDrawer(institute);
+                        }}
+                        title="View students"
                       >
                         <Users size={16} />
                       </button>
@@ -535,6 +586,63 @@ export default function Institutes() {
           </div>
         </div>,
         document.body
+            <div className="manage-body">
+              <div className="manage-card">
+                <span className="manage-icon">
+                  <ShieldCheck size={20} />
+                </span>
+                <div>
+                  <span className="manage-label">Credentials</span>
+                  <span className="manage-value">
+                    Admin portal access ·{" "}
+                    {manageDrawer.mode === "new"
+                      ? "New Institute"
+                      : manageDrawer.name}
+                  </span>
+                </div>
+              </div>
+              <div className="manage-card">
+                <span className="manage-icon">
+                  <MapPin size={20} />
+                </span>
+                <div>
+                  <span className="manage-label">Campuses</span>
+                  <span className="manage-value">
+                    {manageDrawer.mode === "new"
+                      ? "0 Campus Branches"
+                      : `${manageDrawer.campuses ?? manageDrawer.campusDetails?.length ?? 0} Campus Branch${(manageDrawer.campuses ?? manageDrawer.campusDetails?.length ?? 0) === 1 ? "" : "es"}`}
+                  </span>
+                </div>
+              </div>
+              <div className="manage-card">
+                <span className="manage-icon">
+                  <CreditCard size={20} />
+                </span>
+                <div>
+                  <span className="manage-label">Billing Status</span>
+                  <span className="manage-value">Monthly plan · Active</span>
+                </div>
+              </div>
+              <div className="manage-card">
+                <span className="manage-icon">
+                  <UserPlus size={20} />
+                </span>
+                <div>
+                  <span className="manage-label">Assigned Admins</span>
+                  <span className="manage-value">Institute Admin</span>
+                </div>
+              </div>
+              <div className="manage-actions">
+                <button
+                  className="save-button"
+                  onClick={() => setManageDrawer(null)}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
       )}
     </section>
   );

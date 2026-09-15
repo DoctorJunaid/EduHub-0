@@ -277,8 +277,9 @@
 .super-admin-institute-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
   justify-content: flex-end;
 }
 
@@ -294,6 +295,8 @@
   gap: 5px;
   border: 0;
   cursor: pointer;
+  line-height: 1;
+  min-height: 30px;
 }
 
 .super-admin-badge-dot {
@@ -311,8 +314,9 @@
   font-weight: 600;
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 2px 4px;
   cursor: pointer;
+  line-height: 1;
 }
 
 .super-admin-student-count {
@@ -367,6 +371,8 @@
 
 .super-admin-manage-button:active {
   transform: scale(0.96);
+  margin-left: 0;
+  min-width: 86px;
 }
 
 .super-admin-drawer-backdrop {
