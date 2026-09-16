@@ -95,6 +95,41 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    section: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    semester: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    subjects: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    qualification: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    guardian: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    guardianPhone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Pending", "Inactive", "Suspended", "Graduated", "On Leave"],
+      default: "Active",
+    },
     isActive: {
       type: Boolean,
       default: true,

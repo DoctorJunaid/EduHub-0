@@ -24,7 +24,10 @@ export const addStudent = createAsyncThunk('students/add', async (studentData, {
 
 export const updateStudent = createAsyncThunk('students/update', async (studentData, { rejectWithValue }) => {
   try {
-    const { id, ...data } = studentData;
+    const id = studentData.id || studentData._id;
+    const data = { ...studentData };
+    delete data.id;
+    delete data._id;
     const response = await axiosInstance.put(`/campus-admin/students/${id}`, data);
     return response.data.data || response.data;
   } catch (error) {

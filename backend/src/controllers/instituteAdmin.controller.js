@@ -89,6 +89,42 @@ export const assignCampusManager = asyncHandler(async (req, res) => {
   });
 });
 
+export const resendCampusManagerInvite = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.resendCampusManagerInvite(
+    req.instituteId,
+    req.params.id
+  );
+  res.status(200).json({
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+export const updateCampusManager = asyncHandler(async (req, res) => {
+  const updatedManager = await instituteAdminService.updateCampusManager(
+    req.instituteId,
+    req.params.id,
+    req.body
+  );
+  res.status(200).json({
+    success: true,
+    message: "Campus Manager details updated successfully.",
+    data: updatedManager,
+  });
+});
+
+export const unassignCampusManager = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.unassignCampusManager(
+    req.instituteId,
+    req.params.id
+  );
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+});
+
 // --- Campus Managers Management ---
 export const getManagers = asyncHandler(async (req, res) => {
   const managers = await instituteAdminService.getCampusManagers(req.instituteId);

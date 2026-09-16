@@ -21,6 +21,7 @@ export default function ManageCampusPage() {
   const campuses = useSelector(selectInstituteCampuses) || [];
   const existingCampus = campuses.find((campus) => String(campus.id) === String(id));
   const [loading, setLoading] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     // If not new and we don't have the campus loaded, fetch them
@@ -29,12 +30,19 @@ export default function ManageCampusPage() {
     }
   }, [dispatch, isNew, existingCampus, campuses.length]);
 
-  const handleSave = async (values) => {
+  const handleSave = async (values, options = {}) => {
     setLoading(true);
     try {
       if (isNew) {
         await dispatch(createCampus(values)).unwrap();
-        toast.success("Campus created successfully!");
+        if (options.addAnother) {
+          toast.success("Campus branch created! Form cleared to add another.");
+          setFormKey((k) => k + 1);
+          dispatch(fetchCampuses());
+          return;
+        } else {
+          toast.success("Campus created successfully!");
+        }
       } else {
         await dispatch(updateCampus({ id, ...values })).unwrap();
         toast.success("Campus updated successfully!");
@@ -94,6 +102,7 @@ export default function ManageCampusPage() {
             </div>
           ) : (
             <CampusForm 
+              key={isNew ? `new-${formKey}` : id}
               campus={existingCampus} 
               onSave={handleSave} 
               onCancel={handleCancel} 

@@ -146,17 +146,11 @@ const App = () => {
           <Route path="super-admin" element={<SuperAdminDashboard />} />
           <Route path="institutes" element={<Institutes />} />
           <Route path="institutes/new" element={<ManageInstitutePage />} />
+          <Route path="institutes/:instituteId/edit" element={<EditInstitute />} />
+          <Route path="institutes/:instituteId/view" element={<InstituteDetails />} />
           <Route path="institutes/:id" element={<ManageInstitutePage />} />
           <Route path="super-admin/users" element={<GlobalUsers />} />
           <Route path="super-admin/broadcasts" element={<SuperAdminBroadcasts />} />
-          <Route
-            path="institutes/:instituteId"
-            element={<InstituteDetails />}
-          />
-          <Route
-            path="institutes/:instituteId/edit"
-            element={<EditInstitute />}
-          />
         </Route>
       </Route>
 

@@ -25,12 +25,13 @@ export const updateInstitute = createAsyncThunk("institutes/update", async (inst
   try {
     let id, data;
     if (instituteData instanceof FormData) {
-      id = instituteData.get("id");
+      id = instituteData.get("id") || instituteData.get("_id");
       data = instituteData;
     } else {
-      id = instituteData.id;
+      id = instituteData.id || instituteData._id;
       data = { ...instituteData };
       delete data.id;
+      delete data._id;
     }
     
     const response = await axiosInstance.put(`/super-admin/institutes/${id}`, data, {

@@ -77,6 +77,27 @@ export const assignInstituteAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+export const resendInstituteAdminInvite = asyncHandler(async (req, res) => {
+  const result = await superAdminService.resendInstituteAdminInvite(req.params.id);
+  res.status(200).json({
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+export const updateInstituteAdmin = asyncHandler(async (req, res) => {
+  const updatedAdmin = await superAdminService.updateInstituteAdmin(
+    req.params.id,
+    req.body
+  );
+  res.status(200).json({
+    success: true,
+    message: "Institute Admin details updated successfully.",
+    data: updatedAdmin,
+  });
+});
+
 // --- Institute Admins Standalone ---
 export const getInstituteAdmins = asyncHandler(async (req, res) => {
   const admins = await superAdminService.getAllInstituteAdmins();

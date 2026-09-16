@@ -13,6 +13,9 @@ import {
   updateCampus,
   deleteCampus,
   assignCampusManager,
+  resendCampusManagerInvite,
+  updateCampusManager,
+  unassignCampusManager,
   getManagers,
   createManager,
   getStaff,
@@ -52,6 +55,9 @@ router
   .delete(deleteCampus);
 
 router.post("/campuses/:id/assign-manager", assignCampusManager);
+router.post("/campuses/:id/resend-invite", resendCampusManagerInvite);
+router.put("/campuses/:id/manager", updateCampusManager);
+router.delete("/campuses/:id/manager", unassignCampusManager);
 
 // Campus Managers Appointed Under This Institute
 router

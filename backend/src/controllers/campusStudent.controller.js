@@ -1,11 +1,11 @@
 import User from "../models/user.model.js";
+import Campus from "../models/campus.model.js";
 
-// @desc    Get students belonging to campus admin's campus
+// @desc    Get students belonging to campus admin/manager's campus
 // @route   GET /api/v1/campus-admin/students
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const getCampusStudents = async (req, res) => {
   try {
-    // Verify authenticated user
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -13,11 +13,10 @@ export const getCampusStudents = async (req, res) => {
       });
     }
 
-    // Verify role
-    if (req.user.role !== "campus_admin") {
+    if (req.user.role !== "campus_admin" && req.user.role !== "campus_manager") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Campus Admin only.",
+        message: "Access denied. Campus Manager/Admin only.",
       });
     }
 
@@ -26,7 +25,7 @@ export const getCampusStudents = async (req, res) => {
     if (!campusId) {
       return res.status(400).json({
         success: false,
-        message: "Campus Admin is not assigned to a campus",
+        message: "Campus Manager/Admin is not assigned to a campus",
       });
     }
 
@@ -52,13 +51,11 @@ export const getCampusStudents = async (req, res) => {
   }
 };
 
-
-// @desc    Assign student to campus admin's campus
+// @desc    Assign existing student to campus admin/manager's campus
 // @route   POST /api/v1/campus-admin/students
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const addStudentToCampus = async (req, res) => {
   try {
-    // Verify authenticated user
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -66,31 +63,27 @@ export const addStudentToCampus = async (req, res) => {
       });
     }
 
-    // Verify role
-    if (req.user.role !== "campus_admin") {
+    if (req.user.role !== "campus_admin" && req.user.role !== "campus_manager") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Campus Admin only.",
+        message: "Access denied. Campus Manager/Admin only.",
       });
     }
 
-    const { campusId, instituteId } = req.user;
+    let { campusId, instituteId } = req.user;
 
     if (!campusId) {
       return res.status(400).json({
         success: false,
-        message: "Campus Admin is not assigned to a campus",
+        message: "User is not assigned to a campus",
       });
     }
 
     if (!instituteId) {
-      return res.status(400).json({
-        success: false,
-        message: "Campus Admin is not assigned to an institute",
-      });
+      const campus = await Campus.findById(campusId);
+      if (campus) instituteId = campus.instituteId;
     }
 
-    // Validate request body
     const { studentId } = req.body;
 
     if (!studentId) {
@@ -100,7 +93,6 @@ export const addStudentToCampus = async (req, res) => {
       });
     }
 
-    // Find only a student
     const student = await User.findOne({
       _id: studentId,
       role: "student",
@@ -113,9 +105,9 @@ export const addStudentToCampus = async (req, res) => {
       });
     }
 
-    // Verify student belongs to the same institute
     if (
       student.instituteId &&
+      instituteId &&
       student.instituteId.toString() !== instituteId.toString()
     ) {
       return res.status(403).json({
@@ -124,7 +116,6 @@ export const addStudentToCampus = async (req, res) => {
       });
     }
 
-    // Prevent unnecessary reassignment
     if (
       student.campusId &&
       student.campusId.toString() === campusId.toString()
@@ -135,15 +126,12 @@ export const addStudentToCampus = async (req, res) => {
       });
     }
 
-    // Assign institute and campus
-    student.instituteId = instituteId;
+    if (instituteId) student.instituteId = instituteId;
     student.campusId = campusId;
 
     await student.save();
 
-    // Remove sensitive fields from response
     const studentResponse = student.toObject();
-
     delete studentResponse.passwordHash;
     delete studentResponse.resetPasswordToken;
     delete studentResponse.resetPasswordExpires;
@@ -163,52 +151,97 @@ export const addStudentToCampus = async (req, res) => {
     });
   }
 };
+
 // @desc    Create a new student for the campus
 // @route   POST /api/v1/campus-admin/students/new
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const createStudentForCampus = async (req, res) => {
   try {
-    const { campusId, instituteId } = req.user;
-    if (!campusId || !instituteId) return res.status(400).json({ success: false, message: "Admin lacking campus/institute context" });
+    let { campusId, instituteId } = req.user;
 
-    const { name, email, program, roll } = req.body;
-    if (!name || !email) return res.status(400).json({ success: false, message: "Name and email are required" });
+    if (!campusId) {
+      return res.status(400).json({ success: false, message: "Admin lacking campus context" });
+    }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ success: false, message: "User with email already exists" });
+    if (!instituteId && campusId) {
+      const campus = await Campus.findById(campusId);
+      if (campus) instituteId = campus.instituteId;
+    }
 
-    const student = await User.create({
+    const {
       name,
       email,
-      role: 'student',
+      roll,
+      program,
+      section,
+      semester,
+      subjects,
+      phone,
+      studentPhone,
+      guardian,
+      guardianPhone,
+      status,
+      password,
+    } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: "Name and email are required" });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User with this email already exists" });
+    }
+
+    const student = await User.create({
+      name: name.trim(),
+      email: cleanEmail,
+      role: "student",
       campusId,
-      instituteId,
-      program: program || 'Unassigned',
-      roll: roll || `ROLL-${Math.floor(Math.random() * 10000)}`,
-      passwordHash: 'dummy_hash_for_now' // Or whatever default is required by schema
+      instituteId: instituteId || null,
+      roll: roll ? roll.trim() : `ROLL-${Math.floor(1000 + Math.random() * 9000)}`,
+      program: program ? program.trim() : "Unassigned",
+      section: section ? section.trim() : "",
+      semester: semester ? semester.trim() : "",
+      subjects: subjects ? subjects.trim() : "",
+      phone: studentPhone ? studentPhone.trim() : (phone ? phone.trim() : ""),
+      guardian: guardian ? guardian.trim() : "",
+      guardianPhone: guardianPhone ? guardianPhone.trim() : "",
+      status: status || "Active",
+      passwordHash: password || "student123",
     });
 
-    return res.status(201).json({ success: true, data: student });
+    const studentResponse = student.toObject();
+    delete studentResponse.passwordHash;
+
+    return res.status(201).json({
+      success: true,
+      message: "Student created successfully",
+      data: studentResponse,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("Create Student Error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to create student" });
   }
 };
 
 // @desc    Remove a student from the campus
 // @route   DELETE /api/v1/campus-admin/students/:id
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const removeStudentFromCampus = async (req, res) => {
   try {
     const { campusId } = req.user;
     const studentId = req.params.id;
 
-    const student = await User.findOne({ _id: studentId, role: 'student', campusId });
-    if (!student) return res.status(404).json({ success: false, message: "Student not found in this campus" });
+    const student = await User.findOne({ _id: studentId, role: "student", campusId });
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found in this campus" });
+    }
 
-    student.campusId = null; // Or just delete the student? User said "remove", I'll delete them entirely for simplicity in this demo system
     await User.findByIdAndDelete(studentId);
 
-    return res.status(200).json({ success: true, message: "Student removed" });
+    return res.status(200).json({ success: true, message: "Student removed successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -216,64 +249,113 @@ export const removeStudentFromCampus = async (req, res) => {
 
 // @desc    Get all faculty for the campus
 // @route   GET /api/v1/campus-admin/faculty
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const getCampusFaculty = async (req, res) => {
   try {
     const { campusId } = req.user;
     if (!campusId) return res.status(400).json({ success: false, message: "No campus assigned" });
 
-    const faculty = await User.find({ role: 'faculty', campusId }).select('-passwordHash').sort({ createdAt: -1 });
+    const faculty = await User.find({
+      role: { $in: ["faculty", "teacher"] },
+      campusId,
+    })
+      .select("-passwordHash")
+      .sort({ createdAt: -1 });
+
     return res.status(200).json({ success: true, count: faculty.length, data: faculty });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Create a new faculty for the campus
+// @desc    Create a new faculty/teacher for the campus
 // @route   POST /api/v1/campus-admin/faculty/new
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const createFacultyForCampus = async (req, res) => {
   try {
-    const { campusId, instituteId } = req.user;
-    if (!campusId || !instituteId) return res.status(400).json({ success: false, message: "Admin lacking campus/institute context" });
+    let { campusId, instituteId } = req.user;
 
-    const { name, email, department, designation } = req.body;
-    if (!name || !email) return res.status(400).json({ success: false, message: "Name and email are required" });
+    if (!campusId) {
+      return res.status(400).json({ success: false, message: "Admin lacking campus context" });
+    }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ success: false, message: "User with email already exists" });
+    if (!instituteId && campusId) {
+      const campus = await Campus.findById(campusId);
+      if (campus) instituteId = campus.instituteId;
+    }
 
-    const faculty = await User.create({
+    const {
       name,
       email,
-      role: 'faculty',
+      department,
+      designation,
+      phone,
+      qualification,
+      subjects,
+      status,
+      password,
+    } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: "Name and email are required" });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User with this email already exists" });
+    }
+
+    const faculty = await User.create({
+      name: name.trim(),
+      email: cleanEmail,
+      role: "faculty",
       campusId,
-      instituteId,
-      department: department || 'General',
-      designation: designation || 'Lecturer',
-      passwordHash: 'dummy_hash_for_now'
+      instituteId: instituteId || null,
+      department: department ? department.trim() : "General",
+      designation: designation ? designation.trim() : "Lecturer",
+      phone: phone ? phone.trim() : "",
+      qualification: qualification ? qualification.trim() : "",
+      subjects: subjects ? subjects.trim() : "",
+      status: status || "Active",
+      passwordHash: password || "teacher123",
     });
 
-    return res.status(201).json({ success: true, data: faculty });
+    const facultyResponse = faculty.toObject();
+    delete facultyResponse.passwordHash;
+
+    return res.status(201).json({
+      success: true,
+      message: "Faculty created successfully",
+      data: facultyResponse,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("Create Faculty Error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to create faculty" });
   }
 };
 
 // @desc    Remove a faculty from the campus
 // @route   DELETE /api/v1/campus-admin/faculty/:id
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const removeFacultyFromCampus = async (req, res) => {
   try {
     const { campusId } = req.user;
     const facultyId = req.params.id;
 
-    const faculty = await User.findOne({ _id: facultyId, role: 'faculty', campusId });
-    if (!faculty) return res.status(404).json({ success: false, message: "Faculty not found in this campus" });
+    const faculty = await User.findOne({
+      _id: facultyId,
+      role: { $in: ["faculty", "teacher"] },
+      campusId,
+    });
+
+    if (!faculty) {
+      return res.status(404).json({ success: false, message: "Faculty not found in this campus" });
+    }
 
     await User.findByIdAndDelete(facultyId);
 
-    return res.status(200).json({ success: true, message: "Faculty removed" });
+    return res.status(200).json({ success: true, message: "Faculty removed successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -281,18 +363,30 @@ export const removeFacultyFromCampus = async (req, res) => {
 
 // @desc    Update a student in the campus
 // @route   PUT /api/v1/campus-admin/students/:id
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const updateStudentInCampus = async (req, res) => {
   try {
     const { campusId } = req.user;
     const studentId = req.params.id;
 
+    const updateData = { ...req.body };
+    delete updateData._id;
+    delete updateData.id;
+    delete updateData.passwordHash;
+
+    if (updateData.studentPhone && !updateData.phone) {
+      updateData.phone = updateData.studentPhone;
+    }
+
     const student = await User.findOneAndUpdate(
-      { _id: studentId, role: 'student', campusId },
-      req.body,
+      { _id: studentId, role: "student", campusId },
+      updateData,
       { new: true, runValidators: true }
-    );
-    if (!student) return res.status(404).json({ success: false, message: "Student not found in this campus" });
+    ).select("-passwordHash");
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found in this campus" });
+    }
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
@@ -302,18 +396,26 @@ export const updateStudentInCampus = async (req, res) => {
 
 // @desc    Update a faculty in the campus
 // @route   PUT /api/v1/campus-admin/faculty/:id
-// @access  Private / Campus Admin
+// @access  Private / Campus Admin & Campus Manager
 export const updateFacultyInCampus = async (req, res) => {
   try {
     const { campusId } = req.user;
     const facultyId = req.params.id;
 
+    const updateData = { ...req.body };
+    delete updateData._id;
+    delete updateData.id;
+    delete updateData.passwordHash;
+
     const faculty = await User.findOneAndUpdate(
-      { _id: facultyId, role: 'faculty', campusId },
-      req.body,
+      { _id: facultyId, role: { $in: ["faculty", "teacher"] }, campusId },
+      updateData,
       { new: true, runValidators: true }
-    );
-    if (!faculty) return res.status(404).json({ success: false, message: "Faculty not found in this campus" });
+    ).select("-passwordHash");
+
+    if (!faculty) {
+      return res.status(404).json({ success: false, message: "Faculty not found in this campus" });
+    }
 
     return res.status(200).json({ success: true, data: faculty });
   } catch (error) {

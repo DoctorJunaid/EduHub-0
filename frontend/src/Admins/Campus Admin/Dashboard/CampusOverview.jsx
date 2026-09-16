@@ -6,6 +6,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import toast from 'react-hot-toast';
 
 // Redux State Selectors & Actions
 import { selectStudents, addStudent, fetchStudents } from '@/store/Slices/studentsSlice.js';
@@ -166,9 +167,16 @@ export default function CampusOverview() {
           programs={studentPrograms}
           campuses={studentCampuses}
           onClose={() => setAddingStudent(false)}
-          onSave={(values) => {
-            dispatch(addStudent(values));
-            setAddingStudent(false);
+          onSave={async (values) => {
+            try {
+              await dispatch(addStudent(values)).unwrap();
+              toast.success("Student added successfully!");
+              setAddingStudent(false);
+              dispatch(fetchStudents());
+            } catch (err) {
+              toast.error(typeof err === "string" ? err : "Failed to add student");
+              throw err;
+            }
           }}
         />
       )}
@@ -177,9 +185,16 @@ export default function CampusOverview() {
         <FacultyForm
           options={facultyOptions}
           onClose={() => setAddingTeacher(false)}
-          onSave={(values) => {
-            dispatch(addFaculty(values));
-            setAddingTeacher(false);
+          onSave={async (values) => {
+            try {
+              await dispatch(addFaculty(values)).unwrap();
+              toast.success("Teacher added successfully!");
+              setAddingTeacher(false);
+              dispatch(fetchFaculty());
+            } catch (err) {
+              toast.error(typeof err === "string" ? err : "Failed to add teacher");
+              throw err;
+            }
           }}
         />
       )}

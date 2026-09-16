@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Building2, Mail, Image, Save } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { ArrowLeft, Building2, Mail, Image, Save, Loader2, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
@@ -10,7 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { loadInstitutes, saveInstitutes } from "./instituteData";
+import {
+  selectInstitutes,
+  updateInstitute,
+  fetchInstitutes,
+} from "@/store/Slices/institutesSlice";
+import axiosInstance from "@/api/axiosInstance";
+import toast from "react-hot-toast";
 import "./Institutes.css";
 import { cn } from "@/lib/utils";
 
@@ -33,63 +40,97 @@ function isValidUrl(value) {
 
 export default function EditInstitute() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { instituteId } = useParams();
-  const [institutes, setInstitutes] = useState(() => loadInstitutes());
-  const institute = useMemo(
-    () => institutes.find((item) => item.id === instituteId),
-    [institutes, instituteId],
+
+  const institutes = useSelector(selectInstitutes) || [];
+  const cachedInstitute = useMemo(
+    () => institutes.find((item) => (item.id === instituteId || item._id === instituteId)),
+    [institutes, instituteId]
   );
 
-  const [form, setForm] = useState(() =>
-    institute
-      ? {
-          id: institute.id,
-          name: institute.name,
-          type: institute.type,
-          board: institute.board,
-          status: institute.status,
-          email: institute.email || "",
-          phone: institute.phone || "",
-          headOfficeAddress: institute.headOfficeAddress || "",
-          coverImageUrl:
-            institute.coverImageUrl || institute.image || emptyMedia,
-        }
-      : null,
-  );
-
+  const [institute, setInstitute] = useState(cachedInstitute || null);
+  const [loading, setLoading] = useState(!cachedInstitute);
+  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
+  const [form, setForm] = useState({
+    id: instituteId,
+    name: "",
+    type: "University",
+    board: "Federal",
+    status: "Active",
+    email: "",
+    phone: "",
+    headOfficeAddress: "",
+    coverImageUrl: emptyMedia,
+  });
+
+  // Fetch or sync institute
   useEffect(() => {
-    if (!institute) return;
-    setForm({
-      id: institute.id,
-      name: institute.name,
-      type: institute.type,
-      board: institute.board,
-      status: institute.status,
-      email: institute.email || "",
-      phone: institute.phone || "",
-      headOfficeAddress: institute.headOfficeAddress || "",
-      coverImageUrl: institute.coverImageUrl || institute.image || emptyMedia,
-    });
-  }, [institute]);
+    if (cachedInstitute) {
+      setInstitute(cachedInstitute);
+      setForm({
+        id: cachedInstitute.id || cachedInstitute._id,
+        name: cachedInstitute.name || "",
+        type: cachedInstitute.type || "University",
+        board: cachedInstitute.board || "Federal",
+        status: cachedInstitute.status || "Active",
+        email: cachedInstitute.email || "",
+        phone: cachedInstitute.phone || "",
+        headOfficeAddress: cachedInstitute.headOfficeAddress || "",
+        coverImageUrl: cachedInstitute.coverImageUrl || cachedInstitute.image || emptyMedia,
+      });
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+    setLoading(true);
+    axiosInstance
+      .get(`/super-admin/institutes/${instituteId}`)
+      .then((res) => {
+        if (active && res.data?.data) {
+          const fetched = res.data.data;
+          setInstitute(fetched);
+          setForm({
+            id: fetched.id || fetched._id,
+            name: fetched.name || "",
+            type: fetched.type || "University",
+            board: fetched.board || "Federal",
+            status: fetched.status || "Active",
+            email: fetched.email || "",
+            phone: fetched.phone || "",
+            headOfficeAddress: fetched.headOfficeAddress || "",
+            coverImageUrl: fetched.coverImageUrl || fetched.image || emptyMedia,
+          });
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          toast.error("Failed to load institute details");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [instituteId, cachedInstitute]);
 
   const loc = useMemo(() => {
-    const parts = [
+    return [
       { label: "Dashboard", to: "/super-admin" },
       { label: "Institutes", to: "/institutes" },
       {
         label: institute?.name ?? "Institute",
-        to: `/institutes/${instituteId}/edit`,
+        to: `/institutes/${instituteId}`,
       },
       { label: "Edit" },
     ];
-    return parts;
   }, [institute, instituteId]);
-
-  if (!institute) {
-    return <Navigate to="/institutes" replace />;
-  }
 
   const validate = () => {
     const nextErrors = {};
@@ -107,44 +148,97 @@ export default function EditInstitute() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     if (!validate()) return;
-    const nextInstitutes = institutes.map((item) =>
-      item.id === form.id
-        ? {
-            ...item,
-            id: item.id,
-            name: form.name.trim(),
-            type: form.type,
-            board: form.board,
-            status: form.status,
-            email: form.email.trim(),
-            phone: form.phone.trim(),
-            headOfficeAddress: form.headOfficeAddress.trim(),
-            image: form.coverImageUrl.trim() || emptyMedia,
-            coverImageUrl: form.coverImageUrl.trim() || emptyMedia,
-          }
-        : item,
-    );
-    setInstitutes(nextInstitutes);
-    saveInstitutes(nextInstitutes);
-    navigate("/institutes", { replace: true });
+    setSaving(true);
+    try {
+      await dispatch(
+        updateInstitute({
+          id: form.id || instituteId,
+          name: form.name.trim(),
+          type: form.type,
+          board: form.board,
+          status: form.status,
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          headOfficeAddress: form.headOfficeAddress.trim(),
+          image: form.coverImageUrl.trim() || emptyMedia,
+          coverImageUrl: form.coverImageUrl.trim() || emptyMedia,
+        })
+      ).unwrap();
+      toast.success("Institute updated successfully!");
+      navigate("/institutes");
+    } catch (error) {
+      toast.error(typeof error === "string" ? error : "Failed to update institute");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <section className="super-admin-edit-institute" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "350px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", color: "#71717a" }}>
+          <Loader2 size={36} className="spin" />
+          <p style={{ fontSize: "14px", fontWeight: 600 }}>Loading institute details...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (!institute && !loading) {
+    return (
+      <section className="super-admin-edit-institute">
+        <div style={{ padding: "40px 20px", textAlign: "center", background: "#fff", borderRadius: "16px", border: "1px solid #e4e4e7", maxWidth: "500px", margin: "40px auto" }}>
+          <Building2 size={40} style={{ margin: "0 auto 12px", color: "#a1a1aa" }} />
+          <h3 style={{ fontSize: "18px", fontWeight: 700, margin: "0 0 8px" }}>Institute Not Found</h3>
+          <p style={{ fontSize: "14px", color: "#71717a", margin: "0 0 20px" }}>
+            The institute you requested does not exist or has been deleted.
+          </p>
+          <Button onClick={() => navigate("/institutes")} variant="outline">
+            Return to Institutes
+          </Button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="super-admin-edit-institute">
-      <div className="super-admin-edit-top">
-        <button
-          className="super-admin-back-button"
-          onClick={() => navigate("/institutes", { replace: true })}
-          aria-label="Back to institutes"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1>Edit Institute</h1>
-          <p>Update the details for this network.</p>
+      <div className="super-admin-edit-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            className="super-admin-back-button"
+            onClick={() => navigate("/institutes")}
+            aria-label="Back to institutes"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1>Edit Institute</h1>
+            <p>Update network credentials and general details.</p>
+          </div>
         </div>
+
+        <button
+          onClick={() => navigate(`/institutes/${instituteId}`)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            height: "36px",
+            padding: "0 14px",
+            borderRadius: "8px",
+            border: "1px solid #e4e4e7",
+            background: "#fff",
+            color: "#09090b",
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          <SlidersHorizontal size={14} /> Open Management Console
+        </button>
       </div>
 
       <div className="super-admin-edit-breadcrumbs">
@@ -182,7 +276,7 @@ export default function EditInstitute() {
               </label>
               <Input
                 id="institute-name"
-                value={form?.name ?? ""}
+                value={form.name}
                 onChange={(event) =>
                   setForm({ ...form, name: event.target.value })
                 }
@@ -199,7 +293,7 @@ export default function EditInstitute() {
                   Type
                 </label>
                 <Select
-                  value={form?.type ?? "University"}
+                  value={form.type}
                   onValueChange={(value) => setForm({ ...form, type: value })}
                 >
                   <SelectTrigger
@@ -211,7 +305,8 @@ export default function EditInstitute() {
                   <SelectContent>
                     <SelectItem value="University">University</SelectItem>
                     <SelectItem value="College">College</SelectItem>
-                    <SelectItem value="Board">Board</SelectItem>
+                    <SelectItem value="School">School</SelectItem>
+                    <SelectItem value="Institute">Institute</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -224,7 +319,7 @@ export default function EditInstitute() {
                   Board / Affiliation
                 </label>
                 <Select
-                  value={form?.board ?? "Federal"}
+                  value={form.board}
                   onValueChange={(value) => setForm({ ...form, board: value })}
                 >
                   <SelectTrigger
@@ -238,6 +333,8 @@ export default function EditInstitute() {
                     <SelectItem value="Punjab Board">Punjab Board</SelectItem>
                     <SelectItem value="HEC">HEC</SelectItem>
                     <SelectItem value="Sindh Board">Sindh Board</SelectItem>
+                    <SelectItem value="KPK Board">KPK Board</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -250,7 +347,7 @@ export default function EditInstitute() {
                   Status
                 </label>
                 <Select
-                  value={form?.status ?? "Active"}
+                  value={form.status}
                   onValueChange={(value) => setForm({ ...form, status: value })}
                 >
                   <SelectTrigger
@@ -263,6 +360,7 @@ export default function EditInstitute() {
                     <SelectItem value="Active">Active</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Suspended">Suspended</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -289,7 +387,7 @@ export default function EditInstitute() {
                 </label>
                 <Input
                   id="email-input"
-                  value={form?.email ?? ""}
+                  value={form.email}
                   onChange={(event) =>
                     setForm({ ...form, email: event.target.value })
                   }
@@ -308,7 +406,7 @@ export default function EditInstitute() {
                 </label>
                 <Input
                   id="phone-input"
-                  value={form?.phone ?? ""}
+                  value={form.phone}
                   onChange={(event) =>
                     setForm({ ...form, phone: event.target.value })
                   }
@@ -328,7 +426,7 @@ export default function EditInstitute() {
               </label>
               <Input
                 id="address-input"
-                value={form?.headOfficeAddress ?? ""}
+                value={form.headOfficeAddress}
                 onChange={(event) =>
                   setForm({ ...form, headOfficeAddress: event.target.value })
                 }
@@ -355,7 +453,7 @@ export default function EditInstitute() {
               </label>
               <Input
                 id="cover-url"
-                value={form?.coverImageUrl ?? ""}
+                value={form.coverImageUrl}
                 onChange={(event) =>
                   setForm({ ...form, coverImageUrl: event.target.value })
                 }
@@ -370,11 +468,11 @@ export default function EditInstitute() {
                 <img
                   className="super-admin-cover-preview"
                   src={
-                    isValidUrl(form?.coverImageUrl)
+                    isValidUrl(form.coverImageUrl)
                       ? form.coverImageUrl
                       : emptyMedia
                   }
-                  alt={institute.name}
+                  alt={form.name || "Institute Cover"}
                   onError={(event) => {
                     event.currentTarget.src = emptyMedia;
                   }}
@@ -388,13 +486,19 @@ export default function EditInstitute() {
           <Button
             variant="outline"
             className="super-admin-edit-cancel-button"
-            onClick={() => navigate("/institutes", { replace: true })}
+            onClick={() => navigate("/institutes")}
+            disabled={saving}
           >
             Cancel
           </Button>
-          <Button onClick={saveChanges} className="super-admin-save-button">
-            <Save size={16} />
-            Save Changes
+          <Button
+            onClick={saveChanges}
+            disabled={saving}
+            className="super-admin-save-button"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
+            {saving ? "Saving Changes..." : "Save Changes"}
           </Button>
         </div>
       </div>

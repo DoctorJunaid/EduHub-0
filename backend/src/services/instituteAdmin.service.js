@@ -70,7 +70,7 @@ export const getInstituteProfile = async (instituteId) => {
  */
 export const getCampuses = async (instituteId) => {
   const campuses = await Campus.find({ instituteId })
-    .populate("managerId", "name email phone avatar isActive")
+    .populate("managerId", "name email phone avatar isActive status createdAt")
     .sort({ createdAt: -1 });
 
   return campuses;
@@ -94,22 +94,20 @@ export const createCampus = async (instituteId, campusData) => {
 
   if (campusData.managerName && campusData.managerEmail) {
     try {
-      await createCampusManager(instituteId, {
+      await assignCampusManager(instituteId, campus._id, {
         name: campusData.managerName,
         email: campusData.managerEmail,
-        campusId: campus._id,
         phone: campusData.managerPhone || "",
+        sendEmail: true,
       });
     } catch (err) {
-      console.error("Manager inline creation failed:", err.message);
-      // We don't fail the whole campus creation if manager fails, 
-      // but you could choose to throw the error instead.
+      console.error("Manager inline appointment failed:", err.message);
     }
   }
 
   return await Campus.findById(campus._id).populate(
     "managerId",
-    "name email phone avatar"
+    "name email phone avatar isActive status createdAt"
   );
 };
 
@@ -119,7 +117,7 @@ export const createCampus = async (instituteId, campusData) => {
 export const getCampusById = async (instituteId, campusId) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId }).populate(
     "managerId",
-    "name email phone avatar isActive"
+    "name email phone avatar isActive status createdAt"
   );
 
   if (!campus) {
@@ -151,7 +149,7 @@ export const updateCampus = async (instituteId, campusId, updateData) => {
     { _id: campusId, instituteId },
     updateData,
     { new: true, runValidators: true }
-  ).populate("managerId", "name email phone avatar");
+  ).populate("managerId", "name email phone avatar isActive status createdAt");
 
   if (!campus) {
     const error = new Error("Campus not found under your institute");
@@ -183,7 +181,11 @@ export const deleteCampus = async (instituteId, campusId) => {
 /**
  * Assign or reassign a Campus Manager
  */
-export const assignCampusManager = async (instituteId, campusId, { userId, email }) => {
+export const assignCampusManager = async (
+  instituteId,
+  campusId,
+  { userId, email, name, phone, sendEmail = true }
+) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId });
   if (!campus) {
     const error = new Error("Campus not found under your institute");
@@ -191,34 +193,165 @@ export const assignCampusManager = async (instituteId, campusId, { userId, email
     throw error;
   }
 
-  const query = userId ? { _id: userId } : { email: email?.toLowerCase().trim() };
-  if (!userId && !email) {
-    const error = new Error("Please provide userId or email of the manager to assign");
+  let managerUser;
+  if (userId) {
+    managerUser = await User.findById(userId);
+  } else if (email) {
+    managerUser = await User.findOne({ email: email.toLowerCase().trim() });
+  }
+
+  if (!managerUser && email) {
+    // Create new manager user
+    const randomPassword = crypto.randomBytes(16).toString("hex");
+    managerUser = await User.create({
+      name: name ? name.trim() : "Campus Manager",
+      email: email.toLowerCase().trim(),
+      passwordHash: randomPassword,
+      role: "campus_manager",
+      status: "Pending",
+      instituteId,
+      campusId: campus._id,
+      phone: phone ? phone.trim() : "",
+    });
+  } else if (managerUser) {
+    managerUser.role = "campus_manager";
+    managerUser.instituteId = instituteId;
+    managerUser.campusId = campus._id;
+    if (name) managerUser.name = name.trim();
+    if (phone) managerUser.phone = phone.trim();
+    await managerUser.save();
+  }
+
+  if (!managerUser) {
+    const error = new Error("Please provide email or userId of the manager to assign");
     error.statusCode = 400;
     throw error;
   }
-
-  const managerUser = await User.findOne(query);
-  if (!managerUser) {
-    const error = new Error("User to assign not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  // Update user with campus_manager role, linked to this institute and campus
-  managerUser.role = "campus_manager";
-  managerUser.instituteId = instituteId;
-  managerUser.campusId = campus._id;
-  await managerUser.save();
 
   // Set manager on campus
   campus.managerId = managerUser._id;
   await campus.save();
 
+  // Generate setup link
+  const token = generateToken({ id: managerUser._id, role: managerUser.role, reset: true });
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
+
+  if (sendEmail !== false) {
+    try {
+      await sendMail(
+        managerUser.email,
+        "Set up your EduHub Campus Manager Account",
+        "Welcome to EduHub! Please click the link to set up your password.",
+        resetLink
+      );
+    } catch (err) {
+      console.error("Failed to send setup email during campus manager assignment:", err);
+    }
+  }
+
   const userObj = managerUser.toObject();
   delete userObj.passwordHash;
 
-  return { campus, manager: userObj };
+  return { campus, manager: userObj, resetLink };
+};
+
+/**
+ * Resend setup invite email to Campus Manager
+ */
+export const resendCampusManagerInvite = async (instituteId, campusId) => {
+  const campus = await Campus.findOne({ _id: campusId, instituteId }).populate(
+    "managerId",
+    "name email phone role status"
+  );
+  if (!campus) {
+    const error = new Error("Campus not found under your institute");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!campus.managerId) {
+    const error = new Error("No manager is currently appointed for this campus");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const manager = campus.managerId;
+  const token = generateToken({ id: manager._id, role: manager.role || "campus_manager", reset: true });
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
+
+  await sendMail(
+    manager.email,
+    "Set up your EduHub Campus Manager Account",
+    "Welcome to EduHub! Please click the link to set up your password.",
+    resetLink
+  );
+
+  return {
+    success: true,
+    message: `Setup email sent successfully to ${manager.email}`,
+    resetLink,
+    manager,
+  };
+};
+
+/**
+ * Update Campus Manager Details
+ */
+export const updateCampusManager = async (instituteId, campusId, updateData) => {
+  const campus = await Campus.findOne({ _id: campusId, instituteId });
+  if (!campus) {
+    const error = new Error("Campus not found under your institute");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!campus.managerId) {
+    const error = new Error("No manager is assigned to this campus");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const allowedUpdates = {};
+  if (updateData.name) allowedUpdates.name = updateData.name.trim();
+  if (updateData.phone !== undefined) allowedUpdates.phone = updateData.phone.trim();
+  if (updateData.status) allowedUpdates.status = updateData.status;
+  if (updateData.isActive !== undefined) allowedUpdates.isActive = updateData.isActive;
+  if (updateData.email) {
+    const email = updateData.email.toLowerCase().trim();
+    const existing = await User.findOne({ email, _id: { $ne: campus.managerId } });
+    if (existing) {
+      const error = new Error("Email is already registered by another user");
+      error.statusCode = 409;
+      throw error;
+    }
+    allowedUpdates.email = email;
+  }
+
+  const updatedManager = await User.findByIdAndUpdate(
+    campus.managerId,
+    allowedUpdates,
+    { new: true, runValidators: true }
+  ).select("-passwordHash");
+
+  return updatedManager;
+};
+
+/**
+ * Unassign Campus Manager from Campus
+ */
+export const unassignCampusManager = async (instituteId, campusId) => {
+  const campus = await Campus.findOne({ _id: campusId, instituteId });
+  if (!campus) {
+    const error = new Error("Campus not found under your institute");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (campus.managerId) {
+    await User.findByIdAndUpdate(campus.managerId, { campusId: null });
+    campus.managerId = null;
+    await campus.save();
+  }
+  return { message: "Manager unassigned successfully" };
 };
 
 /**
@@ -282,8 +415,8 @@ export const createCampusManager = async (
   }
 
   const token = generateToken({ id: manager._id, role: manager.role, reset: true });
-  const baseUrl = (process.env.BACKEND_URL || process.env.FRONTEND_URL || "https://edu-hub-backend-blond.vercel.app").replace(/\/+$/, "");
-  const resetLink = `${baseUrl}/set-password?token=${token}`;
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
   
   try {
     await sendMail(
@@ -361,8 +494,8 @@ export const createStaff = async (
   });
 
   const token = generateToken({ id: staff._id, role: staff.role, reset: true });
-  const baseUrl = (process.env.BACKEND_URL || process.env.FRONTEND_URL || "https://edu-hub-backend-blond.vercel.app").replace(/\/+$/, "");
-  const resetLink = `${baseUrl}/set-password?token=${token}`;
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
   
   try {
     await sendMail(
@@ -454,8 +587,8 @@ export const createStudent = async (
   });
 
   const token = generateToken({ id: student._id, role: student.role, reset: true });
-  const baseUrl = (process.env.BACKEND_URL || process.env.FRONTEND_URL || "https://edu-hub-backend-blond.vercel.app").replace(/\/+$/, "");
-  const resetLink = `${baseUrl}/set-password?token=${token}`;
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
   
   try {
     await sendMail(
