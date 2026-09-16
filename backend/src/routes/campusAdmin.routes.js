@@ -52,7 +52,7 @@ import {
   updatePerformanceRecord,
   deletePerformanceRecord,
 } from "../controllers/campusAdmin.controller.js";
-
+import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
 
