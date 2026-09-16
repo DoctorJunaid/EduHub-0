@@ -5,52 +5,71 @@ const teacherAttendanceSchema = new mongoose.Schema(
     campusId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campus",
-      required: true,
+      required: [true, "Campus ID is required"],
       index: true,
     },
     teacherProfileId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "TeacherProfile",
-      required: true,
+      ref: "User",
+      required: [true, "Teacher profile ID is required"],
       index: true,
     },
     date: {
       type: Date,
-      required: true,
+      required: [true, "Date is required"],
       index: true,
-      // normalized to midnight (see pre-save below)
     },
     status: {
       type: String,
-      enum: ["Present", "Absent", "Late", "On Leave"],
-      required: true,
+      enum: {
+        values: ["Present", "Absent", "Late", "On Leave"],
+        message: "Status must be Present, Absent, Late, or On Leave",
+      },
+      required: [true, "Status is required"],
     },
-    checkInTime: { type: String, trim: true },   // "08:15 AM"
-    checkOutTime: { type: String, trim: true },  // "03:30 PM"
-    remarks: { type: String, trim: true, maxlength: 300 },
+    checkInTime: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    checkOutTime: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    remarks: {
+      type: String,
+      trim: true,
+      maxlength: [300, "Remarks cannot exceed 300 characters"],
+      default: "",
+    },
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
   { timestamps: true }
 );
 
-// Normalize date to midnight to allow one record per day per teacher
+// Pre-save hook to normalize date to midnight
 teacherAttendanceSchema.pre("save", function (next) {
   if (this.date) {
     const d = new Date(this.date);
     d.setHours(0, 0, 0, 0);
     this.date = d;
   }
-  next();
+  if (typeof next === "function") next();
 });
 
-// Prevent duplicate attendance per (teacher, day)
+// Compound unique index on teacherProfileId + date
 teacherAttendanceSchema.index(
   { teacherProfileId: 1, date: 1 },
   { unique: true }
 );
+
+// Compound index for querying campus attendance by date
+teacherAttendanceSchema.index({ campusId: 1, date: 1 });
 
 const TeacherAttendance =
   mongoose.models.TeacherAttendance ||

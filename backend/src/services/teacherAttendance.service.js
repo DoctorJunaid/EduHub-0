@@ -1,37 +1,43 @@
 import TeacherAttendance from "../models/teacherAttendance.model.js";
-import TeacherProfile from "../models/teacherProfile.model.js";
+import User from "../models/user.model.js";
 
-// ---- Helpers ----
-function normalizeDate(d) {
+// ---- Date Helpers ----
+export function normalizeDate(d) {
   const date = new Date(d);
+  if (isNaN(date.getTime())) {
+    const fallback = new Date();
+    fallback.setHours(0, 0, 0, 0);
+    return fallback;
+  }
   date.setHours(0, 0, 0, 0);
   return date;
 }
 
-function startOfWeek(d) {
-  const date = new Date(d);
-  const day = date.getDay(); // 0 = Sun
+export function startOfWeek(d) {
+  const date = normalizeDate(d);
+  const day = date.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
   const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Monday start
-  return normalizeDate(new Date(date.setDate(diff)));
+  const monday = new Date(date);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
 }
 
 // ---- KPI Stats ----
 export async function getStats(campusId, dateStr) {
   const date = normalizeDate(dateStr || new Date());
 
-  const total = await TeacherProfile.countDocuments({ campusId });
-  const present = await TeacherAttendance.countDocuments({
-    campusId, date, status: "Present",
+  const total = await User.countDocuments({
+    campusId,
+    role: { $in: ["teacher", "faculty"] },
   });
-  const late = await TeacherAttendance.countDocuments({
-    campusId, date, status: "Late",
-  });
-  const absent = await TeacherAttendance.countDocuments({
-    campusId, date, status: "Absent",
-  });
-  const onLeave = await TeacherAttendance.countDocuments({
-    campusId, date, status: "On Leave",
-  });
+
+  const [present, late, absent, onLeave] = await Promise.all([
+    TeacherAttendance.countDocuments({ campusId, date, status: "Present" }),
+    TeacherAttendance.countDocuments({ campusId, date, status: "Late" }),
+    TeacherAttendance.countDocuments({ campusId, date, status: "Absent" }),
+    TeacherAttendance.countDocuments({ campusId, date, status: "On Leave" }),
+  ]);
 
   return { total, present, late, absent, onLeave, date };
 }
@@ -40,12 +46,20 @@ export async function getStats(campusId, dateStr) {
 export async function getAttendanceByDate(campusId, dateStr, filters = {}) {
   const date = normalizeDate(dateStr || new Date());
 
-  // Load teachers with attendance joined
-  const teachers = await TeacherProfile.find({ campusId })
-    .populate({ path: "userId", select: "name email phone" })
+  // Load teachers for the given campus
+  const teachers = await User.find({
+    campusId,
+    role: { $in: ["teacher", "faculty"] },
+  })
+    .select("name email phone department designation subjects status")
+    .sort({ name: 1 })
     .lean();
 
-  const records = await TeacherAttendance.find({ campusId, date }).lean();
+  // Load attendance records for this date
+  const records = await TeacherAttendance.find({ campusId, date })
+    .populate("markedBy", "name email")
+    .lean();
+
   const byTeacher = new Map(
     records.map((r) => [String(r.teacherProfileId), r])
   );
@@ -54,35 +68,46 @@ export async function getAttendanceByDate(campusId, dateStr, filters = {}) {
     const att = byTeacher.get(String(t._id));
     return {
       teacherProfileId: t._id,
-      userId: t.userId?._id || null,
-      name: t.userId?.name || "Unknown",
-      email: t.userId?.email || "",
-      phone: t.userId?.phone || "",
-      department: t.department || "—",
-      designation: t.designation || "",
-      subjects: t.subjects || [],
+      userId: t._id,
+      name: t.name || "Unknown Staff",
+      email: t.email || "",
+      phone: t.phone || "",
+      department: t.department || "General",
+      designation: t.designation || "Lecturer",
+      subjects: t.subjects || "",
       attendanceId: att?._id || null,
       status: att?.status || null,
       checkInTime: att?.checkInTime || null,
       checkOutTime: att?.checkOutTime || null,
       remarks: att?.remarks || "",
+      markedBy: att?.markedBy || null,
+      date,
     };
   });
 
   // Apply filters
   if (filters.status && filters.status !== "All Status") {
-    results = results.filter((r) => r.status === filters.status);
+    if (filters.status === "Unrecorded") {
+      results = results.filter((r) => !r.status);
+    } else {
+      results = results.filter((r) => r.status === filters.status);
+    }
   }
+
   if (filters.department && filters.department !== "All Departments") {
-    results = results.filter((r) => r.department === filters.department);
+    results = results.filter(
+      (r) => r.department?.toLowerCase() === filters.department.toLowerCase()
+    );
   }
+
   if (filters.search) {
-    const q = filters.search.toLowerCase();
+    const q = filters.search.trim().toLowerCase();
     results = results.filter(
       (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.department.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q)
+        r.name?.toLowerCase().includes(q) ||
+        r.department?.toLowerCase().includes(q) ||
+        r.email?.toLowerCase().includes(q) ||
+        r.designation?.toLowerCase().includes(q)
     );
   }
 
@@ -95,33 +120,158 @@ export async function getWeekly(campusId, dateStr) {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
 
-  return TeacherAttendance.find({
-    campusId,
-    date: { $gte: start, $lt: end },
-  })
-    .populate({
-      path: "teacherProfileId",
-      populate: { path: "userId", select: "name" },
+  const [teachers, records] = await Promise.all([
+    User.find({
+      campusId,
+      role: { $in: ["teacher", "faculty"] },
     })
-    .lean();
+      .select("name email department designation")
+      .sort({ name: 1 })
+      .lean(),
+    TeacherAttendance.find({
+      campusId,
+      date: { $gte: start, $lt: end },
+    })
+      .populate("markedBy", "name")
+      .lean(),
+  ]);
+
+  // Build a lookup map by teacherProfileId + dateKey
+  const recordsMap = {};
+  for (const rec of records) {
+    const d = new Date(rec.date);
+    const key = `${rec.teacherProfileId}_${d.toISOString().slice(0, 10)}`;
+    recordsMap[key] = rec;
+  }
+
+  // Generate 7 days of the week starting from Monday
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const current = new Date(start);
+    current.setDate(start.getDate() + i);
+    days.push(current.toISOString().slice(0, 10));
+  }
+
+  const grid = teachers.map((teacher) => {
+    const dailyRecords = {};
+    for (const day of days) {
+      const rec = recordsMap[`${teacher._id}_${day}`] || null;
+      dailyRecords[day] = rec
+        ? {
+            attendanceId: rec._id,
+            status: rec.status,
+            checkInTime: rec.checkInTime || "",
+            checkOutTime: rec.checkOutTime || "",
+            remarks: rec.remarks || "",
+          }
+        : null;
+    }
+
+    return {
+      teacherProfileId: teacher._id,
+      name: teacher.name,
+      email: teacher.email,
+      department: teacher.department || "General",
+      designation: teacher.designation || "Lecturer",
+      dailyRecords,
+    };
+  });
+
+  return {
+    weekStart: start.toISOString().slice(0, 10),
+    days,
+    grid,
+    records,
+  };
 }
 
-// ---- History with pagination ----
-export async function getHistory(campusId, { page = 1, limit = 20 } = {}) {
-  const skip = (page - 1) * limit;
+// ---- History with pagination and filters ----
+export async function getHistory(campusId, queryOptions = {}) {
+  const {
+    page = 1,
+    limit = 20,
+    startDate,
+    endDate,
+    status,
+    department,
+    search,
+  } = queryOptions;
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+  const skip = (pageNum - 1) * limitNum;
+
+  const query = { campusId };
+
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) {
+      query.date.$gte = normalizeDate(startDate);
+    }
+    if (endDate) {
+      const end = normalizeDate(endDate);
+      end.setHours(23, 59, 59, 999);
+      query.date.$lte = end;
+    }
+  }
+
+  if (status && status !== "All Status") {
+    query.status = status;
+  }
+
+  if (department && department !== "All Departments") {
+    const matchingTeachers = await User.find({
+      campusId,
+      role: { $in: ["teacher", "faculty"] },
+      department,
+    }).select("_id");
+    query.teacherProfileId = { $in: matchingTeachers.map((t) => t._id) };
+  }
+
+  if (search && search.trim()) {
+    const searchRegex = new RegExp(search.trim(), "i");
+    const matchingTeachers = await User.find({
+      campusId,
+      role: { $in: ["teacher", "faculty"] },
+      $or: [
+        { name: searchRegex },
+        { email: searchRegex },
+        { department: searchRegex },
+      ],
+    }).select("_id");
+
+    if (query.teacherProfileId) {
+      const existingIds = new Set(
+        query.teacherProfileId.$in.map((id) => String(id))
+      );
+      query.teacherProfileId = {
+        $in: matchingTeachers
+          .filter((t) => existingIds.has(String(t._id)))
+          .map((t) => t._id),
+      };
+    } else {
+      query.teacherProfileId = { $in: matchingTeachers.map((t) => t._id) };
+    }
+  }
+
   const [items, total] = await Promise.all([
-    TeacherAttendance.find({ campusId })
-      .sort({ date: -1 })
+    TeacherAttendance.find(query)
+      .sort({ date: -1, createdAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .populate({
-        path: "teacherProfileId",
-        populate: { path: "userId", select: "name" },
-      })
+      .limit(limitNum)
+      .populate("teacherProfileId", "name email department designation")
+      .populate("markedBy", "name email")
       .lean(),
-    TeacherAttendance.countDocuments({ campusId }),
+    TeacherAttendance.countDocuments(query),
   ]);
-  return { items, total, page, limit, pages: Math.ceil(total / limit) };
+
+  return {
+    items,
+    total,
+    page: pageNum,
+    limit: limitNum,
+    pages: Math.ceil(total / limitNum) || 1,
+  };
 }
 
 // ---- Upsert single attendance record ----
@@ -136,7 +286,9 @@ export async function markAttendance(campusId, markedBy, payload) {
   } = payload;
 
   if (!teacherProfileId || !status) {
-    throw new Error("teacherProfileId and status are required");
+    const err = new Error("teacherProfileId and status are required");
+    err.statusCode = 400;
+    throw err;
   }
 
   const normalized = normalizeDate(date || new Date());
@@ -148,31 +300,58 @@ export async function markAttendance(campusId, markedBy, payload) {
       teacherProfileId,
       date: normalized,
       status,
-      checkInTime,
-      checkOutTime,
-      remarks,
+      checkInTime: checkInTime?.trim() || "",
+      checkOutTime: checkOutTime?.trim() || "",
+      remarks: remarks?.trim() || "",
       markedBy,
     },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
-  );
+  )
+    .populate("teacherProfileId", "name email department designation")
+    .populate("markedBy", "name email");
 
   return record;
 }
 
 // ---- Update existing record ----
 export async function updateAttendance(id, campusId, payload) {
+  const allowed = ["status", "checkInTime", "checkOutTime", "remarks"];
+  const updateData = {};
+  for (const key of allowed) {
+    if (payload[key] !== undefined) {
+      updateData[key] = payload[key];
+    }
+  }
+
   const record = await TeacherAttendance.findOneAndUpdate(
     { _id: id, campusId },
-    payload,
+    updateData,
     { new: true, runValidators: true }
-  );
-  if (!record) throw new Error("Attendance record not found");
+  )
+    .populate("teacherProfileId", "name email department designation")
+    .populate("markedBy", "name email");
+
+  if (!record) {
+    const err = new Error("Attendance record not found");
+    err.statusCode = 404;
+    throw err;
+  }
+
   return record;
 }
 
 // ---- Delete ----
 export async function deleteAttendance(id, campusId) {
-  const record = await TeacherAttendance.findOneAndDelete({ _id: id, campusId });
-  if (!record) throw new Error("Attendance record not found");
+  const record = await TeacherAttendance.findOneAndDelete({
+    _id: id,
+    campusId,
+  });
+
+  if (!record) {
+    const err = new Error("Attendance record not found");
+    err.statusCode = 404;
+    throw err;
+  }
+
   return record;
 }
