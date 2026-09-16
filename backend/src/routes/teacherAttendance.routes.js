@@ -32,7 +32,8 @@ router.get("/weekly", ctrl.getWeekly);
 router.get("/history", ctrl.getHistory);
 
 // POST /api/v1/campus/attendance/teachers
-router.post("/", ctrl.markAttendance);
+router.post("/checkin", ctrl.checkIn);
+router.post("/checkout", ctrl.checkOut);
 
 // PUT /api/v1/campus/attendance/teachers/:id
 router.put("/:id", ctrl.updateAttendance);

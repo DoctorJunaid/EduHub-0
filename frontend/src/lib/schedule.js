@@ -10,6 +10,13 @@ export const minutes = (time) => {
   return hour * 60 + minute;
 };
 export function timeLabel(time) {
+  if (time.includes("T")) {
+    const utcTime = new Date(time);
+    if (!Number.isNaN(utcTime.getTime())) {
+      const hour = utcTime.getUTCHours();
+      return `${hour % 12 || 12}:${String(utcTime.getUTCMinutes()).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
+    }
+  }
   const [hour, minute] = time.split(":").map(Number);
   return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 && hour < 24 ? "PM" : "AM"}`;
 }
