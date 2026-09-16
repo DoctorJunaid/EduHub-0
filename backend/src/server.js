@@ -5,6 +5,10 @@
 import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import dns from "dns";
+
+// Set custom DNS servers (e.g., Google Public DNS)
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const PORT = process.env.PORT || 5000;
 
