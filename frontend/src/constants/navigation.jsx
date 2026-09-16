@@ -63,7 +63,7 @@ export const CAMPUS_ADMIN_NAV = [
     icon: <Calendar size={20} />,
   },
   {
-    label: "Faculty & Staff Attendance",
+    label: "Staff Attendance",
     path: "/faculty-attendance",
     group: "Academics",
     icon: <Users size={20} />,

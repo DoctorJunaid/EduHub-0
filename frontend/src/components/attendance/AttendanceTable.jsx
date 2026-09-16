@@ -33,7 +33,7 @@ export function getStatusBadge(status) {
       return (
         <Badge
           variant="outline"
-          className="bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800 font-medium"
+          className="bg-green-500 text-white border-green-600 dark:bg-green-500/90 dark:text-white dark:border-green-500 font-medium"
         >
           Present
         </Badge>
@@ -51,7 +51,7 @@ export function getStatusBadge(status) {
       return (
         <Badge
           variant="outline"
-          className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 font-medium"
+          className="bg-green-300 text-green-950 border-green-400 dark:bg-green-400/80 dark:text-green-950 dark:border-green-300 font-medium"
         >
           Late
         </Badge>
@@ -60,7 +60,7 @@ export function getStatusBadge(status) {
       return (
         <Badge
           variant="outline"
-          className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-medium"
+          className="bg-blue-500 text-white border-blue-600 dark:bg-blue-500/90 dark:text-white dark:border-blue-400 font-medium"
         >
           On Leave
         </Badge>

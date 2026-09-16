@@ -9,7 +9,7 @@ import AttendanceStatusBadge from '@/components/common/AttendanceStatusBadge';
 
 export default function AttendanceTable({ rows, view, page, pageSize, onAction, onQuickAction, pendingAction }) {
   const current = Math.min(page, Math.max(1, Math.ceil(rows.length / pageSize)));
-  const columns = view === 'weekly' ? ['#', 'Teacher / Staff', 'Department', ...attendanceStatuses] : ['#', 'Teacher / Staff', 'Department', ...(view === 'history' ? ['Date'] : []), 'Check-in (Pakistan Time)', 'Check-out (Pakistan Time)', 'Status', 'Actions'];
+  const columns = view === 'weekly' ? ['#', 'Teacher / Staff', 'Department', ...attendanceStatuses] : ['#', 'Teacher / Staff', 'Department', ...(view === 'history' ? ['Date'] : []), 'Check-in', 'Check-out', 'Status', 'Actions'];
   return <Table aria-label={`${view} faculty attendance`}><TableHeader><TableRow>{columns.map((column) => <TableHead scope="col" key={column}>{column}</TableHead>)}</TableRow></TableHeader><TableBody>
     {rows.slice((current - 1) * pageSize, current * pageSize).map(({ person, record, date, counts }, index) => <TableRow key={record?.id ?? person.id}>
       <TableCell>{(current - 1) * pageSize + index + 1}</TableCell>
