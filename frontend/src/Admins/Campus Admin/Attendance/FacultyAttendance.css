@@ -36,12 +36,17 @@
 .attendance-person [data-slot="avatar-fallback"] { color: #09090b; background: #f4f4f5; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .faculty-attendance .attendance-person strong { font-size: 12px; font-weight: 600; color: #09090b; }
 .faculty-attendance .attendance-person small { font-size: 10px; margin-top: 2px; color: #71717a; }
-.attendance-actions { display: flex; gap: 6px; align-items: center; }
+.attendance-actions { display: flex; gap: 6px; align-items: center; min-width: max-content; }
 .attendance-actions button { height: 28px; font-size: 10px; font-weight: 600; padding: 0 10px; border-radius: 6px; border: 1px solid #e4e4e7; background: #ffffff; color: #09090b; cursor: pointer; }
 .attendance-actions button:hover { background: #09090b; color: #ffffff; border-color: #09090b; }
 .attendance-actions button.attendance-action-disabled,
 .attendance-actions button.attendance-action-disabled:hover { opacity: .45; filter: blur(.35px); cursor: not-allowed; background: #ffffff; color: #71717a; border-color: #e4e4e7; }
 .attendance-actions > button:first-child { min-width: 75px; justify-content: flex-start; }
+.attendance-actions .attendance-more-trigger { width: 30px; min-width: 30px; padding: 0; color: #52525b; border-color: transparent; }
+.attendance-actions .attendance-more-trigger:hover { color: #09090b; background: #f4f4f5; border-color: #e4e4e7; }
+.attendance-more-menu { min-width: 164px; padding: 5px; border: 1px solid #e4e4e7; border-radius: 8px; background: #ffffff; box-shadow: 0 10px 24px rgba(24, 24, 27, .14); }
+.attendance-more-item { min-height: 32px; width: 100%; padding: 0 10px; border-radius: 5px; font-size: 11px; font-weight: 500; color: #27272a; }
+.attendance-more-item:focus { background: #f4f4f5; color: #09090b; }
 .attendance-footer { flex-wrap: wrap; padding: 10px 18px; border-top: 1px solid #e4e4e7; }
 .attendance-footer > span { font-size: 11px; color: #71717a; }
 .faculty-attendance .tt-pagination { flex-wrap: wrap; gap: 6px; }
