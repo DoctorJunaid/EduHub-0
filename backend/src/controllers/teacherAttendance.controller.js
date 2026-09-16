@@ -160,3 +160,23 @@ export const deleteAttendance = asyncHandler(async (req, res) => {
     });
   }
 });
+
+// @desc Check-in for a teacher (records UTC check-in time)
+// @route POST /api/v1/campus/attendance/teachers/checkin
+// @access Private (campus_admin, campus_manager)
+export const checkIn = asyncHandler(async (req, res) => {
+  const campusId = getCampusId(req);
+  const teacherProfileId = req.body.teacherProfileId || req.user?._id;
+  const data = await svc.checkIn(campusId, req.user?._id, teacherProfileId);
+  return res.status(200).json({ success: true, message: "Check-in recorded", data });
+});
+
+// @desc Check-out for a teacher (records UTC check-out time)
+// @route POST /api/v1/campus/attendance/teachers/checkout
+// @access Private (campus_admin, campus_manager)
+export const checkOut = asyncHandler(async (req, res) => {
+  const campusId = getCampusId(req);
+  const teacherProfileId = req.body.teacherProfileId || req.user?._id;
+  const data = await svc.checkOut(campusId, req.user?._id, teacherProfileId);
+  return res.status(200).json({ success: true, message: "Check-out recorded", data });
+});

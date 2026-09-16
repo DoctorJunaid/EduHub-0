@@ -355,3 +355,38 @@ export async function deleteAttendance(id, campusId) {
 
   return record;
 }
+
+// ---- Check-in (record UTC check-in time) ----
+export async function checkIn(campusId, markedBy, teacherProfileId) {
+  const date = normalizeDate(new Date()); // use today UTC date (midnight)
+  const checkInTime = new Date().toISOString(); // full UTC timestamp
+  const record = await TeacherAttendance.findOneAndUpdate(
+    { teacherProfileId, date },
+    {
+      campusId,
+      teacherProfileId,
+      date,
+      status: "Present",
+      checkInTime,
+      markedBy,
+    },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+  )
+    .populate("teacherProfileId", "name email department designation")
+    .populate("markedBy", "name email");
+  return record;
+}
+
+// ---- Check-out (record UTC check-out time) ----
+export async function checkOut(campusId, markedBy, teacherProfileId) {
+  const date = normalizeDate(new Date());
+  const checkOutTime = new Date().toISOString();
+  const record = await TeacherAttendance.findOneAndUpdate(
+    { teacherProfileId, date },
+    { $set: { checkOutTime, markedBy } },
+    { new: true, runValidators: true }
+  )
+    .populate("teacherProfileId", "name email department designation")
+    .populate("markedBy", "name email");
+  return record;
+}

@@ -25,6 +25,14 @@ export const getHistory = (params = {}) =>
 export const markAttendance = (payload) =>
   api.post("/campus/attendance/teachers", payload);
 
+// POST /api/v1/campus/attendance/teachers/checkin
+export const checkIn = (teacherProfileId) =>
+  api.post("/campus/attendance/teachers/checkin", { teacherProfileId });
+
+// POST /api/v1/campus/attendance/teachers/checkout
+export const checkOut = (teacherProfileId) =>
+  api.post("/campus/attendance/teachers/checkout", { teacherProfileId });
+
 // PUT /api/v1/campus/attendance/teachers/:id
 export const updateAttendance = (id, payload) =>
   api.put(`/campus/attendance/teachers/${id}`, payload);

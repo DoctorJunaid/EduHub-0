@@ -39,6 +39,8 @@
 .attendance-actions { display: flex; gap: 6px; align-items: center; }
 .attendance-actions button { height: 28px; font-size: 10px; font-weight: 600; padding: 0 10px; border-radius: 6px; border: 1px solid #e4e4e7; background: #ffffff; color: #09090b; cursor: pointer; }
 .attendance-actions button:hover { background: #09090b; color: #ffffff; border-color: #09090b; }
+.attendance-actions button.attendance-action-disabled,
+.attendance-actions button.attendance-action-disabled:hover { opacity: .45; filter: blur(.35px); cursor: not-allowed; background: #ffffff; color: #71717a; border-color: #e4e4e7; }
 .attendance-actions > button:first-child { min-width: 75px; justify-content: flex-start; }
 .attendance-footer { flex-wrap: wrap; padding: 10px 18px; border-top: 1px solid #e4e4e7; }
 .attendance-footer > span { font-size: 11px; color: #71717a; }
