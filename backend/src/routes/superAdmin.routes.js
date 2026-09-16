@@ -12,6 +12,8 @@ import {
   updateInstitute,
   deleteInstitute,
   assignInstituteAdmin,
+  resendInstituteAdminInvite,
+  updateInstituteAdmin,
   getInstituteAdmins,
   createInstituteAdmin,
   getCampuses,
@@ -47,6 +49,8 @@ router
   .delete(deleteInstitute);
 
 router.post("/institutes/:id/assign-admin", assignInstituteAdmin);
+router.post("/institutes/:id/resend-admin-invite", resendInstituteAdminInvite);
+router.put("/institutes/:id/admin", updateInstituteAdmin);
 
 // Institute Admins Standalone
 router

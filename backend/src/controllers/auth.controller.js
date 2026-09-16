@@ -89,7 +89,7 @@ export const getSetPasswordPage = (req, res) => {
   if (!token) {
     return res.status(400).send("Token is required");
   }
-  const frontendBaseUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+  const frontendBaseUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
   res.redirect(`${frontendBaseUrl}/set-password?token=${token}`);
 };
 

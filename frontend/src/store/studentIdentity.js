@@ -1,5 +1,5 @@
 const normalized = (value) => (value || "").trim().toLowerCase();
-export function studentIdentityErrors(values, records, id = values.id) {
+export function studentIdentityErrors(values, records, id = values.id || values._id) {
   const errors = {};
   for (const [key, label] of [
     ["email", "email address"],
@@ -8,7 +8,7 @@ export function studentIdentityErrors(values, records, id = values.id) {
     const value = normalized(values[key]);
     if (
       value &&
-      records.some((row) => row.id !== id && normalized(row[key]) === value)
+      records.some((row) => (row.id || row._id) !== id && normalized(row[key]) === value)
     )
       errors[key] = `Another student already uses this ${label}.`;
   }

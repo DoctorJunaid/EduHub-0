@@ -99,11 +99,11 @@ export default function Institutes() {
   };
 
   const openInstituteDetails = (institute) => {
-    navigate(`/institutes/${institute.id}`);
+    navigate(`/institutes/${institute.id || institute._id}`);
   };
 
   const openEditInstitute = (institute) => {
-    navigate(`/institutes/${institute.id}/edit`);
+    navigate(`/institutes/${institute.id || institute._id}/edit`);
   };
 
   return (
@@ -338,7 +338,7 @@ export default function Institutes() {
             <tbody>
               {visible.map((institute) => (
                 <tr
-                  key={institute.id}
+                  key={institute.id || institute._id}
                   onClick={() => openInstituteDetails(institute)}
                   className="institute-list-row"
                 >
@@ -377,22 +377,23 @@ export default function Institutes() {
                     <div className="status-wrap">
                       <button
                         className={`status-badge status-${institute.status.toLowerCase()}`}
-                        onClick={() =>
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          const instId = institute.id || institute._id;
                           setStatusMenuFor(
-                            statusMenuFor === institute.id
-                              ? null
-                              : institute.id,
-                          )
-                        }
+                            statusMenuFor === instId ? null : instId
+                          );
+                        }}
                       >
                         <span className="badge-dot" /> {institute.status}
                       </button>
-                      {statusMenuFor === institute.id && (
+                      {statusMenuFor === (institute.id || institute._id) && (
                         <select
                           className="status-select"
                           value={institute.status}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={(event) =>
-                            updateStatus(institute.id, event.target.value)
+                            updateStatus(institute.id || institute._id, event.target.value)
                           }
                           onBlur={() => setStatusMenuFor(null)}
                           aria-label={`Change status for ${institute.name}`}
@@ -416,43 +417,50 @@ export default function Institutes() {
                     <div className="action-icons">
                       <button
                         className="icon-button eye"
-                        onClick={() => setManageDrawer({ ...institute, initialTab: "campuses" })}
-                        title="Manage Campuses"
                         onClick={(event) => {
                           event.stopPropagation();
                           openInstituteDetails(institute);
                         }}
-                        title="View profile"
+                        title="View details & campuses"
                       >
                         <Eye size={16} />
                       </button>
                       <button
                         className="icon-button edit"
-                        onClick={() => setManageDrawer({ ...institute, initialTab: "details" })}
-                        title="Manage Institute"
                         onClick={(event) => {
                           event.stopPropagation();
                           openEditInstitute(institute);
                         }}
-                        title="Edit institute"
+                        title="Edit institute details"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
-                        className="icon-button students"
-                        onClick={() => navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`)}
-                        title="Open Global Users Directory"
+                        className="icon-button manage"
                         onClick={(event) => {
                           event.stopPropagation();
-                          setStudentsDrawer(institute);
+                          setManageDrawer({ ...institute, initialTab: "details" });
                         }}
-                        title="View students"
+                        title="Quick Manage Console"
+                      >
+                        <SlidersHorizontal size={16} />
+                      </button>
+                      <button
+                        className="icon-button students"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`);
+                        }}
+                        title="View users directory"
                       >
                         <Users size={16} />
                       </button>
                       <button
                         className="icon-button delete"
-                        onClick={() => setInstituteToDelete(institute)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setInstituteToDelete(institute);
+                        }}
                         title="Delete institute"
                       >
                         <Trash2 size={16} />

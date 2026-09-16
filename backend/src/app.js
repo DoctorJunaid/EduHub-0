@@ -92,6 +92,16 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Redirect /set-password to the frontend SetPassword page
+app.get("/set-password", (req, res) => {
+  const token = req.query.token;
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  if (!token) {
+    return res.redirect(`${frontendUrl}/login`);
+  }
+  return res.redirect(`${frontendUrl}/set-password?token=${encodeURIComponent(token)}`);
+});
+
 // Mount Versioned API Routes
 app.use("/api/v1", apiRoutes);
 

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateInstitute } from "@/store/Slices/institutesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
-import { Building2, User, MapPin, Loader2, Save, Plus, RefreshCw } from "lucide-react";
+import { Building2, User, MapPin, Loader2, Save, Plus, RefreshCw, Pencil, Send, Copy, Check } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
 const selectStyle = {
@@ -19,18 +20,32 @@ const TAB_CAMPUSES = "campuses";
 
 export default function ManageInstitute({ institute, onClose }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(institute?.initialTab || TAB_DETAILS);
 
   /* ── Details ─────────────────────────────── */
   const [details, setDetails] = useState({
-    name:   institute.name   || "",
-    type:   institute.type   || "University",
-    board:  institute.board  || "",
-    email:  institute.email  || "",
-    phone:  institute.phone  || "",
-    status: institute.status || "Active",
+    name:   institute?.name   || "",
+    type:   institute?.type   || "University",
+    board:  institute?.board  || "",
+    email:  institute?.email  || "",
+    phone:  institute?.phone  || "",
+    status: institute?.status || "Active",
   });
   const [savingDetails, setSavingDetails] = useState(false);
+
+  useEffect(() => {
+    if (institute) {
+      setDetails({
+        name:   institute.name   || "",
+        type:   institute.type   || "University",
+        board:  institute.board  || "",
+        email:  institute.email  || "",
+        phone:  institute.phone  || "",
+        status: institute.status || "Active",
+      });
+    }
+  }, [institute]);
 
   const handleDetailChange = (e) =>
     setDetails((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -54,6 +69,14 @@ export default function ManageInstitute({ institute, onClose }) {
   const [assigning, setAssigning] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
 
+  // Resend / Link / Edit Admin State
+  const [resendingAdminEmail, setResendingAdminEmail] = useState(false);
+  const [copiedAdminLink, setCopiedAdminLink] = useState(false);
+  const [latestAdminSetupLink, setLatestAdminSetupLink] = useState("");
+  const [isEditingAdmin, setIsEditingAdmin] = useState(false);
+  const [editAdminForm, setEditAdminForm] = useState({ name: "", email: "", phone: "", status: "Active" });
+  const [savingAdmin, setSavingAdmin] = useState(false);
+
   const loadAdmin = async () => {
     if (!institute._id && !institute.id) return;
     setAdminLoading(true);
@@ -61,6 +84,14 @@ export default function ManageInstitute({ institute, onClose }) {
       const res = await axiosInstance.get(`/super-admin/institutes/${institute._id || institute.id}`);
       const inst = res.data.data;
       setAdminInfo(inst?.adminId || null);
+      if (inst?.adminId) {
+        setEditAdminForm({
+          name: inst.adminId.name || "",
+          email: inst.adminId.email || "",
+          phone: inst.adminId.phone || "",
+          status: inst.adminId.status || "Active",
+        });
+      }
     } catch {
       setAdminInfo(null);
     } finally {
@@ -72,11 +103,21 @@ export default function ManageInstitute({ institute, onClose }) {
     if (!assignForm.email) { toast.error("Admin email is required"); return; }
     setAssigning(true);
     try {
-      await axiosInstance.post(
+      const res = await axiosInstance.post(
         `/super-admin/institutes/${institute._id || institute.id}/assign-admin`,
-        { newAdminData: { name: assignForm.name, email: assignForm.email, password: "temp123456" } }
+        {
+          email: assignForm.email.trim(),
+          newAdminData: {
+            name: assignForm.name ? assignForm.name.trim() : "Institute Admin",
+            email: assignForm.email.trim(),
+            password: "temp123456",
+          },
+        }
       );
-      toast.success("Admin assigned! A setup email has been sent.");
+      toast.success("Admin assigned! Setup email dispatched.");
+      if (res.data?.data?.resetLink) {
+        setLatestAdminSetupLink(res.data.data.resetLink);
+      }
       setShowAssignForm(false);
       setAssignForm({ name: "", email: "" });
       loadAdmin();
@@ -84,6 +125,60 @@ export default function ManageInstitute({ institute, onClose }) {
       toast.error(err.response?.data?.message || "Failed to assign admin");
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const resendAdminInvite = async () => {
+    setResendingAdminEmail(true);
+    try {
+      const res = await axiosInstance.post(`/super-admin/institutes/${institute._id || institute.id}/resend-admin-invite`);
+      toast.success(res.data?.message || "Setup email sent successfully!");
+      if (res.data?.data?.resetLink) {
+        setLatestAdminSetupLink(res.data.data.resetLink);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send setup email");
+    } finally {
+      setResendingAdminEmail(false);
+    }
+  };
+
+  const copyAdminLink = async () => {
+    let link = latestAdminSetupLink;
+    if (!link) {
+      try {
+        const res = await axiosInstance.post(`/super-admin/institutes/${institute._id || institute.id}/resend-admin-invite`);
+        link = res.data?.data?.resetLink;
+        if (link) setLatestAdminSetupLink(link);
+      } catch (err) {
+        toast.error("Failed to generate link: " + (err.response?.data?.message || err.message));
+        return;
+      }
+    }
+    if (link) {
+      try {
+        await navigator.clipboard.writeText(link);
+        setCopiedAdminLink(true);
+        toast.success("Setup link copied to clipboard!");
+        setTimeout(() => setCopiedAdminLink(false), 3000);
+      } catch {
+        toast.error("Failed to copy link");
+      }
+    }
+  };
+
+  const saveAdminDetails = async (e) => {
+    e.preventDefault();
+    setSavingAdmin(true);
+    try {
+      const res = await axiosInstance.put(`/super-admin/institutes/${institute._id || institute.id}/admin`, editAdminForm);
+      toast.success("Admin details updated successfully!");
+      setAdminInfo(res.data?.data || { ...adminInfo, ...editAdminForm });
+      setIsEditingAdmin(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update admin");
+    } finally {
+      setSavingAdmin(false);
     }
   };
 
@@ -113,6 +208,8 @@ export default function ManageInstitute({ institute, onClose }) {
     try {
       await axiosInstance.post("/super-admin/campuses", {
         ...addCampusForm,
+        address: { city: addCampusForm.location },
+        location: addCampusForm.location,
         instituteId: institute._id || institute.id,
       });
       toast.success("Campus added!");
@@ -175,6 +272,7 @@ export default function ManageInstitute({ institute, onClose }) {
                 <option>University</option>
                 <option>College</option>
                 <option>School</option>
+                <option>Institute</option>
               </select>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -198,7 +296,27 @@ export default function ManageInstitute({ institute, onClose }) {
               </select>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button
+              type="button"
+              onClick={() => navigate(`/institutes/${institute._id || institute.id}/edit`)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                height: "36px",
+                padding: "0 16px",
+                borderRadius: "6px",
+                border: "1px solid #e4e4e7",
+                background: "#fff",
+                color: "#09090b",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              <Pencil size={14} /> Edit Full Profile
+            </button>
             <button
               onClick={saveDetails}
               disabled={savingDetails}
@@ -219,39 +337,128 @@ export default function ManageInstitute({ institute, onClose }) {
               <Loader2 size={16} /> Loading admin info...
             </div>
           ) : adminInfo ? (
-            <div style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "#09090b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "16px", flexShrink: 0 }}>
-                {(adminInfo.name || "A").slice(0, 1).toUpperCase()}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "#09090b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "16px", flexShrink: 0 }}>
+                  {(adminInfo.name || "A").slice(0, 1).toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontWeight: 700, fontSize: "14px", color: "#09090b" }}>{adminInfo.name}</span>
+                    <span style={{ padding: "2px 8px", background: adminInfo.status === "Active" ? "#ecfdf5" : "#fef3c7", color: adminInfo.status === "Active" ? "#065f46" : "#92400e", borderRadius: "999px", fontSize: "11px", fontWeight: 700, border: `1px solid ${adminInfo.status === "Active" ? "#a7f3d0" : "#fde68a"}` }}>
+                      {adminInfo.status === "Active" ? "Active" : "Pending Setup"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#71717a", marginTop: "2px" }}>{adminInfo.email}</div>
+                  {adminInfo.phone && <div style={{ fontSize: "12px", color: "#71717a" }}>{adminInfo.phone}</div>}
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: "14px", color: "#09090b" }}>{adminInfo.name}</div>
-                <div style={{ fontSize: "12px", color: "#71717a", marginTop: "2px" }}>{adminInfo.email}</div>
-                {adminInfo.phone && <div style={{ fontSize: "12px", color: "#71717a" }}>{adminInfo.phone}</div>}
+
+              {/* Action Toolbar */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button
+                  onClick={resendAdminInvite}
+                  disabled={resendingAdminEmail}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: resendingAdminEmail ? 0.7 : 1 }}
+                >
+                  {resendingAdminEmail ? <Loader2 size={13} className="spin" /> : <Send size={13} />}
+                  {resendingAdminEmail ? "Sending..." : "Resend Setup Email"}
+                </button>
+
+                <button
+                  onClick={copyAdminLink}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                >
+                  {copiedAdminLink ? <Check size={13} style={{ color: "green" }} /> : <Copy size={13} />}
+                  {copiedAdminLink ? "Link Copied!" : "Copy Setup Link"}
+                </button>
+
+                <button
+                  onClick={() => setIsEditingAdmin(!isEditingAdmin)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                >
+                  <Pencil size={13} /> {isEditingAdmin ? "Cancel Edit" : "Edit Admin Details"}
+                </button>
+
+                <button
+                  onClick={() => setShowAssignForm(!showAssignForm)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                >
+                  <User size={13} /> Reassign Admin
+                </button>
+
+                <button
+                  onClick={loadAdmin}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#52525b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                >
+                  <RefreshCw size={13} /> Refresh
+                </button>
               </div>
-              <span style={{ padding: "4px 10px", background: adminInfo.isActive !== false ? "#09090b" : "#f4f4f5", color: adminInfo.isActive !== false ? "#fff" : "#52525b", borderRadius: "999px", fontSize: "11px", fontWeight: 700 }}>
-                {adminInfo.isActive !== false ? "Active" : "Inactive"}
-              </span>
+
+              {/* Direct Link Banner if generated */}
+              {latestAdminSetupLink && (
+                <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                  <div style={{ overflow: "hidden" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>ACTIVE SETUP LINK:</div>
+                    <div style={{ fontSize: "12px", color: "#15803d", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{latestAdminSetupLink}</div>
+                  </div>
+                  <button onClick={copyAdminLink} style={{ height: "28px", padding: "0 10px", fontSize: "12px", borderRadius: "6px", border: "1px solid #bbf7d0", background: "#fff", cursor: "pointer", flexShrink: 0 }}>
+                    {copiedAdminLink ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              )}
+
+              {/* Inline Edit Form */}
+              {isEditingAdmin && (
+                <form onSubmit={saveAdminDetails} style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#09090b", margin: 0 }}>Edit Admin Profile</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Full Name</label>
+                      <Input value={editAdminForm.name} onChange={(e) => setEditAdminForm(f => ({ ...f, name: e.target.value }))} required />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Email Address</label>
+                      <Input type="email" value={editAdminForm.email} onChange={(e) => setEditAdminForm(f => ({ ...f, email: e.target.value }))} required />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Phone Number</label>
+                      <Input value={editAdminForm.phone} onChange={(e) => setEditAdminForm(f => ({ ...f, phone: e.target.value }))} />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Account Status</label>
+                      <select value={editAdminForm.status} onChange={(e) => setEditAdminForm(f => ({ ...f, status: e.target.value }))} style={selectStyle}>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                    <button type="button" onClick={() => setIsEditingAdmin(false)} style={{ height: "32px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}>Cancel</button>
+                    <button type="submit" disabled={savingAdmin} style={{ display: "flex", alignItems: "center", gap: "6px", height: "32px", padding: "0 14px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "12px", cursor: "pointer", opacity: savingAdmin ? 0.7 : 1 }}>
+                      {savingAdmin ? <Loader2 size={12} className="spin" /> : <Save size={12} />}
+                      {savingAdmin ? "Saving..." : "Save Admin Profile"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           ) : (
-            <div style={{ padding: "16px", background: "#fafafa", borderRadius: "10px", border: "1px dashed #e4e4e7", color: "#71717a", fontSize: "13px", textAlign: "center" }}>
-              No admin assigned to this institute yet.
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ padding: "16px", background: "#fafafa", borderRadius: "10px", border: "1px dashed #e4e4e7", color: "#71717a", fontSize: "13px", textAlign: "center" }}>
+                No admin assigned to this institute yet.
+              </div>
+              <div>
+                <button
+                  onClick={() => setShowAssignForm(!showAssignForm)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                >
+                  <User size={13} /> Assign Admin
+                </button>
+              </div>
             </div>
           )}
-
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              onClick={() => setShowAssignForm(!showAssignForm)}
-              style={{ display: "flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
-            >
-              <User size={13} /> {adminInfo ? "Reassign Admin" : "Assign Admin"}
-            </button>
-            <button
-              onClick={loadAdmin}
-              style={{ display: "flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#52525b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
-            >
-              <RefreshCw size={13} /> Refresh
-            </button>
-          </div>
 
           {showAssignForm && (
             <div style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -341,7 +548,11 @@ export default function ManageInstitute({ institute, onClose }) {
                 <div key={campus._id || campus.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7" }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "13px", color: "#09090b" }}>{campus.name}</div>
-                    {campus.location && <div style={{ fontSize: "11px", color: "#71717a", marginTop: "2px" }}>{campus.location}</div>}
+                    {(campus.location || campus.address?.city || campus.address?.street) && (
+                      <div style={{ fontSize: "11px", color: "#71717a", marginTop: "2px" }}>
+                        {campus.location || campus.address?.city || campus.address?.street}
+                      </div>
+                    )}
                   </div>
                   <span style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: campus.status === "Active" ? "#09090b" : "#f4f4f5", color: campus.status === "Active" ? "#fff" : "#52525b" }}>
                     {campus.status || "Active"}

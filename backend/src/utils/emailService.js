@@ -19,15 +19,21 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendMail = async (senderMail, subject, Message, resetLink) => {
-  const info = await transporter.sendMail({
-    from: '"EduHub App" <naseebnoman39@gmail.com>',
-    to: senderMail,
-    subject: subject,
-    text: Message,
-    html: getResetPasswordTemplate(resetLink),
-  });
-
-  return info.messageId;
+  try {
+    console.log(`[EMAIL DISPATCH] Attempting to send email to "${senderMail}" with subject: "${subject}"`);
+    const info = await transporter.sendMail({
+      from: '"EduHub App" <naseebnoman39@gmail.com>',
+      to: senderMail,
+      subject: subject,
+      text: Message,
+      html: getResetPasswordTemplate(resetLink),
+    });
+    console.log(`[EMAIL SUCCESS] Successfully sent email to "${senderMail}". MessageId: ${info.messageId}`);
+    return info.messageId;
+  } catch (err) {
+    console.error(`[EMAIL ERROR] Failed to send email to "${senderMail}":`, err.message || err);
+    throw err;
+  }
 };
 
 export const sendVerificationMail = async (senderMail, subject, Message, verificationLink) => {
