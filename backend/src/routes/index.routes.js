@@ -8,6 +8,7 @@ import superAdminRoutes from "./superAdmin.routes.js";
 import instituteAdminRoutes from "./instituteAdmin.routes.js";
 import inquiryRoutes from "./inquiry.routes.js";
 import campusAdminRoutes from "./campusAdmin.routes.js";
+import teacherAttendenceRoutes from "./teacherAttendance.routes.js"
 
 const router = express.Router();
 
@@ -27,5 +28,8 @@ router.use("/institute-admin", instituteAdminRoutes);
 // Optional existing tracks / services
 router.use("/inquiries", inquiryRoutes);
 router.use("/campus-admin", campusAdminRoutes);
+
+router.use("/campus/attendance/teachers", teacherAttendenceRoutes);
+router.use("/campus/attendence/teachers", teacherAttendenceRoutes);
 
 export default router;
