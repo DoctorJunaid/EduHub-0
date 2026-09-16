@@ -12,6 +12,8 @@ import {
   updateInstitute,
   deleteInstitute,
   assignInstituteAdmin,
+  resendInstituteAdminInvite,
+  updateInstituteAdmin,
   getInstituteAdmins,
   createInstituteAdmin,
   getCampuses,
@@ -23,6 +25,7 @@ import {
 } from "../controllers/superAdmin.controller.js";
 
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
+import upload from "../middleware/upload.middleware.js";
 
 const router = express.Router();
 
@@ -37,15 +40,17 @@ router.get("/stats", getStats);
 router
   .route("/institutes")
   .get(getInstitutes)
-  .post(createInstitute);
+  .post(upload.single("image"), createInstitute);
 
 router
   .route("/institutes/:id")
   .get(getInstituteById)
-  .put(updateInstitute)
+  .put(upload.single("image"), updateInstitute)
   .delete(deleteInstitute);
 
 router.post("/institutes/:id/assign-admin", assignInstituteAdmin);
+router.post("/institutes/:id/resend-admin-invite", resendInstituteAdminInvite);
+router.put("/institutes/:id/admin", updateInstituteAdmin);
 
 // Institute Admins Standalone
 router

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -30,17 +30,24 @@ import {
 } from "./facultyData";
 import {
   selectFaculty,
-  facultyAdded,
-  facultyUpdated,
-  facultyDeleted,
-} from "@/store/Slices/facultySlice.js";
+  addFaculty,
+  updateFaculty,
+  deleteFaculty,
+  fetchFaculty,
+} from "@/store/Slices/facultySlice";
+import toast from "react-hot-toast";
 import FacultyForm from "./FacultyForm";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
   const dispatch = useDispatch();
-  const facultyRecords = useSelector(selectFaculty);
+
+  useEffect(() => {
+    dispatch(fetchFaculty());
+  }, [dispatch]);
+
+  const facultyRecords = useSelector(selectFaculty) || [];
   const [form, setForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const options = Object.fromEntries(
@@ -48,7 +55,7 @@ export default function FacultyDirectory() {
       key,
       [
         ...new Set(
-          [...demoRecords, ...facultyRecords].map((teacher) => teacher[key]),
+          [...demoRecords, ...facultyRecords].map((teacher) => teacher[key]).filter(Boolean),
         ),
       ],
     ]),
@@ -72,17 +79,21 @@ export default function FacultyDirectory() {
     setFilters((previous) => ({ ...previous, [key]: value }));
     setPage(1);
   };
-  const saveTeacher = (values) => {
-    if (form.teacher)
-      dispatch(facultyUpdated({ ...values, id: form.teacher.id }));
-    else dispatch(facultyAdded(values));
-    // Reveal the saved record even if earlier filters would hide it.
-    setFilters({ search: "", department: "", designation: "", status: "" });
-    const index = form.teacher
-      ? facultyRecords.findIndex((teacher) => teacher.id === form.teacher.id)
-      : facultyRecords.length;
-    setPage(Math.floor(Math.max(0, index) / pageSize) + 1);
-    setForm(null);
+  const saveTeacher = async (values) => {
+    try {
+      if (form.teacher) {
+        await dispatch(updateFaculty({ ...values, id: form.teacher.id || form.teacher._id })).unwrap();
+        toast.success("Faculty member updated successfully!");
+      } else {
+        await dispatch(addFaculty(values)).unwrap();
+        toast.success("Teacher added successfully!");
+      }
+      setFilters({ search: "", department: "", designation: "", status: "" });
+      setForm(null);
+    } catch (err) {
+      toast.error(typeof err === "string" ? err : "Failed to save teacher");
+      throw err;
+    }
   };
 
   return (
@@ -288,8 +299,15 @@ export default function FacultyDirectory() {
         confirmText="Delete"
         cancelText="Cancel"
         onCancel={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          if (deleteTarget) dispatch(facultyDeleted(deleteTarget.id));
+        onConfirm={async () => {
+          if (deleteTarget) {
+            try {
+              await dispatch(deleteFaculty(deleteTarget.id || deleteTarget._id)).unwrap();
+              toast.success(`${deleteTarget.name || "Faculty member"} removed successfully!`);
+            } catch (err) {
+              toast.error(typeof err === "string" ? err : "Failed to remove faculty member");
+            }
+          }
           setDeleteTarget(null);
         }}
       />

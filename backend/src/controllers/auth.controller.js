@@ -37,6 +37,21 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Set password from email link
+ * @route   POST /api/v1/auth/set-password
+ * @access  Public
+ */
+export const setPassword = asyncHandler(async (req, res) => {
+  const result = await authService.setPassword(req.body);
+
+  res.status(200).json({
+    success: true,
+    message: "Password set successfully.",
+    data: result,
+  });
+});
+
+/**
  * @desc    Get current authenticated user profile
  * @route   GET /api/v1/auth/me
  * @access  Private
@@ -66,9 +81,23 @@ export const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Redirect to frontend set password page
+// @route   GET /api/v1/auth/set-password
+// @access  Public
+export const getSetPasswordPage = (req, res) => {
+  const token = req.query.token;
+  if (!token) {
+    return res.status(400).send("Token is required");
+  }
+  const frontendBaseUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  res.redirect(`${frontendBaseUrl}/set-password?token=${token}`);
+};
+
 export default {
   register,
   login,
   getMe,
   updateProfile,
+  setPassword,
+  getSetPasswordPage,
 };

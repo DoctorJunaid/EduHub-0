@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
-import { Building2, Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Building2, Plus, Search, Pencil, Trash2, User, UserPlus, Settings2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -16,46 +16,44 @@ import {
 } from "@/components/ui/Table";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
-  campusAdded,
-  campusUpdated,
-  campusDeleted,
+  fetchCampuses,
+  createCampus,
+  updateCampus,
+  deleteCampus,
   selectInstituteCampuses,
 } from "@/store/Slices/campusesSlice";
-import CampusForm from "./CampusForm";
+
+import ManageCampusModal from "./ManageCampusModal";
 import { filterCampuses } from "./campusData";
 import "./CampusBranches.css";
 
 export default function CampusBranches() {
   const dispatch = useDispatch();
   const campuses = useSelector(selectInstituteCampuses);
-  const [params, setParams] = useSearchParams();
-  const [modal, setModal] = useState(() =>
-    params.get("add") === "1" ? { type: "add" } : null,
-  );
-  const [search, setSearch] = useState(""),
-    [notice, setNotice] = useState("");
+  const navigate = useNavigate();
+  const [modal, setModal] = useState(null);
+  const [manageCampus, setManageCampus] = useState(null);
+  const [search, setSearch] = useState("");
+  const [notice, setNotice] = useState("");
   const selected = campuses.find((campus) => campus.id === modal?.id);
   const visible = filterCampuses(campuses, search);
+
+  useEffect(() => {
+    dispatch(fetchCampuses());
+  }, [dispatch]);
+
   const close = () => {
     setModal(null);
-    if (params.has("add")) setParams({}, { replace: true });
   };
-  const save = (values) => {
-    dispatch(
-      modal.type === "add" ? campusAdded(values) : campusUpdated(values),
-    );
-    setSearch("");
-    setNotice("Campus saved.");
-    close();
-  };
+
   return (
     <section className="campus-branches" aria-labelledby="campuses-title">
       <header className="campuses-heading">
         <div>
           <h1 id="campuses-title">Campus Branches</h1>
-          <p>Manage your physical locations and facilities.</p>
+          <p>Manage your physical locations, facilities, and campus manager credentials.</p>
         </div>
-        <Button onClick={() => setModal({ type: "add" })}>
+        <Button onClick={() => navigate("/institute-admin/campuses/new")}>
           <Plus size={20} />
           Add Campus
         </Button>
@@ -74,68 +72,117 @@ export default function CampusBranches() {
         <Table aria-label="Campus branches">
           <TableHeader>
             <TableRow>
-              {["Campus Name", "Address", "Status", "Actions"].map((label) => (
+              {["Campus Name", "Address", "Campus Manager", "Status", "Actions"].map((label) => (
                 <TableHead key={label}>{label}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visible.map((campus) => (
-              <TableRow key={campus.id}>
-                <TableCell>
-                  <div className="campus-name">
-                    <span className="campus-building">
-                      <Building2 size={26} />
-                    </span>
-                    <div>
-                      <strong>{campus.name}</strong>
-                      <small>ID: {campus.id}</small>
+            {visible.map((campus) => {
+              const manager = campus.managerId;
+              const hasManager = !!manager && typeof manager === "object";
+
+              return (
+                <TableRow key={campus.id}>
+                  <TableCell>
+                    <div className="campus-name">
+                      <span className="campus-building">
+                        <Building2 size={26} />
+                      </span>
+                      <div>
+                        <strong>{campus.name}</strong>
+                        <small>ID: {campus.id}</small>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>{campus.address}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="campus-active">
-                    <span aria-hidden="true" />
-                    {campus.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="campus-actions">
-                    <Button
-                      variant="outline"
-                      className="campus-manage"
-                      disabled
-                      title="Campus management is not implemented"
-                    >
-                      Manage
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      aria-label={`Edit ${campus.name}`}
-                      onClick={() => setModal({ type: "edit", id: campus.id })}
-                    >
-                      <Pencil size={19} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="campus-delete"
-                      aria-label={`Delete ${campus.name}`}
-                      onClick={() =>
-                        setModal({ type: "delete", id: campus.id })
-                      }
-                    >
-                      <Trash2 size={19} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    {typeof campus.address === "object"
+                      ? campus.address?.street || campus.address?.city || "—"
+                      : campus.address || "—"}
+                  </TableCell>
+                  <TableCell>
+                    {hasManager ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <strong style={{ fontSize: "13px", color: "#09090b" }}>{manager.name}</strong>
+                          <Badge
+                            variant="secondary"
+                            style={{
+                              fontSize: "10px",
+                              padding: "1px 6px",
+                              fontWeight: 700,
+                              background: manager.status === "Active" ? "#ecfdf5" : "#fef3c7",
+                              color: manager.status === "Active" ? "#065f46" : "#92400e",
+                              border: `1px solid ${manager.status === "Active" ? "#a7f3d0" : "#fde68a"}`,
+                            }}
+                          >
+                            {manager.status === "Active" ? "Active" : "Pending Setup"}
+                          </Badge>
+                        </div>
+                        <small style={{ color: "#71717a", fontSize: "12px" }}>{manager.email}</small>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "12px", color: "#a1a1aa", fontStyle: "italic" }}>
+                          Unassigned
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          style={{ height: "24px", padding: "0 8px", fontSize: "11px", fontWeight: 600 }}
+                          onClick={() => setManageCampus(campus)}
+                        >
+                          <UserPlus size={12} style={{ marginRight: "3px" }} />
+                          Assign
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="campus-active">
+                      <span aria-hidden="true" />
+                      {campus.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="campus-actions">
+                      <Button
+                        variant="outline"
+                        className="campus-manage"
+                        style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        onClick={() => setManageCampus(campus)}
+                        title="Manage campus and manager credentials"
+                      >
+                        <Settings2 size={15} />
+                        Manage
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label={`Edit ${campus.name}`}
+                        onClick={() => navigate(`/institute-admin/campuses/${campus.id}`)}
+                      >
+                        <Pencil size={19} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="campus-delete"
+                        aria-label={`Delete ${campus.name}`}
+                        onClick={() =>
+                          setModal({ type: "delete", id: campus.id })
+                        }
+                      >
+                        <Trash2 size={19} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {!visible.length && (
               <TableRow>
-                <TableCell colSpan={4} className="campuses-empty">
+                <TableCell colSpan={5} className="campuses-empty">
                   {campuses.length
                     ? "No campuses match your search."
                     : "No campuses found."}
@@ -148,18 +195,30 @@ export default function CampusBranches() {
           {notice}
         </span>
       </Card>
-      {(modal?.type === "add" || (modal?.type === "edit" && selected)) && (
-        <CampusForm campus={selected} onSave={save} onClose={close} />
-      )}
+
+      {/* Comprehensive Manage Campus & Manager Modal */}
+      <ManageCampusModal
+        campus={manageCampus}
+        open={!!manageCampus}
+        onClose={() => setManageCampus(null)}
+        onCampusUpdated={() => dispatch(fetchCampuses())}
+      />
+
       <ConfirmDialog
         open={modal?.type === "delete" && !!selected}
         title="Delete Campus?"
         description={`Are you sure you want to delete ${selected?.name ?? "this campus"}? This action cannot be undone.`}
         confirmText="Delete Campus"
         onCancel={close}
-        onConfirm={() => {
-          if (selected) dispatch(campusDeleted(selected.id));
-          setNotice("Campus deleted.");
+        onConfirm={async () => {
+          if (selected) {
+            try {
+              await dispatch(deleteCampus(selected.id)).unwrap();
+              setNotice("Campus deleted successfully.");
+            } catch (err) {
+              setNotice(typeof err === "string" ? err : "Failed to delete campus.");
+            }
+          }
           close();
         }}
       />

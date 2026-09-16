@@ -11,9 +11,9 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('eduhub_theme')
       if (savedTheme) return savedTheme === 'dark'
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
+      return true
     }
-    return false
+    return true
   })
 
   const [isGetStartedOpen, setIsGetStartedOpen] = useState(false)

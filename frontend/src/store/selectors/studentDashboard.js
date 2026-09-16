@@ -5,6 +5,7 @@ import { selectTimetable } from "../Slices/timetableSlice.js";
 import { selectStudentAttendanceHistory } from "../Slices/studentAttendanceSlice.js";
 import { selectResults } from "../Slices/resultsSlice.js";
 import { studentAttendanceSummary } from "../../Admins/Campus Admin/Attendance/Students/studentAttendanceData.js";
+import { isDemoRecord } from '../demoProvenance.js';
 
 export function matchCurrentStudent(user, students) {
   if (user?.role !== "student") return null;
@@ -91,22 +92,25 @@ export const selectStudentDashboard = createSelector(
             .filter(
               (session) =>
                 session.program === student.program &&
-                session.section === student.section,
+                session.section === student.section &&
+                courses.some(course => course.toLowerCase() === session.subject.trim().toLowerCase()),
             )
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
         : [];
     const rows = attendanceHistory.filter(
       (row) => row.student.id === student.id,
     );
+    const retiredSummary = student.academicSummaryDemo && results.some(row => row.studentId === student.id && (!isDemoRecord(row) || row.userModified));
+    const academicStudent = retiredSummary ? { ...student, cgpa: null, completedCredits: null, academicStanding: '', academicSummaryDemo: false } : student;
     return {
-      student,
+      student: academicStudent,
       courses,
       timetable: classes,
       attendance: summarizeStudentAttendance(rows),
       // Awarded exam GPAs are not an official cumulative GPA; do not average them here.
       cgpa:
-        Number.isFinite(student.cgpa) && student.cgpa >= 0
-          ? student.cgpa
+        Number.isFinite(academicStudent.cgpa) && academicStudent.cgpa >= 0
+          ? academicStudent.cgpa
           : null,
       results: results.filter((record) => record.studentId === student.id),
     };

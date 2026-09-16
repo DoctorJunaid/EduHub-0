@@ -30,6 +30,11 @@ const campusSchema = new mongoose.Schema(
       trim: true,
       maxlength: [150, "Campus name cannot exceed 150 characters"],
     },
+    location: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     address: {
       type: addressSchema,
       default: () => ({}),

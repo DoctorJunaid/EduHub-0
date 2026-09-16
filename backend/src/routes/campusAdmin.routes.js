@@ -2,6 +2,13 @@ import express from "express";
 import {
   getCampusStudents,
   addStudentToCampus,
+  createStudentForCampus,
+  removeStudentFromCampus,
+  updateStudentInCampus,
+  getCampusFaculty,
+  createFacultyForCampus,
+  removeFacultyFromCampus,
+  updateFacultyInCampus,
 } from "../controllers/campusStudent.controller.js";
 import {
   createTeacher,
@@ -52,76 +59,21 @@ import { authorize } from "../middleware/role.middleware.js";
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("campus_admin"));
-
-router.route("/students").get(getCampusStudents).post(addStudentToCampus);
-
-router.route("/teachers").get(getTeachers).post(createTeacher);
-router
-  .route("/teachers/:id")
-  .get(getTeacherById)
-  .put(updateTeacher)
-  .delete(deleteTeacher);
-
-router.route("/student-profiles").get(getStudents).post(createStudent);
-router
-  .route("/student-profiles/:id")
-  .get(getStudentById)
-  .put(updateStudent)
-  .delete(deleteStudent);
+router.use(authorize("campus_admin", "campus_manager"));
 
 router
-  .route("/class-schedules")
-  .get(getClassSchedules)
-  .post(createClassSchedule);
-router
-  .route("/class-schedules/:id")
-  .get(getClassScheduleById)
-  .put(updateClassSchedule)
-  .delete(deleteClassSchedule);
+  .route("/students")
+  .get(getCampusStudents)
+  .post(validateStudentId, addStudentToCampus);
 
-router.route("/exam-schedules").get(getExamSchedules).post(createExamSchedule);
-router
-  .route("/exam-schedules/:id")
-  .get(getExamScheduleById)
-  .put(updateExamSchedule)
-  .delete(deleteExamSchedule);
+router.post("/students/new", createStudentForCampus);
+router.delete("/students/:id", removeStudentFromCampus);
+router.put("/students/:id", updateStudentInCampus);
 
-router
-  .route("/attendance/teachers")
-  .get(getTeacherAttendance)
-  .post(createTeacherAttendance);
-router
-  .route("/attendance/teachers/:id")
-  .get(getTeacherAttendanceById)
-  .put(updateTeacherAttendance)
-  .delete(deleteTeacherAttendance);
+router.route("/faculty").get(getCampusFaculty);
 
-router
-  .route("/attendance/students")
-  .get(getStudentAttendance)
-  .post(createStudentAttendance);
-router
-  .route("/attendance/students/:id")
-  .get(getStudentAttendanceById)
-  .put(updateStudentAttendance)
-  .delete(deleteStudentAttendance);
-
-router.route("/fees").get(getFeeRecords).post(createFeeRecord);
-router
-  .route("/fees/:id")
-  .get(getFeeRecordById)
-  .put(updateFeeRecord)
-  .delete(deleteFeeRecord);
-
-router
-  .route("/performance")
-  .get(getPerformanceRecords)
-  .post(createPerformanceRecord);
-router
-  .route("/performance/:id")
-  .get(getPerformanceRecordById)
-  .put(updatePerformanceRecord)
-  .delete(deletePerformanceRecord);
+router.post("/faculty/new", createFacultyForCampus);
+router.delete("/faculty/:id", removeFacultyFromCampus);
+router.put("/faculty/:id", updateFacultyInCampus);
 
 export default router;

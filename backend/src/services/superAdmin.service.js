@@ -6,6 +6,10 @@
 import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import Campus from "../models/campus.model.js";
+import { sendMail } from "../utils/emailService.js";
+import generateToken from "../utils/generateToken.js";
+import crypto from "crypto";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 /**
  * Global Platform Statistics
@@ -79,7 +83,7 @@ export const getAllInstitutes = async (query = {}) => {
 /**
  * Create a new Institute with optional inline Institute Admin
  */
-export const createInstitute = async (instituteData, adminData = null) => {
+export const createInstitute = async (instituteData, adminData = null, file = null) => {
   const existingInstitute = await Institute.findOne({ name: instituteData.name.trim() });
   if (existingInstitute) {
     const error = new Error("An institute with this name already exists");
@@ -87,35 +91,67 @@ export const createInstitute = async (instituteData, adminData = null) => {
     throw error;
   }
 
+  if (file) {
+    try {
+      instituteData.image = await uploadToCloudinary(file.buffer);
+    } catch (err) {
+      console.warn("Cloudinary upload rejected, using default image. Error:", err.message);
+    }
+  }
+
+  // Create Institute FIRST so we have an ID for the Admin
+  const institute = await Institute.create({
+    ...instituteData,
+    adminId: instituteData.adminId || null,
+  });
+
   let createdAdmin = null;
 
-  // If admin credentials are provided inline, create the admin first
-  if (adminData && adminData.email && adminData.password) {
+  // If admin credentials are provided inline, create the admin and link to the institute
+  if (adminData && adminData.email) {
     const existingUser = await User.findOne({ email: adminData.email.toLowerCase().trim() });
     if (existingUser) {
+      // If user exists, rollback institute creation
+      await Institute.findByIdAndDelete(institute._id);
       const error = new Error("The specified admin email is already registered");
       error.statusCode = 409;
       throw error;
     }
 
+    const randomPassword = crypto.randomBytes(16).toString("hex");
+
     createdAdmin = await User.create({
       name: adminData.name || `${instituteData.name} Admin`,
       email: adminData.email.toLowerCase().trim(),
-      passwordHash: adminData.password,
+      passwordHash: randomPassword,
       role: "institute_admin",
       phone: adminData.phone || "",
+      instituteId: institute._id, // Assign Institute ID to Admin
     });
-  }
 
-  const institute = await Institute.create({
-    ...instituteData,
-    adminId: createdAdmin ? createdAdmin._id : instituteData.adminId || null,
-  });
+    // Link Admin back to Institute
+    institute.adminId = createdAdmin._id;
+    await institute.save();
 
-  // Link instituteId back to the newly created admin
-  if (createdAdmin) {
-    createdAdmin.instituteId = institute._id;
-    await createdAdmin.save();
+    const token = generateToken({
+      id: createdAdmin._id,
+      role: createdAdmin.role,
+      reset: true,
+    });
+    
+    const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+    const resetLink = `${frontendUrl}/set-password?token=${token}`;
+    
+    try {
+      await sendMail(
+        createdAdmin.email,
+        "Set up your EduHub Institute Admin Account",
+        "Welcome to EduHub! Please click the link to set up your password.",
+        resetLink
+      );
+    } catch (err) {
+      console.error("Failed to send setup email:", err);
+    }
   }
 
   const result = await Institute.findById(institute._id).populate(
@@ -149,8 +185,20 @@ export const getInstituteById = async (id) => {
 /**
  * Update institute by ID
  */
-export const updateInstitute = async (id, updateData) => {
-  const institute = await Institute.findByIdAndUpdate(id, updateData, {
+export const updateInstitute = async (id, updateData, file = null) => {
+  const sanitizedData = { ...updateData };
+  delete sanitizedData._id;
+  delete sanitizedData.id;
+
+  if (file) {
+    try {
+      sanitizedData.image = await uploadToCloudinary(file.buffer);
+    } catch (err) {
+      console.warn("Cloudinary upload rejected, preserving image or using default. Error:", err.message);
+    }
+  }
+
+  const institute = await Institute.findByIdAndUpdate(id, sanitizedData, {
     new: true,
     runValidators: true,
   }).populate("adminId", "name email phone avatar");
@@ -199,21 +247,23 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
     adminUser = await User.findById(userId);
   } else if (email) {
     adminUser = await User.findOne({ email: email.toLowerCase().trim() });
-  } else if (newAdminData && newAdminData.email && newAdminData.password) {
+  } else if (newAdminData && newAdminData.email) {
     const existing = await User.findOne({ email: newAdminData.email.toLowerCase().trim() });
     if (existing) {
-      const error = new Error("User with this email already exists");
-      error.statusCode = 409;
-      throw error;
+      adminUser = existing;
+      if (newAdminData.name) adminUser.name = newAdminData.name.trim();
+      if (newAdminData.phone) adminUser.phone = newAdminData.phone.trim();
+    } else {
+      adminUser = await User.create({
+        name: newAdminData.name ? newAdminData.name.trim() : "Institute Admin",
+        email: newAdminData.email.toLowerCase().trim(),
+        passwordHash: newAdminData.password || crypto.randomBytes(16).toString("hex"),
+        role: "institute_admin",
+        status: "Pending",
+        instituteId: institute._id,
+        phone: newAdminData.phone || "",
+      });
     }
-    adminUser = await User.create({
-      name: newAdminData.name || "Institute Admin",
-      email: newAdminData.email.toLowerCase().trim(),
-      passwordHash: newAdminData.password,
-      role: "institute_admin",
-      instituteId: institute._id,
-      phone: newAdminData.phone || "",
-    });
   }
 
   if (!adminUser) {
@@ -231,10 +281,110 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
   institute.adminId = adminUser._id;
   await institute.save();
 
+  // Generate setup link and send email
+  const token = generateToken({
+    id: adminUser._id,
+    role: adminUser.role,
+    reset: true,
+  });
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
+
+  try {
+    await sendMail(
+      adminUser.email,
+      "Set up your EduHub Institute Admin Account",
+      "Welcome to EduHub! Please click the link to set up your password.",
+      resetLink
+    );
+  } catch (err) {
+    console.error("Failed to send setup email during institute admin assignment:", err);
+  }
+
   const userObj = adminUser.toObject();
   delete userObj.passwordHash;
 
-  return { institute, admin: userObj };
+  return { institute, admin: userObj, resetLink };
+};
+
+/**
+ * Resend setup invite email to Institute Admin
+ */
+export const resendInstituteAdminInvite = async (instituteId) => {
+  const institute = await Institute.findById(instituteId).populate(
+    "adminId",
+    "name email phone role status"
+  );
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!institute.adminId) {
+    const error = new Error("No admin is currently assigned to this institute");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const admin = institute.adminId;
+  const token = generateToken({ id: admin._id, role: admin.role || "institute_admin", reset: true });
+  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const resetLink = `${frontendUrl}/set-password?token=${token}`;
+
+  await sendMail(
+    admin.email,
+    "Set up your EduHub Institute Admin Account",
+    "Welcome to EduHub! Please click the link to set up your password.",
+    resetLink
+  );
+
+  return {
+    success: true,
+    message: `Setup email sent successfully to ${admin.email}`,
+    resetLink,
+    admin,
+  };
+};
+
+/**
+ * Update Institute Admin Details
+ */
+export const updateInstituteAdmin = async (instituteId, updateData) => {
+  const institute = await Institute.findById(instituteId);
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!institute.adminId) {
+    const error = new Error("No admin is assigned to this institute");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const allowedUpdates = {};
+  if (updateData.name) allowedUpdates.name = updateData.name.trim();
+  if (updateData.phone !== undefined) allowedUpdates.phone = updateData.phone.trim();
+  if (updateData.status) allowedUpdates.status = updateData.status;
+  if (updateData.isActive !== undefined) allowedUpdates.isActive = updateData.isActive;
+  if (updateData.email) {
+    const email = updateData.email.toLowerCase().trim();
+    const existing = await User.findOne({ email, _id: { $ne: institute.adminId } });
+    if (existing) {
+      const error = new Error("Email is already taken by another user");
+      error.statusCode = 409;
+      throw error;
+    }
+    allowedUpdates.email = email;
+  }
+
+  const updatedAdmin = await User.findByIdAndUpdate(
+    institute.adminId,
+    allowedUpdates,
+    { new: true, runValidators: true }
+  ).select("-passwordHash");
+
+  return updatedAdmin;
 };
 
 /**
@@ -407,6 +557,12 @@ export const toggleUserStatus = async (id) => {
   if (!user) {
     const error = new Error("User not found");
     error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.role === "super_admin") {
+    const error = new Error("Super Admin accounts cannot be deactivated");
+    error.statusCode = 403;
     throw error;
   }
 

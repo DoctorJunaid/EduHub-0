@@ -1,17 +1,15 @@
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Moon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
-  theme = 'light', onThemeToggle, user = { name: 'Admin User', initials: 'A' } }) => {
+  user = { name: 'Admin User', initials: 'A' } }) => {
   const { pathname } = useLocation();
-  const isDark = theme === 'dark';
 
   return (
     <aside className={`sidebar ${collapsed ? 'is-collapsed' : ''}`} aria-label="Sidebar">
       <div className="sidebar-brand-row">
         <div className="sidebar-brand">
-          <img className="sidebar-brand-logo" src={`${import.meta.env.BASE_URL}brand/eduhub-logo.png`} alt="EduHub" width={36} height={42} />
           <span className="sidebar-label">EduHub</span>
         </div>
         <button type="button" className="sidebar-toggle" onClick={onToggle}
@@ -24,9 +22,19 @@ const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
 
       <nav id="sidebar-navigation" className="sidebar-nav" aria-label="Main navigation">
         {items.map((item, index) => {
-          const isActive = pathname === item.path ||
+          const isActive =
+            pathname === item.path ||
             (item.path === '/dashboard' && pathname === '/') ||
-            (!item.exact && item.path !== '/dashboard' && pathname.startsWith(`${item.path}/`));
+            (!item.exact &&
+              item.path !== '/dashboard' &&
+              item.path !== '/super-admin' &&
+              pathname.startsWith(`${item.path}/`) &&
+              !items.some(
+                (other) =>
+                  other !== item &&
+                  other.path &&
+                  (pathname === other.path || pathname.startsWith(`${other.path}/`))
+              ));
           return (
             <Fragment key={item.path || item.label}>
               {item.group && item.group !== items[index - 1]?.group && (
@@ -44,13 +52,6 @@ const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
       </nav>
 
       <div className="sidebar-footer">
-        <button type="button" className="sidebar-theme-toggle" onClick={onThemeToggle}
-          role="switch" aria-checked={isDark} aria-label="Dark mode"
-          title={collapsed ? (isDark ? 'Switch to light mode' : 'Switch to dark mode') : undefined}>
-          <Moon size={20} aria-hidden="true" />
-          <span className="sidebar-label">Dark Mode</span>
-          <span className="sidebar-theme-switch" aria-hidden="true"><span /></span>
-        </button>
         <div className="sidebar-profile" title={collapsed ? user.name : undefined} aria-label={user.name}>
           <span className="sidebar-profile-avatar">{user.initials}</span>
           <div className="sidebar-label sidebar-profile-copy">

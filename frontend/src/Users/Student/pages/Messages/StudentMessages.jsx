@@ -23,11 +23,11 @@ function ConversationPanel({ conversation, onBack }) {
     else { setDraft(''); setError(''); }
   };
   return <>
-    <header className="sm-chat-header"><Button className="sm-back" variant="ghost" size="icon" aria-label="Back to inbox" onClick={onBack}><ArrowLeft /></Button><Avatar><AvatarFallback>{initials(conversation.name)}</AvatarFallback></Avatar><div><h2>{conversation.name}</h2><p>{conversation.role}</p></div></header>
+    <header className="sm-chat-header"><Button className="sm-back" variant="ghost" size="icon" aria-label="Back to inbox" onClick={onBack}><ArrowLeft /></Button><Avatar><AvatarFallback>{conversation.participant?.initials || initials(conversation.name)}</AvatarFallback></Avatar><div><h2>{conversation.name}</h2><p>{conversation.role}</p></div></header>
     <div className="sm-history" ref={history} role="log" aria-label={`Conversation with ${conversation.name}`} aria-live="polite">
       <p className="sm-log-label">Conversation Log</p>
       {conversation.messages.map((message) => <div key={message.id} className={`sm-message${message.senderId === conversation.self ? ' sm-outgoing' : ''}`}>
-        {message.senderId !== conversation.self && <Avatar><AvatarFallback>{initials(conversation.name)}</AvatarFallback></Avatar>}
+        {message.senderId !== conversation.self && <Avatar><AvatarFallback>{conversation.participant?.initials || initials(conversation.name)}</AvatarFallback></Avatar>}
         <div><p className="sm-bubble">{message.body}</p><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</time></div>
       </div>)}
       {!conversation.messages.length && <p className="sm-empty">No messages in this conversation yet.</p>}
@@ -52,7 +52,7 @@ export default function StudentMessages() {
   const back = () => { setSelected(null); requestAnimationFrame(() => rowButtons.current.get(selected)?.focus()); };
   return <section className={`student-messages-page${conversation ? ' sm-chat-selected' : ''}`} aria-label="Student messages">
     <Card className="sm-inbox"><header className="sm-inbox-header"><div><h1>Messages &amp; Inbox</h1><Button variant="ghost" size="icon" disabled aria-label="New message unavailable" title="Recipient permissions are not configured"><SquarePen /></Button></div><label className="sm-search"><Search aria-hidden="true" /><Input aria-label="Search conversations" placeholder="Search conversations..." value={search} onChange={(event) => setSearch(event.target.value)} /></label></header>
-      <div className="sm-conversations">{visible.map((row) => <button key={row.id} ref={(node) => { if (node) rowButtons.current.set(row.id, node); else rowButtons.current.delete(row.id); }} className={`sm-conversation${row.id === selected ? ' is-selected' : ''}`} aria-pressed={row.id === selected} onClick={() => setSelected(row.id)}><Avatar><AvatarFallback>{initials(row.name)}</AvatarFallback></Avatar><span><strong>{row.name}</strong><small>{row.lastMessage}</small></span></button>)}{!visible.length && <p className="sm-empty">{search.trim() ? 'No matching conversations.' : 'No conversations yet.'}</p>}</div>
+      <div className="sm-conversations">{visible.map((row) => <button key={row.id} ref={(node) => { if (node) rowButtons.current.set(row.id, node); else rowButtons.current.delete(row.id); }} className={`sm-conversation${row.id === selected ? ' is-selected' : ''}`} aria-pressed={row.id === selected} onClick={() => setSelected(row.id)}><Avatar><AvatarFallback>{row.participant?.initials || initials(row.name)}</AvatarFallback></Avatar><span><strong>{row.name}</strong><small>{row.lastMessage}</small></span></button>)}{!visible.length && <p className="sm-empty">{search.trim() ? 'No matching conversations.' : 'No conversations yet.'}</p>}</div>
     </Card>
     <Card className="sm-chat">{conversation ? <ConversationPanel key={conversation.id} conversation={conversation} onBack={back} /> : <div className="sm-no-selection"><MessageCircle aria-hidden="true" /><h2>Select a conversation to start messaging.</h2><p>Your existing conversations will appear in the inbox.</p></div>}</Card>
   </section>;

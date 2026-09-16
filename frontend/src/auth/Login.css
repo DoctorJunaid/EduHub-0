@@ -1,0 +1,475 @@
+/* ═══════════════════════════════════════════════════════════════
+   Login Page — Split: Light left / Dark right card
+   Scoped to .login-page to beat global index.css with !important
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page shell — light gray outer background */
+.login-page {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  background: #f4f4f5 !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ─────────────────────────────────────────
+   LEFT COLUMN — light mode, centered
+──────────────────────────────────────────*/
+.login-page .lp-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #ffffff !important;
+  overflow-y: auto;
+}
+
+.login-page .lp-left-inner {
+  width: 100%;
+  max-width: 340px;
+}
+
+/* Heading */
+.login-page h1 {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  color: #09090b !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2 !important;
+  margin: 0 0 1.5rem !important;
+}
+
+/* Form */
+.login-page .lp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Field */
+.login-page .lp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Label */
+.login-page .lp-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #52525b;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* Input wrap */
+.login-page .lp-input-wrap {
+  position: relative;
+}
+
+.login-page .lp-input-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a1a1aa;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+/* Inputs — !important beats global index.css bare rules */
+.login-page input[type="email"],
+.login-page input[type="password"],
+.login-page input[type="text"] {
+  width: 100% !important;
+  height: 42px !important;
+  background: #fafafa !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 9px !important;
+  padding: 0 12px 0 36px !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  color: #09090b !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: border-color 0.14s, box-shadow 0.14s !important;
+}
+
+.login-page input[type="email"]::placeholder,
+.login-page input[type="password"]::placeholder {
+  color: #a1a1aa !important;
+}
+
+.login-page input[type="email"]:focus,
+.login-page input[type="password"]:focus {
+  border-color: #09090b !important;
+  box-shadow: 0 0 0 3px rgba(9,9,11,0.06) !important;
+  background: #ffffff !important;
+}
+
+/* Autofill override */
+.login-page input:-webkit-autofill,
+.login-page input:-webkit-autofill:hover,
+.login-page input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fafafa inset !important;
+  -webkit-text-fill-color: #09090b !important;
+  caret-color: #09090b !important;
+}
+
+/* Error */
+.login-page .lp-error {
+  font-size: 11.5px;
+  color: #ef4444;
+}
+
+/* Role grid label */
+.login-page .lp-roles-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 6px;
+}
+
+/* Role grid */
+.login-page .lp-roles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.login-page .lp-role-btn {
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid #e4e4e7 !important;
+  background: #fafafa !important;
+  color: #71717a;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+
+.login-page .lp-role-btn:hover {
+  border-color: #a1a1aa !important;
+  color: #3f3f46;
+}
+
+.login-page .lp-role-btn.selected {
+  background: #09090b !important;
+  border-color: #09090b !important;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Remember me */
+.login-page .lp-remember {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.login-page .lp-checkbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid #d4d4d8;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.12s;
+}
+
+.login-page .lp-checkbox.checked {
+  background: #09090b;
+  border-color: #09090b;
+}
+
+.login-page .lp-remember-label {
+  font-size: 13px;
+  color: #71717a;
+}
+
+/* Notice */
+.login-page .lp-notice {
+  font-size: 12px;
+  color: #d97706;
+}
+
+/* Submit button */
+.login-page .lp-submit {
+  width: 100%;
+  height: 42px;
+  background: #09090b !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 9px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: opacity 0.14s !important;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+}
+
+.login-page .lp-submit:hover {
+  opacity: 0.85 !important;
+}
+
+/* Footer links */
+.login-page .lp-footer {
+  margin-top: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-page .lp-footer p,
+.login-page .lp-footer span,
+.login-page .lp-footer a {
+  font-size: 13px;
+  color: #71717a !important;
+  text-decoration: none;
+}
+
+.login-page .lp-footer a {
+  color: #09090b !important;
+  font-weight: 600;
+}
+
+.login-page .lp-footer a:hover {
+  text-decoration: underline;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RIGHT PANEL — dark, narrower, with padding all around
+   ═══════════════════════════════════════════════════════════════ */
+.login-page .lp-right {
+  display: none;
+  width: 40%;
+  flex-shrink: 0;
+  padding: 16px;
+}
+
+@media (min-width: 1024px) {
+  .login-page .lp-right {
+    display: block;
+  }
+}
+
+/* Inner dark card */
+.login-page .lp-right-inner {
+  width: 100%;
+  height: 100%;
+  background: #0e0e10 !important;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  /* Layered designer border */
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 4px 6px rgba(0,0,0,0.2),
+    0 24px 48px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Gradient border ring via pseudo */
+.login-page .lp-right-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    rgba(255,255,255,0.14) 0%,
+    rgba(255,255,255,0.04) 40%,
+    rgba(255,255,255,0.01) 70%,
+    rgba(16,185,129,0.06) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Corner diagonal lines */
+.login-page .lp-right-inner::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60%; height: 50%;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-right: 1px solid rgba(255,255,255,0.05);
+  border-top-right-radius: 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Giant E */
+.login-page .lp-giant-e {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 32px;
+  position: relative;
+  z-index: 2;
+}
+
+.login-page .lp-giant-e span {
+  font-size: clamp(100px, 12vw, 180px);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  background: linear-gradient(
+    155deg,
+    #3c3c40 0%,
+    #565658 25%,
+    #383839 55%,
+    #202022 85%,
+    #161617 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  user-select: none;
+  filter: drop-shadow(0 8px 40px rgba(0,0,0,0.95));
+}
+
+/* Panel text */
+.login-page .lp-panel-text {
+  padding: 12px 36px 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.login-page .lp-panel-brand {
+  font-size: 12px;
+  font-weight: 600;
+  color: #52525b;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.login-page .lp-panel-text h2 {
+  font-size: 1.9rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em;
+  margin: 0 0 10px !important;
+}
+
+.login-page .lp-panel-text p {
+  font-size: 13px;
+  color: #52525b;
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.login-page .lp-panel-text small {
+  font-size: 11.5px;
+  color: #3f3f46;
+  margin-top: 6px;
+  display: block;
+}
+
+/* Floating card */
+.login-page .lp-card {
+  margin: 0 36px 36px;
+  padding: 20px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  position: relative;
+  z-index: 2;
+  background: rgba(20,20,22,0.9) !important;
+  backdrop-filter: blur(20px);
+  border-radius: 14px;
+  border-top-right-radius: 40px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 8px 24px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.login-page .lp-card h3 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  line-height: 1.3 !important;
+  margin: 0 0 8px !important;
+  max-width: 180px;
+}
+
+.login-page .lp-card p {
+  font-size: 12.5px;
+  color: #52525b;
+  line-height: 1.6;
+  max-width: 175px;
+  margin: 0;
+}
+
+/* Avatars */
+.login-page .lp-avatars {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.login-page .lp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #0e0e10;
+  overflow: hidden;
+  margin-left: -9px;
+  flex-shrink: 0;
+  background: #27272a;
+}
+
+.login-page .lp-avatar:first-child { margin-left: 0; }
+
+.login-page .lp-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-page .lp-avatar-count {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #0e0e10;
+  background: #27272a;
+  margin-left: -9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #a1a1aa;
+  flex-shrink: 0;
+}

@@ -1,0 +1,618 @@
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.super-admin-dashboard {
+  min-height: calc(100vh - 120px);
+  padding: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: transparent;
+  color: #09090b;
+  font-family: inherit;
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.super-admin-manage-fullscreen {
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.super-admin-manage-fullscreen .super-admin-drawer-head {
+  justify-content: flex-start !important;
+}
+
+.super-admin-manage-fullscreen form {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.super-admin-manage-fullscreen .form-actions {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+.super-admin-topbar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.super-admin-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #09090b;
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.super-admin-subtitle {
+  font-size: 13px;
+  color: #71717a;
+  margin: 0;
+  font-weight: 500;
+}
+
+.super-admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+
+.super-admin-stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  opacity: 0;
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.super-admin-stat-card:nth-child(1) { animation-delay: 0.05s; }
+.super-admin-stat-card:nth-child(2) { animation-delay: 0.1s; }
+.super-admin-stat-card:nth-child(3) { animation-delay: 0.15s; }
+.super-admin-stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+.super-admin-stat-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+}
+
+/* ── STANDARD CARDS ── */
+.super-admin-stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.super-admin-stat-label {
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.super-admin-stat-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #09090b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.super-admin-stat-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.super-admin-stat-value {
+  color: #09090b;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-top: 10px;
+}
+
+.super-admin-stat-detail {
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.super-admin-institutes-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.02);
+  padding: 16px;
+  opacity: 0;
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+.super-admin-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.super-admin-panel-head h2 {
+  margin: 0 0 4px;
+  color: #09090b;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.super-admin-panel-head p {
+  margin: 0;
+  color: #71717a;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.super-admin-filter {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #52525b;
+}
+
+.super-admin-filter.active {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+
+.super-admin-empty-row {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #71717a;
+  border: 1px dashed #e4e4e7;
+  font-weight: 700;
+  text-align: center;
+  font-size: 12px;
+}
+
+.super-admin-institute-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.super-admin-institute-row {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+}
+
+.super-admin-institute-row:hover {
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+}
+
+.super-admin-institute-row.selected {
+  border-color: #09090b;
+  box-shadow: inset 0 0 0 1px #09090b;
+}
+
+.super-admin-institute-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 310px;
+}
+
+.super-admin-institute-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e4e4e7;
+}
+
+.super-admin-institute-copy h3 {
+  margin: 0 0 2px;
+  color: #09090b;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.super-admin-institute-copy p {
+  margin: 0;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.super-admin-institute-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  justify-content: flex-end;
+}
+
+.super-admin-active-badge {
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 600;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  cursor: pointer;
+  line-height: 1;
+  min-height: 30px;
+}
+
+.super-admin-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.super-admin-campus-count,
+.super-admin-student-count {
+  min-width: 82px;
+  color: #52525b;
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.super-admin-student-count {
+  min-width: 96px;
+}
+
+.super-admin-clickable {
+  text-decoration: none;
+}
+
+.super-admin-active-badge:hover,
+.super-admin-campus-count:hover,
+.super-admin-student-count:hover {
+  opacity: 0.88;
+}
+
+.super-admin-status-wrap {
+  position: relative;
+}
+
+.super-admin-status-select {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 4;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #09090b;
+  font-weight: 700;
+  font-size: 11px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.super-admin-manage-button {
+  background: #09090b;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 10px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.super-admin-manage-button:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
+.super-admin-manage-button:active {
+  transform: scale(0.96);
+  margin-left: 0;
+  min-width: 86px;
+}
+
+.super-admin-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(7, 15, 30, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.super-admin-drawer,
+.super-admin-student-drawer,
+.super-admin-manage-drawer {
+  width: min(460px, calc(100vw - 40px));
+  min-height: 280px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  border: 1px solid #e4e4e7;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.super-admin-manage-drawer {
+  width: min(800px, 95vw);
+}
+
+.super-admin-student-drawer {
+  width: min(460px, calc(100vw - 40px));
+}
+
+.super-admin-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.super-admin-drawer-head h3 {
+  margin: 4px 0 0;
+  color: #09090b;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.super-admin-drawer-kicker {
+  color: #52525b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.super-admin-drawer-close {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid #e4e4e7;
+  background: #fafafa;
+  color: #09090b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.super-admin-drawer-close:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+.super-admin-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.super-admin-drawer-row,
+.super-admin-student-drawer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fafafa;
+  border-radius: 10px;
+  border: 1px solid #e4e4e7;
+  padding: 11px 12px;
+}
+
+.super-admin-drawer-row-main,
+.super-admin-student-drawer-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.super-admin-drawer-campus-name,
+.super-admin-student-name {
+  color: #09090b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.super-admin-drawer-campus-location,
+.super-admin-student-meta,
+.super-admin-student-campus {
+  color: #71717a;
+  font-size: 11px;
+}
+
+.super-admin-drawer-campus-status,
+.super-admin-student-status {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.super-admin-drawer-campus-status.active,
+.super-admin-student-status.active {
+  background: #09090b;
+  color: #ffffff;
+}
+
+.super-admin-drawer-campus-status.pending,
+.super-admin-student-status.pending {
+  background: var(--warning-bg, #fffaf0);
+  color: var(--color-warning, #b7791f);
+}
+
+.super-admin-drawer-campus-status.suspended,
+.super-admin-student-status.suspended {
+  background: var(--danger-bg, #fcebea);
+  color: var(--color-danger, #b42318);
+}
+
+.super-admin-manage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.super-admin-manage-card {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.super-admin-manage-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.super-admin-manage-card-label {
+  display: block;
+  color: #52525b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.super-admin-manage-card-value {
+  display: block;
+  color: #09090b;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 3px;
+}
+
+.super-admin-manage-card-action {
+  margin-left: auto;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #09090b;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.super-admin-manage-card-action:hover {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+
+@media (max-width: 1100px) {
+  .super-admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(190px, 1fr));
+  }
+
+  .super-admin-institute-row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .super-admin-dashboard {
+    padding: 16px;
+  }
+
+  .super-admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .super-admin-institute-row,
+  .super-admin-institute-main,
+  .super-admin-institute-meta {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .super-admin-institute-row {
+    flex-direction: column;
+  }
+
+  .super-admin-institute-meta {
+    justify-content: flex-start;
+  }
+}

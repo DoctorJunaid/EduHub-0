@@ -1,5 +1,8 @@
 import { useId, useState } from "react";
-import { X } from "lucide-react";
+import { useSelector } from 'react-redux';
+import { selectStudents } from '@/store/Slices/studentsSlice';
+import { studentIdentityErrors, hasStudentIdentityConflicts } from '@/store/studentIdentity';
+import { X, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,26 +14,41 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/Button";
 import { studentStatuses } from "./studentData.js";
 
+const DEFAULT_PROGRAMS = [
+  'BS Computer Science',
+  'BS Software Engineering',
+  'BS Artificial Intelligence',
+  'BS Data Science',
+  'FSc Pre-Engineering',
+  'FSc Pre-Medical',
+];
+
 export default function StudentForm({
   student,
-  programs,
-  campuses,
+  programs = DEFAULT_PROGRAMS,
+  campuses = ["Main Campus"],
   editAllFields = false,
   onSave,
   onClose,
 }) {
   const id = useId();
   const editing = Boolean(student);
+  const records = useSelector(selectStudents);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const safePrograms = programs && programs.length ? programs : DEFAULT_PROGRAMS;
+  const safeCampuses = campuses && campuses.length ? campuses : ["Main Campus"];
+
   const [values, setValues] = useState(() => ({
     name: student?.name ?? "",
     roll: student?.roll ?? "",
     email: student?.email ?? "",
-    studentPhone: student?.studentPhone ?? "",
-    program: student?.program ?? programs[0] ?? "",
+    studentPhone: student?.studentPhone ?? student?.phone ?? "",
+    program: student?.program ?? safePrograms[0] ?? "",
     section: student?.section ?? "",
     semester: student?.semester ?? "",
     subjects: student?.subjects ?? "",
-    campus: student?.campus ?? (typeof campuses[0] === 'object' ? campuses[0].value : campuses[0]) ?? "",
+    campus: student?.campus ?? (typeof safeCampuses[0] === 'object' ? safeCampuses[0].value : safeCampuses[0]) ?? "",
     status: student?.status ?? "Active",
     guardian: student?.guardian ?? "",
     guardianPhone: student?.guardianPhone ?? "",
@@ -45,7 +63,10 @@ export default function StudentForm({
       name: key,
       value: values[key],
       required: !optional,
+      'aria-invalid': Boolean(errors[key]),
+      'aria-describedby': errors[key] ? `${id}-${key}-error` : undefined,
       onChange: (event) => {
+        setErrors(previous => ({ ...previous, [key]: undefined }));
         event.target.setCustomValidity(
           !optional && !event.target.value.trim()
             ? `${label} is required.`
@@ -66,10 +87,11 @@ export default function StudentForm({
         ) : (
           <Input {...props} type={type} placeholder={placeholder} />
         )}
+        {errors[key] && <p id={`${id}-${key}-error`} role="alert" className="student-identity-error">{errors[key]}</p>}
       </div>
     );
   };
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     const saved = Object.fromEntries(
       Object.entries(values).map(([key, value]) => [key, value.trim()]),
@@ -79,7 +101,18 @@ export default function StudentForm({
       saved.campus = student.campus;
       saved.guardianPhone = student.guardianPhone;
     }
-    onSave(saved);
+    const problems = studentIdentityErrors(saved, records, student?.id || student?._id);
+    setErrors(problems);
+    if (Object.keys(problems).length) {
+      document.getElementById(`${id}-${Object.keys(problems)[0]}`)?.focus();
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await onSave(saved);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <Dialog
@@ -109,6 +142,7 @@ export default function StudentForm({
           </DialogClose>
         </div>
         <form onSubmit={submit}>
+          {hasStudentIdentityConflicts(records) && <p role="status" className="student-identity-error">Some existing student records share an email or roll number. Resolve these identities by editing the records; no records have been merged or removed.</p>}
           <div className="student-form-row">
             {field("name", "Full Name", { placeholder: "e.g. Ali Raza" })}
             {field("roll", editing ? "Roll Number" : "Roll Number / ID", {
@@ -165,11 +199,12 @@ export default function StudentForm({
             </>
           )}
           <div className="student-modal-actions">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">
-              {editing ? "Save Changes" : "Save Student"}
+            <Button type="submit" disabled={isSubmitting} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              {isSubmitting && <Loader2 size={16} className="spin" />}
+              {isSubmitting ? (editing ? "Saving Changes..." : "Saving Student...") : (editing ? "Save Changes" : "Save Student")}
             </Button>
           </div>
         </form>

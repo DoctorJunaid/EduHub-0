@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
@@ -10,22 +10,59 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import "./FacultyForm.css";
-
 import { facultyStatuses } from "./facultyData.js";
 
-export default function FacultyForm({ teacher, options, onSave, onClose }) {
+const DEFAULT_DESIGNATIONS = [
+  "Lecturer",
+  "Assistant Professor",
+  "Associate Professor",
+  "Professor",
+  "HOD",
+  "Instructor",
+];
+
+const DEFAULT_DEPARTMENTS = [
+  "Computer Science",
+  "Software Engineering",
+  "Electrical Engineering",
+  "Information Technology",
+  "Management Sciences",
+  "General",
+];
+
+const DEFAULT_CAMPUSES = ["Main Campus"];
+
+export default function FacultyForm({ teacher, options = {}, onSave, onClose }) {
   const id = useId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const designations =
+    options?.designation && options.designation.length
+      ? options.designation
+      : DEFAULT_DESIGNATIONS;
+
+  const departments =
+    options?.department && options.department.length
+      ? options.department
+      : DEFAULT_DEPARTMENTS;
+
+  const campuses =
+    options?.campus && options.campus.length
+      ? options.campus
+      : DEFAULT_CAMPUSES;
+
   const [values, setValues] = useState(() => ({
     name: teacher?.name ?? "",
     email: teacher?.email ?? "",
-    designation: teacher?.designation ?? options.designation[0] ?? "",
+    designation: teacher?.designation ?? designations[0] ?? "Lecturer",
     qualification: teacher?.qualification ?? "",
-    department: teacher?.department ?? options.department[0] ?? "",
+    department: teacher?.department ?? departments[0] ?? "Computer Science",
     phone: teacher?.phone ?? "",
     subjects: teacher?.subjects ?? "",
-    campus: teacher?.campus ?? options.campus[0] ?? "",
+    campus: teacher?.campus ?? campuses[0] ?? "Main Campus",
     status: teacher?.status ?? "Active",
   }));
+
   const fields = [
     { key: "name", label: "Full Name", placeholder: "e.g. Dr. Usman Khan" },
     {
@@ -34,13 +71,13 @@ export default function FacultyForm({ teacher, options, onSave, onClose }) {
       type: "email",
       placeholder: "usman.khan@nust.edu.pk",
     },
-    { key: "designation", label: "Designation", choices: options.designation },
+    { key: "designation", label: "Designation", choices: designations },
     {
       key: "qualification",
       label: "Qualification",
       placeholder: "Ph.D. in Computer Science",
     },
-    { key: "department", label: "Department", choices: options.department },
+    { key: "department", label: "Department", choices: departments },
     {
       key: "phone",
       label: "Phone Number",
@@ -54,18 +91,24 @@ export default function FacultyForm({ teacher, options, onSave, onClose }) {
       placeholder: "Advanced Web Design, Data Structures",
       wide: true,
     },
-    { key: "campus", label: "Assigned Campus", choices: options.campus },
+    { key: "campus", label: "Assigned Campus", choices: campuses },
     { key: "status", label: "Status", choices: facultyStatuses },
   ];
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    onSave(
-      Object.fromEntries(
-        Object.entries(values).map(([key, value]) => [key, value.trim()]),
-      ),
-    );
+    setIsSubmitting(true);
+    try {
+      await onSave(
+        Object.fromEntries(
+          Object.entries(values).map(([key, value]) => [key, value.trim()]),
+        ),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
   return (
     <Dialog
       open
@@ -88,6 +131,7 @@ export default function FacultyForm({ teacher, options, onSave, onClose }) {
               variant="ghost"
               className="faculty-form-close"
               aria-label="Close faculty form"
+              disabled={isSubmitting}
             >
               <X size={23} />
             </Button>
@@ -159,10 +203,13 @@ export default function FacultyForm({ teacher, options, onSave, onClose }) {
             )}
           </div>
           <div className="faculty-form-actions">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Save Teacher</Button>
+            <Button type="submit" disabled={isSubmitting} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              {isSubmitting && <Loader2 size={16} className="spin" />}
+              {isSubmitting ? (teacher ? "Saving Changes..." : "Saving Teacher...") : (teacher ? "Save Changes" : "Save Teacher")}
+            </Button>
           </div>
         </form>
       </DialogContent>

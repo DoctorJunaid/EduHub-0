@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -26,9 +26,10 @@ import {
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   selectStudents,
-  studentAdded,
-  studentUpdated,
-  studentDeleted,
+  addStudent,
+  updateStudent,
+  deleteStudent,
+  fetchStudents,
 } from "@/store/Slices/studentsSlice.js";
 import {
   studentStatuses,
@@ -37,6 +38,7 @@ import {
   filterStudents,
   paginateStudents,
 } from "./studentData.js";
+import toast from "react-hot-toast";
 import StudentForm from "./StudentForm";
 import StudentProfileDialog from "./StudentProfileDialog";
 import StudentStatusBadge from "./StudentStatusBadge";
@@ -44,7 +46,12 @@ import "./StudentsDirectory.css";
 
 export default function StudentsDirectory() {
   const dispatch = useDispatch();
-  const students = useSelector(selectStudents);
+
+  useEffect(() => {
+    dispatch(fetchStudents());
+  }, [dispatch]);
+
+  const students = useSelector(selectStudents) || [];
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({
     search: "",
@@ -56,34 +63,38 @@ export default function StudentsDirectory() {
   const programs = [
     ...new Set([
       ...studentPrograms,
-      ...students.map((student) => student.program),
+      ...students.map((student) => student.program).filter(Boolean),
     ]),
   ];
   const campuses = [
     ...new Set([
       ...studentCampuses,
-      ...students.map((student) => student.campus),
+      ...students.map((student) => student.campus).filter(Boolean),
     ]),
   ];
   const filtered = filterStudents(students, filters);
   const result = paginateStudents(filtered, page, pageSize);
-  const selected = students.find((student) => student.id === modal?.id);
+  const selected = students.find((student) => (student.id === modal?.id || student._id === modal?.id));
   const close = () => setModal(null);
   const updateFilter = (key, value) => {
     setFilters((previous) => ({ ...previous, [key]: value }));
     setPage(1);
   };
-  const save = (values) => {
-    const index =
-      modal.mode === "edit"
-        ? students.findIndex((student) => student.id === selected.id)
-        : students.length;
-    if (modal.mode === "edit")
-      dispatch(studentUpdated({ ...values, id: selected.id }));
-    else dispatch(studentAdded(values));
-    setFilters({ search: "", program: "", status: "" });
-    setPage(Math.floor(index / pageSize) + 1);
-    close();
+  const save = async (values) => {
+    try {
+      if (modal.mode === "edit") {
+        await dispatch(updateStudent({ ...values, id: selected.id || selected._id })).unwrap();
+        toast.success("Student record updated successfully!");
+      } else {
+        await dispatch(addStudent(values)).unwrap();
+        toast.success("Student added successfully!");
+      }
+      setFilters({ search: "", program: "", status: "" });
+      close();
+    } catch (err) {
+      toast.error(typeof err === "string" ? err : "Failed to save student record");
+      throw err;
+    }
   };
   return (
     <section className="students-directory" aria-labelledby="students-title">
@@ -303,8 +314,15 @@ export default function StudentsDirectory() {
         confirmText="Delete"
         cancelText="Cancel"
         onCancel={close}
-        onConfirm={() => {
-          if (selected) dispatch(studentDeleted(selected.id));
+        onConfirm={async () => {
+          if (selected) {
+            try {
+              await dispatch(deleteStudent(selected.id || selected._id)).unwrap();
+              toast.success(`${selected.name || "Student"} removed successfully!`);
+            } catch (err) {
+              toast.error(typeof err === "string" ? err : "Failed to delete student");
+            }
+          }
           close();
         }}
       />

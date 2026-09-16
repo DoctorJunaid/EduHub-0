@@ -1,67 +1,76 @@
 .campus-branches {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  color: var(--foreground);
+  gap: 14px;
+  color: #09090b;
 }
 .campuses-heading {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 }
 .campuses-heading h1 {
-  font-size: 36px;
-  line-height: 1.25;
+  font-size: 22px;
+  line-height: 1.2;
   font-weight: 700;
-  margin-bottom: 6px;
+  color: #09090b;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
 }
 .campuses-heading p {
-  color: var(--muted-foreground);
-  font-size: 18px;
+  color: #71717a;
+  font-size: 13px;
+  margin: 0;
 }
 .campuses-heading > button {
-  height: 50px;
-  padding-inline: 22px;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  height: 36px;
+  padding: 0 14px;
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
 }
 .campuses-card {
-  padding: 28px;
-  gap: 26px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  gap: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02);
 }
 .campuses-search {
   display: block;
   position: relative;
-  width: min(100%, 390px);
+  width: min(100%, 360px);
 }
 .campuses-search svg {
   position: absolute;
-  top: 14px;
-  left: 16px;
-  color: var(--muted-foreground);
+  top: 11px;
+  left: 12px;
+  color: #71717a;
 }
 .campuses-search input {
-  height: 48px;
-  padding-left: 48px;
-  border-radius: 9px;
-  background: var(--color-background);
+  height: 38px;
+  padding-left: 38px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fafafa;
 }
 .campuses-card th {
   text-transform: uppercase;
-  font-size: 13px;
-  color: var(--muted-foreground);
-  height: 60px;
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  height: 42px;
+  background: #fafafa;
+  border-top: 1px solid #e4e4e7;
 }
 .campuses-card td {
-  height: 100px;
-  color: var(--muted-foreground);
-  font-size: 15px;
+  height: 52px;
+  color: #09090b;
+  font-size: 13px;
 }
 .campuses-card th:last-child {
   text-align: right;
@@ -86,53 +95,65 @@
 .campus-building {
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 56px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--color-success-bg);
-  color: var(--color-success);
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
 }
 .campuses-card .campus-active {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 24px;
-  background: var(--color-success-bg);
-  color: var(--color-success);
-  font-size: 14px;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #09090b;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
 }
 .campus-active > span {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: currentColor;
+  background: #ffffff;
 }
 .campus-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 8px;
 }
 .campus-actions button {
-  height: 44px;
-  min-width: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card);
+  height: 34px;
+  min-width: 34px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #09090b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.campus-actions button:hover {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
 }
 .campus-actions .campus-manage {
-  padding-inline: 20px;
-  background: var(--color-success-bg);
-  color: var(--color-success);
-  border-color: var(--color-border-green);
+  padding-inline: 14px;
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+  font-size: 11px;
+  font-weight: 600;
   opacity: 1;
 }
 .campus-actions .campus-delete {
-  color: var(--color-danger);
-  background: var(--color-danger-bg);
-  border-color: color-mix(in srgb, var(--color-danger) 15%, var(--border));
+  color: #09090b;
+  background: #ffffff;
+  border-color: #e4e4e7;
 }
 .campuses-empty {
   text-align: center;
