@@ -134,17 +134,25 @@
   background: var(--card);
   color: var(--muted-foreground);
 }
-.isd-actions .isd-edit,
-.isd-actions .isd-delete {
+.isd-actions .isd-edit {
   background: #ffffff;
   color: #09090b;
   border: 1px solid #e4e4e7;
 }
-.isd-actions .isd-edit:hover,
-.isd-actions .isd-delete:hover {
+.isd-actions .isd-edit:hover {
   background: #09090b;
   color: #ffffff;
   border-color: #09090b;
+}
+.isd-actions .isd-delete {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.isd-actions .isd-delete:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
 }
 .isd-empty {
   text-align: center;

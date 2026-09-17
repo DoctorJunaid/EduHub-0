@@ -18,21 +18,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { percentage } from "./resultsData.js";
 export default function ResultsTable({ rows, onTranscript, onEdit }) {
+  const columnDefs = [
+    { label: "Student & Roll No", width: "23%", align: "left" },
+    { label: "Course / Subject", width: "19%", align: "left" },
+    { label: "Semester", width: "11%", align: "left" },
+    { label: "Score & %", width: "10%", align: "left" },
+    { label: "Grade", width: "7%", align: "center" },
+    { label: "GPA", width: "7%", align: "center" },
+    { label: "Remarks", width: "10%", align: "left" },
+    { label: "Actions", width: "13%", align: "right" },
+  ];
+
   return (
     <Table aria-label="Exam results">
       <TableHeader>
         <TableRow>
-          {[
-            "Student Name & Roll No.",
-            "Course / Subject",
-            "Semester",
-            "Score & %",
-            "Grade",
-            "GPA",
-            "Academic Remarks",
-            "Actions",
-          ].map((label) => (
-            <TableHead scope="col" key={label}>
+          {columnDefs.map(({ label, width, align }) => (
+            <TableHead scope="col" key={label} style={{ width, textAlign: align }}>
               {label}
             </TableHead>
           ))}
@@ -41,58 +43,62 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
       <TableBody>
         {rows.map((row) => (
           <TableRow key={row.id}>
-            <TableCell>
+            <TableCell style={{ width: "23%" }}>
               <div className="results-person">
                 <Avatar>
                   <AvatarFallback>
                     {row.student.initials || row.student.name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <strong>{row.student.name}</strong>
-                  <small>{row.student.roll}</small>
+                <div style={{ minWidth: 0, overflow: "hidden" }}>
+                  <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.student.name}</strong>
+                  <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>{row.student.roll}</small>
                 </div>
               </div>
             </TableCell>
-            <TableCell>
-              {row.exam.subject}
-              <small>{row.courseCode || "—"}</small>
+            <TableCell style={{ width: "19%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.exam.subject}</strong>
+              <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>{row.courseCode || "—"}</small>
             </TableCell>
-            <TableCell>
+            <TableCell style={{ width: "11%" }}>
               {row.semester}
               <small>{row.academicYear}</small>
             </TableCell>
-            <TableCell className="results-score">
+            <TableCell className="results-score" style={{ width: "10%" }}>
               {row.score} / {row.totalMarks}{" "}
               <small>({percentage(row)?.toFixed(1) ?? "—"}%)</small>
             </TableCell>
-            <TableCell>
+            <TableCell style={{ width: "7%", textAlign: "center" }}>
               <Badge variant="secondary" className="results-grade">
                 {row.grade || "—"}
               </Badge>
             </TableCell>
-            <TableCell>{row.gpa?.toFixed(2) ?? "—"}</TableCell>
-            <TableCell className="results-remarks">
+            <TableCell style={{ width: "7%", textAlign: "center" }}>{row.gpa?.toFixed(2) ?? "—"}</TableCell>
+            <TableCell className="results-remarks" style={{ width: "10%" }}>
               {row.remarks || "—"}
             </TableCell>
-            <TableCell>
+            <TableCell style={{ width: "13%", textAlign: "right" }}>
               <div className="results-actions">
-                <Button
-                  variant="outline"
+                <button
+                  type="button"
+                  className="toolbar-btn toolbar-btn-outline"
+                  style={{ height: "26px", padding: "0 7px", fontSize: "11px", fontWeight: "600" }}
                   onClick={() => onTranscript(row.studentId)}
                   aria-label={`View transcript for ${row.student.name}`}
                 >
                   <FileText size={12} />
-                  View Transcript
-                </Button>
+                  Transcript
+                </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
+                    <button
+                      type="button"
+                      className="table-icon-btn"
+                      style={{ width: "24px", height: "26px" }}
                       aria-label={`Result actions for ${row.student.name}, ${row.exam.subject}`}
                     >
                       <MoreVertical size={13} />
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => onEdit(row.id)}>

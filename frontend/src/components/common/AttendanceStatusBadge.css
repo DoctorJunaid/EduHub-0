@@ -1,4 +1,4 @@
-.attendance-status { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 92px; max-width: 100%; border: 1px solid transparent; border-radius: 999px; padding: 5px 12px; min-height: 24px; font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: 0.01em; white-space: nowrap; vertical-align: middle; box-sizing: border-box; text-align: center; }
+.attendance-status { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 0 !important; max-width: 100%; border: 1px solid transparent; border-radius: 999px; padding: 3px 9px; min-height: 22px; font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: 0.01em; white-space: nowrap; vertical-align: middle; box-sizing: border-box; text-align: center; }
 .attendance-status i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; transform: translateY(-0.5px); }
 .attendance-present { background: #22c55e; color: #ffffff; border-color: #16a34a; }
 .attendance-late { background: #86efac; color: #14532d; border-color: #4ade80; }

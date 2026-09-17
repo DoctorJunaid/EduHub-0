@@ -29,7 +29,7 @@
 .student-attendance-log-heading span { color: #71717a; font-size: 11px; }
 .student-attendance-log-heading button { height: 30px; font-size: 11px; font-weight: 600; border-radius: 6px; }
 .student-attendance [data-slot="table-container"] { border: 0; border-radius: 0; }
-.student-attendance table { min-width: 1040px; width: 100%; border-collapse: collapse; }
+.student-attendance table { min-width: 0; width: 100%; table-layout: fixed; border-collapse: collapse; }
 .student-attendance th { padding: 10px 14px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; background: #fafafa; color: #71717a; border-bottom: 1px solid #e4e4e7; text-align: left; }
 .student-attendance td { padding: 10px 14px; font-size: 11px; border-bottom: 1px solid #f4f4f5; color: #09090b; }
 .student-attendance tr:hover td { background: #fafafa; }
@@ -41,7 +41,29 @@
 .student-attendance-subject { display: flex; align-items: center; gap: 8px; font-weight: 500; }
 .student-attendance-subject i { width: 5px; height: 5px; border-radius: 50%; background: #09090b; flex-shrink: 0; }
 .student-attendance td small.student-attendance-room { display: flex; gap: 6px; align-items: center; color: #71717a; }
-.student-attendance .student-attendance-action { min-width: 125px; height: 30px; padding: 0 9px; display: flex; justify-content: space-between; gap: 13px; font-size: 11px; font-weight: 600; }
+.student-attendance .student-attendance-action {
+  width: auto;
+  max-width: 110px;
+  height: 26px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #09090b;
+  cursor: pointer;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+.student-attendance .student-attendance-action:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
 .student-attendance-footer { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid #e4e4e7; }
 .student-attendance-footer > span { font-size: 11px; color: #71717a; }
 .student-attendance .tt-pagination { flex-wrap: wrap; gap: 6px; }

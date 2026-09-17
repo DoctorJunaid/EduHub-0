@@ -151,9 +151,14 @@
   opacity: 1;
 }
 .campus-actions .campus-delete {
-  color: #09090b;
-  background: #ffffff;
-  border-color: #e4e4e7;
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.campus-actions .campus-delete:hover {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 .campuses-empty {
   text-align: center;

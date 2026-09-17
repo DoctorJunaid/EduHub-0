@@ -975,11 +975,12 @@
   border-color: #a1a1aa;
 }
 
-.icon-button.delete:hover {
+.icon-button.delete {
   background: #fef2f2;
-  color: #ef4444;
+  color: #dc2626;
   border-color: #fca5a5;
 }
+.icon-button.delete:hover { background: #fee2e2; color: #b91c1c; border-color: #f87171; }
 
 .icon-button.edit:hover {
   color: #09090b;

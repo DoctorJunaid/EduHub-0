@@ -9,33 +9,26 @@ export const studentCampuses = [
   ...new Set(facultyRecords.map((teacher) => teacher.campus)),
 ];
 
-// The two directory reference records; unknown contact values remain blank.
-export const studentRecords = campusStudents
-  .slice(0, 2)
-  .map((student, index) => ({
-    ...student,
-    id: `student-demo-${index + 1}`,
-    email: index === 0 ? "ali.raza@nust.edu.pk" : "",
-    studentPhone: index === 0 ? "+92 333 5551234" : "",
-    guardianPhone: student.phone,
-    semester: "4th Semester",
-    subjects:
-      index === 0
-        ? "Advanced Web Design, Data Structures, AI"
-        : "Advanced Web Design, Data Structures",
-    campus: "NUST Main Campus (H-12)",
-  }));
+export const studentSemesters = [
+  ...new Set(campusStudents.map((student) => student.semester).filter(Boolean)),
+];
 
-export function filterStudents(records, { search, program, status }) {
+// The directory reference records; unknown contact values remain blank.
+export const studentRecords = campusStudents.map((student) => ({
+  ...student,
+}));
+
+export function filterStudents(records, { search, program, status, semester }) {
   const query = search.trim().toLowerCase();
   return records.filter(
     (student) =>
       (!query ||
-        `${student.name} ${student.roll} ${student.program}`
+        `${student.name} ${student.roll} ${student.program} ${student.email || ""} ${student.section || ""}`
           .toLowerCase()
           .includes(query)) &&
       (!program || student.program === program) &&
-      (!status || student.status === status),
+      (!status || student.status === status) &&
+      (!semester || student.semester === semester),
   );
 }
 

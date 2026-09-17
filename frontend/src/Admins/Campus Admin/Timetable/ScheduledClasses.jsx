@@ -73,14 +73,14 @@ export default function ScheduledClasses({
         <TableHeader>
           <TableRow>
             {[
-              "Subject & Section",
-              "Days & Time",
-              "Room / Lab",
-              "Assigned Instructor",
-              "Status",
-              "Actions",
-            ].map((label) => (
-              <TableHead scope="col" key={label}>
+              { label: "Subject & Section", width: "26%" },
+              { label: "Days & Time", width: "22%" },
+              { label: "Room / Lab", width: "14%" },
+              { label: "Assigned Instructor", width: "18%" },
+              { label: "Status", width: "10%" },
+              { label: "Actions", width: "10%" },
+            ].map(({ label, width }) => (
+              <TableHead scope="col" key={label} style={{ width }}>
                 {label}
               </TableHead>
             ))}
