@@ -446,10 +446,20 @@
   color: #09090b !important;
 }
 
-.campus-icon-btn.delete:hover,
-.table-icon-btn.delete:hover {
+.campus-icon-btn.delete,
+.campus-icon-btn.is-delete,
+.table-icon-btn.delete {
   background: #fef2f2 !important;
   border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+
+.campus-icon-btn.delete:hover,
+.campus-icon-btn.is-delete:hover,
+.table-icon-btn.delete:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
 }
 
 /* ==========================================================================

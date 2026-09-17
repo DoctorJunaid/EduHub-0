@@ -409,9 +409,15 @@
   color: #ffffff;
   border-color: #09090b;
 }
-.class-timetable .tt-row-actions .tt-edit,
 .class-timetable .tt-row-actions .tt-delete {
-  color: #09090b;
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.class-timetable .tt-row-actions .tt-delete:hover {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 .tt-empty {
   padding: 20px;
