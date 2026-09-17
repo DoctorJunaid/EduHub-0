@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CalendarDays,
@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AttendanceDateNavigator from "@/components/common/AttendanceDateNavigator";
-import { selectFaculty } from "@/store/Slices/facultySlice.js";
+import { fetchFaculty, selectFaculty } from "@/store/Slices/facultySlice.js";
 import {
   selectAttendance,
   selectAttendanceSummary,
@@ -26,7 +26,6 @@ import { dateKey, parseDate, longDate } from "@/lib/dates";
 import { mondayOf, shiftDays } from "@/lib/schedule";
 import { downloadCsv } from "@/lib/csv";
 import * as attendanceApi from "@/api/teacherAttendance.api.js";
-import { facultyRecords as demoFaculty } from "../Faculty/facultyData.js";
 import {
   attendanceRows,
   attendanceStatuses,
@@ -49,20 +48,32 @@ const initialFilters = {
   to: "",
 };
 
+const pakistanDateTime = (value) => {
+  const timestamp = new Date(value);
+  if (Number.isNaN(timestamp.getTime())) return null;
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(timestamp)
+    .reduce((parts, part) => ({ ...parts, [part.type]: part.value }), {});
+};
+
+const pakistanTime = (value) => {
+  const parts = pakistanDateTime(value);
+  return parts ? `${parts.hour}:${parts.minute}` : "";
+};
+
 export default function FacultyAttendance() {
   const dispatch = useDispatch();
   const rawFaculty = useSelector(selectFaculty);
   const faculty = useMemo(() => {
-    let list = [];
-    if (!rawFaculty || rawFaculty.length === 0) {
-      list = demoFaculty;
-    } else if (rawFaculty.length >= 8) {
-      list = rawFaculty;
-    } else {
-      const seen = new Set(rawFaculty.map((r) => String(r.id || r._id)));
-      list = [...rawFaculty, ...demoFaculty.filter((d) => !seen.has(String(d.id)))];
-    }
-    return list.map((person) => ({
+    return (rawFaculty || []).map((person) => ({
       ...person,
       id: String(person.id || person._id || ""),
       name: person.name || `${person.firstName || ""} ${person.lastName || ""}`.trim() || person.email || "Faculty Member",
@@ -72,22 +83,43 @@ export default function FacultyAttendance() {
   const reduxRecords = useSelector(selectAttendance);
   const [date, setDate] = useState(() => dateKey(new Date()));
 
-  // Ensure active attendance records are populated for the selected date
-  const records = useMemo(() => {
-    const matchingDate = reduxRecords?.filter((r) => r.date === date);
-    if (matchingDate && matchingDate.length > 0) return reduxRecords;
+  // Attendance actions must reflect actual records. Fabricated fallback records
+  // made every row look checked in/out and therefore disabled both buttons.
+  const records = reduxRecords || [];
 
-    const fallbackForDate = faculty.map((person, idx) => ({
-      id: `att-${person.id}-${date}`,
-      facultyId: person.id,
-      date,
-      checkInTime: idx % 7 === 0 ? "08:45" : "08:00",
-      checkOutTime: idx % 5 === 0 ? "16:00" : "16:30",
-      status: idx % 10 === 0 ? "Absent" : idx % 7 === 0 ? "Late" : "Present",
-    }));
+  useEffect(() => {
+    // Refresh the persisted directory so action IDs always belong to this campus.
+    dispatch(fetchFaculty());
+  }, [dispatch]);
 
-    return reduxRecords?.length ? [...reduxRecords, ...fallbackForDate] : fallbackForDate;
-  }, [reduxRecords, faculty, date]);
+  useEffect(() => {
+    let cancelled = false;
+    attendanceApi
+      .listAttendance({ date })
+      .then((response) => {
+        if (cancelled) return;
+        for (const row of response.data?.data || []) {
+          if (!row.attendanceId || !row.status) continue;
+          dispatch(
+            attendanceSaved({
+              id: String(row.attendanceId),
+              facultyId: String(row.teacherProfileId),
+              date,
+              checkInTime: pakistanTime(row.checkInTime),
+              checkOutTime: pakistanTime(row.checkOutTime),
+              status: row.status,
+            }),
+          );
+        }
+      })
+      .catch(() => {
+        // The action itself shows an actionable API error. Keep the page usable
+        // when a temporary list refresh fails.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date, dispatch]);
 
   const summary = useSelector((state) => selectAttendanceSummary(state, date));
   const [view, setView] = useState("daily");
@@ -139,38 +171,19 @@ export default function FacultyAttendance() {
       const response = await attendanceApi[action](facultyId);
       const saved = response.data?.data;
       if (!saved) throw new Error("Attendance response was empty.");
-      const toPakistanParts = (value) => {
-        const timestamp = new Date(value);
-        if (Number.isNaN(timestamp.getTime())) return null;
-        return new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Karachi",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-          .formatToParts(timestamp)
-          .reduce((parts, part) => ({ ...parts, [part.type]: part.value }), {});
-      };
-      const timestampParts = toPakistanParts(
+      const timestampParts = pakistanDateTime(
         saved.checkInTime || saved.checkOutTime,
       );
       const savedDate = timestampParts
         ? `${timestampParts.year}-${timestampParts.month}-${timestampParts.day}`
         : new Date(saved.date).toISOString().slice(0, 10);
-      const toPakistanTime = (value) => {
-        const parts = toPakistanParts(value);
-        return parts ? `${parts.hour}:${parts.minute}` : "";
-      };
       dispatch(
         attendanceSaved({
           id: saved._id,
-          facultyId,
+          facultyId: String(saved.teacherProfileId?._id || saved.teacherProfileId || facultyId),
           date: savedDate,
-          checkInTime: toPakistanTime(saved.checkInTime),
-          checkOutTime: toPakistanTime(saved.checkOutTime),
+          checkInTime: pakistanTime(saved.checkInTime),
+          checkOutTime: pakistanTime(saved.checkOutTime),
           status: saved.status,
         }),
       );

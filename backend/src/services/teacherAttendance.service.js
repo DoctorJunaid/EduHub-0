@@ -358,17 +358,31 @@ export async function deleteAttendance(id, campusId) {
 
 // ---- Check-in (record UTC check-in time) ----
 export async function checkIn(campusId, markedBy, teacherProfileId) {
-  const date = normalizeDate(new Date()); // use today UTC date (midnight)
-  const checkInTime = new Date().toISOString(); // full UTC timestamp
+  const teacher = await User.findOne({
+    _id: teacherProfileId,
+    campusId,
+    role: { $in: ["teacher", "faculty"] },
+  }).select("_id").lean();
+  if (!teacher) {
+    const error = new Error("Teacher or staff member was not found for this campus.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const date = normalizeDate(new Date());
+  const existing = await TeacherAttendance.findOne({ campusId, teacherProfileId, date });
+  if (existing?.checkInTime) {
+    const error = new Error("This teacher has already checked in today.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const checkInTime = new Date().toISOString();
   const record = await TeacherAttendance.findOneAndUpdate(
-    { teacherProfileId, date },
+    { campusId, teacherProfileId, date },
     {
-      campusId,
-      teacherProfileId,
-      date,
-      status: "Present",
-      checkInTime,
-      markedBy,
+      $set: { status: "Present", checkInTime, markedBy },
+      $setOnInsert: { campusId, teacherProfileId, date },
     },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
   )
@@ -380,13 +394,32 @@ export async function checkIn(campusId, markedBy, teacherProfileId) {
 // ---- Check-out (record UTC check-out time) ----
 export async function checkOut(campusId, markedBy, teacherProfileId) {
   const date = normalizeDate(new Date());
+  const existing = await TeacherAttendance.findOne({ campusId, teacherProfileId, date });
+  if (!existing?.checkInTime) {
+    const error = new Error("Check-in must be recorded before check-out.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (existing.checkOutTime) {
+    const error = new Error("This teacher has already checked out today.");
+    error.statusCode = 409;
+    throw error;
+  }
+
   const checkOutTime = new Date().toISOString();
   const record = await TeacherAttendance.findOneAndUpdate(
-    { teacherProfileId, date },
+    // Older attendance documents may store an unset checkout as null or omit
+    // the field entirely. Both are valid "not checked out" states.
+    { _id: existing._id, campusId, checkOutTime: { $in: ["", null] } },
     { $set: { checkOutTime, markedBy } },
     { new: true, runValidators: true }
   )
     .populate("teacherProfileId", "name email department designation")
     .populate("markedBy", "name email");
+  if (!record) {
+    const error = new Error("Attendance changed before check-out could be recorded. Please refresh and try again.");
+    error.statusCode = 409;
+    throw error;
+  }
   return record;
 }
