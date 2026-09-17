@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./Admins/Campus Admin/CampusShared.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -508,6 +509,19 @@ tbody tr:hover {
   min-height: 0;
   padding: 32px;
   overflow: auto;
+}
+
+.content-area.content-area-flush,
+.content-area:has(.campus-overview),
+.content-area:has(.students-directory),
+.content-area:has(.faculty-directory),
+.content-area:has(.class-timetable),
+.content-area:has(.exam-schedules),
+.content-area:has(.faculty-attendance),
+.content-area:has(.student-attendance),
+.content-area:has(.exam-results),
+.content-area:has(.fee-management) {
+  padding: 0 !important;
 }
 
 .sidebar-brand-row {

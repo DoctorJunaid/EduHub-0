@@ -2,26 +2,16 @@ import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ChartNoAxesCombined,
-  ChevronDown,
   CircleAlert,
   Clock,
   Coins,
   Download,
-  Filter,
   Plus,
   Search,
 } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import SummaryCard from "@/components/common/SummaryCard";
 import Progress from "@/components/common/Progress";
 import Pagination from "@/components/common/Pagination";
 import { selectStudents } from "@/store/Slices/studentsSlice.js";
@@ -55,24 +45,27 @@ const defaultFilters = {
   semester: "",
   dueDate: "",
 };
+
 export default function FeeManagement() {
   const dispatch = useDispatch();
-  const students = useSelector(selectStudents),
-    records = useSelector(selectFees),
-    joined = useSelector(selectJoinedFees);
-  const [draft, setDraft] = useState(defaultFilters),
-    [filters, setFilters] = useState(defaultFilters);
-  const [page, setPage] = useState(1),
-    [pageSize, setPageSize] = useState(10),
-    [modal, setModal] = useState(null);
-  const [notice, setNotice] = useState(""),
-    [allActivity, setAllActivity] = useState(false);
+  const students = useSelector(selectStudents);
+  const records = useSelector(selectFees);
+  const joined = useSelector(selectJoinedFees);
+
+  const [filters, setFilters] = useState(defaultFilters);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [modal, setModal] = useState(null);
+  const [notice, setNotice] = useState("");
+  const [allActivity, setAllActivity] = useState(false);
+
   const filtered = useMemo(
     () => filterVouchers(joined, filters),
     [joined, filters],
   );
   const summary = useMemo(() => collectionSummary(filtered), [filtered]);
   const visible = paginateStudents(filtered, page, pageSize);
+
   const unique = (values) => [...new Set(values.filter(Boolean))].sort();
   const options = {
     feeCategory: unique(records.map((record) => record.feeCategory)),
@@ -80,18 +73,24 @@ export default function FeeManagement() {
       [...records, ...students].map((record) => record.semester),
     ),
   };
+
   const selected = joined.find((voucher) => voucher.id === modal?.id);
   const selectedRecord = records.find((voucher) => voucher.id === modal?.id);
+
   const close = () => setModal(null);
   const onAction = (mode, id) => setModal({ mode, id });
+
   const reset = () => {
-    setDraft(defaultFilters);
     setFilters(defaultFilters);
     setPage(1);
     setNotice("");
   };
-  const change = (key, value) =>
-    setDraft((previous) => ({ ...previous, [key]: value }));
+
+  const change = (key, value) => {
+    setFilters((previous) => ({ ...previous, [key]: value }));
+    setPage(1);
+  };
+
   const save = (values) => {
     dispatch(voucherSaved(values));
     reset();
@@ -105,252 +104,267 @@ export default function FeeManagement() {
     setNotice("Voucher saved.");
     close();
   };
+
   const exportFees = () => {
     const data = feeExport(filtered);
     downloadCsv("fee-vouchers.csv", data.headers, data.rows);
     setNotice(`Exported ${filtered.length} vouchers.`);
   };
+
   const recent = [...filtered].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
-  const filterPending = Object.keys(defaultFilters).some(
-    (key) => draft[key] !== filters[key],
-  );
+
   return (
     <section
-      className="class-timetable fee-management"
-      aria-labelledby="fee-title"
+      className="campus-tab-page fee-management"
+      aria-label="Fee Management"
     >
-      <div className="tt-page-heading">
-        <div>
-          <h1 id="fee-title">Fee Management</h1>
-          <p>
-            Manage tuition fees, vouchers, payments and outstanding balances.
-          </p>
+      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
+      <div className="campus-kpi-track">
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Coins size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Total Fee Collected</span>
+              <span className="kpi-value">{formatPKR(summary.Paid)}</span>
+            </div>
+          </div>
         </div>
-        <div className="fee-header-actions">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download size={16} />
-                Export
-                <ChevronDown size={13} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={exportFees}>
-                Export filtered CSV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            className="tt-primary"
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Clock size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Pending / Unpaid</span>
+              <span className="kpi-value">{formatPKR(summary.Pending)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <CircleAlert size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Overdue Dues</span>
+              <span className="kpi-value">{formatPKR(summary.Overdue)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <ChartNoAxesCombined size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Collection Rate</span>
+              <span className="kpi-value">{summary.rate.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Contiguous 56px Toolbar */}
+      <div className="campus-toolbar">
+        <div className="toolbar-left">
+          <div className="toolbar-search" style={{ width: "130px", maxWidth: "145px" }}>
+            <Search size={13} />
+            <input
+              type="search"
+              placeholder="Search voucher..."
+              value={filters.search}
+              onChange={(e) => change("search", e.target.value)}
+              aria-label="Search student or voucher"
+            />
+          </div>
+
+          <select
+            className="toolbar-select"
+            aria-label="Filter by Category"
+            style={{ maxWidth: "105px" }}
+            value={filters.feeCategory}
+            onChange={(e) => change("feeCategory", e.target.value)}
+          >
+            <option value="">All Categories</option>
+            {options.feeCategory.map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+
+          <select
+            className="toolbar-select"
+            aria-label="Filter by Status"
+            style={{ maxWidth: "95px" }}
+            value={filters.paymentStatus}
+            onChange={(e) => change("paymentStatus", e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            {paymentStatuses.map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+
+          <select
+            className="toolbar-select"
+            aria-label="Filter by Semester"
+            style={{ maxWidth: "95px" }}
+            value={filters.semester}
+            onChange={(e) => change("semester", e.target.value)}
+          >
+            <option value="">All Semesters</option>
+            {options.semester.map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            aria-label="Filter by due date"
+            value={filters.dueDate}
+            onChange={(e) => change("dueDate", e.target.value)}
+            style={{ height: "32px", width: "115px", fontSize: "11px", background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "6px", padding: "0 6px", boxSizing: "border-box" }}
+          />
+
+          {(filters.search || filters.feeCategory || filters.paymentStatus || filters.semester || filters.dueDate) && (
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-outline"
+              onClick={reset}
+            >
+              Reset
+            </button>
+          )}
+        </div>
+
+        <div className="toolbar-actions">
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-outline"
+            onClick={exportFees}
+          >
+            <Download size={14} />
+            Export CSV
+          </button>
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-primary"
             disabled={!students.length}
             onClick={() => onAction("add")}
           >
-            <Plus size={17} />
+            <Plus size={14} />
             Add Fee Voucher
-          </Button>
+          </button>
         </div>
       </div>
-      <div className="fee-summary">
-        {[
-          [Coins, formatPKR(summary.Paid), "Total Collected", "fee-collected"],
-          [
-            Clock,
-            formatPKR(summary.Pending),
-            "Outstanding / Pending",
-            "fee-pending-card",
-          ],
-          [
-            CircleAlert,
-            formatPKR(summary.Overdue),
-            "Overdue",
-            "fee-overdue-card",
-          ],
-          [
-            ChartNoAxesCombined,
-            `${summary.rate.toFixed(1)}%`,
-            "Collection Rate",
-            "fee-rate-card",
-          ],
-        ].map(([Icon, value, label, className]) => (
-          <SummaryCard
-            key={label}
-            icon={Icon}
-            value={value}
-            label={label}
-            className={className}
-          />
-        ))}
-      </div>
-      <Card className="tt-card fee-progress-panel">
-        <div className="fee-progress-title">
-          <span>
-            <ChartNoAxesCombined size={23} />
+
+      {/* 3. Progress Ribbon */}
+      <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #e4e4e7", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span style={{ fontSize: "12px", fontWeight: "600", color: "#09090b" }}>Overall Recovery:</span>
+          <span style={{ fontSize: "12px", color: "#71717a" }}>
+            <strong>{formatPKR(summary.Paid)}</strong> of {formatPKR(summary.total)} target
           </span>
-          <div>
-            <h2>Collection Progress</h2>
-            <p>
-              <strong>{formatPKR(summary.Paid)}</strong> collected of{" "}
-              {formatPKR(summary.total)}
-            </p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "240px" }}>
+          <div style={{ flex: 1 }}>
+            <Progress value={summary.rate} label="Fee collection rate" />
+          </div>
+          <span style={{ fontSize: "11px", fontWeight: "700", color: "#09090b" }}>{summary.rate.toFixed(1)}%</span>
+        </div>
+      </div>
+
+      {/* 4. Table Panel */}
+      <div style={{ padding: "16px 20px", width: "100%", boxSizing: "border-box" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
+          <div className="campus-table-container">
+            <FeeTable rows={visible.records} onAction={onAction} />
+          </div>
+
+          <div className="campus-footer" style={{ borderTop: "1px solid #e4e4e7" }}>
+            <div className="footer-info">
+              {notice && <span style={{ color: "#16a34a", marginRight: "12px", fontWeight: "600" }}>{notice}</span>}
+              Showing {filtered.length > 0 ? (visible.currentPage - 1) * pageSize + 1 : 0} to{" "}
+              {Math.min(visible.currentPage * pageSize, filtered.length)} of {filtered.length} fee vouchers
+            </div>
+
+            <Pagination
+              total={filtered.length}
+              page={visible.currentPage}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+              label="vouchers"
+            />
           </div>
         </div>
-        <div className="fee-progress">
-          <Progress value={summary.rate} label="Fee collection rate" />
-          <span>{summary.rate.toFixed(1)}%</span>
-        </div>
-        <div className="fee-legend">
-          {[
-            ["Paid", "Collected"],
-            ["Pending", "Pending"],
-            ["Overdue", "Overdue"],
-          ].map(([key, label]) => (
-            <span key={key}>
-              <i className={`fee-dot-${key.toLowerCase()}`} />
-              {label}
-              <strong>{formatPKR(summary[key])}</strong>
+      </div>
+
+      {/* 5. Recent Activity Panel */}
+      <div style={{ padding: "0 20px 20px 20px" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", padding: "14px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <Clock size={14} />
+              Recent Payment Activity
             </span>
-          ))}
-        </div>
-      </Card>
-      <Card className="tt-card fee-filter-panel">
-        <form
-          className="fee-filters"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setFilters(draft);
-            setPage(1);
-            setNotice("Filters applied.");
-          }}
-        >
-          <div className="fee-search">
-            <Search size={15} />
-            <Input
-              aria-label="Search student, voucher or fee"
-              placeholder="Search student, voucher or fee..."
-              value={draft.search}
-              onChange={(event) => change("search", event.target.value)}
-            />
-          </div>
-          {[
-            [
-              "feeCategory",
-              "Fee Category",
-              "All Categories",
-              options.feeCategory,
-            ],
-            [
-              "paymentStatus",
-              "Payment Status",
-              "All Statuses",
-              paymentStatuses,
-            ],
-            ["semester", "Semester", "All Semesters", options.semester],
-          ].map(([key, label, placeholder, choices]) => (
-            <label key={key}>
-              {label}
-              <select
-                value={draft[key]}
-                onChange={(event) => change(key, event.target.value)}
-              >
-                <option value="">{placeholder}</option>
-                {choices.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-              </select>
-            </label>
-          ))}
-          <label>
-            Due Date
-            <Input
-              type="date"
-              aria-label="Filter by due date"
-              value={draft.dueDate}
-              onChange={(event) => change("dueDate", event.target.value)}
-            />
-          </label>
-          <Button type="button" variant="outline" onClick={reset}>
-            Reset
-          </Button>
-          <Button type="submit">
-            <Filter size={15} />
-            Filter
-          </Button>
-        </form>
-        {filterPending && (
-          <p className="fee-filter-note">
-            Select Filter to apply your changes. Export uses the currently
-            applied filters.
-          </p>
-        )}
-      </Card>
-      <Card className="tt-card fee-table-panel">
-        <div className="fee-table-count">{filtered.length} vouchers logged</div>
-        <FeeTable rows={visible.records} onAction={onAction} />
-        <div className="fee-footer">
-          <span role="status">{notice}</span>
-          <Pagination
-            total={filtered.length}
-            page={visible.currentPage}
-            pageSize={pageSize}
-            onPage={setPage}
-            onPageSize={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-            label="vouchers"
-          />
-        </div>
-      </Card>
-      <Card className="tt-card fee-activity">
-        <div className="fee-activity-heading">
-          <h2>
-            <Clock size={16} />
-            Recent Payment Activity
-          </h2>
-          <Button
-            variant="ghost"
-            disabled={recent.length <= 4}
-            onClick={() => setAllActivity(!allActivity)}
-          >
-            {allActivity ? "Show Recent" : "View All"}
-          </Button>
-        </div>
-        <div className="fee-activity-grid">
-          {recent.slice(0, allActivity ? recent.length : 4).map((voucher) => (
-            <button
-              className="fee-activity-item"
-              key={voucher.id}
-              onClick={() => onAction("view", voucher.id)}
+            <Button
+              variant="ghost"
+              style={{ fontSize: "11px", height: "26px" }}
+              disabled={recent.length <= 4}
+              onClick={() => setAllActivity(!allActivity)}
             >
-              <Avatar>
-                <AvatarFallback>{voucher.student.initials}</AvatarFallback>
-              </Avatar>
-              <div>
-                <strong>{voucher.student.name}</strong>
-                <span>{voucher.feeCategory}</span>
-                <strong>{formatPKR(voucher.amount)}</strong>
-                <small>
-                  {voucher.createdAt === voucher.updatedAt
-                    ? "Created"
-                    : "Updated"}{" "}
-                  {new Date(voucher.updatedAt).toLocaleString()}
-                </small>
-              </div>
-              <FeeStatusBadge status={voucher.paymentStatus} />
-            </button>
-          ))}
+              {allActivity ? "Show Less" : "View All"}
+            </Button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
+            {recent.slice(0, allActivity ? recent.length : 4).map((voucher) => (
+              <button
+                key={voucher.id}
+                type="button"
+                className="fee-activity-item"
+                onClick={() => onAction("view", voucher.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  padding: "10px 12px",
+                  border: "1px solid #e4e4e7",
+                  borderRadius: "6px",
+                  background: "#fafafa",
+                  cursor: "pointer",
+                  textAlign: "left"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Avatar style={{ width: "28px", height: "28px", fontSize: "10px", background: "#f4f4f5", color: "#09090b" }}>
+                    <AvatarFallback>{voucher.student.initials}</AvatarFallback>
+                  </Avatar>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <strong style={{ fontSize: "12px", color: "#09090b" }}>{voucher.student.name}</strong>
+                    <span style={{ fontSize: "11px", color: "#71717a" }}>{voucher.feeCategory} · {formatPKR(voucher.amount)}</span>
+                  </div>
+                </div>
+                <FeeStatusBadge status={voucher.paymentStatus} />
+              </button>
+            ))}
+          </div>
         </div>
-        {!recent.length && (
-          <p className="tt-empty">
-            No voucher activity in the current selection.
-          </p>
-        )}
-      </Card>
-      {(modal?.mode === "add" ||
-        (modal?.mode === "edit" && selectedRecord)) && (
+      </div>
+
+      {/* Modals */}
+      {(modal?.mode === "add" || (modal?.mode === "edit" && selectedRecord)) && (
         <FeeVoucherForm
           record={selectedRecord}
           students={students}

@@ -4,3 +4,5 @@ export function validDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(parseDate(value).getTime()) && dateKey(parseDate(value)) === value;
 }
 export const longDate = (value) => parseDate(value).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+export const shortDate = (value) => parseDate(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+

@@ -11,9 +11,7 @@ import {
   ChevronRight,
   Eye,
 } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Table,
   TableHeader,
@@ -70,16 +68,23 @@ export default function CampusOperationsHub({
   students = [],
   faculty = [],
   timetable = [],
+  activeTab = 'students',
   onAddStudent,
   onAddTeacher,
   onViewStudentProfile,
 }) {
-  const [activeTab, setActiveTab] = useState('students');
   const [searchQuery, setSearchQuery] = useState('');
   const [programFilter, setProgramFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 8;
+
+  React.useEffect(() => {
+    setSearchQuery('');
+    setProgramFilter('');
+    setStatusFilter('');
+    setPage(1);
+  }, [activeTab]);
 
   // Generate attendance rows from students and timetable
   const attendanceRows = useMemo(() => {
@@ -176,14 +181,6 @@ export default function CampusOperationsHub({
     currentPage * pageSize
   );
 
-  const handleTabChange = (newTab) => {
-    setActiveTab(newTab);
-    setSearchQuery('');
-    setProgramFilter('');
-    setStatusFilter('');
-    setPage(1);
-  };
-
   const programsList = [
     'BS Computer Science',
     'BS Software Engineering',
@@ -192,68 +189,7 @@ export default function CampusOperationsHub({
   ];
 
   return (
-    <Card className="campus-operations-hub">
-      {/* Top Bar: Tabs & Quick Action Buttons */}
-      <div className="hub-top-toolbar">
-        {/* Navigation Tabs with Counter Badges */}
-        <div className="hub-tabs-list" role="tablist">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'students'}
-            className={`hub-tab-button ${activeTab === 'students' ? 'is-active' : ''}`}
-            onClick={() => handleTabChange('students')}
-          >
-            <Users size={15} />
-            <span>Students Roster</span>
-            <span className="hub-tab-counter">{students.length}</span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === 'faculty'}
-            className={`hub-tab-button ${activeTab === 'faculty' ? 'is-active' : ''}`}
-            onClick={() => handleTabChange('faculty')}
-          >
-            <GraduationCap size={15} />
-            <span>Faculty Members</span>
-            <span className="hub-tab-counter">{faculty.length}</span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === 'timetable'}
-            className={`hub-tab-button ${activeTab === 'timetable' ? 'is-active' : ''}`}
-            onClick={() => handleTabChange('timetable')}
-          >
-            <CalendarDays size={15} />
-            <span>Class Timetable & Labs</span>
-            <span className="hub-tab-counter">{timetable.length}</span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === 'attendance'}
-            className={`hub-tab-button ${activeTab === 'attendance' ? 'is-active' : ''}`}
-            onClick={() => handleTabChange('attendance')}
-          >
-            <ClipboardCheck size={15} />
-            <span>Live Attendance</span>
-            <span className="hub-tab-counter">{attendanceRows.length}</span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === 'programs'}
-            className={`hub-tab-button ${activeTab === 'programs' ? 'is-active' : ''}`}
-            onClick={() => handleTabChange('programs')}
-          >
-            <BookOpen size={15} />
-            <span>Degree Programs</span>
-            <span className="hub-tab-counter">{ACADEMIC_PROGRAMS_DATA.length}</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="campus-operations-hub">
       {/* Filter & Search Bar with Action Buttons Aligned on Right */}
       <div className="hub-filter-bar">
         <div className="hub-filter-left">
@@ -269,14 +205,14 @@ export default function CampusOperationsHub({
               }}
               placeholder={
                 activeTab === 'students'
-                  ? 'Search students by name, roll number, or program...'
+                  ? 'Search students...'
                   : activeTab === 'faculty'
-                  ? 'Search faculty by name, department, or qualification...'
+                  ? 'Search faculty...'
                   : activeTab === 'timetable'
-                  ? 'Search classes by course, room, or instructor...'
+                  ? 'Search timetable...'
                   : activeTab === 'attendance'
-                  ? 'Search attendance logs by student name or subject...'
-                  : 'Search degree programs or departments...'
+                  ? 'Search attendance...'
+                  : 'Search programs...'
               }
               aria-label="Search records"
             />
@@ -330,25 +266,28 @@ export default function CampusOperationsHub({
           )}
         </div>
 
-        {/* Global Action Buttons Aligned on Far Right */}
+        {/* Contextual Action Button Aligned on Far Right */}
         <div className="hub-top-actions">
-          <Button
-            size="sm"
-            variant="outline"
-            className="hub-action-btn"
-            onClick={onAddStudent}
-          >
-            <Plus size={14} />
-            Add Student
-          </Button>
-          <Button
-            size="sm"
-            className="hub-action-btn hub-primary-btn"
-            onClick={onAddTeacher}
-          >
-            <Plus size={14} />
-            Add Teacher
-          </Button>
+          {activeTab === 'students' && (
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-primary"
+              onClick={onAddStudent}
+            >
+              <Plus size={14} />
+              Add Student
+            </button>
+          )}
+          {activeTab === 'faculty' && (
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-primary"
+              onClick={onAddTeacher}
+            >
+              <Plus size={14} />
+              Add Teacher
+            </button>
+          )}
         </div>
       </div>
 
@@ -356,29 +295,27 @@ export default function CampusOperationsHub({
       <div className="hub-table-wrapper" tabIndex={0} aria-label="Campus operations data table">
         {/* 1. Students View */}
         {activeTab === 'students' && (
-          <Table>
+          <Table className="hub-students-table">
             <TableHeader>
               <TableRow>
                 <TableHead>Student Name & Roll No</TableHead>
                 <TableHead>Program & Semester</TableHead>
-                <TableHead>Section</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Guardian Contact</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-center">Section</TableHead>
+                <TableHead className="text-center">Attendance</TableHead>
+                <TableHead className="text-center">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayedRows.map((student) => (
-                <TableRow key={student.id || student.roll}>
+                <TableRow
+                  key={student.id || student.roll}
+                  className="hub-clickable-row"
+                  onClick={() => onViewStudentProfile?.(student)}
+                >
                   <TableCell>
-                    <div className="hub-user-cell">
-                      <Avatar className="hub-avatar">
-                        <AvatarFallback>{student.initials || 'ST'}</AvatarFallback>
-                      </Avatar>
-                      <div className="hub-user-info">
-                        <strong>{student.name}</strong>
-                        <small>{student.roll}</small>
-                      </div>
+                    <div className="hub-user-info">
+                      <strong className="hub-student-link">{student.name}</strong>
+                      <small>{student.roll}</small>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -387,41 +324,31 @@ export default function CampusOperationsHub({
                       <small>{student.semester || 'Spring 2025'}</small>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <span className="hub-badge-neutral">{student.section || 'CS-4A'}</span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
+                    <span className="hub-attendance-rate">{student.attendance || '94.2%'}</span>
+                  </TableCell>
+                  <TableCell className="text-center">
                     <span
                       className={`hub-status-pill ${
-                        student.status === 'Active' ? 'is-active' : 'is-pending'
+                        student.status === 'Active'
+                          ? 'is-active'
+                          : student.status === 'Suspended' || student.status === 'Inactive'
+                          ? 'is-suspended'
+                          : 'is-pending'
                       }`}
                     >
                       <span className="dot" />
                       {student.status || 'Active'}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <div className="hub-cell-stack">
-                      <div>{student.guardian || 'Guardian Contact'}</div>
-                      <small className="text-muted">{student.phone || student.guardianPhone || '+92 300 0000000'}</small>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="hub-row-btn"
-                      onClick={() => onViewStudentProfile?.(student)}
-                    >
-                      <Eye size={12} />
-                      View Profile
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
               {displayedRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="hub-empty-cell">
+                  <TableCell colSpan={5} className="hub-empty-cell">
                     No student records found matching your filters.
                   </TableCell>
                 </TableRow>
@@ -432,29 +359,22 @@ export default function CampusOperationsHub({
 
         {/* 2. Faculty View */}
         {activeTab === 'faculty' && (
-          <Table>
+          <Table className="hub-faculty-table">
             <TableHeader>
               <TableRow>
                 <TableHead>Faculty Member</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Designation & Title</TableHead>
-                <TableHead>Assigned Subjects</TableHead>
-                <TableHead>Duty Status</TableHead>
-                <TableHead className="text-right">Official Email</TableHead>
+                <TableHead className="text-center">Duty Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayedRows.map((teacher) => (
                 <TableRow key={teacher.id || teacher.name}>
                   <TableCell>
-                    <div className="hub-user-cell">
-                      <Avatar className="hub-avatar">
-                        <AvatarFallback>{teacher.initials || 'FC'}</AvatarFallback>
-                      </Avatar>
-                      <div className="hub-user-info">
-                        <strong>{teacher.name}</strong>
-                        <small>{teacher.qualification || 'Ph.D. Academic'}</small>
-                      </div>
+                    <div className="hub-user-info">
+                      <strong className="hub-student-link">{teacher.name}</strong>
+                      <small>{teacher.qualification || 'Ph.D. Academic'}</small>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -463,10 +383,7 @@ export default function CampusOperationsHub({
                   <TableCell>
                     <strong>{teacher.designation}</strong>
                   </TableCell>
-                  <TableCell>
-                    <div>{teacher.subjects}</div>
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <span
                       className={`hub-status-pill ${
                         teacher.status === 'Active' ? 'is-active' : 'is-pending'
@@ -476,15 +393,12 @@ export default function CampusOperationsHub({
                       {teacher.status === 'Active' ? 'On Duty' : 'On Leave'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <small className="text-muted">{teacher.email || 'faculty@nust.edu.pk'}</small>
-                  </TableCell>
                 </TableRow>
               ))}
               {displayedRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="hub-empty-cell">
-                    No faculty records found.
+                  <TableCell colSpan={4} className="hub-empty-cell">
+                    No faculty records found matching your filters.
                   </TableCell>
                 </TableRow>
               )}
@@ -494,15 +408,13 @@ export default function CampusOperationsHub({
 
         {/* 3. Class Timetable View */}
         {activeTab === 'timetable' && (
-          <Table>
+          <Table className="hub-timetable-table">
             <TableHeader>
               <TableRow>
-                <TableHead>Subject & Course</TableHead>
-                <TableHead>Section & Program</TableHead>
+                <TableHead>Course & Subject</TableHead>
+                <TableHead>Section & Venue</TableHead>
                 <TableHead>Schedule & Timings</TableHead>
-                <TableHead>Room / Lab Allocation</TableHead>
-                <TableHead>Assigned Instructor</TableHead>
-                <TableHead>Live Status</TableHead>
+                <TableHead className="text-center">Live Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -511,13 +423,13 @@ export default function CampusOperationsHub({
                   <TableCell>
                     <div className="hub-cell-stack">
                       <strong>{item.subject}</strong>
-                      <small>Core Course</small>
+                      <small>{item.instructor || 'Dr. Usman Khan'}</small>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="hub-cell-stack">
                       <span className="hub-badge-neutral">{item.section}</span>
-                      <small>{item.program || 'BS Computer Science'}</small>
+                      <small>{item.room || 'Lab 302'}</small>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -526,18 +438,7 @@ export default function CampusOperationsHub({
                       <small>{item.startTime && item.endTime ? `${item.startTime} – ${item.endTime}` : item.time || '10:00 AM – 11:30 AM'}</small>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <strong className="font-semibold">{item.room}</strong>
-                  </TableCell>
-                  <TableCell>
-                    <div className="hub-user-cell">
-                      <Avatar className="hub-avatar">
-                        <AvatarFallback>UK</AvatarFallback>
-                      </Avatar>
-                      <span>{item.instructor || 'Dr. Usman Khan'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <span
                       className={`hub-status-pill ${
                         item.status === 'Active' ? 'is-active' : 'is-pending'
@@ -551,8 +452,8 @@ export default function CampusOperationsHub({
               ))}
               {displayedRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="hub-empty-cell">
-                    No class schedules found.
+                  <TableCell colSpan={4} className="hub-empty-cell">
+                    No class schedules found matching your filters.
                   </TableCell>
                 </TableRow>
               )}
@@ -562,52 +463,44 @@ export default function CampusOperationsHub({
 
         {/* 4. Live Attendance View */}
         {activeTab === 'attendance' && (
-          <Table>
+          <Table className="hub-attendance-table">
             <TableHeader>
               <TableRow>
                 <TableHead>Student Name & Roll No</TableHead>
                 <TableHead>Program & Section</TableHead>
-                <TableHead>Subject / Lecture</TableHead>
-                <TableHead>Room / Venue</TableHead>
-                <TableHead>Session Time</TableHead>
-                <TableHead className="text-right">Attendance Status</TableHead>
+                <TableHead>Subject & Room</TableHead>
+                <TableHead className="text-center">Attendance Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayedRows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
-                    <div className="hub-user-cell">
-                      <Avatar className="hub-avatar">
-                        <AvatarFallback>{row.student.initials || 'ST'}</AvatarFallback>
-                      </Avatar>
-                      <div className="hub-user-info">
-                        <strong>{row.student.name}</strong>
-                        <small>{row.student.roll}</small>
-                      </div>
+                    <div className="hub-user-info">
+                      <strong className="hub-student-link">{row.student.name}</strong>
+                      <small>{row.student.roll}</small>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <strong>{row.student.program}</strong>
-                    <small>Sec: {row.student.section}</small>
+                    <div className="hub-cell-stack">
+                      <strong>{row.student.program}</strong>
+                      <small>Sec: {row.student.section}</small>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <strong>{row.subject}</strong>
+                    <div className="hub-cell-stack">
+                      <strong>{row.subject}</strong>
+                      <small>{row.room} • {row.time}</small>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <span className="hub-badge-neutral">{row.room}</span>
-                  </TableCell>
-                  <TableCell>
-                    <small>{row.time}</small>
-                  </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-center">
                     <span
                       className={`hub-status-pill ${
                         row.status === 'Present'
                           ? 'is-active'
                           : row.status === 'Late'
                           ? 'is-pending'
-                          : 'is-pending'
+                          : 'is-absent'
                       }`}
                     >
                       <span className="dot" />
@@ -618,8 +511,8 @@ export default function CampusOperationsHub({
               ))}
               {displayedRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="hub-empty-cell">
-                    No attendance records found.
+                  <TableCell colSpan={4} className="hub-empty-cell">
+                    No attendance records found matching your filters.
                   </TableCell>
                 </TableRow>
               )}
@@ -629,40 +522,42 @@ export default function CampusOperationsHub({
 
         {/* 5. Academic Programs View */}
         {activeTab === 'programs' && (
-          <Table>
+          <Table className="hub-programs-table">
             <TableHeader>
               <TableRow>
                 <TableHead>Degree Program</TableHead>
-                <TableHead>Academic Level</TableHead>
                 <TableHead>Department</TableHead>
-                <TableHead>Enrolled Students</TableHead>
-                <TableHead>Active Class Sections</TableHead>
-                <TableHead className="text-right">Head of Department</TableHead>
+                <TableHead className="text-center">Enrolled Students</TableHead>
+                <TableHead className="text-center">Head of Department</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayedRows.map((prog) => (
                 <TableRow key={prog.id}>
                   <TableCell>
-                    <strong className="font-semibold">{prog.name}</strong>
+                    <div className="hub-cell-stack">
+                      <strong>{prog.name}</strong>
+                      <small>{prog.degree}</small>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <span className="hub-badge-neutral">{prog.degree}</span>
+                    <span>{prog.department}</span>
                   </TableCell>
-                  <TableCell>
-                    <div>{prog.department}</div>
+                  <TableCell className="text-center">
+                    <span className="hub-badge-neutral font-semibold">{prog.enrolledCount} Students</span>
                   </TableCell>
-                  <TableCell>
-                    <strong>{prog.enrolledCount} Students</strong>
-                  </TableCell>
-                  <TableCell>
-                    <small>{prog.sections}</small>
-                  </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-center">
                     <strong>{prog.hod}</strong>
                   </TableCell>
                 </TableRow>
               ))}
+              {displayedRows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="hub-empty-cell">
+                    No academic programs found matching your filters.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         )}
@@ -707,6 +602,6 @@ export default function CampusOperationsHub({
           </Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

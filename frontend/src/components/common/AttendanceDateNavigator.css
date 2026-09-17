@@ -1,6 +1,76 @@
-.attendance-date-controls, .attendance-date-controls > div { display: flex; align-items: center; gap: 9px; }
-.attendance-date-controls > div { gap: 0; border: 1px solid var(--border); border-radius: 7px; }
-.attendance-date-controls button { height: 33px; font-size: 11px; }
-.attendance-date-controls > div > button { border: 0; box-shadow: none; padding: 0 8px; }
-.attendance-date-controls .date-picker-trigger { min-width: 184px; justify-content: flex-start; }
-@media (max-width: 650px) { .attendance-date-controls { gap: 5px; flex-wrap: wrap; } .attendance-date-controls .date-picker-trigger { min-width: 163px; } }
+/* ==========================================================================
+   Attendance Date Navigator (Unified 34px Toolbar Component)
+   ========================================================================== */
+
+.attendance-date-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.attendance-date-controls .attendance-date-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background: #ffffff;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.attendance-date-controls .date-picker-trigger {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  min-width: 95px !important;
+  max-width: 115px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 6px !important;
+  border-radius: 5px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #09090b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.attendance-date-controls .date-picker-trigger:hover {
+  background: #f4f4f5 !important;
+}
+
+.attendance-date-controls .date-nav-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 26px;
+  border: none;
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.attendance-date-controls .date-nav-arrow:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+@media (max-width: 650px) {
+  .attendance-date-controls {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .attendance-date-controls .date-picker-trigger {
+    min-width: 120px;
+  }
+}

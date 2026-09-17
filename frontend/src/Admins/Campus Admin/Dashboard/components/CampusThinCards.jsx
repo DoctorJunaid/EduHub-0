@@ -4,7 +4,6 @@ import {
   GraduationCap,
   BookOpen,
   CalendarDays,
-  Building2,
 } from 'lucide-react';
 
 const CARD_DATA = [
@@ -32,12 +31,6 @@ const CARD_DATA = [
     label: 'Class & Lab Sessions',
     primaryMetric: '42 Sessions',
   },
-  {
-    id: 'campus-card',
-    icon: Building2,
-    label: 'Campus Operations',
-    primaryMetric: 'Operational',
-  },
 ];
 
 export default function CampusThinCards({ onSelectCard, activeCardId = 'students-card' }) {
@@ -61,17 +54,14 @@ export default function CampusThinCards({ onSelectCard, activeCardId = 'students
               }}
               className={`campus-thin-card ${isActive ? 'is-active' : ''}`}
             >
-              {/* Minimal Top Row: Category Label & Minimal Icon Pill */}
-              <div className="card-top-row">
-                <span className="card-stat-label">{card.label}</span>
+              <div className="card-centered-wrap">
                 <div className="card-icon-pill">
-                  <Icon size={14} aria-hidden="true" />
+                  <Icon size={18} aria-hidden="true" />
                 </div>
-              </div>
-
-              {/* Main Metric */}
-              <div className="card-body-block">
-                <div className="card-primary-metric">{card.primaryMetric}</div>
+                <div className="card-info-stack">
+                  <span className="card-stat-label">{card.label}</span>
+                  <div className="card-primary-metric">{card.primaryMetric}</div>
+                </div>
               </div>
             </div>
           );

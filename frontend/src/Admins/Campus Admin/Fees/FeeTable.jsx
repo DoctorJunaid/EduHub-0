@@ -19,20 +19,22 @@ import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
 
 export default function FeeTable({ rows, onAction }) {
+  const columnDefs = [
+    { label: "Student / Voucher", width: "23%", align: "left" },
+    { label: "Fee Category", width: "17%", align: "left" },
+    { label: "Amount (PKR)", width: "14%", align: "left" },
+    { label: "Due Date", width: "12%", align: "left" },
+    { label: "Payment Status", width: "12%", align: "center" },
+    { label: "Payment Date", width: "10%", align: "left" },
+    { label: "Actions", width: "12%", align: "right" },
+  ];
+
   return (
     <Table aria-label="Fee vouchers">
       <TableHeader>
         <TableRow>
-          {[
-            "Student / Voucher",
-            "Fee Category",
-            "Amount (PKR)",
-            "Due Date",
-            "Payment Status",
-            "Payment Date",
-            "Actions",
-          ].map((label) => (
-            <TableHead scope="col" key={label}>
+          {columnDefs.map(({ label, width, align }) => (
+            <TableHead scope="col" key={label} style={{ width, textAlign: align }}>
               {label}
             </TableHead>
           ))}
@@ -41,41 +43,43 @@ export default function FeeTable({ rows, onAction }) {
       <TableBody>
         {rows.map((voucher) => (
           <TableRow key={voucher.id}>
-            <TableCell>
+            <TableCell style={{ width: "23%" }}>
               <div className="fee-person">
                 <Avatar>
                   <AvatarFallback>
                     {voucher.student.initials || voucher.student.name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <strong>{voucher.student.name}</strong>
-                  <small>{voucher.voucherNo}</small>
+                <div style={{ minWidth: 0, overflow: "hidden" }}>
+                  <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{voucher.student.name}</strong>
+                  <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>{voucher.voucherNo}</small>
                 </div>
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell style={{ width: "17%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {voucher.feeCategory}
               <small>{voucher.semester || "—"}</small>
             </TableCell>
-            <TableCell>
+            <TableCell style={{ width: "14%" }}>
               <strong>{formatPKR(voucher.amount)}</strong>
             </TableCell>
-            <TableCell>{voucher.dueDate}</TableCell>
-            <TableCell>
+            <TableCell style={{ width: "12%", whiteSpace: "nowrap" }}>{voucher.dueDate}</TableCell>
+            <TableCell style={{ width: "12%", textAlign: "center", whiteSpace: "nowrap" }}>
               <FeeStatusBadge status={voucher.paymentStatus} />
             </TableCell>
-            <TableCell>{voucher.paymentDate || "—"}</TableCell>
-            <TableCell>
+            <TableCell style={{ width: "10%", whiteSpace: "nowrap" }}>{voucher.paymentDate || "—"}</TableCell>
+            <TableCell style={{ width: "12%", textAlign: "right" }}>
               <div className="fee-actions">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
+                    <button
+                      type="button"
+                      className="table-icon-btn"
+                      style={{ width: "24px", height: "26px" }}
                       aria-label={`Actions for voucher ${voucher.voucherNo}`}
                     >
                       <MoreHorizontal size={15} />
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
@@ -96,15 +100,15 @@ export default function FeeTable({ rows, onAction }) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
+                <button
+                  type="button"
                   className="fee-mark-paid"
-                  variant="outline"
                   disabled={voucher.paymentStatus === "Paid"}
                   onClick={() => onAction("paid", voucher.id)}
                   aria-label={`Mark voucher ${voucher.voucherNo} paid`}
                 >
                   {voucher.paymentStatus === "Paid" ? "Paid" : "Mark Paid"}
-                </Button>
+                </button>
               </div>
             </TableCell>
           </TableRow>

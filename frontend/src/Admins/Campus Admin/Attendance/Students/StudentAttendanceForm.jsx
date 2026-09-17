@@ -1,31 +1,147 @@
-import { useId, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/Input';
+import { useState } from 'react';
+import { Users } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/Button';
 import { attendanceStatuses } from '@/lib/attendance';
 import { timeLabel } from '@/lib/schedule';
 import { validStudentAttendance } from './studentAttendanceData.js';
+import FullPageFormShell from '@/components/common/FullPageFormShell';
 
 export default function StudentAttendanceForm({ students, classes, date, records, onSave, onClose }) {
-  const id = useId();
   const [values, setValues] = useState({ studentId: '', classId: '', date, status: '' });
   const [error, setError] = useState('');
-  const existing = records.find((record) => record.studentId === values.studentId && record.classId === values.classId && record.date === values.date);
-  const change = (key, value) => { setValues((previous) => ({ ...previous, [key]: value })); setError(''); };
+
+  const existing = records.find(
+    (record) => record.studentId === values.studentId && record.classId === values.classId && record.date === values.date,
+  );
+
+  const change = (key, value) => {
+    setValues((previous) => ({ ...previous, [key]: value }));
+    setError('');
+  };
+
   const submit = (event) => {
     event.preventDefault();
-    if (!validStudentAttendance(values)) return setError('Select a student, class, valid date, and approved status.');
-    if (!students.some((student) => student.id === values.studentId) || !classes.some((session) => session.id === values.classId)) return setError('Select an existing student and timetable class.');
+    if (!validStudentAttendance(values)) return setError('Please select a student, class, valid date, and approved status.');
+    if (!students.some((student) => student.id === values.studentId) || !classes.some((session) => session.id === values.classId))
+      return setError('Select an existing student and timetable class.');
     onSave(values);
   };
-  return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}><DialogContent className="tt-dialog" overlayClassName="tt-overlay" aria-describedby={`${id}-help`}>
-    <div className="tt-dialog-heading"><DialogTitle>Record Student Attendance</DialogTitle></div><p id={`${id}-help`} className="student-attendance-form-help">Select the student and class session you want to record. Status is set manually.</p>
-    <form onSubmit={submit}><div className="tt-form-grid">
-      <div className="tt-field"><Label htmlFor={`${id}-student`}>Student *</Label><select id={`${id}-student`} value={values.studentId} required onChange={(e) => change('studentId', e.target.value)}><option value="">Select student</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name} — {student.roll}</option>)}</select></div>
-      <div className="tt-field"><Label htmlFor={`${id}-class`}>Timetable Class *</Label><select id={`${id}-class`} value={values.classId} required onChange={(e) => change('classId', e.target.value)}><option value="">Select class</option>{classes.map((session) => <option key={session.id} value={session.id}>{session.subject} — {session.section} — {timeLabel(session.startTime)} — {session.room}</option>)}</select></div>
-      <div className="tt-field"><Label htmlFor={`${id}-date`}>Date *</Label><Input id={`${id}-date`} type="date" required value={values.date} onChange={(e) => change('date', e.target.value)} /></div>
-      <div className="tt-field"><Label htmlFor={`${id}-status`}>Status *</Label><select id={`${id}-status`} value={values.status} required onChange={(e) => change('status', e.target.value)}><option value="">Select status</option>{attendanceStatuses.map((status) => <option key={status}>{status}</option>)}</select></div>
-    </div>{existing && <p className="student-attendance-form-help">An entry already exists ({existing.status}). Saving updates that entry.</p>}{error && <p role="alert" className="tt-error">{error}</p>}<div className="tt-dialog-actions"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit">{existing ? 'Update Attendance' : 'Save Attendance'}</Button></div></form>
-  </DialogContent></Dialog>;
+
+  return (
+    <FullPageFormShell
+      title="Record Student Attendance"
+      subtitle="Manually log presence or absence for a student in a specific lecture session."
+      parentName="Student Attendance"
+      icon={<Users size={22} />}
+      onBack={onClose}
+    >
+      <form onSubmit={submit}>
+        <div className="activity-form-grid">
+          <div className="activity-section-title">Session & Student Details</div>
+
+          <div className="activity-form-field span-2">
+            <Label htmlFor="att-stud-id">Select Enrolled Student *</Label>
+            <select
+              id="att-stud-id"
+              value={values.studentId}
+              required
+              onChange={(e) => change('studentId', e.target.value)}
+            >
+              <option value="">Select student from roster</option>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name} — {student.roll} ({student.program})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="activity-form-field span-2">
+            <Label htmlFor="att-stud-class">Timetable Lecture Session *</Label>
+            <select
+              id="att-stud-class"
+              value={values.classId}
+              required
+              onChange={(e) => change('classId', e.target.value)}
+            >
+              <option value="">Select class lecture</option>
+              {classes.map((session) => (
+                <option key={session.id} value={session.id}>
+                  {session.subject} — Section {session.section} ({timeLabel(session.startTime)}) — {session.room}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor="att-stud-date">Attendance Date *</Label>
+            <input
+              id="att-stud-date"
+              type="date"
+              required
+              value={values.date}
+              onChange={(e) => change('date', e.target.value)}
+            />
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor="att-stud-status">Attendance Status *</Label>
+            <select
+              id="att-stud-status"
+              value={values.status}
+              required
+              onChange={(e) => change('status', e.target.value)}
+            >
+              <option value="">Select status</option>
+              {attendanceStatuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {existing && (
+          <p
+            style={{
+              marginTop: '16px',
+              padding: '10px 14px',
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              borderRadius: '8px',
+              fontSize: '12px',
+              color: '#1d4ed8',
+            }}
+          >
+            An attendance entry already exists for this session ({existing.status}). Submitting will update the record.
+          </p>
+        )}
+
+        {error && (
+          <p
+            role="alert"
+            style={{
+              marginTop: '16px',
+              padding: '10px 14px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '8px',
+              fontSize: '12px',
+              color: '#dc2626',
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <div className="activity-form-actions">
+          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="activity-submit-btn">
+            {existing ? 'Update Attendance Entry' : 'Save Attendance Entry'}
+          </button>
+        </div>
+      </form>
+    </FullPageFormShell>
+  );
 }

@@ -1,49 +1,85 @@
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/Button";
+import { Coins, FileText, User, Calendar, CheckCircle2 } from "lucide-react";
 import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
+import FullPageFormShell from "@/components/common/FullPageFormShell";
+
 export default function VoucherDetails({ voucher, onClose }) {
+  if (!voucher) return null;
+
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+    <FullPageFormShell
+      title={`Fee Voucher #${voucher.voucherNo}`}
+      subtitle={`Billing details and payment record for ${voucher.student?.name || "Student"}.`}
+      parentName="Fee Management"
+      icon={<Coins size={22} />}
+      onBack={onClose}
+      maxWidth={850}
     >
-      <DialogContent
-        className="tt-dialog"
-        overlayClassName="tt-overlay"
-        aria-describedby={undefined}
-      >
-        <div className="tt-dialog-heading">
-          <DialogTitle>Fee Voucher Details</DialogTitle>
-        </div>
-        <dl className="tt-details">
-          {[
-            ["Student", voucher.student.name],
-            ["Voucher Number", voucher.voucherNo],
-            ["Fee Category", voucher.feeCategory],
-            ["Semester", voucher.semester || "—"],
-            ["Amount", formatPKR(voucher.amount)],
-            ["Due Date", voucher.dueDate],
-            ["Payment Date", voucher.paymentDate || "—"],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-          <div>
-            <dt>Payment Status</dt>
-            <dd>
-              <FeeStatusBadge status={voucher.paymentStatus} />
-            </dd>
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Student Name
+            </span>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.student.name}</strong>
           </div>
-        </dl>
-        <div className="tt-dialog-actions">
-          <Button onClick={onClose}>Close</Button>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Voucher Serial No.
+            </span>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.voucherNo}</strong>
+          </div>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Fee Category
+            </span>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.feeCategory}</strong>
+          </div>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Semester
+            </span>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.semester || "—"}</strong>
+          </div>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Total Amount
+            </span>
+            <strong style={{ fontSize: "18px", color: "#09090b" }}>{formatPKR(voucher.amount)}</strong>
+          </div>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Payment Due Date
+            </span>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.dueDate}</strong>
+          </div>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Settlement / Payment Date
+            </span>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.paymentDate || "Unpaid"}</strong>
+          </div>
+
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+              Payment Status
+            </span>
+            <FeeStatusBadge status={voucher.paymentStatus} />
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="activity-form-actions">
+          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+            Back to Fee Management
+          </button>
+        </div>
+      </div>
+    </FullPageFormShell>
   );
 }

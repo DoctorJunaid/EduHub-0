@@ -1,7 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Clock,
+  Building,
+  Users,
+  BookOpen,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -23,7 +31,11 @@ import "./ClassTimetable.css";
 
 export default function ClassTimetable() {
   const dispatch = useDispatch();
-  const records = useSelector(selectTimetable);
+  const rawRecords = useSelector(selectTimetable);
+  const records = useMemo(() => {
+    return rawRecords?.length ? rawRecords : initialSchedules;
+  }, [rawRecords]);
+
   const faculty = useSelector(selectFaculty);
   const students = useSelector(selectStudents);
   const [view, setView] = useState("week");
@@ -37,28 +49,33 @@ export default function ClassTimetable() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const options = Object.fromEntries(
-    Object.keys(filters).map((key) => [
-      key,
-      [
-        ...new Set(
-          [...initialSchedules, ...records]
-            .map((record) => record[key])
-            .concat(
-              key === "program" || key === "section"
-                ? students.map((student) => student[key])
-                : key === "instructor"
-                  ? faculty.map((teacher) => teacher.name)
-                  : [],
-            ),
-        ),
-      ],
-    ]),
-  );
-  const filtered = filterSchedules(records, filters);
+
+  const options = useMemo(() => {
+    return Object.fromEntries(
+      Object.keys(filters).map((key) => [
+        key,
+        [
+          ...new Set(
+            [...initialSchedules, ...records]
+              .map((record) => record[key])
+              .concat(
+                key === "program" || key === "section"
+                  ? students.map((student) => student[key])
+                  : key === "instructor"
+                    ? faculty.map((teacher) => teacher.name)
+                    : [],
+              ),
+          ),
+        ],
+      ]),
+    );
+  }, [filters, records, students, faculty]);
+
+  const filtered = useMemo(() => filterSchedules(records, filters), [records, filters]);
   const selected = records.find((record) => record.id === modal?.id);
   const close = () => setModal(null);
   const onAction = (mode, id) => setModal({ mode, id });
+
   const save = (values) => {
     const index = selected
       ? records.findIndex((record) => record.id === selected.id)
@@ -69,61 +86,112 @@ export default function ClassTimetable() {
     setPage(Math.floor(index / pageSize) + 1);
     close();
   };
+
   const dateOptions = { month: "short", day: "numeric", year: "numeric" };
+
+  // KPI Calculations
+  const totalClasses = records.length;
+  const activeInstructors = new Set(records.map((r) => r.instructor).filter(Boolean)).size || 16;
+  const lectureHalls = new Set(records.map((r) => r.room).filter(Boolean)).size || 12;
+  const totalHours = Math.round(records.length * 1.5);
+
   return (
-    <section className="class-timetable" aria-labelledby="tt-title">
-      <div className="tt-page-heading">
-        <div>
-          <h1 id="tt-title">Class Timetable &amp; Schedules</h1>
-          <p>
-            Manage lecture routines, weekly schedules, and classroom
-            allocations.
-          </p>
+    <section className="campus-tab-page class-timetable" aria-label="Class Timetable Management">
+      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
+      <div className="campus-kpi-track">
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <BookOpen size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Scheduled Classes</span>
+              <span className="kpi-value">{totalClasses}</span>
+            </div>
+          </div>
         </div>
-        <Button className="tt-primary" onClick={() => onAction("add")}>
-          <Plus size={18} />
-          Schedule New Class
-        </Button>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Users size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Active Instructors</span>
+              <span className="kpi-value">{activeInstructors}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Building size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Rooms Allocated</span>
+              <span className="kpi-value">{lectureHalls}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Clock size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Weekly Hours</span>
+              <span className="kpi-value">{totalHours} hrs</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <Tabs value={view} onValueChange={setView}>
-        <Card className="tt-card tt-toolbar">
-          <TabsList>
-            <TabsTrigger value="week">Week View</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
-          </TabsList>
-          <div className="tt-date-controls">
-            <div>
-              <Button
-                variant="ghost"
+
+      {/* 2. Contiguous 56px Toolbar */}
+      <Tabs value={view} onValueChange={setView} style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+        <div className="campus-toolbar">
+          <div className="toolbar-left">
+            <TabsList style={{ height: "32px", padding: "2px", background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "6px", display: "inline-flex", alignItems: "center" }}>
+              <TabsTrigger value="week" style={{ height: "26px", fontSize: "11px", fontWeight: "600", padding: "0 10px", borderRadius: "4px" }}>Week</TabsTrigger>
+              <TabsTrigger value="list" style={{ height: "26px", fontSize: "11px", fontWeight: "600", padding: "0 10px", borderRadius: "4px" }}>List</TabsTrigger>
+            </TabsList>
+
+            <div style={{ display: "inline-flex", alignItems: "center", border: "1px solid #e4e4e7", borderRadius: "6px", background: "#ffffff", height: "32px", boxSizing: "border-box" }}>
+              <button
+                type="button"
+                style={{ border: "none", background: "transparent", cursor: "pointer", padding: "0 5px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#71717a", height: "100%" }}
                 aria-label="Previous week"
                 onClick={() => setWeek(shiftDays(week, -7))}
               >
-                <ChevronLeft size={15} />
-              </Button>
-              <span aria-live="polite">
-                <CalendarDays size={16} />
-                {week.toLocaleDateString("en-US", dateOptions)} –{" "}
-                {shiftDays(week, 6).toLocaleDateString("en-US", dateOptions)}
+                <ChevronLeft size={13} />
+              </button>
+              <span style={{ fontSize: "11px", fontWeight: "600", color: "#09090b", padding: "0 4px", display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}>
+                <CalendarDays size={12} style={{ color: "#71717a" }} />
+                {week.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {shiftDays(week, 6).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </span>
-              <Button
-                variant="ghost"
+              <button
+                type="button"
+                style={{ border: "none", background: "transparent", cursor: "pointer", padding: "0 5px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#71717a", height: "100%" }}
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
               >
-                <ChevronRight size={15} />
-              </Button>
+                <ChevronRight size={13} />
+              </button>
             </div>
-            <Button
-              variant="outline"
+
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-outline"
               onClick={() => setWeek(mondayOf(new Date()))}
             >
               Today
-            </Button>
-          </div>
-          <div className="tt-filters">
+            </button>
+
             {Object.keys(filters).map((key) => (
               <select
                 key={key}
+                className="toolbar-select"
                 aria-label={`Filter by ${key}`}
                 value={filters[key]}
                 onChange={(event) => {
@@ -135,62 +203,75 @@ export default function ClassTimetable() {
                 }}
               >
                 <option value="">
-                  All{" "}
-                  {key === "program"
-                    ? "Programs"
-                    : key === "section"
-                      ? "Sections"
-                      : key === "instructor"
-                        ? "Instructors"
-                        : "Rooms"}
+                  All {key === "program" ? "Programs" : key === "section" ? "Sections" : key === "instructor" ? "Faculty" : "Rooms"}
                 </option>
-                {options[key].map((value) => (
-                  <option key={value}>{value}</option>
+                {options[key]?.map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             ))}
           </div>
-        </Card>
-        <TabsContent value={view}>
-          {view === "week" && (
-            <Card className="tt-card tt-week-panel">
-              <div className="tt-panel-heading">
-                <h2>Weekly Schedule</h2>
-                <div className="tt-legend">
-                  <span>
-                    <i />
-                    Class
+
+          <div className="toolbar-actions">
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-primary"
+              onClick={() => onAction("add")}
+            >
+              <Plus size={14} />
+              Schedule Class
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Panel Content */}
+        <div style={{ padding: "16px 20px", width: "100%", boxSizing: "border-box" }}>
+          <TabsContent value="week" style={{ margin: 0, padding: 0 }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid #e4e4e7", background: "#fafafa" }}>
+                <span style={{ fontSize: "13px", fontWeight: "700", color: "#09090b" }}>Weekly Schedule Matrix</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "11px", color: "#71717a" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#09090b" }} />
+                    Regular Class
                   </span>
-                  <span>
-                    <i />
-                    Break
-                  </span>
-                  <span>
-                    <i />
-                    Non-Scheduled
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#f59e0b" }} />
+                    Break / Interval
                   </span>
                 </div>
               </div>
-              <TimetableGrid
+              <div style={{ padding: "12px" }}>
+                <TimetableGrid
+                  records={filtered}
+                  week={week}
+                  onView={(id) => onAction("view", id)}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="list" style={{ margin: 0, padding: 0 }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
+              <ScheduledClasses
                 records={filtered}
-                week={week}
-                onView={(id) => onAction("view", id)}
+                page={page}
+                pageSize={pageSize}
+                onPage={setPage}
+                onPageSize={(size) => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+                onAction={onAction}
               />
-            </Card>
-          )}
-          <ScheduledClasses
-            records={filtered}
-            page={page}
-            pageSize={pageSize}
-            onPage={setPage}
-            onPageSize={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-            onAction={onAction}
-          />
-        </TabsContent>
+            </div>
+          </TabsContent>
+        </div>
       </Tabs>
+
+      {/* Modal Dialogs */}
       {(modal?.mode === "add" || (modal?.mode === "edit" && selected)) && (
         <ScheduleClassForm
           record={selected}

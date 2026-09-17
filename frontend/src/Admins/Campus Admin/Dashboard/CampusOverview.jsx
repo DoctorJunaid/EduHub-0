@@ -1,11 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  MapPin,
-  Download,
-  Plus,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 
 // Redux State Selectors & Actions
@@ -25,6 +19,7 @@ import StudentProfileDialog from '@/Admins/Campus Admin/Students/StudentProfileD
 // Redesigned Components
 import CampusThinCards from './components/CampusThinCards';
 import CampusOperationsHub from './components/CampusOperationsHub';
+import CampusActivitySidebar from './components/CampusActivitySidebar';
 
 import './CampusOverview.css';
 
@@ -97,69 +92,40 @@ export default function CampusOverview() {
     document.body.removeChild(link);
   };
 
+  const cardToTabMap = {
+    'students-card': 'students',
+    'faculty-card': 'faculty',
+    'programs-card': 'programs',
+    'timetable-card': 'timetable',
+  };
+
   return (
     <div className="campus-overview" aria-label="Campus Executive Command Center">
-      {/* 1. Clean Top Executive Header */}
-      <section className="overview-hero-section">
-        <div className="overview-hero-details">
-          <h1 className="overview-hero-heading">NUST Main Campus (H-12)</h1>
-
-          <p className="overview-hero-subtext">
-            <MapPin size={14} className="icon-map" />
-            <span>Sector H-12, Islamabad</span>
-            <span className="dot-sep">•</span>
-            <span>Director: Erin Daniels</span>
-            <span className="dot-sep">•</span>
-            <span>Spring 2025 Semester</span>
-          </p>
-        </div>
-
-        {/* Clean Executive Actions on Far Right */}
-        <div className="overview-hero-actions-block">
-          <Button
-            variant="outline"
-            className="overview-action-btn"
-            onClick={handleExportSummary}
-            title="Export complete campus report as CSV"
-          >
-            <Download size={14} />
-            Export
-          </Button>
-
-          <Button
-            variant="outline"
-            className="overview-action-btn"
-            onClick={() => setAddingStudent(true)}
-          >
-            <Plus size={14} />
-            Add Student
-          </Button>
-
-          <Button
-            className="overview-action-btn overview-primary-btn"
-            onClick={() => setAddingTeacher(true)}
-          >
-            <Plus size={14} />
-            Add Teacher
-          </Button>
-        </div>
-      </section>
-
-      {/* 2. 5 Clean, Thin KPI Cards (Logical Academic Metrics Only) */}
+      {/* 1. 4 Clean KPI Cards Touching Border-to-Border */}
       <CampusThinCards
         activeCardId={activeCardId}
         onSelectCard={(id) => setActiveCardId(id)}
       />
 
-      {/* 3. All-In-One Unified Operations Hub (Students, Faculty, Timetable, Attendance, Programs) */}
-      <CampusOperationsHub
-        students={students}
-        faculty={faculty}
-        timetable={timetable}
-        onAddStudent={() => setAddingStudent(true)}
-        onAddTeacher={() => setAddingTeacher(true)}
-        onViewStudentProfile={(student) => setInspectingStudent(student)}
-      />
+      {/* 2. Operations Hub & Right Activity Sidebar (Nil Gap) */}
+      <div className="campus-split-container">
+        <div className="campus-table-panel">
+          <CampusOperationsHub
+            activeTab={cardToTabMap[activeCardId] || 'students'}
+            students={students}
+            faculty={faculty}
+            timetable={timetable}
+            onAddStudent={() => setAddingStudent(true)}
+            onAddTeacher={() => setAddingTeacher(true)}
+            onViewStudentProfile={(student) => setInspectingStudent(student)}
+          />
+        </div>
+
+        <CampusActivitySidebar
+          students={students}
+          onSelectStudent={(student) => setInspectingStudent(student)}
+        />
+      </div>
 
       {/* In-Page Modals */}
       {addingStudent && (

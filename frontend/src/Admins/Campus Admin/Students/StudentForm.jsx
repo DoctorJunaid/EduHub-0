@@ -1,33 +1,27 @@
 import { useId, useState } from "react";
-import { useSelector } from 'react-redux';
-import { selectStudents } from '@/store/Slices/studentsSlice';
-import { studentIdentityErrors, hasStudentIdentityConflicts } from '@/store/studentIdentity';
-import { X, Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/Input";
+import { useSelector } from "react-redux";
+import { selectStudents } from "@/store/Slices/studentsSlice";
+import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
+import { Users, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/Button";
 import { studentStatuses } from "./studentData.js";
+import FullPageFormShell from "@/components/common/FullPageFormShell";
 
 const DEFAULT_PROGRAMS = [
-  'BS Computer Science',
-  'BS Software Engineering',
-  'BS Artificial Intelligence',
-  'BS Data Science',
-  'FSc Pre-Engineering',
-  'FSc Pre-Medical',
+  "BS Computer Science",
+  "BS Software Engineering",
+  "BS Artificial Intelligence",
+  "BS Data Science",
+  "FSc Pre-Engineering",
+  "FSc Pre-Medical",
 ];
 
 export default function StudentForm({
   student,
   programs = DEFAULT_PROGRAMS,
   campuses = ["Main Campus"],
-  editAllFields = false,
+  editAllFields = true,
   onSave,
   onClose,
 }) {
@@ -48,11 +42,12 @@ export default function StudentForm({
     section: student?.section ?? "",
     semester: student?.semester ?? "",
     subjects: student?.subjects ?? "",
-    campus: student?.campus ?? (typeof safeCampuses[0] === 'object' ? safeCampuses[0].value : safeCampuses[0]) ?? "",
+    campus: student?.campus ?? (typeof safeCampuses[0] === "object" ? safeCampuses[0].value : safeCampuses[0]) ?? "",
     status: student?.status ?? "Active",
     guardian: student?.guardian ?? "",
     guardianPhone: student?.guardianPhone ?? "",
   }));
+
   const field = (
     key,
     label,
@@ -63,50 +58,62 @@ export default function StudentForm({
       name: key,
       value: values[key],
       required: !optional,
-      'aria-invalid': Boolean(errors[key]),
-      'aria-describedby': errors[key] ? `${id}-${key}-error` : undefined,
+      "aria-invalid": Boolean(errors[key]),
+      "aria-describedby": errors[key] ? `${id}-${key}-error` : undefined,
       onChange: (event) => {
-        setErrors(previous => ({ ...previous, [key]: undefined }));
+        setErrors((previous) => ({ ...previous, [key]: undefined }));
         event.target.setCustomValidity(
-          !optional && !event.target.value.trim()
-            ? `${label} is required.`
-            : "",
+          !optional && !event.target.value.trim() ? `${label} is required.` : "",
         );
         setValues((previous) => ({ ...previous, [key]: event.target.value }));
       },
     };
+
     return (
-      <div className="student-form-field">
-        <Label htmlFor={props.id}>{label}</Label>
+      <div className="activity-form-field">
+        <Label htmlFor={props.id}>{label}{!optional && " *"}</Label>
         {options ? (
           <select {...props}>
-            {options.map((option) => (
-              <option key={typeof option === 'object' ? option.value : option} value={typeof option === 'object' ? option.value : option}>{typeof option === 'object' ? option.label : option}</option>
-            ))}
+            {options.map((option) => {
+              const val = typeof option === "object" ? option.value : option;
+              const lbl = typeof option === "object" ? option.label : option;
+              return (
+                <option key={val} value={val}>
+                  {lbl}
+                </option>
+              );
+            })}
           </select>
         ) : (
-          <Input {...props} type={type} placeholder={placeholder} />
+          <input {...props} type={type} placeholder={placeholder} />
         )}
-        {errors[key] && <p id={`${id}-${key}-error`} role="alert" className="student-identity-error">{errors[key]}</p>}
+        {errors[key] && (
+          <p id={`${id}-${key}-error`} role="alert" className="activity-field-error">
+            {errors[key]}
+          </p>
+        )}
       </div>
     );
   };
+
   const submit = async (event) => {
     event.preventDefault();
     const saved = Object.fromEntries(
-      Object.entries(values).map(([key, value]) => [key, value.trim()]),
+      Object.entries(values).map(([key, value]) => [key, typeof value === "string" ? value.trim() : value]),
     );
-    // Preserve hidden fields byte-for-byte in Edit mode, including optional contact data.
+
     if (editing && !editAllFields) {
       saved.campus = student.campus;
       saved.guardianPhone = student.guardianPhone;
     }
+
     const problems = studentIdentityErrors(saved, records, student?.id || student?._id);
     setErrors(problems);
     if (Object.keys(problems).length) {
       document.getElementById(`${id}-${Object.keys(problems)[0]}`)?.focus();
       return;
     }
+
     setIsSubmitting(true);
     try {
       await onSave(saved);
@@ -114,101 +121,112 @@ export default function StudentForm({
       setIsSubmitting(false);
     }
   };
+
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+    <FullPageFormShell
+      title={editing ? "Edit Student Record" : "Register New Student"}
+      subtitle={
+        editing
+          ? `Updating profile and academic registration for ${student?.name || "student"}.`
+          : "Fill in student profile, academic program, section, and guardian contact details."
+      }
+      parentName="Students Directory"
+      icon={<Users size={22} />}
+      onBack={onClose}
     >
-      <DialogContent
-        className="student-form-dialog"
-        overlayClassName="student-modal-overlay"
-        showCloseButton={false}
-        aria-describedby={undefined}
-      >
-        <div className="student-modal-heading">
-          <DialogTitle>
-            {editing ? "Edit Student Record" : "Add New Student"}
-          </DialogTitle>
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              className="student-modal-close"
-              aria-label="Close student form"
-            >
-              <X size={23} />
-            </Button>
-          </DialogClose>
+      <form onSubmit={submit}>
+        {hasStudentIdentityConflicts(records) && (
+          <p
+            role="status"
+            style={{
+              padding: "10px 14px",
+              background: "#fffbeb",
+              border: "1px solid #fef3c7",
+              borderRadius: "8px",
+              fontSize: "12px",
+              color: "#b45309",
+              marginBottom: "18px",
+            }}
+          >
+            Some existing student records share an email or roll number. Make sure each student has a distinct identity.
+          </p>
+        )}
+
+        <div className="activity-form-grid">
+          <div className="activity-section-title">Personal & Academic Identification</div>
+
+          {field("name", "Full Student Name", { placeholder: "e.g. Ali Raza" })}
+          {field("roll", "Roll Number / Student ID", { placeholder: "e.g. NUST-CS-2024-001" })}
+
+          {field("email", "Email Address", {
+            type: "email",
+            placeholder: "ali.raza@nust.edu.pk",
+          })}
+          {field("studentPhone", "Student Phone (Optional)", {
+            type: "tel",
+            optional: true,
+            placeholder: "+92 333 1234567",
+          })}
+
+          <div className="activity-section-title">Program & Enrollment Details</div>
+
+          {field("program", "Degree Program", { options: safePrograms })}
+          {field("section", "Class Section", { placeholder: "e.g. CS-4A" })}
+          {field("semester", "Current Semester", { placeholder: "e.g. 4th Semester" })}
+          {field("campus", "Assigned Campus Branch", { options: safeCampuses })}
+
+          <div className="activity-form-field span-2">
+            <Label htmlFor={`${id}-subjects`}>Enrolled Subjects *</Label>
+            <input
+              id={`${id}-subjects`}
+              name="subjects"
+              value={values.subjects}
+              required
+              placeholder="e.g. Advanced Web Design, Data Structures, Machine Learning"
+              onChange={(e) => setValues((prev) => ({ ...prev, subjects: e.target.value }))}
+            />
+          </div>
+
+          {field("status", "Enrollment Status", { options: studentStatuses })}
+
+          <div className="activity-section-title">Guardian Information</div>
+
+          {field("guardian", "Father / Guardian Name", {
+            optional: true,
+            placeholder: "e.g. Muhammad Raza",
+          })}
+          {field("guardianPhone", "Guardian Contact Number", {
+            optional: true,
+            type: "tel",
+            placeholder: "+92 300 9876543",
+          })}
         </div>
-        <form onSubmit={submit}>
-          {hasStudentIdentityConflicts(records) && <p role="status" className="student-identity-error">Some existing student records share an email or roll number. Resolve these identities by editing the records; no records have been merged or removed.</p>}
-          <div className="student-form-row">
-            {field("name", "Full Name", { placeholder: "e.g. Ali Raza" })}
-            {field("roll", editing ? "Roll Number" : "Roll Number / ID", {
-              placeholder: "e.g. NUST-CS-2024-001",
-            })}
-          </div>
-          <div className="student-form-row">
-            {field("email", editing ? "Email" : "Email Address", {
-              type: "email",
-              placeholder: "ali.raza@nust.edu.pk",
-            })}
-            {field("studentPhone", editing ? "Phone" : "Student Phone", {
-              type: "tel",
-              optional: true,
-              placeholder: "+92 333",
-            })}
-          </div>
-          <div className="student-form-row student-form-thirds">
-            {field("program", editing ? "Program" : "Class / Program", {
-              options: programs,
-            })}
-            {field("section", "Section", { placeholder: "CS-4A" })}
-            {field("semester", "Semester", { placeholder: "4th Semester" })}
-          </div>
-          <div className="student-form-row student-form-full">
-            {field("subjects", "Enrolled Subjects", {
-              placeholder: "Advanced Web Design, Data Structures, AI",
-            })}
-          </div>
-          {editing && !editAllFields ? (
-            <div className="student-form-row">
-              {field("status", "Status", { options: studentStatuses })}
-              {field("guardian", "Guardian Name", { optional: true })}
-            </div>
-          ) : (
-            <>
-              <div className="student-form-row">
-                {field("campus", "Campus Branch", { options: campuses })}
-                {field("status", "Enrollment Status", {
-                  options: studentStatuses,
-                })}
-              </div>
-              <div className="student-form-row student-guardian-fields">
-                {field("guardian", "Guardian Name", {
-                  optional: true,
-                  placeholder: "Father / Guardian Name",
-                })}
-                {field("guardianPhone", "Guardian Phone", {
-                  optional: true,
-                  type: "tel",
-                  placeholder: "+92 300",
-                })}
-              </div>
-            </>
-          )}
-          <div className="student-modal-actions">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              {isSubmitting && <Loader2 size={16} className="spin" />}
-              {isSubmitting ? (editing ? "Saving Changes..." : "Saving Student...") : (editing ? "Save Changes" : "Save Student")}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+
+        <div className="activity-form-actions">
+          <button
+            type="button"
+            className="activity-cancel-btn"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="activity-submit-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Loader2 size={15} className="spin" />}
+            {isSubmitting
+              ? editing
+                ? "Updating Record..."
+                : "Saving Student..."
+              : editing
+              ? "Update Student Record"
+              : "Register Student"}
+          </button>
+        </div>
+      </form>
+    </FullPageFormShell>
   );
 }
