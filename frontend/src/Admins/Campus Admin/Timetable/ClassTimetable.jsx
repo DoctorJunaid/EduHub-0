@@ -10,7 +10,6 @@ import {
   Users,
   BookOpen,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
@@ -21,7 +20,11 @@ import {
 } from "@/store/Slices/timetableSlice.js";
 import { selectFaculty } from "@/store/Slices/facultySlice.js";
 import { selectStudents } from "@/store/Slices/studentsSlice.js";
-import { initialSchedules } from "./timetableData.js";
+import {
+  educationTypeOptions,
+  initialSchedules,
+  timetableTemplates,
+} from "./timetableData.js";
 import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
 import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
@@ -49,6 +52,7 @@ export default function ClassTimetable() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [educationType, setEducationType] = useState("Colleges");
 
   const options = useMemo(() => {
     return Object.fromEntries(
@@ -71,7 +75,11 @@ export default function ClassTimetable() {
     );
   }, [filters, records, students, faculty]);
 
-  const filtered = useMemo(() => filterSchedules(records, filters), [records, filters]);
+  const filtered = useMemo(
+    () => filterSchedules(records, filters),
+    [records, filters],
+  );
+  const templateRecords = timetableTemplates[educationType];
   const selected = records.find((record) => record.id === modal?.id);
   const close = () => setModal(null);
   const onAction = (mode, id) => setModal({ mode, id });
@@ -87,16 +95,19 @@ export default function ClassTimetable() {
     close();
   };
 
-  const dateOptions = { month: "short", day: "numeric", year: "numeric" };
-
   // KPI Calculations
   const totalClasses = records.length;
-  const activeInstructors = new Set(records.map((r) => r.instructor).filter(Boolean)).size || 16;
-  const lectureHalls = new Set(records.map((r) => r.room).filter(Boolean)).size || 12;
+  const activeInstructors =
+    new Set(records.map((r) => r.instructor).filter(Boolean)).size || 16;
+  const lectureHalls =
+    new Set(records.map((r) => r.room).filter(Boolean)).size || 12;
   const totalHours = Math.round(records.length * 1.5);
 
   return (
-    <section className="campus-tab-page class-timetable" aria-label="Class Timetable Management">
+    <section
+      className="campus-tab-page class-timetable"
+      aria-label="Class Timetable Management"
+    >
       {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
       <div className="campus-kpi-track">
         <div className="campus-kpi-card">
@@ -149,30 +160,116 @@ export default function ClassTimetable() {
       </div>
 
       {/* 2. Contiguous 56px Toolbar */}
-      <Tabs value={view} onValueChange={setView} style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+      <Tabs
+        value={view}
+        onValueChange={setView}
+        style={{ width: "100%", display: "flex", flexDirection: "column" }}
+      >
         <div className="campus-toolbar">
           <div className="toolbar-left">
-            <TabsList style={{ height: "32px", padding: "2px", background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "6px", display: "inline-flex", alignItems: "center" }}>
-              <TabsTrigger value="week" style={{ height: "26px", fontSize: "11px", fontWeight: "600", padding: "0 10px", borderRadius: "4px" }}>Week</TabsTrigger>
-              <TabsTrigger value="list" style={{ height: "26px", fontSize: "11px", fontWeight: "600", padding: "0 10px", borderRadius: "4px" }}>List</TabsTrigger>
+            <TabsList
+              style={{
+                height: "32px",
+                padding: "2px",
+                background: "#ffffff",
+                border: "1px solid #e4e4e7",
+                borderRadius: "6px",
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              <TabsTrigger
+                value="week"
+                style={{
+                  height: "26px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  padding: "0 10px",
+                  borderRadius: "4px",
+                }}
+              >
+                Week
+              </TabsTrigger>
+              <TabsTrigger
+                value="list"
+                style={{
+                  height: "26px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  padding: "0 10px",
+                  borderRadius: "4px",
+                }}
+              >
+                List
+              </TabsTrigger>
             </TabsList>
 
-            <div style={{ display: "inline-flex", alignItems: "center", border: "1px solid #e4e4e7", borderRadius: "6px", background: "#ffffff", height: "32px", boxSizing: "border-box" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                border: "1px solid #e4e4e7",
+                borderRadius: "6px",
+                background: "#ffffff",
+                height: "32px",
+                boxSizing: "border-box",
+              }}
+            >
               <button
                 type="button"
-                style={{ border: "none", background: "transparent", cursor: "pointer", padding: "0 5px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#71717a", height: "100%" }}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: "0 5px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#71717a",
+                  height: "100%",
+                }}
                 aria-label="Previous week"
                 onClick={() => setWeek(shiftDays(week, -7))}
               >
                 <ChevronLeft size={13} />
               </button>
-              <span style={{ fontSize: "11px", fontWeight: "600", color: "#09090b", padding: "0 4px", display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}>
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  color: "#09090b",
+                  padding: "0 4px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 <CalendarDays size={12} style={{ color: "#71717a" }} />
-                {week.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {shiftDays(week, 6).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                {week.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}{" "}
+                –{" "}
+                {shiftDays(week, 6).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </span>
               <button
                 type="button"
-                style={{ border: "none", background: "transparent", cursor: "pointer", padding: "0 5px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#71717a", height: "100%" }}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: "0 5px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#71717a",
+                  height: "100%",
+                }}
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
               >
@@ -203,7 +300,14 @@ export default function ClassTimetable() {
                 }}
               >
                 <option value="">
-                  All {key === "program" ? "Programs" : key === "section" ? "Sections" : key === "instructor" ? "Faculty" : "Rooms"}
+                  All{" "}
+                  {key === "program"
+                    ? "Programs"
+                    : key === "section"
+                      ? "Sections"
+                      : key === "instructor"
+                        ? "Faculty"
+                        : "Rooms"}
                 </option>
                 {options[key]?.map((val) => (
                   <option key={val} value={val}>
@@ -227,25 +331,94 @@ export default function ClassTimetable() {
         </div>
 
         {/* 3. Panel Content */}
-        <div style={{ padding: "16px 20px", width: "100%", boxSizing: "border-box" }}>
+        <div
+          style={{
+            padding: "16px 20px",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
           <TabsContent value="week" style={{ margin: 0, padding: 0 }}>
-            <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid #e4e4e7", background: "#fafafa" }}>
-                <span style={{ fontSize: "13px", fontWeight: "700", color: "#09090b" }}>Weekly Schedule Matrix</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "11px", color: "#71717a" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#09090b" }} />
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e4e4e7",
+                borderRadius: "8px",
+                overflow: "hidden",
+              }}
+            >
+              <div className="tt-template-heading">
+                <div>
+                  <span className="tt-template-title">
+                    Weekly Schedule Matrix
+                  </span>
+                  <small>
+                    Template preview for the selected education type
+                  </small>
+                </div>
+                <label className="tt-type-control">
+                  <span>Institution type</span>
+                  <select
+                    className="toolbar-select"
+                    aria-label="Institution type"
+                    value={educationType}
+                    onChange={(event) => setEducationType(event.target.value)}
+                  >
+                    {educationTypeOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "16px",
+                    fontSize: "11px",
+                    color: "#71717a",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "2px",
+                        background: "#09090b",
+                      }}
+                    />
                     Regular Class
                   </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#f59e0b" }} />
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "2px",
+                        background: "#f59e0b",
+                      }}
+                    />
                     Break / Interval
                   </span>
                 </div>
               </div>
               <div style={{ padding: "12px" }}>
                 <TimetableGrid
-                  records={filtered}
+                  records={templateRecords}
                   week={week}
                   onView={(id) => onAction("view", id)}
                 />
@@ -254,7 +427,14 @@ export default function ClassTimetable() {
           </TabsContent>
 
           <TabsContent value="list" style={{ margin: 0, padding: 0 }}>
-            <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e4e4e7",
+                borderRadius: "8px",
+                overflow: "hidden",
+              }}
+            >
               <ScheduledClasses
                 records={filtered}
                 page={page}
