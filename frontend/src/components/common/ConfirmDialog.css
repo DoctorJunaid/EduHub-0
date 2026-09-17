@@ -4,4 +4,12 @@
 .confirmation-dialog [data-slot="dialog-description"] { color: var(--muted-foreground); font-size: 14px; line-height: 1.6; }
 .confirmation-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 .confirmation-actions button { height: 42px; padding: 0 20px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--card); color: var(--foreground); }
-.confirmation-actions button[data-variant="destructive"] { background: var(--destructive); color: var(--destructive-foreground); border-color: var(--destructive); }
+.confirmation-actions button[data-variant="destructive"] {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+.confirmation-actions button[data-variant="destructive"]:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
