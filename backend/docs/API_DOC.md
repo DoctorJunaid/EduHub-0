@@ -14,5 +14,23 @@ req.body = full_name, institute_name, institute_type, email, phone, message
 POST api/v1/inquiries
 
 ## Swagger for API Documentation
+
 It's getting difficult for me to manually create api documentation for me, so I would use Swagger for it.
 
+# What more APIs we have to create:
+
+1. User Authentication but we have a confusion on that because "All roles arent suppose to register"
+2. Super Admin can activate or deactivate any user account
+   > Created User APIs
+
+Campus Operations: TeacherProfile, StudentProfile, ClassSchedule, ExamSchedule
+Operations: campusAdminService, campusAdminController, campusAdminRoutes.js
+
+Attendance: TeacherAttendance, StudentAttendance, campusAdminService(attendance functions)
+Operations: campusAdminRoutees.js
+
+Finance: FeeRecord campusAdminService (fee functions)
+Operations: campusAdminRoutes.js
+
+Academics: Performance campusAdminService(performance functions)
+Operations: campusAdminRoutes.js

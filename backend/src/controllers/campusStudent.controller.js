@@ -13,7 +13,10 @@ export const getCampusStudents = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "campus_admin" && req.user.role !== "campus_manager") {
+    if (
+      req.user.role !== "campus_admin" &&
+      req.user.role !== "campus_manager"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Access denied. Campus Manager/Admin only.",
@@ -63,7 +66,10 @@ export const addStudentToCampus = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "campus_admin" && req.user.role !== "campus_manager") {
+    if (
+      req.user.role !== "campus_admin" &&
+      req.user.role !== "campus_manager"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Access denied. Campus Manager/Admin only.",
@@ -160,7 +166,9 @@ export const createStudentForCampus = async (req, res) => {
     let { campusId, instituteId } = req.user;
 
     if (!campusId) {
-      return res.status(400).json({ success: false, message: "Admin lacking campus context" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Admin lacking campus context" });
     }
 
     if (!instituteId && campusId) {
@@ -185,13 +193,18 @@ export const createStudentForCampus = async (req, res) => {
     } = req.body;
 
     if (!name || !email) {
-      return res.status(400).json({ success: false, message: "Name and email are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Name and email are required" });
     }
 
     const cleanEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "User with this email already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
     }
 
     const student = await User.create({
@@ -200,12 +213,14 @@ export const createStudentForCampus = async (req, res) => {
       role: "student",
       campusId,
       instituteId: instituteId || null,
-      roll: roll ? roll.trim() : `ROLL-${Math.floor(1000 + Math.random() * 9000)}`,
+      roll: roll
+        ? roll.trim()
+        : `ROLL-${Math.floor(1000 + Math.random() * 9000)}`,
       program: program ? program.trim() : "Unassigned",
       section: section ? section.trim() : "",
       semester: semester ? semester.trim() : "",
       subjects: subjects ? subjects.trim() : "",
-      phone: studentPhone ? studentPhone.trim() : (phone ? phone.trim() : ""),
+      phone: studentPhone ? studentPhone.trim() : phone ? phone.trim() : "",
       guardian: guardian ? guardian.trim() : "",
       guardianPhone: guardianPhone ? guardianPhone.trim() : "",
       status: status || "Active",
@@ -222,7 +237,10 @@ export const createStudentForCampus = async (req, res) => {
     });
   } catch (error) {
     console.error("Create Student Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Failed to create student" });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create student",
+    });
   }
 };
 
@@ -234,14 +252,22 @@ export const removeStudentFromCampus = async (req, res) => {
     const { campusId } = req.user;
     const studentId = req.params.id;
 
-    const student = await User.findOne({ _id: studentId, role: "student", campusId });
+    const student = await User.findOne({
+      _id: studentId,
+      role: "student",
+      campusId,
+    });
     if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found in this campus" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found in this campus" });
     }
 
     await User.findByIdAndDelete(studentId);
 
-    return res.status(200).json({ success: true, message: "Student removed successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Student removed successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -253,7 +279,10 @@ export const removeStudentFromCampus = async (req, res) => {
 export const getCampusFaculty = async (req, res) => {
   try {
     const { campusId } = req.user;
-    if (!campusId) return res.status(400).json({ success: false, message: "No campus assigned" });
+    if (!campusId)
+      return res
+        .status(400)
+        .json({ success: false, message: "No campus assigned" });
 
     const faculty = await User.find({
       role: { $in: ["faculty", "teacher"] },
@@ -262,7 +291,9 @@ export const getCampusFaculty = async (req, res) => {
       .select("-passwordHash")
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({ success: true, count: faculty.length, data: faculty });
+    return res
+      .status(200)
+      .json({ success: true, count: faculty.length, data: faculty });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -276,7 +307,9 @@ export const createFacultyForCampus = async (req, res) => {
     let { campusId, instituteId } = req.user;
 
     if (!campusId) {
-      return res.status(400).json({ success: false, message: "Admin lacking campus context" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Admin lacking campus context" });
     }
 
     if (!instituteId && campusId) {
@@ -297,13 +330,18 @@ export const createFacultyForCampus = async (req, res) => {
     } = req.body;
 
     if (!name || !email) {
-      return res.status(400).json({ success: false, message: "Name and email are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Name and email are required" });
     }
 
     const cleanEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "User with this email already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
     }
 
     const faculty = await User.create({
@@ -331,7 +369,10 @@ export const createFacultyForCampus = async (req, res) => {
     });
   } catch (error) {
     console.error("Create Faculty Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Failed to create faculty" });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create faculty",
+    });
   }
 };
 
@@ -350,12 +391,16 @@ export const removeFacultyFromCampus = async (req, res) => {
     });
 
     if (!faculty) {
-      return res.status(404).json({ success: false, message: "Faculty not found in this campus" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Faculty not found in this campus" });
     }
 
     await User.findByIdAndDelete(facultyId);
 
-    return res.status(200).json({ success: true, message: "Faculty removed successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Faculty removed successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -381,11 +426,13 @@ export const updateStudentInCampus = async (req, res) => {
     const student = await User.findOneAndUpdate(
       { _id: studentId, role: "student", campusId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-passwordHash");
 
     if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found in this campus" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found in this campus" });
     }
 
     return res.status(200).json({ success: true, data: student });
@@ -410,11 +457,13 @@ export const updateFacultyInCampus = async (req, res) => {
     const faculty = await User.findOneAndUpdate(
       { _id: facultyId, role: { $in: ["faculty", "teacher"] }, campusId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-passwordHash");
 
     if (!faculty) {
-      return res.status(404).json({ success: false, message: "Faculty not found in this campus" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Faculty not found in this campus" });
     }
 
     return res.status(200).json({ success: true, data: faculty });

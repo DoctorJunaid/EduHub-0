@@ -1,10 +1,25 @@
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { weekdays, shiftDays, gridRange, dayBlocks, minutes, timeLabel } from "../../../lib/schedule.js";
+import {
+  weekdays,
+  shiftDays,
+  gridRange,
+  dayBlocks,
+  minutes,
+  timeLabel,
+} from "../../../lib/schedule.js";
 
 export default function TimetableGrid({ records, week, onView }) {
   const { start, end } = gridRange(records);
-  const height = ((end - start) / 60) * 40;
+  const height = ((end - start) / 60) * 52;
+  const breaks = records.filter((record) => record.isBreak);
+  const timeMarks = Array.from(
+    { length: Math.floor((end - start) / 60) + 1 },
+    (_, index) => start + index * 60,
+  );
+  if (timeMarks[timeMarks.length - 1] !== end) timeMarks.push(end);
+  const classRecords = records.filter((record) => !record.isBreak);
+
   return (
     <div className="tt-grid-scroll">
       <div
@@ -28,17 +43,34 @@ export default function TimetableGrid({ records, week, onView }) {
         </div>
         <div className="tt-grid-body" style={{ height }}>
           <div className="tt-time-axis">
-            {Array.from({ length: (end - start) / 60 + 1 }, (_, index) => (
-              <span key={index} style={{ top: index * 40 }}>
+            {timeMarks.map((mark) => (
+              <span key={mark} style={{ top: ((mark - start) / 60) * 52 }}>
                 {timeLabel(
-                  `${String((start / 60 + index) % 24).padStart(2, "0")}:00`,
+                  `${String(Math.floor(mark / 60)).padStart(2, "0")}:${String(mark % 60).padStart(2, "0")}`,
                 )}
               </span>
             ))}
           </div>
+          {breaks.map((record) => (
+            <div
+              className="tt-break-row"
+              key={record.id}
+              style={{
+                top: ((minutes(record.startTime) - start) / 60) * 52,
+                height:
+                  ((minutes(record.endTime) - minutes(record.startTime)) / 60) *
+                  52,
+              }}
+            >
+              <strong>{record.subject}</strong>
+              <span>
+                {timeLabel(record.startTime)} – {timeLabel(record.endTime)}
+              </span>
+            </div>
+          ))}
           {weekdays.map((day, index) => (
             <div className="tt-day-column" key={day}>
-              {dayBlocks(records, index + 1).map(
+              {dayBlocks(classRecords, index + 1).map(
                 ({ record, lane, laneCount }) => (
                   <Button
                     key={record.id}
@@ -47,13 +79,16 @@ export default function TimetableGrid({ records, week, onView }) {
                     onClick={() => onView(record.id)}
                     aria-label={`${record.subject}, ${day}, ${timeLabel(record.startTime)} to ${timeLabel(record.endTime)}`}
                     style={{
-                      top: ((minutes(record.startTime) - start) / 60) * 40,
-                      height:
+                      top: ((minutes(record.startTime) - start) / 60) * 52 + 6,
+                      height: Math.max(
                         ((minutes(record.endTime) - minutes(record.startTime)) /
                           60) *
-                        40,
-                      left: `calc(${(lane / laneCount) * 100}% + 6px)`,
-                      width: `calc(${100 / laneCount}% - 12px)`,
+                          52 -
+                          12,
+                        44,
+                      ),
+                      left: `calc(${(lane / laneCount) * 100}% + 8px)`,
+                      width: `calc(${100 / laneCount}% - 16px)`,
                     }}
                   >
                     <CalendarDays size={14} aria-hidden="true" />

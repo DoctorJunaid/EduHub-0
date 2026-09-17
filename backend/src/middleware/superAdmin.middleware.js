@@ -12,4 +12,4 @@ export const isSuperAdmin = (req, res, next) => {
   });
 };
 
-export default isSuperAdmin;
+export default isSuperAdmin;

@@ -5,10 +5,12 @@
 import express from "express";
 import authRoutes from "./auth.routes.js";
 import superAdminRoutes from "./superAdmin.routes.js";
+// import authRoutes from "./auth.routes.js";
+import campusAdminRoutes from "./campusAdmin.routes.js";
+// import userRoutes from "./user.routes.js";
 import instituteAdminRoutes from "./instituteAdmin.routes.js";
 import inquiryRoutes from "./inquiry.routes.js";
-import campusAdminRoutes from "./campusAdmin.routes.js";
-import teacherAttendenceRoutes from "./teacherAttendance.routes.js"
+import teacherAttendenceRoutes from "./teacherAttendance.routes.js";
 
 const router = express.Router();
 

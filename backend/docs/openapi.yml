@@ -200,6 +200,502 @@ paths:
         "200":
           description: Campus Admin deleted
 
+  /campus-admin/teachers:
+    get:
+      summary: Get all teacher profiles
+      operationId: getTeachers
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Teacher profiles retrieved
+    post:
+      summary: Create teacher profile
+      operationId: createTeacher
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeacherProfileInput"
+      responses:
+        "201":
+          description: Teacher profile created
+
+  /campus-admin/teachers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get teacher profile by ID
+      operationId: getTeacherById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Teacher profile found
+    put:
+      summary: Update teacher profile
+      operationId: updateTeacher
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeacherProfileInput"
+      responses:
+        "200":
+          description: Teacher profile updated
+    delete:
+      summary: Delete teacher profile
+      operationId: deleteTeacher
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Teacher profile deleted
+
+  /campus-admin/student-profiles:
+    get:
+      summary: Get all student profiles
+      operationId: getStudents
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Student profiles retrieved
+    post:
+      summary: Create student profile
+      operationId: createStudent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentProfileInput"
+      responses:
+        "201":
+          description: Student profile created
+
+  /campus-admin/student-profiles/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get student profile by ID
+      operationId: getStudentById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Student profile found
+    put:
+      summary: Update student profile
+      operationId: updateStudent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentProfileInput"
+      responses:
+        "200":
+          description: Student profile updated
+    delete:
+      summary: Delete student profile
+      operationId: deleteStudent
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Student profile deleted
+
+  /campus-admin/class-schedules:
+    get:
+      summary: Get all class schedules
+      operationId: getClassSchedules
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Class schedules retrieved
+    post:
+      summary: Create class schedule
+      operationId: createClassSchedule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassScheduleInput"
+      responses:
+        "201":
+          description: Class schedule created
+
+  /campus-admin/class-schedules/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get class schedule by ID
+      operationId: getClassScheduleById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Class schedule found
+    put:
+      summary: Update class schedule
+      operationId: updateClassSchedule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassScheduleInput"
+      responses:
+        "200":
+          description: Class schedule updated
+    delete:
+      summary: Delete class schedule
+      operationId: deleteClassSchedule
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Class schedule deleted
+
+  /campus-admin/exam-schedules:
+    get:
+      summary: Get all exam schedules
+      operationId: getExamSchedules
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Exam schedules retrieved
+    post:
+      summary: Create exam schedule
+      operationId: createExamSchedule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExamScheduleInput"
+      responses:
+        "201":
+          description: Exam schedule created
+
+  /campus-admin/exam-schedules/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get exam schedule by ID
+      operationId: getExamScheduleById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Exam schedule found
+    put:
+      summary: Update exam schedule
+      operationId: updateExamSchedule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExamScheduleInput"
+      responses:
+        "200":
+          description: Exam schedule updated
+    delete:
+      summary: Delete exam schedule
+      operationId: deleteExamSchedule
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Exam schedule deleted
+
+  /campus-admin/attendance/teachers:
+    get:
+      summary: Get all teacher attendance records
+      operationId: getTeacherAttendance
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Teacher attendance records retrieved
+    post:
+      summary: Create teacher attendance record
+      operationId: createTeacherAttendance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeacherAttendanceInput"
+      responses:
+        "201":
+          description: Teacher attendance record created
+
+  /campus-admin/attendance/teachers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get teacher attendance by ID
+      operationId: getTeacherAttendanceById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Teacher attendance found
+    put:
+      summary: Update teacher attendance
+      operationId: updateTeacherAttendance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeacherAttendanceInput"
+      responses:
+        "200":
+          description: Teacher attendance updated
+    delete:
+      summary: Delete teacher attendance
+      operationId: deleteTeacherAttendance
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Teacher attendance deleted
+
+  /campus-admin/attendance/students:
+    get:
+      summary: Get all student attendance records
+      operationId: getStudentAttendance
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Student attendance records retrieved
+    post:
+      summary: Create student attendance record
+      operationId: createStudentAttendance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentAttendanceInput"
+      responses:
+        "201":
+          description: Student attendance record created
+
+  /campus-admin/attendance/students/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get student attendance by ID
+      operationId: getStudentAttendanceById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Student attendance found
+    put:
+      summary: Update student attendance
+      operationId: updateStudentAttendance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentAttendanceInput"
+      responses:
+        "200":
+          description: Student attendance updated
+    delete:
+      summary: Delete student attendance
+      operationId: deleteStudentAttendance
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Student attendance deleted
+
+  /campus-admin/fees:
+    get:
+      summary: Get all fee records
+      operationId: getFeeRecords
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Fee records retrieved
+    post:
+      summary: Create fee record
+      operationId: createFeeRecord
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeeRecordInput"
+      responses:
+        "201":
+          description: Fee record created
+
+  /campus-admin/fees/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get fee record by ID
+      operationId: getFeeRecordById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Fee record found
+    put:
+      summary: Update fee record
+      operationId: updateFeeRecord
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeeRecordInput"
+      responses:
+        "200":
+          description: Fee record updated
+    delete:
+      summary: Delete fee record
+      operationId: deleteFeeRecord
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Fee record deleted
+
+  /campus-admin/performance:
+    get:
+      summary: Get all performance records
+      operationId: getPerformanceRecords
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Performance records retrieved
+    post:
+      summary: Create performance record
+      operationId: createPerformanceRecord
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PerformanceInput"
+      responses:
+        "201":
+          description: Performance record created
+
+  /campus-admin/performance/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get performance record by ID
+      operationId: getPerformanceRecordById
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Performance record found
+    put:
+      summary: Update performance record
+      operationId: updatePerformanceRecord
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PerformanceInput"
+      responses:
+        "200":
+          description: Performance record updated
+    delete:
+      summary: Delete performance record
+      operationId: deletePerformanceRecord
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Performance record deleted
+
 components:
   securitySchemes:
     BearerAuth:
@@ -314,6 +810,310 @@ components:
         instituteId:
           type: string
           description: MongoDB ObjectId of the associated Institute
+          example: 64f8c12a8a7c2b0012a45678
+
+    TeacherProfileInput:
+      type: object
+      required:
+        - user
+        - employeeId
+        - department
+        - qualification
+      properties:
+        user:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        employeeId:
+          type: string
+          example: T-101
+        department:
+          type: string
+          example: Mathematics
+        subjectsTaught:
+          type: array
+          items:
+            type: string
+          example: ["Algebra", "Calculus"]
+        qualification:
+          type: string
+          example: M.Sc Mathematics
+        designation:
+          type: string
+          example: Senior Teacher
+        hireDate:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+          example: true
+
+    StudentProfileInput:
+      type: object
+      required:
+        - user
+        - studentId
+        - gradeOrClass
+        - section
+        - rollNumber
+        - guardianDetails
+      properties:
+        user:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        studentId:
+          type: string
+          example: S-2024-015
+        gradeOrClass:
+          type: string
+          example: Grade 10
+        section:
+          type: string
+          example: A
+        rollNumber:
+          type: string
+          example: "15"
+        guardianDetails:
+          type: object
+          required: [name, phone, relation]
+          properties:
+            name:
+              type: string
+              example: Ahmed Khan
+            phone:
+              type: string
+              example: "+923001234567"
+            relation:
+              type: string
+              example: Father
+        enrollmentDate:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+          example: true
+
+    ClassScheduleInput:
+      type: object
+      required:
+        - title
+        - subject
+        - className
+        - section
+        - dayOfWeek
+        - startTime
+        - endTime
+        - teacherId
+      properties:
+        title:
+          type: string
+          example: Mathematics Period 1
+        subject:
+          type: string
+          example: Mathematics
+        className:
+          type: string
+          example: Grade 10
+        section:
+          type: string
+          example: A
+        dayOfWeek:
+          type: string
+          enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+        startTime:
+          type: string
+          example: "09:00"
+        endTime:
+          type: string
+          example: "10:00"
+        roomNumber:
+          type: string
+          example: Room 12
+        teacherId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        instituteId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        campusId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+
+    ExamScheduleInput:
+      type: object
+      required:
+        - examName
+        - examType
+        - className
+        - section
+        - subject
+        - examDate
+        - startTime
+        - endTime
+      properties:
+        examName:
+          type: string
+          example: Midterm Exam
+        examType:
+          type: string
+          enum: [Midterm, Final, Quiz, Assignment, Practical]
+        className:
+          type: string
+          example: Grade 10
+        section:
+          type: string
+          example: A
+        subject:
+          type: string
+          example: Biology
+        examDate:
+          type: string
+          format: date-time
+        startTime:
+          type: string
+          example: "10:00"
+        endTime:
+          type: string
+          example: "11:30"
+        roomNumber:
+          type: string
+          example: Lab 2
+        teacherId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        instituteId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        campusId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+
+    TeacherAttendanceInput:
+      type: object
+      required:
+        - teacherId
+        - date
+        - status
+      properties:
+        teacherId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [present, absent, late, on leave]
+        remarks:
+          type: string
+          example: Medical leave approved
+        instituteId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        campusId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+
+    StudentAttendanceInput:
+      type: object
+      required:
+        - studentId
+        - date
+        - status
+      properties:
+        studentId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [present, absent, late, excused]
+        remarks:
+          type: string
+          example: Permission granted
+        instituteId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        campusId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+
+    FeeRecordInput:
+      type: object
+      required:
+        - studentId
+        - feeType
+        - amount
+        - dueDate
+      properties:
+        studentId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        feeType:
+          type: string
+          enum: [tuition, library, transport, exam, miscellaneous]
+        amount:
+          type: number
+          example: 25000
+        paidAmount:
+          type: number
+          example: 10000
+        dueDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, partial, paid, overdue]
+        notes:
+          type: string
+          example: First installment paid
+        instituteId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        campusId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+
+    PerformanceInput:
+      type: object
+      required:
+        - studentId
+        - examName
+        - subject
+        - term
+        - marksObtained
+        - totalMarks
+      properties:
+        studentId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        examName:
+          type: string
+          example: Monthly Test
+        subject:
+          type: string
+          example: Physics
+        term:
+          type: string
+          example: Term 1
+        marksObtained:
+          type: number
+          example: 82
+        totalMarks:
+          type: number
+          example: 100
+        grade:
+          type: string
+          example: A
+        remarks:
+          type: string
+          example: Good performance
+        instituteId:
+          type: string
+          example: 64f8c12a8a7c2b0012a45678
+        campusId:
+          type: string
           example: 64f8c12a8a7c2b0012a45678
 
     ErrorResponse:

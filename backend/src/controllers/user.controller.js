@@ -1,5 +1,10 @@
 import User from "../models/user.model.js";
 
+/**
+ * TODO: Add OpenAPI documentation for user management endpoints
+ */
+
+// Get all users
 // @desc    Get all users (super admin / admin directory)
 // @route   GET /api/v1/users
 // @query   search (text), role, unassigned (true/false), instituteId, campusId
@@ -46,9 +51,7 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// @desc    Get single user by ID
-// @route   GET /api/v1/users/:id
-// @access  Private/Super Admin
+// Get user by ID
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
@@ -57,7 +60,9 @@ export const getUserById = async (req, res) => {
       .populate("campusId", "name");
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     res.status(200).json({ success: true, data: user });
   } catch (error) {
@@ -68,9 +73,7 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// @desc    Update user
-// @route   PUT /api/v1/users/:id
-// @access  Private/Super Admin
+// Update user details (excluding password)
 export const updateUser = async (req, res) => {
   try {
     // Prevent password update here
@@ -83,7 +86,9 @@ export const updateUser = async (req, res) => {
     ).select("-passwordHash");
 
     if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
@@ -94,9 +99,7 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// @desc    Change user role
-// @route   PUT /api/v1/users/:id/role
-// @access  Private/Super Admin
+// Change user role (super_admin, campus_admin, student)
 export const changeUserRole = async (req, res) => {
   try {
     const { role } = req.body;
@@ -107,7 +110,9 @@ export const changeUserRole = async (req, res) => {
 
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     user.role = role;
@@ -119,14 +124,14 @@ export const changeUserRole = async (req, res) => {
   }
 };
 
-// @desc    Delete user
-// @route   DELETE /api/v1/users/:id
-// @access  Private/Super Admin
+// Toggle user status (active/suspended)
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Prevent super admin from deleting themselves
@@ -144,61 +149,52 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// @desc    Update user profile by ID (excluding email)
-// @route   PUT /api/v1/users/:id/profile
-// @access  Private/Super Admin
-export const updateUserProfileById = async (req, res) => {
+export const toggleUserStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { fullName, phone, address, bio, gender, dateOfBirth } = req.body;
+    const { status } = req.body;
+    const allowedStatuses = ["active", "suspended"];
 
-    const updateFields = {};
-
-    if (fullName !== undefined) updateFields.fullName = fullName.trim();
-    if (phone !== undefined) updateFields.phone = phone.trim();
-    if (address !== undefined) updateFields.address = address.trim();
-    if (bio !== undefined) updateFields.bio = bio.trim();
-    if (gender !== undefined) updateFields.gender = gender;
-    if (dateOfBirth !== undefined) {
-      const dob = new Date(dateOfBirth);
-      if (isNaN(dob.getTime())) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid date of birth format",
-        });
-      }
-      updateFields.dateOfBirth = dob;
-    }
-
-    if (Object.keys(updateFields).length === 0) {
+    if (!status || !allowedStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "No profile fields provided to update",
+        message: "Status must be either active or suspended",
       });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      updateFields,
-      { new: true, runValidators: true }
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true },
     ).select("-passwordHash");
 
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      user: updatedUser,
-    });
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
-    });
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateUserProfileById = async (req, res) => {
+  try {
+    const { password, ...updateData } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-passwordHash");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

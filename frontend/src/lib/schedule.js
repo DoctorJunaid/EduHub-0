@@ -44,15 +44,10 @@ export function filterSchedules(records, filters) {
   );
 }
 export function gridRange(records) {
+  if (!records.length) return { start: 0, end: 60 };
   return {
-    start: Math.min(
-      8 * 60,
-      ...records.map((item) => Math.floor(minutes(item.startTime) / 60) * 60),
-    ),
-    end: Math.max(
-      17 * 60,
-      ...records.map((item) => Math.ceil(minutes(item.endTime) / 60) * 60),
-    ),
+    start: Math.min(...records.map((item) => minutes(item.startTime))),
+    end: Math.max(...records.map((item) => minutes(item.endTime))),
   };
 }
 export function dayBlocks(records, day) {
