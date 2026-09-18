@@ -88,6 +88,7 @@ export const CAMPUS_ADMIN_NAV = [
   },
   { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
   { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
+  { label: "Salary Profiles", path: "/salary-profiles", icon: <Users size={20} /> },
   { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
 ];
 
