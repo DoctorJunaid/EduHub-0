@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
   requireApprovalForSubstitute: false,
   lateGraceMinutes: 10,
   earlyLeaveGraceMinutes: 15,
+  substituteBonusPerClass: 0,
 };
 
 export const getInstituteSettings = async (instituteId) => {

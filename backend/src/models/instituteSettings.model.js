@@ -71,6 +71,10 @@ const instituteSettingsSchema = new mongoose.Schema(
       max: 60,
       default: 15,
     },
+    substituteBonusPerClass: {
+      type: Number,
+      default: 0,
+    },
     lastEditedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
