@@ -14,6 +14,7 @@ import teacherAttendenceRoutes from "./teacherAttendance.routes.js";
 import settingsRoutes from "./settings.routes.js";
 import substituteRoutes from "./substitute.routes.js";
 import salaryPolicyRoutes from "./salaryPolicy.routes.js";
+import teacherSalaryProfileRoutes from "./teacherSalaryProfile.routes.js";
 
 const router = express.Router();
 
@@ -40,5 +41,6 @@ router.use("/campus/attendence/teachers", teacherAttendenceRoutes);
 router.use("/settings", settingsRoutes);
 router.use("/campus/substitutes", substituteRoutes);
 router.use("/campus/salary", salaryPolicyRoutes);
+router.use("/campus/salary/profiles", teacherSalaryProfileRoutes);
 
 export default router;
