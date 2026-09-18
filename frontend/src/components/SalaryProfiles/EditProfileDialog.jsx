@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Save } from "lucide-react";
 
-const EditProfileDialog = ({ profile, onClose, onSave }) => {
+const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
   const [formData, setFormData] = useState({
     teacherProfileId: "",
     baseSalary: 0,
@@ -61,18 +61,18 @@ const EditProfileDialog = ({ profile, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="salary-profile-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
-        className="w-full max-w-lg mx-4 rounded-2xl border border-gray-700/50 bg-gray-900/95 shadow-2xl"
+        className="salary-profile-dialog-shell w-full max-w-lg mx-4 rounded-2xl border border-gray-700/50 bg-gray-900/95 shadow-2xl"
         style={{
           animation: "slideDown 0.3s ease-out",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
-          <h2 className="text-xl font-semibold text-white">
+        <div className="salary-profile-dialog-header flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
+          <div><span>Finance / compensation</span><h2 className="text-xl font-semibold text-white">
             {profile ? "Edit Salary Profile" : "Add Salary Profile"}
-          </h2>
+          </h2><p>Keep recurring compensation details accurate for payroll.</p></div>
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors"
@@ -82,25 +82,23 @@ const EditProfileDialog = ({ profile, onClose, onSave }) => {
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="salary-profile-dialog-form p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Teacher ID (only for new profiles) */}
           {!profile && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Teacher Profile ID</label>
-              <input
-                type="text"
+              <label className="block text-sm font-medium text-gray-300 mb-1">Teacher</label>
+              <select
                 name="teacherProfileId"
                 value={formData.teacherProfileId}
                 onChange={handleChange}
                 required
                 className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Enter teacher profile ID"
-              />
+              ><option value="">Select teacher</option>{teachers.map((teacher) => <option key={teacher._id} value={teacher._id}>{teacher.name || teacher.user?.name || teacher.email || 'Teacher'}</option>)}</select>
             </div>
           )}
 
           {/* Base Salary */}
-          <div>
+          <div className="salary-dialog-section">
             <label className="block text-sm font-medium text-gray-300 mb-1">Base Salary (PKR)</label>
             <input
               type="number"
@@ -114,7 +112,7 @@ const EditProfileDialog = ({ profile, onClose, onSave }) => {
           </div>
 
           {/* Allowances */}
-          <div>
+          <div className="salary-dialog-section">
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium text-gray-300">Allowances</label>
               <button
@@ -157,7 +155,7 @@ const EditProfileDialog = ({ profile, onClose, onSave }) => {
           </div>
 
           {/* Deductions */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="salary-dialog-section grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Tax Deduction (PKR)</label>
               <input
@@ -183,7 +181,7 @@ const EditProfileDialog = ({ profile, onClose, onSave }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50">
+          <div className="salary-profile-dialog-footer flex justify-end gap-3 pt-4 border-t border-gray-700/50">
             <button
               type="button"
               onClick={onClose}
