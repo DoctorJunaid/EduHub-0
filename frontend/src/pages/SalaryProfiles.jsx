@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosInstance';
 import EditProfileDialog from '../components/SalaryProfiles/EditProfileDialog';
-import { Users, Edit2, Plus } from 'lucide-react';
+import { Users, Edit2, Plus, Search, WalletCards, ReceiptText, BadgeDollarSign } from 'lucide-react';
+import './SalaryProfiles.css';
 
 const SalaryProfiles = () => {
   const [profiles, setProfiles] = useState([]);
@@ -9,13 +10,21 @@ const SalaryProfiles = () => {
   const [error, setError] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [search, setSearch] = useState('');
 
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/campus/salary/profiles');
-      if (res.data.success) {
-        setProfiles(res.data.data);
+      const [profilesResult, teachersResult] = await Promise.allSettled([
+        api.get('/campus/salary/profiles'),
+        api.get('/campus/faculty'),
+      ]);
+      const profilesResponse = profilesResult.status === 'fulfilled' ? profilesResult.value : null;
+      const teachersResponse = teachersResult.status === 'fulfilled' ? teachersResult.value : null;
+      if (profilesResponse?.data.success) {
+        setProfiles(profilesResponse.data.data);
+        setTeachers(teachersResponse?.data?.data || []);
       } else {
         setError('Failed to load salary profiles');
       }
@@ -54,68 +63,70 @@ const SalaryProfiles = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-white">Loading salary profiles...</div>;
-  if (error) return <div className="p-8 text-center text-red-400">{error}</div>;
+  const visibleProfiles = profiles.filter((profile) => {
+    const teacher = profile.teacherProfileId;
+    const name = teacher?.user?.name || teacher?.employeeId || teacher || '';
+    return String(name).toLowerCase().includes(search.trim().toLowerCase());
+  });
+  const formatPKR = (value) => `PKR ${Number(value || 0).toLocaleString('en-PK')}`;
+  const totalBase = profiles.reduce((sum, profile) => sum + Number(profile.baseSalary || 0), 0);
+  const totalAllowances = profiles.reduce((sum, profile) => sum + (profile.allowances || []).reduce((amount, item) => amount + Number(item.amount || 0), 0), 0);
+  const totalDeductions = profiles.reduce((sum, profile) => sum + Number(profile.taxDeduction || 0) + Number(profile.otherDeduction || 0), 0);
+
+  if (loading) return <div className="salary-profiles-page campus-tab-page salary-profiles-state">Loading salary profiles...</div>;
+  if (error) return <div className="salary-profiles-page campus-tab-page salary-profiles-state salary-profiles-error">{error}</div>;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Salary Profiles</h1>
-        <button
-          onClick={() => openEdit(null)}
-          className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Profile
-        </button>
+    <div className="salary-profiles-page campus-tab-page">
+      <div className="salary-profiles-heading">
+        <div><span className="salary-profiles-eyebrow">Finance / compensation</span><h1>Salary Profiles</h1><p>Maintain base salary, allowances, and recurring deductions for teaching staff.</p></div>
+        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={() => openEdit(null)}><Plus size={14} /> Add Profile</button>
       </div>
-      <div className="overflow-x-auto glass-panel p-4 rounded-xl">
-        <table className="min-w-full text-left text-white">
-          <thead className="border-b border-gray-700">
+
+      <div className="campus-kpi-track salary-profiles-kpis">
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Users size={16} /></div><div className="kpi-info"><span className="kpi-label">Configured Staff</span><span className="kpi-value">{profiles.length}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><BadgeDollarSign size={16} /></div><div className="kpi-info"><span className="kpi-label">Base Payroll</span><span className="kpi-value">{formatPKR(totalBase)}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><WalletCards size={16} /></div><div className="kpi-info"><span className="kpi-label">Allowances</span><span className="kpi-value">{formatPKR(totalAllowances)}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><ReceiptText size={16} /></div><div className="kpi-info"><span className="kpi-label">Recurring Deductions</span><span className="kpi-value">{formatPKR(totalDeductions)}</span></div></div></div>
+      </div>
+
+      <div className="campus-toolbar">
+        <div className="toolbar-left"><div className="toolbar-search"><Search size={13} /><input type="search" placeholder="Search teacher..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>{search && <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => setSearch('')}>Reset</button>}</div>
+        <div className="toolbar-actions"><span className="salary-profiles-result-count">{visibleProfiles.length} of {profiles.length} profiles</span></div>
+      </div>
+
+      <div className="campus-table-container salary-profiles-table-wrap">
+        <div className="overflow-x-auto"><table className="salary-profiles-table">
+          <thead>
             <tr>
-              <th className="px-4 py-2">Teacher</th>
-              <th className="px-4 py-2">Base Salary</th>
-              <th className="px-4 py-2">Allowances</th>
-              <th className="px-4 py-2">Tax</th>
-              <th className="px-4 py-2">Other</th>
-              <th className="px-4 py-2">Actions</th>
+              <th>Teacher</th><th>Base salary</th><th>Allowances</th><th>Tax</th><th>Other</th><th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {profiles.map((p) => (
-              <tr key={p._id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
-                <td className="px-4 py-2">
-                  {p.teacherProfileId?.user?.name || p.teacherProfileId?.employeeId || p.teacherProfileId || '—'}
+            {visibleProfiles.length === 0 ? <tr><td colSpan="6" className="salary-profiles-empty">No salary profiles match this search.</td></tr> : visibleProfiles.map((p) => (
+              <tr key={p._id}>
+                <td><div className="salary-profile-person"><span>{(p.teacherProfileId?.user?.name || 'T').slice(0, 1)}</span><div><strong>{p.teacherProfileId?.user?.name || p.teacherProfileId?.employeeId || p.teacherProfileId || 'Unknown teacher'}</strong><small>{p.teacherProfileId?.designation || p.teacherProfileId?.department || 'Teaching staff'}</small></div></div>
                 </td>
-                <td className="px-4 py-2">{p.baseSalary}</td>
-                <td className="px-4 py-2">
+                <td><strong className="salary-amount">{formatPKR(p.baseSalary)}</strong></td>
+                <td>
                   {p.allowances && p.allowances.length > 0
-                    ? p.allowances.map((a, i) => (
-                        <div key={i} className="flex justify-between">
-                          <span>{a.name}:</span>
-                          <span>{a.amount}</span>
-                        </div>
-                      ))
-                    : '—'}
+                    ? <div className="allowance-stack">{p.allowances.map((a, i) => (
+                        <div key={i}><span>{a.name}</span><strong>{formatPKR(a.amount)}</strong></div>
+                    ))}</div>
+                    : <span className="salary-muted">No allowances</span>}
                 </td>
-                <td className="px-4 py-2">{p.taxDeduction}</td>
-                <td className="px-4 py-2">{p.otherDeduction}</td>
-                <td className="px-4 py-2">
-                  <button
-                    onClick={() => openEdit(p)}
-                    className="flex items-center text-indigo-400 hover:text-indigo-300"
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" /> Edit
-                  </button>
-                </td>
+                <td><span className="salary-deduction">{formatPKR(p.taxDeduction)}</span></td>
+                <td><span className="salary-deduction">{formatPKR(p.otherDeduction)}</span></td>
+                <td className="text-right"><button type="button" onClick={() => openEdit(p)} className="salary-edit-btn"><Edit2 size={13} /> Edit</button></td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
       {dialogOpen && (
         <EditProfileDialog
           profile={selectedProfile}
+          teachers={teachers}
           onClose={closeDialog}
           onSave={handleSave}
         />

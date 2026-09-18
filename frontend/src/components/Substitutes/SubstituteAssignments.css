@@ -250,3 +250,45 @@
 .substitute-dialog .bg-blue-600\/20 { background: #eff6ff !important; border-color: #bfdbfe !important; }
 .substitute-dialog .bg-blue-600 { background: #09090b !important; }
 .substitute-dialog .bg-blue-600:hover { background: #27272a !important; }
+
+.assign-dialog-shell { width: min(700px, calc(100vw - 32px)) !important; height: min(760px, calc(100vh - 32px)); max-height: calc(100vh - 32px) !important; }
+.assign-dialog-header { padding: 20px 24px !important; }
+.assign-dialog-kicker { display: block; color: #71717a; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+.assign-dialog-header h2 { margin: 0; font-size: 20px; }
+.assign-dialog-header p { margin: 5px 0 0; color: #71717a !important; font-size: 12px; }
+.assign-dialog-header button { color: #71717a !important; }
+.assign-dialog-header button:hover { color: #09090b !important; background: #f4f4f5 !important; }
+.assign-dialog-body { min-height: 0; padding: 24px !important; }
+.assign-section { display: flex; flex-direction: column; gap: 14px; }
+.assign-section-title { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f2; }
+.assign-section-title > span { color: #a1a1aa; font-size: 10px; font-weight: 700; }
+.assign-section-title strong { display: block; color: #18181b; font-size: 13px; }
+.assign-section-title small { margin-top: 3px; color: #a1a1aa; font-size: 10px; }
+.assign-field-grid { gap: 12px !important; }
+.assign-field-grid-three { grid-template-columns: 1fr 0.7fr 1fr !important; }
+.assign-field label { display: block; margin-bottom: 6px; color: #3f3f46 !important; font-size: 11px; font-weight: 650; }
+.assign-field label span { color: #a1a1aa; font-weight: 500; }
+.assign-field select,
+.assign-field input,
+.assign-field textarea { width: 100%; min-height: 36px; padding: 0 10px; box-sizing: border-box; font-size: 12px; }
+.assign-field textarea { min-height: 76px; padding-top: 9px; resize: vertical; }
+.assign-suggestion-title { display: none !important; }
+.assign-teacher-section { border-top: 0 !important; padding-top: 0 !important; }
+.assign-teacher-card { padding: 12px !important; border-radius: 8px !important; border-color: #e4e4e7 !important; background: #fafafa !important; }
+.assign-teacher-card:hover,
+.assign-teacher-card.is-selected { background: #eff6ff !important; border-color: #93c5fd !important; }
+.assign-teacher-card input { accent-color: #18181b; }
+.assign-teacher-card .text-white { color: #18181b !important; }
+.assign-teacher-card .text-gray-400,
+.assign-teacher-card .text-gray-500 { color: #71717a !important; }
+.assign-dialog-footer { padding: 14px 24px !important; background: #fafafa !important; }
+.assign-cancel-btn { color: #52525b !important; font-size: 12px; }
+.assign-cancel-btn:hover { color: #09090b !important; }
+.assign-submit-btn { color: #fff !important; background: #09090b !important; border-radius: 6px !important; font-size: 12px; font-weight: 650; }
+.assign-submit-btn:hover { background: #27272a !important; }
+.assign-submit-btn:disabled { color: #a1a1aa !important; background: #e4e4e7 !important; border-color: #e4e4e7 !important; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  .assign-dialog-body { padding: 18px !important; }
+  .assign-field-grid-three { grid-template-columns: 1fr !important; }
+}

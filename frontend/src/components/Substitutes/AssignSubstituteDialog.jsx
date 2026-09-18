@@ -102,18 +102,24 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
 
   return (
     <div className="substitute-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center p-6 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">Assign Substitute</h2>
+      <div className="assign-dialog-shell bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="assign-dialog-header flex justify-between items-center p-6 border-b border-gray-800">
+          <div>
+            <span className="assign-dialog-kicker">Staff operations</span>
+            <h2 className="text-xl font-semibold text-white">Assign Substitute</h2>
+            <p>Set the coverage details and choose an available teacher.</p>
+          </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="assign-dialog-body p-6 overflow-y-auto flex-1 custom-scrollbar">
           <form id="substituteForm" onSubmit={handleSubmit} className="space-y-6">
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="assign-section">
+              <div className="assign-section-title"><span>01</span><div><strong>Schedule</strong><small>When should the cover class run?</small></div></div>
+            <div className="assign-field-grid grid grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="block text-sm font-medium text-gray-300 mb-1">Date</label>
                 <input type="date" name="date" value={formData.date} onChange={handleChange} required
@@ -126,7 +132,7 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="assign-field-grid grid grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="block text-sm font-medium text-gray-300 mb-1">Start Time</label>
                 <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required
@@ -138,8 +144,11 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
+            </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="assign-section">
+              <div className="assign-section-title"><span>02</span><div><strong>Class coverage</strong><small>Identify the class and the reason.</small></div></div>
+            <div className="assign-field-grid assign-field-grid-three grid grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="block text-sm font-medium text-gray-300 mb-1">Class</label>
                 <input type="text" name="className" placeholder="e.g. 10th" value={formData.className} onChange={handleChange} required
@@ -157,10 +166,12 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Original Teacher ID (Object ID)</label>
-              <input type="text" name="originalTeacherId" placeholder="Teacher Object ID" value={formData.originalTeacherId} onChange={handleChange} required
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500" />
+            <div className="assign-field">
+              <label>Original teacher</label>
+              <select name="originalTeacherId" value={formData.originalTeacherId} onChange={handleChange} required>
+                <option value="">Select original teacher</option>
+                {allTeachers.map((teacher) => <option key={teacher._id} value={teacher._id}>{teacher.name || teacher.user?.name || teacher.email || "Teacher"}</option>)}
+              </select>
             </div>
 
             <div className="form-group">
@@ -173,9 +184,11 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
                 <option value="Other">Other</option>
               </select>
             </div>
+            </div>
 
-            <div className="border-t border-gray-800 pt-6">
-              <h3 className="text-lg font-medium text-white mb-4 flex items-center">
+            <div className="assign-section assign-teacher-section border-t border-gray-800 pt-6">
+              <div className="assign-section-title"><span>03</span><div><strong>Choose substitute</strong><small>Suggestions update as you refine the class.</small></div></div>
+              <h3 className="assign-suggestion-title text-lg font-medium text-white mb-4 flex items-center">
                 <Search className="w-5 h-5 mr-2 text-blue-400" />
                 Select Substitute Teacher
               </h3>
@@ -189,7 +202,7 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
               ) : (
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   {availableTeachers.map(teacher => (
-                    <label key={teacher._id} className={`flex items-start p-4 rounded-xl cursor-pointer transition-colors border ${formData.substituteTeacherId === teacher._id ? 'bg-blue-600/20 border-blue-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'}`}>
+                    <label key={teacher._id} className={`assign-teacher-card flex items-start p-4 rounded-xl cursor-pointer transition-colors border ${formData.substituteTeacherId === teacher._id ? 'is-selected bg-blue-600/20 border-blue-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'}`}>
                       <input type="radio" name="substituteTeacherId" value={teacher._id} checked={formData.substituteTeacherId === teacher._id} onChange={handleChange} className="mt-1" />
                       <div className="ml-3 flex-1">
                         <div className="flex justify-between items-start">
@@ -208,8 +221,8 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
               )}
             </div>
 
-            <div className="form-group">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Notes (Optional)</label>
+            <div className="assign-field">
+              <label>Notes <span>(optional)</span></label>
               <textarea name="notes" value={formData.notes} onChange={handleChange} rows="2" maxLength="300"
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 custom-scrollbar"></textarea>
             </div>
@@ -217,9 +230,9 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
           </form>
         </div>
 
-        <div className="p-6 border-t border-gray-800 bg-gray-900 flex justify-end gap-3">
-          <button onClick={onClose} className="px-5 py-2.5 text-gray-400 hover:text-white transition-colors">Cancel</button>
-          <button type="submit" form="substituteForm" disabled={submitting} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50">
+        <div className="assign-dialog-footer p-6 border-t border-gray-800 bg-gray-900 flex justify-end gap-3">
+          <button onClick={onClose} className="assign-cancel-btn px-5 py-2.5 text-gray-400 hover:text-white transition-colors">Cancel</button>
+          <button type="submit" form="substituteForm" disabled={submitting || !formData.originalTeacherId || !formData.substituteTeacherId} className="assign-submit-btn px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50">
             {submitting ? "Assigning..." : "Assign Substitute"}
           </button>
         </div>
