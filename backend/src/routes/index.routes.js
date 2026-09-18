@@ -11,6 +11,7 @@ import campusAdminRoutes from "./campusAdmin.routes.js";
 import instituteAdminRoutes from "./instituteAdmin.routes.js";
 import inquiryRoutes from "./inquiry.routes.js";
 import teacherAttendenceRoutes from "./teacherAttendance.routes.js";
+import settingsRoutes from "./settings.routes.js";
 
 const router = express.Router();
 
@@ -33,5 +34,7 @@ router.use("/campus-admin", campusAdminRoutes);
 
 router.use("/campus/attendance/teachers", teacherAttendenceRoutes);
 router.use("/campus/attendence/teachers", teacherAttendenceRoutes);
+
+router.use("/settings", settingsRoutes);
 
 export default router;

@@ -5,5 +5,6 @@ export const instituteNavigation = [
   { label: "Staff Directory", path: '/institute-admin/staff', icon: <Users size={20} /> },
   { label: "Students", path: '/institute-admin/students', icon: <BookOpen size={20} /> },
   { label: "Broadcast Alerts", path: "/institute-admin/alerts", icon: <MessageCircle size={20} /> },
+  { label: "Settings", path: "/institute-admin/settings", icon: <MessageCircle size={20} /> },
 ];
 

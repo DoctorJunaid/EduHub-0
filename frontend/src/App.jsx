@@ -14,6 +14,7 @@ import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStuden
 import InstituteStaff from "./Admins/Institute Admin/Staff/InstituteStaff";
 import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
+import Settings from "./components/Settings/Settings";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
 import { Route, Routes } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
@@ -123,6 +124,7 @@ const App = () => {
             element={<InstituteStudents />}
           />
           <Route path="institute-admin/staff" element={<InstituteStaff />} />
+          <Route path="institute-admin/settings" element={<Settings />} />
         </Route>
       </Route>
 
@@ -138,6 +140,7 @@ const App = () => {
           <Route path="results" element={<ExamResults />} />
           <Route path="fees" element={<FeeManagement />} />
           <Route path="messages" element={<Messages />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
 
