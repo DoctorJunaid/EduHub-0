@@ -101,7 +101,7 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="substitute-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-gray-800">
           <h2 className="text-xl font-semibold text-white">Assign Substitute</h2>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Calendar as CalendarIcon, User, RefreshCw, X, Check, XCircle } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, User, RefreshCw, X, Check, Clock3, CheckCircle2 } from "lucide-react";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import AssignSubstituteDialog from "./AssignSubstituteDialog";
@@ -10,6 +10,8 @@ const SubstituteAssignments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   useEffect(() => {
     fetchAssignments();
@@ -54,6 +56,27 @@ const SubstituteAssignments = () => {
     }
   };
 
+  const visibleAssignments = assignments.filter((assignment) => {
+    const query = search.trim().toLowerCase();
+    const matchesSearch = !query || [
+      assignment.className,
+      assignment.section,
+      assignment.subject,
+      assignment.reason,
+      assignment.originalTeacherId?.user?.name,
+      assignment.substituteTeacherId?.user?.name,
+    ].some((value) => String(value || "").toLowerCase().includes(query));
+    return matchesSearch && (!statusFilter || assignment.status === statusFilter);
+  });
+
+  const counts = assignments.reduce((summary, assignment) => {
+    summary.total += 1;
+    if (assignment.status === "Pending Approval") summary.pending += 1;
+    if (["Assigned", "Completed"].includes(assignment.status)) summary.active += 1;
+    if (assignment.status === "Completed") summary.completed += 1;
+    return summary;
+  }, { total: 0, pending: 0, active: 0, completed: 0 });
+
   const getStatusBadgeClass = (status) => {
     switch(status) {
       case 'Pending Approval': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
@@ -65,44 +88,50 @@ const SubstituteAssignments = () => {
   };
 
   return (
-    <div className="substitutes-container p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="substitutes-container campus-tab-page">
+      <div className="substitutes-heading">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Substitute Assignments</h1>
-          <p className="text-gray-400">Manage teacher substitutions and load limits.</p>
+          <div className="substitutes-eyebrow">Staff operations / coverage</div>
+          <h1>Substitute Assignments</h1>
+          <p>Coordinate cover classes, approvals, and substitute workload for the selected day.</p>
         </div>
-        
-        <div className="flex gap-4 items-center">
-          <div className="relative">
-            <input 
-              type="date" 
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-gray-800/80 border border-gray-700 text-white rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500"
-            />
-            <CalendarIcon className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-          </div>
-          <button 
-            onClick={() => setIsDialogOpen(true)}
-            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-lg shadow-blue-500/20"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Assign Substitute
-          </button>
-        </div>
+        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={() => setIsDialogOpen(true)}>
+          <Plus size={14} /> Assign Substitute
+        </button>
       </div>
 
-      <div className="glass-panel rounded-xl overflow-hidden border border-gray-700/50">
+      <div className="campus-kpi-track substitutes-kpis">
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><CalendarIcon size={16} /></div><div className="kpi-info"><span className="kpi-label">Today's Assignments</span><span className="kpi-value">{counts.total}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Clock3 size={16} /></div><div className="kpi-info"><span className="kpi-label">Pending Approval</span><span className="kpi-value">{counts.pending}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><User size={16} /></div><div className="kpi-info"><span className="kpi-label">Active Coverage</span><span className="kpi-value">{counts.active}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><CheckCircle2 size={16} /></div><div className="kpi-info"><span className="kpi-label">Completed</span><span className="kpi-value">{counts.completed}</span></div></div></div>
+      </div>
+
+      <div className="campus-toolbar">
+        <div className="toolbar-left">
+          <div className="toolbar-search">
+            <Search size={13} />
+            <input type="search" placeholder="Search assignments..." value={search} onChange={(event) => setSearch(event.target.value)} />
+          </div>
+          <select className="toolbar-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option value="Pending Approval">Pending Approval</option>
+            <option value="Assigned">Assigned</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <label className="substitutes-date-filter"><CalendarIcon size={13} /><input type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} aria-label="Assignment date" /></label>
+          {(search || statusFilter) && <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => { setSearch(""); setStatusFilter(""); }}>Reset</button>}
+        </div>
+        <div className="toolbar-actions"><span className="substitutes-result-count">{visibleAssignments.length} shown</span></div>
+      </div>
+
+      <div className="campus-table-container substitutes-table-wrap">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="substitutes-table">
             <thead>
               <tr className="bg-gray-800/50 border-b border-gray-700/50">
-                <th className="p-4 font-semibold text-gray-300">Period & Time</th>
-                <th className="p-4 font-semibold text-gray-300">Class</th>
-                <th className="p-4 font-semibold text-gray-300">Original Teacher</th>
-                <th className="p-4 font-semibold text-gray-300">Substitute</th>
-                <th className="p-4 font-semibold text-gray-300">Status</th>
-                <th className="p-4 font-semibold text-gray-300 text-right">Actions</th>
+                <th>Period &amp; time</th><th>Class coverage</th><th>Original teacher</th><th>Substitute teacher</th><th>Status</th><th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -113,46 +142,26 @@ const SubstituteAssignments = () => {
                     Loading assignments...
                   </td>
                 </tr>
-              ) : assignments.length === 0 ? (
+              ) : visibleAssignments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-gray-400">
-                    No substitute assignments for this date.
+                  <td colSpan="6" className="substitutes-empty">
+                    <CalendarIcon size={24} /><strong>No assignments found</strong><span>Try another date or clear the filters.</span>
                   </td>
                 </tr>
               ) : (
-                assignments.map((assignment) => (
-                  <tr key={assignment._id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                    <td className="p-4">
-                      <div className="font-medium text-white">Period {assignment.period}</div>
-                      <div className="text-xs text-gray-400">{assignment.startTime} - {assignment.endTime}</div>
+                visibleAssignments.map((assignment) => (
+                  <tr key={assignment._id}>
+                    <td><strong>Period {assignment.period}</strong><small>{assignment.startTime} - {assignment.endTime}</small>
                     </td>
-                    <td className="p-4">
-                      <div className="font-medium text-white">{assignment.className} {assignment.section && `- ${assignment.section}`}</div>
-                      <div className="text-xs text-blue-400">{assignment.subject}</div>
+                    <td><strong>{assignment.className} {assignment.section && <span className="muted">/ {assignment.section}</span>}</strong><small className="subject-label">{assignment.subject}</small>
                     </td>
-                    <td className="p-4">
-                      <div className="flex items-center">
-                        <User className="w-4 h-4 text-gray-500 mr-2" />
-                        <span className="text-gray-300">{assignment.originalTeacherId?.user?.name || "Unknown"}</span>
-                      </div>
-                      <div className="text-xs text-red-400 mt-1 pl-6">{assignment.reason}</div>
+                    <td><div className="substitute-person"><span className="person-avatar">{(assignment.originalTeacherId?.user?.name || "U").slice(0, 1)}</span><span><strong>{assignment.originalTeacherId?.user?.name || "Unknown"}</strong><small>{assignment.reason}</small></span></div>
                     </td>
-                    <td className="p-4">
-                      <div className="flex items-center">
-                        <User className="w-4 h-4 text-blue-400 mr-2" />
-                        <span className="font-medium text-white">{assignment.substituteTeacherId?.user?.name || "Unknown"}</span>
-                      </div>
-                      {assignment.bonusEligible && (
-                        <div className="text-xs text-green-400 mt-1 pl-6">Bonus: ${assignment.bonusAmount}</div>
-                      )}
+                    <td><div className="substitute-person"><span className="person-avatar person-avatar-accent">{(assignment.substituteTeacherId?.user?.name || "U").slice(0, 1)}</span><span><strong>{assignment.substituteTeacherId?.user?.name || "Unknown"}</strong>{assignment.bonusEligible && <small className="bonus-label">Bonus: PKR {assignment.bonusAmount}</small>}</span></div>
                     </td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs border ${getStatusBadgeClass(assignment.status)}`}>
-                        {assignment.status}
-                      </span>
+                    <td><span className={`substitute-status ${getStatusBadgeClass(assignment.status)}`}>{assignment.status}</span>
                     </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
+                    <td className="text-right"><div className="substitute-actions">
                         {assignment.status === 'Pending Approval' && (
                           <button onClick={() => handleUpdateStatus(assignment._id, 'Assigned')} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition" title="Approve">
                             <Check className="w-4 h-4" />

@@ -37,6 +37,8 @@ const userSchema = new mongoose.Schema(
         "institute_admin",
         "campus_admin",
         "campus_manager",
+        "principal",
+        "accountant",
         "teacher",
         "faculty",
         "student",
@@ -60,6 +62,8 @@ const userSchema = new mongoose.Schema(
         return (
           this.role === "campus_manager" ||
           this.role === "campus_admin" ||
+          this.role === "principal" ||
+          this.role === "accountant" ||
           this.role === "teacher" ||
           this.role === "faculty" ||
           this.role === "student"
