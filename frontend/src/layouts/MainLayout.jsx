@@ -5,9 +5,13 @@ import { loggedOut, selectCurrentUser } from '../store/Slices/authSlice';
 import { ROLE_LABELS } from '../auth/roles';
 import Sidebar from "../components/common/Sidebar";
 import Header from "../components/common/Header";
-import { CAMPUS_ADMIN_NAV } from "../constants/navigation";
+import { CAMPUS_ADMIN_NAV, getCampusAdminNav } from "../constants/navigation";
+import { useInstitution } from "@/context/InstitutionContext";
 
-const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV, className = '', profile: suppliedProfile, headerProps = {} }) => {
+const MainLayout = ({ navigation, className = '', profile: suppliedProfile, headerProps = {} }) => {
+  const { isSchool } = useInstitution();
+  const effectiveNavigation = navigation || getCampusAdminNav(isSchool);
+
   const dispatch = useDispatch(), navigate = useNavigate();
   const location = useLocation();
   const user = useSelector(selectCurrentUser);
@@ -34,7 +38,7 @@ const MainLayout = ({ navigation = CAMPUS_ADMIN_NAV, className = '', profile: su
       <Sidebar
         user={profile}
         onSignOut={signOut}
-        items={navigation}
+        items={effectiveNavigation}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
       />

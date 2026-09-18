@@ -42,10 +42,12 @@ import { campusStudents as demoStudents } from "../Dashboard/campusOverviewData.
 import toast from "react-hot-toast";
 import StudentForm from "./StudentForm";
 import StudentProfileDialog from "./StudentProfileDialog";
+import { useInstitution } from "@/context/InstitutionContext";
 import "./StudentsDirectory.css";
 
 export default function StudentsDirectory() {
   const dispatch = useDispatch();
+  const { isSchool } = useInstitution();
 
   useEffect(() => {
     dispatch(fetchStudents());
@@ -53,8 +55,11 @@ export default function StudentsDirectory() {
 
   const rawStudents = useSelector(selectStudents);
   const students = useMemo(() => {
+    if (isSchool) {
+      return rawStudents && rawStudents.length > 0 ? rawStudents : [];
+    }
     return rawStudents?.length ? rawStudents : demoStudents;
-  }, [rawStudents]);
+  }, [rawStudents, isSchool]);
 
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({
@@ -67,22 +72,32 @@ export default function StudentsDirectory() {
   const pageSize = 10;
 
   const programs = useMemo(() => {
+    if (isSchool) {
+      const cls = [
+        ...new Set(students.map((student) => student.gradeOrClass || student.program).filter(Boolean)),
+      ];
+      return cls.length > 0 ? cls : ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6", "Grade 5"];
+    }
     return [
       ...new Set([
         ...studentPrograms,
         ...students.map((student) => student.program).filter(Boolean),
       ]),
     ];
-  }, [students]);
+  }, [students, isSchool]);
 
   const semesters = useMemo(() => {
+    if (isSchool) {
+      const sec = [...new Set(students.map((student) => student.section).filter(Boolean))];
+      return sec.length > 0 ? sec : ["Section A", "Section B", "Section C", "Section D"];
+    }
     return [
       ...new Set([
         ...studentSemesters,
         ...students.map((student) => student.semester).filter(Boolean),
       ]),
     ];
-  }, [students]);
+  }, [students, isSchool]);
 
   const campuses = useMemo(() => {
     return [
@@ -122,13 +137,9 @@ export default function StudentsDirectory() {
   };
 
   // KPI stats calculations
-  const totalCount = students.length >= 10 ? students.length.toLocaleString() : "1,248";
-  const activeCount = students.length >= 10 
-    ? students.filter(s => s.status === 'Active').length.toLocaleString() 
-    : "1,180";
-  const pendingCount = students.length >= 10
-    ? students.filter(s => s.status === 'Pending').length.toLocaleString()
-    : "68";
+  const totalCount = students.length;
+  const activeCount = students.filter(s => s.status === 'Active').length;
+  const pendingCount = students.filter(s => s.status === 'Pending').length;
 
   return (
     <section className="campus-tab-page students-directory" aria-label="Students Directory Management">
@@ -140,7 +151,7 @@ export default function StudentsDirectory() {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Enrolled Students</span>
+              <span className="kpi-label">{isSchool ? "Enrolled Pupils" : "Enrolled Students"}</span>
               <strong className="kpi-value">{totalCount}</strong>
             </div>
           </div>
@@ -152,7 +163,7 @@ export default function StudentsDirectory() {
               <UserCheck size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Active Status</span>
+              <span className="kpi-label">{isSchool ? "Active Pupils" : "Active Status"}</span>
               <strong className="kpi-value">{activeCount}</strong>
             </div>
           </div>
@@ -176,8 +187,8 @@ export default function StudentsDirectory() {
               <Percent size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Average Attendance</span>
-              <strong className="kpi-value">94.2%</strong>
+              <span className="kpi-label">{isSchool ? "Pupil Attendance" : "Average Attendance"}</span>
+              <strong className="kpi-value">96.4%</strong>
             </div>
           </div>
         </div>
@@ -190,10 +201,10 @@ export default function StudentsDirectory() {
             <Search size={14} />
             <input
               type="text"
-              placeholder="Search students..."
+              placeholder={isSchool ? "Search pupils by name or roll..." : "Search students..."}
               value={filters.search}
               onChange={(e) => updateFilter("search", e.target.value)}
-              aria-label="Search students"
+              aria-label="Search records"
             />
           </div>
 
@@ -201,9 +212,9 @@ export default function StudentsDirectory() {
             className="toolbar-select"
             value={filters.program}
             onChange={(e) => updateFilter("program", e.target.value)}
-            aria-label="Filter by program"
+            aria-label={isSchool ? "Filter by Class" : "Filter by program"}
           >
-            <option value="">All Programs</option>
+            <option value="">{isSchool ? "All Classes" : "All Programs"}</option>
             {programs.map((prog) => (
               <option key={prog} value={prog}>
                 {prog}
@@ -215,9 +226,9 @@ export default function StudentsDirectory() {
             className="toolbar-select"
             value={filters.semester}
             onChange={(e) => updateFilter("semester", e.target.value)}
-            aria-label="Filter by semester"
+            aria-label={isSchool ? "Filter by Section" : "Filter by semester"}
           >
-            <option value="">All Semesters</option>
+            <option value="">{isSchool ? "All Sections" : "All Semesters"}</option>
             {semesters.map((sem) => (
               <option key={sem} value={sem}>
                 {sem}
@@ -247,7 +258,7 @@ export default function StudentsDirectory() {
             onClick={() => setModal({ mode: "add" })}
           >
             <Plus size={14} />
-            Add New Student
+            {isSchool ? "Admit New Pupil" : "Add New Student"}
           </button>
         </div>
       </div>
@@ -257,66 +268,76 @@ export default function StudentsDirectory() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead style={{ width: "26%" }}>Student Member</TableHead>
-              <TableHead style={{ width: "22%" }}>Program &amp; Specialization</TableHead>
-              <TableHead style={{ width: "20%" }}>Semester &amp; Academics</TableHead>
-              <TableHead style={{ width: "16%" }}>Campus Branch</TableHead>
-              <TableHead className="text-center" style={{ width: "10%" }}>Status</TableHead>
-              <TableHead className="text-center" style={{ width: "6%" }}>Actions</TableHead>
+              <TableHead style={{ width: "24%" }}>{isSchool ? "Pupil Name & Roll" : "Student Member"}</TableHead>
+              <TableHead style={{ width: "22%" }}>{isSchool ? "Class & Enrolled Subjects" : "Program & Specialization"}</TableHead>
+              <TableHead style={{ width: "24%" }}>{isSchool ? "Section & Guardian Contact" : "Semester & Academics"}</TableHead>
+              <TableHead style={{ width: "13%" }}>Campus Branch</TableHead>
+              <TableHead className="text-center" style={{ width: "9%" }}>Status</TableHead>
+              <TableHead className="text-center" style={{ width: "8%" }}>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {result.records.map((student) => (
               <TableRow key={student.id || student.roll}>
-                <TableCell>
+                <TableCell style={{ width: "24%", overflow: "hidden" }}>
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", minWidth: 0, overflow: "hidden" }}
                     onClick={() => setModal({ mode: "view", id: student.id || student._id })}
                   >
                     <Avatar style={{ width: "28px", height: "28px", fontSize: "11px", fontWeight: "600", background: "#f4f4f5", color: "#09090b", flexShrink: 0 }}>
                       <AvatarFallback>{student.initials || student.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px" }}>
-                      <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25 }}>
+                    <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                      <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
                         {student.name}
                       </strong>
-                      <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2 }}>
+                      <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}>
                         Roll No: {student.roll}
                       </span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px" }}>
-                    <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25 }}>
-                      {student.program}
+                <TableCell style={{ width: "22%", overflow: "hidden" }}>
+                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                    <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                      {isSchool ? (student.gradeOrClass || student.program?.replace(/BS\s+/i, "Grade 10 - ") || "Grade 10") : student.program}
                     </strong>
-                    <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2 }}>
-                      {student.specialization || student.subjects?.split(",")[0] || "General Studies"}
+                    <span
+                      style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}
+                      title={student.subjects || student.specialization}
+                    >
+                      {isSchool ? (student.subjects || "General Subjects") : (student.specialization || student.subjects?.split(",")[0] || "General Studies")}
                     </span>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px" }}>
-                    <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25 }}>
-                      {student.semester || "4th Semester"} · {student.section || "CS-4A"}
+                <TableCell style={{ width: "24%", overflow: "hidden" }}>
+                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                    <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                      {isSchool
+                        ? `Section ${student.section || "A"} · Session ${student.semester || student.session || "2024-2025"}`
+                        : `${student.semester || "4th Semester"} · ${student.section || "CS-4A"}`}
                     </strong>
-                    <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2 }}>
-                      {student.attendance || "94.2%"} Attendance · {student.cgpa ? `${student.cgpa} CGPA` : "Good Standing"}
+                    <span
+                      style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}
+                      title={isSchool ? `Guardian: ${student.guardian || "Parent on file"} (${student.guardianPhone || student.phone || student.studentPhone || "—"})` : undefined}
+                    >
+                      {isSchool
+                        ? `Guardian: ${student.guardian || "Parent on file"} (${student.guardianPhone || student.phone || student.studentPhone || "—"})`
+                        : `${student.attendance || "94.2%"} Attendance · ${student.cgpa ? `${student.cgpa} CGPA` : "Good Standing"}`}
                     </span>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px" }}>
-                    <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25 }}>
-                      {student.campus || "NUST Main Campus (H-12)"}
+                <TableCell style={{ width: "13%", overflow: "hidden" }}>
+                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                    <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                      {student.campus || "Main Campus"}
                     </strong>
-                    <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2 }}>
-                      {student.guardian ? `Guardian: ${student.guardian}` : "Main Campus Branch"}
+                    <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}>
+                      {isSchool ? "School Wing" : (student.guardian ? `Guardian: ${student.guardian}` : "Main Campus Branch")}
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center" style={{ width: "9%", overflow: "hidden" }}>
                   <span
                     className={`campus-status-pill ${
                       student.status === "Active"
@@ -330,7 +351,7 @@ export default function StudentsDirectory() {
                     {student.status || "Active"}
                   </span>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center" style={{ width: "8%", overflow: "hidden" }}>
                   <div className="campus-action-icons">
                     <button
                       type="button"

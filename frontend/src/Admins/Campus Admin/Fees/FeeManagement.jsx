@@ -35,6 +35,7 @@ import FeeTable from "./FeeTable";
 import FeeStatusBadge from "./FeeStatusBadge";
 import VoucherDetails from "./VoucherDetails";
 import MarkPaidDialog from "./MarkPaidDialog";
+import { useInstitution } from "@/context/InstitutionContext";
 import "../Timetable/ClassTimetable.css";
 import "./FeeManagement.css";
 
@@ -48,6 +49,7 @@ const defaultFilters = {
 
 export default function FeeManagement() {
   const dispatch = useDispatch();
+  const { isSchool } = useInstitution();
   const students = useSelector(selectStudents);
   const records = useSelector(selectFees);
   const joined = useSelector(selectJoinedFees);
@@ -213,14 +215,14 @@ export default function FeeManagement() {
 
           <select
             className="toolbar-select"
-            aria-label="Filter by Semester"
+            aria-label={isSchool ? "Filter by Term" : "Filter by Semester"}
             style={{ maxWidth: "95px" }}
             value={filters.semester}
             onChange={(e) => change("semester", e.target.value)}
           >
-            <option value="">All Semesters</option>
+            <option value="">{isSchool ? "All Terms" : "All Semesters"}</option>
             {options.semester.map((val) => (
-              <option key={val} value={val}>{val}</option>
+              <option key={val} value={val}>{isSchool ? String(val).replace(/Semester\s+/i, "Term ") : val}</option>
             ))}
           </select>
 

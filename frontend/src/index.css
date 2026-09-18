@@ -949,6 +949,59 @@ tbody tr:hover {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  padding-right: 8px;
+}
+
+.institution-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #18181b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.institution-mode-pill:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.institution-mode-pill.mode-school {
+  border-color: #bbf7d0;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  color: #166534;
+}
+
+.institution-mode-pill.mode-university {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  color: #1e40af;
+}
+
+.institution-dot-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.institution-dot-indicator.school {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.institution-dot-indicator.university {
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
 }
 
 .header-notifications-wrap {

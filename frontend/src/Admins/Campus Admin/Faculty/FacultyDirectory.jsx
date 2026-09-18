@@ -37,10 +37,12 @@ import {
 import toast from "react-hot-toast";
 import FacultyForm from "./FacultyForm";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { useInstitution } from "@/context/InstitutionContext";
 import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
   const dispatch = useDispatch();
+  const { isSchool } = useInstitution();
 
   useEffect(() => {
     dispatch(fetchFaculty());
@@ -48,12 +50,11 @@ export default function FacultyDirectory() {
 
   const rawFaculty = useSelector(selectFaculty);
   const facultyRecords = useMemo(() => {
-    if (!rawFaculty || rawFaculty.length === 0) return demoRecords;
-    if (rawFaculty.length >= 8) return rawFaculty;
-    // Merge backend records with demoRecords to ensure full dataset
-    const seen = new Set(rawFaculty.map((r) => String(r.id || r._id)));
-    return [...rawFaculty, ...demoRecords.filter((d) => !seen.has(String(d.id)))];
-  }, [rawFaculty]);
+    if (isSchool) {
+      return rawFaculty && rawFaculty.length > 0 ? rawFaculty : [];
+    }
+    return rawFaculty && rawFaculty.length > 0 ? rawFaculty : demoRecords;
+  }, [rawFaculty, isSchool]);
 
   const [form, setForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -64,12 +65,12 @@ export default function FacultyDirectory() {
         key,
         [
           ...new Set(
-            [...demoRecords, ...facultyRecords].map((teacher) => teacher[key]).filter(Boolean),
+            [...(isSchool ? [] : demoRecords), ...facultyRecords].map((teacher) => teacher[key]).filter(Boolean),
           ),
         ],
       ]),
     );
-  }, [facultyRecords]);
+  }, [facultyRecords, isSchool]);
 
   const [filters, setFilters] = useState({
     search: "",
@@ -111,9 +112,9 @@ export default function FacultyDirectory() {
   };
 
   // KPI Calculations
-  const totalFaculty = facultyRecords.length >= 10 ? facultyRecords.length : 86;
-  const activeFaculty = facultyRecords.filter(f => f.status === 'Active' || f.status === 'Full Time').length || 82;
-  const deptCount = options.department?.length || 4;
+  const totalFaculty = facultyRecords.length;
+  const activeFaculty = facultyRecords.filter(f => f.status === 'Active' || f.status === 'Full Time').length;
+  const deptCount = options.department?.length || 0;
 
   return (
     <section className="campus-tab-page faculty-directory" aria-label="Faculty Directory Management">
@@ -125,7 +126,7 @@ export default function FacultyDirectory() {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Appointed Faculty</span>
+              <span className="kpi-label">{isSchool ? "Teaching Staff" : "Appointed Faculty"}</span>
               <span className="kpi-value">{totalFaculty}</span>
             </div>
           </div>
@@ -137,7 +138,7 @@ export default function FacultyDirectory() {
               <UserCheck size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Active / On-Duty</span>
+              <span className="kpi-label">{isSchool ? "Active Teachers" : "Active / On-Duty"}</span>
               <span className="kpi-value">{activeFaculty}</span>
             </div>
           </div>
@@ -149,7 +150,7 @@ export default function FacultyDirectory() {
               <Building size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Academic Depts</span>
+              <span className="kpi-label">{isSchool ? "Academic Wings" : "Academic Depts"}</span>
               <span className="kpi-value">{deptCount}</span>
             </div>
           </div>
@@ -161,8 +162,8 @@ export default function FacultyDirectory() {
               <GraduationCap size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Student-Staff Ratio</span>
-              <span className="kpi-value">1:14</span>
+              <span className="kpi-label">{isSchool ? "Pupil-Teacher Ratio" : "Student-Staff Ratio"}</span>
+              <span className="kpi-value">1:15</span>
             </div>
           </div>
         </div>
@@ -175,7 +176,7 @@ export default function FacultyDirectory() {
             <Search size={13} />
             <input
               type="text"
-              placeholder="Search faculty..."
+              placeholder={isSchool ? "Search teachers..." : "Search faculty..."}
               value={filters.search}
               onChange={(e) => updateFilter("search", e.target.value)}
               aria-label="Search faculty by name or department"
@@ -187,9 +188,9 @@ export default function FacultyDirectory() {
             style={{ maxWidth: "115px" }}
             value={filters.department}
             onChange={(e) => updateFilter("department", e.target.value)}
-            aria-label="Filter by department"
+            aria-label={isSchool ? "Filter by wing" : "Filter by department"}
           >
-            <option value="">All Depts</option>
+            <option value="">{isSchool ? "All Wings" : "All Depts"}</option>
             {options.department?.map((dept) => (
               <option key={dept} value={dept}>
                 {dept}
@@ -202,9 +203,9 @@ export default function FacultyDirectory() {
             style={{ maxWidth: "115px" }}
             value={filters.designation}
             onChange={(e) => updateFilter("designation", e.target.value)}
-            aria-label="Filter by designation"
+            aria-label={isSchool ? "Filter by role" : "Filter by designation"}
           >
-            <option value="">All Designations</option>
+            <option value="">{isSchool ? "All Roles" : "All Designations"}</option>
             {options.designation?.map((desig) => (
               <option key={desig} value={desig}>
                 {desig}
@@ -235,7 +236,7 @@ export default function FacultyDirectory() {
             onClick={() => setForm({ teacher: null })}
           >
             <Plus size={14} />
-            Add New Teacher
+            {isSchool ? "Add New Teacher" : "Add Faculty Member"}
           </button>
         </div>
       </div>
@@ -245,11 +246,11 @@ export default function FacultyDirectory() {
         <Table className="campus-table">
           <TableHeader>
             <TableRow>
-              <TableHead style={{ width: "26%" }}>Faculty Member</TableHead>
-              <TableHead style={{ width: "20%" }}>Designation & Qualification</TableHead>
-              <TableHead style={{ width: "20%" }}>Department & Subjects</TableHead>
-              <TableHead style={{ width: "14%" }}>Campus Branch</TableHead>
-              <TableHead style={{ width: "12%", textAlign: "center" }}>Duty Status</TableHead>
+              <TableHead style={{ width: "24%" }}>{isSchool ? "Teacher & Contact" : "Faculty Member"}</TableHead>
+              <TableHead style={{ width: "21%" }}>Designation & Qualification</TableHead>
+              <TableHead style={{ width: "26%" }}>{isSchool ? "Wing & Teaching Subject(s)" : "Department & Subjects"}</TableHead>
+              <TableHead style={{ width: "12%" }}>Campus Branch</TableHead>
+              <TableHead style={{ width: "9%", textAlign: "center" }}>Duty Status</TableHead>
               <TableHead style={{ width: "8%", textAlign: "center" }}>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -265,44 +266,61 @@ export default function FacultyDirectory() {
 
                 return (
                   <TableRow key={teacher.id || teacher._id}>
-                    <TableCell>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <Avatar style={{ width: "28px", height: "28px", fontSize: "11px", fontWeight: "600", background: "#f4f4f5", color: "#09090b" }}>
+                    <TableCell style={{ width: "24%", overflow: "hidden" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, overflow: "hidden" }}>
+                        <Avatar style={{ width: "28px", height: "28px", fontSize: "11px", fontWeight: "600", background: "#f4f4f5", color: "#09090b", flexShrink: 0 }}>
                           <AvatarFallback>{teacher.initials || teacher.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                          <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b" }}>{teacher.name}</strong>
-                          <span style={{ fontSize: "11px", color: "#71717a" }}>{teacher.email}</span>
+                        <div style={{ display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+                          <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                            {teacher.name}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                            {teacher.email}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
 
-                    <TableCell>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#09090b" }}>{teacher.designation}</span>
-                        <span style={{ fontSize: "11px", color: "#71717a" }}>{teacher.qualification}</span>
+                    <TableCell style={{ width: "21%", overflow: "hidden" }}>
+                      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          {teacher.designation}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          {teacher.qualification}
+                        </span>
                       </div>
                     </TableCell>
 
-                    <TableCell>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#09090b" }}>{teacher.department}</span>
-                        <span style={{ fontSize: "11px", color: "#71717a" }}>{teacher.subjects}</span>
+                    <TableCell style={{ width: "26%", overflow: "hidden" }}>
+                      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          {teacher.department}
+                        </span>
+                        <span
+                          style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}
+                          title={teacher.subjects}
+                        >
+                          {teacher.subjects}
+                        </span>
                       </div>
                     </TableCell>
 
-                    <TableCell>
-                      <span style={{ fontSize: "12px", color: "#09090b" }}>{teacher.campus || "Main Campus"}</span>
+                    <TableCell style={{ width: "12%", overflow: "hidden" }}>
+                      <span style={{ fontSize: "12px", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                        {teacher.campus || "Main Campus"}
+                      </span>
                     </TableCell>
 
-                    <TableCell style={{ textAlign: "center" }}>
+                    <TableCell style={{ width: "9%", textAlign: "center", overflow: "hidden" }}>
                       <span className={`campus-status-pill status-${statusKey}`}>
                         <span className="status-dot" />
                         {statusText}
                       </span>
                     </TableCell>
 
-                    <TableCell style={{ textAlign: "center" }}>
+                    <TableCell style={{ width: "8%", textAlign: "center", overflow: "hidden" }}>
                       <div className="campus-action-icons">
                         <button
                           type="button"

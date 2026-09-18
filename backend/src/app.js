@@ -45,6 +45,14 @@ app.use(cors({
   credentials: true,
 }));
 
+// Request logger for development
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== "test") {
+    console.log(`[HTTP] ${req.method} ${req.url}`);
+  }
+  next();
+});
+
 
 // Rate limiting (100 requests per 10 mins)
 const limiter = rateLimit({

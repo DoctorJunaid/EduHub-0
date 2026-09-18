@@ -547,6 +547,9 @@
   background: #fafafa;
   border-bottom: 1px solid #e4e4e7;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hub-table-wrapper th:first-child,

@@ -3,6 +3,7 @@ import { Award, GraduationCap } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { validateResult, resultKey } from "./resultsData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
+import { useInstitution } from "@/context/InstitutionContext";
 
 export default function ResultForm({
   record,
@@ -12,11 +13,12 @@ export default function ResultForm({
   onClose,
   onSave,
 }) {
+  const { isSchool } = useInstitution();
   const [values, setValues] = useState(() => ({
     studentId: record?.studentId ?? "",
     examId: record?.examId ?? "",
     academicYear: record?.academicYear ?? "2024-2025",
-    semester: record?.semester ?? "Fall 2024",
+    semester: record?.semester ?? (isSchool ? "Final Term" : "Fall 2024"),
     courseCode: record?.courseCode ?? "",
     score: record?.score ?? "",
     totalMarks: record?.totalMarks ?? "",
@@ -137,21 +139,21 @@ export default function ResultForm({
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="res-sem">Semester *</Label>
+            <Label htmlFor="res-sem">{isSchool ? "Term / Exam Session *" : "Semester *"}</Label>
             <input
               id="res-sem"
               required
-              placeholder="e.g. Fall 2024"
+              placeholder={isSchool ? "e.g. Final Term or Mid Term" : "e.g. Fall 2024"}
               value={values.semester}
               onChange={(e) => change("semester", e.target.value)}
             />
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="res-code">Course Code</Label>
+            <Label htmlFor="res-code">{isSchool ? "Subject Code (Optional)" : "Course Code"}</Label>
             <input
               id="res-code"
-              placeholder="e.g. CS-301"
+              placeholder={isSchool ? "e.g. MTH-10" : "e.g. CS-301"}
               value={values.courseCode}
               onChange={(e) => change("courseCode", e.target.value)}
             />

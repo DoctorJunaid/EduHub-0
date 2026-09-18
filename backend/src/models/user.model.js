@@ -90,6 +90,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    gradeOrClass: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    admissionNo: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     roll: {
       type: String,
       trim: true,

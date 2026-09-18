@@ -78,11 +78,38 @@ export const loginUser = async ({ email, password }) => {
     throw error;
   }
 
+  await user.populate([
+    { path: "instituteId", select: "name type board status" },
+    {
+      path: "campusId",
+      select: "name phone status instituteId",
+      populate: { path: "instituteId", select: "name type board status" },
+    },
+  ]);
+
+  const instituteType =
+    user.instituteId?.type ||
+    user.campusId?.instituteId?.type ||
+    "School";
+  const instituteName =
+    user.instituteId?.name ||
+    user.campusId?.instituteId?.name ||
+    "";
+  const instituteBoard =
+    user.instituteId?.board ||
+    user.campusId?.instituteId?.board ||
+    "";
+
   const token = generateToken({
     id: user._id,
+    name: user.name,
+    email: user.email,
     role: user.role,
-    instituteId: user.instituteId,
-    campusId: user.campusId,
+    instituteId: user.instituteId?._id || user.instituteId,
+    campusId: user.campusId?._id || user.campusId,
+    instituteType,
+    instituteName,
+    instituteBoard,
   });
 
   const userObj = user.toObject();
@@ -98,7 +125,11 @@ export const getMe = async (userId) => {
   const user = await User.findById(userId)
     .select("-passwordHash")
     .populate("instituteId", "name type board status")
-    .populate("campusId", "name phone status");
+    .populate({
+      path: "campusId",
+      select: "name phone status instituteId",
+      populate: { path: "instituteId", select: "name type board status" },
+    });
 
   if (!user) {
     const error = new Error("User account not found");

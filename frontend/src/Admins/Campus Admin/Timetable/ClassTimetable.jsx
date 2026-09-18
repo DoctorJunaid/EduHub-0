@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CalendarDays,
@@ -26,6 +26,7 @@ import {
   timetableTemplates,
 } from "./timetableData.js";
 import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
+import { useInstitution } from "@/context/InstitutionContext";
 import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
 import ScheduleClassForm from "./ScheduleClassForm";
@@ -33,6 +34,7 @@ import ClassDetailsDialog from "./ClassDetailsDialog";
 import "./ClassTimetable.css";
 
 export default function ClassTimetable() {
+  const { isSchool } = useInstitution();
   const dispatch = useDispatch();
   const rawRecords = useSelector(selectTimetable);
   const records = useMemo(() => {
@@ -52,7 +54,11 @@ export default function ClassTimetable() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [educationType, setEducationType] = useState("Colleges");
+  const [educationType, setEducationType] = useState(() => isSchool ? "School" : "Colleges");
+
+  useEffect(() => {
+    setEducationType(isSchool ? "School" : "Colleges");
+  }, [isSchool]);
 
   const options = useMemo(() => {
     return Object.fromEntries(
@@ -116,7 +122,7 @@ export default function ClassTimetable() {
               <BookOpen size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Scheduled Classes</span>
+              <span className="kpi-label">{isSchool ? "Scheduled Periods" : "Scheduled Classes"}</span>
               <span className="kpi-value">{totalClasses}</span>
             </div>
           </div>
@@ -128,7 +134,7 @@ export default function ClassTimetable() {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Active Instructors</span>
+              <span className="kpi-label">{isSchool ? "Teachers on Duty" : "Active Instructors"}</span>
               <span className="kpi-value">{activeInstructors}</span>
             </div>
           </div>
@@ -140,7 +146,7 @@ export default function ClassTimetable() {
               <Building size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Rooms Allocated</span>
+              <span className="kpi-label">{isSchool ? "Classrooms & Labs" : "Rooms Allocated"}</span>
               <span className="kpi-value">{lectureHalls}</span>
             </div>
           </div>
@@ -152,8 +158,8 @@ export default function ClassTimetable() {
               <Clock size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Weekly Hours</span>
-              <span className="kpi-value">{totalHours} hrs</span>
+              <span className="kpi-label">{isSchool ? "Teaching Periods" : "Weekly Hours"}</span>
+              <span className="kpi-value">{isSchool ? `${records.length * 5} periods` : `${totalHours} hrs`}</span>
             </div>
           </div>
         </div>
@@ -302,11 +308,11 @@ export default function ClassTimetable() {
                 <option value="">
                   All{" "}
                   {key === "program"
-                    ? "Programs"
+                    ? (isSchool ? "Classes" : "Programs")
                     : key === "section"
                       ? "Sections"
                       : key === "instructor"
-                        ? "Faculty"
+                        ? (isSchool ? "Teachers" : "Faculty")
                         : "Rooms"}
                 </option>
                 {options[key]?.map((val) => (
@@ -325,7 +331,7 @@ export default function ClassTimetable() {
               onClick={() => onAction("add")}
             >
               <Plus size={14} />
-              Schedule Class
+              {isSchool ? "Schedule Period" : "Schedule Class"}
             </button>
           </div>
         </div>
@@ -350,10 +356,10 @@ export default function ClassTimetable() {
               <div className="tt-template-heading">
                 <div>
                   <span className="tt-template-title">
-                    Weekly Schedule Matrix
+                    {isSchool ? "School Weekly Timetable & Period Matrix" : "Weekly Schedule Matrix"}
                   </span>
                   <small>
-                    Template preview for the selected education type
+                    {isSchool ? "Class periods, Morning Assembly, and Break schedule" : "Template preview for the selected education type"}
                   </small>
                 </div>
                 <label className="tt-type-control">

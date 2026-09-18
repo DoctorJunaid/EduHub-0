@@ -76,4 +76,69 @@ router.post("/faculty/new", createFacultyForCampus);
 router.delete("/faculty/:id", removeFacultyFromCampus);
 router.put("/faculty/:id", updateFacultyInCampus);
 
+// Teachers & Staff Profiles
+router.route("/teachers").get(getTeachers).post(createTeacher);
+router
+  .route("/teachers/:id")
+  .get(getTeacherById)
+  .put(updateTeacher)
+  .delete(deleteTeacher);
+
+// Class Schedules & Routines (School Periods)
+router.route("/schedules").get(getClassSchedules).post(createClassSchedule);
+router
+  .route("/schedules/:id")
+  .get(getClassScheduleById)
+  .put(updateClassSchedule)
+  .delete(deleteClassSchedule);
+
+// Examination Schedules
+router.route("/exams").get(getExamSchedules).post(createExamSchedule);
+router
+  .route("/exams/:id")
+  .get(getExamScheduleById)
+  .put(updateExamSchedule)
+  .delete(deleteExamSchedule);
+
+// Teacher Attendance
+router
+  .route("/attendance/teachers")
+  .get(getTeacherAttendance)
+  .post(createTeacherAttendance);
+router
+  .route("/attendance/teachers/:id")
+  .get(getTeacherAttendanceById)
+  .put(updateTeacherAttendance)
+  .delete(deleteTeacherAttendance);
+
+// Student Attendance
+router
+  .route("/attendance/students")
+  .get(getStudentAttendance)
+  .post(createStudentAttendance);
+router
+  .route("/attendance/students/:id")
+  .get(getStudentAttendanceById)
+  .put(updateStudentAttendance)
+  .delete(deleteStudentAttendance);
+
+// Fee Records
+router.route("/fees").get(getFeeRecords).post(createFeeRecord);
+router
+  .route("/fees/:id")
+  .get(getFeeRecordById)
+  .put(updateFeeRecord)
+  .delete(deleteFeeRecord);
+
+// Performance / Exam Results Records
+router
+  .route("/performance")
+  .get(getPerformanceRecords)
+  .post(createPerformanceRecord);
+router
+  .route("/performance/:id")
+  .get(getPerformanceRecordById)
+  .put(updatePerformanceRecord)
+  .delete(deletePerformanceRecord);
+
 export default router;

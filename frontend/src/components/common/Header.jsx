@@ -5,6 +5,8 @@ import {
   Info,
   CheckCircle2,
   AlertTriangle,
+  School,
+  GraduationCap,
 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import axiosInstance from "@/api/axiosInstance";
+import { useInstitution, INSTITUTION_TYPES } from "@/context/InstitutionContext";
 
 const Header = ({
   user,
@@ -28,9 +31,24 @@ const Header = ({
   onSignOut,
   showProfile = false,
   showNotifications = true,
-  searchPlaceholder = "Search students, faculty, classes...",
+  searchPlaceholder,
   handleSearch = () => {},
 }) => {
+  const {
+    institutionType,
+    setInstitutionType,
+    isSchool,
+    isUniversity,
+    instituteName,
+    instituteBoard,
+    userRole,
+  } = useInstitution();
+  const effectiveSearchPlaceholder =
+    searchPlaceholder ||
+    (isSchool
+      ? "Search students, teachers, classes, subjects..."
+      : "Search students, faculty, programs, classes...");
+
   const focusProfile = useRef(false);
   const notificationRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -172,10 +190,10 @@ const Header = ({
         <input
           ref={searchInputRef}
           type="search"
-          placeholder={searchPlaceholder}
+          placeholder={effectiveSearchPlaceholder}
           defaultValue={localStorage.getItem("eduHubSuperSearch") || ""}
           onChange={handleSearch}
-          aria-label="Search students, faculty, classes"
+          aria-label="Search records"
         />
         <span className="search-shortcut" title="Press ⌘K or Ctrl+K to search">
           <kbd>⌘</kbd>
@@ -184,6 +202,7 @@ const Header = ({
       </div>
 
       <div className="header-actions">
+
         {showNotifications && (
           <div className="header-notifications-wrap" ref={notificationRef}>
             <button

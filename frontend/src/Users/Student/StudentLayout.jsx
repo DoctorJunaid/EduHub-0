@@ -3,10 +3,12 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from "@/layouts/MainLayout";
 import { selectStudentProfile, selectCurrentStudent } from "@/store/selectors/studentDashboard";
-import { studentNavigation } from "./navigation";
+import { getStudentNav } from "./navigation";
+import { useInstitution } from "@/context/InstitutionContext";
 import "./Student.css";
 
 export default function StudentLayout() {
+  const { isSchool } = useInstitution();
   const profile = useSelector(selectStudentProfile);
   const student = useSelector(selectCurrentStudent);
   const hasDemoData = useSelector((state) => Boolean(student && (
@@ -16,18 +18,31 @@ export default function StudentLayout() {
   )));
   const location = useLocation();
   const navigate = useNavigate();
-  const pageLabel = { '/student/courses': 'Courses', '/student/assignments': 'Assignments', '/student/attendance': 'Attendance', '/student/diary': 'Diary', '/student/grades': 'Results', '/student/fees': 'Fees', '/student/messages': 'Messages' }[location.pathname];
+  const nav = getStudentNav(isSchool);
+
+  const pageLabel = {
+    '/student/courses': isSchool ? 'Subjects' : 'Courses',
+    '/student/assignments': isSchool ? 'Homework' : 'Assignments',
+    '/student/attendance': 'Attendance',
+    '/student/diary': 'Diary',
+    '/student/grades': isSchool ? 'Report Card' : 'Results',
+    '/student/fees': isSchool ? 'Challans' : 'Fees',
+    '/student/messages': 'Messages',
+  }[location.pathname];
+
   const focusSummary = () => {
     const summary = document.getElementById('student-profile-summary');
     summary?.scrollIntoView({ block: 'nearest' });
     summary?.focus({ preventScroll: true });
   };
+
   useEffect(() => {
     if (location.pathname === '/student/dashboard' && location.state?.focusStudentProfile) focusSummary();
   }, [location]);
+
   return (
     <MainLayout
-      navigation={studentNavigation}
+      navigation={nav}
       className="student-shell"
       profile={hasDemoData ? { ...profile, roleLabel: `${profile.roleLabel} · Demo` } : profile}
       headerProps={{

@@ -37,6 +37,7 @@ import ResultForm from "./ResultForm";
 import TranscriptDialog from "./TranscriptDialog";
 import "../Timetable/ClassTimetable.css";
 import "./ExamResults.css";
+import { useInstitution } from "@/context/InstitutionContext";
 
 const initialFilters = {
   academicYear: "",
@@ -49,6 +50,7 @@ const initialFilters = {
 };
 
 export default function ExamResults() {
+  const { isSchool } = useInstitution();
   const dispatch = useDispatch();
   const students = useSelector(selectStudents);
   const exams = useSelector(selectExams);
@@ -136,8 +138,8 @@ export default function ExamResults() {
               <GraduationCap size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Average Campus GPA</span>
-              <span className="kpi-value">{avgGpa}</span>
+              <span className="kpi-label">{isSchool ? "Average Marks Score" : "Average Campus GPA"}</span>
+              <span className="kpi-value">{isSchool ? "84.2%" : avgGpa}</span>
             </div>
           </div>
         </div>
@@ -148,7 +150,7 @@ export default function ExamResults() {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Students Evaluated</span>
+              <span className="kpi-label">{isSchool ? "Pupils Evaluated" : "Students Evaluated"}</span>
               <span className="kpi-value">{studentCount}</span>
             </div>
           </div>
@@ -172,7 +174,7 @@ export default function ExamResults() {
               <Star size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Honor Roll Awardees</span>
+              <span className="kpi-label">{isSchool ? "Position Holders" : "Honor Roll Awardees"}</span>
               <span className="kpi-value">142</span>
             </div>
           </div>
@@ -186,7 +188,7 @@ export default function ExamResults() {
             <Search size={13} />
             <input
               type="search"
-              placeholder="Search student..."
+              placeholder={isSchool ? "Search pupil..." : "Search student..."}
               value={filters.search}
               onChange={(e) => change("search", e.target.value)}
               aria-label="Search student or course"
@@ -200,7 +202,7 @@ export default function ExamResults() {
             value={filters.academicYear}
             onChange={(e) => change("academicYear", e.target.value)}
           >
-            <option value="">All Years</option>
+            <option value="">{isSchool ? "All Sessions" : "All Years"}</option>
             {options.academicYear.map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
@@ -213,7 +215,7 @@ export default function ExamResults() {
             value={filters.semester}
             onChange={(e) => change("semester", e.target.value)}
           >
-            <option value="">All Semesters</option>
+            <option value="">{isSchool ? "All Terms" : "All Semesters"}</option>
             {options.semester.map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
@@ -226,7 +228,7 @@ export default function ExamResults() {
             value={filters.course}
             onChange={(e) => change("course", e.target.value)}
           >
-            <option value="">All Courses</option>
+            <option value="">{isSchool ? "All Subjects" : "All Courses"}</option>
             {options.course.map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
@@ -274,7 +276,7 @@ export default function ExamResults() {
             onClick={() => setModal({ mode: "transcript" })}
           >
             <FileText size={13} />
-            Transcript
+            {isSchool ? "Report Card" : "Transcript"}
           </button>
           <button
             type="button"
@@ -284,7 +286,7 @@ export default function ExamResults() {
             onClick={() => setModal({ mode: "add" })}
           >
             <Plus size={13} />
-            Record Result
+            {isSchool ? "Record Marks" : "Record Result"}
           </button>
         </div>
       </div>

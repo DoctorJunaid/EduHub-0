@@ -2,8 +2,10 @@ import { Coins, FileText, User, Calendar, CheckCircle2 } from "lucide-react";
 import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
+import { useInstitution } from "@/context/InstitutionContext";
 
 export default function VoucherDetails({ voucher, onClose }) {
+  const { isSchool } = useInstitution();
   if (!voucher) return null;
 
   return (
@@ -40,9 +42,11 @@ export default function VoucherDetails({ voucher, onClose }) {
 
           <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
             <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
-              Semester
+              {isSchool ? "Term / Period" : "Semester"}
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.semester || "—"}</strong>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>
+              {isSchool ? (voucher.semester?.replace(/Semester/i, "Term") || "Annual Term") : (voucher.semester || "—")}
+            </strong>
           </div>
 
           <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>

@@ -19,10 +19,12 @@ import StudentAttendanceTable from './StudentAttendanceTable';
 import StudentAttendanceForm from './StudentAttendanceForm';
 import '../../Timetable/ClassTimetable.css';
 import './StudentAttendance.css';
+import { useInstitution } from '@/context/InstitutionContext';
 
 const emptyFilters = { search: '', program: '', section: '', subject: '', status: '', studentId: '', from: '', to: '' };
 
 export default function StudentAttendance({ matchTimetable, rateMode }) {
+  const { isSchool } = useInstitution();
   const dispatch = useDispatch();
   const rawStudents = useSelector(selectStudents);
   const students = useMemo(() => {
@@ -107,7 +109,7 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">Enrolled Students</span>
+              <span className="kpi-label">{isSchool ? "Enrolled Pupils" : "Enrolled Students"}</span>
               <span className="kpi-value">{totalStudents}</span>
             </div>
           </div>
@@ -167,7 +169,7 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
               <Search size={13} />
               <input
                 type="search"
-                placeholder="Search students..."
+                placeholder={isSchool ? "Search pupils..." : "Search students..."}
                 value={filters.search}
                 onChange={(e) => changeFilter('search', e.target.value)}
                 aria-label="Search students"
@@ -196,7 +198,7 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
               value={filters.program}
               onChange={(e) => changeFilter('program', e.target.value)}
             >
-              <option value="">All Programs</option>
+              <option value="">{isSchool ? "All Classes" : "All Programs"}</option>
               {options.program.map((val) => (
                 <option key={val} value={val}>{val}</option>
               ))}
@@ -253,13 +255,13 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
         {view === 'history' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', background: '#fafafa', borderBottom: '1px solid #e4e4e7' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '600' }}>
-              Student:
+              {isSchool ? "Pupil:" : "Student:"}
               <select
                 className="toolbar-select"
                 value={filters.studentId}
                 onChange={(e) => changeFilter('studentId', e.target.value)}
               >
-                <option value="">All Students</option>
+                <option value="">{isSchool ? "All Pupils" : "All Students"}</option>
                 {students.map((student) => (
                   <option key={student.id} value={student.id}>
                     {student.name} — {student.roll}

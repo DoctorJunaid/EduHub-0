@@ -3,6 +3,7 @@ import { Coins, Receipt } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { paymentStatuses, validateVoucher } from "./feeData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
+import { useInstitution } from "@/context/InstitutionContext";
 
 export default function FeeVoucherForm({
   record,
@@ -11,6 +12,7 @@ export default function FeeVoucherForm({
   onSave,
   onClose,
 }) {
+  const { isSchool } = useInstitution();
   const [values, setValues] = useState(() => ({
     studentId: record?.studentId ?? "",
     voucherNo: record?.voucherNo ?? "",
@@ -114,10 +116,10 @@ export default function FeeVoucherForm({
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="voucher-sem">Semester (Optional)</Label>
+            <Label htmlFor="voucher-sem">{isSchool ? "Term / Fee Period (Optional)" : "Semester (Optional)"}</Label>
             <input
               id="voucher-sem"
-              placeholder="e.g. 4th Semester"
+              placeholder={isSchool ? "e.g. 1st Term / Monthly" : "e.g. 4th Semester"}
               value={values.semester}
               list={options.semester ? "voucher-sem-options" : undefined}
               onChange={(e) => change("semester", e.target.value)}

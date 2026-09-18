@@ -36,10 +36,14 @@ export const ADMIN_NAV = [
   },
 ];
 
-export const CAMPUS_ADMIN_NAV = [
-  { label: "Campus Overview", path: "/dashboard", icon: <Home size={20} /> },
+export const getCampusAdminNav = (isSchool = false) => [
   {
-    label: "Faculty Directory",
+    label: isSchool ? "School Overview" : "Campus Overview",
+    path: "/dashboard",
+    icon: <Home size={20} />,
+  },
+  {
+    label: isSchool ? "Teachers Directory" : "Faculty Directory",
     path: "/faculty",
     group: "People",
     icon: <Users size={20} />,
@@ -51,7 +55,7 @@ export const CAMPUS_ADMIN_NAV = [
     icon: <Users size={20} />,
   },
   {
-    label: "Class Timetable",
+    label: isSchool ? "Class Routine & Timetable" : "Class Timetable",
     path: "/timetable",
     group: "Academics",
     icon: <Calendar size={20} />,
@@ -63,7 +67,7 @@ export const CAMPUS_ADMIN_NAV = [
     icon: <Calendar size={20} />,
   },
   {
-    label: "Staff Attendance",
+    label: isSchool ? "Teacher Attendance" : "Staff Attendance",
     path: "/faculty-attendance",
     group: "Academics",
     icon: <Users size={20} />,
@@ -75,7 +79,7 @@ export const CAMPUS_ADMIN_NAV = [
     icon: <Users size={20} />,
   },
   {
-    label: "Exam Results & GPA",
+    label: isSchool ? "Exams & Report Cards" : "Exam Results & GPA",
     path: "/results",
     group: "Academics",
     icon: <Award size={20} />,
@@ -88,6 +92,8 @@ export const CAMPUS_ADMIN_NAV = [
   },
   { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
 ];
+
+export const CAMPUS_ADMIN_NAV = getCampusAdminNav(false);
 
 export const TEACHER_NAV = [
   {

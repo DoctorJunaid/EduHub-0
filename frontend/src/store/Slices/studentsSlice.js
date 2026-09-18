@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance.js';
 
-const initialsFor = (name) => name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+const initialsFor = (name) =>
+  (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
 
 export const fetchStudents = createAsyncThunk('students/fetchAll', async (campusId, { rejectWithValue }) => {
   try {
-    // Assuming backend has a route like /campus-admin/students or /user?role=Student
     const response = await axiosInstance.get('/campus-admin/students');
     return response.data.data || response.data;
   } catch (error) {
@@ -67,8 +67,9 @@ const studentsSlice = createSlice({
       .addCase(fetchStudents.pending, (state) => { state.status = 'loading'; })
       .addCase(fetchStudents.fulfilled, (state, { payload }) => {
         state.status = 'succeeded';
+        const list = Array.isArray(payload) ? payload : (payload?.students || payload?.data || []);
         // Map backend _id to id and generate initials if needed
-        state.records = payload.map(student => ({
+        state.records = list.map(student => ({
           ...student,
           id: student._id || student.id,
           initials: student.initials || initialsFor(student.name || 'Unknown Student')

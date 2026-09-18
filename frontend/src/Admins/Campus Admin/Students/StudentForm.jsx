@@ -2,11 +2,12 @@ import { useId, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStudents } from "@/store/Slices/studentsSlice";
 import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
-import { Users, Loader2 } from "lucide-react";
+import { Users, School, GraduationCap, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/Button";
 import { studentStatuses } from "./studentData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
+import { useInstitution } from "@/context/InstitutionContext";
 
 const DEFAULT_PROGRAMS = [
   "BS Computer Science",
@@ -17,6 +18,21 @@ const DEFAULT_PROGRAMS = [
   "FSc Pre-Medical",
 ];
 
+const DEFAULT_SCHOOL_CLASSES = [
+  "Grade 10",
+  "Grade 9",
+  "Grade 8",
+  "Grade 7",
+  "Grade 6",
+  "Grade 5",
+  "Grade 4",
+  "Grade 3",
+  "Grade 2",
+  "Grade 1",
+  "Kindergarten (KG)",
+  "Nursery",
+];
+
 export default function StudentForm({
   student,
   programs = DEFAULT_PROGRAMS,
@@ -25,12 +41,17 @@ export default function StudentForm({
   onSave,
   onClose,
 }) {
+  const { isSchool } = useInstitution();
   const id = useId();
   const editing = Boolean(student);
   const records = useSelector(selectStudents);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const safePrograms = programs && programs.length ? programs : DEFAULT_PROGRAMS;
+
+  const safeOptionsList = isSchool
+    ? DEFAULT_SCHOOL_CLASSES
+    : (programs && programs.length ? programs : DEFAULT_PROGRAMS);
+
   const safeCampuses = campuses && campuses.length ? campuses : ["Main Campus"];
 
   const [values, setValues] = useState(() => ({
@@ -38,10 +59,10 @@ export default function StudentForm({
     roll: student?.roll ?? "",
     email: student?.email ?? "",
     studentPhone: student?.studentPhone ?? student?.phone ?? "",
-    program: student?.program ?? safePrograms[0] ?? "",
-    section: student?.section ?? "",
-    semester: student?.semester ?? "",
-    subjects: student?.subjects ?? "",
+    program: student?.gradeOrClass ?? student?.program ?? safeOptionsList[0] ?? "",
+    section: student?.section ?? (isSchool ? "A" : ""),
+    semester: student?.semester ?? (isSchool ? "2024-2025" : ""),
+    subjects: student?.subjects ?? (isSchool ? "Mathematics, General Science, English, Urdu, Social Studies, Islamiat" : ""),
     campus: student?.campus ?? (typeof safeCampuses[0] === "object" ? safeCampuses[0].value : safeCampuses[0]) ?? "",
     status: student?.status ?? "Active",
     guardian: student?.guardian ?? "",
@@ -107,6 +128,10 @@ export default function StudentForm({
       saved.guardianPhone = student.guardianPhone;
     }
 
+    if (isSchool) {
+      saved.gradeOrClass = saved.program;
+    }
+
     const problems = studentIdentityErrors(saved, records, student?.id || student?._id);
     setErrors(problems);
     if (Object.keys(problems).length) {
@@ -124,14 +149,22 @@ export default function StudentForm({
 
   return (
     <FullPageFormShell
-      title={editing ? "Edit Student Record" : "Register New Student"}
-      subtitle={
-        editing
-          ? `Updating profile and academic registration for ${student?.name || "student"}.`
-          : "Fill in student profile, academic program, section, and guardian contact details."
+      title={
+        isSchool
+          ? editing ? "Edit Pupil Record" : "Admit New Pupil"
+          : editing ? "Edit Student Record" : "Register New Student"
       }
-      parentName="Students Directory"
-      icon={<Users size={22} />}
+      subtitle={
+        isSchool
+          ? editing
+            ? `Updating school record and parent contacts for ${student?.name || "pupil"}.`
+            : "Fill in pupil details, assigned class & section, enrolled subjects, and guardian contact."
+          : editing
+            ? `Updating profile and academic registration for ${student?.name || "student"}.`
+            : "Fill in student profile, academic program, section, and guardian contact details."
+      }
+      parentName={isSchool ? "Pupils Directory" : "Students Directory"}
+      icon={isSchool ? <School size={22} /> : <GraduationCap size={22} />}
       onBack={onClose}
     >
       <form onSubmit={submit}>
@@ -148,55 +181,80 @@ export default function StudentForm({
               marginBottom: "18px",
             }}
           >
-            Some existing student records share an email or roll number. Make sure each student has a distinct identity.
+            Some existing records share an email or roll number. Make sure each pupil has a distinct identity.
           </p>
         )}
 
         <div className="activity-form-grid">
-          <div className="activity-section-title">Personal & Academic Identification</div>
+          <div className="activity-section-title">
+            {isSchool ? "Pupil Identification & Contact" : "Personal & Academic Identification"}
+          </div>
 
-          {field("name", "Full Student Name", { placeholder: "e.g. Ali Raza" })}
-          {field("roll", "Roll Number / Student ID", { placeholder: "e.g. NUST-CS-2024-001" })}
-
-          {field("email", "Email Address", {
-            type: "email",
-            placeholder: "ali.raza@nust.edu.pk",
+          {field("name", isSchool ? "Full Pupil Name" : "Full Student Name", {
+            placeholder: isSchool ? "e.g. Hamza Tariq" : "e.g. Ali Raza"
           })}
-          {field("studentPhone", "Student Phone (Optional)", {
+          {field("roll", isSchool ? "Roll No / Admission No" : "Roll Number / Student ID", {
+            placeholder: isSchool ? "e.g. 10-A-01 or ADM-2024-52" : "e.g. NUST-CS-2024-001"
+          })}
+
+          {field("email", isSchool ? "Student / Parent Email" : "Email Address", {
+            type: "email",
+            optional: isSchool,
+            placeholder: isSchool ? "parent.contact@gmail.com" : "ali.raza@nust.edu.pk",
+          })}
+          {field("studentPhone", isSchool ? "Student / Home Phone (Optional)" : "Student Phone (Optional)", {
             type: "tel",
             optional: true,
             placeholder: "+92 333 1234567",
           })}
 
-          <div className="activity-section-title">Program & Enrollment Details</div>
+          <div className="activity-section-title">
+            {isSchool ? "Class & Academic Enrollment" : "Program & Enrollment Details"}
+          </div>
 
-          {field("program", "Degree Program", { options: safePrograms })}
-          {field("section", "Class Section", { placeholder: "e.g. CS-4A" })}
-          {field("semester", "Current Semester", { placeholder: "e.g. 4th Semester" })}
-          {field("campus", "Assigned Campus Branch", { options: safeCampuses })}
+          {field("program", isSchool ? "Assigned Class / Grade" : "Degree Program", {
+            options: safeOptionsList
+          })}
+          {field("section", isSchool ? "Section (A, B, C, D)" : "Class Section", {
+            placeholder: isSchool ? "e.g. Section A" : "e.g. CS-4A"
+          })}
+          {field("semester", isSchool ? "Academic Session / Year" : "Current Semester", {
+            placeholder: isSchool ? "e.g. 2024-2025" : "e.g. 4th Semester"
+          })}
+          {field("campus", isSchool ? "School Campus Branch" : "Assigned Campus Branch", {
+            options: safeCampuses
+          })}
 
           <div className="activity-form-field span-2">
-            <Label htmlFor={`${id}-subjects`}>Enrolled Subjects *</Label>
+            <Label htmlFor={`${id}-subjects`}>
+              {isSchool ? "Enrolled School Subjects *" : "Enrolled Subjects *"}
+            </Label>
             <input
               id={`${id}-subjects`}
               name="subjects"
               value={values.subjects}
               required
-              placeholder="e.g. Advanced Web Design, Data Structures, Machine Learning"
+              placeholder={
+                isSchool
+                  ? "e.g. Mathematics, English Language, Urdu, General Science, Islamiat, Computer"
+                  : "e.g. Advanced Web Design, Data Structures, Machine Learning"
+              }
               onChange={(e) => setValues((prev) => ({ ...prev, subjects: e.target.value }))}
             />
           </div>
 
           {field("status", "Enrollment Status", { options: studentStatuses })}
 
-          <div className="activity-section-title">Guardian Information</div>
+          <div className="activity-section-title">
+            {isSchool ? "Parent / Guardian Record" : "Guardian Information"}
+          </div>
 
-          {field("guardian", "Father / Guardian Name", {
-            optional: true,
-            placeholder: "e.g. Muhammad Raza",
+          {field("guardian", isSchool ? "Father / Guardian Name *" : "Father / Guardian Name", {
+            optional: !isSchool,
+            placeholder: "e.g. Muhammad Tariq",
           })}
-          {field("guardianPhone", "Guardian Contact Number", {
-            optional: true,
+          {field("guardianPhone", isSchool ? "Parent Contact / WhatsApp *" : "Guardian Contact Number", {
+            optional: !isSchool,
             type: "tel",
             placeholder: "+92 300 9876543",
           })}
@@ -220,10 +278,10 @@ export default function StudentForm({
             {isSubmitting
               ? editing
                 ? "Updating Record..."
-                : "Saving Student..."
+                : isSchool ? "Admitting Pupil..." : "Saving Student..."
               : editing
-              ? "Update Student Record"
-              : "Register Student"}
+              ? isSchool ? "Update Pupil Record" : "Update Student Record"
+              : isSchool ? "Admit Pupil" : "Register Student"}
           </button>
         </div>
       </form>

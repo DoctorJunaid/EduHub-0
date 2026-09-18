@@ -7,17 +7,20 @@ import './index.css'
 import App from './App.jsx'
 import { Provider } from 'react-redux'
 import { store } from './store/store.js'
+import { InstitutionProvider } from './context/InstitutionContext.jsx'
 
 initTheme()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
-    <BrowserRouter>
-      <TooltipProvider>
-        <App />
-      </TooltipProvider>
-    </BrowserRouter>
+      <InstitutionProvider>
+        <BrowserRouter>
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
+        </BrowserRouter>
+      </InstitutionProvider>
     </Provider>
   </StrictMode>,
 )

@@ -181,6 +181,8 @@ export const createStudentForCampus = async (req, res) => {
       email,
       roll,
       program,
+      gradeOrClass,
+      admissionNo,
       section,
       semester,
       subjects,
@@ -216,7 +218,9 @@ export const createStudentForCampus = async (req, res) => {
       roll: roll
         ? roll.trim()
         : `ROLL-${Math.floor(1000 + Math.random() * 9000)}`,
-      program: program ? program.trim() : "Unassigned",
+      program: program ? program.trim() : (gradeOrClass ? gradeOrClass.trim() : "Unassigned"),
+      gradeOrClass: gradeOrClass ? gradeOrClass.trim() : "",
+      admissionNo: admissionNo ? admissionNo.trim() : "",
       section: section ? section.trim() : "",
       semester: semester ? semester.trim() : "",
       subjects: subjects ? subjects.trim() : "",

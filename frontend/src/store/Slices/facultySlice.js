@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance.js";
 
 const initialsFor = (name) =>
-  name.trim().replace(/^Dr\.\s*/i, "").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  (name || "").trim().replace(/^Dr\.\s*/i, "").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
 
 export const fetchFaculty = createAsyncThunk("faculty/fetchAll", async (_, { rejectWithValue }) => {
   try {
@@ -66,7 +66,8 @@ const facultySlice = createSlice({
       .addCase(fetchFaculty.pending, (state) => { state.status = 'loading'; })
       .addCase(fetchFaculty.fulfilled, (state, { payload }) => {
         state.status = 'succeeded';
-        state.records = payload.map(faculty => ({
+        const list = Array.isArray(payload) ? payload : (payload?.faculty || payload?.data || []);
+        state.records = list.map(faculty => ({
           ...faculty,
           id: faculty._id || faculty.id,
           initials: faculty.initials || initialsFor(faculty.name || "Unknown Faculty")
@@ -103,4 +104,5 @@ const facultySlice = createSlice({
 
 export const { facultyAdded, facultyUpdated, facultyDeleted } = facultySlice.actions;
 export const selectFaculty = (state) => state.faculty.records;
+export const selectFacultyStatus = (state) => state.faculty.status;
 export default facultySlice.reducer;

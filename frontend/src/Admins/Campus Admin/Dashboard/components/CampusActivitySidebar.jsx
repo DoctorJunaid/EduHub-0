@@ -12,6 +12,7 @@ import {
   Filter,
   CheckCircle2,
 } from 'lucide-react';
+import { useInstitution } from '@/context/InstitutionContext';
 
 const INITIAL_ACTIVITIES = [
   {
@@ -99,9 +100,189 @@ const INITIAL_ACTIVITIES = [
   },
 ];
 
-export default function CampusActivitySidebar({ onSelectStudent, students = [] }) {
+const SCHOOL_ACTIVITIES = [
+  {
+    id: 'act-s1',
+    category: 'students',
+    title: 'Admission Verified',
+    description: 'Zainab Bilal enrolled in Grade 10 - Section A',
+    time: '2m ago',
+    icon: UserCheck,
+    badge: 'Enrolled',
+    tone: 'green',
+    studentName: 'Zainab Bilal',
+  },
+  {
+    id: 'act-s2',
+    category: 'academic',
+    title: 'Daily Diary Published',
+    description: 'Grade 8-A Mathematics Ex 4.2 homework assigned',
+    time: '12m ago',
+    icon: FileText,
+    badge: 'Homework',
+    tone: 'purple',
+  },
+  {
+    id: 'act-s3',
+    category: 'academic',
+    title: 'First Term Datesheet Released',
+    description: 'Exam schedule published for Grade 9 & 10',
+    time: '30m ago',
+    icon: CalendarDays,
+    badge: 'Examinations',
+    tone: 'blue',
+  },
+  {
+    id: 'act-s4',
+    category: 'staff',
+    title: 'Teacher Marked On Duty',
+    description: 'Mr. Bilal Raza marked On Duty for Grade 9-B Homeroom',
+    time: '45m ago',
+    icon: GraduationCap,
+    badge: 'On Duty',
+    tone: 'purple',
+  },
+  {
+    id: 'act-s5',
+    category: 'attendance',
+    title: 'Morning Assembly Register Synced',
+    description: 'Grade 10-A recorded 96.2% live attendance (38/40)',
+    time: '1h ago',
+    icon: ClipboardCheck,
+    badge: 'Present',
+    tone: 'green',
+  },
+  {
+    id: 'act-s6',
+    category: 'alerts',
+    title: 'PTM Notice Dispatched',
+    description: 'Parent-Teacher Meeting circular sent to all guardians',
+    time: '2h ago',
+    icon: Bell,
+    badge: 'Circular',
+    tone: 'amber',
+  },
+  {
+    id: 'act-s7',
+    category: 'academic',
+    title: 'Period Schedule Updated',
+    description: 'Science Lab assigned for Grade 8 Practical session',
+    time: '3h ago',
+    icon: Clock,
+    badge: 'Timetable',
+    tone: 'blue',
+  },
+  {
+    id: 'act-s8',
+    category: 'students',
+    title: 'Guardian Contact Updated',
+    description: 'Maryam Ahmed guardian emergency phone updated',
+    time: 'Today, 09:15 AM',
+    icon: FileText,
+    badge: 'Active',
+    tone: 'green',
+    studentName: 'Maryam Ahmed',
+  },
+];
+
+export default function CampusActivitySidebar({ onSelectStudent, students = [], faculty = [] }) {
+  const { isSchool } = useInstitution();
   const [filter, setFilter] = useState('all');
-  const [activities] = useState(INITIAL_ACTIVITIES);
+
+  const activities = React.useMemo(() => {
+    if (!isSchool) return INITIAL_ACTIVITIES;
+
+    const s0 = students[0]?.name || 'Muhammad Abdullah';
+    const s0Class = students[0]?.gradeOrClass || 'Grade 10';
+    const s0Sec = students[0]?.section || 'A';
+    const s1 = students[1]?.name || 'Fatima Zahra';
+    const t0 = faculty[0]?.name || 'Ms. Saima Khan';
+
+    return [
+      {
+        id: 'act-s1',
+        category: 'students',
+        title: 'Admission Verified',
+        description: `${s0} enrolled in ${s0Class} - Section ${s0Sec}`,
+        time: '2m ago',
+        icon: UserCheck,
+        badge: 'Enrolled',
+        tone: 'green',
+        studentName: s0,
+      },
+      {
+        id: 'act-s2',
+        category: 'academic',
+        title: 'Daily Diary Published',
+        description: 'Grade 10-A Mathematics Ex 4.2 homework assigned',
+        time: '12m ago',
+        icon: FileText,
+        badge: 'Homework',
+        tone: 'purple',
+      },
+      {
+        id: 'act-s3',
+        category: 'academic',
+        title: 'First Term Datesheet Released',
+        description: 'Exam schedule published for Secondary Wing (Grade 9 & 10)',
+        time: '30m ago',
+        icon: CalendarDays,
+        badge: 'Examinations',
+        tone: 'blue',
+      },
+      {
+        id: 'act-s4',
+        category: 'staff',
+        title: 'Teacher Marked On Duty',
+        description: `${t0} marked On Duty for Morning Assembly & Homeroom`,
+        time: '45m ago',
+        icon: GraduationCap,
+        badge: 'On Duty',
+        tone: 'purple',
+      },
+      {
+        id: 'act-s5',
+        category: 'attendance',
+        title: 'Morning Assembly Register Synced',
+        description: `${s0Class}-${s0Sec} recorded 96.2% live attendance`,
+        time: '1h ago',
+        icon: ClipboardCheck,
+        badge: 'Present',
+        tone: 'green',
+      },
+      {
+        id: 'act-s6',
+        category: 'alerts',
+        title: 'PTM Notice Dispatched',
+        description: 'Parent-Teacher Meeting circular sent to all guardians',
+        time: '2h ago',
+        icon: Bell,
+        badge: 'Circular',
+        tone: 'amber',
+      },
+      {
+        id: 'act-s7',
+        category: 'academic',
+        title: 'Period Schedule Updated',
+        description: 'Science Lab assigned for Grade 10-A Practical session',
+        time: '3h ago',
+        icon: Clock,
+        badge: 'Timetable',
+        tone: 'blue',
+      },
+      {
+        id: 'act-s8',
+        category: 'students',
+        title: 'Guardian Contact Updated',
+        description: `${s1} guardian contact record verified and synced`,
+        time: 'Today, 09:15 AM',
+        icon: FileText,
+        badge: 'Active',
+        tone: 'green',
+        studentName: s1,
+      },
+    ];
+  }, [isSchool, students, faculty]);
 
   const filteredActivities = activities.filter((item) => {
     if (filter === 'all') return true;

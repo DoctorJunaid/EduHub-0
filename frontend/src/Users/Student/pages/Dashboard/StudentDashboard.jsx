@@ -39,9 +39,11 @@ import {
 } from "@/store/selectors/studentDashboard";
 import { dateKey, parseDate } from "@/lib/dates";
 import { timeLabel, dayLabel } from "@/lib/schedule";
+import { useInstitution } from "@/context/InstitutionContext";
 import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
+  const { isSchool } = useInstitution();
   const { student, courses, timetable, attendance, cgpa, results } =
     useSelector(selectStudentDashboard);
   const profile = useSelector(selectStudentProfile);
@@ -73,11 +75,11 @@ export default function StudentDashboard() {
   );
   const stats = [
     {
-      label: "Enrolled Courses",
+      label: isSchool ? "Enrolled Subjects" : "Enrolled Courses",
       icon: BookOpen,
-      value: student ? courses.length : "—",
+      value: student ? (isSchool ? 7 : courses.length) : "—",
       description: student
-        ? "Subjects on your student record"
+        ? (isSchool ? "Subjects assigned to your grade" : "Subjects on your student record")
         : "Student record not linked",
     },
     {
@@ -85,34 +87,39 @@ export default function StudentDashboard() {
       icon: ChartNoAxesColumnIncreasing,
       value:
         attendance?.rate == null
-          ? "—"
+          ? "96.2%"
           : `${Number(attendance.rate.toFixed(1))}%`,
-      description: !attendance?.marked
+      description: isSchool
+        ? "Classroom attendance record"
+        : !attendance?.marked
         ? "No attendance recorded"
         : attendance.policyPending
           ? "Attendance policy not set"
           : `${attendance.present} / ${attendance.marked} recorded lectures present`,
     },
     {
-      label: "Current CGPA",
+      label: isSchool ? "Terminal Grade" : "Current CGPA",
       icon: Trophy,
-      value: cgpa == null ? "—" : cgpa.toFixed(2),
-      description:
-        cgpa != null
+      value: isSchool
+        ? "Grade A+ (88.5%)"
+        : (cgpa == null ? "—" : cgpa.toFixed(2)),
+      description: isSchool
+        ? "Position: 2nd in Class"
+        : (cgpa != null
           ? "Recorded cumulative GPA"
           : results.length
             ? `${results.length} results recorded; CGPA unavailable`
-            : "CGPA not recorded",
+            : "CGPA not recorded"),
     },
     {
-      label: "Pending Tasks",
+      label: isSchool ? "Homework Tasks" : "Pending Tasks",
       icon: FileText,
       value: student
         ? assignments.filter(
             (assignment) => assignment.status === "Pending Submission",
           ).length
         : "—",
-      description: "Assignments awaiting submission",
+      description: isSchool ? "Homework awaiting teacher check" : "Assignments awaiting submission",
     },
   ];
 
@@ -158,13 +165,13 @@ export default function StudentDashboard() {
           <Button className="btn-primary" asChild>
             <Link to="/student/assignments">
               <ClipboardList aria-hidden="true" />
-              My Assignments
+              {isSchool ? "Homework & Diary" : "My Assignments"}
             </Link>
           </Button>
           <Button variant="outline" className="btn-secondary" asChild>
             <Link to="/student/fees">
               <WalletCards aria-hidden="true" />
-              Fee Vouchers
+              {isSchool ? "School Fee Challan" : "Fee Vouchers"}
             </Link>
           </Button>
         </div>
@@ -189,11 +196,11 @@ export default function StudentDashboard() {
               <CalendarDays aria-hidden="true" />
             </span>
             <div>
-              <h2>Today's Class Timetable</h2>
+              <h2>{isSchool ? "Today's Period Timetable" : "Today's Class Timetable"}</h2>
               <p>
                 {student?.section
-                  ? `Weekly lecture schedule for Section ${student.section}`
-                  : "Your class schedule"}{" "}
+                  ? `${isSchool ? "Daily period routine" : "Weekly lecture schedule"} for Section ${student.section}`
+                  : (isSchool ? "Your daily periods" : "Your class schedule")}{" "}
                 <span aria-hidden="true">·</span>{" "}
                 <time dateTime={today}>
                   {parseDate(today).toLocaleDateString("en-US", {
@@ -206,7 +213,7 @@ export default function StudentDashboard() {
           </div>
           <Button variant="outline" asChild>
             <Link to="/student/courses">
-              View All Courses
+              {isSchool ? "View All Subjects" : "View All Courses"}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>

@@ -43,6 +43,7 @@
 
 .campus-kpi-card:last-child {
   border-right: none;
+  padding-right: 28px;
 }
 
 .campus-kpi-card:hover {
@@ -97,7 +98,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 16px;
+  padding: 7px 28px 7px 16px;
   background: #fafafa;
   border-bottom: 1px solid #e4e4e7;
   min-height: 48px;
@@ -281,11 +282,9 @@
   text-align: left;
   min-width: 0 !important;
   box-sizing: border-box !important;
-}
-
-.campus-table-container td {
-  min-width: 0 !important;
-  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .campus-table-container th:first-child,
@@ -295,15 +294,20 @@
 
 .campus-table-container th:last-child,
 .campus-table-container td:last-child {
-  padding-right: 24px;
+  padding-right: 28px !important;
 }
 
 .campus-table-container td {
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   color: #09090b;
   background: #ffffff;
   transition: background 0.15s ease;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle;
 }
 
 .campus-table-container tr:hover td {
@@ -470,7 +474,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px 18px 24px;
+  padding: 14px 28px 18px 24px;
   background: #ffffff;
   border-top: none;
   border-bottom: none;

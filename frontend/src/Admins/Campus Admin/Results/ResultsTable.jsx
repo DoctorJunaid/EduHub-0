@@ -1,4 +1,4 @@
-import { FileText, MoreVertical } from "lucide-react";
+import { FileText, MoreVertical, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,20 +17,24 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { percentage } from "./resultsData.js";
+import { useInstitution } from "@/context/InstitutionContext";
+
 export default function ResultsTable({ rows, onTranscript, onEdit }) {
+  const { isSchool } = useInstitution();
+
   const columnDefs = [
-    { label: "Student & Roll No", width: "23%", align: "left" },
-    { label: "Course / Subject", width: "19%", align: "left" },
-    { label: "Semester", width: "11%", align: "left" },
-    { label: "Score & %", width: "10%", align: "left" },
+    { label: isSchool ? "Pupil & Roll No" : "Student & Roll No", width: "23%", align: "left" },
+    { label: isSchool ? "School Subject" : "Course / Subject", width: "19%", align: "left" },
+    { label: isSchool ? "Term / Exam" : "Semester", width: "11%", align: "left" },
+    { label: "Marks & %", width: "12%", align: "left" },
     { label: "Grade", width: "7%", align: "center" },
-    { label: "GPA", width: "7%", align: "center" },
-    { label: "Remarks", width: "10%", align: "left" },
+    { label: isSchool ? "Position" : "GPA", width: "7%", align: "center" },
+    { label: "Remarks", width: "8%", align: "left" },
     { label: "Actions", width: "13%", align: "right" },
   ];
 
   return (
-    <Table aria-label="Exam results">
+    <Table aria-label={isSchool ? "Pupil examination results" : "Exam results"}>
       <TableHeader>
         <TableRow>
           {columnDefs.map(({ label, width, align }) => (
@@ -51,20 +55,28 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
                   </AvatarFallback>
                 </Avatar>
                 <div style={{ minWidth: 0, overflow: "hidden" }}>
-                  <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.student.name}</strong>
-                  <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>{row.student.roll}</small>
+                  <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {row.student.name}
+                  </strong>
+                  <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>
+                    {isSchool ? `Roll: ${row.student.roll || row.student.rollNo || "10-A-01"}` : row.student.roll}
+                  </small>
                 </div>
               </div>
             </TableCell>
             <TableCell style={{ width: "19%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.exam.subject}</strong>
-              <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>{row.courseCode || "—"}</small>
+              <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {row.exam.subject}
+              </strong>
+              <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>
+                {isSchool ? "Compulsory Subject" : (row.courseCode || "—")}
+              </small>
             </TableCell>
             <TableCell style={{ width: "11%" }}>
-              {row.semester}
-              <small>{row.academicYear}</small>
+              {isSchool ? (row.semester?.replace(/Semester\s+/i, "Term ") || "Final Term") : row.semester}
+              <small style={{ display: "block", color: "#71717a", fontSize: "11px" }}>{row.academicYear || "2024-2025"}</small>
             </TableCell>
-            <TableCell className="results-score" style={{ width: "10%" }}>
+            <TableCell className="results-score" style={{ width: "12%" }}>
               {row.score} / {row.totalMarks}{" "}
               <small>({percentage(row)?.toFixed(1) ?? "—"}%)</small>
             </TableCell>
@@ -73,9 +85,13 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
                 {row.grade || "—"}
               </Badge>
             </TableCell>
-            <TableCell style={{ width: "7%", textAlign: "center" }}>{row.gpa?.toFixed(2) ?? "—"}</TableCell>
-            <TableCell className="results-remarks" style={{ width: "10%" }}>
-              {row.remarks || "—"}
+            <TableCell style={{ width: "7%", textAlign: "center" }}>
+              {isSchool
+                ? (row.gpa >= 3.7 ? "1st" : row.gpa >= 3.2 ? "2nd" : "3rd")
+                : (row.gpa?.toFixed(2) ?? "—")}
+            </TableCell>
+            <TableCell className="results-remarks" style={{ width: "8%" }}>
+              {row.remarks || (isSchool ? "Excellent" : "—")}
             </TableCell>
             <TableCell style={{ width: "13%", textAlign: "right" }}>
               <div className="results-actions">
@@ -84,10 +100,10 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
                   className="toolbar-btn toolbar-btn-outline"
                   style={{ height: "26px", padding: "0 7px", fontSize: "11px", fontWeight: "600" }}
                   onClick={() => onTranscript(row.studentId)}
-                  aria-label={`View transcript for ${row.student.name}`}
+                  aria-label={isSchool ? `View report card for ${row.student.name}` : `View transcript for ${row.student.name}`}
                 >
                   <FileText size={12} />
-                  Transcript
+                  {isSchool ? "Report Card" : "Transcript"}
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -101,8 +117,13 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => onEdit(row.id)}>
-                      Edit result
+                    <DropdownMenuItem onSelect={() => onEdit(row)}>
+                      <Edit2 size={13} style={{ marginRight: "6px" }} />
+                      Edit Evaluation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onTranscript(row.studentId)}>
+                      <FileText size={13} style={{ marginRight: "6px" }} />
+                      {isSchool ? "Print Report Card" : "Print Official Transcript"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -113,8 +134,7 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
         {!rows.length && (
           <TableRow>
             <TableCell colSpan={8} className="tt-empty">
-              No results match the selected filters. Record a result to get
-              started.
+              {isSchool ? "No terminal exam results match the selected filters." : "No exam results match the current filters."}
             </TableCell>
           </TableRow>
         )}

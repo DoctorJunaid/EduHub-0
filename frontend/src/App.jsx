@@ -53,10 +53,10 @@ const App = () => {
   const auth = useSelector(selectAuth);
 
   useEffect(() => {
-    if (localStorage.getItem("eduHubToken") && !auth.user) {
+    if (localStorage.getItem("eduHubToken")) {
       dispatch(fetchCurrentUser());
     }
-  }, [dispatch, auth.user]);
+  }, [dispatch]);
 
   return (
     <>

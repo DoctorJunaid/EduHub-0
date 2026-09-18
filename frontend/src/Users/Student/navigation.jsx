@@ -9,7 +9,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 
-export const studentNavigation = [
+export const getStudentNav = (isSchool) => [
   {
     label: "Overview",
     path: "/student/dashboard",
@@ -17,12 +17,12 @@ export const studentNavigation = [
     icon: <LayoutGrid size={20} />,
   },
   {
-    label: "My Courses",
+    label: isSchool ? "My Subjects" : "My Courses",
     path: "/student/courses",
     icon: <BookOpen size={20} />,
   },
   {
-    label: "Assignments",
+    label: isSchool ? "Homework & Diary" : "Assignments",
     path: "/student/assignments",
     icon: <FileText size={20} />,
   },
@@ -37,12 +37,12 @@ export const studentNavigation = [
     icon: <NotebookPen size={20} />,
   },
   {
-    label: "Grades & CGPA",
+    label: isSchool ? "Progress Report Card" : "Grades & CGPA",
     path: "/student/grades",
     icon: <Award size={20} />,
   },
   {
-    label: "Fee Vouchers",
+    label: isSchool ? "School Fee Challan" : "Fee Vouchers",
     path: "/student/fees",
     icon: <WalletCards size={20} />,
   },
@@ -52,3 +52,5 @@ export const studentNavigation = [
     icon: <MessageCircle size={20} />,
   },
 ];
+
+export const studentNavigation = getStudentNav(false);
