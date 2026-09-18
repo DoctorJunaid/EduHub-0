@@ -3,8 +3,9 @@ import { useSelector } from "react-redux";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import { toast } from "react-hot-toast";
-import { Play, Eye, ChevronLeft, ChevronRight, CheckCircle, Banknote } from "lucide-react";
+import { Play, Eye, ChevronLeft, ChevronRight, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clock3, ReceiptText } from "lucide-react";
 import { selectCurrentRole } from "../store/Slices/authSlice";
+import "./SalaryPayroll.css";
 
 const SalaryPayroll = () => {
   const [payrolls, setPayrolls] = useState([]);
@@ -15,6 +16,7 @@ const SalaryPayroll = () => {
   const [generating, setGenerating] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
   const role = useSelector(selectCurrentRole);
   const canEdit = ["campus_admin", "campus_manager"].includes(role);
   const canApprove = ["campus_admin", "institute_admin", "principal"].includes(role);
@@ -111,132 +113,114 @@ const SalaryPayroll = () => {
     `PKR ${(amount || 0).toLocaleString("en-PK")}`;
 
   const totalPages = Math.ceil(total / limit);
+  const filteredPayrolls = payrolls.filter((payroll) => {
+    const name = payroll.teacherProfileId?.user?.name || payroll.teacherProfileId?.employeeId || "";
+    return name.toLowerCase().includes(search.trim().toLowerCase());
+  });
+  const summary = payrolls.reduce((result, payroll) => {
+    result.gross += Number(payroll.grossSalary || 0);
+    result.net += Number(payroll.netSalary || 0);
+    if (payroll.status === "Draft") result.draft += 1;
+    if (payroll.status === "Paid") result.paid += 1;
+    return result;
+  }, { gross: 0, net: 0, draft: 0, paid: 0 });
 
   const statusBadge = (status) => {
     const colors = {
-      Draft: "bg-yellow-500/20 text-yellow-400",
-      Approved: "bg-blue-500/20 text-blue-400",
-      Paid: "bg-green-500/20 text-green-400",
+      Draft: "payroll-status payroll-status-draft",
+      Approved: "payroll-status payroll-status-approved",
+      Paid: "payroll-status payroll-status-paid",
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors[status] || "bg-gray-500/20 text-gray-400"}`}>
+      <span className={colors[status] || "payroll-status payroll-status-default"}>
         {status}
       </span>
     );
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-white">Salary & Payroll</h1>
-        <div className="flex items-center gap-3">
-          {/* Month Picker */}
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => { setMonth(e.target.value); setPage(1); }}
-            className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          >
-            <option value="">All Statuses</option>
-            <option value="Draft">Draft</option>
-            <option value="Approved">Approved</option>
-            <option value="Paid">Paid</option>
-          </select>
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="flex items-center px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-lg shadow-green-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            {generating ? "Generating..." : "Generate Payroll"}
-          </button>
-        </div>
+    <div className="salary-payroll-page campus-tab-page">
+      <div className="salary-payroll-heading">
+        <div><span className="salary-payroll-eyebrow">Finance / monthly close</span><h1>Salary &amp; Payroll</h1><p>Generate, review, approve, and settle monthly teacher payroll.</p></div>
+        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}><Play size={13} /> {generating ? "Generating..." : "Generate Payroll"}</button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto glass-panel p-4 rounded-xl">
+      <div className="campus-kpi-track salary-payroll-kpis">
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><WalletCards size={16} /></div><div className="kpi-info"><span className="kpi-label">Gross payroll</span><span className="kpi-value">{formatPKR(summary.gross)}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><ReceiptText size={16} /></div><div className="kpi-info"><span className="kpi-label">Net payroll</span><span className="kpi-value">{formatPKR(summary.net)}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Clock3 size={16} /></div><div className="kpi-info"><span className="kpi-label">Draft records</span><span className="kpi-value">{summary.draft}</span></div></div></div>
+        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><CircleCheck size={16} /></div><div className="kpi-info"><span className="kpi-label">Paid records</span><span className="kpi-value">{summary.paid}</span></div></div></div>
+      </div>
+
+      <div className="campus-toolbar">
+        <div className="toolbar-left">
+          <div className="toolbar-search"><Search size={13} /><input type="search" placeholder="Search teacher..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+          <input className="payroll-month-filter" type="month" value={month} onChange={(event) => { setMonth(event.target.value); setPage(1); }} aria-label="Payroll month" />
+          <select className="toolbar-select" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }} aria-label="Filter payroll status"><option value="">All Statuses</option><option value="Draft">Draft</option><option value="Approved">Approved</option><option value="Paid">Paid</option></select>
+          {(search || statusFilter) && <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => { setSearch(""); setStatusFilter(""); }}>Reset</button>}
+        </div>
+        <div className="toolbar-actions"><span className="salary-payroll-result-count">{filteredPayrolls.length} shown / {total} records</span></div>
+      </div>
+
+      <div className="campus-table-container salary-payroll-table-wrap">
         {loading ? (
-          <div className="text-center text-gray-400 py-8">Loading payroll data...</div>
+          <div className="salary-payroll-state">Loading payroll data...</div>
         ) : payrolls.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
-            No payroll records found for {month}. Click "Generate Payroll" to create them.
-          </div>
+          <div className="salary-payroll-state"><ReceiptText size={24} /><strong>No payroll records for {month}</strong><span>Generate payroll to create the monthly draft records.</span></div>
         ) : (
-          <table className="min-w-full text-left text-white">
-            <thead className="border-b border-gray-700">
+          <div className="overflow-x-auto"><table className="salary-payroll-table">
+            <thead>
               <tr>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Teacher</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Gross</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Deductions</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Bonuses</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Net</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Status</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-400">Actions</th>
+                <th>Teacher</th><th>Gross</th><th>Deductions</th><th>Bonuses</th><th>Net salary</th><th>Status</th><th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {payrolls.map((p) => (
-                <tr
-                  key={p._id}
-                  className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm">
-                    {p.teacherProfileId?.user?.name || p.teacherProfileId?.employeeId || p.teacherProfileId || "Unknown teacher"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-green-400">{formatPKR(p.grossSalary)}</td>
-                  <td className="px-4 py-3 text-sm text-red-400">−{formatPKR(p.deductionsTotal)}</td>
-                  <td className="px-4 py-3 text-sm text-emerald-400">+{formatPKR(p.bonusesTotal)}</td>
-                  <td className="px-4 py-3 text-sm font-semibold text-blue-400">{formatPKR(p.netSalary)}</td>
-                  <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button onClick={() => viewPayslip(p._id)} className="flex items-center text-indigo-400 hover:text-indigo-300 transition-colors">
-                        <Eye className="w-4 h-4 mr-1" /> View
-                      </button>
+              {filteredPayrolls.map((p) => (
+                <tr key={p._id}>
+                  <td><div className="payroll-person"><span>{(p.teacherProfileId?.user?.name || "T").slice(0, 1)}</span><div><strong>{p.teacherProfileId?.user?.name || p.teacherProfileId?.employeeId || "Unknown teacher"}</strong><small>{p.teacherProfileId?.designation || p.teacherProfileId?.department || "Teaching staff"}</small></div></div></td>
+                  <td><strong className="payroll-amount">{formatPKR(p.grossSalary)}</strong></td>
+                  <td><span className="payroll-deduction">-{formatPKR(p.deductionsTotal)}</span></td>
+                  <td><span className="payroll-bonus">+{formatPKR(p.bonusesTotal)}</span></td>
+                  <td><strong className="payroll-net">{formatPKR(p.netSalary)}</strong></td>
+                  <td>{statusBadge(p.status)}</td>
+                  <td className="text-right"><div className="payroll-actions">
+                      <button onClick={() => viewPayslip(p._id)} className="payroll-action-btn"><Eye size={13} /> View</button>
                       {p.status === "Draft" && canEdit && <>
-                        <button onClick={() => addAdjustment(p, "deduction")} className="text-red-400 hover:text-red-300">+ Deduction</button>
-                        <button onClick={() => addAdjustment(p, "bonus")} className="text-green-400 hover:text-green-300">+ Bonus</button>
+                        <button onClick={() => addAdjustment(p, "deduction")} className="payroll-action-btn payroll-action-negative">+ Deduction</button>
+                        <button onClick={() => addAdjustment(p, "bonus")} className="payroll-action-btn payroll-action-positive">+ Bonus</button>
                       </>}
-                      {p.status === "Draft" && canApprove && <button onClick={() => updateWorkflow(p._id, "approve")} className="flex items-center text-blue-400 hover:text-blue-300"><CheckCircle className="w-4 h-4 mr-1" /> Approve</button>}
-                      {p.status === "Approved" && canPay && <button onClick={() => updateWorkflow(p._id, "mark-paid")} className="flex items-center text-green-400 hover:text-green-300"><Banknote className="w-4 h-4 mr-1" /> Mark Paid</button>}
+                      {p.status === "Draft" && canApprove && <button onClick={() => updateWorkflow(p._id, "approve")} className="payroll-action-btn payroll-action-primary"><CheckCircle size={13} /> Approve</button>}
+                      {p.status === "Approved" && canPay && <button onClick={() => updateWorkflow(p._id, "mark-paid")} className="payroll-action-btn payroll-action-positive"><Banknote size={13} /> Mark Paid</button>}
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-gray-400">
+        <div className="salary-payroll-pagination">
+          <p>
             Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="payroll-page-controls">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-40 transition-colors"
+              className="payroll-page-btn"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm text-gray-300">
+            <span>
               Page {page} of {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-40 transition-colors"
+              className="payroll-page-btn"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

@@ -25,13 +25,13 @@ const PayslipDialog = ({ payslip, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="payroll-payslip-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
         className="w-full max-w-2xl mx-4 rounded-2xl border border-gray-700/50 bg-gray-900/95 shadow-2xl max-h-[85vh] overflow-y-auto"
         style={{ animation: "slideDown 0.3s ease-out" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50 sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10">
+        <div className="payslip-header flex items-center justify-between px-6 py-4 border-b border-gray-700/50 sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10">
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-blue-400" />
             <div>
@@ -141,7 +141,7 @@ const PayslipDialog = ({ payslip, onClose }) => {
           )}
 
           {/* Status Badge */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-700/50">
+          <div className="payslip-footer flex items-center justify-between gap-3 pt-4 border-t border-gray-700/50">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-400">Status:</span>
               <span
