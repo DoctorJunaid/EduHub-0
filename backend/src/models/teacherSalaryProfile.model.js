@@ -13,7 +13,7 @@ const bankAccountSchema = new mongoose.Schema({
 
 const teacherSalaryProfileSchema = new mongoose.Schema({
   campusId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campus', required: true, index: true },
-  teacherProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'TeacherProfile', unique: true },
+  teacherProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'TeacherProfile', required: true },
   baseSalary: { type: Number, required: true, min: 0 },
   allowances: [allowanceSchema],
   bankAccount: bankAccountSchema,

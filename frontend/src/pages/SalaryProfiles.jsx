@@ -43,7 +43,7 @@ const SalaryProfiles = () => {
 
   const handleSave = async (profileData) => {
     try {
-      const teacherId = profileData.teacherProfileId || profileData._id;
+      const teacherId = profileData.teacherProfileId?._id || profileData.teacherProfileId || profileData._id;
       await api.put(`/campus/salary/profiles/${teacherId}`, profileData);
       await fetchProfiles();
     } catch (err) {
@@ -84,7 +84,9 @@ const SalaryProfiles = () => {
           <tbody>
             {profiles.map((p) => (
               <tr key={p._id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
-                <td className="px-4 py-2">{p.teacherProfileId || '—'}</td>
+                <td className="px-4 py-2">
+                  {p.teacherProfileId?.user?.name || p.teacherProfileId?.employeeId || p.teacherProfileId || '—'}
+                </td>
                 <td className="px-4 py-2">{p.baseSalary}</td>
                 <td className="px-4 py-2">
                   {p.allowances && p.allowances.length > 0

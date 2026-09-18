@@ -6,7 +6,13 @@ import { TeacherSalaryProfile } from '../models/teacherSalaryProfile.model.js';
  * @returns {Promise<Array>} - Array of profiles
  */
 export const listProfiles = async (campusId) => {
-  return TeacherSalaryProfile.find({ campusId }).lean();
+  return TeacherSalaryProfile.find({ campusId })
+    .populate({
+      path: "teacherProfileId",
+      select: "user employeeId department designation",
+      populate: { path: "user", select: "name email" },
+    })
+    .lean();
 };
 
 /**

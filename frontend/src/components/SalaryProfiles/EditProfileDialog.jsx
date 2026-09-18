@@ -13,7 +13,7 @@ const EditProfileDialog = ({ profile, onClose, onSave }) => {
   useEffect(() => {
     if (profile) {
       setFormData({
-        teacherProfileId: profile.teacherProfileId || "",
+        teacherProfileId: profile.teacherProfileId?._id || profile.teacherProfileId || "",
         baseSalary: profile.baseSalary || 0,
         allowances: profile.allowances || [],
         taxDeduction: profile.taxDeduction || 0,

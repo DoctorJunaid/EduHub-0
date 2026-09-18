@@ -16,6 +16,7 @@ import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
 import Settings from "./components/Settings/Settings";
 import SalaryProfiles from "./pages/SalaryProfiles";
+import SalaryPayroll from "./pages/SalaryPayroll";
 import SubstituteAssignments from "./components/Substitutes/SubstituteAssignments";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
 import { Route, Routes } from "react-router-dom";
@@ -50,6 +51,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCurrentUser, selectAuth } from "./store/Slices/authSlice";
 import { Toaster } from "react-hot-toast";
 import NotFound from "./components/common/NotFound";
+import MyPayslips from "./pages/MyPayslips";
+import { TEACHER_NAV } from "./constants/navigation";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -145,6 +148,18 @@ const App = () => {
           <Route path="settings" element={<Settings />} />
           <Route path="substitutes" element={<SubstituteAssignments />} />
           <Route path="salary-profiles" element={<SalaryProfiles />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager", "institute_admin", "accountant", "principal"]} />}>
+        <Route element={<MainLayout />}>
+          <Route path="salary-payroll" element={<SalaryPayroll />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={["teacher", "faculty"]} />}>
+        <Route element={<MainLayout navigation={TEACHER_NAV} />}>
+          <Route path="my-payslips" element={<MyPayslips />} />
         </Route>
       </Route>
 
