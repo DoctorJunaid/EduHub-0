@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { configureStore } from '@reduxjs/toolkit';
-import exams, { addExam, updateExam, deleteExam, selectExamStats } from './examsSlice.js';
+import exams, { examAdded as addExam, examUpdated as updateExam, examDeleted as deleteExam, selectExamStats } from './examsSlice.js';
 import { initialExams, validateExam, filterExams, examsInWeek, dateKey } from '../../Admins/Campus Admin/Exams/examData.js';
 import { mondayOf, shiftDays, minutes, dayBlocks } from '../../lib/schedule.js';
 import { loadDemoState, storageKeys } from '../persistence.js';

@@ -50,7 +50,7 @@ export default function TranscriptDialog({
     <FullPageFormShell
       title={
         isSchool
-          ? `School Progress Report Card: ${student?.name || "Pupil"}`
+          ? `School Progress Report Card: ${student?.name || "Student"}`
           : `Academic Transcript: ${student?.name || "Student"}`
       }
       subtitle={
@@ -67,7 +67,7 @@ export default function TranscriptDialog({
         {/* Student Selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", background: "#fafafa", border: "1px solid #e4e4e7", borderRadius: "10px" }}>
           <label style={{ fontSize: "12px", fontWeight: "600", color: "#09090b" }}>
-            {isSchool ? "Select Pupil:" : "Select Student:"}
+            Select Student:
           </label>
           <select
             style={{
@@ -84,7 +84,7 @@ export default function TranscriptDialog({
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
           >
-            <option value="">{isSchool ? "Select pupil..." : "Select student..."}</option>
+            <option value="">Select student...</option>
             {students.map((person) => (
               <option key={person.id} value={person.id}>
                 {person.name} — {isSchool ? `Roll: ${person.roll || person.rollNo || "10-A-01"}` : person.roll}
@@ -113,7 +113,7 @@ export default function TranscriptDialog({
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
-              <strong style={{ fontSize: "14px", color: "#09090b" }}>{student?.name ?? "No pupil selected"}</strong>
+              <strong style={{ fontSize: "14px", color: "#09090b" }}>{student?.name ?? "No student selected"}</strong>
               <p style={{ fontSize: "12px", color: "#71717a", margin: "2px 0 0" }}>
                 {isSchool
                   ? `${student?.gradeOrClass || "Grade 10"} · Roll: ${student?.roll || "10-A-01"}`
@@ -167,7 +167,7 @@ export default function TranscriptDialog({
               {!rows.length && (
                 <TableRow>
                   <TableCell colSpan={5} style={{ textAlign: "center", padding: "32px 16px", color: "#71717a" }}>
-                    {isSchool ? "No exam marks recorded for this pupil yet." : "No results recorded for this student in the selected period."}
+                    {isSchool ? "No exam marks recorded for this student yet." : "No results recorded for this student in the selected period."}
                   </TableCell>
                 </TableRow>
               )}

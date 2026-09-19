@@ -15,7 +15,7 @@ export default function StudentAttendanceTable({ rows, page, pageSize, onMark })
   const visible = paginateStudents(rows, page, pageSize);
   const columnDefs = [
     { label: '#', width: '4%', align: 'left' },
-    { label: isSchool ? 'Pupil & Roll No.' : 'Student & Roll No.', width: '23%', align: 'left' },
+    { label: 'Student & Roll No.', width: '23%', align: 'left' },
     { label: isSchool ? 'Class & Section' : 'Program / Section', width: '16%', align: 'left' },
     { label: isSchool ? 'Subject & Period' : 'Subject & Class', width: '18%', align: 'left' },
     { label: 'Date & Time', width: '14%', align: 'left' },
@@ -24,7 +24,7 @@ export default function StudentAttendanceTable({ rows, page, pageSize, onMark })
   ];
 
   return (
-    <Table aria-label={isSchool ? "Pupil attendance register" : "Student attendance register"}>
+    <Table aria-label="Student attendance register">
       <TableHeader>
         <TableRow>
           {columnDefs.map(({ label, width, align }) => (
@@ -115,7 +115,7 @@ export default function StudentAttendanceTable({ rows, page, pageSize, onMark })
         {!visible.records.length && (
           <TableRow>
             <TableCell colSpan={7} className="tt-empty">
-              {isSchool ? "No pupil attendance records match this date and filters." : "No student attendance sessions match this date and filters."}
+              {isSchool ? "No student attendance records match this date and filters." : "No student attendance sessions match this date and filters."}
             </TableCell>
           </TableRow>
         )}

@@ -190,98 +190,112 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
   const [filter, setFilter] = useState('all');
 
   const activities = React.useMemo(() => {
-    if (!isSchool) return INITIAL_ACTIVITIES;
+    if (students.length === 0 && faculty.length === 0) {
+      return [
+        {
+          id: 'act-init-1',
+          category: 'alerts',
+          title: 'Campus Manager Active',
+          description: isSchool ? 'School database connected and ready for student enrollment' : 'Campus management portal active and ready',
+          time: 'Just now',
+          icon: CheckCircle2,
+          badge: 'Online',
+          tone: 'green',
+        },
+        {
+          id: 'act-init-2',
+          category: 'students',
+          title: 'Student Directory Ready',
+          description: isSchool ? 'Click "+ Add Student" to register students into classes' : 'Add students using the quick action button',
+          time: 'Active',
+          icon: UserPlus,
+          badge: 'Ready',
+          tone: 'blue',
+        },
+        {
+          id: 'act-init-3',
+          category: 'staff',
+          title: isSchool ? 'Teaching Staff Directory' : 'Faculty Directory',
+          description: isSchool ? 'Click "+ Add Teacher" to appoint school teachers' : 'Appoint faculty members to campus departments',
+          time: 'Active',
+          icon: GraduationCap,
+          badge: 'Ready',
+          tone: 'purple',
+        },
+      ];
+    }
 
-    const s0 = students[0]?.name || 'Muhammad Abdullah';
-    const s0Class = students[0]?.gradeOrClass || 'Grade 10';
-    const s0Sec = students[0]?.section || 'A';
-    const s1 = students[1]?.name || 'Fatima Zahra';
-    const t0 = faculty[0]?.name || 'Ms. Saima Khan';
+    if (!isSchool) {
+      return students.slice(0, 5).map((s, idx) => ({
+        id: `act-u-${s.id || idx}`,
+        category: 'students',
+        title: 'Student Enrolled',
+        description: `${s.name} (${s.roll || 'ID'}) enrolled in ${s.program || 'Program'}`,
+        time: `${(idx + 1) * 15}m ago`,
+        icon: UserCheck,
+        badge: s.status || 'Active',
+        tone: s.status === 'Active' ? 'green' : 'amber',
+        studentName: s.name,
+      }));
+    }
 
-    return [
-      {
+    const items = [];
+    if (students[0]) {
+      const s0 = students[0];
+      items.push({
         id: 'act-s1',
         category: 'students',
-        title: 'Admission Verified',
-        description: `${s0} enrolled in ${s0Class} - Section ${s0Sec}`,
-        time: '2m ago',
+        title: 'Student Enrolled',
+        description: `${s0.name} enrolled in ${s0.gradeOrClass || 'Grade 10'} - Section ${s0.section || 'A'}`,
+        time: '5m ago',
         icon: UserCheck,
-        badge: 'Enrolled',
+        badge: s0.status || 'Active',
         tone: 'green',
-        studentName: s0,
-      },
-      {
-        id: 'act-s2',
-        category: 'academic',
-        title: 'Daily Diary Published',
-        description: 'Grade 10-A Mathematics Ex 4.2 homework assigned',
-        time: '12m ago',
-        icon: FileText,
-        badge: 'Homework',
-        tone: 'purple',
-      },
-      {
-        id: 'act-s3',
-        category: 'academic',
-        title: 'First Term Datesheet Released',
-        description: 'Exam schedule published for Secondary Wing (Grade 9 & 10)',
-        time: '30m ago',
-        icon: CalendarDays,
-        badge: 'Examinations',
-        tone: 'blue',
-      },
-      {
+        studentName: s0.name,
+      });
+    }
+
+    if (faculty[0]) {
+      const t0 = faculty[0];
+      items.push({
         id: 'act-s4',
         category: 'staff',
-        title: 'Teacher Marked On Duty',
-        description: `${t0} marked On Duty for Morning Assembly & Homeroom`,
-        time: '45m ago',
+        title: 'Teacher Appointed',
+        description: `${t0.name} (${t0.designation || 'Teacher'}) active on duty`,
+        time: '30m ago',
         icon: GraduationCap,
         badge: 'On Duty',
         tone: 'purple',
-      },
-      {
-        id: 'act-s5',
-        category: 'attendance',
-        title: 'Morning Assembly Register Synced',
-        description: `${s0Class}-${s0Sec} recorded 96.2% live attendance`,
-        time: '1h ago',
-        icon: ClipboardCheck,
-        badge: 'Present',
-        tone: 'green',
-      },
-      {
-        id: 'act-s6',
-        category: 'alerts',
-        title: 'PTM Notice Dispatched',
-        description: 'Parent-Teacher Meeting circular sent to all guardians',
-        time: '2h ago',
-        icon: Bell,
-        badge: 'Circular',
-        tone: 'amber',
-      },
-      {
-        id: 'act-s7',
-        category: 'academic',
-        title: 'Period Schedule Updated',
-        description: 'Science Lab assigned for Grade 10-A Practical session',
-        time: '3h ago',
-        icon: Clock,
-        badge: 'Timetable',
-        tone: 'blue',
-      },
-      {
+      });
+    }
+
+    if (students[1]) {
+      const s1 = students[1];
+      items.push({
         id: 'act-s8',
         category: 'students',
-        title: 'Guardian Contact Updated',
-        description: `${s1} guardian contact record verified and synced`,
-        time: 'Today, 09:15 AM',
+        title: 'Profile Verified',
+        description: `${s1.name} student record verified and in good standing`,
+        time: '1h ago',
         icon: FileText,
-        badge: 'Active',
+        badge: 'Verified',
         tone: 'green',
-        studentName: s1,
-      },
-    ];
+        studentName: s1.name,
+      });
+    }
+
+    items.push({
+      id: 'act-sys-1',
+      category: 'academic',
+      title: 'Academic Routine Active',
+      description: 'Daily timetable and attendance registers active',
+      time: 'Today',
+      icon: Clock,
+      badge: 'Active',
+      tone: 'blue',
+    });
+
+    return items;
   }, [isSchool, students, faculty]);
 
   const filteredActivities = activities.filter((item) => {

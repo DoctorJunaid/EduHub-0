@@ -9,7 +9,20 @@ import { dailyStudentRows, recordedStudentRows, filterStudentAttendance, student
 import { paginateStudents } from '../../Admins/Campus Admin/Students/studentData.js';
 
 const memory = () => { const values = new Map(); return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) }; };
-const create = (storage = memory()) => { const store = configureStore({ reducer: { students, timetable, studentAttendance }, preloadedState: loadDemoState(storage) }); persistDemoState(store, storage); return store; };
+const defaultStudent = { id: 'student-demo-1', name: 'Demo Student', roll: 'CS-001', program: 'BS Computer Science', section: 'CS-4A' };
+const defaultSchedule = { id: 'schedule-1', program: 'BS Computer Science', section: 'CS-4A', days: [1], startTime: '08:30', endTime: '10:00', room: 'Lab 302', instructor: 'Dr. Usman Khan', subject: 'Data Structures' };
+const create = (storage = memory()) => {
+  const store = configureStore({
+    reducer: { students, timetable, studentAttendance },
+    preloadedState: {
+      students: { records: [defaultStudent] },
+      timetable: { records: [defaultSchedule] },
+      ...loadDemoState(storage),
+    },
+  });
+  persistDemoState(store, storage);
+  return store;
+};
 const record = { studentId: 'student-demo-1', classId: 'schedule-1', date: '2026-09-07', status: 'Absent' };
 
 test('student attendance absent/present/history survives refresh and updates by session key', () => {

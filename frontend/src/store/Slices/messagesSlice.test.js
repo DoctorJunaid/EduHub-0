@@ -10,7 +10,14 @@ const setup = () => {
   const data = new Map();
   const storage = { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
   const create = () => {
-    const store = configureStore({ reducer: { messages, students, faculty }, preloadedState: loadDemoState(storage) });
+    const store = configureStore({
+      reducer: { messages, students, faculty },
+      preloadedState: {
+        students: { records: [{ id: 's-1', name: 'Student 1', email: 's1@example.test', roll: '101' }] },
+        faculty: { records: [{ id: 'f-1', name: 'Teacher 1', email: 't1@example.test', designation: 'Instructor' }] },
+        ...loadDemoState(storage),
+      },
+    });
     persistDemoState(store, storage);
     return store;
   };

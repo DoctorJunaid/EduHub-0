@@ -14,19 +14,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   selectTimetable,
-  classScheduled,
-  classUpdated,
-  classDeleted,
+  fetchSchedules,
+  addSchedule,
+  updateSchedule,
+  deleteSchedule,
 } from "@/store/Slices/timetableSlice.js";
-import { selectFaculty } from "@/store/Slices/facultySlice.js";
-import { selectStudents } from "@/store/Slices/studentsSlice.js";
+import { selectFaculty, fetchFaculty } from "@/store/Slices/facultySlice.js";
+import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
 import {
   educationTypeOptions,
-  initialSchedules,
   timetableTemplates,
 } from "./timetableData.js";
 import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
 import { useInstitution } from "@/context/InstitutionContext";
+import toast from "react-hot-toast";
 import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
 import ScheduleClassForm from "./ScheduleClassForm";
@@ -36,9 +37,16 @@ import "./ClassTimetable.css";
 export default function ClassTimetable() {
   const { isSchool } = useInstitution();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchSchedules());
+    dispatch(fetchFaculty());
+    dispatch(fetchStudents());
+  }, [dispatch]);
+
   const rawRecords = useSelector(selectTimetable);
   const records = useMemo(() => {
-    return rawRecords?.length ? rawRecords : initialSchedules;
+    return Array.isArray(rawRecords) ? rawRecords : [];
   }, [rawRecords]);
 
   const faculty = useSelector(selectFaculty);
@@ -61,53 +69,52 @@ export default function ClassTimetable() {
   }, [isSchool]);
 
   const options = useMemo(() => {
-    return Object.fromEntries(
-      Object.keys(filters).map((key) => [
-        key,
-        [
-          ...new Set(
-            [...initialSchedules, ...records]
-              .map((record) => record[key])
-              .concat(
-                key === "program" || key === "section"
-                  ? students.map((student) => student[key])
-                  : key === "instructor"
-                    ? faculty.map((teacher) => teacher.name)
-                    : [],
-              ),
-          ),
-        ],
-      ]),
-    );
-  }, [filters, records, students, faculty]);
+    const studentPrograms = [...new Set(students.map((s) => s.gradeOrClass || s.program).filter(Boolean))];
+    const studentSections = [...new Set(students.map((s) => s.section).filter(Boolean))];
+    const teacherNames = [...new Set(faculty.map((f) => f.name).filter(Boolean))];
+
+    return {
+      program: studentPrograms.length ? studentPrograms : ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"],
+      section: studentSections.length ? studentSections : ["Section A", "Section B", "Section C"],
+      instructor: teacherNames.length ? teacherNames : [...new Set(records.map((r) => r.instructor).filter(Boolean))],
+      room: [...new Set(records.map((r) => r.room).filter(Boolean)), "Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"],
+    };
+  }, [records, students, faculty]);
 
   const filtered = useMemo(
     () => filterSchedules(records, filters),
     [records, filters],
   );
   const templateRecords = timetableTemplates[educationType];
-  const selected = records.find((record) => record.id === modal?.id);
+  const selected = records.find((record) => record.id === modal?.id || record._id === modal?.id);
   const close = () => setModal(null);
   const onAction = (mode, id) => setModal({ mode, id });
 
-  const save = (values) => {
-    const index = selected
-      ? records.findIndex((record) => record.id === selected.id)
-      : records.length;
-    if (selected) dispatch(classUpdated({ ...values, id: selected.id }));
-    else dispatch(classScheduled(values));
-    setFilters({ program: "", section: "", instructor: "", room: "" });
-    setPage(Math.floor(index / pageSize) + 1);
-    close();
+  const save = async (values) => {
+    try {
+      if (selected) {
+        await dispatch(
+          updateSchedule({ ...values, id: selected._id || selected.id })
+        ).unwrap();
+        toast.success("Schedule updated successfully!");
+      } else {
+        await dispatch(addSchedule(values)).unwrap();
+        toast.success("Class routine scheduled successfully!");
+      }
+      setFilters({ program: "", section: "", instructor: "", room: "" });
+      close();
+    } catch (err) {
+      toast.error(typeof err === "string" ? err : "Failed to save schedule");
+    }
   };
 
-  // KPI Calculations
+  // Real KPI Calculations
   const totalClasses = records.length;
   const activeInstructors =
-    new Set(records.map((r) => r.instructor).filter(Boolean)).size || 16;
+    new Set(records.map((r) => r.instructor).filter(Boolean)).size || 0;
   const lectureHalls =
-    new Set(records.map((r) => r.room).filter(Boolean)).size || 12;
-  const totalHours = Math.round(records.length * 1.5);
+    new Set(records.map((r) => r.room).filter(Boolean)).size || 0;
+  const totalHours = Math.round(records.length * 0.75);
 
   return (
     <section
@@ -476,8 +483,15 @@ export default function ClassTimetable() {
         confirmText="Delete"
         cancelText="Cancel"
         onCancel={close}
-        onConfirm={() => {
-          if (selected) dispatch(classDeleted(selected.id));
+        onConfirm={async () => {
+          if (selected) {
+            try {
+              await dispatch(deleteSchedule(selected._id || selected.id)).unwrap();
+              toast.success("Class routine removed successfully");
+            } catch (err) {
+              toast.error("Failed to delete class routine");
+            }
+          }
           close();
         }}
       />

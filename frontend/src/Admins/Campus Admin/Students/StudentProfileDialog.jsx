@@ -9,9 +9,9 @@ export default function StudentProfileDialog({ student, onClose }) {
 
   return (
     <FullPageFormShell
-      title={isSchool ? "Pupil Profile & Record" : "Student Detailed Profile"}
+      title={isSchool ? "Student Profile & Record" : "Student Detailed Profile"}
       subtitle={isSchool ? `School academic and guardian record for ${student.name}` : `Comprehensive academic profile for ${student.name}`}
-      parentName={isSchool ? "Pupils Directory" : "Students"}
+      parentName="Students Directory"
       icon={isSchool ? <School size={24} /> : <GraduationCap size={24} />}
       onBack={onClose}
       maxWidth={720}

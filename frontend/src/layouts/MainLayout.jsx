@@ -15,7 +15,15 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
   const dispatch = useDispatch(), navigate = useNavigate();
   const location = useLocation();
   const user = useSelector(selectCurrentUser);
-  const profile = suppliedProfile || { ...user, initials: user.name.slice(0, 2).toUpperCase(), role: ROLE_LABELS[user.role] };
+  const userName = user?.name || "Campus Admin";
+  const userInitials = userName.trim().slice(0, 2).toUpperCase() || "CA";
+  const userRole = user?.role ? (ROLE_LABELS[user.role] || user.role) : "Admin";
+  const profile = suppliedProfile || {
+    ...user,
+    name: userName,
+    initials: userInitials,
+    role: userRole,
+  };
   const signOut = () => { dispatch(loggedOut()); navigate('/login', { replace: true }); };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     window.matchMedia('(max-width: 768px)').matches

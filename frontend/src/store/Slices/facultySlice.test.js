@@ -9,7 +9,25 @@ import reducer, {
 } from "./facultySlice.js";
 import { filterFaculty } from "../../Admins/Campus Admin/Faculty/facultyData.js";
 
-const makeStore = () => configureStore({ reducer: { faculty: reducer } });
+const seedFaculty = {
+  id: "f-1",
+  name: "Dr. Usman Khan",
+  email: "usman.khan@example.com",
+  designation: "Professor & HoD",
+  qualification: "Ph.D. Computer Science",
+  department: "Computer Science",
+  phone: "+92 300 1234567",
+  subjects: "Data Structures, Algorithms",
+  campus: "NUST Main Campus (H-12)",
+  status: "Active",
+  initials: "UK",
+};
+
+const makeStore = (initial = [seedFaculty]) =>
+  configureStore({
+    reducer: { faculty: reducer },
+    preloadedState: { faculty: { records: initial } },
+  });
 const values = {
   name: "Test Teacher",
   email: "teacher@example.com",

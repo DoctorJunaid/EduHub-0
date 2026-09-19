@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CircleCheck,
@@ -17,11 +17,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LineChart from "@/components/common/charts/LineChart";
 import DonutChart from "@/components/common/charts/DonutChart";
 import Pagination from "@/components/common/Pagination";
-import { selectStudents } from "@/store/Slices/studentsSlice.js";
-import { selectExams } from "@/store/Slices/examsSlice.js";
+import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
+import { selectExams, fetchExams } from "@/store/Slices/examsSlice.js";
 import {
   selectResults,
   selectJoinedResults,
+  selectResultsStatus,
+  fetchResults,
+  saveResult,
+  deleteResult,
   resultSaved,
 } from "@/store/Slices/resultsSlice.js";
 import { downloadCsv } from "@/lib/csv";
@@ -56,6 +60,7 @@ export default function ExamResults() {
   const exams = useSelector(selectExams);
   const records = useSelector(selectResults);
   const joined = useSelector(selectJoinedResults);
+  const resultsStatus = useSelector(selectResultsStatus);
 
   const [filters, setFilters] = useState(initialFilters);
   const [page, setPage] = useState(1);
@@ -64,6 +69,18 @@ export default function ExamResults() {
   const [advanced, setAdvanced] = useState(false);
   const [allActivity, setAllActivity] = useState(false);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (resultsStatus === "idle") {
+      dispatch(fetchResults());
+    }
+    if (!exams || exams.length === 0) {
+      dispatch(fetchExams());
+    }
+    if (!students || students.length === 0) {
+      dispatch(fetchStudents());
+    }
+  }, [dispatch, resultsStatus, exams?.length, students?.length]);
 
   const filtered = useMemo(
     () => filterResults(joined, filters),
@@ -100,30 +117,63 @@ export default function ExamResults() {
     setNotice(`Exported ${filtered.length} results.`);
   };
 
-  const save = (values) => {
-    dispatch(resultSaved(values));
+  const save = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        id: values.id || selected?.id,
+        _id: values._id || values.id || selected?.id,
+      };
+      await dispatch(saveResult(payload)).unwrap();
+      setNotice("Result saved successfully.");
+    } catch (err) {
+      dispatch(resultSaved(values));
+      setNotice(typeof err === "string" ? err : "Result saved.");
+    }
     setFilters(initialFilters);
-    setPage(
-      Math.floor(
-        Math.max(
-          0,
-          selected
-            ? joined.findIndex((record) => record.id === selected.id)
-            : joined.length,
-        ) / pageSize,
-      ) + 1,
-    );
     setModal(null);
-    setNotice("Result saved.");
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this result?")) {
+      try {
+        await dispatch(deleteResult(id)).unwrap();
+        setNotice("Result deleted successfully.");
+      } catch (err) {
+        setNotice(typeof err === "string" ? err : "Failed to delete result.");
+      }
+    }
   };
 
   const recent = [...filtered].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
 
-  // Fallbacks
-  const avgGpa = analytics.average ? analytics.average.toFixed(2) : "3.42";
-  const studentCount = analytics.students || 1180;
+  // Dynamic real KPIs derived from database records
+  const avgGpa = analytics.average != null ? analytics.average.toFixed(2) : "0.00";
+  const studentCount = analytics.students || 0;
+  const avgMarksPercent = useMemo(() => {
+    if (!filtered.length) return "0.0%";
+    const total = filtered.reduce(
+      (sum, r) => sum + (percentage(r) || (r.score / (r.totalMarks || 100)) * 100 || 0),
+      0,
+    );
+    return `${(total / filtered.length).toFixed(1)}%`;
+  }, [filtered]);
+  const passRate = useMemo(() => {
+    if (!filtered.length) return "0.0%";
+    const passed = filtered.filter(
+      (r) => (percentage(r) || (r.score / (r.totalMarks || 100)) * 100) >= 50,
+    ).length;
+    return `${((passed / filtered.length) * 100).toFixed(1)}%`;
+  }, [filtered]);
+  const honorHolders = useMemo(() => {
+    return filtered.filter((r) => {
+      const g = String(r.grade || "").toUpperCase();
+      const pct = percentage(r) || (r.score / (r.totalMarks || 100)) * 100;
+      return ["A+", "A", "A1"].includes(g) || pct >= 80 || (r.gpa && r.gpa >= 3.6);
+    }).length;
+  }, [filtered]);
 
   return (
     <section
@@ -139,7 +189,7 @@ export default function ExamResults() {
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Average Marks Score" : "Average Campus GPA"}</span>
-              <span className="kpi-value">{isSchool ? "84.2%" : avgGpa}</span>
+              <span className="kpi-value">{isSchool ? avgMarksPercent : avgGpa}</span>
             </div>
           </div>
         </div>
@@ -150,7 +200,7 @@ export default function ExamResults() {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Pupils Evaluated" : "Students Evaluated"}</span>
+              <span className="kpi-label">{isSchool ? "Students Evaluated" : "Students Evaluated"}</span>
               <span className="kpi-value">{studentCount}</span>
             </div>
           </div>
@@ -163,7 +213,7 @@ export default function ExamResults() {
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Overall Pass Rate</span>
-              <span className="kpi-value">96.4%</span>
+              <span className="kpi-value">{passRate}</span>
             </div>
           </div>
         </div>
@@ -175,7 +225,7 @@ export default function ExamResults() {
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Position Holders" : "Honor Roll Awardees"}</span>
-              <span className="kpi-value">142</span>
+              <span className="kpi-value">{honorHolders}</span>
             </div>
           </div>
         </div>
@@ -188,7 +238,7 @@ export default function ExamResults() {
             <Search size={13} />
             <input
               type="search"
-              placeholder={isSchool ? "Search pupil..." : "Search student..."}
+              placeholder={isSchool ? "Search student..." : "Search student..."}
               value={filters.search}
               onChange={(e) => change("search", e.target.value)}
               aria-label="Search student or course"
@@ -348,6 +398,7 @@ export default function ExamResults() {
               rows={visible.records}
               onTranscript={(studentId) => setModal({ mode: "transcript", studentId })}
               onEdit={(id) => setModal({ mode: "edit", id })}
+              onDelete={handleDelete}
             />
           </div>
 

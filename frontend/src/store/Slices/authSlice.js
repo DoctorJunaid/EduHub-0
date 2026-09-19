@@ -47,6 +47,7 @@ export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async 
 // Helper to read cached user
 const getCachedUser = () => {
   try {
+    if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem('eduHubUser');
     return raw ? JSON.parse(raw) : null;
   } catch {
@@ -60,7 +61,7 @@ const slice = createSlice({
   name: 'auth',
   initialState: {
     ...loggedOutState,
-    isAuthenticated: !!localStorage.getItem('eduHubToken'),
+    isAuthenticated: typeof localStorage !== 'undefined' ? !!localStorage.getItem('eduHubToken') : false,
     user: initialCachedUser,
     selectedRole: initialCachedUser?.role || null,
     status: 'idle',

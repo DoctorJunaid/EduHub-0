@@ -19,11 +19,11 @@ import {
 import { percentage } from "./resultsData.js";
 import { useInstitution } from "@/context/InstitutionContext";
 
-export default function ResultsTable({ rows, onTranscript, onEdit }) {
+export default function ResultsTable({ rows, onTranscript, onEdit, onDelete }) {
   const { isSchool } = useInstitution();
 
   const columnDefs = [
-    { label: isSchool ? "Pupil & Roll No" : "Student & Roll No", width: "23%", align: "left" },
+    { label: "Student & Roll No", width: "23%", align: "left" },
     { label: isSchool ? "School Subject" : "Course / Subject", width: "19%", align: "left" },
     { label: isSchool ? "Term / Exam" : "Semester", width: "11%", align: "left" },
     { label: "Marks & %", width: "12%", align: "left" },
@@ -34,7 +34,7 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
   ];
 
   return (
-    <Table aria-label={isSchool ? "Pupil examination results" : "Exam results"}>
+    <Table aria-label={isSchool ? "Student examination results" : "Exam results"}>
       <TableHeader>
         <TableRow>
           {columnDefs.map(({ label, width, align }) => (
@@ -117,7 +117,7 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => onEdit(row)}>
+                    <DropdownMenuItem onSelect={() => onEdit(row.id)}>
                       <Edit2 size={13} style={{ marginRight: "6px" }} />
                       Edit Evaluation
                     </DropdownMenuItem>
@@ -125,6 +125,14 @@ export default function ResultsTable({ rows, onTranscript, onEdit }) {
                       <FileText size={13} style={{ marginRight: "6px" }} />
                       {isSchool ? "Print Report Card" : "Print Official Transcript"}
                     </DropdownMenuItem>
+                    {onDelete && (
+                      <DropdownMenuItem
+                        style={{ color: "#ef4444" }}
+                        onSelect={() => onDelete(row.id)}
+                      >
+                        Delete Result
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

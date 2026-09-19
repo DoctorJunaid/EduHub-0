@@ -45,7 +45,9 @@ test('collection totals separate Pending and Overdue and guard zero totals', () 
   assert.match(formatPKR(100.5), /100\.5/);
 });
 test('student changes are joined and missing students never erase outstanding balances', () => {
-  const store = create(); store.dispatch(voucherSaved(sample));
+  const store = create();
+  store.dispatch(studentAdded({ id: 'student-demo-1', name: 'Original Student', roll: '101', program: 'CS' }));
+  store.dispatch(voucherSaved(sample));
   const person = store.getState().students.records[0];
   store.dispatch(studentUpdated({ ...person, name: 'Updated Student' }));
   assert.equal(selectJoinedFees(store.getState())[0].student.name, 'Updated Student');

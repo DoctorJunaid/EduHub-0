@@ -151,19 +151,19 @@ export default function StudentForm({
     <FullPageFormShell
       title={
         isSchool
-          ? editing ? "Edit Pupil Record" : "Admit New Pupil"
+          ? editing ? "Edit Student Record" : "Add New Student"
           : editing ? "Edit Student Record" : "Register New Student"
       }
       subtitle={
         isSchool
           ? editing
-            ? `Updating school record and parent contacts for ${student?.name || "pupil"}.`
-            : "Fill in pupil details, assigned class & section, enrolled subjects, and guardian contact."
+            ? `Updating school record and parent contacts for ${student?.name || "student"}.`
+            : "Fill in student details, assigned class & section, enrolled subjects, and guardian contact."
           : editing
             ? `Updating profile and academic registration for ${student?.name || "student"}.`
             : "Fill in student profile, academic program, section, and guardian contact details."
       }
-      parentName={isSchool ? "Pupils Directory" : "Students Directory"}
+      parentName="Students Directory"
       icon={isSchool ? <School size={22} /> : <GraduationCap size={22} />}
       onBack={onClose}
     >
@@ -181,16 +181,16 @@ export default function StudentForm({
               marginBottom: "18px",
             }}
           >
-            Some existing records share an email or roll number. Make sure each pupil has a distinct identity.
+            Some existing records share an email or roll number. Make sure each student has a distinct identity.
           </p>
         )}
 
         <div className="activity-form-grid">
           <div className="activity-section-title">
-            {isSchool ? "Pupil Identification & Contact" : "Personal & Academic Identification"}
+            {isSchool ? "Student Identification & Contact" : "Personal & Academic Identification"}
           </div>
 
-          {field("name", isSchool ? "Full Pupil Name" : "Full Student Name", {
+          {field("name", "Full Student Name", {
             placeholder: isSchool ? "e.g. Hamza Tariq" : "e.g. Ali Raza"
           })}
           {field("roll", isSchool ? "Roll No / Admission No" : "Roll Number / Student ID", {
@@ -278,10 +278,10 @@ export default function StudentForm({
             {isSubmitting
               ? editing
                 ? "Updating Record..."
-                : isSchool ? "Admitting Pupil..." : "Saving Student..."
+                : "Saving Student..."
               : editing
-              ? isSchool ? "Update Pupil Record" : "Update Student Record"
-              : isSchool ? "Admit Pupil" : "Register Student"}
+              ? "Update Student Record"
+              : isSchool ? "Add Student" : "Register Student"}
           </button>
         </div>
       </form>

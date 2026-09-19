@@ -52,10 +52,20 @@ const facultySlice = createSlice({
     error: null
   },
   reducers: {
-    facultyAdded: (state, { payload }) => { state.records.push({ ...payload, id: payload.id || Math.random().toString() }); },
+    facultyAdded: (state, { payload }) => {
+      state.records.push({
+        ...payload,
+        id: payload.id || Math.random().toString(),
+        initials: payload.initials || initialsFor(payload.name || ''),
+      });
+    },
     facultyUpdated: (state, { payload }) => {
       const faculty = state.records.find((record) => record.id === payload.id);
-      if (faculty) Object.assign(faculty, payload);
+      if (faculty) {
+        Object.assign(faculty, payload, {
+          initials: payload.name ? initialsFor(payload.name) : faculty.initials,
+        });
+      }
     },
     facultyDeleted: (state, { payload }) => {
       state.records = state.records.filter((faculty) => faculty.id !== payload);

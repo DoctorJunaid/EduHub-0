@@ -30,8 +30,8 @@ export default function CampusThinCards({
     {
       id: 'students-card',
       icon: Users,
-      label: 'Enrolled Pupils',
-      primaryMetric: `${students.length} ${students.length === 1 ? 'Pupil' : 'Pupils'}`,
+      label: 'Enrolled Students',
+      primaryMetric: `${students.length} ${students.length === 1 ? 'Student' : 'Students'}`,
     },
     {
       id: 'faculty-card',
@@ -43,13 +43,13 @@ export default function CampusThinCards({
       id: 'classes-card',
       icon: Layers,
       label: 'Classes & Sections',
-      primaryMetric: `${distinctGrades || 5} Grades Active`,
+      primaryMetric: `${distinctGrades} ${distinctGrades === 1 ? 'Grade' : 'Grades'} Active`,
     },
     {
       id: 'timetable-card',
       icon: Clock,
       label: 'Daily Routine',
-      primaryMetric: '7 Daily Periods',
+      primaryMetric: `${timetable.length} Active Periods`,
     },
   ];
 
@@ -70,13 +70,13 @@ export default function CampusThinCards({
       id: 'programs-card',
       icon: BookOpen,
       label: 'Degree Programs',
-      primaryMetric: `${distinctGrades || 4} Programs`,
+      primaryMetric: `${distinctGrades} ${distinctGrades === 1 ? 'Program' : 'Programs'}`,
     },
     {
       id: 'timetable-card',
       icon: CalendarDays,
       label: 'Class & Lab Sessions',
-      primaryMetric: `${timetable.length || 18} Sessions`,
+      primaryMetric: `${timetable.length} Sessions`,
     },
   ];
 

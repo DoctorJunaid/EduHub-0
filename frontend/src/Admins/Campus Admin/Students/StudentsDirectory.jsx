@@ -38,7 +38,6 @@ import {
   filterStudents,
   paginateStudents,
 } from "./studentData.js";
-import { campusStudents as demoStudents } from "../Dashboard/campusOverviewData.js";
 import toast from "react-hot-toast";
 import StudentForm from "./StudentForm";
 import StudentProfileDialog from "./StudentProfileDialog";
@@ -54,12 +53,7 @@ export default function StudentsDirectory() {
   }, [dispatch]);
 
   const rawStudents = useSelector(selectStudents);
-  const students = useMemo(() => {
-    if (isSchool) {
-      return rawStudents && rawStudents.length > 0 ? rawStudents : [];
-    }
-    return rawStudents?.length ? rawStudents : demoStudents;
-  }, [rawStudents, isSchool]);
+  const students = useMemo(() => rawStudents || [], [rawStudents]);
 
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({
@@ -151,7 +145,7 @@ export default function StudentsDirectory() {
               <Users size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Enrolled Pupils" : "Enrolled Students"}</span>
+              <span className="kpi-label">{isSchool ? "Enrolled Students" : "Enrolled Students"}</span>
               <strong className="kpi-value">{totalCount}</strong>
             </div>
           </div>
@@ -163,7 +157,7 @@ export default function StudentsDirectory() {
               <UserCheck size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Active Pupils" : "Active Status"}</span>
+              <span className="kpi-label">{isSchool ? "Active Students" : "Active Status"}</span>
               <strong className="kpi-value">{activeCount}</strong>
             </div>
           </div>
@@ -187,7 +181,7 @@ export default function StudentsDirectory() {
               <Percent size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Pupil Attendance" : "Average Attendance"}</span>
+              <span className="kpi-label">{isSchool ? "Student Attendance" : "Average Attendance"}</span>
               <strong className="kpi-value">96.4%</strong>
             </div>
           </div>
@@ -201,7 +195,7 @@ export default function StudentsDirectory() {
             <Search size={14} />
             <input
               type="text"
-              placeholder={isSchool ? "Search pupils by name or roll..." : "Search students..."}
+              placeholder={isSchool ? "Search students by name or roll..." : "Search students..."}
               value={filters.search}
               onChange={(e) => updateFilter("search", e.target.value)}
               aria-label="Search records"
@@ -258,7 +252,7 @@ export default function StudentsDirectory() {
             onClick={() => setModal({ mode: "add" })}
           >
             <Plus size={14} />
-            {isSchool ? "Admit New Pupil" : "Add New Student"}
+            {isSchool ? "Add New Student" : "Add New Student"}
           </button>
         </div>
       </div>
@@ -268,7 +262,7 @@ export default function StudentsDirectory() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead style={{ width: "24%" }}>{isSchool ? "Pupil Name & Roll" : "Student Member"}</TableHead>
+              <TableHead style={{ width: "24%" }}>{isSchool ? "Student Name & Roll" : "Student Member"}</TableHead>
               <TableHead style={{ width: "22%" }}>{isSchool ? "Class & Enrolled Subjects" : "Program & Specialization"}</TableHead>
               <TableHead style={{ width: "24%" }}>{isSchool ? "Section & Guardian Contact" : "Semester & Academics"}</TableHead>
               <TableHead style={{ width: "13%" }}>Campus Branch</TableHead>

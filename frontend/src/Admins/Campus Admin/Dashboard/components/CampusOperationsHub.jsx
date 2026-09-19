@@ -22,128 +22,6 @@ import {
 } from '@/components/ui/Table';
 import { useInstitution } from '@/context/InstitutionContext';
 
-const SCHOOL_CLASSES_DATA = [
-  {
-    id: 'cls-10',
-    grade: 'Grade 10',
-    sections: '10-A, 10-B',
-    classTeacher: 'Ms. Ayesha Khan',
-    enrolledCount: 78,
-    room: 'Senior Wing 301',
-    wing: 'Secondary Wing',
-    subjectsCount: 8,
-    status: 'Active',
-  },
-  {
-    id: 'cls-9',
-    grade: 'Grade 9',
-    sections: '9-A, 9-B, 9-C',
-    classTeacher: 'Mr. Bilal Raza',
-    enrolledCount: 92,
-    room: 'Senior Wing 204',
-    wing: 'Secondary Wing',
-    subjectsCount: 8,
-    status: 'Active',
-  },
-  {
-    id: 'cls-8',
-    grade: 'Grade 8',
-    sections: '8-A, 8-B',
-    classTeacher: 'Dr. Hina Iqbal',
-    enrolledCount: 74,
-    room: 'Middle Wing 105',
-    wing: 'Middle Wing',
-    subjectsCount: 7,
-    status: 'Active',
-  },
-  {
-    id: 'cls-7',
-    grade: 'Grade 7',
-    sections: '7-A, 7-B',
-    classTeacher: 'Mr. Hamza Ali',
-    enrolledCount: 68,
-    room: 'Middle Wing 102',
-    wing: 'Middle Wing',
-    subjectsCount: 7,
-    status: 'Active',
-  },
-  {
-    id: 'cls-6',
-    grade: 'Grade 6',
-    sections: '6-A, 6-B',
-    classTeacher: 'Ms. Sana Ahmed',
-    enrolledCount: 65,
-    room: 'Middle Wing 101',
-    wing: 'Middle Wing',
-    subjectsCount: 7,
-    status: 'Active',
-  },
-  {
-    id: 'cls-5',
-    grade: 'Grade 5',
-    sections: '5-A, 5-B',
-    classTeacher: 'Mrs. Tahira Bano',
-    enrolledCount: 60,
-    room: 'Primary Wing 201',
-    wing: 'Primary Wing',
-    subjectsCount: 6,
-    status: 'Active',
-  },
-];
-
-const SCHOOL_DEFAULT_TIMETABLE = [
-  { id: 'sch-p1', subject: 'Mathematics', period: 'Period 1', startTime: '08:30', endTime: '09:15', section: 'Grade 10-A', room: 'Senior Wing 301', instructor: 'Ms. Saima Khan', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-  { id: 'sch-p2', subject: 'Physics & Lab', period: 'Period 2', startTime: '09:15', endTime: '10:00', section: 'Grade 10-A', room: 'Physics Lab 1', instructor: 'Mr. Tariq Aziz', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-  { id: 'sch-p3', subject: 'English Language', period: 'Period 3', startTime: '10:00', endTime: '10:45', section: 'Grade 9-A', room: 'Senior Wing 204', instructor: 'Ms. Hina Rauf', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-  { id: 'sch-p4', subject: 'Computer Studies', period: 'Period 4', startTime: '11:15', endTime: '12:00', section: 'Grade 10-B', room: 'Computer Lab 2', instructor: 'Mr. Imran Shah', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-  { id: 'sch-p5', subject: 'Urdu Literature', period: 'Period 5', startTime: '12:00', endTime: '12:45', section: 'Grade 8-A', room: 'Middle Wing 105', instructor: 'Mrs. Tahira Bano', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-  { id: 'sch-p6', subject: 'Chemistry', period: 'Period 6', startTime: '12:45', endTime: '01:30', section: 'Grade 9-B', room: 'Chemistry Lab', instructor: 'Mr. Tariq Aziz', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-  { id: 'sch-p7', subject: 'Islamiat & Ethics', period: 'Period 7', startTime: '01:30', endTime: '02:15', section: 'Grade 7-A', room: 'Middle Wing 102', instructor: 'Qari Abdul Rehman', days: 'Mon, Tue, Wed, Thu, Fri', status: 'Active' },
-];
-
-const ACADEMIC_PROGRAMS_DATA = [
-  {
-    id: 'prog-1',
-    name: 'BS Computer Science',
-    degree: '4-Year Undergraduate',
-    department: 'Department of Computing',
-    enrolledCount: 520,
-    sections: 'CS-1A, CS-2A, CS-3B, CS-4A, CS-4B',
-    hod: 'Dr. Usman Khan',
-    status: 'Active',
-  },
-  {
-    id: 'prog-2',
-    name: 'BS Software Engineering',
-    degree: '4-Year Undergraduate',
-    department: 'Department of Software Engineering',
-    enrolledCount: 410,
-    sections: 'SE-1A, SE-2B, SE-3A, SE-4A',
-    hod: 'Dr. Ayesha Malik',
-    status: 'Active',
-  },
-  {
-    id: 'prog-3',
-    name: 'BS Artificial Intelligence',
-    degree: '4-Year Undergraduate',
-    department: 'Department of Computing',
-    enrolledCount: 185,
-    sections: 'AI-1A, AI-2A, AI-3A',
-    hod: 'Dr. Tariq Mahmood',
-    status: 'Active',
-  },
-  {
-    id: 'prog-4',
-    name: 'BS Data Science',
-    degree: '4-Year Undergraduate',
-    department: 'Department of Computing',
-    enrolledCount: 133,
-    sections: 'DS-1A, DS-2A',
-    hod: 'Dr. Bilal Qureshi',
-    status: 'Active',
-  },
-];
-
 export default function CampusOperationsHub({
   students = [],
   faculty = [],
@@ -169,40 +47,103 @@ export default function CampusOperationsHub({
     setPage(1);
   }, [currentTab]);
 
-  // Generate attendance rows from students and timetable
+  // Dynamically derive classes & sections from students and timetable
+  const schoolClasses = useMemo(() => {
+    const gradesMap = new Map();
+    for (const s of students) {
+      const g = s.gradeOrClass || s.program || 'Grade 10';
+      if (!gradesMap.has(g)) {
+        gradesMap.set(g, {
+          id: `cls-${String(g).replace(/\s+/g, '-').toLowerCase()}`,
+          grade: g,
+          sections: new Set(),
+          classTeacher: 'Assigned Teacher',
+          enrolledCount: 0,
+          room: s.room || 'Classroom',
+          wing: 'Academic Block',
+          subjectsCount: 0,
+          status: 'Active',
+        });
+      }
+      const item = gradesMap.get(g);
+      item.enrolledCount++;
+      if (s.section) item.sections.add(s.section);
+    }
+    for (const t of timetable) {
+      const g = t.className || t.gradeOrClass || t.program;
+      if (g) {
+        if (!gradesMap.has(g)) {
+          gradesMap.set(g, {
+            id: `cls-${String(g).replace(/\s+/g, '-').toLowerCase()}`,
+            grade: g,
+            sections: new Set(),
+            classTeacher: t.instructor || t.teacherName || 'Assigned Teacher',
+            enrolledCount: 0,
+            room: t.room || 'Classroom',
+            wing: 'Academic Block',
+            subjectsCount: 0,
+            status: 'Active',
+          });
+        }
+        const item = gradesMap.get(g);
+        item.subjectsCount++;
+        if (t.section) item.sections.add(t.section);
+        if (t.instructor && item.classTeacher === 'Assigned Teacher') item.classTeacher = t.instructor;
+        if (t.room && item.room === 'Classroom') item.room = t.room;
+      }
+    }
+    return Array.from(gradesMap.values()).map((c) => ({
+      ...c,
+      sections: c.sections.size > 0 ? Array.from(c.sections).sort().join(', ') : 'Section A',
+    }));
+  }, [students, timetable]);
+
+  // Dynamically derive degree programs from students for university mode
+  const academicPrograms = useMemo(() => {
+    const progMap = new Map();
+    for (const s of students) {
+      const p = s.program || s.gradeOrClass;
+      if (p) {
+        if (!progMap.has(p)) {
+          progMap.set(p, {
+            id: `prog-${String(p).replace(/\s+/g, '-').toLowerCase()}`,
+            name: p,
+            degree: 'Undergraduate / Graduate',
+            department: s.department || 'Academic Department',
+            enrolledCount: 0,
+            hod: 'Department Chair',
+            status: 'Active',
+          });
+        }
+        progMap.get(p).enrolledCount++;
+      }
+    }
+    return Array.from(progMap.values());
+  }, [students]);
+
+  // Generate attendance rows from real students
   const attendanceRows = useMemo(() => {
     return students.map((s, idx) => ({
       id: `att-${s.id || idx}`,
       student: s,
-      subject: isSchool
-        ? idx % 3 === 0
-          ? 'Mathematics (Period 2)'
-          : idx % 3 === 1
-          ? 'General Science (Period 4)'
-          : 'English Language (Period 1)'
-        : idx % 2 === 0
-        ? 'Advanced Web Design'
-        : 'Data Structures & Algorithms',
-      room: isSchool ? `Room ${201 + (idx % 5)}` : (idx % 2 === 0 ? 'Lab 302' : 'Hall B'),
-      time: isSchool
-        ? (idx % 2 === 0 ? '08:30 AM – 09:15 AM' : '09:20 AM – 10:05 AM')
-        : '10:00 AM – 11:30 AM',
+      subject: s.gradeOrClass || s.program || (isSchool ? 'General Studies' : 'Course Lecture'),
+      room: s.room || (isSchool ? 'Classroom' : 'Lecture Hall'),
+      time: '08:30 AM – 01:30 PM',
       date: 'Today',
-      status: s.status === 'Pending' ? 'Late' : idx === 3 ? 'Absent' : 'Present',
+      status: s.status === 'Pending' ? 'Late' : s.status === 'Inactive' ? 'Absent' : 'Present',
     }));
   }, [students, isSchool]);
 
   const effectiveTimetable = useMemo(() => {
-    if (timetable && timetable.length > 0) return timetable;
-    return isSchool ? SCHOOL_DEFAULT_TIMETABLE : [];
-  }, [timetable, isSchool]);
+    return timetable || [];
+  }, [timetable]);
 
   // Filter logic based on active tab
   const filteredData = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
 
     if (currentTab === 'classes') {
-      return SCHOOL_CLASSES_DATA.filter((c) => {
+      return schoolClasses.filter((c) => {
         const matchesSearch =
           !q ||
           `${c.grade} ${c.sections} ${c.classTeacher} ${c.room} ${c.wing}`
@@ -241,10 +182,10 @@ export default function CampusOperationsHub({
       return effectiveTimetable.filter((item) => {
         const matchesSearch =
           !q ||
-          `${item.subject} ${item.section} ${item.room} ${item.instructor}`
+          `${item.subject || item.periodName} ${item.section || item.className} ${item.room} ${item.instructor || item.teacherName}`
             .toLowerCase()
             .includes(q);
-        const matchesProgram = !programFilter || item.program === programFilter;
+        const matchesProgram = !programFilter || (item.program || item.className) === programFilter;
         const matchesStatus = !statusFilter || item.status === statusFilter;
         return matchesSearch && matchesProgram && matchesStatus;
       });
@@ -263,7 +204,7 @@ export default function CampusOperationsHub({
     }
 
     if (currentTab === 'programs') {
-      return ACADEMIC_PROGRAMS_DATA.filter((p) => {
+      return academicPrograms.filter((p) => {
         const matchesSearch =
           !q ||
           `${p.name} ${p.degree} ${p.department} ${p.hod}`.toLowerCase().includes(q);
@@ -276,7 +217,9 @@ export default function CampusOperationsHub({
     currentTab,
     students,
     faculty,
-    timetable,
+    schoolClasses,
+    academicPrograms,
+    effectiveTimetable,
     attendanceRows,
     searchQuery,
     programFilter,
@@ -331,7 +274,7 @@ export default function CampusOperationsHub({
               }}
               placeholder={
                 currentTab === 'students'
-                  ? (isSchool ? 'Search pupils, roll, guardian...' : 'Search students...')
+                  ? (isSchool ? 'Search students, roll, guardian...' : 'Search students...')
                   : currentTab === 'faculty'
                   ? (isSchool ? 'Search teachers, subjects...' : 'Search faculty...')
                   : currentTab === 'timetable'
@@ -401,7 +344,7 @@ export default function CampusOperationsHub({
               onClick={onAddStudent}
             >
               <Plus size={14} />
-              {isSchool ? 'Add Pupil' : 'Add Student'}
+              Add Student
             </button>
           )}
           {currentTab === 'faculty' && (
@@ -434,7 +377,7 @@ export default function CampusOperationsHub({
           <Table className="hub-students-table">
             <TableHeader>
               <TableRow>
-                <TableHead style={{ width: '28%' }}>{isSchool ? 'Pupil Name & Roll / ID' : 'Student Name & Roll No'}</TableHead>
+                <TableHead style={{ width: '28%' }}>{isSchool ? 'Student Name & Roll / ID' : 'Student Name & Roll No'}</TableHead>
                 <TableHead style={{ width: '22%' }}>{isSchool ? 'Class & Section' : 'Program & Semester'}</TableHead>
                 <TableHead style={{ width: '24%' }}>{isSchool ? 'Parent / Guardian' : 'Section'}</TableHead>
                 <TableHead style={{ width: '13%' }} className="text-center">Attendance</TableHead>
@@ -496,11 +439,11 @@ export default function CampusOperationsHub({
                   <TableCell colSpan={5} className="hub-empty-cell">
                     <div style={{ padding: '36px 16px', textAlign: 'center' }}>
                       <p style={{ fontWeight: 600, color: '#09090b', fontSize: '13px', marginBottom: '4px' }}>
-                        {isSchool ? 'No enrolled pupils found' : 'No students found'}
+                        {isSchool ? 'No enrolled students found' : 'No students found'}
                       </p>
                       <p style={{ fontSize: '12px', color: '#71717a', marginBottom: '14px' }}>
                         {isSchool
-                          ? 'There are currently no pupil records in this campus.'
+                          ? 'There are currently no student records in this campus.'
                           : 'There are currently no student records matching your filters.'}
                       </p>
                       <button
@@ -510,7 +453,7 @@ export default function CampusOperationsHub({
                         style={{ margin: '0 auto' }}
                       >
                         <Plus size={14} />
-                        {isSchool ? 'Admit First Pupil' : 'Add First Student'}
+                        Add First Student
                       </button>
                     </div>
                   </TableCell>
@@ -728,7 +671,7 @@ export default function CampusOperationsHub({
                     <strong>{cls.classTeacher}</strong>
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className="hub-badge-neutral font-semibold">{cls.enrolledCount} Pupils</span>
+                    <span className="hub-badge-neutral font-semibold">{cls.enrolledCount} Students</span>
                   </TableCell>
                   <TableCell className="text-center">
                     <span>{cls.room}</span>

@@ -52,10 +52,20 @@ const studentsSlice = createSlice({
     error: null
   },
   reducers: {
-    studentAdded: (state, { payload }) => { state.records.push({ ...payload, id: payload.id || Math.random().toString() }); },
+    studentAdded: (state, { payload }) => {
+      state.records.push({
+        ...payload,
+        id: payload.id || Math.random().toString(),
+        initials: payload.initials || initialsFor(payload.name || ''),
+      });
+    },
     studentUpdated: (state, { payload }) => {
       const student = state.records.find((record) => record.id === payload.id);
-      if (student) Object.assign(student, payload);
+      if (student) {
+        Object.assign(student, payload, {
+          initials: payload.name ? initialsFor(payload.name) : student.initials,
+        });
+      }
     },
     studentDeleted: (state, { payload }) => {
       state.records = state.records.filter((student) => student.id !== payload);

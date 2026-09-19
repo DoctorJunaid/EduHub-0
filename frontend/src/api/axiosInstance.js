@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-const defaultBaseUrl = import.meta.env.DEV
+const defaultBaseUrl = import.meta?.env?.DEV
   ? 'http://localhost:5000/api/v1'
   : 'https://edu-hub-backend-blond.vercel.app/api/v1';
 
 // Create a configured axios instance pointing to the local dev or hosted backend
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
+  baseURL: import.meta?.env?.VITE_API_URL || defaultBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
 // Request Interceptor: Attach JWT Token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('eduHubToken');
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubToken') : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,7 +32,9 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Clear token and redirect to login if unauthorized
-      localStorage.removeItem('eduHubToken');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('eduHubToken');
+      }
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

@@ -23,7 +23,6 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import {
-  facultyRecords as demoRecords,
   facultyStatuses,
   filterFaculty,
 } from "./facultyData";
@@ -49,12 +48,7 @@ export default function FacultyDirectory() {
   }, [dispatch]);
 
   const rawFaculty = useSelector(selectFaculty);
-  const facultyRecords = useMemo(() => {
-    if (isSchool) {
-      return rawFaculty && rawFaculty.length > 0 ? rawFaculty : [];
-    }
-    return rawFaculty && rawFaculty.length > 0 ? rawFaculty : demoRecords;
-  }, [rawFaculty, isSchool]);
+  const facultyRecords = useMemo(() => rawFaculty || [], [rawFaculty]);
 
   const [form, setForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -65,12 +59,12 @@ export default function FacultyDirectory() {
         key,
         [
           ...new Set(
-            [...(isSchool ? [] : demoRecords), ...facultyRecords].map((teacher) => teacher[key]).filter(Boolean),
+            facultyRecords.map((teacher) => teacher[key]).filter(Boolean),
           ),
         ],
       ]),
     );
-  }, [facultyRecords, isSchool]);
+  }, [facultyRecords]);
 
   const [filters, setFilters] = useState({
     search: "",
@@ -162,7 +156,7 @@ export default function FacultyDirectory() {
               <GraduationCap size={16} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Pupil-Teacher Ratio" : "Student-Staff Ratio"}</span>
+              <span className="kpi-label">{isSchool ? "Student-Teacher Ratio" : "Student-Staff Ratio"}</span>
               <span className="kpi-value">1:15</span>
             </div>
           </div>

@@ -34,18 +34,31 @@ export const percentage = (record) =>
     ? (record.score / record.totalMarks) * 100
     : null;
 export function joinResults(records, students, exams) {
-  const people = new Map(students.map((person) => [person.id, person]));
-  const assessments = new Map(exams.map((exam) => [exam.id, exam]));
-  return records
-    .filter(
-      (record) =>
-        people.has(record.studentId) && assessments.has(record.examId),
-    )
-    .map((record) => ({
+  const people = new Map(
+    students.map((person) => [String(person._id || person.id), person])
+  );
+  const assessments = new Map(
+    exams.map((exam) => [String(exam._id || exam.id), exam])
+  );
+  return records.map((record) => {
+    const student = people.get(String(record.studentId)) ?? {
+      id: record.studentId,
+      name: record.student?.name || "Student",
+      roll: record.student?.roll || "—",
+      initials: "ST",
+    };
+    const exam = assessments.get(String(record.examId)) ?? {
+      id: record.examId || "def-exam",
+      subject: record.subject || record.courseCode || "General Studies",
+      examType: record.examName || "Examination",
+      date: record.createdAt || "",
+    };
+    return {
       ...record,
-      student: people.get(record.studentId),
-      exam: assessments.get(record.examId),
-    }));
+      student,
+      exam,
+    };
+  });
 }
 export function filterResults(rows, filters) {
   const query = (filters.search ?? "").trim().toLowerCase();

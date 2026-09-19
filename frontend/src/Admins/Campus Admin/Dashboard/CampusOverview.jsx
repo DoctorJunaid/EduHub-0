@@ -5,11 +5,9 @@ import toast from 'react-hot-toast';
 // Redux State Selectors & Actions
 import { selectStudents, selectStudentsStatus, addStudent, fetchStudents } from '@/store/Slices/studentsSlice.js';
 import { selectFaculty, selectFacultyStatus, addFaculty, fetchFaculty } from '@/store/Slices/facultySlice.js';
-import { selectTimetable } from '@/store/Slices/timetableSlice.js';
-
-// Demonstration Seed Data Fallbacks (University fallback only)
-import { campusStudents as demoStudents, campusClasses as demoClasses } from './campusOverviewData.js';
-import { facultyRecords as demoFaculty } from '@/Admins/Campus Admin/Faculty/facultyData.js';
+import { selectTimetable, fetchSchedules } from '@/store/Slices/timetableSlice.js';
+import { fetchExams } from '@/store/Slices/examsSlice.js';
+import { fetchFees } from '@/store/Slices/feesSlice.js';
 
 // Forms & Modal Dialogs
 import FacultyForm from '@/Admins/Campus Admin/Faculty/FacultyForm';
@@ -31,6 +29,9 @@ export default function CampusOverview() {
   React.useEffect(() => {
     dispatch(fetchStudents());
     dispatch(fetchFaculty());
+    dispatch(fetchSchedules());
+    dispatch(fetchExams());
+    dispatch(fetchFees());
   }, [dispatch]);
 
   // Redux Selectors with real database state
@@ -40,21 +41,10 @@ export default function CampusOverview() {
   const studentsStatus = useSelector(selectStudentsStatus);
   const facultyStatus = useSelector(selectFacultyStatus);
 
-  // In School mode: strictly use real API records. Never show university demo students!
-  const students = useMemo(() => {
-    if (rawStudents && rawStudents.length > 0) return rawStudents;
-    return isSchool ? [] : demoStudents;
-  }, [rawStudents, isSchool]);
-
-  const faculty = useMemo(() => {
-    if (rawFaculty && rawFaculty.length > 0) return rawFaculty;
-    return isSchool ? [] : demoFaculty;
-  }, [rawFaculty, isSchool]);
-
-  const timetable = useMemo(() => {
-    if (rawTimetable && rawTimetable.length > 0) return rawTimetable;
-    return isSchool ? [] : demoClasses;
-  }, [rawTimetable, isSchool]);
+  // Strictly use real API records - no mock fallbacks
+  const students = useMemo(() => rawStudents || [], [rawStudents]);
+  const faculty = useMemo(() => rawFaculty || [], [rawFaculty]);
+  const timetable = useMemo(() => rawTimetable || [], [rawTimetable]);
 
   // Modal Dialog states
   const [addingStudent, setAddingStudent] = useState(false);
@@ -67,7 +57,7 @@ export default function CampusOverview() {
     return Object.fromEntries(
       ['designation', 'department', 'campus'].map((key) => [
         key,
-        [...new Set([...demoFaculty, ...faculty].map((teacher) => teacher[key]))],
+        [...new Set(faculty.map((teacher) => teacher[key]).filter(Boolean))],
       ])
     );
   }, [faculty]);
@@ -170,7 +160,7 @@ export default function CampusOverview() {
                 gradeOrClass: isSchool ? values.program : undefined,
               };
               await dispatch(addStudent(payload)).unwrap();
-              toast.success(isSchool ? "Pupil admitted successfully!" : "Student added successfully!");
+              toast.success("Student added successfully!");
               setAddingStudent(false);
               dispatch(fetchStudents());
             } catch (err) {

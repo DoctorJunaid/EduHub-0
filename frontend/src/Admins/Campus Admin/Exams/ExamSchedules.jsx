@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   CalendarDays,
@@ -14,12 +14,20 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-import { selectExams, selectExamStats, addExam, updateExam, deleteExam } from '@/store/Slices/examsSlice.js';
-import { selectFaculty } from '@/store/Slices/facultySlice.js';
-import { selectStudents } from '@/store/Slices/studentsSlice.js';
-import { selectTimetable } from '@/store/Slices/timetableSlice.js';
+import {
+  selectExams,
+  selectExamStats,
+  fetchExams,
+  addExam,
+  updateExam,
+  deleteExam,
+} from '@/store/Slices/examsSlice.js';
+import { selectFaculty, fetchFaculty } from '@/store/Slices/facultySlice.js';
+import { selectStudents, fetchStudents } from '@/store/Slices/studentsSlice.js';
+import { selectTimetable, fetchSchedules } from '@/store/Slices/timetableSlice.js';
 import { mondayOf, shiftDays } from '../../../lib/schedule.js';
 import { dateKey, parseDate, examTypes, filterExams } from './examData.js';
+import toast from 'react-hot-toast';
 import ExamCalendar from './ExamCalendar';
 import ExamForm from './ExamForm';
 import ExamDetailsDialog from './ExamDetailsDialog';
@@ -31,7 +39,16 @@ const emptyFilters = { search: '', examType: '', department: '', room: '', invig
 
 export default function ExamSchedules() {
   const dispatch = useDispatch();
-  const records = useSelector(selectExams);
+
+  useEffect(() => {
+    dispatch(fetchExams());
+    dispatch(fetchFaculty());
+    dispatch(fetchStudents());
+    dispatch(fetchSchedules());
+  }, [dispatch]);
+
+  const rawRecords = useSelector(selectExams);
+  const records = useMemo(() => Array.isArray(rawRecords) ? rawRecords : [], [rawRecords]);
   const stats = useSelector((state) => selectExamStats(state, dateKey(new Date())));
   const faculty = useSelector(selectFaculty);
   const students = useSelector(selectStudents);
@@ -55,10 +72,10 @@ export default function ExamSchedules() {
   }), [faculty, records, timetable, students]);
 
   const filtered = useMemo(() => {
-    return filterExams(records, filters).sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+    return filterExams(records, filters).sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.startTime || '').localeCompare(b.startTime || ''));
   }, [records, filters]);
 
-  const selected = records.find((item) => item.id === modal?.id);
+  const selected = records.find((item) => item.id === modal?.id || item._id === modal?.id);
   const onAction = (mode, id) => setModal({ mode, id });
   const close = () => setModal(null);
 
@@ -67,23 +84,29 @@ export default function ExamSchedules() {
     setPage(1);
   };
 
-  const save = (values) => {
-    const action = selected ? updateExam({ ...values, id: selected.id }) : addExam(values);
-    dispatch(action);
-    setFilters(emptyFilters);
-    setWeek(mondayOf(parseDate(values.date)));
-    const sorted = [...records.filter((item) => item.id !== action.payload.id), action.payload].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
-    setPage(Math.floor(sorted.findIndex((item) => item.id === action.payload.id) / pageSize) + 1);
-    close();
+  const save = async (values) => {
+    try {
+      if (selected) {
+        await dispatch(updateExam({ ...values, id: selected._id || selected.id })).unwrap();
+        toast.success("Exam schedule updated successfully!");
+      } else {
+        await dispatch(addExam(values)).unwrap();
+        toast.success("Exam scheduled successfully!");
+      }
+      setFilters(emptyFilters);
+      close();
+    } catch (err) {
+      toast.error(typeof err === 'string' ? err : 'Failed to save exam schedule');
+    }
   };
 
   const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
 
-  // Fallback numbers for demo clarity
-  const totalExams = stats.total || records.length || 18;
-  const midterms = stats.midterms || 8;
-  const finals = stats.finals || 10;
-  const thisWeek = stats.week || 4;
+  // Real Database Metrics
+  const totalExams = records.length;
+  const midterms = records.filter((item) => item.examType === 'Midterm').length;
+  const finals = records.filter((item) => item.examType === 'Final').length;
+  const thisWeek = stats.week || 0;
 
   return (
     <section className="campus-tab-page exam-schedules" aria-label="Exam Schedules Management">
@@ -286,13 +309,20 @@ export default function ExamSchedules() {
       )}
       <ConfirmDialog
         open={modal?.mode === 'delete' && Boolean(selected)}
-        title="Delete Exam?"
+        title="Delete Exam Schedule?"
         description={`Are you sure you want to delete ${selected?.subject ?? 'this exam'}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         onCancel={close}
-        onConfirm={() => {
-          if (selected) dispatch(deleteExam(selected.id));
+        onConfirm={async () => {
+          if (selected) {
+            try {
+              await dispatch(deleteExam(selected._id || selected.id)).unwrap();
+              toast.success("Exam schedule deleted");
+            } catch (err) {
+              toast.error("Failed to delete exam schedule");
+            }
+          }
           close();
         }}
       />

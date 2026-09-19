@@ -4,7 +4,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import reducer, { studentAdded, studentUpdated, studentDeleted, selectStudents } from './studentsSlice.js';
 import { filterStudents, paginateStudents, studentStatuses } from '../../Admins/Campus Admin/Students/studentData.js';
 
-const makeStore = () => configureStore({ reducer: { students: reducer } });
+const seed1 = { id: 's-1', name: 'Ali Raza', roll: 'NUST-CS-2023-042', email: 'ali@example.com', studentPhone: '03001234567', program: 'BS Computer Science', section: 'CS-4A', semester: '4th Semester', subjects: 'Data Structures', campus: 'NUST Main Campus (H-12)', status: 'Active', guardian: 'Raza Khan', guardianPhone: '03007654321', initials: 'AR' };
+const seed2 = { id: 's-2', name: 'Zainab Bilal', roll: 'NUST-CS-2023-088', email: 'zainab@example.com', studentPhone: '03001234568', program: 'BS Software Engineering', section: 'SE-2B', semester: '2nd Semester', subjects: 'OOP', campus: 'NUST Main Campus (H-12)', status: 'Pending', guardian: 'Bilal Ahmed', guardianPhone: '03007654322', initials: 'ZB' };
+const makeStore = (initial = [seed1, seed2]) => configureStore({ reducer: { students: reducer }, preloadedState: { students: { records: initial } } });
 const values = { name: 'Test Student', roll: 'TEST-1', email: 'test@example.com', studentPhone: '', program: 'BS Computer Science', section: 'CS-4A', semester: '4th Semester', subjects: 'Data Structures', campus: 'NUST Main Campus (H-12)', status: 'Active', guardian: '', guardianPhone: '' };
 
 test('add creates stable IDs and keeps optional fields blank', () => {
@@ -50,7 +52,7 @@ test('search and all approved statuses operate on current CRUD state', () => {
     assert.equal(filtered[0].status, status);
   }
   assert.equal(filterStudents(selectStudents(store.getState()), { search: 'NUST-CS-2023-042', program: '', status: '' }).length, 1);
-  assert.equal(filterStudents(selectStudents(store.getState()), { search: 'computer science', program: '', status: '' }).length, 6);
+  assert.equal(filterStudents(selectStudents(store.getState()), { search: 'computer science', program: '', status: '' }).length, 5);
   assert.equal(filterStudents(selectStudents(store.getState()), { search: 'missing', program: '', status: '' }).length, 0);
 });
 

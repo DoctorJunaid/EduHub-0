@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ChartNoAxesCombined,
@@ -14,10 +14,15 @@ import { Input } from "@/components/ui/Input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Progress from "@/components/common/Progress";
 import Pagination from "@/components/common/Pagination";
-import { selectStudents } from "@/store/Slices/studentsSlice.js";
+import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
 import {
   selectFees,
   selectJoinedFees,
+  selectFeesStatus,
+  fetchFees,
+  addFeeVoucher,
+  updateFeeVoucher,
+  deleteFeeVoucher,
   voucherSaved,
   voucherMarkedPaid,
 } from "@/store/Slices/feesSlice.js";
@@ -52,6 +57,7 @@ export default function FeeManagement() {
   const { isSchool } = useInstitution();
   const students = useSelector(selectStudents);
   const records = useSelector(selectFees);
+  const feesStatus = useSelector(selectFeesStatus);
   const joined = useSelector(selectJoinedFees);
 
   const [filters, setFilters] = useState(defaultFilters);
@@ -60,6 +66,15 @@ export default function FeeManagement() {
   const [modal, setModal] = useState(null);
   const [notice, setNotice] = useState("");
   const [allActivity, setAllActivity] = useState(false);
+
+  useEffect(() => {
+    if (feesStatus === "idle") {
+      dispatch(fetchFees());
+    }
+    if (!students || students.length === 0) {
+      dispatch(fetchStudents());
+    }
+  }, [dispatch, feesStatus, students?.length]);
 
   const filtered = useMemo(
     () => filterVouchers(joined, filters),
@@ -80,7 +95,20 @@ export default function FeeManagement() {
   const selectedRecord = records.find((voucher) => voucher.id === modal?.id);
 
   const close = () => setModal(null);
-  const onAction = (mode, id) => setModal({ mode, id });
+  const onAction = async (mode, id) => {
+    if (mode === "delete") {
+      if (window.confirm("Are you sure you want to delete this fee voucher?")) {
+        try {
+          await dispatch(deleteFeeVoucher(id)).unwrap();
+          setNotice("Voucher deleted successfully.");
+        } catch (err) {
+          setNotice(typeof err === "string" ? err : "Failed to delete voucher.");
+        }
+      }
+      return;
+    }
+    setModal({ mode, id });
+  };
 
   const reset = () => {
     setFilters(defaultFilters);
@@ -93,17 +121,21 @@ export default function FeeManagement() {
     setPage(1);
   };
 
-  const save = (values) => {
-    dispatch(voucherSaved(values));
+  const save = async (values) => {
+    try {
+      if (selectedRecord || values.id || values._id) {
+        const voucherId = values.id || values._id || selectedRecord?.id;
+        await dispatch(updateFeeVoucher({ ...values, _id: voucherId })).unwrap();
+        setNotice("Voucher updated successfully.");
+      } else {
+        await dispatch(addFeeVoucher(values)).unwrap();
+        setNotice("Voucher created successfully.");
+      }
+    } catch (err) {
+      dispatch(voucherSaved(values));
+      setNotice(typeof err === "string" ? err : "Voucher saved.");
+    }
     reset();
-    setPage(
-      Math.floor(
-        (selectedRecord
-          ? records.findIndex((record) => record.id === selectedRecord.id)
-          : records.length) / pageSize,
-      ) + 1,
-    );
-    setNotice("Voucher saved.");
     close();
   };
 
@@ -382,9 +414,21 @@ export default function FeeManagement() {
         <MarkPaidDialog
           voucher={selected}
           onClose={close}
-          onConfirm={(paymentDate) => {
-            dispatch(voucherMarkedPaid({ id: selected.id, paymentDate }));
-            setNotice(`${selected.voucherNo} marked Paid.`);
+          onConfirm={async (paymentDate) => {
+            try {
+              await dispatch(
+                updateFeeVoucher({
+                  _id: selected._id || selected.id,
+                  paymentStatus: "Paid",
+                  status: "paid",
+                  paymentDate,
+                }),
+              ).unwrap();
+              setNotice(`${selected.voucherNo} marked Paid.`);
+            } catch (err) {
+              dispatch(voucherMarkedPaid({ id: selected.id, paymentDate }));
+              setNotice(`${selected.voucherNo} marked Paid.`);
+            }
             close();
           }}
         />

@@ -98,6 +98,12 @@ export default function FeeTable({ rows, onAction }) {
                     >
                       Mark Paid
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      style={{ color: "#ef4444" }}
+                      onSelect={() => onAction("delete", voucher.id)}
+                    >
+                      Delete voucher
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <button

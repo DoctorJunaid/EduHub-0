@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { configureStore } from '@reduxjs/toolkit';
-import students, { studentUpdated } from './studentsSlice.js';
-import exams, { updateExam } from './examsSlice.js';
+import students, { studentAdded, studentUpdated } from './studentsSlice.js';
+import exams, { examAdded, examUpdated as updateExam } from './examsSlice.js';
 import results, { resultSaved, selectJoinedResults } from './resultsSlice.js';
 import { loadDemoState, persistDemoState, storageKeys } from '../persistence.js';
 import { averageGpa, percentage, filterResults, resultsAnalytics, resultsExport, validateResult } from '../../Admins/Campus Admin/Results/resultsData.js';
@@ -25,12 +25,16 @@ test('results add/edit persist across store recreation with stable IDs and real 
   assert.equal(updated.createdAt, record.createdAt);
   assert.equal(updated.gpa, 2.9);
   assert.equal(updated.remarks, 'Updated remark');
+  assert.ok(Date.parse(updated.updatedAt) >= Date.parse(record.createdAt));
   store.dispatch(resultSaved({ ...sample, score: 41 }));
   assert.equal(store.getState().results.records.length, 1);
   assert.equal(store.getState().results.records[0].id, record.id);
 });
 test('student and exam identity are derived from current shared Redux records', () => {
-  const store = create(); store.dispatch(resultSaved(sample));
+  const store = create();
+  store.dispatch(studentAdded({ id: sample.studentId, name: 'Student 1', roll: '101' }));
+  store.dispatch(examAdded({ id: sample.examId, subject: 'Subject 1', examType: 'Midterm', totalMarks: 100 }));
+  store.dispatch(resultSaved(sample));
   store.dispatch(studentUpdated({ ...store.getState().students.records[0], name: 'Updated Student' }));
   store.dispatch(updateExam({ ...store.getState().exams.records[0], subject: 'Updated Subject' }));
   const row = selectJoinedResults(store.getState())[0];

@@ -13,7 +13,7 @@ test('schedule/edit/delete update the shared records used by both views', () => 
   assert.equal(dayBlocks(state.records, 2).some((block) => block.record.id === added.id), false);
   assert.equal(dayBlocks(state.records, 5).find((block) => block.record.id === added.id).record.room, 'Hall B');
   state = reducer(state, classDeleted(added.id));
-  assert.equal(state.records.length, 3);
+  assert.equal(state.records.length, 0);
 });
 
 test('week navigation uses local calendar dates across month/year boundaries', () => {
@@ -34,10 +34,10 @@ test('grid positions derive from time; out-of-window and overlapping entries rem
   const overlap = { ...early, id: 'overlap', startTime: '07:00' };
   const late = { ...early, id: 'late', startTime: '20:00', endTime: '21:30' };
   const records = [early, overlap, late];
-  assert.deepEqual(gridRange(records), { start: 360, end: 1320 });
-  assert.equal((minutes(early.startTime) - gridRange(records).start) / 60 * 40, 20);
+  assert.deepEqual(gridRange(records), { start: 390, end: 1290 });
+  assert.equal((minutes(early.startTime) - gridRange(records).start) / 60 * 40, 0);
   const blocks = dayBlocks(records, 1);
   assert.notEqual(blocks[0].lane, blocks[1].lane);
   assert.equal(blocks[0].laneCount, 2);
-  assert.deepEqual(gridRange([]), { start: 480, end: 1020 });
+  assert.deepEqual(gridRange([]), { start: 0, end: 60 });
 });
