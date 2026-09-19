@@ -8,6 +8,7 @@ import { selectFaculty, selectFacultyStatus, addFaculty, fetchFaculty } from '@/
 import { selectTimetable, fetchSchedules } from '@/store/Slices/timetableSlice.js';
 import { fetchExams } from '@/store/Slices/examsSlice.js';
 import { fetchFees } from '@/store/Slices/feesSlice.js';
+import { fetchActivityLogs, selectActivityLogs } from '@/store/Slices/activityLogSlice.js';
 
 // Forms & Modal Dialogs
 import FacultyForm from '@/Admins/Campus Admin/Faculty/FacultyForm';
@@ -32,6 +33,7 @@ export default function CampusOverview() {
     dispatch(fetchSchedules());
     dispatch(fetchExams());
     dispatch(fetchFees());
+    dispatch(fetchActivityLogs());
   }, [dispatch]);
 
   // Redux Selectors with real database state
@@ -40,6 +42,7 @@ export default function CampusOverview() {
   const rawTimetable = useSelector(selectTimetable);
   const studentsStatus = useSelector(selectStudentsStatus);
   const facultyStatus = useSelector(selectFacultyStatus);
+  const activityLogs = useSelector(selectActivityLogs);
 
   // Strictly use real API records - no mock fallbacks
   const students = useMemo(() => rawStudents || [], [rawStudents]);
@@ -143,6 +146,7 @@ export default function CampusOverview() {
         <CampusActivitySidebar
           students={students}
           faculty={faculty}
+          activityLogs={activityLogs}
           onSelectStudent={(student) => setInspectingStudent(student)}
         />
       </div>
@@ -163,6 +167,7 @@ export default function CampusOverview() {
               toast.success("Student added successfully!");
               setAddingStudent(false);
               dispatch(fetchStudents());
+              dispatch(fetchActivityLogs());
             } catch (err) {
               toast.error(typeof err === "string" ? err : "Failed to add student");
               throw err;
@@ -181,6 +186,7 @@ export default function CampusOverview() {
               toast.success("Teacher added successfully!");
               setAddingTeacher(false);
               dispatch(fetchFaculty());
+              dispatch(fetchActivityLogs());
             } catch (err) {
               toast.error(typeof err === "string" ? err : "Failed to add teacher");
               throw err;
