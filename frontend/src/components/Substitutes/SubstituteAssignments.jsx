@@ -87,6 +87,18 @@ const SubstituteAssignments = () => {
     }
   };
 
+  if (isDialogOpen) {
+    return <AssignSubstituteDialog
+      isOpen={isDialogOpen}
+      onClose={() => setIsDialogOpen(false)}
+      onSuccess={() => {
+        setIsDialogOpen(false);
+        fetchAssignments();
+      }}
+      selectedDate={selectedDate}
+    />;
+  }
+
   return (
     <div className="substitutes-container campus-tab-page">
       <div className="substitutes-heading">
@@ -186,18 +198,6 @@ const SubstituteAssignments = () => {
           </table>
         </div>
       </div>
-
-      {isDialogOpen && (
-        <AssignSubstituteDialog 
-          isOpen={isDialogOpen} 
-          onClose={() => setIsDialogOpen(false)} 
-          onSuccess={() => {
-            setIsDialogOpen(false);
-            fetchAssignments();
-          }}
-          selectedDate={selectedDate}
-        />
-      )}
     </div>
   );
 };

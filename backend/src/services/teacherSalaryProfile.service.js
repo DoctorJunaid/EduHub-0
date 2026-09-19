@@ -1,4 +1,5 @@
 import { TeacherSalaryProfile } from '../models/teacherSalaryProfile.model.js';
+import { TeacherProfile } from '../models/profile.model.js';
 
 /**
  * List all salary profiles for a given campus.
@@ -7,12 +8,44 @@ import { TeacherSalaryProfile } from '../models/teacherSalaryProfile.model.js';
  */
 export const listProfiles = async (campusId) => {
   return TeacherSalaryProfile.find({ campusId })
+    .select("teacherProfileId baseSalary allowances taxDeduction otherDeduction isActive")
     .populate({
       path: "teacherProfileId",
       select: "user employeeId department designation",
       populate: { path: "user", select: "name email" },
     })
     .lean();
+};
+
+/**
+ * Get only teachers that belong to the current campus. This is deliberately
+ * separate from the profile list so opening Salary Profiles never waits for
+ * the selector data.
+ */
+export const listCampusTeachers = async (campusId) => {
+  const teachers = await TeacherProfile.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: { "user.campusId": campusId } },
+    {
+      $project: {
+        employeeId: 1,
+        department: 1,
+        designation: 1,
+        name: "$user.name",
+        email: "$user.email",
+      },
+    },
+    { $sort: { name: 1, employeeId: 1 } },
+  ]);
+  return teachers;
 };
 
 /**

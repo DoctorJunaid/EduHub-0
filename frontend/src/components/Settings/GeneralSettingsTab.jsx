@@ -53,7 +53,7 @@ const GeneralSettingsTab = () => {
         }
       }
     } catch (error) {
-      toast.error("Failed to load settings");
+      toast.error(error.response?.data?.message || "Failed to load settings");
       console.error(error);
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ const GeneralSettingsTab = () => {
         fetchSettings();
       }
     } catch (error) {
-      toast.error("Failed to save settings");
+      toast.error(error.response?.data?.message || "Failed to save settings");
       console.error(error);
     } finally {
       setSaving(false);
@@ -100,7 +100,7 @@ const GeneralSettingsTab = () => {
         fetchSettings();
       }
     } catch (error) {
-      toast.error("Failed to reset settings");
+      toast.error(error.response?.data?.message || "Failed to reset settings");
       console.error(error);
     } finally {
       setSaving(false);
@@ -118,7 +118,7 @@ const GeneralSettingsTab = () => {
   if (loading) return <div className="p-8 text-center text-white">Loading settings...</div>;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="settings-tab-content space-y-8 animate-fadeIn">
       {isCampusManager && (
         <div className="flex justify-end mb-4">
           <button
@@ -259,7 +259,7 @@ const GeneralSettingsTab = () => {
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="allowSameSubstituteForWholeDay" checked={formData.allowSameSubstituteForWholeDay} onChange={handleChange} className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
               </label>
             </div>
 
@@ -273,7 +273,7 @@ const GeneralSettingsTab = () => {
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="requireApprovalForSubstitute" checked={formData.requireApprovalForSubstitute} onChange={handleChange} className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
               </label>
             </div>
           </div>

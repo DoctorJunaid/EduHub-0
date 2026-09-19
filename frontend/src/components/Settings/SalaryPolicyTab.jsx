@@ -67,7 +67,7 @@ const SalaryPolicyTab = () => {
   if (loading) return <div className="p-8 text-center text-white">Loading salary policy...</div>;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="settings-tab-content space-y-8 animate-fadeIn">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Deduction Rules Section */}
         <div className="settings-card glass-panel p-6 rounded-xl">

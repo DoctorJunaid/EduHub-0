@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Save } from "lucide-react";
+import { X, Plus, Trash2, Save, User, DollarSign, Sparkles, ChevronDown, ShieldAlert } from "lucide-react";
 
 const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -61,45 +61,69 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
   };
 
   return (
-    <div className="salary-profile-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div
-        className="salary-profile-dialog-shell w-full max-w-lg mx-4 rounded-2xl border border-gray-700/50 bg-gray-900/95 shadow-2xl"
-        style={{
-          animation: "slideDown 0.3s ease-out",
-        }}
-      >
-        {/* Header */}
-        <div className="salary-profile-dialog-header flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
-          <div><span>Finance / compensation</span><h2 className="text-xl font-semibold text-white">
-            {profile ? "Edit Salary Profile" : "Add Salary Profile"}
-          </h2><p>Keep recurring compensation details accurate for payroll.</p></div>
+    <div className="salary-profile-dialog fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm transition-all">
+      <div className="salary-profile-dialog-shell bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        
+          {/* Header */}
+        <div className="salary-profile-dialog-header flex justify-between items-start px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase text-blue-600 bg-blue-50 border border-blue-100/80 mb-1.5">
+              <Sparkles className="w-3 h-3 text-blue-500" />
+              Finance / Compensation
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+              {profile ? "Edit Salary Profile" : "Add Salary Profile"}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {profile 
+                ? "Keep recurring compensation details accurate for payroll." 
+                : "Create a new salary profile with base salary and allowances."}
+            </p>
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="salary-profile-dialog-form p-6 space-y-5 max-h-[70vh] overflow-y-auto">
-          {/* Teacher ID (only for new profiles) */}
+        {/* Form Body */}
+        <form id="salaryProfileForm" onSubmit={handleSubmit} className="salary-profile-dialog-form p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+          
+          {/* Teacher Selection (for new profiles) */}
           {!profile && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Teacher</label>
-              <select
-                name="teacherProfileId"
-                value={formData.teacherProfileId}
-                onChange={handleChange}
-                required
-                className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              ><option value="">Select teacher</option>{teachers.map((teacher) => <option key={teacher._id} value={teacher._id}>{teacher.name || teacher.user?.name || teacher.email || 'Teacher'}</option>)}</select>
+            <div className="form-group">
+              <label className="block text-xs font-semibold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-slate-400" /> Teacher <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  name="teacherProfileId"
+                  value={formData.teacherProfileId}
+                  onChange={handleChange}
+                  required
+                  className="w-full appearance-none bg-slate-50/70 border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                >
+                  <option value="">Select teacher</option>
+                  {teachers.map((teacher) => (
+                    <option key={teacher._id} value={teacher._id}>
+                      {teacher.name || teacher.user?.name || teacher.email || 'Teacher'}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+              </div>
             </div>
           )}
 
           {/* Base Salary */}
-          <div className="salary-dialog-section">
-            <label className="block text-sm font-medium text-gray-300 mb-1">Base Salary (PKR)</label>
+          <div className="form-group">
+            <label className="block text-xs font-semibold text-slate-800 mb-1.5 flex items-center gap-1.5">
+              <DollarSign className="w-3.5 h-3.5 text-slate-400" /> Base Salary (PKR) <span className="text-rose-500">*</span>
+            </label>
             <input
               type="number"
               name="baseSalary"
@@ -107,107 +131,131 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
               onChange={handleChange}
               min="0"
               required
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="e.g. 50000"
+              className="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
           {/* Allowances */}
-          <div className="salary-dialog-section">
+          <div className="form-group pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-300">Allowances</label>
+              <label className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                Allowances
+              </label>
               <button
                 type="button"
                 onClick={addAllowance}
-                className="flex items-center text-sm text-green-400 hover:text-green-300 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all cursor-pointer"
               >
-                <Plus className="w-4 h-4 mr-1" /> Add
+                <Plus className="w-3.5 h-3.5" /> Add Allowance
               </button>
             </div>
+            
             {formData.allowances.length === 0 && (
-              <p className="text-sm text-gray-500 italic">No allowances added.</p>
+              <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 text-center">
+                No extra allowances added.
+              </p>
             )}
-            {formData.allowances.map((a, i) => (
-              <div key={i} className="flex items-center gap-2 mb-2">
-                <input
-                  type="text"
-                  placeholder="Name"
-                  value={a.name}
-                  onChange={(e) => handleAllowanceChange(i, "name", e.target.value)}
-                  className="flex-1 bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  value={a.amount}
-                  onChange={(e) => handleAllowanceChange(i, "amount", e.target.value)}
-                  min="0"
-                  className="w-32 bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeAllowance(i)}
-                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+
+            <div className="space-y-2">
+              {formData.allowances.map((a, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Allowance Name (e.g. Medical)"
+                    value={a.name}
+                    onChange={(e) => handleAllowanceChange(i, "name", e.target.value)}
+                    className="flex-1 bg-slate-50/70 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Amount"
+                    value={a.amount}
+                    onChange={(e) => handleAllowanceChange(i, "amount", e.target.value)}
+                    min="0"
+                    className="w-32 bg-slate-50/70 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeAllowance(i)}
+                    className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl border border-slate-200 hover:border-rose-200 transition-all cursor-pointer shrink-0"
+                    title="Remove allowance"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Deductions */}
-          <div className="salary-dialog-section grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Tax Deduction (PKR)</label>
-              <input
-                type="number"
-                name="taxDeduction"
-                value={formData.taxDeduction}
-                onChange={handleChange}
-                min="0"
-                className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Other Deduction (PKR)</label>
-              <input
-                type="number"
-                name="otherDeduction"
-                value={formData.otherDeduction}
-                onChange={handleChange}
-                min="0"
-                className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
+          <div className="form-group pt-2 border-t border-slate-100">
+            <label className="block text-xs font-semibold text-slate-800 mb-2">
+              Deductions (PKR)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Tax Deduction</label>
+                <input
+                  type="number"
+                  name="taxDeduction"
+                  value={formData.taxDeduction}
+                  onChange={handleChange}
+                  min="0"
+                  placeholder="0"
+                  className="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Other Deduction</label>
+                <input
+                  type="number"
+                  name="otherDeduction"
+                  value={formData.otherDeduction}
+                  onChange={handleChange}
+                  min="0"
+                  placeholder="0"
+                  className="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="salary-profile-dialog-footer flex justify-end gap-3 pt-4 border-t border-gray-700/50">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg shadow-blue-500/30 transition-all active:scale-95"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </button>
-          </div>
         </form>
-      </div>
 
-      <style>{`
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+        {/* Footer with Action Buttons */}
+        <div className="salary-profile-dialog-footer px-6 py-4 border-t border-slate-200/80 bg-slate-50/80 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer min-w-[85px]"
+          >
+            <X className="w-3.5 h-3.5 text-slate-400" />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="salaryProfileForm"
+            className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 shadow-md shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer min-w-[140px]"
+          >
+            {profile ? (
+              <>
+                <Save className="w-3.5 h-3.5 text-white" />
+                <span>Save Profile</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5 text-white" />
+                <span>Add Salary Profile</span>
+              </>
+            )}
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 };
 
 export default EditProfileDialog;
+

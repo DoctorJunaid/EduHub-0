@@ -22,6 +22,7 @@ import resultsReducer from "./Slices/resultsSlice.js";
 import feesReducer from "./Slices/feesSlice.js";
 import messagesReducer from "./Slices/messagesSlice.js";
 import institutesReducer from "./Slices/institutesSlice.js";
+import activityLogReducer from "./Slices/activityLogSlice.js";
 import { resultSaved } from "./Slices/resultsSlice.js";
 import { makeDemoResults } from "../Admins/Campus Admin/Results/demoResults.js";
 import { preserveDemoEdits } from "./demoProvenance.js";
@@ -45,6 +46,7 @@ const reducers = combineReducers({
   studentAttendance: studentAttendanceReducer,
   results: resultsReducer,
   fees: feesReducer,
+  activityLogs: activityLogReducer,
 });
 export function createAppStore({
   storage,

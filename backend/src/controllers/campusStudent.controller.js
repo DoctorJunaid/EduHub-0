@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
 import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
+import { logActivity } from "../models/activityLog.model.js";
 
 // @desc    Get students belonging to campus admin/manager's campus
 // @route   GET /api/v1/campus-admin/students
@@ -258,6 +259,18 @@ export const createStudentForCampus = async (req, res) => {
       console.warn("Could not sync StudentProfile:", profileErr.message);
     }
 
+    logActivity({
+      campus: campusId,
+      action: "student_created",
+      category: "students",
+      title: "Student Enrolled",
+      description: `${student.name} enrolled in ${student.gradeOrClass || student.program || 'campus'}`,
+      entityType: "student",
+      entityId: student._id,
+      performedBy: req.user?._id,
+      metadata: { name: student.name, program: student.program, roll: student.roll, gradeOrClass: student.gradeOrClass },
+    });
+
     return res.status(201).json({
       success: true,
       message: "Student created successfully",
@@ -292,6 +305,18 @@ export const removeStudentFromCampus = async (req, res) => {
     }
 
     await User.findByIdAndDelete(studentId);
+
+    logActivity({
+      campus: campusId,
+      action: "student_removed",
+      category: "students",
+      title: "Student Removed",
+      description: `${student.name || 'Student'} removed from campus`,
+      entityType: "student",
+      entityId: student._id,
+      performedBy: req.user?._id,
+      metadata: { name: student.name, roll: student.roll },
+    });
 
     return res
       .status(200)
@@ -412,6 +437,18 @@ export const createFacultyForCampus = async (req, res) => {
       console.warn("Could not sync TeacherProfile:", profileErr.message);
     }
 
+    logActivity({
+      campus: campusId,
+      action: "faculty_created",
+      category: "staff",
+      title: "Teacher Appointed",
+      description: `${faculty.name} appointed as ${faculty.designation || 'Faculty'} in ${faculty.department || 'department'}`,
+      entityType: "faculty",
+      entityId: faculty._id,
+      performedBy: req.user?._id,
+      metadata: { name: faculty.name, designation: faculty.designation, department: faculty.department },
+    });
+
     return res.status(201).json({
       success: true,
       message: "Faculty created successfully",
@@ -447,6 +484,18 @@ export const removeFacultyFromCampus = async (req, res) => {
     }
 
     await User.findByIdAndDelete(facultyId);
+
+    logActivity({
+      campus: campusId,
+      action: "faculty_removed",
+      category: "staff",
+      title: "Faculty Removed",
+      description: `${faculty.name || 'Faculty'} removed from campus`,
+      entityType: "faculty",
+      entityId: faculty._id,
+      performedBy: req.user?._id,
+      metadata: { name: faculty.name, department: faculty.department },
+    });
 
     return res
       .status(200)
@@ -505,6 +554,18 @@ export const updateStudentInCampus = async (req, res) => {
         .json({ success: false, message: "Student not found in this campus" });
     }
 
+    logActivity({
+      campus: campusId,
+      action: "student_updated",
+      category: "students",
+      title: "Student Profile Updated",
+      description: `${student.name || 'Student'} profile information updated`,
+      entityType: "student",
+      entityId: student._id,
+      performedBy: req.user?._id,
+      metadata: { name: student.name, updatedFields: Object.keys(updateData) },
+    });
+
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -549,6 +610,18 @@ export const updateFacultyInCampus = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Faculty not found in this campus" });
     }
+
+    logActivity({
+      campus: campusId,
+      action: "faculty_updated",
+      category: "staff",
+      title: "Faculty Profile Updated",
+      description: `${faculty.name || 'Faculty'} profile information updated`,
+      entityType: "faculty",
+      entityId: faculty._id,
+      performedBy: req.user?._id,
+      metadata: { name: faculty.name, updatedFields: Object.keys(updateData) },
+    });
 
     return res.status(200).json({ success: true, data: faculty });
   } catch (error) {
