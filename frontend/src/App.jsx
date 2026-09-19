@@ -52,7 +52,9 @@ import { fetchCurrentUser, selectAuth } from "./store/Slices/authSlice";
 import { Toaster } from "react-hot-toast";
 import NotFound from "./components/common/NotFound";
 import MyPayslips from "./pages/MyPayslips";
-import { TEACHER_NAV } from "./constants/navigation";
+import TeacherLayout from "./Users/Teacher/TeacherLayout";
+import TeacherDashboard from "./Users/Teacher/TeacherDashboard";
+import TeacherPage from "./Users/Teacher/TeacherPage";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -158,7 +160,14 @@ const App = () => {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["teacher", "faculty"]} />}>
-        <Route element={<MainLayout navigation={TEACHER_NAV} />}>
+        <Route element={<TeacherLayout />}>
+          <Route path="teacher" element={<TeacherDashboard />} />
+          <Route path="teacher/classes" element={<TeacherPage />} />
+          <Route path="teacher/assignments" element={<TeacherPage />} />
+          <Route path="teacher/attendance" element={<TeacherPage />} />
+          <Route path="teacher/diary" element={<TeacherPage />} />
+          <Route path="teacher/gradebook" element={<TeacherPage />} />
+          <Route path="teacher/messages" element={<TeacherPage />} />
           <Route path="my-payslips" element={<MyPayslips />} />
         </Route>
       </Route>
