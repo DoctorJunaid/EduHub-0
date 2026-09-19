@@ -208,87 +208,62 @@
   .substitutes-date-filter input { width: 105px; }
 }
 
-.substitute-dialog > div {
-  background: #fff !important;
-  border: 1px solid #e4e4e7 !important;
-  border-radius: 10px !important;
-  color: #09090b;
+.assign-dialog-shell {
+  width: min(680px, calc(100vw - 32px)) !important;
+  max-height: min(780px, calc(100vh - 32px)) !important;
 }
 
-.substitute-dialog h2,
-.substitute-dialog h3 { color: #09090b !important; }
-
-.substitute-dialog label,
-.substitute-dialog .text-gray-300 { color: #3f3f46 !important; }
-
-.substitute-dialog .border-gray-800,
-.substitute-dialog .border-gray-700 { border-color: #e4e4e7 !important; }
-
-.substitute-dialog .bg-gray-900 { background: #fff !important; }
-
-.substitute-dialog input,
-.substitute-dialog select,
-.substitute-dialog textarea {
-  color: #09090b !important;
-  background: #fff !important;
-  border-color: #d4d4d8 !important;
-  border-radius: 6px !important;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-.substitute-dialog input::placeholder,
-.substitute-dialog textarea::placeholder { color: #a1a1aa !important; }
-
-.substitute-dialog .bg-gray-800 {
-  color: #09090b !important;
-  background: #fafafa !important;
-  border-color: #e4e4e7 !important;
+/* Full-page substitute assignment form */
+.substitute-assignment-form .full-page-activity {
+  position: static;
+  z-index: auto;
 }
-
-.substitute-dialog .text-white { color: #18181b !important; }
-.substitute-dialog .text-gray-400,
-.substitute-dialog .text-gray-500 { color: #71717a !important; }
-.substitute-dialog .bg-blue-600\/20 { background: #eff6ff !important; border-color: #bfdbfe !important; }
-.substitute-dialog .bg-blue-600 { background: #09090b !important; }
-.substitute-dialog .bg-blue-600:hover { background: #27272a !important; }
-
-.assign-dialog-shell { width: min(700px, calc(100vw - 32px)) !important; height: min(760px, calc(100vh - 32px)); max-height: calc(100vh - 32px) !important; }
-.assign-dialog-header { padding: 20px 24px !important; }
-.assign-dialog-kicker { display: block; color: #71717a; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
-.assign-dialog-header h2 { margin: 0; font-size: 20px; }
-.assign-dialog-header p { margin: 5px 0 0; color: #71717a !important; font-size: 12px; }
-.assign-dialog-header button { color: #71717a !important; }
-.assign-dialog-header button:hover { color: #09090b !important; background: #f4f4f5 !important; }
-.assign-dialog-body { min-height: 0; padding: 24px !important; }
-.assign-section { display: flex; flex-direction: column; gap: 14px; }
-.assign-section-title { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f2; }
-.assign-section-title > span { color: #a1a1aa; font-size: 10px; font-weight: 700; }
-.assign-section-title strong { display: block; color: #18181b; font-size: 13px; }
-.assign-section-title small { margin-top: 3px; color: #a1a1aa; font-size: 10px; }
-.assign-field-grid { gap: 12px !important; }
-.assign-field-grid-three { grid-template-columns: 1fr 0.7fr 1fr !important; }
-.assign-field label { display: block; margin-bottom: 6px; color: #3f3f46 !important; font-size: 11px; font-weight: 650; }
-.assign-field label span { color: #a1a1aa; font-weight: 500; }
-.assign-field select,
-.assign-field input,
-.assign-field textarea { width: 100%; min-height: 36px; padding: 0 10px; box-sizing: border-box; font-size: 12px; }
-.assign-field textarea { min-height: 76px; padding-top: 9px; resize: vertical; }
-.assign-suggestion-title { display: none !important; }
-.assign-teacher-section { border-top: 0 !important; padding-top: 0 !important; }
-.assign-teacher-card { padding: 12px !important; border-radius: 8px !important; border-color: #e4e4e7 !important; background: #fafafa !important; }
-.assign-teacher-card:hover,
-.assign-teacher-card.is-selected { background: #eff6ff !important; border-color: #93c5fd !important; }
-.assign-teacher-card input { accent-color: #18181b; }
-.assign-teacher-card .text-white { color: #18181b !important; }
-.assign-teacher-card .text-gray-400,
-.assign-teacher-card .text-gray-500 { color: #71717a !important; }
-.assign-dialog-footer { padding: 14px 24px !important; background: #fafafa !important; }
-.assign-cancel-btn { color: #52525b !important; font-size: 12px; }
-.assign-cancel-btn:hover { color: #09090b !important; }
-.assign-submit-btn { color: #fff !important; background: #09090b !important; border-radius: 6px !important; font-size: 12px; font-weight: 650; }
-.assign-submit-btn:hover { background: #27272a !important; }
-.assign-submit-btn:disabled { color: #a1a1aa !important; background: #e4e4e7 !important; border-color: #e4e4e7 !important; cursor: not-allowed; }
-
+.substitute-candidates { grid-column: 1 / -1; }
+.substitute-form-notice, .substitute-form-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 13px 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  background: #f8fafc;
+  font-size: 12px;
+}
+.substitute-form-warning { color: #a16207; background: #fffbeb; border-style: solid; border-color: #fde68a; }
+.substitute-candidate-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.substitute-candidate { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: .15s ease; }
+.substitute-candidate:hover { border-color: #93c5fd; background: #f8fbff; }
+.substitute-candidate.is-selected { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 2px #dbeafe; }
+.substitute-candidate input { width: 15px; height: 15px; accent-color: #2563eb; flex: 0 0 auto; }
+.substitute-candidate-avatar { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%; background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 700; }
+.substitute-candidate > span:nth-child(3) { min-width: 0; display: grid; gap: 2px; }
+.substitute-candidate strong { overflow: hidden; color: #1e293b; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.substitute-candidate small { overflow: hidden; color: #64748b; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.substitute-load-warning { margin-left: auto; color: #a16207; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.substitute-ready { display: inline-flex; align-items: center; gap: 6px; color: #a16207; font-size: 12px; }
+.substitute-ready.is-ready { color: #15803d; }
+.activity-form-action-buttons { display: flex; gap: 10px; }
+.activity-submit-btn:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 640px) {
-  .assign-dialog-body { padding: 18px !important; }
-  .assign-field-grid-three { grid-template-columns: 1fr !important; }
+  .substitute-candidate-grid { grid-template-columns: 1fr; }
+  .activity-form-actions { align-items: stretch; flex-direction: column; }
+  .activity-form-action-buttons { width: 100%; }
+  .activity-form-action-buttons button { flex: 1; }
 }

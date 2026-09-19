@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import campusAdminService from "../services/campusAdmin.service.js";
+import ActivityLog, { logActivity } from "../models/activityLog.model.js";
 
 // Helper to safely extract campus and institute context
 const getContext = (req) => {
@@ -175,6 +176,18 @@ export const deleteCampusAdmin = async (req, res) => {
 export const createTeacher = async (req, res) => {
   try {
     const profile = await campusAdminService.createTeacherProfile(req.body);
+    const { campusId } = getContext(req);
+    logActivity({
+      campus: campusId,
+      action: "faculty_created",
+      category: "staff",
+      title: "Teacher Profile Created",
+      description: `${req.body.name || 'New teacher'} added as ${req.body.designation || 'Faculty'}`,
+      entityType: "faculty",
+      entityId: profile._id,
+      performedBy: req.user?._id,
+      metadata: { name: req.body.name, designation: req.body.designation },
+    });
     res.status(201).json({ success: true, data: profile });
   } catch (error) {
     handleError(res, error);
@@ -237,6 +250,18 @@ export const deleteTeacher = async (req, res) => {
 export const createStudent = async (req, res) => {
   try {
     const profile = await campusAdminService.createStudentProfile(req.body);
+    const { campusId } = getContext(req);
+    logActivity({
+      campus: campusId,
+      action: "student_created",
+      category: "students",
+      title: "Student Enrolled",
+      description: `${req.body.name || 'New student'} enrolled in ${req.body.program || req.body.gradeOrClass || 'campus'}`,
+      entityType: "student",
+      entityId: profile._id,
+      performedBy: req.user?._id,
+      metadata: { name: req.body.name, program: req.body.program, roll: req.body.roll },
+    });
     res.status(201).json({ success: true, data: profile });
   } catch (error) {
     handleError(res, error);
@@ -304,6 +329,17 @@ export const createClassSchedule = async (req, res) => {
       instituteId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "schedule_created",
+      category: "academic",
+      title: "Class Scheduled",
+      description: `${req.body.subject || 'New class'} scheduled for ${req.body.section || 'section'} in ${req.body.room || 'room'}`,
+      entityType: "schedule",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { subject: req.body.subject, section: req.body.section, instructor: req.body.instructor },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -367,6 +403,17 @@ export const createExamSchedule = async (req, res) => {
       instituteId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "exam_created",
+      category: "academic",
+      title: "Exam Scheduled",
+      description: `${req.body.subject || req.body.examName || 'Exam'} scheduled for ${req.body.date || 'upcoming date'}`,
+      entityType: "exam",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { subject: req.body.subject, date: req.body.date },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -425,6 +472,18 @@ export const deleteExamSchedule = async (req, res) => {
 export const createTeacherAttendance = async (req, res) => {
   try {
     const record = await campusAdminService.createTeacherAttendance(req.body);
+    const { campusId } = getContext(req);
+    logActivity({
+      campus: campusId,
+      action: "teacher_attendance_marked",
+      category: "attendance",
+      title: "Teacher Attendance Marked",
+      description: `Attendance recorded for ${req.body.teacherName || 'teacher'} — ${req.body.status || 'Present'}`,
+      entityType: "attendance",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { teacherName: req.body.teacherName, status: req.body.status, date: req.body.date },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -494,6 +553,17 @@ export const createStudentAttendance = async (req, res) => {
       instituteId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "student_attendance_marked",
+      category: "attendance",
+      title: "Student Attendance Recorded",
+      description: `Attendance marked for ${req.body.studentName || 'student'} — ${req.body.status || 'Present'}`,
+      entityType: "attendance",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { studentName: req.body.studentName, status: req.body.status, date: req.body.date },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -508,6 +578,16 @@ export const createBulkStudentAttendance = async (req, res) => {
       instituteId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "student_attendance_bulk",
+      category: "attendance",
+      title: "Bulk Attendance Submitted",
+      description: `Attendance recorded for ${records.length} student(s)`,
+      entityType: "attendance",
+      performedBy: req.user?._id,
+      metadata: { count: records.length },
+    });
     res.status(201).json({ success: true, count: records.length, data: records });
   } catch (error) {
     handleError(res, error, 400);
@@ -577,6 +657,17 @@ export const createFeeRecord = async (req, res) => {
       instituteId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "fee_created",
+      category: "fees",
+      title: "Fee Voucher Created",
+      description: `Fee record created for ${req.body.studentName || 'student'} — Rs ${req.body.amount || req.body.totalAmount || '0'}`,
+      entityType: "fee",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { studentName: req.body.studentName, amount: req.body.amount || req.body.totalAmount },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -688,6 +779,17 @@ export const createPerformanceRecord = async (req, res) => {
       instituteId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "performance_created",
+      category: "academic",
+      title: "Result Published",
+      description: `Performance record created for ${req.body.studentName || 'student'} in ${req.body.subject || req.body.examName || 'exam'}`,
+      entityType: "performance",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { studentName: req.body.studentName, subject: req.body.subject },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -742,5 +844,50 @@ export const deletePerformanceRecord = async (req, res) => {
       });
   } catch (error) {
     handleError(res, error, 404);
+  }
+};
+
+// --- Activity Logs Controllers ---
+export const getActivityLogs = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const { category, limit = 50, page = 1 } = req.query;
+
+    const filter = { campus: campusId };
+    if (category && category !== "all") {
+      filter.category = category;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const logs = await ActivityLog.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await ActivityLog.countDocuments(filter);
+
+    return res.status(200).json({
+      success: true,
+      count: logs.length,
+      total,
+      data: logs,
+    });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+export const createActivityLogEntry = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const log = await ActivityLog.create({
+      ...req.body,
+      campus: campusId,
+      performedBy: req.user?._id,
+    });
+    return res.status(201).json({ success: true, data: log });
+  } catch (error) {
+    handleError(res, error, 400);
   }
 };

@@ -1,36 +1,102 @@
 .settings-container {
-  animation: fadeIn 0.4s ease-out;
+  animation: settingsFadeIn .25s ease-out;
 }
 
-.glass-panel {
-  background: rgba(30, 41, 59, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.settings-heading {
+  min-height: 94px;
+  padding: 22px 20px 18px;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e7;
 }
 
-.settings-card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+.settings-heading span {
+  display: block;
+  margin-bottom: 5px;
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
-.settings-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+.settings-heading h1 {
+  margin: 0;
+  color: #09090b;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -.02em;
 }
 
-/* Custom Checkbox Toggle Styles */
-.peer:checked ~ div {
-  background-color: #3b82f6; /* Tailwind blue-500 */
+.settings-heading p {
+  margin: 6px 0 0;
+  color: #71717a;
+  font-size: 12px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.settings-tabbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  overflow-x: auto;
 }
+
+.settings-tabbar button {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  color: #71717a;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.settings-tabbar button:hover { color: #09090b; background: #f4f4f5; }
+.settings-tabbar button.is-active { color: #fff; background: #09090b; border-color: #09090b; }
+
+.settings-content {
+  width: 100%;
+  padding: 20px;
+  background: #fff;
+}
+
+.settings-tab-content { max-width: 980px; margin: 0 auto; }
+.settings-tab-content .settings-card {
+  margin: 0;
+  padding: 20px !important;
+  background: #fff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.settings-tab-content .settings-card:hover { transform: none; box-shadow: none !important; }
+.settings-tab-content .settings-card h2 { margin: 0 0 18px; padding-bottom: 12px; color: #18181b !important; border-color: #e4e4e7 !important; font-size: 14px; font-weight: 700; }
+.settings-tab-content label { color: #3f3f46 !important; font-size: 11px; font-weight: 650; }
+.settings-tab-content input:not([type='checkbox']) { height: 36px; color: #09090b !important; background: #fff !important; border: 1px solid #d4d4d8 !important; border-radius: 6px !important; font-size: 12px; outline: 0; }
+.settings-tab-content input:not([type='checkbox']):focus { border-color: #09090b !important; box-shadow: 0 0 0 2px #f4f4f5; }
+.settings-tab-content .text-white { color: #18181b !important; }
+.settings-tab-content .text-gray-300 { color: #3f3f46 !important; }
+.settings-tab-content .text-gray-400 { color: #71717a !important; }
+.settings-tab-content .text-gray-500 { color: #a1a1aa !important; }
+.settings-tab-content .bg-gray-800\/30,
+.settings-tab-content .bg-gray-800\/50 { background: #fafafa !important; border-color: #e4e4e7 !important; }
+.settings-tab-content .border-gray-700,
+.settings-tab-content .border-gray-700\/50 { border-color: #e4e4e7 !important; }
+.settings-tab-content button[type='submit'] { height: 34px; padding: 0 13px; color: #fff !important; background: #09090b !important; border: 1px solid #09090b !important; border-radius: 6px; font-size: 11px; font-weight: 650; box-shadow: none !important; }
+.settings-tab-content button[type='submit']:hover { background: #27272a !important; }
+.settings-tab-content button[type='submit'] svg { width: 14px; height: 14px; }
+.settings-tab-content .settings-card .peer:checked ~ div { background: #09090b !important; }
+.settings-tab-content .settings-card .peer ~ div { background: #d4d4d8 !important; }
+.settings-tab-content .settings-card .peer:focus ~ div { outline: 2px solid #e4e4e7; outline-offset: 2px; }
+
+@keyframes settingsFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 680px) { .settings-heading { padding: 18px 14px; } .settings-content { padding: 14px; } .settings-tabbar { padding: 8px 14px; } .settings-tab-content .settings-card { padding: 16px !important; } }

@@ -16,21 +16,16 @@ const SalaryProfiles = () => {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      const [profilesResult, teachersResult] = await Promise.allSettled([
-        api.get('/campus/salary/profiles'),
-        api.get('/campus/faculty'),
-      ]);
-      const profilesResponse = profilesResult.status === 'fulfilled' ? profilesResult.value : null;
-      const teachersResponse = teachersResult.status === 'fulfilled' ? teachersResult.value : null;
-      if (profilesResponse?.data.success) {
-        setProfiles(profilesResponse.data.data);
-        setTeachers(teachersResponse?.data?.data || []);
+      setError(null);
+      const profilesResponse = await api.get('/campus/salary/profiles');
+      if (profilesResponse.data.success) {
+        setProfiles(profilesResponse.data.data || []);
       } else {
-        setError('Failed to load salary profiles');
+        setError(profilesResponse.data.message || 'Failed to load salary profiles');
       }
     } catch (err) {
       console.error(err);
-      setError('Error fetching salary profiles');
+      setError(err.response?.data?.message || 'Failed to load salary profiles');
     } finally {
       setLoading(false);
     }
@@ -40,7 +35,17 @@ const SalaryProfiles = () => {
     fetchProfiles();
   }, []);
 
-  const openEdit = (profile) => {
+  const openEdit = async (profile) => {
+    if (!profile && teachers.length === 0) {
+      try {
+        const response = await api.get('/campus/salary/profiles/teachers');
+        if (!response.data.success) throw new Error(response.data.message);
+        setTeachers(response.data.data || []);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load teachers for the salary profile.');
+        return;
+      }
+    }
     setSelectedProfile(profile);
     setDialogOpen(true);
   };
@@ -80,7 +85,7 @@ const SalaryProfiles = () => {
     <div className="salary-profiles-page campus-tab-page">
       <div className="salary-profiles-heading">
         <div><span className="salary-profiles-eyebrow">Finance / compensation</span><h1>Salary Profiles</h1><p>Maintain base salary, allowances, and recurring deductions for teaching staff.</p></div>
-        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={() => openEdit(null)}><Plus size={14} /> Add Profile</button>
+        <button type="button" className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer border-0" onClick={() => openEdit(null)}><Plus size={14} /> Add Profile</button>
       </div>
 
       <div className="campus-kpi-track salary-profiles-kpis">
@@ -111,7 +116,7 @@ const SalaryProfiles = () => {
                 <td>
                   {p.allowances && p.allowances.length > 0
                     ? <div className="allowance-stack">{p.allowances.map((a, i) => (
-                        <div key={i}><span>{a.name}</span><strong>{formatPKR(a.amount)}</strong></div>
+                      <div key={i}><span>{a.name}</span><strong>{formatPKR(a.amount)}</strong></div>
                     ))}</div>
                     : <span className="salary-muted">No allowances</span>}
                 </td>

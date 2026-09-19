@@ -57,6 +57,8 @@ import {
   deletePerformanceRecord,
   getDashboardStats,
   createBulkStudentAttendance,
+  getActivityLogs,
+  createActivityLogEntry,
 } from "../controllers/campusAdmin.controller.js";
 import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
@@ -153,5 +155,8 @@ router
   .get(getPerformanceRecordById)
   .put(updatePerformanceRecord)
   .delete(deletePerformanceRecord);
+
+// Activity Logs (Audit Trail)
+router.route("/activity-logs").get(getActivityLogs).post(createActivityLogEntry);
 
 export default router;

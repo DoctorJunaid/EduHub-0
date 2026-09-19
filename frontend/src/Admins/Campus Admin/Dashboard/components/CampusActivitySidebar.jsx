@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Activity,
   UserPlus,
@@ -11,292 +11,191 @@ import {
   FileText,
   Filter,
   CheckCircle2,
+  Trash2,
+  Pencil,
+  DollarSign,
+  BookOpen,
+  Users,
 } from 'lucide-react';
 import { useInstitution } from '@/context/InstitutionContext';
 
-const INITIAL_ACTIVITIES = [
-  {
-    id: 'act-1',
-    category: 'students',
-    title: 'Status Updated to Pending',
-    description: 'Zainab Bilal (NUST-CS-2023-088) verification pending',
-    time: '2m ago',
-    icon: UserCheck,
-    badge: 'Pending',
-    tone: 'amber',
-    studentName: 'Zainab Bilal',
-  },
-  {
-    id: 'act-2',
-    category: 'students',
-    title: 'Course Registration Submitted',
-    description: 'Ali Raza enrolled in Spring 2025 semester',
-    time: '8m ago',
-    icon: UserPlus,
-    badge: 'Active',
-    tone: 'green',
-    studentName: 'Ali Raza',
-  },
-  {
-    id: 'act-3',
-    category: 'academic',
-    title: 'Midterm Schedules Published',
-    description: 'BS Computer Science & Software Engineering exam dates set',
-    time: '24m ago',
-    icon: CalendarDays,
-    badge: 'Academic',
-    tone: 'blue',
-  },
-  {
-    id: 'act-4',
-    category: 'staff',
-    title: 'Faculty Checked In',
-    description: 'Dr. Usman Khan marked On Duty for Data Structures lecture',
-    time: '45m ago',
-    icon: GraduationCap,
-    badge: 'On Duty',
-    tone: 'purple',
-  },
-  {
-    id: 'act-5',
-    category: 'attendance',
-    title: 'Attendance Register Synced',
-    description: 'Section CS-4A recorded 94.2% live attendance (38/40)',
-    time: '1h ago',
-    icon: ClipboardCheck,
-    badge: 'Present',
-    tone: 'green',
-  },
-  {
-    id: 'act-6',
-    category: 'alerts',
-    title: 'Campus Notice Dispatched',
-    description: 'Orientation hall reassigned to Auditorium B (H-12)',
-    time: '2h ago',
-    icon: Bell,
-    badge: 'Broadcast',
-    tone: 'red',
-  },
-  {
-    id: 'act-7',
-    category: 'academic',
-    title: 'Lab Session Scheduled',
-    description: 'Lab 302 booked for Advanced Web Design (CS-4A)',
-    time: '3h ago',
-    icon: Clock,
-    badge: 'Timetable',
-    tone: 'blue',
-  },
-  {
-    id: 'act-8',
-    category: 'students',
-    title: 'Profile Updated',
-    description: 'Maryam Ahmed updated semester registration details',
-    time: 'Today, 09:15 AM',
-    icon: FileText,
-    badge: 'Active',
-    tone: 'green',
-    studentName: 'Maryam Ahmed',
-  },
-];
+// Map backend action types to icon + tone
+const ACTION_CONFIG = {
+  student_created:     { icon: UserPlus,       tone: 'green',  category: 'students' },
+  student_assigned:    { icon: UserCheck,      tone: 'green',  category: 'students' },
+  student_updated:     { icon: Pencil,         tone: 'blue',   category: 'students' },
+  student_removed:     { icon: Trash2,         tone: 'red',    category: 'students' },
+  faculty_created:     { icon: GraduationCap,  tone: 'purple', category: 'staff' },
+  faculty_updated:     { icon: Pencil,         tone: 'blue',   category: 'staff' },
+  faculty_removed:     { icon: Trash2,         tone: 'red',    category: 'staff' },
+  schedule_created:    { icon: CalendarDays,   tone: 'blue',   category: 'academic' },
+  schedule_updated:    { icon: Pencil,         tone: 'blue',   category: 'academic' },
+  schedule_deleted:    { icon: Trash2,         tone: 'red',    category: 'academic' },
+  exam_created:        { icon: BookOpen,       tone: 'blue',   category: 'academic' },
+  exam_updated:        { icon: Pencil,         tone: 'blue',   category: 'academic' },
+  exam_deleted:        { icon: Trash2,         tone: 'red',    category: 'academic' },
+  teacher_attendance_marked: { icon: ClipboardCheck, tone: 'green',  category: 'attendance' },
+  student_attendance_marked: { icon: ClipboardCheck, tone: 'green',  category: 'attendance' },
+  student_attendance_bulk:   { icon: Users,          tone: 'green',  category: 'attendance' },
+  fee_created:         { icon: DollarSign,     tone: 'amber',  category: 'fees' },
+  fee_updated:         { icon: Pencil,         tone: 'amber',  category: 'fees' },
+  fee_deleted:         { icon: Trash2,         tone: 'red',    category: 'fees' },
+  performance_created: { icon: BookOpen,       tone: 'purple', category: 'academic' },
+  system_event:        { icon: Bell,           tone: 'blue',   category: 'alerts' },
+};
 
-const SCHOOL_ACTIVITIES = [
-  {
-    id: 'act-s1',
-    category: 'students',
-    title: 'Admission Verified',
-    description: 'Zainab Bilal enrolled in Grade 10 - Section A',
-    time: '2m ago',
-    icon: UserCheck,
-    badge: 'Enrolled',
-    tone: 'green',
-    studentName: 'Zainab Bilal',
-  },
-  {
-    id: 'act-s2',
-    category: 'academic',
-    title: 'Daily Diary Published',
-    description: 'Grade 8-A Mathematics Ex 4.2 homework assigned',
-    time: '12m ago',
-    icon: FileText,
-    badge: 'Homework',
-    tone: 'purple',
-  },
-  {
-    id: 'act-s3',
-    category: 'academic',
-    title: 'First Term Datesheet Released',
-    description: 'Exam schedule published for Grade 9 & 10',
-    time: '30m ago',
-    icon: CalendarDays,
-    badge: 'Examinations',
-    tone: 'blue',
-  },
-  {
-    id: 'act-s4',
-    category: 'staff',
-    title: 'Teacher Marked On Duty',
-    description: 'Mr. Bilal Raza marked On Duty for Grade 9-B Homeroom',
-    time: '45m ago',
-    icon: GraduationCap,
-    badge: 'On Duty',
-    tone: 'purple',
-  },
-  {
-    id: 'act-s5',
-    category: 'attendance',
-    title: 'Morning Assembly Register Synced',
-    description: 'Grade 10-A recorded 96.2% live attendance (38/40)',
-    time: '1h ago',
-    icon: ClipboardCheck,
-    badge: 'Present',
-    tone: 'green',
-  },
-  {
-    id: 'act-s6',
-    category: 'alerts',
-    title: 'PTM Notice Dispatched',
-    description: 'Parent-Teacher Meeting circular sent to all guardians',
-    time: '2h ago',
-    icon: Bell,
-    badge: 'Circular',
-    tone: 'amber',
-  },
-  {
-    id: 'act-s7',
-    category: 'academic',
-    title: 'Period Schedule Updated',
-    description: 'Science Lab assigned for Grade 8 Practical session',
-    time: '3h ago',
-    icon: Clock,
-    badge: 'Timetable',
-    tone: 'blue',
-  },
-  {
-    id: 'act-s8',
-    category: 'students',
-    title: 'Guardian Contact Updated',
-    description: 'Maryam Ahmed guardian emergency phone updated',
-    time: 'Today, 09:15 AM',
-    icon: FileText,
-    badge: 'Active',
-    tone: 'green',
-    studentName: 'Maryam Ahmed',
-  },
-];
+/**
+ * Format a date string into a human-readable relative time.
+ */
+function timeAgo(dateString) {
+  if (!dateString) return '';
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now - date;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
 
-export default function CampusActivitySidebar({ onSelectStudent, students = [], faculty = [] }) {
+  if (diffSec < 60) return 'Just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay === 1) return 'Yesterday';
+  if (diffDay < 7) return `${diffDay}d ago`;
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export default function CampusActivitySidebar({ onSelectStudent, students = [], faculty = [], activityLogs = [] }) {
   const { isSchool } = useInstitution();
   const [filter, setFilter] = useState('all');
 
-  const activities = React.useMemo(() => {
-    if (students.length === 0 && faculty.length === 0) {
-      return [
+  const activities = useMemo(() => {
+    let list = [];
+
+    // 1. If we have real logs from the API, map and sort them
+    if (activityLogs.length > 0) {
+      list = activityLogs.map((log, idx) => {
+        const config = ACTION_CONFIG[log.action] || ACTION_CONFIG.system_event;
+        const rawDate = log.createdAt ? new Date(log.createdAt) : new Date();
+        const validDate = isNaN(rawDate.getTime()) ? new Date() : rawDate;
+        return {
+          id: log._id || log.id || `log-${idx}`,
+          category: log.category || config.category,
+          title: log.title,
+          description: log.description,
+          rawDate: validDate,
+          time: timeAgo(validDate),
+          icon: config.icon,
+          tone: config.tone,
+          studentName: log.metadata?.name || null,
+          action: log.action,
+        };
+      });
+    } else if (students.length === 0 && faculty.length === 0) {
+      // 2. Initial empty state fallback
+      const now = Date.now();
+      list = [
         {
           id: 'act-init-1',
           category: 'alerts',
           title: 'Campus Manager Active',
-          description: isSchool ? 'School database connected and ready for student enrollment' : 'Campus management portal active and ready',
+          description: isSchool
+            ? 'School database connected and ready for student enrollment'
+            : 'Campus management portal active and ready',
+          rawDate: new Date(now),
           time: 'Just now',
           icon: CheckCircle2,
-          badge: 'Online',
           tone: 'green',
         },
         {
           id: 'act-init-2',
           category: 'students',
           title: 'Student Directory Ready',
-          description: isSchool ? 'Click "+ Add Student" to register students into classes' : 'Add students using the quick action button',
-          time: 'Active',
+          description: isSchool
+            ? 'Click "+ Add Student" to register students into classes'
+            : 'Add students using the quick action button',
+          rawDate: new Date(now - 1000 * 60 * 5),
+          time: '5m ago',
           icon: UserPlus,
-          badge: 'Ready',
           tone: 'blue',
         },
         {
           id: 'act-init-3',
           category: 'staff',
           title: isSchool ? 'Teaching Staff Directory' : 'Faculty Directory',
-          description: isSchool ? 'Click "+ Add Teacher" to appoint school teachers' : 'Appoint faculty members to campus departments',
-          time: 'Active',
+          description: isSchool
+            ? 'Click "+ Add Teacher" to appoint school teachers'
+            : 'Appoint faculty members to campus departments',
+          rawDate: new Date(now - 1000 * 60 * 15),
+          time: '15m ago',
           icon: GraduationCap,
-          badge: 'Ready',
           tone: 'purple',
         },
       ];
-    }
+    } else {
+      // 3. Live directory data fallback (ensuring proper timestamps)
+      const now = Date.now();
 
-    if (!isSchool) {
-      return students.slice(0, 5).map((s, idx) => ({
-        id: `act-u-${s.id || idx}`,
-        category: 'students',
-        title: 'Student Enrolled',
-        description: `${s.name} (${s.roll || 'ID'}) enrolled in ${s.program || 'Program'}`,
-        time: `${(idx + 1) * 15}m ago`,
-        icon: UserCheck,
-        badge: s.status || 'Active',
-        tone: s.status === 'Active' ? 'green' : 'amber',
-        studentName: s.name,
-      }));
-    }
+      // Faculty items (recent)
+      faculty.forEach((t, idx) => {
+        const fallbackMs = now - (idx === 0 ? 0 : idx === 1 ? 2 * 60 * 1000 : (idx + 1) * 10 * 60 * 1000);
+        const dateObj = t.createdAt ? new Date(t.createdAt) : new Date(fallbackMs);
+        const validDate = isNaN(dateObj.getTime()) ? new Date(fallbackMs) : dateObj;
+        list.push({
+          id: `act-t-${t._id || t.id || idx}`,
+          category: 'staff',
+          title: 'Teacher On Duty',
+          description: `${t.name} (${t.designation || 'Teacher'}) active on duty`,
+          rawDate: validDate,
+          time: timeAgo(validDate),
+          icon: GraduationCap,
+          tone: 'purple',
+        });
+      });
 
-    const items = [];
-    if (students[0]) {
-      const s0 = students[0];
-      items.push({
-        id: 'act-s1',
-        category: 'students',
-        title: 'Student Enrolled',
-        description: `${s0.name} enrolled in ${s0.gradeOrClass || 'Grade 10'} - Section ${s0.section || 'A'}`,
-        time: '5m ago',
-        icon: UserCheck,
-        badge: s0.status || 'Active',
-        tone: 'green',
-        studentName: s0.name,
+      // System routine item
+      const routineDate = new Date(now - 2 * 3600 * 1000);
+      list.push({
+        id: 'act-sys-routine',
+        category: 'academic',
+        title: 'Academic Routine Active',
+        description: 'Daily timetable and attendance registers active',
+        rawDate: routineDate,
+        time: 'Today',
+        icon: Clock,
+        tone: 'blue',
+      });
+
+      // Students items (older - 2d ago)
+      students.forEach((s, idx) => {
+        const fallbackMs = now - (2 * 24 * 3600 * 1000 + idx * 3600 * 1000);
+        const dateObj = s.createdAt ? new Date(s.createdAt) : new Date(fallbackMs);
+        const validDate = isNaN(dateObj.getTime()) ? new Date(fallbackMs) : dateObj;
+        list.push({
+          id: `act-s-${s._id || s.id || idx}`,
+          category: 'students',
+          title: idx === 0 ? 'Student Enrolled' : 'Student Record Active',
+          description: isSchool
+            ? `${s.name} enrolled in ${s.gradeOrClass || 'Grade 10'} — Section ${s.section || 'A'}`
+            : `${s.name} (${s.roll || 'ID'}) enrolled in ${s.program || 'Program'}`,
+          rawDate: validDate,
+          time: timeAgo(validDate),
+          icon: idx === 0 ? UserPlus : UserCheck,
+          tone: s.status === 'Active' ? 'green' : 'amber',
+          studentName: s.name,
+        });
       });
     }
 
-    if (faculty[0]) {
-      const t0 = faculty[0];
-      items.push({
-        id: 'act-s4',
-        category: 'staff',
-        title: 'Teacher Appointed',
-        description: `${t0.name} (${t0.designation || 'Teacher'}) active on duty`,
-        time: '30m ago',
-        icon: GraduationCap,
-        badge: 'On Duty',
-        tone: 'purple',
-      });
-    }
-
-    if (students[1]) {
-      const s1 = students[1];
-      items.push({
-        id: 'act-s8',
-        category: 'students',
-        title: 'Profile Verified',
-        description: `${s1.name} student record verified and in good standing`,
-        time: '1h ago',
-        icon: FileText,
-        badge: 'Verified',
-        tone: 'green',
-        studentName: s1.name,
-      });
-    }
-
-    items.push({
-      id: 'act-sys-1',
-      category: 'academic',
-      title: 'Academic Routine Active',
-      description: 'Daily timetable and attendance registers active',
-      time: 'Today',
-      icon: Clock,
-      badge: 'Active',
-      tone: 'blue',
-    });
-
-    return items;
-  }, [isSchool, students, faculty]);
+    // STRICTLY SORT BY rawDate DESCENDING (Latest first on top!)
+    return list.sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+  }, [activityLogs, isSchool, students, faculty]);
 
   const filteredActivities = activities.filter((item) => {
     if (filter === 'all') return true;
@@ -315,45 +214,29 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
       {/* Sidebar Header */}
       <div className="activity-sidebar-header">
         <div className="activity-title-group">
-          <div className="activity-live-indicator">
-            <span className="pulse-ring" />
-            <span className="pulse-dot" />
-          </div>
           <h2 className="activity-heading">Campus Activity & Logs</h2>
         </div>
-        <span className="activity-count-badge">{filteredActivities.length} Logs</span>
       </div>
 
       {/* Filter Tabs */}
       <div className="activity-filter-bar">
-        <button
-          type="button"
-          className={`activity-filter-chip ${filter === 'all' ? 'is-active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          All
-        </button>
-        <button
-          type="button"
-          className={`activity-filter-chip ${filter === 'students' ? 'is-active' : ''}`}
-          onClick={() => setFilter('students')}
-        >
-          Students
-        </button>
-        <button
-          type="button"
-          className={`activity-filter-chip ${filter === 'academic' ? 'is-active' : ''}`}
-          onClick={() => setFilter('academic')}
-        >
-          Academic
-        </button>
-        <button
-          type="button"
-          className={`activity-filter-chip ${filter === 'attendance' ? 'is-active' : ''}`}
-          onClick={() => setFilter('attendance')}
-        >
-          Attendance
-        </button>
+        {[
+          { key: 'all', label: 'All' },
+          { key: 'students', label: 'Students' },
+          { key: 'staff', label: 'Staff' },
+          { key: 'academic', label: 'Academic' },
+          { key: 'attendance', label: 'Attendance' },
+          { key: 'fees', label: 'Fees' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            className={`activity-filter-chip ${filter === key ? 'is-active' : ''}`}
+            onClick={() => setFilter(key)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Activity Timeline List */}
@@ -383,6 +266,12 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
             </div>
           );
         })}
+
+        {filteredActivities.length === 0 && (
+          <div style={{ padding: '32px 18px', textAlign: 'center', color: '#a1a1aa', fontSize: '12px' }}>
+            No activity logs found for this filter.
+          </div>
+        )}
       </div>
     </aside>
   );

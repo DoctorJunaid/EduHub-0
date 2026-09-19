@@ -1,7 +1,7 @@
 import express from "express";
 import { authorize } from "../middleware/role.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
-import { listProfiles, upsertProfile } from "../services/teacherSalaryProfile.service.js";
+import { listCampusTeachers, listProfiles, upsertProfile } from "../services/teacherSalaryProfile.service.js";
 
 const router = express.Router();
 
@@ -21,6 +21,20 @@ router.get("/", authorize(...readerRoles), async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Failed to fetch salary profiles" });
+  }
+});
+
+// GET /campus/salary/profiles/teachers - loaded only when adding a profile.
+router.get("/teachers", authorize(...readerRoles), async (req, res) => {
+  try {
+    const campusId = req.user.campusId || req.query.campusId;
+    if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
+
+    const teachers = await listCampusTeachers(campusId);
+    res.json({ success: true, data: teachers });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to fetch campus teachers" });
   }
 });
 

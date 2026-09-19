@@ -12,7 +12,7 @@ router.use(protect);
 // ---- CAMPUS MANAGER ROUTES ----
 
 // GET /settings/campus/me
-router.get("/campus/me", authorize("campus_admin"), async (req, res) => {
+router.get("/campus/me", authorize("campus_admin", "campus_manager"), async (req, res) => {
   try {
     // Assuming req.user.campusId exists for campus_admin
     const campusId = req.user.campusId; 
@@ -25,7 +25,7 @@ router.get("/campus/me", authorize("campus_admin"), async (req, res) => {
 });
 
 // PUT /settings/campus/me
-router.put("/campus/me", authorize("campus_admin"), async (req, res) => {
+router.put("/campus/me", authorize("campus_admin", "campus_manager"), async (req, res) => {
   try {
     const campusId = req.user.campusId;
     if (!campusId) return res.status(400).json({ success: false, message: "No campus assigned to this user" });
@@ -37,7 +37,7 @@ router.put("/campus/me", authorize("campus_admin"), async (req, res) => {
 });
 
 // POST /settings/campus/me/reset
-router.post("/campus/me/reset", authorize("campus_admin"), async (req, res) => {
+router.post("/campus/me/reset", authorize("campus_admin", "campus_manager"), async (req, res) => {
   try {
     const campusId = req.user.campusId;
     if (!campusId) return res.status(400).json({ success: false, message: "No campus assigned to this user" });
@@ -49,7 +49,7 @@ router.post("/campus/me/reset", authorize("campus_admin"), async (req, res) => {
 });
 
 // GET /settings/campus/me/effective
-router.get("/campus/me/effective", authorize("campus_admin"), async (req, res) => {
+router.get("/campus/me/effective", authorize("campus_admin", "campus_manager"), async (req, res) => {
   try {
     const campusId = req.user.campusId;
     if (!campusId) return res.status(400).json({ success: false, message: "No campus assigned to this user" });
