@@ -1,10 +1,10 @@
-import { Coins, FileText, User, Calendar, CheckCircle2 } from "lucide-react";
+import { Coins, FileText, User, Calendar, CheckCircle2, Printer } from "lucide-react";
 import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
 
-export default function VoucherDetails({ voucher, onClose }) {
+export default function VoucherDetails({ voucher, onClose, onPrint }) {
   const { isSchool } = useInstitution();
   if (!voucher) return null;
 
@@ -78,10 +78,21 @@ export default function VoucherDetails({ voucher, onClose }) {
           </div>
         </div>
 
-        <div className="activity-form-actions">
+        <div className="activity-form-actions" style={{ display: "flex", gap: "10px" }}>
           <button type="button" className="activity-cancel-btn" onClick={onClose}>
             Back to Fee Management
           </button>
+          {onPrint && (
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-primary"
+              onClick={() => onPrint(voucher)}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+              <Printer size={15} />
+              Print Bank Challan
+            </button>
+          )}
         </div>
       </div>
     </FullPageFormShell>

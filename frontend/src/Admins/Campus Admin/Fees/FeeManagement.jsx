@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import {
   ChartNoAxesCombined,
   CircleAlert,
@@ -40,6 +41,7 @@ import FeeTable from "./FeeTable";
 import FeeStatusBadge from "./FeeStatusBadge";
 import VoucherDetails from "./VoucherDetails";
 import MarkPaidDialog from "./MarkPaidDialog";
+import PrintChallanDialog from "./PrintChallanDialog";
 import { useInstitution } from "@/context/InstitutionContext";
 import "../Timetable/ClassTimetable.css";
 import "./FeeManagement.css";
@@ -68,13 +70,20 @@ export default function FeeManagement() {
   const [allActivity, setAllActivity] = useState(false);
 
   useEffect(() => {
-    if (feesStatus === "idle") {
+    dispatch(fetchFees());
+    dispatch(fetchStudents());
+
+    const interval = setInterval(() => {
       dispatch(fetchFees());
-    }
-    if (!students || students.length === 0) {
-      dispatch(fetchStudents());
-    }
-  }, [dispatch, feesStatus, students?.length]);
+    }, 15000);
+    const onFocus = () => dispatch(fetchFees());
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [dispatch]);
 
   const filtered = useMemo(
     () => filterVouchers(joined, filters),
@@ -100,9 +109,10 @@ export default function FeeManagement() {
       if (window.confirm("Are you sure you want to delete this fee voucher?")) {
         try {
           await dispatch(deleteFeeVoucher(id)).unwrap();
-          setNotice("Voucher deleted successfully.");
+          toast.success("Voucher deleted successfully.");
+          dispatch(fetchFees());
         } catch (err) {
-          setNotice(typeof err === "string" ? err : "Failed to delete voucher.");
+          toast.error(typeof err === "string" ? err : "Failed to delete voucher.");
         }
       }
       return;
@@ -126,14 +136,15 @@ export default function FeeManagement() {
       if (selectedRecord || values.id || values._id) {
         const voucherId = values.id || values._id || selectedRecord?.id;
         await dispatch(updateFeeVoucher({ ...values, _id: voucherId })).unwrap();
-        setNotice("Voucher updated successfully.");
+        toast.success("Voucher updated successfully.");
       } else {
         await dispatch(addFeeVoucher(values)).unwrap();
-        setNotice("Voucher created successfully.");
+        toast.success("Voucher created successfully.");
       }
+      dispatch(fetchFees());
     } catch (err) {
       dispatch(voucherSaved(values));
-      setNotice(typeof err === "string" ? err : "Voucher saved.");
+      toast.success(typeof err === "string" ? err : "Voucher saved.");
     }
     reset();
     close();
@@ -142,7 +153,7 @@ export default function FeeManagement() {
   const exportFees = () => {
     const data = feeExport(filtered);
     downloadCsv("fee-vouchers.csv", data.headers, data.rows);
-    setNotice(`Exported ${filtered.length} vouchers.`);
+    toast.success(`Exported ${filtered.length} vouchers.`);
   };
 
   const recent = [...filtered].sort((a, b) =>
@@ -408,7 +419,11 @@ export default function FeeManagement() {
         />
       )}
       {modal?.mode === "view" && selected && (
-        <VoucherDetails voucher={selected} onClose={close} />
+        <VoucherDetails
+          voucher={selected}
+          onClose={close}
+          onPrint={(v) => setModal({ mode: "print", id: v.id })}
+        />
       )}
       {modal?.mode === "paid" && selected && (
         <MarkPaidDialog
@@ -419,19 +434,24 @@ export default function FeeManagement() {
               await dispatch(
                 updateFeeVoucher({
                   _id: selected._id || selected.id,
+                  id: selected._id || selected.id,
                   paymentStatus: "Paid",
                   status: "paid",
                   paymentDate,
                 }),
               ).unwrap();
-              setNotice(`${selected.voucherNo} marked Paid.`);
+              toast.success(`Voucher ${selected.voucherNo} marked as Paid.`);
+              dispatch(fetchFees());
             } catch (err) {
               dispatch(voucherMarkedPaid({ id: selected.id, paymentDate }));
-              setNotice(`${selected.voucherNo} marked Paid.`);
+              toast.success(`Voucher ${selected.voucherNo} marked as Paid.`);
             }
             close();
           }}
         />
+      )}
+      {modal?.mode === "print" && selected && (
+        <PrintChallanDialog voucher={selected} onClose={close} />
       )}
     </section>
   );

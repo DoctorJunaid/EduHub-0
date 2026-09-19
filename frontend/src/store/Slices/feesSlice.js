@@ -6,10 +6,13 @@ import { selectStudents } from './studentsSlice.js';
 
 const normalizeFee = (item) => {
   const id = item._id || item.id || nanoid();
-  const studentId =
+  const studentObj =
     typeof item.studentId === 'object' && item.studentId !== null
-      ? item.studentId._id || item.studentId.id
-      : item.studentId;
+      ? item.studentId
+      : typeof item.student === 'object' && item.student !== null
+        ? item.student
+        : null;
+  const studentId = studentObj ? studentObj._id || studentObj.id : item.studentId;
   const voucherNo =
     item.voucherNo || item.challanNo || `CH-${String(id).slice(-6).toUpperCase()}`;
   const feeCategory = item.feeCategory || item.feeType || 'Tuition';
@@ -25,24 +28,42 @@ const normalizeFee = (item) => {
     ? new Date(item.paymentDate).toISOString().split('T')[0]
     : '';
 
-  return {
+  const normalized = {
     ...item,
-    id,
-    _id: item._id || id,
+    id: String(id),
+    _id: String(id),
     studentId: String(studentId || ''),
-    voucherNo,
-    challanNo: voucherNo,
-    feeCategory,
-    feeType: feeCategory,
-    semester,
+    voucherNo: String(voucherNo),
+    challanNo: String(voucherNo),
+    feeCategory: String(feeCategory),
+    feeType: String(feeCategory),
+    semester: String(semester),
     amount,
+    paidAmount: Number(item.paidAmount || (paymentStatus === 'Paid' ? amount : 0)),
     paymentStatus,
     status: paymentStatus.toLowerCase(),
     dueDate,
     paymentDate,
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || new Date().toISOString(),
+    createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
+    updatedAt: item.updatedAt ? new Date(item.updatedAt).toISOString() : new Date().toISOString(),
   };
+
+  if (studentObj) {
+    normalized.student = {
+      ...studentObj,
+      id: String(studentObj._id || studentObj.id || studentId),
+      name: studentObj.name || 'Student',
+      roll: studentObj.roll || String(studentId),
+      initials: (studentObj.name || 'Student')
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((p) => p[0] || '')
+        .join('')
+        .toUpperCase(),
+    };
+  }
+
+  return normalized;
 };
 
 export const fetchFees = createAsyncThunk(

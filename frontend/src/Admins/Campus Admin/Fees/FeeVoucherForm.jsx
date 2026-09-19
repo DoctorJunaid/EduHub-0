@@ -12,21 +12,42 @@ export default function FeeVoucherForm({
   onSave,
   onClose,
 }) {
-  const { isSchool } = useInstitution();
+  const generateVoucherNo = () => {
+    const year = new Date().getFullYear();
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    return `VCH-${year}-${rand}`;
+  };
+
   const [values, setValues] = useState(() => ({
     studentId: record?.studentId ?? "",
-    voucherNo: record?.voucherNo ?? "",
-    feeCategory: record?.feeCategory ?? "",
-    semester: record?.semester ?? "",
+    voucherNo: record?.voucherNo || (record ? "" : generateVoucherNo()),
+    feeCategory: record?.feeCategory || "Tuition Fee",
+    semester: record?.semester || "",
     amount: record?.amount ?? "",
-    dueDate: record?.dueDate ?? "",
+    dueDate: record?.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
     paymentStatus: record?.paymentStatus ?? "Pending",
     paymentDate: record?.paymentDate ?? "",
   }));
   const [error, setError] = useState("");
 
   const change = (key, value) => {
-    setValues((previous) => ({ ...previous, [key]: value }));
+    setValues((previous) => {
+      const next = { ...previous, [key]: value };
+      if (key === "paymentStatus" && value === "Paid" && !next.paymentDate) {
+        next.paymentDate = new Date().toISOString().split("T")[0];
+      }
+      return next;
+    });
+    setError("");
+  };
+
+  const handleStudentChange = (selectedId) => {
+    const matched = students.find((s) => s.id === selectedId);
+    setValues((prev) => ({
+      ...prev,
+      studentId: selectedId,
+      semester: prev.semester || (matched?.program ? matched.program : (matched?.gradeOrClass || "Fall 2025")),
+    }));
     setError("");
   };
 
@@ -68,7 +89,7 @@ export default function FeeVoucherForm({
               id="voucher-student"
               value={values.studentId}
               required
-              onChange={(event) => change("studentId", event.target.value)}
+              onChange={(event) => handleStudentChange(event.target.value)}
             >
               <option value="">Select student</option>
               {!students.some((student) => student.id === values.studentId) &&

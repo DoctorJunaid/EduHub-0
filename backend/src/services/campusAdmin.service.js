@@ -426,32 +426,71 @@ class CampusAdminService {
 
   // --- Fee Record Operations ---
   async createFeeRecord(campusId, instituteId, data) {
+    const rawStatus = (data.status || data.paymentStatus || "pending").toLowerCase();
+    const status = ["paid", "pending", "overdue"].includes(rawStatus) ? rawStatus : "pending";
+    const amount = Number(data.amount || 0);
+    const paidAmount = status === "paid" ? (Number(data.paidAmount) || amount) : Number(data.paidAmount || 0);
+    const paymentDate = status === "paid"
+      ? (data.paymentDate ? new Date(data.paymentDate) : new Date())
+      : (data.paymentDate ? new Date(data.paymentDate) : null);
+    const dueDate = data.dueDate ? new Date(data.dueDate) : new Date();
+
     const payload = {
       ...data,
       campusId,
       instituteId: instituteId || null,
-      challanNo: data.challanNo || `CH-${Math.floor(100000 + Math.random() * 900000)}`,
-      month: data.month || new Date().toISOString().slice(0, 7),
-      status: data.status ? data.status.toLowerCase() : "pending",
+      feeType: data.feeType || data.feeCategory || "Tuition",
+      challanNo: data.challanNo || data.voucherNo || `CH-${Math.floor(100000 + Math.random() * 900000)}`,
+      month: data.month || (data.dueDate ? String(data.dueDate).slice(0, 7) : new Date().toISOString().slice(0, 7)),
+      semester: data.semester || "Current Term",
+      amount,
+      paidAmount,
+      dueDate,
+      paymentDate,
+      status,
     };
-    return await FeeRecord.create(payload);
+    const created = await FeeRecord.create(payload);
+    return await FeeRecord.findById(created._id).populate(
+      "studentId",
+      "name roll email program gradeOrClass section guardian guardianPhone",
+    );
   }
 
   async getAllFeeRecords(campusId, filter = {}) {
     const query = { campusId };
-    if (filter.status) query.status = filter.status.toLowerCase();
+    if (filter.status && filter.status !== "all") query.status = filter.status.toLowerCase();
+    if (filter.paymentStatus && filter.paymentStatus !== "all") query.status = filter.paymentStatus.toLowerCase();
     if (filter.studentId) query.studentId = filter.studentId;
-    if (filter.feeType) query.feeType = filter.feeType.toLowerCase();
+    if (filter.feeType && filter.feeType !== "all") query.feeType = new RegExp(`^${filter.feeType.trim()}$`, "i");
+
+    if (filter.search && filter.search.trim()) {
+      const q = filter.search.trim();
+      const studentMatches = await User.find({
+        campusId,
+        role: "student",
+        $or: [
+          { name: new RegExp(q, "i") },
+          { roll: new RegExp(q, "i") },
+          { email: new RegExp(q, "i") },
+        ],
+      }).select("_id").lean();
+
+      query.$or = [
+        { challanNo: new RegExp(q, "i") },
+        { feeType: new RegExp(q, "i") },
+        { studentId: { $in: studentMatches.map((s) => s._id) } },
+      ];
+    }
 
     return await FeeRecord.find(query)
-      .populate("studentId", "name roll program gradeOrClass section guardian guardianPhone")
+      .populate("studentId", "name roll email program gradeOrClass section guardian guardianPhone")
       .sort({ dueDate: 1, createdAt: -1 });
   }
 
   async getFeeRecordById(id, campusId) {
     const record = await FeeRecord.findOne({ _id: id, campusId }).populate(
       "studentId",
-      "name roll program gradeOrClass section guardian guardianPhone",
+      "name roll email program gradeOrClass section guardian guardianPhone",
     );
     if (!record) throw new Error("Fee record not found.");
     return record;
@@ -459,15 +498,30 @@ class CampusAdminService {
 
   async updateFeeRecord(id, campusId, updateData) {
     const payload = { ...updateData };
-    if (payload.status) payload.status = payload.status.toLowerCase();
-    if (payload.status === "paid" && !payload.paymentDate) {
-      payload.paymentDate = new Date();
+    if (payload.paymentStatus && !payload.status) {
+      payload.status = payload.paymentStatus.toLowerCase();
+    }
+    if (payload.status) {
+      payload.status = payload.status.toLowerCase();
+    }
+    if (payload.feeCategory && !payload.feeType) {
+      payload.feeType = payload.feeCategory;
+    }
+    if (payload.voucherNo && !payload.challanNo) {
+      payload.challanNo = payload.voucherNo;
+    }
+    if (payload.status === "paid") {
+      if (!payload.paymentDate) payload.paymentDate = new Date();
+      if (!payload.paidAmount && payload.amount) payload.paidAmount = payload.amount;
     }
 
     const record = await FeeRecord.findOneAndUpdate(
       { _id: id, campusId },
       payload,
-      { new: true, runValidators: true }
+      { new: true, returnDocument: "after", runValidators: true }
+    ).populate(
+      "studentId",
+      "name roll email program gradeOrClass section guardian guardianPhone",
     );
     if (!record) throw new Error("Fee record not found.");
     return record;

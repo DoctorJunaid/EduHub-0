@@ -88,6 +88,11 @@ export default function FeeTable({ rows, onAction }) {
                       View details
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                      onSelect={() => onAction("print", voucher.id)}
+                    >
+                      Print Challan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                       onSelect={() => onAction("edit", voucher.id)}
                     >
                       Edit voucher
