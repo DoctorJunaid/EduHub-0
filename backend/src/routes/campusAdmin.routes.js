@@ -76,4 +76,13 @@ router.post("/faculty/new", createFacultyForCampus);
 router.delete("/faculty/:id", removeFacultyFromCampus);
 router.put("/faculty/:id", updateFacultyInCampus);
 
+router.route("/timetables")
+  .get(getClassSchedules)
+  .post(createClassSchedule);
+
+router.route("/timetables/:id")
+  .get(getClassScheduleById)
+  .put(updateClassSchedule)
+  .delete(deleteClassSchedule);
+
 export default router;

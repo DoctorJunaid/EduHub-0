@@ -1,13 +1,13 @@
 import {
   TeacherProfile,
   StudentProfile,
-  ClassSchedule,
   ExamSchedule,
   TeacherAttendance,
   StudentAttendance,
   FeeRecord,
   Performance,
 } from "../models/profile.model.js";
+import Timetable from "../models/timetable.model.js";
 
 class CampusAdminService {
   // --- Teacher Operations ---
@@ -92,26 +92,22 @@ class CampusAdminService {
 
   // --- Class Schedule Operations ---
   async createClassSchedule(data) {
-    return await ClassSchedule.create(data);
+    return await Timetable.create(data);
   }
 
   async getAllClassSchedules(filter = {}) {
-    return await ClassSchedule.find(filter)
-      .populate("teacherId", "employeeId department qualification")
-      .sort({ dayOfWeek: 1, startTime: 1 });
+    return await Timetable.find(filter)
+      .sort({ days: 1, startTime: 1 });
   }
 
   async getClassScheduleById(id) {
-    const record = await ClassSchedule.findById(id).populate(
-      "teacherId",
-      "employeeId department qualification",
-    );
+    const record = await Timetable.findById(id);
     if (!record) throw new Error("Class schedule not found.");
     return record;
   }
 
   async updateClassSchedule(id, updateData) {
-    const record = await ClassSchedule.findByIdAndUpdate(id, updateData, {
+    const record = await Timetable.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -120,7 +116,7 @@ class CampusAdminService {
   }
 
   async deleteClassSchedule(id) {
-    const record = await ClassSchedule.findByIdAndDelete(id);
+    const record = await Timetable.findByIdAndDelete(id);
     if (!record) throw new Error("Class schedule not found.");
     return record;
   }

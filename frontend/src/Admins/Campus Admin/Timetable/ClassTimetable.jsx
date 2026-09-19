@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CalendarDays,
@@ -14,16 +14,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   selectTimetable,
-  classScheduled,
-  classUpdated,
-  classDeleted,
+  fetchTimetable,
+  scheduleClass,
+  updateScheduledClass,
+  deleteScheduledClass,
 } from "@/store/Slices/timetableSlice.js";
 import { selectFaculty } from "@/store/Slices/facultySlice.js";
 import { selectStudents } from "@/store/Slices/studentsSlice.js";
 import {
   educationTypeOptions,
   initialSchedules,
-  timetableTemplates,
+  getMatrixConfig,
+  getTemplateRecords,
 } from "./timetableData.js";
 import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
 import TimetableGrid from "./TimetableGrid";
@@ -35,9 +37,11 @@ import "./ClassTimetable.css";
 export default function ClassTimetable() {
   const dispatch = useDispatch();
   const rawRecords = useSelector(selectTimetable);
-  const records = useMemo(() => {
-    return rawRecords?.length ? rawRecords : initialSchedules;
-  }, [rawRecords]);
+  const records = useMemo(() => rawRecords || [], [rawRecords]);
+
+  useEffect(() => {
+    dispatch(fetchTimetable());
+  }, [dispatch]);
 
   const faculty = useSelector(selectFaculty);
   const students = useSelector(selectStudents);
@@ -52,7 +56,7 @@ export default function ClassTimetable() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [educationType, setEducationType] = useState("Colleges");
+  const [educationType, setEducationType] = useState("College");
 
   const options = useMemo(() => {
     return Object.fromEntries(
@@ -60,7 +64,7 @@ export default function ClassTimetable() {
         key,
         [
           ...new Set(
-            [...initialSchedules, ...records]
+            records
               .map((record) => record[key])
               .concat(
                 key === "program" || key === "section"
@@ -73,29 +77,50 @@ export default function ClassTimetable() {
         ],
       ]),
     );
-  }, [filters, records, students, faculty]);
+  }, [records, students, faculty]);
 
   const filtered = useMemo(
     () => filterSchedules(records, filters),
     [records, filters],
   );
-  const templateRecords = timetableTemplates[educationType];
-  const selected = records.find((record) => record.id === modal?.id);
+
+  const matrixConfig = useMemo(
+    () => getMatrixConfig(educationType),
+    [educationType],
+  );
+  const templateRecords = useMemo(
+    () => getTemplateRecords(educationType),
+    [educationType],
+  );
+
+  const modalRecord =
+    records.find((record) => record.id === modal?.id) ??
+    templateRecords.find((record) => record.id === modal?.id);
+  const isLiveRecord =
+    modalRecord && !String(modalRecord.id).startsWith("template-");
   const close = () => setModal(null);
-  const onAction = (mode, id) => setModal({ mode, id });
+  const onAction = (mode, id, defaults) =>
+    setModal(defaults ? { mode, id, defaults } : { mode, id });
 
   const save = (values) => {
-    const index = selected
-      ? records.findIndex((record) => record.id === selected.id)
+    const index = isLiveRecord
+      ? records.findIndex((record) => record.id === modalRecord.id)
       : records.length;
-    if (selected) dispatch(classUpdated({ ...values, id: selected.id }));
-    else dispatch(classScheduled(values));
+    if (isLiveRecord) {
+      dispatch(updateScheduledClass({ ...values, id: modalRecord.id }));
+    } else {
+      // the template creates the record with an institutionType
+      const payload = {
+        ...values,
+        institutionType: educationType,
+      };
+      dispatch(scheduleClass(payload));
+    }
     setFilters({ program: "", section: "", instructor: "", room: "" });
     setPage(Math.floor(index / pageSize) + 1);
     close();
   };
 
-  // KPI Calculations
   const totalClasses = records.length;
   const activeInstructors =
     new Set(records.map((r) => r.instructor).filter(Boolean)).size || 16;
@@ -108,12 +133,11 @@ export default function ClassTimetable() {
       className="campus-tab-page class-timetable"
       aria-label="Class Timetable Management"
     >
-      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
-      <div className="campus-kpi-track">
+      <div className="campus-kpi-track class-timetable-kpi">
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <BookOpen size={16} />
+              <BookOpen size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Scheduled Classes</span>
@@ -125,7 +149,7 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Users size={16} />
+              <Users size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Active Instructors</span>
@@ -137,7 +161,7 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Building size={16} />
+              <Building size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Rooms Allocated</span>
@@ -149,7 +173,7 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Clock size={16} />
+              <Clock size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Weekly Hours</span>
@@ -159,93 +183,29 @@ export default function ClassTimetable() {
         </div>
       </div>
 
-      {/* 2. Contiguous 56px Toolbar */}
       <Tabs
         value={view}
         onValueChange={setView}
-        style={{ width: "100%", display: "flex", flexDirection: "column" }}
+        className="class-timetable-tabs"
       >
         <div className="campus-toolbar">
           <div className="toolbar-left">
-            <TabsList
-              style={{
-                height: "32px",
-                padding: "2px",
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "6px",
-                display: "inline-flex",
-                alignItems: "center",
-              }}
-            >
-              <TabsTrigger
-                value="week"
-                style={{
-                  height: "26px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "0 10px",
-                  borderRadius: "4px",
-                }}
-              >
-                Week
-              </TabsTrigger>
-              <TabsTrigger
-                value="list"
-                style={{
-                  height: "26px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "0 10px",
-                  borderRadius: "4px",
-                }}
-              >
-                List
-              </TabsTrigger>
+            <TabsList className="tt-view-tabs">
+              <TabsTrigger value="week">Week</TabsTrigger>
+              <TabsTrigger value="list">List</TabsTrigger>
             </TabsList>
 
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                border: "1px solid #e4e4e7",
-                borderRadius: "6px",
-                background: "#ffffff",
-                height: "32px",
-                boxSizing: "border-box",
-              }}
-            >
+            <div className="tt-week-nav">
               <button
                 type="button"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  padding: "0 5px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#71717a",
-                  height: "100%",
-                }}
+                className="tt-week-nav-btn"
                 aria-label="Previous week"
                 onClick={() => setWeek(shiftDays(week, -7))}
               >
-                <ChevronLeft size={13} />
+                <ChevronLeft size={14} />
               </button>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  color: "#09090b",
-                  padding: "0 4px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <CalendarDays size={12} style={{ color: "#71717a" }} />
+              <span className="tt-week-range">
+                <CalendarDays size={12} aria-hidden="true" />
                 {week.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -259,21 +219,11 @@ export default function ClassTimetable() {
               </span>
               <button
                 type="button"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  padding: "0 5px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#71717a",
-                  height: "100%",
-                }}
+                className="tt-week-nav-btn"
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
               >
-                <ChevronRight size={13} />
+                <ChevronRight size={14} />
               </button>
             </div>
 
@@ -330,23 +280,9 @@ export default function ClassTimetable() {
           </div>
         </div>
 
-        {/* 3. Panel Content */}
-        <div
-          style={{
-            padding: "16px 20px",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
-        >
-          <TabsContent value="week" style={{ margin: 0, padding: 0 }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+        <div className="tt-panel-content">
+          <TabsContent value="week">
+            <div className="tt-panel-card">
               <div className="tt-template-heading">
                 <div>
                   <span className="tt-template-title">
@@ -359,7 +295,7 @@ export default function ClassTimetable() {
                 <label className="tt-type-control">
                   <span>Institution type</span>
                   <select
-                    className="toolbar-select"
+                    className="toolbar-select tt-type-select"
                     aria-label="Institution type"
                     value={educationType}
                     onChange={(event) => setEducationType(event.target.value)}
@@ -371,70 +307,34 @@ export default function ClassTimetable() {
                     ))}
                   </select>
                 </label>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "16px",
-                    fontSize: "11px",
-                    color: "#71717a",
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "2px",
-                        background: "#09090b",
-                      }}
-                    />
+                <div className="tt-legend tt-legend-inline">
+                  <span>
+                    <i className="tt-legend-class" />
                     Regular Class
                   </span>
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "2px",
-                        background: "#f59e0b",
-                      }}
-                    />
+                  <span>
+                    <i className="tt-legend-break" />
                     Break / Interval
                   </span>
                 </div>
               </div>
-              <div style={{ padding: "12px" }}>
+              <div className="tt-grid-panel">
                 <TimetableGrid
                   records={templateRecords}
                   week={week}
+                  matrixConfig={matrixConfig}
                   onView={(id) => onAction("view", id)}
+                  onAction={onAction}
+                  onQuickAdd={(defaults) =>
+                    onAction("add", undefined, defaults)
+                  }
                 />
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="list" style={{ margin: 0, padding: 0 }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+          <TabsContent value="list">
+            <div className="tt-panel-card tt-list-panel">
               <ScheduledClasses
                 records={filtered}
                 page={page}
@@ -451,27 +351,33 @@ export default function ClassTimetable() {
         </div>
       </Tabs>
 
-      {/* Modal Dialogs */}
-      {(modal?.mode === "add" || (modal?.mode === "edit" && selected)) && (
+      {(modal?.mode === "add" ||
+        (modal?.mode === "edit" && (isLiveRecord || modalRecord))) && (
         <ScheduleClassForm
-          record={selected}
+          record={isLiveRecord ? modalRecord : undefined}
+          defaults={
+            modal?.defaults ??
+            (modal?.mode === "edit" && modalRecord && !isLiveRecord
+              ? modalRecord
+              : undefined)
+          }
           options={options}
           onSave={save}
           onClose={close}
         />
       )}
-      {modal?.mode === "view" && selected && (
-        <ClassDetailsDialog record={selected} onClose={close} />
+      {modal?.mode === "view" && modalRecord && (
+        <ClassDetailsDialog record={modalRecord} onClose={close} />
       )}
       <ConfirmDialog
-        open={modal?.mode === "delete" && Boolean(selected)}
+        open={modal?.mode === "delete" && Boolean(isLiveRecord)}
         title="Delete Scheduled Class?"
-        description={`Are you sure you want to delete ${selected?.subject ?? "this class"}? This action cannot be undone.`}
+        description={`Are you sure you want to delete ${modalRecord?.subject ?? "this class"}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         onCancel={close}
         onConfirm={() => {
-          if (selected) dispatch(classDeleted(selected.id));
+          if (isLiveRecord) dispatch(deleteScheduledClass(modalRecord.id));
           close();
         }}
       />

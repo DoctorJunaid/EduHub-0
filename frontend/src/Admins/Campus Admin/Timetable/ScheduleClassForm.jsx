@@ -7,20 +7,23 @@ import FullPageFormShell from "@/components/common/FullPageFormShell";
 
 export default function ScheduleClassForm({
   record,
+  defaults,
   options,
   onSave,
   onClose,
 }) {
   const [values, setValues] = useState(() => ({
-    subject: record?.subject ?? "",
-    program: record?.program ?? options.program[0] ?? "",
-    section: record?.section ?? "",
-    instructor: record?.instructor ?? options.instructor[0] ?? "",
-    room: record?.room ?? options.room[0] ?? "",
-    days: record?.days ?? [],
-    startTime: record?.startTime ?? "",
-    endTime: record?.endTime ?? "",
-    status: record?.status ?? "Active",
+    subject: record?.subject ?? defaults?.subject ?? "",
+    program:
+      record?.program ?? defaults?.program ?? options.program[0] ?? "",
+    section: record?.section ?? defaults?.section ?? "",
+    instructor:
+      record?.instructor ?? defaults?.instructor ?? options.instructor[0] ?? "",
+    room: record?.room ?? defaults?.room ?? options.room[0] ?? "",
+    days: record?.days ?? defaults?.days ?? [],
+    startTime: record?.startTime ?? defaults?.startTime ?? "",
+    endTime: record?.endTime ?? defaults?.endTime ?? "",
+    status: record?.status ?? defaults?.status ?? "Active",
   }));
   const [error, setError] = useState("");
 

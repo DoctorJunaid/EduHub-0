@@ -253,7 +253,8 @@ export const deleteStudent = async (req, res) => {
 // --- Class Schedule Controllers ---
 export const createClassSchedule = async (req, res) => {
   try {
-    const record = await campusAdminService.createClassSchedule(req.body);
+    const payload = { ...req.body, campusId: req.user.campusId };
+    const record = await campusAdminService.createClassSchedule(payload);
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -262,7 +263,8 @@ export const createClassSchedule = async (req, res) => {
 
 export const getClassSchedules = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllClassSchedules(req.query);
+    const query = { ...req.query, campusId: req.user.campusId };
+    const records = await campusAdminService.getAllClassSchedules(query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
