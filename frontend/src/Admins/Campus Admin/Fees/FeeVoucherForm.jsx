@@ -12,6 +12,8 @@ export default function FeeVoucherForm({
   onSave,
   onClose,
 }) {
+  const { isSchool } = useInstitution();
+
   const generateVoucherNo = () => {
     const year = new Date().getFullYear();
     const rand = Math.floor(1000 + Math.random() * 9000);
