@@ -223,6 +223,13 @@ const feeRecordSchema = new mongoose.Schema(
     challanNo: { type: String, default: "" },
     month: { type: String, default: "" },
     semester: { type: String, default: "" },
+    description: { type: String, default: "" },
+    breakdown: [
+      {
+        title: { type: String, default: "" },
+        amount: { type: Number, default: 0 },
+      },
+    ],
     notes: { type: String, default: "" },
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,

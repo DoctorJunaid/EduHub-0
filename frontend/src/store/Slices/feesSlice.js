@@ -28,6 +28,11 @@ const normalizeFee = (item) => {
     ? new Date(item.paymentDate).toISOString().split('T')[0]
     : '';
 
+  const description = item.description || item.notes || '';
+  const breakdown = Array.isArray(item.breakdown)
+    ? item.breakdown.map((b) => ({ title: String(b.title || ''), amount: Number(b.amount || 0) }))
+    : [];
+
   const normalized = {
     ...item,
     id: String(id),
@@ -38,6 +43,9 @@ const normalizeFee = (item) => {
     feeCategory: String(feeCategory),
     feeType: String(feeCategory),
     semester: String(semester),
+    description: String(description),
+    notes: String(description),
+    breakdown,
     amount,
     paidAmount: Number(item.paidAmount || (paymentStatus === 'Paid' ? amount : 0)),
     paymentStatus,
@@ -128,11 +136,61 @@ export const deleteFeeVoucher = createAsyncThunk(
   }
 );
 
+export const generateMonthlyFees = createAsyncThunk(
+  'fees/generateMonthlyFees',
+  async (options, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/campus-admin/fees/generate-monthly', options);
+      return response.data.data || response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to generate monthly fees');
+    }
+  }
+);
+
+export const fetchFeeStructures = createAsyncThunk(
+  'fees/fetchFeeStructures',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/campus-admin/fees/structures');
+      return response.data.data || response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch fee structures');
+    }
+  }
+);
+
+export const saveFeeStructure = createAsyncThunk(
+  'fees/saveFeeStructure',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/campus-admin/fees/structures', data);
+      return response.data.data || response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to save fee structure');
+    }
+  }
+);
+
+export const deleteFeeStructure = createAsyncThunk(
+  'fees/deleteFeeStructure',
+  async (id, { rejectWithValue }) => {
+    try {
+      await axiosInstance.delete(`/campus-admin/fees/structures/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete fee structure');
+    }
+  }
+);
+
 const slice = createSlice({
   name: 'fees',
   initialState: {
     records: [],
+    structures: [],
     status: 'idle',
+    structuresStatus: 'idle',
     error: null,
   },
   reducers: {
@@ -209,6 +267,29 @@ const slice = createSlice({
         state.records = state.records.filter(
           (item) => item.id !== payload && item._id !== payload
         );
+      })
+      .addCase(generateMonthlyFees.fulfilled, (state, { payload }) => {
+        if (payload?.records && Array.isArray(payload.records)) {
+          const newNormalized = payload.records.map(normalizeFee);
+          state.records = [...newNormalized, ...state.records];
+        }
+      })
+      .addCase(fetchFeeStructures.fulfilled, (state, { payload }) => {
+        state.structuresStatus = 'succeeded';
+        state.structures = Array.isArray(payload) ? payload : (payload?.data || []);
+      })
+      .addCase(saveFeeStructure.fulfilled, (state, { payload }) => {
+        const index = state.structures.findIndex(
+          (s) => s._id === payload._id || s.gradeOrClass === payload.gradeOrClass
+        );
+        if (index !== -1) {
+          state.structures[index] = payload;
+        } else {
+          state.structures.push(payload);
+        }
+      })
+      .addCase(deleteFeeStructure.fulfilled, (state, { payload }) => {
+        state.structures = state.structures.filter((s) => s._id !== payload);
       });
   },
 });
@@ -216,5 +297,6 @@ const slice = createSlice({
 export const { voucherSaved, voucherMarkedPaid } = slice.actions;
 export const selectFees = (state) => state.fees.records;
 export const selectFeesStatus = (state) => state.fees.status;
+export const selectFeeStructures = (state) => state.fees.structures || [];
 export const selectJoinedFees = createSelector([selectFees, selectStudents], joinVouchers);
 export default slice.reducer;

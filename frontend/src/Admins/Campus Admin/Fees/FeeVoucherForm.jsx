@@ -25,6 +25,10 @@ export default function FeeVoucherForm({
     voucherNo: record?.voucherNo || (record ? "" : generateVoucherNo()),
     feeCategory: record?.feeCategory || "Tuition Fee",
     semester: record?.semester || "",
+    description: record?.description || record?.notes || "",
+    breakdown: Array.isArray(record?.breakdown) && record.breakdown.length > 0
+      ? record.breakdown
+      : [],
     amount: record?.amount ?? "",
     dueDate: record?.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
     paymentStatus: record?.paymentStatus ?? "Pending",
@@ -53,6 +57,39 @@ export default function FeeVoucherForm({
     setError("");
   };
 
+  const handleAddLineItem = () => {
+    setValues((prev) => ({
+      ...prev,
+      breakdown: [...prev.breakdown, { title: "", amount: "" }],
+    }));
+  };
+
+  const handleRemoveLineItem = (index) => {
+    setValues((prev) => {
+      const nextBreakdown = prev.breakdown.filter((_, i) => i !== index);
+      const total = nextBreakdown.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+      return {
+        ...prev,
+        breakdown: nextBreakdown,
+        amount: total > 0 ? total : prev.amount,
+      };
+    });
+  };
+
+  const handleLineItemChange = (index, field, val) => {
+    setValues((prev) => {
+      const nextBreakdown = prev.breakdown.map((item, i) =>
+        i === index ? { ...item, [field]: val } : item
+      );
+      const total = nextBreakdown.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+      return {
+        ...prev,
+        breakdown: nextBreakdown,
+        amount: total > 0 ? total : prev.amount,
+      };
+    });
+  };
+
   const submit = (event) => {
     event.preventDefault();
     const payload = Object.fromEntries(
@@ -62,6 +99,10 @@ export default function FeeVoucherForm({
       ]),
     );
     payload.amount = Number(payload.amount);
+    payload.breakdown = values.breakdown
+      .filter((item) => item.title && Number(item.amount) > 0)
+      .map((item) => ({ title: item.title.trim(), amount: Number(item.amount) }));
+    payload.notes = payload.description;
     const message = validateVoucher(payload);
     if (message) return setError(message);
     if (!students.some((student) => student.id === payload.studentId))
@@ -167,6 +208,104 @@ export default function FeeVoucherForm({
               value={values.amount}
               onChange={(e) => change("amount", e.target.value)}
             />
+          </div>
+
+          <div className="activity-form-field span-2">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <Label htmlFor="voucher-description">Description & Particulars (Prints on Bank Challan)</Label>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button
+                  type="button"
+                  onClick={() => change("description", isSchool ? "Regular Monthly Tuition Fee, Computer Lab & Library dues" : "Semester Tuition Fee, Laboratory and Examination charges")}
+                  style={{ background: "none", border: "none", color: "#4f46e5", fontSize: "11px", cursor: "pointer", padding: 0 }}
+                >
+                  + Auto-fill description
+                </button>
+              </div>
+            </div>
+            <textarea
+              id="voucher-description"
+              rows={2}
+              placeholder="e.g. Regular Monthly Tuition Fee and Computer Lab dues. A late fine of Rs. 200 applies after due date."
+              value={values.description}
+              onChange={(e) => change("description", e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 10px",
+                border: "1px solid #d4d4d8",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontFamily: "inherit",
+                resize: "vertical",
+              }}
+            />
+          </div>
+
+          {/* Optional Breakdown Line Items */}
+          <div className="activity-form-field span-2" style={{ borderTop: "1px dashed #e4e4e7", paddingTop: "12px", marginTop: "4px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <div>
+                <strong style={{ fontSize: "13px", color: "#09090b", display: "block" }}>
+                  Itemized Fee Breakdown (Optional)
+                </strong>
+                <span style={{ fontSize: "11px", color: "#71717a" }}>
+                  Add specific fee heads to show a detailed breakdown on the 3-part bank slip.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddLineItem}
+                style={{
+                  background: "#f4f4f5",
+                  border: "1px solid #d4d4d8",
+                  padding: "4px 8px",
+                  borderRadius: "5px",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                }}
+              >
+                + Add Fee Head
+              </button>
+            </div>
+
+            {values.breakdown.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
+                {values.breakdown.map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. Tuition Fee, Lab Charges, Sports Fund"
+                      value={item.title}
+                      onChange={(e) => handleLineItemChange(idx, "title", e.target.value)}
+                      style={{ flex: 2, padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      value={item.amount}
+                      onChange={(e) => handleLineItemChange(idx, "amount", e.target.value)}
+                      style={{ flex: 1, padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveLineItem(idx)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#dc2626",
+                        fontSize: "16px",
+                        cursor: "pointer",
+                        padding: "0 6px",
+                      }}
+                      aria-label="Remove fee head"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="activity-section-title">Billing & Due Dates</div>

@@ -237,12 +237,30 @@ export default function PrintChallanDialog({ voucher, onClose }) {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr style={{ borderBottom: "1px solid #e4e4e7" }}>
-                      <td style={{ padding: "5px 4px" }}>{voucher.feeCategory || "Tuition Fee"}</td>
-                      <td style={{ textAlign: "right", padding: "5px 4px", fontWeight: "600" }}>
-                        {formatPKR(voucher.amount)}
-                      </td>
-                    </tr>
+                    {Array.isArray(voucher.breakdown) && voucher.breakdown.length > 0 ? (
+                      voucher.breakdown.map((item, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #f4f4f5" }}>
+                          <td style={{ padding: "4px" }}>{item.title}</td>
+                          <td style={{ textAlign: "right", padding: "4px", fontWeight: "600" }}>
+                            {formatPKR(item.amount)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr style={{ borderBottom: "1px solid #e4e4e7" }}>
+                        <td style={{ padding: "5px 4px" }}>
+                          <div>{voucher.feeCategory || "Tuition Fee"}</div>
+                          {(voucher.description || voucher.notes) && (
+                            <div style={{ fontSize: "8.5px", color: "#71717a", marginTop: "2px", lineHeight: "1.3" }}>
+                              {voucher.description || voucher.notes}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ textAlign: "right", padding: "5px 4px", fontWeight: "600" }}>
+                          {formatPKR(voucher.amount)}
+                        </td>
+                      </tr>
+                    )}
                     <tr style={{ borderTop: "1.5px solid #09090b", fontWeight: "800" }}>
                       <td style={{ padding: "6px 4px" }}>TOTAL PAYABLE:</td>
                       <td style={{ textAlign: "right", padding: "6px 4px", fontSize: "12px", color: "#09090b" }}>
@@ -251,6 +269,12 @@ export default function PrintChallanDialog({ voucher, onClose }) {
                     </tr>
                   </tbody>
                 </table>
+
+                {(voucher.description || voucher.notes) && Array.isArray(voucher.breakdown) && voucher.breakdown.length > 0 && (
+                  <div style={{ fontSize: "9px", color: "#52525b", margin: "4px 0 8px 0", background: "#ffffff", border: "1px dashed #d4d4d8", padding: "4px 6px", borderRadius: "4px" }}>
+                    <strong>Note:</strong> {voucher.description || voucher.notes}
+                  </div>
+                )}
 
                 {/* Status Stamp */}
                 <div style={{ textAlign: "center", margin: "10px 0" }}>

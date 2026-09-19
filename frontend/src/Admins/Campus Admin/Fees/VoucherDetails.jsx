@@ -78,6 +78,30 @@ export default function VoucherDetails({ voucher, onClose, onPrint }) {
           </div>
         </div>
 
+        {/* Voucher Description & Line Items Particulars */}
+        {(voucher.description || voucher.notes || (Array.isArray(voucher.breakdown) && voucher.breakdown.length > 0)) && (
+          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "6px" }}>
+              Voucher Description & Fee Particulars
+            </span>
+            {(voucher.description || voucher.notes) && (
+              <p style={{ margin: "0 0 10px 0", fontSize: "13px", color: "#3f3f46", lineHeight: "1.5" }}>
+                {voucher.description || voucher.notes}
+              </p>
+            )}
+            {Array.isArray(voucher.breakdown) && voucher.breakdown.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", borderTop: "1px solid #e4e4e7", paddingTop: "8px" }}>
+                {voucher.breakdown.map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                    <span style={{ color: "#71717a" }}>{item.title}</span>
+                    <strong style={{ color: "#09090b" }}>{formatPKR(item.amount)}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="activity-form-actions" style={{ display: "flex", gap: "10px" }}>
           <button type="button" className="activity-cancel-btn" onClick={onClose}>
             Back to Fee Management

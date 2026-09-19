@@ -46,6 +46,10 @@ import {
   getFeeRecordById,
   updateFeeRecord,
   deleteFeeRecord,
+  generateMonthlyFees,
+  getFeeStructures,
+  saveFeeStructure,
+  deleteFeeStructure,
   createPerformanceRecord,
   getPerformanceRecords,
   getPerformanceRecordById,
@@ -128,7 +132,10 @@ router
   .put(updateStudentAttendance)
   .delete(deleteStudentAttendance);
 
-// Fee Records
+// Fee Records & School Monthly Fee System
+router.post("/fees/generate-monthly", generateMonthlyFees);
+router.route("/fees/structures").get(getFeeStructures).post(saveFeeStructure);
+router.delete("/fees/structures/:id", deleteFeeStructure);
 router.route("/fees").get(getFeeRecords).post(createFeeRecord);
 router
   .route("/fees/:id")

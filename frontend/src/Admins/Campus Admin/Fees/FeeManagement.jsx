@@ -9,6 +9,8 @@ import {
   Download,
   Plus,
   Search,
+  Settings2,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -24,6 +26,7 @@ import {
   addFeeVoucher,
   updateFeeVoucher,
   deleteFeeVoucher,
+  fetchFeeStructures,
   voucherSaved,
   voucherMarkedPaid,
 } from "@/store/Slices/feesSlice.js";
@@ -42,6 +45,8 @@ import FeeStatusBadge from "./FeeStatusBadge";
 import VoucherDetails from "./VoucherDetails";
 import MarkPaidDialog from "./MarkPaidDialog";
 import PrintChallanDialog from "./PrintChallanDialog";
+import GenerateMonthlyFeesDialog from "./GenerateMonthlyFeesDialog";
+import FeeStructureDialog from "./FeeStructureDialog";
 import { useInstitution } from "@/context/InstitutionContext";
 import "../Timetable/ClassTimetable.css";
 import "./FeeManagement.css";
@@ -72,6 +77,7 @@ export default function FeeManagement() {
   useEffect(() => {
     dispatch(fetchFees());
     dispatch(fetchStudents());
+    dispatch(fetchFeeStructures());
 
     const interval = setInterval(() => {
       dispatch(fetchFees());
@@ -292,6 +298,26 @@ export default function FeeManagement() {
           <button
             type="button"
             className="toolbar-btn toolbar-btn-outline"
+            onClick={() => setModal({ mode: "structure" })}
+            title="School Fee Structure Setup"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Settings2 size={14} />
+            Fee Setup
+          </button>
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-outline"
+            onClick={() => setModal({ mode: "generate" })}
+            title="Generate Monthly Fee Vouchers"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Wand2 size={14} />
+            Generate Monthly
+          </button>
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-outline"
             onClick={exportFees}
           >
             <Download size={14} />
@@ -452,6 +478,15 @@ export default function FeeManagement() {
       )}
       {modal?.mode === "print" && selected && (
         <PrintChallanDialog voucher={selected} onClose={close} />
+      )}
+      {modal?.mode === "generate" && (
+        <GenerateMonthlyFeesDialog
+          onClose={close}
+          onGenerated={() => dispatch(fetchFees())}
+        />
+      )}
+      {modal?.mode === "structure" && (
+        <FeeStructureDialog onClose={close} />
       )}
     </section>
   );
