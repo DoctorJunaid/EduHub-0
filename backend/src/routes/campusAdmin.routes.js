@@ -51,6 +51,8 @@ import {
   getPerformanceRecordById,
   updatePerformanceRecord,
   deletePerformanceRecord,
+  getDashboardStats,
+  createBulkStudentAttendance,
 } from "../controllers/campusAdmin.controller.js";
 import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
@@ -60,6 +62,9 @@ const router = express.Router();
 
 router.use(protect);
 router.use(authorize("campus_admin", "campus_manager"));
+
+// Real-time Aggregated Campus / School Dashboard Statistics
+router.get("/dashboard/stats", getDashboardStats);
 
 router
   .route("/students")
@@ -116,6 +121,7 @@ router
   .route("/attendance/students")
   .get(getStudentAttendance)
   .post(createStudentAttendance);
+router.post("/attendance/students/bulk", createBulkStudentAttendance);
 router
   .route("/attendance/students/:id")
   .get(getStudentAttendanceById)

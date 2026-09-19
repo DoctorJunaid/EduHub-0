@@ -22,7 +22,16 @@ const teacherAttendanceSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ["Present", "Absent", "Late", "On Leave"],
+        values: [
+          "Present",
+          "Absent",
+          "Late",
+          "On Leave",
+          "present",
+          "absent",
+          "late",
+          "on leave",
+        ],
         message: "Status must be Present, Absent, Late, or On Leave",
       },
       required: [true, "Status is required"],
@@ -51,6 +60,12 @@ const teacherAttendanceSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+teacherAttendanceSchema.virtual("teacherId").get(function () {
+  return this.teacherProfileId;
+}).set(function (val) {
+  this.teacherProfileId = val;
+});
 
 // Pre-save hook to normalize date to midnight
 teacherAttendanceSchema.pre("save", function (next) {

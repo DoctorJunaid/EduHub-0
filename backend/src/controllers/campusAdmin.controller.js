@@ -3,10 +3,44 @@ import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import campusAdminService from "../services/campusAdmin.service.js";
 
+// Helper to safely extract campus and institute context
+const getContext = (req) => {
+  const campusId = req.user?.campusId || req.query.campusId;
+  const instituteId = req.user?.instituteId || req.query.instituteId;
+  if (!campusId && req.user?.role !== "super_admin") {
+    const error = new Error("Campus context required. No campus assigned to user.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return { campusId, instituteId };
+};
+
+// Helper for HTTP response error handling
+const handleError = (res, error, status = 400) => {
+  res.status(status).json({ success: false, message: error.message });
+};
+
+// GET Aggregated Campus / School Dashboard Statistics
+export const getDashboardStats = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const isSchool = req.query.isSchool === "true" || req.user?.instituteType === "School";
+    const stats = await campusAdminService.getDashboardStats(campusId, isSchool);
+    return res.status(200).json({ success: true, data: stats });
+  } catch (error) {
+    handleError(res, error, error.statusCode || 500);
+  }
+};
+
 // CREATE Campus Admin
 export const createCampusAdmin = async (req, res) => {
   try {
-    const { fullName, email, password, instituteId } = req.body;
+    const { fullName, name, email, password, instituteId } = req.body;
+    const adminName = name || fullName;
+
+    if (!adminName) {
+      return res.status(400).json({ success: false, message: "Name is required" });
+    }
 
     // Verify assigned institute exists
     const institute = await Institute.findById(instituteId);
@@ -24,11 +58,11 @@ export const createCampusAdmin = async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(password || "admin123", salt);
 
     const campusAdmin = await User.create({
-      fullName,
-      email,
+      name: adminName.trim(),
+      email: email.toLowerCase().trim(),
       passwordHash,
       role: "campus_admin",
       instituteId,
@@ -46,8 +80,9 @@ export const createCampusAdmin = async (req, res) => {
 // GET All Campus Admins
 export const getCampusAdmins = async (req, res) => {
   try {
-    const admins = await User.find({ role: "campus_admin" })
+    const admins = await User.find({ role: { $in: ["campus_admin", "campus_manager"] } })
       .populate("instituteId", "name type email")
+      .select("-passwordHash")
       .sort({ createdAt: -1 });
 
     return res
@@ -63,8 +98,10 @@ export const getCampusAdminById = async (req, res) => {
   try {
     const admin = await User.findOne({
       _id: req.params.id,
-      role: "campus_admin",
-    }).populate("instituteId", "name type email");
+      role: { $in: ["campus_admin", "campus_manager"] },
+    })
+      .populate("instituteId", "name type email")
+      .select("-passwordHash");
 
     if (!admin) {
       return res
@@ -80,11 +117,12 @@ export const getCampusAdminById = async (req, res) => {
 // UPDATE Campus Admin
 export const updateCampusAdmin = async (req, res) => {
   try {
-    const { fullName, email, instituteId, status, password } = req.body;
+    const { fullName, name, email, instituteId, status, password } = req.body;
 
     const updateFields = {};
-    if (fullName) updateFields.fullName = fullName;
-    if (email) updateFields.email = email;
+    const adminName = name || fullName;
+    if (adminName) updateFields.name = adminName.trim();
+    if (email) updateFields.email = email.toLowerCase().trim();
     if (instituteId) updateFields.instituteId = instituteId;
     if (status) updateFields.status = status;
 
@@ -94,10 +132,12 @@ export const updateCampusAdmin = async (req, res) => {
     }
 
     const admin = await User.findOneAndUpdate(
-      { _id: req.params.id, role: "campus_admin" },
+      { _id: req.params.id, role: { $in: ["campus_admin", "campus_manager"] } },
       updateFields,
       { new: true, runValidators: true },
-    ).populate("instituteId", "name type");
+    )
+      .populate("instituteId", "name type")
+      .select("-passwordHash");
 
     if (!admin) {
       return res
@@ -116,7 +156,7 @@ export const deleteCampusAdmin = async (req, res) => {
   try {
     const admin = await User.findOneAndDelete({
       _id: req.params.id,
-      role: "campus_admin",
+      role: { $in: ["campus_admin", "campus_manager"] },
     });
     if (!admin) {
       return res
@@ -131,13 +171,6 @@ export const deleteCampusAdmin = async (req, res) => {
   }
 };
 
-// New
-
-// Helper for HTTP response error handling
-const handleError = (res, error, status = 400) => {
-  res.status(status).json({ success: false, message: error.message });
-};
-
 // --- Teacher Controllers ---
 export const createTeacher = async (req, res) => {
   try {
@@ -150,7 +183,8 @@ export const createTeacher = async (req, res) => {
 
 export const getTeachers = async (req, res) => {
   try {
-    const profiles = await campusAdminService.getAllTeacherProfiles(req.query);
+    const { campusId } = getContext(req);
+    const profiles = await campusAdminService.getAllTeacherProfiles(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: profiles.length, data: profiles });
@@ -161,8 +195,10 @@ export const getTeachers = async (req, res) => {
 
 export const getTeacherById = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const profile = await campusAdminService.getTeacherProfileById(
       req.params.id,
+      campusId,
     );
     res.status(200).json({ success: true, data: profile });
   } catch (error) {
@@ -172,8 +208,10 @@ export const getTeacherById = async (req, res) => {
 
 export const updateTeacher = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const profile = await campusAdminService.updateTeacherProfile(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: profile });
@@ -184,7 +222,8 @@ export const updateTeacher = async (req, res) => {
 
 export const deleteTeacher = async (req, res) => {
   try {
-    await campusAdminService.deleteTeacherProfile(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteTeacherProfile(req.params.id, campusId);
     res.status(200).json({
       success: true,
       message: "Teacher profile deleted successfully.",
@@ -206,7 +245,8 @@ export const createStudent = async (req, res) => {
 
 export const getStudents = async (req, res) => {
   try {
-    const profiles = await campusAdminService.getAllStudentProfiles(req.query);
+    const { campusId } = getContext(req);
+    const profiles = await campusAdminService.getAllStudentProfiles(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: profiles.length, data: profiles });
@@ -217,8 +257,10 @@ export const getStudents = async (req, res) => {
 
 export const getStudentById = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const profile = await campusAdminService.getStudentProfileById(
       req.params.id,
+      campusId,
     );
     res.status(200).json({ success: true, data: profile });
   } catch (error) {
@@ -228,8 +270,10 @@ export const getStudentById = async (req, res) => {
 
 export const updateStudent = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const profile = await campusAdminService.updateStudentProfile(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: profile });
@@ -240,7 +284,8 @@ export const updateStudent = async (req, res) => {
 
 export const deleteStudent = async (req, res) => {
   try {
-    await campusAdminService.deleteStudentProfile(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteStudentProfile(req.params.id, campusId);
     res.status(200).json({
       success: true,
       message: "Student profile deleted successfully.",
@@ -253,7 +298,12 @@ export const deleteStudent = async (req, res) => {
 // --- Class Schedule Controllers ---
 export const createClassSchedule = async (req, res) => {
   try {
-    const record = await campusAdminService.createClassSchedule(req.body);
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.createClassSchedule(
+      campusId,
+      instituteId,
+      req.body,
+    );
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -262,7 +312,8 @@ export const createClassSchedule = async (req, res) => {
 
 export const getClassSchedules = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllClassSchedules(req.query);
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllClassSchedules(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
@@ -273,7 +324,8 @@ export const getClassSchedules = async (req, res) => {
 
 export const getClassScheduleById = async (req, res) => {
   try {
-    const record = await campusAdminService.getClassScheduleById(req.params.id);
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.getClassScheduleById(req.params.id, campusId);
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 404);
@@ -282,8 +334,10 @@ export const getClassScheduleById = async (req, res) => {
 
 export const updateClassSchedule = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.updateClassSchedule(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: record });
@@ -294,7 +348,8 @@ export const updateClassSchedule = async (req, res) => {
 
 export const deleteClassSchedule = async (req, res) => {
   try {
-    await campusAdminService.deleteClassSchedule(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteClassSchedule(req.params.id, campusId);
     res
       .status(200)
       .json({ success: true, message: "Class schedule deleted successfully." });
@@ -306,7 +361,12 @@ export const deleteClassSchedule = async (req, res) => {
 // --- Exam Schedule Controllers ---
 export const createExamSchedule = async (req, res) => {
   try {
-    const record = await campusAdminService.createExamSchedule(req.body);
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.createExamSchedule(
+      campusId,
+      instituteId,
+      req.body,
+    );
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -315,7 +375,8 @@ export const createExamSchedule = async (req, res) => {
 
 export const getExamSchedules = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllExamSchedules(req.query);
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllExamSchedules(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
@@ -326,7 +387,8 @@ export const getExamSchedules = async (req, res) => {
 
 export const getExamScheduleById = async (req, res) => {
   try {
-    const record = await campusAdminService.getExamScheduleById(req.params.id);
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.getExamScheduleById(req.params.id, campusId);
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 404);
@@ -335,8 +397,10 @@ export const getExamScheduleById = async (req, res) => {
 
 export const updateExamSchedule = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.updateExamSchedule(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: record });
@@ -347,7 +411,8 @@ export const updateExamSchedule = async (req, res) => {
 
 export const deleteExamSchedule = async (req, res) => {
   try {
-    await campusAdminService.deleteExamSchedule(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteExamSchedule(req.params.id, campusId);
     res
       .status(200)
       .json({ success: true, message: "Exam schedule deleted successfully." });
@@ -368,7 +433,8 @@ export const createTeacherAttendance = async (req, res) => {
 
 export const getTeacherAttendance = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllTeacherAttendance(req.query);
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllTeacherAttendance(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
@@ -379,8 +445,10 @@ export const getTeacherAttendance = async (req, res) => {
 
 export const getTeacherAttendanceById = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.getTeacherAttendanceById(
       req.params.id,
+      campusId,
     );
     res.status(200).json({ success: true, data: record });
   } catch (error) {
@@ -390,8 +458,10 @@ export const getTeacherAttendanceById = async (req, res) => {
 
 export const updateTeacherAttendance = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.updateTeacherAttendance(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: record });
@@ -402,7 +472,8 @@ export const updateTeacherAttendance = async (req, res) => {
 
 export const deleteTeacherAttendance = async (req, res) => {
   try {
-    await campusAdminService.deleteTeacherAttendance(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteTeacherAttendance(req.params.id, campusId);
     res
       .status(200)
       .json({
@@ -417,8 +488,27 @@ export const deleteTeacherAttendance = async (req, res) => {
 // --- Student Attendance Controllers ---
 export const createStudentAttendance = async (req, res) => {
   try {
-    const record = await campusAdminService.createStudentAttendance(req.body);
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.createStudentAttendance(
+      campusId,
+      instituteId,
+      req.body,
+    );
     res.status(201).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const createBulkStudentAttendance = async (req, res) => {
+  try {
+    const { campusId, instituteId } = getContext(req);
+    const records = await campusAdminService.createBulkStudentAttendance(
+      campusId,
+      instituteId,
+      req.body,
+    );
+    res.status(201).json({ success: true, count: records.length, data: records });
   } catch (error) {
     handleError(res, error, 400);
   }
@@ -426,7 +516,8 @@ export const createStudentAttendance = async (req, res) => {
 
 export const getStudentAttendance = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllStudentAttendance(req.query);
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllStudentAttendance(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
@@ -437,8 +528,10 @@ export const getStudentAttendance = async (req, res) => {
 
 export const getStudentAttendanceById = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.getStudentAttendanceById(
       req.params.id,
+      campusId,
     );
     res.status(200).json({ success: true, data: record });
   } catch (error) {
@@ -448,8 +541,10 @@ export const getStudentAttendanceById = async (req, res) => {
 
 export const updateStudentAttendance = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.updateStudentAttendance(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: record });
@@ -460,7 +555,8 @@ export const updateStudentAttendance = async (req, res) => {
 
 export const deleteStudentAttendance = async (req, res) => {
   try {
-    await campusAdminService.deleteStudentAttendance(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteStudentAttendance(req.params.id, campusId);
     res
       .status(200)
       .json({
@@ -475,7 +571,12 @@ export const deleteStudentAttendance = async (req, res) => {
 // --- Fee Record Controllers ---
 export const createFeeRecord = async (req, res) => {
   try {
-    const record = await campusAdminService.createFeeRecord(req.body);
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.createFeeRecord(
+      campusId,
+      instituteId,
+      req.body,
+    );
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -484,7 +585,8 @@ export const createFeeRecord = async (req, res) => {
 
 export const getFeeRecords = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllFeeRecords(req.query);
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllFeeRecords(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
@@ -495,7 +597,8 @@ export const getFeeRecords = async (req, res) => {
 
 export const getFeeRecordById = async (req, res) => {
   try {
-    const record = await campusAdminService.getFeeRecordById(req.params.id);
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.getFeeRecordById(req.params.id, campusId);
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 404);
@@ -504,8 +607,10 @@ export const getFeeRecordById = async (req, res) => {
 
 export const updateFeeRecord = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.updateFeeRecord(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: record });
@@ -516,7 +621,8 @@ export const updateFeeRecord = async (req, res) => {
 
 export const deleteFeeRecord = async (req, res) => {
   try {
-    await campusAdminService.deleteFeeRecord(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteFeeRecord(req.params.id, campusId);
     res
       .status(200)
       .json({ success: true, message: "Fee record deleted successfully." });
@@ -528,7 +634,12 @@ export const deleteFeeRecord = async (req, res) => {
 // --- Performance Controllers ---
 export const createPerformanceRecord = async (req, res) => {
   try {
-    const record = await campusAdminService.createPerformance(req.body);
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.createPerformance(
+      campusId,
+      instituteId,
+      req.body,
+    );
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -537,7 +648,8 @@ export const createPerformanceRecord = async (req, res) => {
 
 export const getPerformanceRecords = async (req, res) => {
   try {
-    const records = await campusAdminService.getAllPerformance(req.query);
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllPerformance(campusId, req.query);
     res
       .status(200)
       .json({ success: true, count: records.length, data: records });
@@ -548,7 +660,8 @@ export const getPerformanceRecords = async (req, res) => {
 
 export const getPerformanceRecordById = async (req, res) => {
   try {
-    const record = await campusAdminService.getPerformanceById(req.params.id);
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.getPerformanceById(req.params.id, campusId);
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 404);
@@ -557,8 +670,10 @@ export const getPerformanceRecordById = async (req, res) => {
 
 export const updatePerformanceRecord = async (req, res) => {
   try {
+    const { campusId } = getContext(req);
     const record = await campusAdminService.updatePerformance(
       req.params.id,
+      campusId,
       req.body,
     );
     res.status(200).json({ success: true, data: record });
@@ -569,7 +684,8 @@ export const updatePerformanceRecord = async (req, res) => {
 
 export const deletePerformanceRecord = async (req, res) => {
   try {
-    await campusAdminService.deletePerformance(req.params.id);
+    const { campusId } = getContext(req);
+    await campusAdminService.deletePerformance(req.params.id, campusId);
     res
       .status(200)
       .json({

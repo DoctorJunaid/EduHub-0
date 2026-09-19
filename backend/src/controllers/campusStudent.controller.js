@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
+import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
 
 // @desc    Get students belonging to campus admin/manager's campus
 // @route   GET /api/v1/campus-admin/students
@@ -234,6 +235,29 @@ export const createStudentForCampus = async (req, res) => {
     const studentResponse = student.toObject();
     delete studentResponse.passwordHash;
 
+    // Sync StudentProfile so downstream services (attendance, fees, payroll) find the profile
+    try {
+      await StudentProfile.findOneAndUpdate(
+        { user: student._id },
+        {
+          user: student._id,
+          studentId: student.roll || String(student._id),
+          gradeOrClass: student.gradeOrClass || student.program || "Grade 10",
+          section: student.section || "A",
+          rollNumber: student.roll || "1",
+          guardianDetails: {
+            name: student.guardian || "Guardian",
+            phone: student.guardianPhone || student.phone || "N/A",
+            relation: "Parent",
+          },
+          isActive: student.status !== "Inactive",
+        },
+        { upsert: true, new: true }
+      );
+    } catch (profileErr) {
+      console.warn("Could not sync StudentProfile:", profileErr.message);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Student created successfully",
@@ -366,6 +390,28 @@ export const createFacultyForCampus = async (req, res) => {
     const facultyResponse = faculty.toObject();
     delete facultyResponse.passwordHash;
 
+    // Sync TeacherProfile for timetable, payroll, and substitute modules
+    try {
+      const empId = `EMP-${faculty._id.toString().slice(-4).toUpperCase()}`;
+      await TeacherProfile.findOneAndUpdate(
+        { user: faculty._id },
+        {
+          user: faculty._id,
+          employeeId: empId,
+          department: faculty.department || "General",
+          subjectsTaught: faculty.subjects
+            ? faculty.subjects.split(",").map((s) => s.trim())
+            : [],
+          qualification: faculty.qualification || "Bachelor",
+          designation: faculty.designation || "Teacher",
+          isActive: faculty.status !== "Inactive",
+        },
+        { upsert: true, new: true }
+      );
+    } catch (profileErr) {
+      console.warn("Could not sync TeacherProfile:", profileErr.message);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Faculty created successfully",
@@ -418,10 +464,30 @@ export const updateStudentInCampus = async (req, res) => {
     const { campusId } = req.user;
     const studentId = req.params.id;
 
-    const updateData = { ...req.body };
-    delete updateData._id;
-    delete updateData.id;
-    delete updateData.passwordHash;
+    // Strict whitelist to prevent privilege escalation / mass assignment
+    const allowedFields = [
+      "name",
+      "phone",
+      "studentPhone",
+      "roll",
+      "program",
+      "gradeOrClass",
+      "admissionNo",
+      "section",
+      "semester",
+      "subjects",
+      "guardian",
+      "guardianPhone",
+      "status",
+      "isActive",
+    ];
+
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = typeof req.body[key] === "string" ? req.body[key].trim() : req.body[key];
+      }
+    }
 
     if (updateData.studentPhone && !updateData.phone) {
       updateData.phone = updateData.studentPhone;
@@ -453,10 +519,24 @@ export const updateFacultyInCampus = async (req, res) => {
     const { campusId } = req.user;
     const facultyId = req.params.id;
 
-    const updateData = { ...req.body };
-    delete updateData._id;
-    delete updateData.id;
-    delete updateData.passwordHash;
+    // Strict whitelist to prevent privilege escalation
+    const allowedFields = [
+      "name",
+      "phone",
+      "department",
+      "designation",
+      "qualification",
+      "subjects",
+      "status",
+      "isActive",
+    ];
+
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = typeof req.body[key] === "string" ? req.body[key].trim() : req.body[key];
+      }
+    }
 
     const faculty = await User.findOneAndUpdate(
       { _id: facultyId, role: { $in: ["faculty", "teacher"] }, campusId },

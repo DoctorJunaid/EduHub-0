@@ -9,12 +9,15 @@
  *   req.user.campusId  →  filter data to this admin's campus only
  */
 export const isCampusAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "campus_admin") {
+  if (
+    req.user &&
+    (req.user.role === "campus_admin" || req.user.role === "campus_manager")
+  ) {
     return next();
   }
   return res.status(403).json({
     success: false,
-    message: "Access denied. Campus Admin privileges required.",
+    message: "Access denied. Campus Manager/Admin privileges required.",
   });
 };
 

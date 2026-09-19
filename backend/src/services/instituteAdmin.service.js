@@ -214,6 +214,21 @@ export const assignCampusManager = async (
       phone: phone ? phone.trim() : "",
     });
   } else if (managerUser) {
+    // Prevent taking over super admins or admins from other institutes
+    if (managerUser.role === "super_admin") {
+      const err = new Error("Cannot reassign a Super Admin account.");
+      err.statusCode = 403;
+      throw err;
+    }
+    if (
+      managerUser.instituteId &&
+      managerUser.instituteId.toString() !== instituteId.toString()
+    ) {
+      const err = new Error("User belongs to a different institute.");
+      err.statusCode = 403;
+      throw err;
+    }
+
     managerUser.role = "campus_manager";
     managerUser.instituteId = instituteId;
     managerUser.campusId = campus._id;
@@ -232,7 +247,7 @@ export const assignCampusManager = async (
   campus.managerId = managerUser._id;
   await campus.save();
 
-  // Generate setup link
+  // Generate setup link and dispatch strictly via email
   const token = generateToken({ id: managerUser._id, role: managerUser.role, reset: true });
   const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
@@ -253,7 +268,7 @@ export const assignCampusManager = async (
   const userObj = managerUser.toObject();
   delete userObj.passwordHash;
 
-  return { campus, manager: userObj, resetLink };
+  return { campus, manager: userObj, message: "Campus manager assigned successfully." };
 };
 
 /**
