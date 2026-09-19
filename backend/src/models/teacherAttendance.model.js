@@ -67,12 +67,11 @@ teacherAttendanceSchema.virtual("teacherId").get(function () {
   this.teacherProfileId = val;
 });
 
-// Pre-save hook to normalize date to midnight
+// Pre-save hook to normalize date to canonical UTC midnight
 teacherAttendanceSchema.pre("save", function (next) {
   if (this.date) {
     const d = new Date(this.date);
-    d.setHours(0, 0, 0, 0);
-    this.date = d;
+    this.date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
   }
   if (typeof next === "function") next();
 });

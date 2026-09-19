@@ -167,7 +167,7 @@ export const deleteAttendance = asyncHandler(async (req, res) => {
 export const checkIn = asyncHandler(async (req, res) => {
   const campusId = getCampusId(req);
   const teacherProfileId = req.body.teacherProfileId || req.user?._id;
-  const data = await svc.checkIn(campusId, req.user?._id, teacherProfileId);
+  const data = await svc.checkIn(campusId, req.user?._id, teacherProfileId, req.body.date);
   return res.status(200).json({ success: true, message: "Check-in recorded", data });
 });
 
@@ -177,6 +177,6 @@ export const checkIn = asyncHandler(async (req, res) => {
 export const checkOut = asyncHandler(async (req, res) => {
   const campusId = getCampusId(req);
   const teacherProfileId = req.body.teacherProfileId || req.user?._id;
-  const data = await svc.checkOut(campusId, req.user?._id, teacherProfileId);
+  const data = await svc.checkOut(campusId, req.user?._id, teacherProfileId, req.body.date);
   return res.status(200).json({ success: true, message: "Check-out recorded", data });
 });

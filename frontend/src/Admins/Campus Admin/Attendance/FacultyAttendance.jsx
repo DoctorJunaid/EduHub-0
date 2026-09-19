@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import {
   CalendarDays,
   CircleCheck,
@@ -168,7 +169,7 @@ export default function FacultyAttendance() {
     if (pendingAction) return;
     setPendingAction(`${action}:${facultyId}`);
     try {
-      const response = await attendanceApi[action](facultyId);
+      const response = await attendanceApi[action](facultyId, date);
       const saved = response.data?.data;
       if (!saved) throw new Error("Attendance response was empty.");
       const timestampParts = pakistanDateTime(
@@ -176,10 +177,10 @@ export default function FacultyAttendance() {
       );
       const savedDate = timestampParts
         ? `${timestampParts.year}-${timestampParts.month}-${timestampParts.day}`
-        : new Date(saved.date).toISOString().slice(0, 10);
+        : date;
       dispatch(
         attendanceSaved({
-          id: saved._id,
+          id: String(saved._id),
           facultyId: String(saved.teacherProfileId?._id || saved.teacherProfileId || facultyId),
           date: savedDate,
           checkInTime: pakistanTime(saved.checkInTime),
@@ -189,11 +190,31 @@ export default function FacultyAttendance() {
       );
       setDate(savedDate);
       setView("daily");
-      setNotice(
-        `${action === "checkIn" ? "Check-in" : "Check-out"} recorded. Time shown in Pakistan Standard Time.`,
+      toast.success(
+        `${action === "checkIn" ? "Check-in" : "Check-out"} recorded successfully!`,
       );
+
+      // Re-fetch attendance list to maintain 100% backend synchronization
+      try {
+        const refreshRes = await attendanceApi.listAttendance({ date: savedDate });
+        for (const row of refreshRes.data?.data || []) {
+          if (!row.attendanceId || !row.status) continue;
+          dispatch(
+            attendanceSaved({
+              id: String(row.attendanceId),
+              facultyId: String(row.teacherProfileId),
+              date: savedDate,
+              checkInTime: pakistanTime(row.checkInTime),
+              checkOutTime: pakistanTime(row.checkOutTime),
+              status: row.status,
+            }),
+          );
+        }
+      } catch {
+        // Background sync non-fatal
+      }
     } catch (error) {
-      setNotice(
+      toast.error(
         error.response?.data?.message ||
           error.message ||
           "Could not update attendance.",
@@ -205,20 +226,56 @@ export default function FacultyAttendance() {
 
   const week = mondayOf(parseDate(date));
 
-  const save = (values) => {
-    dispatch(attendanceSaved(values));
-    setDate(values.date);
-    setView("daily");
-    setFilters(initialFilters);
-    setPage(
-      Math.floor(
-        Math.max(
-          0,
-          faculty.findIndex((member) => member.id === values.facultyId),
-        ) / pageSize,
-      ) + 1,
-    );
-    setNotice("Attendance saved.");
+  const save = async (values) => {
+    try {
+      const payload = {
+        teacherProfileId: values.facultyId,
+        date: values.date,
+        status: values.status,
+        checkInTime: values.checkInTime ? `${values.date}T${values.checkInTime}:00.000Z` : "",
+        checkOutTime: values.checkOutTime ? `${values.date}T${values.checkOutTime}:00.000Z` : "",
+        remarks: values.remarks || "",
+      };
+      if (values.id) {
+        await attendanceApi.updateAttendance(values.id, payload);
+      } else {
+        await attendanceApi.markAttendance(payload);
+      }
+      dispatch(attendanceSaved(values));
+      setDate(values.date);
+      setView("daily");
+      setFilters(initialFilters);
+      setPage(
+        Math.floor(
+          Math.max(
+            0,
+            faculty.findIndex((member) => member.id === values.facultyId),
+          ) / pageSize,
+        ) + 1,
+      );
+      toast.success("Attendance saved successfully!");
+
+      try {
+        const refreshRes = await attendanceApi.listAttendance({ date: values.date });
+        for (const row of refreshRes.data?.data || []) {
+          if (!row.attendanceId || !row.status) continue;
+          dispatch(
+            attendanceSaved({
+              id: String(row.attendanceId),
+              facultyId: String(row.teacherProfileId),
+              date: values.date,
+              checkInTime: pakistanTime(row.checkInTime),
+              checkOutTime: pakistanTime(row.checkOutTime),
+              status: row.status,
+            }),
+          );
+        }
+      } catch {
+        // Sync non-fatal
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || "Failed to save attendance");
+    }
     close();
   };
 
@@ -237,11 +294,11 @@ export default function FacultyAttendance() {
     );
   };
 
-  // Metric counts
-  const totalCount = faculty.length || 86;
-  const presentCount = records.filter(r => r.date === date && r.status === 'Present').length || 82;
-  const lateCount = records.filter(r => r.date === date && r.status === 'Late').length || 3;
-  const absentCount = records.filter(r => r.date === date && r.status === 'Absent').length || 1;
+  // Metric counts (derived accurately from active database records)
+  const totalCount = faculty.length;
+  const presentCount = records.filter(r => r.date === date && (r.status === 'Present' || r.status === 'Late')).length;
+  const lateCount = records.filter(r => r.date === date && r.status === 'Late').length;
+  const absentCount = records.filter(r => r.date === date && r.status === 'Absent').length;
 
   return (
     <section

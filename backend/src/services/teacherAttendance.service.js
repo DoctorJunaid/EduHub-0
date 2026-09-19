@@ -3,14 +3,20 @@ import User from "../models/user.model.js";
 
 // ---- Date Helpers ----
 export function normalizeDate(d) {
+  if (!d) {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  }
+  if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [year, month, day] = d.split("-").map(Number);
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+  }
   const date = new Date(d);
   if (isNaN(date.getTime())) {
-    const fallback = new Date();
-    fallback.setHours(0, 0, 0, 0);
-    return fallback;
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
   }
-  date.setHours(0, 0, 0, 0);
-  return date;
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
 }
 
 export function startOfWeek(d) {
@@ -55,8 +61,13 @@ export async function getAttendanceByDate(campusId, dateStr, filters = {}) {
     .sort({ name: 1 })
     .lean();
 
-  // Load attendance records for this date
-  const records = await TeacherAttendance.find({ campusId, date })
+  // Load attendance records for this date (using day window for timezone safety)
+  const startWindow = new Date(date.getTime() - 6 * 60 * 60 * 1000);
+  const endWindow = new Date(date.getTime() + 24 * 60 * 60 * 1000 - 1);
+  const records = await TeacherAttendance.find({
+    campusId,
+    date: { $gte: startWindow, $lte: endWindow },
+  })
     .populate("markedBy", "name email")
     .lean();
 
@@ -357,7 +368,7 @@ export async function deleteAttendance(id, campusId) {
 }
 
 // ---- Check-in (record UTC check-in time) ----
-export async function checkIn(campusId, markedBy, teacherProfileId) {
+export async function checkIn(campusId, markedBy, teacherProfileId, dateStr) {
   const teacher = await User.findOne({
     _id: teacherProfileId,
     campusId,
@@ -369,8 +380,14 @@ export async function checkIn(campusId, markedBy, teacherProfileId) {
     throw error;
   }
 
-  const date = normalizeDate(new Date());
-  const existing = await TeacherAttendance.findOne({ campusId, teacherProfileId, date });
+  const date = normalizeDate(dateStr || new Date());
+  const startWindow = new Date(date.getTime() - 6 * 60 * 60 * 1000);
+  const endWindow = new Date(date.getTime() + 24 * 60 * 60 * 1000 - 1);
+  const existing = await TeacherAttendance.findOne({
+    campusId,
+    teacherProfileId,
+    date: { $gte: startWindow, $lte: endWindow },
+  });
   if (existing?.checkInTime) {
     const error = new Error("This teacher has already checked in today.");
     error.statusCode = 409;
@@ -392,9 +409,15 @@ export async function checkIn(campusId, markedBy, teacherProfileId) {
 }
 
 // ---- Check-out (record UTC check-out time) ----
-export async function checkOut(campusId, markedBy, teacherProfileId) {
-  const date = normalizeDate(new Date());
-  const existing = await TeacherAttendance.findOne({ campusId, teacherProfileId, date });
+export async function checkOut(campusId, markedBy, teacherProfileId, dateStr) {
+  const date = normalizeDate(dateStr || new Date());
+  const startWindow = new Date(date.getTime() - 6 * 60 * 60 * 1000);
+  const endWindow = new Date(date.getTime() + 24 * 60 * 60 * 1000 - 1);
+  const existing = await TeacherAttendance.findOne({
+    campusId,
+    teacherProfileId,
+    date: { $gte: startWindow, $lte: endWindow },
+  });
   if (!existing?.checkInTime) {
     const error = new Error("Check-in must be recorded before check-out.");
     error.statusCode = 400;

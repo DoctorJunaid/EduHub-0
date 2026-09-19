@@ -8,19 +8,21 @@ export function validateAttendance(record) {
   if (!validDate(record.date)) return "Enter a valid date.";
   if (!attendanceStatuses.includes(record.status))
     return "Select an attendance status.";
-  const time = /^([01]\d|2[0-3]):[0-5]\d$/;
-  if (
-    ![record.checkInTime, record.checkOutTime].every(
-      (value) => typeof value === "string" && (!value || time.test(value)),
-    )
-  )
+  const time = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
+  const isValidTime = (val) => {
+    if (!val || typeof val !== "string") return true;
+    if (time.test(val)) return true;
+    if (val.includes("T") && !isNaN(new Date(val).getTime())) return true;
+    return false;
+  };
+  if (!isValidTime(record.checkInTime) || !isValidTime(record.checkOutTime))
     return "Enter valid check-in and check-out times.";
   if (record.checkOutTime && !record.checkInTime)
     return "Enter a check-in time before adding check-out.";
   if (
     record.checkInTime &&
     record.checkOutTime &&
-    record.checkOutTime <= record.checkInTime
+    record.checkOutTime < record.checkInTime
   )
     return "Check-out must be after check-in for this date.";
   return "";

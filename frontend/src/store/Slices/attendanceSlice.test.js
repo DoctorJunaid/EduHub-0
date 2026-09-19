@@ -13,8 +13,23 @@ const storageFor = () => { const map = new Map(); return { getItem: (key) => map
 const create = (storage = storageFor()) => { const store = configureStore({ reducer: { faculty, attendance }, preloadedState: loadDemoState(storage) }); persistDemoState(store, storage); return store; };
 const sample = { facultyId: 'faculty-demo-1', date: '2026-09-07', checkInTime: '08:45', checkOutTime: '', status: 'Present' };
 
+const sampleFaculty = {
+  id: 'faculty-demo-1',
+  name: 'Demo Teacher',
+  email: 'demo@eduhub.com',
+  designation: 'Lecturer',
+  qualification: 'M.Sc',
+  department: 'General',
+  phone: '+923001234567',
+  subjects: 'Math',
+  campus: 'Main',
+  status: 'Active',
+  initials: 'DT'
+};
+
 test('attendance create, checkout and status survive refresh without duplicated identities', () => {
   const storage = storageFor(); let store = create(storage);
+  store.dispatch(facultyAdded(sampleFaculty));
   store.dispatch(attendanceSaved(sample));
   store = create(storage);
   let record = store.getState().attendance.records[0];
@@ -33,10 +48,11 @@ test('attendance create, checkout and status survive refresh without duplicated 
 });
 test('faculty additions and edits flow into attendance; missing records are not absences', () => {
   const store = create();
+  store.dispatch(facultyAdded({ ...sampleFaculty, name: 'Original Teacher', department: 'Original Department' }));
   const original = store.getState().faculty.records[0];
   store.dispatch(attendanceSaved(sample));
   store.dispatch(facultyUpdated({ ...original, name: 'Updated Teacher', department: 'Updated Department' }));
-  store.dispatch(facultyAdded({ ...original, name: 'New Teacher' }));
+  store.dispatch(facultyAdded({ ...original, id: 'faculty-demo-2', name: 'New Teacher' }));
   let { faculty: people, attendance: log } = store.getState();
   const rows = attendanceRows(log.records, people.records, sample.date, 'daily', {});
   assert.equal(rows.length, 2);
