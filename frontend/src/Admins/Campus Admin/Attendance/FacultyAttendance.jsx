@@ -49,7 +49,20 @@ const initialFilters = {
   to: "",
 };
 
+const getPakistanDate = () => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .formatToParts(new Date())
+    .reduce((res, p) => ({ ...res, [p.type]: p.value }), {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
+
 const pakistanDateTime = (value) => {
+  if (!value) return null;
   const timestamp = new Date(value);
   if (Number.isNaN(timestamp.getTime())) return null;
   return new Intl.DateTimeFormat("en-GB", {
@@ -66,6 +79,10 @@ const pakistanDateTime = (value) => {
 };
 
 const pakistanTime = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value)) {
+    return value.slice(0, 5);
+  }
   const parts = pakistanDateTime(value);
   return parts ? `${parts.hour}:${parts.minute}` : "";
 };
@@ -82,7 +99,7 @@ export default function FacultyAttendance() {
   }, [rawFaculty]);
 
   const reduxRecords = useSelector(selectAttendance);
-  const [date, setDate] = useState(() => dateKey(new Date()));
+  const [date, setDate] = useState(() => getPakistanDate());
 
   // Attendance actions must reflect actual records. Fabricated fallback records
   // made every row look checked in/out and therefore disabled both buttons.
@@ -95,30 +112,39 @@ export default function FacultyAttendance() {
 
   useEffect(() => {
     let cancelled = false;
-    attendanceApi
-      .listAttendance({ date })
-      .then((response) => {
-        if (cancelled) return;
-        for (const row of response.data?.data || []) {
-          if (!row.attendanceId || !row.status) continue;
-          dispatch(
-            attendanceSaved({
-              id: String(row.attendanceId),
-              facultyId: String(row.teacherProfileId),
-              date,
-              checkInTime: pakistanTime(row.checkInTime),
-              checkOutTime: pakistanTime(row.checkOutTime),
-              status: row.status,
-            }),
-          );
-        }
-      })
-      .catch(() => {
-        // The action itself shows an actionable API error. Keep the page usable
-        // when a temporary list refresh fails.
-      });
+    const fetchAttendance = () => {
+      attendanceApi
+        .listAttendance({ date })
+        .then((response) => {
+          if (cancelled) return;
+          for (const row of response.data?.data || []) {
+            if (!row.attendanceId || !row.status) continue;
+            dispatch(
+              attendanceSaved({
+                id: String(row.attendanceId),
+                facultyId: String(row.teacherProfileId),
+                date,
+                checkInTime: pakistanTime(row.checkInTime),
+                checkOutTime: pakistanTime(row.checkOutTime),
+                status: row.status,
+              }),
+            );
+          }
+        })
+        .catch(() => {
+          // Keep the page usable when a temporary list refresh fails.
+        });
+    };
+
+    fetchAttendance();
+    const interval = setInterval(fetchAttendance, 10000);
+    const onFocus = () => fetchAttendance();
+    window.addEventListener("focus", onFocus);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
     };
   }, [date, dispatch]);
 
@@ -219,6 +245,25 @@ export default function FacultyAttendance() {
           error.message ||
           "Could not update attendance.",
       );
+      // Immediately refresh list on error/conflict so UI catches up with other PCs
+      try {
+        const refreshRes = await attendanceApi.listAttendance({ date });
+        for (const row of refreshRes.data?.data || []) {
+          if (!row.attendanceId || !row.status) continue;
+          dispatch(
+            attendanceSaved({
+              id: String(row.attendanceId),
+              facultyId: String(row.teacherProfileId),
+              date,
+              checkInTime: pakistanTime(row.checkInTime),
+              checkOutTime: pakistanTime(row.checkOutTime),
+              status: row.status,
+            }),
+          );
+        }
+      } catch {
+        // Sync non-fatal
+      }
     } finally {
       setPendingAction(null);
     }
@@ -232,8 +277,8 @@ export default function FacultyAttendance() {
         teacherProfileId: values.facultyId,
         date: values.date,
         status: values.status,
-        checkInTime: values.checkInTime ? `${values.date}T${values.checkInTime}:00.000Z` : "",
-        checkOutTime: values.checkOutTime ? `${values.date}T${values.checkOutTime}:00.000Z` : "",
+        checkInTime: values.checkInTime ? new Date(`${values.date}T${values.checkInTime}:00+05:00`).toISOString() : "",
+        checkOutTime: values.checkOutTime ? new Date(`${values.date}T${values.checkOutTime}:00+05:00`).toISOString() : "",
         remarks: values.remarks || "",
       };
       if (values.id) {

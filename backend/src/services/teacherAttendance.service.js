@@ -395,16 +395,27 @@ export async function checkIn(campusId, markedBy, teacherProfileId, dateStr) {
   }
 
   const checkInTime = new Date().toISOString();
-  const record = await TeacherAttendance.findOneAndUpdate(
-    { campusId, teacherProfileId, date },
-    {
-      $set: { status: "Present", checkInTime, markedBy },
-      $setOnInsert: { campusId, teacherProfileId, date },
-    },
-    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
-  )
-    .populate("teacherProfileId", "name email department designation")
-    .populate("markedBy", "name email");
+  let record;
+  if (existing) {
+    record = await TeacherAttendance.findOneAndUpdate(
+      { _id: existing._id },
+      { $set: { status: "Present", checkInTime, markedBy } },
+      { new: true, runValidators: true }
+    )
+      .populate("teacherProfileId", "name email department designation")
+      .populate("markedBy", "name email");
+  } else {
+    record = await TeacherAttendance.findOneAndUpdate(
+      { campusId, teacherProfileId, date },
+      {
+        $set: { status: "Present", checkInTime, markedBy },
+        $setOnInsert: { campusId, teacherProfileId, date },
+      },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    )
+      .populate("teacherProfileId", "name email department designation")
+      .populate("markedBy", "name email");
+  }
   return record;
 }
 
@@ -413,11 +424,29 @@ export async function checkOut(campusId, markedBy, teacherProfileId, dateStr) {
   const date = normalizeDate(dateStr || new Date());
   const startWindow = new Date(date.getTime() - 6 * 60 * 60 * 1000);
   const endWindow = new Date(date.getTime() + 24 * 60 * 60 * 1000 - 1);
-  const existing = await TeacherAttendance.findOne({
+  let existing = await TeacherAttendance.findOne({
     campusId,
     teacherProfileId,
     date: { $gte: startWindow, $lte: endWindow },
   });
+
+  // Cross-PC fallback: If not found in window (e.g. slight device timezone variance),
+  // match any open check-in recorded for this teacher within the last 24 hours.
+  if (!existing?.checkInTime) {
+    const now = new Date();
+    const recentStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const fallback = await TeacherAttendance.findOne({
+      campusId,
+      teacherProfileId,
+      checkInTime: { $exists: true, $ne: null, $ne: "" },
+      checkOutTime: { $in: ["", null] },
+      createdAt: { $gte: recentStart },
+    }).sort({ createdAt: -1 });
+    if (fallback) {
+      existing = fallback;
+    }
+  }
+
   if (!existing?.checkInTime) {
     const error = new Error("Check-in must be recorded before check-out.");
     error.statusCode = 400;
