@@ -523,6 +523,17 @@ export const updateTeacherAttendance = async (req, res) => {
       campusId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "teacher_attendance_marked",
+      category: "attendance",
+      title: "Teacher Attendance Updated",
+      description: `Attendance updated — ${req.body.status || 'Updated'}`,
+      entityType: "attendance",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { status: req.body.status, date: req.body.date },
+    });
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -627,6 +638,17 @@ export const updateStudentAttendance = async (req, res) => {
       campusId,
       req.body,
     );
+    logActivity({
+      campus: campusId,
+      action: "student_attendance_marked",
+      category: "attendance",
+      title: "Student Attendance Updated",
+      description: `Attendance updated — ${req.body.status || 'Updated'}`,
+      entityType: "attendance",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { status: req.body.status, date: req.body.date },
+    });
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -803,26 +825,32 @@ export const deletePerformanceRecord = async (req, res) => {
 export const getActivityLogs = async (req, res) => {
   try {
     const { campusId } = getContext(req);
-    const { category, limit = 50, page = 1 } = req.query;
+    const { category, limit = 10, page = 1 } = req.query;
 
     const filter = { campus: campusId };
     if (category && category !== "all") {
       filter.category = category;
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.max(1, Number(limit) || 10);
+    const skip = (pageNum - 1) * limitNum;
+
     const logs = await ActivityLog.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit))
+      .limit(limitNum)
       .lean();
 
     const total = await ActivityLog.countDocuments(filter);
+    const hasMore = skip + logs.length < total;
 
     return res.status(200).json({
       success: true,
       count: logs.length,
       total,
+      page: pageNum,
+      hasMore,
       data: logs,
     });
   } catch (error) {

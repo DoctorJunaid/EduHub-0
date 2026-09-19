@@ -27,6 +27,7 @@ import { dateKey, parseDate, longDate } from "@/lib/dates";
 import { mondayOf, shiftDays } from "@/lib/schedule";
 import { downloadCsv } from "@/lib/csv";
 import * as attendanceApi from "@/api/teacherAttendance.api.js";
+import { fetchActivityLogs } from "@/store/Slices/activityLogSlice.js";
 import {
   attendanceRows,
   attendanceStatuses,
@@ -219,6 +220,7 @@ export default function FacultyAttendance() {
       toast.success(
         `${action === "checkIn" ? "Check-in" : "Check-out"} recorded successfully!`,
       );
+      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
 
       // Re-fetch attendance list to maintain 100% backend synchronization
       try {
@@ -299,6 +301,7 @@ export default function FacultyAttendance() {
         ) + 1,
       );
       toast.success("Attendance saved successfully!");
+      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
 
       try {
         const refreshRes = await attendanceApi.listAttendance({ date: values.date });
