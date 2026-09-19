@@ -1,4 +1,11 @@
-import { Clock, User, Mail, Building, Calendar, CheckCircle2 } from "lucide-react";
+import {
+  Clock,
+  User,
+  Mail,
+  Building,
+  Calendar,
+  CheckCircle2,
+} from "lucide-react";
 import { longDate } from "@/lib/dates";
 import { timeLabel } from "@/lib/schedule";
 import AttendanceStatusBadge from "@/components/common/AttendanceStatusBadge";
@@ -17,37 +24,131 @@ export default function AttendanceDetails({ record, person, onEdit, onClose }) {
       maxWidth={850}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Teacher / Staff
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{person.name}</strong>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>
+              {person.name}
+            </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Institutional Email
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{person.email}</strong>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>
+              {person.email}
+            </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Department
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{person.department}</strong>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>
+              {person.department}
+            </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Attendance Date
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{longDate(record.date)}</strong>
+            <strong style={{ fontSize: "15px", color: "#09090b" }}>
+              {longDate(record.date)}
+            </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Check-in Time
             </span>
             <strong style={{ fontSize: "15px", color: "#09090b" }}>
@@ -55,8 +156,24 @@ export default function AttendanceDetails({ record, person, onEdit, onClose }) {
             </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Check-out Time
             </span>
             <strong style={{ fontSize: "15px", color: "#09090b" }}>
@@ -64,16 +181,44 @@ export default function AttendanceDetails({ record, person, onEdit, onClose }) {
             </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa", gridColumn: "span 2" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid #e4e4e7",
+              borderRadius: "10px",
+              background: "#fafafa",
+              gridColumn: "span 2",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                color: "#71717a",
+                display: "block",
+                marginBottom: "4px",
+              }}
+            >
               Recorded Status
             </span>
             <AttendanceStatusBadge status={record.status} />
           </div>
         </div>
 
-        <div className="activity-form-actions" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+        <div
+          className="activity-form-actions"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <button
+            type="button"
+            className="activity-cancel-btn"
+            onClick={onClose}
+          >
             Back to Attendance
           </button>
           {onEdit && (

@@ -10,6 +10,7 @@ import {
   Building2,
   Home,
   Radio,
+  FileText,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -91,6 +92,10 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <ClipboardList size={20} />,
   },
   { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
+  { label: "Salary Profiles", path: "/salary-profiles", icon: <Users size={20} /> },
+  { label: "Salary & Payroll", path: "/salary-payroll", icon: <ClipboardList size={20} /> },
+  { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
 ];
 
 export const CAMPUS_ADMIN_NAV = getCampusAdminNav(false);
@@ -112,6 +117,7 @@ export const TEACHER_NAV = [
   { label: "Exams", path: "/exams", icon: <Award size={20} /> },
   { label: "Results", path: "/results", icon: <Trophy size={20} /> },
   { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "My Payslips", path: "/my-payslips", icon: <FileText size={20} /> },
 ];
 
 export const STUDENT_NAV = [

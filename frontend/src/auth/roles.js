@@ -4,6 +4,10 @@ export const ROLE_LABELS = {
   campus_manager: "Campus Manager",
   institute_admin: "Institute Admin",
   student: "Student",
+  teacher: "Teacher",
+  faculty: "Faculty",
+  accountant: "Accountant",
+  principal: "Principal",
 };
 
 export const ROLE_HOME_ROUTES = {
@@ -12,6 +16,10 @@ export const ROLE_HOME_ROUTES = {
   campus_manager: "/dashboard",
   institute_admin: "/institute-admin",
   student: "/student/dashboard",
+  teacher: "/my-payslips",
+  faculty: "/my-payslips",
+  accountant: "/salary-payroll",
+  principal: "/salary-payroll",
 };
 
 export const roleHome = (role) =>
