@@ -16,6 +16,7 @@ import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
 import Settings from "./components/Settings/Settings";
 import SalaryProfiles from "./pages/SalaryProfiles";
+import MySalary from "./pages/MySalary";
 import SalaryPayroll from "./pages/SalaryPayroll";
 import SubstituteAssignments from "./components/Substitutes/SubstituteAssignments";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
@@ -155,6 +156,7 @@ const App = () => {
 
       <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager", "institute_admin", "accountant", "principal"]} />}>
         <Route element={<MainLayout />}>
+          <Route path="salary-profiles" element={<SalaryProfiles />} />
           <Route path="salary-payroll" element={<SalaryPayroll />} />
         </Route>
       </Route>
@@ -169,6 +171,7 @@ const App = () => {
           <Route path="teacher/gradebook" element={<TeacherPage />} />
           <Route path="teacher/messages" element={<TeacherPage />} />
           <Route path="my-payslips" element={<MyPayslips />} />
+          <Route path="my-salary" element={<MySalary />} />
         </Route>
       </Route>
 
