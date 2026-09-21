@@ -1,5 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { validDate } from "../../lib/dates.js";
+import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { validDate } from '../../lib/dates.js';
 
 export function validDiaryEntry(entry) {
   return Boolean(
@@ -30,6 +32,19 @@ const slice = createSlice({
     },
   },
 });
+const slice = createSlice({ name: 'diary', initialState: { records: [] }, reducers: {
+  diarySaved: {
+    prepare: (entry) => ({ payload: { ...entry, id: entry.id || nanoid() } }),
+    reducer: (state, { payload }) => {
+      if (!validDiaryEntry(payload)) return;
+      const index = state.records.findIndex((entry) => entry.id === payload.id);
+      if (index === -1) state.records.push(payload);
+      else state.records[index] = payload;
+    },
+  },
+  diaryDeleted: (state, { payload }) => { state.records = state.records.filter((entry) => entry.id !== payload); },
+} });
+export const { diarySaved, diaryDeleted } = slice.actions;
 export default slice.reducer;
 export const { diaryLoaded } = slice.actions;
 const empty = [];
