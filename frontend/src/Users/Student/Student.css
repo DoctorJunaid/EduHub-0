@@ -1,59 +1,179 @@
-/* Role-scoped adjustments only; the shared layout remains the single shell. */
+/* Student portal shell tuned to the Campus Manager's minimalist black/white UI */
+.student-shell {
+  background: #fafafa;
+  color: #09090b;
+}
+
+.student-shell .sidebar {
+  padding: 12px 8px;
+  background: #ffffff;
+  border-right: 1px solid #e4e4e7;
+}
+
+.student-shell .sidebar-brand-row {
+  margin-bottom: 10px;
+  padding: 2px 4px 0;
+}
+
+.student-shell .sidebar-brand {
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.student-shell .sidebar-nav {
+  gap: 2px;
+  padding-right: 2px;
+}
+
+.student-shell .sidebar-item {
+  min-height: 34px;
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+  line-height: 1.2;
+}
+
+.student-shell .sidebar-item-icon {
+  color: #52525b;
+}
+
+.student-shell .sidebar-item-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.student-shell .sidebar-item.active {
+  background: #09090b;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.student-shell .sidebar-item.active .sidebar-item-icon {
+  color: #ffffff;
+}
+
+.student-shell .sidebar-footer {
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e4e4e7;
+}
+
+.student-shell .sidebar-profile {
+  min-height: 54px;
+  padding: 8px 10px;
+  margin-bottom: 2px;
+  background: #f4f4f5;
+  border-color: #e4e4e7;
+}
+
+.student-shell .sidebar-profile-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+  background: #09090b;
+  color: #ffffff;
+}
+
+.student-shell .sidebar-profile-name {
+  font-size: 12px;
+}
+
+.student-shell .sidebar-profile-role {
+  font-size: 10px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.student-shell .sidebar-signout {
+  min-height: 32px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #3f3f46;
+}
+
+.student-shell .sidebar-signout:hover {
+  background: #f4f4f5;
+}
+
+.student-shell .sidebar.is-collapsed {
+  width: 70px;
+}
+
+.student-shell
+  .sidebar.is-collapsed
+  :is(.sidebar-item, .sidebar-signout, .sidebar-profile) {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.student-shell .sidebar-item[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .student-shell .main-area {
   height: 100dvh;
+  background: #fafafa;
 }
+
 .student-shell .content-area {
-  padding: 24px;
+  padding: 18px 20px 20px;
+  background: #fafafa;
 }
+
+.student-shell .content-area:has(.student-dashboard),
+.student-shell .content-area:has(.student-attendance-page),
+.student-shell .content-area:has(.student-grades-page),
+.student-shell .content-area:has(.student-fees-page),
+.student-shell .content-area:has(.student-messages-page),
+.student-shell .content-area:has(.student-courses),
+.student-shell .content-area:has(.student-assignments),
+.student-shell .content-area:has(.student-diary-page) {
+  padding: 0;
+}
+
 .student-shell .header {
   gap: 20px;
   padding-inline: 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
 }
+
 .student-shell .header-search {
   max-width: 480px;
-  background: var(--background);
+  background: #f4f4f5;
 }
+
 .student-shell .header-search input {
   background: transparent;
 }
+
+.student-shell .breadcrumbs a,
+.student-shell .breadcrumb-current {
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
 .student-shell .profile-avatar {
   width: 38px;
   height: 38px;
-  border-radius: var(--radius-lg);
-  background: var(--secondary);
-  color: var(--secondary-foreground);
+  border-radius: 12px;
+  background: #09090b;
+  color: #ffffff;
 }
+
 .student-shell .profile-name small {
   display: block;
   font-size: 12px;
   font-weight: 400;
 }
-.student-shell .sidebar-item {
-  min-height: 44px;
-  font-size: 14px;
+
+.student-shell .sidebar {
+  border-right: 1px solid #e4e4e7;
+  background: #ffffff;
 }
-.student-shell .sidebar-item[aria-disabled="true"] {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-.student-shell .sidebar-footer {
-  display: flex;
-  flex-direction: column;
-}
-.student-shell .sidebar-profile {
-  order: -1;
-  margin-bottom: 12px;
-}
-.student-shell .sidebar-profile-role:last-child:not(:first-of-type) {
-  display: none;
-}
-.student-shell .sidebar-profile-avatar {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-}
-.student-shell .sidebar-profile-role {
-  overflow-wrap: anywhere;
-}
+
 .student-profile-menu {
   min-width: 190px;
   padding: 6px;
@@ -61,22 +181,31 @@
   background: var(--popover);
   border-radius: var(--radius-md);
 }
+
 .student-profile-menu [data-slot="dropdown-menu-item"],
 .student-profile-menu [data-slot="dropdown-menu-label"] {
   padding: 8px 10px;
   font-size: 14px;
 }
+
+.student-shell .content-area > section {
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .student-shell .content-area {
     padding: 20px 16px;
   }
+
   .student-shell .header {
     gap: 12px;
     padding-inline: 16px;
   }
+
   .student-shell .header-search {
     display: none;
   }
+
   .student-shell .breadcrumbs {
     flex: 1;
     min-width: 0;
@@ -84,15 +213,80 @@
   }
 }
 
-.student-assignment-status { padding:6px 12px; border-radius:var(--radius-md); font-size:12px; font-weight:600; white-space:nowrap; background:var(--muted); color:var(--muted-foreground); }
-.student-assignment-status.is-submitted { background:var(--color-warning-bg); color:var(--color-warning); }
-.student-assignment-status.is-graded { background:var(--color-success-bg); color:var(--color-success); }
-.student-shell .sa-score,.student-assignment-dialog .sa-score { color:var(--color-success); font-weight:700; }
-.dark .student-assignment-status.is-graded,.dark .student-shell .sa-score,.dark .student-assignment-dialog .sa-score { color:var(--color-green-light); }
-.sd-assignment-list { display:flex; flex-direction:column; gap:8px; }
-.sd-assignment-list > a { display:flex; align-items:center; gap:12px; padding:12px; border-radius:var(--radius-md); background:var(--background); color:var(--foreground); }
-.sd-assignment-list > a > svg { width:24px; flex-shrink:0; color:var(--color-success); }
-.sd-assignment-list > a > div { flex:1; min-width:0; }
-.sd-assignment-list strong { display:block; font-size:13px; overflow-wrap:anywhere; }
-.sd-assignment-list small { display:block; font-size:12px; color:var(--muted-foreground); margin-top:4px; }
-@media(max-width:500px) { .sd-assignment-list > a { flex-wrap:wrap; } }
+.student-assignment-status {
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.student-assignment-status.is-submitted {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.student-assignment-status.is-graded {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.student-shell .sa-score,
+.student-assignment-dialog .sa-score {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.dark .student-assignment-status.is-graded,
+.dark .student-shell .sa-score,
+.dark .student-assignment-dialog .sa-score {
+  color: var(--color-green-light);
+}
+
+.sd-assignment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sd-assignment-list > a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.sd-assignment-list > a > svg {
+  width: 24px;
+  flex-shrink: 0;
+  color: var(--color-success);
+}
+
+.sd-assignment-list > a > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-assignment-list strong {
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.sd-assignment-list small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+
+@media (max-width: 500px) {
+  .sd-assignment-list > a {
+    flex-wrap: wrap;
+  }
+}

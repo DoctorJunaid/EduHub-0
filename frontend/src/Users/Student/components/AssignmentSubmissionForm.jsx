@@ -19,11 +19,12 @@ export default function AssignmentSubmissionForm({ assignment, onSaved }) {
   const editing = Boolean(assignment.submission);
   const submit = (event) => {
     event.preventDefault();
-    const problem = dispatch(
-      submitStudentAssignment({ assignmentId: assignment.id, notes }),
-    );
-    if (problem) setError(problem);
-    else onSaved();
+    Promise.resolve(
+      dispatch(submitStudentAssignment({ assignmentId: assignment.id, notes })),
+    ).then((problem) => {
+      if (problem) setError(problem);
+      else onSaved();
+    });
   };
   return (
     <DialogContent className="student-assignment-dialog">
@@ -46,7 +47,7 @@ export default function AssignmentSubmissionForm({ assignment, onSaved }) {
           aria-describedby={error ? "assignment-error" : "assignment-save-note"}
         />
         <p id="assignment-save-note">
-          Saved in this browser for the frontend demo. File attachments are not
+          Your submission is sent to your school. File attachments are not
           available yet.
         </p>
         {error && (

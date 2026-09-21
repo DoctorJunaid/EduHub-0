@@ -19,7 +19,7 @@ import SalaryProfiles from "./pages/SalaryProfiles";
 import SalaryPayroll from "./pages/SalaryPayroll";
 import SubstituteAssignments from "./components/Substitutes/SubstituteAssignments";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import CampusOverview from "./Admins/Campus Admin/Dashboard/CampusOverview";
 import FacultyDirectory from "./Admins/Campus Admin/Faculty/FacultyDirectory";
@@ -70,95 +70,135 @@ const App = () => {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
-      <Route path="/" element={<AuthEntry />} />
-      <Route
-        path="signup"
-        element={
-          <AuthEntry>
-            <Signup />
-          </AuthEntry>
-        }
-      />
-      <Route
-        path="login"
-        element={
-          <AuthEntry>
-            <Login />
-          </AuthEntry>
-        }
-      />
-      <Route
-        path="set-password"
-        element={
-          <AuthEntry>
-            <SetPassword />
-          </AuthEntry>
-        }
-      />
+        <Route path="/" element={<AuthEntry />} />
+        <Route
+          path="signup"
+          element={
+            <AuthEntry>
+              <Signup />
+            </AuthEntry>
+          }
+        />
+        <Route
+          path="login"
+          element={
+            <AuthEntry>
+              <Login />
+            </AuthEntry>
+          }
+        />
+        <Route
+          path="set-password"
+          element={
+            <AuthEntry>
+              <SetPassword />
+            </AuthEntry>
+          }
+        />
 
-      <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-        <Route element={<StudentLayout />}>
-          <Route path="student/dashboard" element={<StudentDashboard />} />
-          <Route path="student/courses" element={<StudentCourses />} />
-          <Route path="student/assignments" element={<StudentAssignments />} />
-          <Route
-            path="student/attendance"
-            element={<StudentAttendancePage />}
-          />
-          <Route path="student/diary" element={<StudentDiary />} />
-          <Route path="student/grades" element={<StudentGrades />} />
-          <Route path="student/fees" element={<StudentFees />} />
-          <Route path="student/messages" element={<StudentMessages />} />
+        <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+          <Route element={<StudentLayout />}>
+            <Route path="student/dashboard" element={<StudentDashboard />} />
+            <Route path="student/courses" element={<StudentCourses />} />
+            <Route
+              path="student/assignments"
+              element={<StudentAssignments />}
+            />
+            <Route
+              path="student/attendance"
+              element={<StudentAttendancePage />}
+            />
+            <Route
+              path="student/diary"
+              element={<Navigate to="/student/assignments" replace />}
+            />
+            <Route path="student/grades" element={<StudentGrades />} />
+            <Route path="student/fees" element={<StudentFees />} />
+            <Route path="student/messages" element={<StudentMessages />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["institute_admin"]} />}>
+        <Route element={<ProtectedRoute allowedRoles={["institute_admin"]} />}>
+          <Route
+            element={
+              <MainLayout
+                navigation={instituteNavigation}
+                className="institute-admin-shell"
+              />
+            }
+          >
+            <Route path="institute-admin" element={<InstituteDashboard />} />
+            <Route
+              path="institute-admin/campuses"
+              element={<CampusBranches />}
+            />
+            <Route
+              path="institute-admin/campuses/new"
+              element={<ManageCampusPage />}
+            />
+            <Route
+              path="institute-admin/campuses/:id"
+              element={<ManageCampusPage />}
+            />
+            <Route
+              path="institute-admin/alerts"
+              element={<BroadcastAlerts />}
+            />
+            <Route
+              path="institute-admin/students"
+              element={<InstituteStudents />}
+            />
+            <Route path="institute-admin/staff" element={<InstituteStaff />} />
+            <Route path="institute-admin/settings" element={<Settings />} />
+          </Route>
+        </Route>
+
         <Route
           element={
-            <MainLayout
-              navigation={instituteNavigation}
-              className="institute-admin-shell"
+            <ProtectedRoute allowedRoles={["campus_admin", "campus_manager"]} />
+          }
+        >
+          <Route element={<MainLayout />}>
+            <Route path="dashboard" element={<CampusOverview />} />
+            <Route path="faculty" element={<FacultyDirectory />} />
+            <Route path="students" element={<StudentsDirectory />} />
+            <Route path="timetable" element={<ClassTimetable />} />
+            <Route path="exams" element={<ExamSchedules />} />
+            <Route path="faculty-attendance" element={<FacultyAttendance />} />
+            <Route path="student-attendance" element={<StudentAttendance />} />
+            <Route path="results" element={<ExamResults />} />
+            <Route path="fees" element={<FeeManagement />} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="substitutes" element={<SubstituteAssignments />} />
+            <Route path="salary-profiles" element={<SalaryProfiles />} />
+          </Route>
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "campus_admin",
+                "campus_manager",
+                "institute_admin",
+                "accountant",
+                "principal",
+              ]}
             />
           }
         >
-          <Route path="institute-admin" element={<InstituteDashboard />} />
-          <Route path="institute-admin/campuses" element={<CampusBranches />} />
-          <Route path="institute-admin/campuses/new" element={<ManageCampusPage />} />
-          <Route path="institute-admin/campuses/:id" element={<ManageCampusPage />} />
-          <Route path="institute-admin/alerts" element={<BroadcastAlerts />} />
-          <Route
-            path="institute-admin/students"
-            element={<InstituteStudents />}
-          />
-          <Route path="institute-admin/staff" element={<InstituteStaff />} />
-          <Route path="institute-admin/settings" element={<Settings />} />
+          <Route element={<MainLayout />}>
+            <Route path="salary-payroll" element={<SalaryPayroll />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager"]} />}>
-        <Route element={<MainLayout />}>
-          <Route path="dashboard" element={<CampusOverview />} />
-          <Route path="faculty" element={<FacultyDirectory />} />
-          <Route path="students" element={<StudentsDirectory />} />
-          <Route path="timetable" element={<ClassTimetable />} />
-          <Route path="exams" element={<ExamSchedules />} />
-          <Route path="faculty-attendance" element={<FacultyAttendance />} />
-          <Route path="student-attendance" element={<StudentAttendance />} />
-          <Route path="results" element={<ExamResults />} />
-          <Route path="fees" element={<FeeManagement />} />
-          <Route path="messages" element={<Messages />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="substitutes" element={<SubstituteAssignments />} />
-          <Route path="salary-profiles" element={<SalaryProfiles />} />
-        </Route>
-      </Route>
-
-      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager", "institute_admin", "accountant", "principal"]} />}>
-        <Route element={<MainLayout />}>
-          <Route path="salary-payroll" element={<SalaryPayroll />} />
-        </Route>
-      </Route>
-
+        <Route
+          element={<ProtectedRoute allowedRoles={["teacher", "faculty"]} />}
+        >
+          <Route element={<MainLayout navigation={TEACHER_NAV} />}>
+            <Route path="my-payslips" element={<MyPayslips />} />
+          </Route>
       <Route element={<ProtectedRoute allowedRoles={["teacher", "faculty"]} />}>
         <Route element={<TeacherLayout />}>
           <Route path="teacher" element={<TeacherDashboard />} />
@@ -170,24 +210,32 @@ const App = () => {
           <Route path="teacher/messages" element={<TeacherPage />} />
           <Route path="my-payslips" element={<MyPayslips />} />
         </Route>
-      </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
-        <Route element={<MainLayout navigation={ADMIN_NAV} />}>
-          <Route path="super-admin" element={<SuperAdminDashboard />} />
-          <Route path="institutes" element={<Institutes />} />
-          <Route path="institutes/new" element={<ManageInstitutePage />} />
-          <Route path="institutes/:instituteId/edit" element={<EditInstitute />} />
-          <Route path="institutes/:instituteId/view" element={<InstituteDetails />} />
-          <Route path="institutes/:id" element={<ManageInstitutePage />} />
-          <Route path="super-admin/users" element={<GlobalUsers />} />
-          <Route path="super-admin/broadcasts" element={<SuperAdminBroadcasts />} />
+        <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
+          <Route element={<MainLayout navigation={ADMIN_NAV} />}>
+            <Route path="super-admin" element={<SuperAdminDashboard />} />
+            <Route path="institutes" element={<Institutes />} />
+            <Route path="institutes/new" element={<ManageInstitutePage />} />
+            <Route
+              path="institutes/:instituteId/edit"
+              element={<EditInstitute />}
+            />
+            <Route
+              path="institutes/:instituteId/view"
+              element={<InstituteDetails />}
+            />
+            <Route path="institutes/:id" element={<ManageInstitutePage />} />
+            <Route path="super-admin/users" element={<GlobalUsers />} />
+            <Route
+              path="super-admin/broadcasts"
+              element={<SuperAdminBroadcasts />}
+            />
+          </Route>
         </Route>
-      </Route>
 
-      {/* Global 404 Not Found Route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* Global 404 Not Found Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   );
 };
