@@ -103,6 +103,14 @@ router
   .put(updateClassSchedule)
   .delete(deleteClassSchedule);
 
+// Timetables alias (for timetable matrix & schedules)
+router.route("/timetables").get(getClassSchedules).post(createClassSchedule);
+router
+  .route("/timetables/:id")
+  .get(getClassScheduleById)
+  .put(updateClassSchedule)
+  .delete(deleteClassSchedule);
+
 // Examination Schedules
 router.route("/exams").get(getExamSchedules).post(createExamSchedule);
 router
@@ -158,5 +166,4 @@ router
 
 // Activity Logs (Audit Trail)
 router.route("/activity-logs").get(getActivityLogs).post(createActivityLogEntry);
-
 export default router;

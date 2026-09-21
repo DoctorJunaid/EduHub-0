@@ -23,7 +23,9 @@ import { selectFaculty, fetchFaculty } from "@/store/Slices/facultySlice.js";
 import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
 import {
   educationTypeOptions,
-  timetableTemplates,
+  getMatrixConfig,
+  getTemplateRecords,
+  initialSchedules,
 } from "./timetableData.js";
 import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -62,53 +64,117 @@ export default function ClassTimetable() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [educationType, setEducationType] = useState(() => isSchool ? "School" : "Colleges");
+  const [educationType, setEducationType] = useState(() => (isSchool ? "School" : "College"));
 
   useEffect(() => {
-    setEducationType(isSchool ? "School" : "Colleges");
+    setEducationType(isSchool ? "School" : "College");
   }, [isSchool]);
 
   const options = useMemo(() => {
-    const studentPrograms = [...new Set(students.map((s) => s.gradeOrClass || s.program).filter(Boolean))];
-    const studentSections = [...new Set(students.map((s) => s.section).filter(Boolean))];
-    const teacherNames = [...new Set(faculty.map((f) => f.name).filter(Boolean))];
+    const studentPrograms = [
+      ...new Set(
+        students
+          .map((s) => s.gradeOrClass || s.program)
+          .concat(records.map((r) => r.program || r.className))
+          .filter(Boolean)
+      ),
+    ];
+    const studentSections = [
+      ...new Set(
+        students
+          .map((s) => s.section)
+          .concat(records.map((r) => r.section))
+          .filter(Boolean)
+      ),
+    ];
+    const teacherNames = [
+      ...new Set(
+        faculty
+          .map((f) => f.name)
+          .concat(records.map((r) => r.instructor || r.teacherName))
+          .filter(Boolean)
+      ),
+    ];
+    const roomNames = [
+      ...new Set(records.map((r) => r.room || r.roomNumber).filter(Boolean)),
+    ];
 
     return {
-      program: studentPrograms.length ? studentPrograms : ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"],
-      section: studentSections.length ? studentSections : ["Section A", "Section B", "Section C"],
-      instructor: teacherNames.length ? teacherNames : [...new Set(records.map((r) => r.instructor).filter(Boolean))],
-      room: [...new Set(records.map((r) => r.room).filter(Boolean)), "Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"],
+      program: studentPrograms.length
+        ? studentPrograms
+        : isSchool
+          ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"]
+          : ["BS Computer Science", "BBA", "BS Software Engineering"],
+      section: studentSections.length
+        ? studentSections
+        : ["Section A", "Section B", "Section C"],
+      instructor: teacherNames.length
+        ? teacherNames
+        : ["Dr. Usman Khan", "Prof. Sarah Ahmed"],
+      room: roomNames.length
+        ? roomNames
+        : ["Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"],
     };
-  }, [records, students, faculty]);
+  }, [records, students, faculty, isSchool]);
 
   const filtered = useMemo(
     () => filterSchedules(records, filters),
     [records, filters],
   );
-  const templateRecords = timetableTemplates[educationType];
-  const selected = records.find((record) => record.id === modal?.id || record._id === modal?.id);
+
+  const matrixConfig = useMemo(
+    () => getMatrixConfig(educationType),
+    [educationType],
+  );
+  const templateRecords = useMemo(
+    () => getTemplateRecords(educationType),
+    [educationType],
+  );
+
+  const modalRecord =
+    records.find((record) => record.id === modal?.id || record._id === modal?.id) ??
+    templateRecords.find((record) => record.id === modal?.id);
+  const isLiveRecord =
+    modalRecord && !String(modalRecord.id).startsWith("template-");
   const close = () => setModal(null);
-  const onAction = (mode, id) => setModal({ mode, id });
+  const onAction = (mode, id, defaults) =>
+    setModal(defaults ? { mode, id, defaults } : { mode, id });
 
   const save = async (values) => {
     try {
-      if (selected) {
+      const index = isLiveRecord
+        ? records.findIndex(
+            (record) =>
+              record.id === modalRecord?.id || record._id === modalRecord?._id
+          )
+        : records.length;
+
+      if (isLiveRecord && modalRecord) {
         await dispatch(
-          updateSchedule({ ...values, id: selected._id || selected.id })
+          updateSchedule({ ...values, id: modalRecord._id || modalRecord.id })
         ).unwrap();
         toast.success("Schedule updated successfully!");
       } else {
-        await dispatch(addSchedule(values)).unwrap();
-        toast.success("Class routine scheduled successfully!");
+        const payload = {
+          ...values,
+          institutionType: educationType,
+        };
+        await dispatch(addSchedule(payload)).unwrap();
+        toast.success(
+          isSchool
+            ? "Period routine scheduled successfully!"
+            : "Class routine scheduled successfully!"
+        );
       }
       setFilters({ program: "", section: "", instructor: "", room: "" });
+      setPage(Math.floor(index / pageSize) + 1);
       close();
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Failed to save schedule");
+      toast.error(
+        typeof err === "string" ? err : err?.message || "Failed to save schedule"
+      );
     }
   };
-
-  // Real KPI Calculations
   const totalClasses = records.length;
   const activeInstructors =
     new Set(records.map((r) => r.instructor).filter(Boolean)).size || 0;
@@ -121,12 +187,11 @@ export default function ClassTimetable() {
       className="campus-tab-page class-timetable"
       aria-label="Class Timetable Management"
     >
-      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
-      <div className="campus-kpi-track">
+      <div className="campus-kpi-track class-timetable-kpi">
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <BookOpen size={16} />
+              <BookOpen size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Scheduled Periods" : "Scheduled Classes"}</span>
@@ -138,7 +203,7 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Users size={16} />
+              <Users size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Teachers on Duty" : "Active Instructors"}</span>
@@ -150,7 +215,7 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Building size={16} />
+              <Building size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Classrooms & Labs" : "Rooms Allocated"}</span>
@@ -162,7 +227,7 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Clock size={16} />
+              <Clock size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Teaching Periods" : "Weekly Hours"}</span>
@@ -172,93 +237,29 @@ export default function ClassTimetable() {
         </div>
       </div>
 
-      {/* 2. Contiguous 56px Toolbar */}
       <Tabs
         value={view}
         onValueChange={setView}
-        style={{ width: "100%", display: "flex", flexDirection: "column" }}
+        className="class-timetable-tabs"
       >
         <div className="campus-toolbar">
           <div className="toolbar-left">
-            <TabsList
-              style={{
-                height: "32px",
-                padding: "2px",
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "6px",
-                display: "inline-flex",
-                alignItems: "center",
-              }}
-            >
-              <TabsTrigger
-                value="week"
-                style={{
-                  height: "26px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "0 10px",
-                  borderRadius: "4px",
-                }}
-              >
-                Week
-              </TabsTrigger>
-              <TabsTrigger
-                value="list"
-                style={{
-                  height: "26px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "0 10px",
-                  borderRadius: "4px",
-                }}
-              >
-                List
-              </TabsTrigger>
+            <TabsList className="tt-view-tabs">
+              <TabsTrigger value="week">Week</TabsTrigger>
+              <TabsTrigger value="list">List</TabsTrigger>
             </TabsList>
 
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                border: "1px solid #e4e4e7",
-                borderRadius: "6px",
-                background: "#ffffff",
-                height: "32px",
-                boxSizing: "border-box",
-              }}
-            >
+            <div className="tt-week-nav">
               <button
                 type="button"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  padding: "0 5px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#71717a",
-                  height: "100%",
-                }}
+                className="tt-week-nav-btn"
                 aria-label="Previous week"
                 onClick={() => setWeek(shiftDays(week, -7))}
               >
-                <ChevronLeft size={13} />
+                <ChevronLeft size={14} />
               </button>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  color: "#09090b",
-                  padding: "0 4px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <CalendarDays size={12} style={{ color: "#71717a" }} />
+              <span className="tt-week-range">
+                <CalendarDays size={12} aria-hidden="true" />
                 {week.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -272,21 +273,11 @@ export default function ClassTimetable() {
               </span>
               <button
                 type="button"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  padding: "0 5px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#71717a",
-                  height: "100%",
-                }}
+                className="tt-week-nav-btn"
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
               >
-                <ChevronRight size={13} />
+                <ChevronRight size={14} />
               </button>
             </div>
 
@@ -343,23 +334,9 @@ export default function ClassTimetable() {
           </div>
         </div>
 
-        {/* 3. Panel Content */}
-        <div
-          style={{
-            padding: "16px 20px",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
-        >
-          <TabsContent value="week" style={{ margin: 0, padding: 0 }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+        <div className="tt-panel-content">
+          <TabsContent value="week">
+            <div className="tt-panel-card">
               <div className="tt-template-heading">
                 <div>
                   <span className="tt-template-title">
@@ -372,7 +349,7 @@ export default function ClassTimetable() {
                 <label className="tt-type-control">
                   <span>Institution type</span>
                   <select
-                    className="toolbar-select"
+                    className="toolbar-select tt-type-select"
                     aria-label="Institution type"
                     value={educationType}
                     onChange={(event) => setEducationType(event.target.value)}
@@ -384,70 +361,34 @@ export default function ClassTimetable() {
                     ))}
                   </select>
                 </label>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "16px",
-                    fontSize: "11px",
-                    color: "#71717a",
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "2px",
-                        background: "#09090b",
-                      }}
-                    />
+                <div className="tt-legend tt-legend-inline">
+                  <span>
+                    <i className="tt-legend-class" />
                     Regular Class
                   </span>
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "2px",
-                        background: "#f59e0b",
-                      }}
-                    />
+                  <span>
+                    <i className="tt-legend-break" />
                     Break / Interval
                   </span>
                 </div>
               </div>
-              <div style={{ padding: "12px" }}>
+              <div className="tt-grid-panel">
                 <TimetableGrid
                   records={templateRecords}
                   week={week}
+                  matrixConfig={matrixConfig}
                   onView={(id) => onAction("view", id)}
+                  onAction={onAction}
+                  onQuickAdd={(defaults) =>
+                    onAction("add", undefined, defaults)
+                  }
                 />
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="list" style={{ margin: 0, padding: 0 }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+          <TabsContent value="list">
+            <div className="tt-panel-card tt-list-panel">
               <ScheduledClasses
                 records={filtered}
                 page={page}
@@ -464,29 +405,37 @@ export default function ClassTimetable() {
         </div>
       </Tabs>
 
-      {/* Modal Dialogs */}
-      {(modal?.mode === "add" || (modal?.mode === "edit" && selected)) && (
+      {(modal?.mode === "add" ||
+        (modal?.mode === "edit" && (isLiveRecord || modalRecord))) && (
         <ScheduleClassForm
-          record={selected}
+          record={isLiveRecord ? modalRecord : undefined}
+          defaults={
+            modal?.defaults ??
+            (modal?.mode === "edit" && modalRecord && !isLiveRecord
+              ? modalRecord
+              : undefined)
+          }
           options={options}
           onSave={save}
           onClose={close}
         />
       )}
-      {modal?.mode === "view" && selected && (
-        <ClassDetailsDialog record={selected} onClose={close} />
+      {modal?.mode === "view" && modalRecord && (
+        <ClassDetailsDialog record={modalRecord} onClose={close} />
       )}
       <ConfirmDialog
-        open={modal?.mode === "delete" && Boolean(selected)}
+        open={modal?.mode === "delete" && Boolean(isLiveRecord)}
         title="Delete Scheduled Class?"
-        description={`Are you sure you want to delete ${selected?.subject ?? "this class"}? This action cannot be undone.`}
+        description={`Are you sure you want to delete ${modalRecord?.subject ?? "this class"}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         onCancel={close}
         onConfirm={async () => {
-          if (selected) {
+          if (isLiveRecord && modalRecord) {
             try {
-              await dispatch(deleteSchedule(selected._id || selected.id)).unwrap();
+              await dispatch(
+                deleteSchedule(modalRecord._id || modalRecord.id)
+              ).unwrap();
               toast.success("Class routine removed successfully");
             } catch (err) {
               toast.error("Failed to delete class routine");

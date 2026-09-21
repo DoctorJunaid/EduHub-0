@@ -10,6 +10,7 @@ import {
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import User from "../models/user.model.js";
 import FeeStructure from "../models/feeStructure.model.js";
+import Timetable from "../models/timetable.model.js";
 
 class CampusAdminService {
   // --- Dashboard Aggregated Statistics ---
@@ -197,67 +198,132 @@ class CampusAdminService {
     return profile;
   }
 
-  // --- Class Schedule Operations (School Period Routines) ---
-  async createClassSchedule(campusId, instituteId, data) {
+  // --- Class Schedule Operations ---
+  async createClassSchedule(campusIdOrData, maybeInstituteId, maybeData) {
+    let campusId, instituteId, data;
+    if (typeof campusIdOrData === "object" && campusIdOrData !== null && !maybeData) {
+      data = campusIdOrData;
+      campusId = data.campusId;
+      instituteId = data.instituteId;
+    } else {
+      campusId = campusIdOrData;
+      instituteId = maybeInstituteId;
+      data = maybeData || {};
+    }
+
+    const dayMap = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 7 };
+    let days = Array.isArray(data.days) && data.days.length ? data.days : null;
+    if (!days && data.dayOfWeek) {
+      days = [dayMap[data.dayOfWeek] || 1];
+    }
+    if (!days || !days.length) {
+      days = [1, 2, 3, 4, 5];
+    }
+
     const payload = {
       ...data,
-      campusId,
-      instituteId: instituteId || null,
-      className: data.className || data.gradeOrClass || "Grade 10",
-      gradeOrClass: data.gradeOrClass || data.className || "Grade 10",
-      periodName: data.periodName || data.title || "Period 1",
-      title: data.title || data.periodName || "Period 1",
-      teacherName: data.teacherName || data.instructor || "",
-      instructor: data.instructor || data.teacherName || "",
-      room: data.room || data.roomNumber || "",
-      roomNumber: data.roomNumber || data.room || "",
+      campusId: campusId || data.campusId,
+      instituteId: instituteId || data.instituteId || null,
+      institutionType: data.institutionType || "School",
+      program: data.program || data.className || data.gradeOrClass || "Grade 10",
+      section: data.section || "A",
+      subject: data.subject || "General",
+      instructor: data.instructor || data.teacherName || "Assigned Teacher",
+      room: data.room || data.roomNumber || "Room 101",
+      days,
+      startTime: data.startTime || "08:30",
+      endTime: data.endTime || "09:20",
+      status: data.status || "Active",
     };
-    return await ClassSchedule.create(payload);
+
+    return await Timetable.create(payload);
   }
 
-  async getAllClassSchedules(campusId, filter = {}) {
-    const query = { campusId };
-    if (filter.dayOfWeek) query.dayOfWeek = filter.dayOfWeek;
-    if (filter.className || filter.gradeOrClass) {
-      query.$or = [
-        { className: filter.className || filter.gradeOrClass },
-        { gradeOrClass: filter.className || filter.gradeOrClass },
-      ];
+  async getAllClassSchedules(campusIdOrFilter = {}, maybeFilter = {}) {
+    let filter = {};
+    if (typeof campusIdOrFilter === "object" && campusIdOrFilter !== null) {
+      filter = { ...campusIdOrFilter };
+    } else {
+      filter = { ...maybeFilter, campusId: campusIdOrFilter };
+    }
+
+    const query = {};
+    if (filter.campusId) query.campusId = filter.campusId;
+    if (filter.days) query.days = filter.days;
+    if (filter.dayOfWeek) {
+      const dayMap = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 7 };
+      const dayNum = dayMap[filter.dayOfWeek];
+      if (dayNum) query.days = dayNum;
+    }
+    if (filter.program || filter.className || filter.gradeOrClass) {
+      const prog = filter.program || filter.className || filter.gradeOrClass;
+      query.$or = [{ program: prog }, { className: prog }, { gradeOrClass: prog }];
     }
     if (filter.section) query.section = filter.section;
     if (filter.subject) query.subject = new RegExp(filter.subject, "i");
+    if (filter.institutionType) query.institutionType = filter.institutionType;
 
-    return await ClassSchedule.find(query)
-      .populate("teacherId", "name email phone department designation")
-      .sort({ dayOfWeek: 1, startTime: 1 });
+    let records = await Timetable.find(query).sort({ days: 1, startTime: 1 });
+    if (!records.length && filter.campusId) {
+      const legacyQuery = { campusId: filter.campusId };
+      if (filter.dayOfWeek) legacyQuery.dayOfWeek = filter.dayOfWeek;
+      if (filter.section) legacyQuery.section = filter.section;
+      const legacyRecords = await ClassSchedule.find(legacyQuery)
+        .populate("teacherId", "name email phone department designation")
+        .sort({ dayOfWeek: 1, startTime: 1 });
+      if (legacyRecords.length) {
+        return legacyRecords;
+      }
+    }
+    return records;
   }
 
   async getClassScheduleById(id, campusId) {
-    const record = await ClassSchedule.findOne({ _id: id, campusId }).populate(
-      "teacherId",
-      "name email phone department designation",
-    );
+    const query = { _id: id };
+    if (campusId) query.campusId = campusId;
+    let record = await Timetable.findOne(query);
+    if (!record) {
+      record = await ClassSchedule.findOne(query).populate(
+        "teacherId",
+        "name email phone department designation",
+      );
+    }
     if (!record) throw new Error("Class schedule not found.");
     return record;
   }
 
-  async updateClassSchedule(id, campusId, updateData) {
-    const payload = { ...updateData };
-    if (payload.gradeOrClass && !payload.className) payload.className = payload.gradeOrClass;
-    if (payload.instructor && !payload.teacherName) payload.teacherName = payload.instructor;
-    if (payload.room && !payload.roomNumber) payload.roomNumber = payload.room;
+  async updateClassSchedule(id, campusIdOrUpdate, maybeUpdate) {
+    let campusId, updateData;
+    if (maybeUpdate !== undefined) {
+      campusId = campusIdOrUpdate;
+      updateData = maybeUpdate;
+    } else {
+      updateData = campusIdOrUpdate;
+    }
+    const query = { _id: id };
+    if (campusId) query.campusId = campusId;
 
-    const record = await ClassSchedule.findOneAndUpdate(
-      { _id: id, campusId },
-      payload,
-      { new: true, runValidators: true }
-    );
+    let record = await Timetable.findOneAndUpdate(query, updateData, {
+      new: true,
+      runValidators: true,
+    });
+    if (!record) {
+      record = await ClassSchedule.findOneAndUpdate(query, updateData, {
+        new: true,
+        runValidators: true,
+      });
+    }
     if (!record) throw new Error("Class schedule not found.");
     return record;
   }
 
   async deleteClassSchedule(id, campusId) {
-    const record = await ClassSchedule.findOneAndDelete({ _id: id, campusId });
+    const query = { _id: id };
+    if (campusId) query.campusId = campusId;
+    let record = await Timetable.findOneAndDelete(query);
+    if (!record) {
+      record = await ClassSchedule.findOneAndDelete(query);
+    }
     if (!record) throw new Error("Class schedule not found.");
     return record;
   }
