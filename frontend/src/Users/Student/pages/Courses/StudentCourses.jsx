@@ -10,16 +10,7 @@ export default function StudentCourses() {
   const courses = useSelector(selectStudentCourses);
   const student = useSelector(selectCurrentStudent);
   return (
-    <section
-      className="student-courses"
-      aria-labelledby="student-courses-title"
-    >
-      <div className="sc-page-heading">
-        <h1 id="student-courses-title">My Enrolled Courses &amp; Routine</h1>
-        <p>
-          Semester course allocations, syllabus modules, and instructor details.
-        </p>
-      </div>
+    <section className="student-courses">
       {courses.length ? (
         <div className="sc-grid">
           {courses.map((course) => (

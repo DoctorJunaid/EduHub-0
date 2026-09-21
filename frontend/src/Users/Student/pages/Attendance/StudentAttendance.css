@@ -1,8 +1,9 @@
 .student-attendance-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   min-width: 0;
+  padding: 18px 20px 20px;
   color: var(--foreground);
 }
 .sta-page-heading h1 {
@@ -18,7 +19,10 @@
 .sta-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 0;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
 }
 .student-attendance-page .sta-stat,
 .student-attendance-page .sta-card {
@@ -31,45 +35,54 @@
 .student-attendance-page .sta-stat {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: 18px;
-  padding: 20px;
-  min-height: 132px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  min-height: 56px;
+  border: none;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  box-shadow: none;
+}
+.student-attendance-page .sta-stat:last-child {
+  border-right: none;
 }
 .sta-stat .summary-icon {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: auto;
+  height: auto;
   flex-shrink: 0;
-  color: var(--color-success);
-  background: var(--color-success-bg);
-  border-radius: var(--radius-lg);
+  color: #09090b;
+  background: transparent;
+  border-radius: 0;
 }
 .sta-stat .summary-icon svg {
-  width: 26px;
-  height: 26px;
+  width: 16px;
+  height: 16px;
 }
 .sta-stat > div {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1px;
   min-width: 0;
 }
 .sta-stat .summary-label {
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--muted-foreground);
-}
-.sta-stat strong {
-  font-size: 28px;
-  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   line-height: 1.2;
 }
+.sta-stat strong {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
 .sta-stat small {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--muted-foreground);
+  display: none;
 }
 .sta-notice {
   padding: 12px 16px;
@@ -80,8 +93,8 @@
   font-size: 13px;
 }
 .student-attendance-page .sta-card {
-  padding: 20px 24px;
-  gap: 16px;
+  padding: 16px 18px;
+  gap: 12px;
 }
 .sta-card-heading {
   display: flex;
@@ -199,6 +212,60 @@
   ) {
   color: var(--color-green-light);
 }
+
+.student-attendance-page {
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+.sta-page-heading h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.sta-page-heading p {
+  font-size: 12px;
+}
+.sta-stats {
+  gap: 0;
+}
+.student-attendance-page .sta-stat {
+  gap: 12px;
+  padding: 10px 16px;
+  min-height: 56px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.sta-notice {
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.student-attendance-page .sta-card {
+  padding: 10px 12px;
+  gap: 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.sta-card-heading {
+  gap: 8px;
+}
+.sta-card-heading h2 {
+  gap: 8px;
+  font-size: 15px;
+}
+.sta-card-heading h2 span {
+  padding: 6px;
+}
+.sta-courses {
+  gap: 10px;
+}
+.sta-card th {
+  padding: 0 8px 6px;
+  font-size: 10px;
+}
+.sta-card td {
+  padding: 8px;
+  font-size: 11px;
+}
 @media (max-width: 1200px) {
   .sta-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -209,7 +276,7 @@
     grid-template-columns: 1fr;
   }
   .sta-page-heading h1 {
-    font-size: 26px;
+    font-size: 20px;
   }
   .student-attendance-page .sta-card {
     padding: 16px;

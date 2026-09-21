@@ -3,7 +3,6 @@ import {
   BookOpen,
   FileText,
   CircleCheck,
-  NotebookPen,
   Award,
   WalletCards,
   MessageCircle,
@@ -22,7 +21,7 @@ export const getStudentNav = (isSchool) => [
     icon: <BookOpen size={20} />,
   },
   {
-    label: isSchool ? "Homework & Diary" : "Assignments",
+    label: isSchool ? "Daily Diary & Homework" : "Assignments",
     path: "/student/assignments",
     icon: <FileText size={20} />,
   },
@@ -32,12 +31,7 @@ export const getStudentNav = (isSchool) => [
     icon: <CircleCheck size={20} />,
   },
   {
-    label: "Daily Diary",
-    path: "/student/diary",
-    icon: <NotebookPen size={20} />,
-  },
-  {
-    label: isSchool ? "Progress Report Card" : "Grades & CGPA",
+    label: "Progress Report Card",
     path: "/student/grades",
     icon: <Award size={20} />,
   },

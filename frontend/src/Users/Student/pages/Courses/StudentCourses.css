@@ -1,8 +1,9 @@
 .student-courses {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   min-width: 0;
+  padding: 18px 20px 20px;
   color: var(--foreground);
 }
 .sc-page-heading h1 {
@@ -148,6 +149,58 @@
   ) {
   color: var(--color-green-light);
 }
+
+.student-courses {
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+.sc-page-heading h1 {
+  margin-bottom: 2px;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.sc-page-heading p {
+  font-size: 12px;
+}
+.sc-grid {
+  gap: 8px;
+}
+.student-course-card {
+  padding: 10px;
+  gap: 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.sc-card-top {
+  gap: 6px;
+}
+.student-course-card h2 {
+  font-size: 14px;
+  line-height: 1.25;
+}
+.sc-routines {
+  gap: 6px;
+}
+.sc-info {
+  gap: 6px;
+  min-height: 0;
+  padding: 8px;
+  border-radius: 6px;
+}
+.sc-info > div {
+  font-size: 11px;
+}
+.sc-info dt {
+  gap: 6px;
+}
+.sc-card-footer {
+  gap: 6px;
+  padding-top: 8px;
+  font-size: 11px;
+}
+.sc-empty {
+  padding: 24px 12px;
+}
 @media (max-width: 1200px) {
   .sc-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -155,7 +208,7 @@
 }
 @media (max-width: 700px) {
   .sc-grid {
-    grid-template-columns: 1fr;
+    font-size: 20px;
   }
   .sc-page-heading h1 {
     font-size: 26px;

@@ -5,12 +5,19 @@ import { validSubmission } from "../assignmentData.js";
 const assignments = createSlice({
   name: "assignments",
   initialState: { records: [] },
-  reducers: {},
+  reducers: {
+    assignmentsLoaded: (state, { payload }) => {
+      state.records = Array.isArray(payload) ? payload : [];
+    },
+  },
 });
 const submissions = createSlice({
   name: "submissions",
   initialState: { records: [] },
   reducers: {
+    submissionsLoaded: (state, { payload }) => {
+      state.records = Array.isArray(payload) ? payload : [];
+    },
     submissionSaved(state, { payload }) {
       if (!validSubmission(payload) || payload.status !== "Submitted") return;
       const existing = state.records.find(
@@ -27,4 +34,5 @@ const submissions = createSlice({
 });
 export default assignments.reducer;
 export const submissionsReducer = submissions.reducer;
-export const { submissionSaved } = submissions.actions;
+export const { assignmentsLoaded } = assignments.actions;
+export const { submissionsLoaded, submissionSaved } = submissions.actions;

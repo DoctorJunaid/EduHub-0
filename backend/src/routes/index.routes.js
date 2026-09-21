@@ -16,6 +16,7 @@ import substituteRoutes from "./substitute.routes.js";
 import salaryPolicyRoutes from "./salaryPolicy.routes.js";
 import teacherSalaryProfileRoutes from "./teacherSalaryProfile.routes.js";
 import payrollRoutes from "./payroll.routes.js";
+import studentRoutes from "./student.routes.js";
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ router.get("/health", (req, res) => {
 
 // Mount Track A governance & authentication routes
 router.use("/auth", authRoutes);
+router.use("/student", studentRoutes);
 router.use("/super-admin", superAdminRoutes);
 router.use("/institute-admin", instituteAdminRoutes);
 

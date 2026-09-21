@@ -3,6 +3,10 @@ import { selectStudentDashboard } from "./studentDashboard.js";
 import { validAssignment, validSubmission } from "../assignmentData.js";
 const empty = [];
 const normalize = (value) => value.trim().toLowerCase();
+const referenceId = (value) => {
+  if (value && typeof value === "object") return value._id || value.id || "";
+  return value || "";
+};
 export const selectStudentAssignments = createSelector(
   [
     selectStudentDashboard,
@@ -14,14 +18,27 @@ export const selectStudentAssignments = createSelector(
     return assignments
       .filter(validAssignment)
       .flatMap((assignment) => {
+        const assignmentClassId = String(referenceId(assignment.classId));
         const session = timetable.find(
           (record) =>
-            record.id === assignment.classId &&
+            [record.id, record._id, record.classId]
+              .map(referenceId)
+              .some((id) => String(id) === assignmentClassId) &&
             courses.some(
               (course) => normalize(course) === normalize(record.subject),
             ),
         );
-        if (!session) return [];
+        const fallbackSession =
+          session ||
+          timetable.find(
+            (record) =>
+              courses.some(
+                (course) => normalize(course) === normalize(record.subject),
+              ) &&
+              (normalize(record.subject) === normalize(assignment.subject) ||
+                normalize(record.title) === normalize(assignment.subject)),
+          );
+        if (!fallbackSession) return [];
         const submission = submissions.find(
           (record) =>
             validSubmission(record) &&
@@ -32,8 +49,8 @@ export const selectStudentAssignments = createSelector(
         return [
           {
             ...assignment,
-            subject: session.subject,
-            section: session.section,
+            subject: fallbackSession.subject || assignment.subject || "General",
+            section: fallbackSession.section || assignment.section || "",
             submission,
             status,
             scoreLabel:

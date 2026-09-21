@@ -1,16 +1,134 @@
-.student-diary-page { display:flex; flex-direction:column; gap:24px; min-width:0; color:var(--foreground); }
-.sdp-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; }
-.sdp-heading > div { min-width:0; }
-.sdp-heading h1 { font-size:30px; font-weight:700; line-height:1.3; margin-bottom:6px; }
-.sdp-heading p { font-size:15px; line-height:1.5; color:var(--muted-foreground); }
-.sdp-heading [data-slot=select-trigger] { width:210px; flex-shrink:0; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--card); font-size:13px; }
-.student-diary-subjects { padding:5px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--popover); color:var(--popover-foreground); max-width:calc(100vw - 32px); }
-.student-diary-subjects [data-slot=select-item] { padding:8px 28px 8px 10px; font-size:13px; }
-.sdp-entries { display:flex; flex-direction:column; gap:18px; }
-.sdp-empty { padding:48px 24px; align-items:center; text-align:center; gap:12px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--card); box-shadow:var(--shadow-sm); }
-.sdp-empty svg { width:32px; height:32px; color:var(--muted-foreground); }
-.sdp-empty h2 { font-size:18px; font-weight:600; }
-.sdp-empty p { font-size:14px; color:var(--muted-foreground); }
-.sd-diary-list { display:flex; flex-direction:column; gap:12px; }
-@media(max-width:800px) { .sdp-heading { align-items:flex-start; flex-direction:column; } }
-@media(max-width:600px) { .sdp-heading h1 { font-size:26px; } .sdp-heading [data-slot=select-trigger] { width:100%; } }
+.student-diary-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+  color: var(--foreground);
+}
+.sdp-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.sdp-heading > div {
+  min-width: 0;
+}
+.sdp-heading h1 {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.sdp-heading p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.sdp-heading [data-slot="select-trigger"] {
+  width: 210px;
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  font-size: 13px;
+}
+.student-diary-subjects {
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  max-width: calc(100vw - 32px);
+}
+.student-diary-subjects [data-slot="select-item"] {
+  padding: 8px 28px 8px 10px;
+  font-size: 13px;
+}
+.sdp-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sdp-empty {
+  padding: 48px 24px;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.sdp-empty svg {
+  width: 32px;
+  height: 32px;
+  color: var(--muted-foreground);
+}
+.sdp-empty h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.sdp-empty p {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.sd-diary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.student-diary-page {
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+.sdp-heading {
+  gap: 10px;
+}
+.sdp-heading h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.sdp-heading p {
+  font-size: 12px;
+  line-height: 1.3;
+}
+.sdp-heading [data-slot="select-trigger"] {
+  width: 180px;
+  padding: 7px 9px;
+  font-size: 11px;
+}
+.sdp-entries {
+  gap: 8px;
+}
+.sdp-empty {
+  padding: 24px 12px;
+  gap: 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.sdp-empty h2 {
+  font-size: 15px;
+}
+.sdp-empty p {
+  font-size: 12px;
+}
+.sd-diary-list {
+  gap: 8px;
+}
+@media (max-width: 800px) {
+  .sdp-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 600px) {
+  .sdp-heading h1 {
+    font-size: 20px;
+  }
+  .sdp-heading [data-slot="select-trigger"] {
+    width: 100%;
+  }
+}
