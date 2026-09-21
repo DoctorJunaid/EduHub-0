@@ -744,6 +744,54 @@ export const deleteFeeRecord = async (req, res) => {
   }
 };
 
+export const generateMonthlyFees = async (req, res) => {
+  try {
+    const { campusId, instituteId } = getContext(req);
+    const result = await campusAdminService.generateMonthlyFees(
+      campusId,
+      instituteId,
+      req.body,
+    );
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const getFeeStructures = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const structures = await campusAdminService.getFeeStructures(campusId);
+    res.status(200).json({ success: true, count: structures.length, data: structures });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+export const saveFeeStructure = async (req, res) => {
+  try {
+    const { campusId, instituteId } = getContext(req);
+    const structure = await campusAdminService.upsertFeeStructure(
+      campusId,
+      instituteId,
+      req.body,
+    );
+    res.status(200).json({ success: true, data: structure });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const deleteFeeStructure = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteFeeStructure(req.params.id, campusId);
+    res.status(200).json({ success: true, message: "Fee structure removed successfully." });
+  } catch (error) {
+    handleError(res, error, 404);
+  }
+};
+
 // --- Performance Controllers ---
 export const createPerformanceRecord = async (req, res) => {
   try {

@@ -10,7 +10,6 @@ import {
   Building2,
   Home,
   Radio,
-  FileText,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -93,8 +92,16 @@ export const getCampusAdminNav = (isSchool = false) => [
   },
   { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
   { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
-  { label: "Salary Profiles", path: "/salary-profiles", icon: <Users size={20} /> },
-  { label: "Salary & Payroll", path: "/salary-payroll", icon: <ClipboardList size={20} /> },
+  {
+    label: "Salary Profiles",
+    path: "/salary-profiles",
+    icon: <Users size={20} />,
+  },
+  {
+    label: "Salary & Payroll",
+    path: "/salary-payroll",
+    icon: <ClipboardList size={20} />,
+  },
   { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
 ];
 
@@ -102,22 +109,40 @@ export const CAMPUS_ADMIN_NAV = getCampusAdminNav(false);
 
 export const TEACHER_NAV = [
   {
-    label: "Dashboard",
-    path: "/dashboard",
+    label: "Overview",
+    path: "/teacher",
     icon: <LayoutDashboard size={20} />,
   },
-  { label: "My Classes", path: "/classes", icon: <BookOpen size={20} /> },
-  { label: "Students", path: "/students", icon: <Users size={20} /> },
-  { label: "Attendance", path: "/attendance", icon: <Calendar size={20} /> },
   {
-    label: "Assignments",
-    path: "/assignments",
+    label: "My Classes",
+    path: "/teacher/classes",
+    icon: <BookOpen size={20} />,
+  },
+  {
+    label: "Assignments & Grading",
+    path: "/teacher/assignments",
     icon: <ClipboardList size={20} />,
   },
-  { label: "Exams", path: "/exams", icon: <Award size={20} /> },
-  { label: "Results", path: "/results", icon: <Trophy size={20} /> },
-  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
-  { label: "My Payslips", path: "/my-payslips", icon: <FileText size={20} /> },
+  {
+    label: "Take Attendance",
+    path: "/teacher/attendance",
+    icon: <Users size={20} />,
+  },
+  {
+    label: "Daily Diary",
+    path: "/teacher/diary",
+    icon: <Calendar size={20} />,
+  },
+  {
+    label: "Gradebook & Marks",
+    path: "/teacher/gradebook",
+    icon: <Trophy size={20} />,
+  },
+  {
+    label: "Messages",
+    path: "/teacher/messages",
+    icon: <MessageSquare size={20} />,
+  },
 ];
 
 export const STUDENT_NAV = [

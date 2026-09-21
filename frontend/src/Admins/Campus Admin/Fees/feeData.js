@@ -20,16 +20,20 @@ export function validateVoucher(record) {
   return "";
 }
 export function joinVouchers(records, students) {
-  const people = new Map(students.map((student) => [student.id, student]));
-  return records.map((record) => ({
-    ...record,
-    student: people.get(record.studentId) ?? {
+  const people = new Map(students.map((student) => [String(student.id || student._id), student]));
+  return records.map((record) => {
+    const fromMap = people.get(String(record.studentId));
+    const student = fromMap || (record.student?.name ? record.student : null) || {
       id: record.studentId,
       name: "Student unavailable",
       roll: record.studentId,
       initials: "?",
-    },
-  }));
+    };
+    return {
+      ...record,
+      student,
+    };
+  });
 }
 export function filterVouchers(rows, filters) {
   const query = (filters.search ?? "").trim().toLowerCase();

@@ -1,0 +1,186 @@
+.teacher-classes {
+  padding: 32px;
+  max-width: 1600px;
+  margin: auto;
+}
+.teacher-classes-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+.teacher-classes-heading h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.2vw, 2.35rem);
+}
+.teacher-classes-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  overflow: hidden;
+}
+.teacher-class-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) repeat(3, 140px);
+  gap: 12px;
+  padding: 20px;
+}
+.teacher-class-search,
+.teacher-class-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted-foreground);
+  padding: 0 13px;
+  min-height: 42px;
+}
+.teacher-class-search input,
+.teacher-class-select select {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--foreground);
+  width: 100%;
+  font: inherit;
+}
+.teacher-class-select select {
+  cursor: pointer;
+  appearance: auto;
+}
+.teacher-classes-table-wrap {
+  overflow-x: auto;
+}
+.teacher-classes-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 850px;
+}
+.teacher-classes-table th,
+.teacher-classes-table td {
+  padding: 16px 28px;
+  text-align: left;
+  border-top: 1px solid var(--border);
+}
+.teacher-classes-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--muted) 22%, transparent);
+}
+.teacher-classes-table td {
+  font-size: 0.88rem;
+}
+.teacher-classes-table td strong,
+.teacher-classes-table td small {
+  display: block;
+}
+.teacher-classes-table td small {
+  color: var(--muted-foreground);
+  margin-top: 5px;
+}
+.teacher-class-time {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+}
+.teacher-class-time svg {
+  grid-row: span 2;
+  color: var(--foreground);
+}
+.teacher-room-badge {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--muted);
+  font-size: 0.78rem;
+}
+.teacher-instructor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.teacher-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.teacher-classes-empty {
+  text-align: center;
+  padding: 44px;
+  color: var(--muted-foreground);
+}
+.teacher-classes-empty strong,
+.teacher-classes-empty span {
+  display: block;
+}
+.teacher-classes-empty span {
+  margin-top: 6px;
+  font-size: 0.88rem;
+}
+.teacher-classes-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+.teacher-classes-footer > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.teacher-classes-footer strong {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--foreground);
+  color: var(--background);
+}
+@media (max-width: 850px) {
+  .teacher-classes {
+    padding: 22px;
+  }
+  .teacher-class-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .teacher-class-search {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 560px) {
+  .teacher-classes {
+    padding: 16px;
+  }
+  .teacher-classes-heading {
+    align-items: flex-start;
+    gap: 14px;
+    flex-direction: column;
+  }
+  .teacher-classes-heading button {
+    width: 100%;
+  }
+  .teacher-class-filters {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .teacher-classes-footer {
+    padding: 16px;
+    gap: 10px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -9,6 +9,7 @@ import {
 } from "../models/profile.model.js";
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import User from "../models/user.model.js";
+import FeeStructure from "../models/feeStructure.model.js";
 
 class CampusAdminService {
   // --- Dashboard Aggregated Statistics ---
@@ -426,32 +427,74 @@ class CampusAdminService {
 
   // --- Fee Record Operations ---
   async createFeeRecord(campusId, instituteId, data) {
+    const rawStatus = (data.status || data.paymentStatus || "pending").toLowerCase();
+    const status = ["paid", "pending", "overdue"].includes(rawStatus) ? rawStatus : "pending";
+    const amount = Number(data.amount || 0);
+    const paidAmount = status === "paid" ? (Number(data.paidAmount) || amount) : Number(data.paidAmount || 0);
+    const paymentDate = status === "paid"
+      ? (data.paymentDate ? new Date(data.paymentDate) : new Date())
+      : (data.paymentDate ? new Date(data.paymentDate) : null);
+    const dueDate = data.dueDate ? new Date(data.dueDate) : new Date();
+
     const payload = {
       ...data,
       campusId,
       instituteId: instituteId || null,
-      challanNo: data.challanNo || `CH-${Math.floor(100000 + Math.random() * 900000)}`,
-      month: data.month || new Date().toISOString().slice(0, 7),
-      status: data.status ? data.status.toLowerCase() : "pending",
+      feeType: data.feeType || data.feeCategory || "Tuition",
+      challanNo: data.challanNo || data.voucherNo || `CH-${Math.floor(100000 + Math.random() * 900000)}`,
+      month: data.month || (data.dueDate ? String(data.dueDate).slice(0, 7) : new Date().toISOString().slice(0, 7)),
+      semester: data.semester || "Current Term",
+      description: data.description || data.notes || "",
+      notes: data.description || data.notes || "",
+      breakdown: Array.isArray(data.breakdown) ? data.breakdown : [],
+      amount,
+      paidAmount,
+      dueDate,
+      paymentDate,
+      status,
     };
-    return await FeeRecord.create(payload);
+    const created = await FeeRecord.create(payload);
+    return await FeeRecord.findById(created._id).populate(
+      "studentId",
+      "name roll email program gradeOrClass section guardian guardianPhone",
+    );
   }
 
   async getAllFeeRecords(campusId, filter = {}) {
     const query = { campusId };
-    if (filter.status) query.status = filter.status.toLowerCase();
+    if (filter.status && filter.status !== "all") query.status = filter.status.toLowerCase();
+    if (filter.paymentStatus && filter.paymentStatus !== "all") query.status = filter.paymentStatus.toLowerCase();
     if (filter.studentId) query.studentId = filter.studentId;
-    if (filter.feeType) query.feeType = filter.feeType.toLowerCase();
+    if (filter.feeType && filter.feeType !== "all") query.feeType = new RegExp(`^${filter.feeType.trim()}$`, "i");
+
+    if (filter.search && filter.search.trim()) {
+      const q = filter.search.trim();
+      const studentMatches = await User.find({
+        campusId,
+        role: "student",
+        $or: [
+          { name: new RegExp(q, "i") },
+          { roll: new RegExp(q, "i") },
+          { email: new RegExp(q, "i") },
+        ],
+      }).select("_id").lean();
+
+      query.$or = [
+        { challanNo: new RegExp(q, "i") },
+        { feeType: new RegExp(q, "i") },
+        { studentId: { $in: studentMatches.map((s) => s._id) } },
+      ];
+    }
 
     return await FeeRecord.find(query)
-      .populate("studentId", "name roll program gradeOrClass section guardian guardianPhone")
+      .populate("studentId", "name roll email program gradeOrClass section guardian guardianPhone")
       .sort({ dueDate: 1, createdAt: -1 });
   }
 
   async getFeeRecordById(id, campusId) {
     const record = await FeeRecord.findOne({ _id: id, campusId }).populate(
       "studentId",
-      "name roll program gradeOrClass section guardian guardianPhone",
+      "name roll email program gradeOrClass section guardian guardianPhone",
     );
     if (!record) throw new Error("Fee record not found.");
     return record;
@@ -459,15 +502,32 @@ class CampusAdminService {
 
   async updateFeeRecord(id, campusId, updateData) {
     const payload = { ...updateData };
-    if (payload.status) payload.status = payload.status.toLowerCase();
-    if (payload.status === "paid" && !payload.paymentDate) {
-      payload.paymentDate = new Date();
+    if (payload.paymentStatus && !payload.status) {
+      payload.status = payload.paymentStatus.toLowerCase();
+    }
+    if (payload.status) {
+      payload.status = payload.status.toLowerCase();
+    }
+    if (payload.feeCategory && !payload.feeType) {
+      payload.feeType = payload.feeCategory;
+    }
+    if (payload.voucherNo && !payload.challanNo) {
+      payload.challanNo = payload.voucherNo;
+    }
+    if (payload.description && !payload.notes) payload.notes = payload.description;
+    if (payload.notes && !payload.description) payload.description = payload.notes;
+    if (payload.status === "paid") {
+      if (!payload.paymentDate) payload.paymentDate = new Date();
+      if (!payload.paidAmount && payload.amount) payload.paidAmount = payload.amount;
     }
 
     const record = await FeeRecord.findOneAndUpdate(
       { _id: id, campusId },
       payload,
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
+    ).populate(
+      "studentId",
+      "name roll email program gradeOrClass section guardian guardianPhone",
     );
     if (!record) throw new Error("Fee record not found.");
     return record;
@@ -477,6 +537,159 @@ class CampusAdminService {
     const record = await FeeRecord.findOneAndDelete({ _id: id, campusId });
     if (!record) throw new Error("Fee record not found.");
     return record;
+  }
+
+  async generateMonthlyFees(campusId, instituteId, options = {}) {
+    const month = options.month || new Date().toISOString().slice(0, 7);
+    const dueDate = options.dueDate ? new Date(options.dueDate) : new Date(Date.now() + 14 * 86400000);
+    const feeCategory = options.feeCategory || "Monthly Tuition Fee";
+    const description = options.description || `Monthly Tuition & Composite Dues for ${month}`;
+    const targetGrade = options.gradeOrClass && options.gradeOrClass !== "all" ? options.gradeOrClass.trim() : null;
+    const defaultAmount = Number(options.defaultAmount) || 5000;
+
+    // 1. Fetch eligible students
+    const studentQuery = { campusId, role: "student", isActive: { $ne: false } };
+    if (targetGrade) {
+      studentQuery.$or = [
+        { gradeOrClass: new RegExp(`^${targetGrade}$`, "i") },
+        { program: new RegExp(`^${targetGrade}$`, "i") },
+      ];
+    }
+    const students = await User.find(studentQuery).lean();
+    if (!students.length) {
+      return {
+        generatedCount: 0,
+        skippedCount: 0,
+        totalEligible: 0,
+        message: "No eligible students found for the selected grade/criteria.",
+        records: [],
+      };
+    }
+
+    // 2. Fetch Fee Structures for campus
+    const feeStructures = await FeeStructure.find({ campusId }).lean();
+    const structureMap = new Map(
+      feeStructures.map((fs) => [(fs.gradeOrClass || "").trim().toLowerCase(), fs])
+    );
+
+    // 3. Find existing fee records for this month & feeType to avoid duplicate billing
+    const existingRecords = await FeeRecord.find({
+      campusId,
+      month,
+      feeType: new RegExp(`^${feeCategory.trim()}$`, "i"),
+    }).select("studentId").lean();
+
+    const billedStudentIds = new Set(existingRecords.map((r) => String(r.studentId)));
+
+    // 4. Generate records for unbilled students
+    const year = new Date().getFullYear();
+    const toCreate = [];
+    let skippedCount = 0;
+
+    for (const student of students) {
+      const studentIdStr = String(student._id);
+      if (billedStudentIds.has(studentIdStr)) {
+        skippedCount++;
+        continue;
+      }
+
+      const studentGrade = (student.gradeOrClass || student.program || "").trim().toLowerCase();
+      const matchedStructure = structureMap.get(studentGrade);
+
+      let amount = defaultAmount;
+      let breakdown = [{ title: feeCategory, amount: defaultAmount }];
+
+      if (matchedStructure) {
+        const tuition = Number(matchedStructure.tuitionFee || 0);
+        const lab = Number(matchedStructure.labFee || 0);
+        const sports = Number(matchedStructure.sportsFee || 0);
+        const exam = Number(matchedStructure.examFee || 0);
+        const other = Number(matchedStructure.otherFee || 0);
+        const total = tuition + lab + sports + exam + other;
+        if (total > 0) {
+          amount = total;
+          breakdown = [];
+          if (tuition > 0) breakdown.push({ title: "Tuition Fee", amount: tuition });
+          if (lab > 0) breakdown.push({ title: "Computer / Science Lab", amount: lab });
+          if (sports > 0) breakdown.push({ title: "Sports & Physical Fund", amount: sports });
+          if (exam > 0) breakdown.push({ title: "Examination Fee", amount: exam });
+          if (other > 0) breakdown.push({ title: "General Services & Utility", amount: other });
+        }
+      }
+
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      const challanNo = `VCH-${year}-${rand}`;
+      const semester = student.gradeOrClass || student.program || month;
+
+      toCreate.push({
+        campusId,
+        instituteId: instituteId || null,
+        studentId: student._id,
+        feeType: feeCategory,
+        challanNo,
+        month,
+        semester,
+        amount,
+        paidAmount: 0,
+        dueDate,
+        paymentDate: null,
+        status: "pending",
+        description: matchedStructure?.description || description,
+        notes: matchedStructure?.description || description,
+        breakdown,
+      });
+    }
+
+    let createdRecords = [];
+    if (toCreate.length > 0) {
+      const created = await FeeRecord.insertMany(toCreate);
+      const createdIds = created.map((c) => c._id);
+      createdRecords = await FeeRecord.find({ _id: { $in: createdIds } })
+        .populate("studentId", "name roll email program gradeOrClass section guardian guardianPhone")
+        .sort({ createdAt: -1 });
+    }
+
+    return {
+      generatedCount: toCreate.length,
+      skippedCount,
+      totalEligible: students.length,
+      records: createdRecords,
+    };
+  }
+
+  // --- Fee Structure Operations ---
+  async getFeeStructures(campusId) {
+    return await FeeStructure.find({ campusId }).sort({ gradeOrClass: 1 });
+  }
+
+  async upsertFeeStructure(campusId, instituteId, data) {
+    const gradeOrClass = (data.gradeOrClass || "").trim();
+    if (!gradeOrClass) throw new Error("Grade or Class name is required.");
+
+    const payload = {
+      campusId,
+      instituteId: instituteId || null,
+      gradeOrClass,
+      tuitionFee: Number(data.tuitionFee || 0),
+      labFee: Number(data.labFee || 0),
+      sportsFee: Number(data.sportsFee || 0),
+      examFee: Number(data.examFee || 0),
+      otherFee: Number(data.otherFee || 0),
+      lateFeeFine: Number(data.lateFeeFine || 0),
+      description: data.description || "",
+    };
+
+    return await FeeStructure.findOneAndUpdate(
+      { campusId, gradeOrClass },
+      payload,
+      { returnDocument: "after", upsert: true, runValidators: true }
+    );
+  }
+
+  async deleteFeeStructure(id, campusId) {
+    const deleted = await FeeStructure.findOneAndDelete({ _id: id, campusId });
+    if (!deleted) throw new Error("Fee structure not found.");
+    return deleted;
   }
 
   // --- Performance / Exam Results Operations ---
