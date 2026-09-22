@@ -172,32 +172,9 @@ const App = () => {
             <Route path="messages" element={<Messages />} />
             <Route path="settings" element={<Settings />} />
             <Route path="substitutes" element={<SubstituteAssignments />} />
-            <Route path="salary-profiles" element={<SalaryProfiles />} />
           </Route>
         </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager"]} />}>
-        <Route element={<MainLayout />}>
-          <Route path="dashboard" element={<CampusOverview />} />
-          <Route path="faculty" element={<FacultyDirectory />} />
-          <Route path="students" element={<StudentsDirectory />} />
-          <Route path="timetable" element={<ClassTimetable />} />
-          <Route path="exams" element={<ExamSchedules />} />
-          <Route path="faculty-attendance" element={<FacultyAttendance />} />
-          <Route path="student-attendance" element={<StudentAttendance />} />
-          <Route path="results" element={<ExamResults />} />
-          <Route path="fees" element={<FeeManagement />} />
-          <Route path="messages" element={<Messages />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="substitutes" element={<SubstituteAssignments />} />
-          <Route path="salary-profiles" element={<SalaryProfiles />} />
-        </Route>
-      </Route>
-
-      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager", "institute_admin", "accountant", "principal"]} />}>
-        <Route element={<MainLayout />}>
-          <Route path="salary-profiles" element={<SalaryProfiles />} />
-          <Route path="salary-payroll" element={<SalaryPayroll />} />
         <Route
           element={
             <ProtectedRoute
@@ -212,6 +189,7 @@ const App = () => {
           }
         >
           <Route element={<MainLayout />}>
+            <Route path="salary-profiles" element={<SalaryProfiles />} />
             <Route path="salary-payroll" element={<SalaryPayroll />} />
           </Route>
         </Route>
@@ -219,20 +197,17 @@ const App = () => {
         <Route
           element={<ProtectedRoute allowedRoles={["teacher", "faculty"]} />}
         >
-          <Route element={<MainLayout navigation={TEACHER_NAV} />}>
+          <Route element={<TeacherLayout />}>
+            <Route path="teacher" element={<TeacherDashboard />} />
+            <Route path="teacher/classes" element={<TeacherPage />} />
+            <Route path="teacher/assignments" element={<TeacherPage />} />
+            <Route path="teacher/attendance" element={<TeacherPage />} />
+            <Route path="teacher/diary" element={<TeacherPage />} />
+            <Route path="teacher/gradebook" element={<TeacherPage />} />
+            <Route path="teacher/messages" element={<TeacherPage />} />
             <Route path="my-payslips" element={<MyPayslips />} />
+            <Route path="my-salary" element={<MySalary />} />
           </Route>
-      <Route element={<ProtectedRoute allowedRoles={["teacher", "faculty"]} />}>
-        <Route element={<TeacherLayout />}>
-          <Route path="teacher" element={<TeacherDashboard />} />
-          <Route path="teacher/classes" element={<TeacherPage />} />
-          <Route path="teacher/assignments" element={<TeacherPage />} />
-          <Route path="teacher/attendance" element={<TeacherPage />} />
-          <Route path="teacher/diary" element={<TeacherPage />} />
-          <Route path="teacher/gradebook" element={<TeacherPage />} />
-          <Route path="teacher/messages" element={<TeacherPage />} />
-          <Route path="my-payslips" element={<MyPayslips />} />
-          <Route path="my-salary" element={<MySalary />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>

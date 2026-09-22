@@ -1,6 +1,3 @@
-import { createSelector, createSlice, createAsyncThunk, nanoid } from '@reduxjs/toolkit';
-import axiosInstance from '../../api/axiosInstance.js';
-import { fetchActivityLogs } from './activityLogSlice.js';
 import {
   createSelector,
   createSlice,
@@ -8,6 +5,7 @@ import {
   nanoid,
 } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance.js";
+import { fetchActivityLogs } from "./activityLogSlice.js";
 import {
   studentAttendanceKey,
   validStudentAttendance,
@@ -60,18 +58,14 @@ export const fetchStudentAttendance = createAsyncThunk(
 );
 
 export const markStudentAttendance = createAsyncThunk(
-  'studentAttendance/mark',
-  async (payload, { dispatch, rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post('/campus-admin/attendance/students', payload);
-      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
   "studentAttendance/mark",
-  async (payload, { rejectWithValue }) => {
+  async (payload, { dispatch, rejectWithValue }) => {
     try {
       const response = await axiosInstance.post(
         "/campus-admin/attendance/students",
         payload,
       );
+      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
       return response.data.data || response.data;
     } catch (error) {
       return rejectWithValue(
@@ -82,16 +76,8 @@ export const markStudentAttendance = createAsyncThunk(
 );
 
 export const markBulkStudentAttendance = createAsyncThunk(
-  'studentAttendance/markBulk',
-  async ({ date, records }, { dispatch, rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post('/campus-admin/attendance/students/bulk', {
-        date,
-        records,
-      });
-      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
   "studentAttendance/markBulk",
-  async ({ date, records }, { rejectWithValue }) => {
+  async ({ date, records }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axiosInstance.post(
         "/campus-admin/attendance/students/bulk",
@@ -100,6 +86,7 @@ export const markBulkStudentAttendance = createAsyncThunk(
           records,
         },
       );
+      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
       return response.data.data || response.data;
     } catch (error) {
       return rejectWithValue(

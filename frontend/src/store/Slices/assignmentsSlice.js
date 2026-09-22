@@ -8,6 +8,7 @@ const assignments = createSlice({
   reducers: {
     assignmentsLoaded: (state, { payload }) => {
       state.records = Array.isArray(payload) ? payload : [];
+    },
     assignmentSaved(state, { payload }) {
       if (!validAssignment(payload)) return;
       const existing = state.records.find((record) => record.id === payload.id);
@@ -19,6 +20,7 @@ const assignments = createSlice({
     },
   },
 });
+
 const submissions = createSlice({
   name: "submissions",
   initialState: { records: [] },
@@ -47,9 +49,8 @@ const submissions = createSlice({
     },
   },
 });
+
 export default assignments.reducer;
 export const submissionsReducer = submissions.reducer;
-export const { assignmentsLoaded } = assignments.actions;
-export const { submissionsLoaded, submissionSaved } = submissions.actions;
-export const { assignmentSaved, assignmentDeleted } = assignments.actions;
-export const { submissionSaved, submissionGraded } = submissions.actions;
+export const { assignmentsLoaded, assignmentSaved, assignmentDeleted } = assignments.actions;
+export const { submissionsLoaded, submissionSaved, submissionGraded } = submissions.actions;
