@@ -30,9 +30,13 @@ export default function useSalaryProfiles() {
       let errorMessage = null;
 
       if (profilesResult.status === 'fulfilled' && profilesResult.value?.data?.success) {
-        setProfiles(profilesResult.value.data.data || []);
+        const fetchedProfiles = profilesResult.value.data.data || [];
+        setProfiles(fetchedProfiles);
         setPagination({
-          total: profilesResult.value.data.count || 0,
+          total:
+            profilesResult.value.data.count ??
+            profilesResult.value.data.total ??
+            fetchedProfiles.length,
           page: profilesResult.value.data.pagination?.page || filters.page,
           limit: profilesResult.value.data.pagination?.limit || filters.limit,
         });
@@ -74,10 +78,26 @@ export default function useSalaryProfiles() {
 
   const deactivate = async (teacherId) => {
     try {
-      const response = await salaryApi.deactivateSalaryProfile(teacherId);
-      toast.success(response.data?.message || 'Profile deactivated');
+      let response;
+      try {
+        response = await salaryApi.deactivateSalaryProfile(teacherId);
+      } catch {
+        const targetProfile = profiles.find(
+          (p) =>
+            String(p._id) === String(teacherId) ||
+            String(p.teacherProfileId?._id || p.teacherProfileId) === String(teacherId)
+        );
+        const baseSalary = targetProfile?.baseSalary || 0;
+        const allowances = targetProfile?.allowances || [];
+        response = await salaryApi.saveSalaryProfile(teacherId, {
+          baseSalary,
+          allowances,
+          isActive: false,
+        });
+      }
+      toast.success(response?.data?.message || 'Profile deactivated successfully');
       await reload();
-      return response.data?.data;
+      return response?.data?.data;
     } catch (error) {
       const msg = error.response?.data?.message || 'Failed to deactivate profile';
       toast.error(msg, { id: 'salary-profiles-deactivate-error' });
@@ -87,10 +107,26 @@ export default function useSalaryProfiles() {
 
   const activate = async (teacherId) => {
     try {
-      const response = await salaryApi.activateSalaryProfile(teacherId);
-      toast.success(response.data?.message || 'Profile activated');
+      let response;
+      try {
+        response = await salaryApi.activateSalaryProfile(teacherId);
+      } catch {
+        const targetProfile = profiles.find(
+          (p) =>
+            String(p._id) === String(teacherId) ||
+            String(p.teacherProfileId?._id || p.teacherProfileId) === String(teacherId)
+        );
+        const baseSalary = targetProfile?.baseSalary || 0;
+        const allowances = targetProfile?.allowances || [];
+        response = await salaryApi.saveSalaryProfile(teacherId, {
+          baseSalary,
+          allowances,
+          isActive: true,
+        });
+      }
+      toast.success(response?.data?.message || 'Profile activated successfully');
       await reload();
-      return response.data?.data;
+      return response?.data?.data;
     } catch (error) {
       const msg = error.response?.data?.message || 'Failed to activate profile';
       toast.error(msg, { id: 'salary-profiles-activate-error' });
