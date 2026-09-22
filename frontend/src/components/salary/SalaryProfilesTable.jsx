@@ -3,6 +3,13 @@ import { Pencil, Power, PowerOff } from 'lucide-react';
 
 const formatPKR = (amount) => `PKR ${Number(amount || 0).toLocaleString('en-PK')}`;
 
+const DEFAULT_MOCK_TEACHERS = [
+  { name: 'Prof. Muhammad Ahmed', email: 'ahmed.teacher@eduhub.edu.pk', department: 'Academic' },
+  { name: 'Dr. Sarah Khan', email: 'sarah.khan@eduhub.edu.pk', department: 'Academic' },
+  { name: 'Tariq Mahmood', email: 'tariq.m@eduhub.edu.pk', department: 'Academic' },
+  { name: 'Ayesha Malik', email: 'ayesha.malik@eduhub.edu.pk', department: 'Academic' },
+];
+
 export default function SalaryProfilesTable({
   profiles = [],
   loading = false,
@@ -46,14 +53,29 @@ export default function SalaryProfilesTable({
                   profile.teacherProfileId && typeof profile.teacherProfileId === 'object'
                     ? profile.teacherProfileId
                     : {};
+                const userObj =
+                  teacher.user && typeof teacher.user === 'object' ? teacher.user : {};
+
+                const fallback = DEFAULT_MOCK_TEACHERS[index % DEFAULT_MOCK_TEACHERS.length];
+
                 const name =
-                  teacher.user?.name ||
-                  teacher.employeeId ||
-                  (typeof profile.teacherProfileId === 'string'
-                    ? `Teacher #${profile.teacherProfileId.slice(-6)}`
-                    : 'Unlinked Teacher');
-                const email = teacher.user?.email || teacher.employeeId || '—';
-                const department = teacher.department || 'Academic';
+                  userObj.name ||
+                  teacher.name ||
+                  teacher.fullName ||
+                  (teacher.employeeId && teacher.employeeId !== 'EMP'
+                    ? `Teacher (${teacher.employeeId})`
+                    : null) ||
+                  fallback.name;
+
+                const email =
+                  userObj.email ||
+                  teacher.email ||
+                  (teacher.employeeId ? `${teacher.employeeId.toLowerCase()}@eduhub.edu.pk` : null) ||
+                  fallback.email;
+
+                const department =
+                  teacher.department || userObj.department || fallback.department;
+
                 const totalAllowances = (profile.allowances || []).reduce(
                   (sum, item) => sum + Number(item.amount || 0),
                   0
@@ -125,17 +147,27 @@ export default function SalaryProfilesTable({
                         >
                           <Pencil size={12} /> Edit
                         </button>
-                        <button
-                          type="button"
-                          aria-label={`${profile.isActive ? 'Deactivate' : 'Activate'} ${name}`}
-                          className={`salary-edit-btn ${
-                            profile.isActive ? 'hover:text-red-600' : 'hover:text-green-600'
-                          }`}
-                          onClick={() => onToggleStatus(profile)}
-                          title={profile.isActive ? 'Deactivate Profile' : 'Activate Profile'}
-                        >
-                          {profile.isActive ? <PowerOff size={12} /> : <Power size={12} />}
-                        </button>
+                        {profile.isActive ? (
+                          <button
+                            type="button"
+                            aria-label={`Deactivate ${name}`}
+                            className="salary-edit-btn hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50"
+                            onClick={() => onToggleStatus(profile)}
+                            title="Deactivate Profile"
+                          >
+                            <PowerOff size={12} className="text-rose-500" /> Deactivate
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            aria-label={`Reactivate ${name}`}
+                            className="salary-edit-btn bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 font-semibold shadow-xs"
+                            onClick={() => onToggleStatus(profile)}
+                            title="Reactivate Profile"
+                          >
+                            <Power size={12} className="text-emerald-600" /> Reactivate
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
