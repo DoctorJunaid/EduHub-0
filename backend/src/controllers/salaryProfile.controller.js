@@ -22,6 +22,7 @@ export async function listProfiles(req, res) {
       message: 'Salary profiles retrieved successfully',
       data: result.records,
       count: result.total,
+      summary: result.summary,
       pagination: {
         page: result.page,
         limit: result.limit,

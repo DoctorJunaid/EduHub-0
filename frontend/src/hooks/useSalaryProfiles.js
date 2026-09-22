@@ -17,6 +17,11 @@ export default function useSalaryProfiles() {
     page: 1,
     limit: 20,
   });
+  const [summary, setSummary] = useState({
+    total: 0,
+    active: 0,
+    deactivated: 0,
+  });
   const [teachersWithoutProfile, setTeachersWithoutProfile] = useState([]);
 
   const reload = useCallback(async () => {
@@ -31,7 +36,11 @@ export default function useSalaryProfiles() {
 
       if (profilesResult.status === 'fulfilled' && profilesResult.value?.data?.success) {
         const fetchedProfiles = profilesResult.value.data.data || [];
+        const resSummary = profilesResult.value.data.summary;
         setProfiles(fetchedProfiles);
+        if (resSummary) {
+          setSummary(resSummary);
+        }
         setPagination({
           total:
             profilesResult.value.data.count ??
@@ -140,6 +149,7 @@ export default function useSalaryProfiles() {
     filters,
     setFilters,
     pagination,
+    summary,
     teachersWithoutProfile,
     reload,
     upsert,
