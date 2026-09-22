@@ -38,6 +38,103 @@
   font-size: 12px;
 }
 
+/* Premium Segmented Status Nav Tabs */
+.salary-status-nav {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
+  display: flex;
+  align-items: center;
+}
+
+.salary-status-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+}
+
+.salary-status-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 15px;
+  color: #52525b;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.salary-status-tab-btn:hover {
+  color: #18181b;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.salary-status-tab-btn.is-active {
+  color: #09090b;
+  background: #ffffff;
+  border-color: #e4e4e7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-weight: 700;
+}
+
+.salary-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.15s ease-in-out;
+}
+
+.salary-status-badge-all {
+  color: #52525b;
+  background: #e4e4e7;
+}
+
+.is-active .salary-status-badge-all {
+  color: #ffffff;
+  background: #18181b;
+}
+
+.salary-status-badge-active {
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+}
+
+.is-active .salary-status-badge-active {
+  color: #ffffff;
+  background: #16a34a;
+  border-color: #15803d;
+}
+
+.salary-status-badge-deactivated {
+  color: #b91c1c;
+  background: #ffe4e6;
+  border: 1px solid #fecdd3;
+}
+
+.is-active .salary-status-badge-deactivated {
+  color: #ffffff;
+  background: #e11d48;
+  border-color: #be123c;
+}
+
 .salary-profiles-kpis .campus-kpi-card {
   min-height: 68px;
 }
@@ -229,5 +326,10 @@
 
   .salary-profiles-table {
     min-width: 760px;
+  }
+
+  .salary-status-nav {
+    padding: 10px 14px;
+    overflow-x: auto;
   }
 }
