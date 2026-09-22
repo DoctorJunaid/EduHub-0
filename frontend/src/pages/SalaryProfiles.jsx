@@ -1,143 +1,279 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api/axiosInstance';
-import EditProfileDialog from '../components/SalaryProfiles/EditProfileDialog';
-import { Users, Edit2, Plus, Search, WalletCards, ReceiptText, BadgeDollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
+import useSalaryProfiles from '../hooks/useSalaryProfiles';
+import SalarySummaryCard from '../components/salary/SalarySummaryCard';
+import TeachersWithoutProfileAlert from '../components/salary/TeachersWithoutProfileAlert';
+import SalaryProfilesTable from '../components/salary/SalaryProfilesTable';
+import SalaryProfileDialog from '../components/salary/SalaryProfileDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import './SalaryProfiles.css';
 
-const SalaryProfiles = () => {
-  const [profiles, setProfiles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedProfile, setSelectedProfile] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [teachers, setTeachers] = useState([]);
-  const [search, setSearch] = useState('');
+export default function SalaryProfiles() {
+  const {
+    profiles,
+    loading,
+    filters,
+    setFilters,
+    pagination,
+    teachersWithoutProfile,
+    upsert,
+    deactivate,
+    activate,
+  } = useSalaryProfiles();
 
-  const fetchProfiles = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const profilesResponse = await api.get('/campus/salary/profiles');
-      if (profilesResponse.data.success) {
-        setProfiles(profilesResponse.data.data || []);
-      } else {
-        setError(profilesResponse.data.message || 'Failed to load salary profiles');
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Failed to load salary profiles');
-    } finally {
-      setLoading(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  // Status toggle confirm dialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetToggleProfile, setTargetToggleProfile] = useState(null);
+
+  const handleOpenAdd = (teacher = null) => {
+    if (teacher && (teacher._id || teacher.user)) {
+      setSelectedProfile({ teacherProfileId: teacher, baseSalary: 0, allowances: [] });
+    } else {
+      setSelectedProfile(null);
     }
+    setDialogOpen(true);
   };
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  const openEdit = async (profile) => {
-    if (!profile && teachers.length === 0) {
-      try {
-        const response = await api.get('/campus/salary/profiles/teachers');
-        if (!response.data.success) throw new Error(response.data.message);
-        setTeachers(response.data.data || []);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load teachers for the salary profile.');
-        return;
-      }
-    }
+  const handleOpenEdit = (profile) => {
     setSelectedProfile(profile);
     setDialogOpen(true);
   };
 
-  const closeDialog = () => {
-    setDialogOpen(false);
-    setSelectedProfile(null);
-  };
-
-  const handleSave = async (profileData) => {
+  const handleSaveProfile = async (teacherId, payload) => {
+    setSaving(true);
     try {
-      const teacherId = profileData.teacherProfileId?._id || profileData.teacherProfileId || profileData._id;
-      await api.put(`/campus/salary/profiles/${teacherId}`, profileData);
-      await fetchProfiles();
-    } catch (err) {
-      console.error(err);
-      setError('Failed to save profile');
+      await upsert(teacherId, payload);
+      setDialogOpen(false);
+      setSelectedProfile(null);
+    } catch (error) {
+      console.error(error);
     } finally {
-      closeDialog();
+      setSaving(false);
     }
   };
 
-  const visibleProfiles = profiles.filter((profile) => {
-    const teacher = profile.teacherProfileId;
-    const name = teacher?.user?.name || teacher?.employeeId || teacher || '';
-    return String(name).toLowerCase().includes(search.trim().toLowerCase());
-  });
-  const formatPKR = (value) => `PKR ${Number(value || 0).toLocaleString('en-PK')}`;
-  const totalBase = profiles.reduce((sum, profile) => sum + Number(profile.baseSalary || 0), 0);
-  const totalAllowances = profiles.reduce((sum, profile) => sum + (profile.allowances || []).reduce((amount, item) => amount + Number(item.amount || 0), 0), 0);
-  const totalDeductions = profiles.reduce((sum, profile) => sum + Number(profile.taxDeduction || 0) + Number(profile.otherDeduction || 0), 0);
+  const handlePromptToggleStatus = (profile) => {
+    if (profile.isActive) {
+      setTargetToggleProfile(profile);
+      setConfirmOpen(true);
+    } else {
+      activate(profile.teacherProfileId?._id || profile.teacherProfileId);
+    }
+  };
 
-  if (loading) return <div className="salary-profiles-page campus-tab-page salary-profiles-state">Loading salary profiles...</div>;
-  if (error) return <div className="salary-profiles-page campus-tab-page salary-profiles-state salary-profiles-error">{error}</div>;
+  const handleConfirmDeactivate = async () => {
+    if (!targetToggleProfile) return;
+    const tid =
+      targetToggleProfile.teacherProfileId?._id || targetToggleProfile.teacherProfileId;
+    await deactivate(tid);
+    setConfirmOpen(false);
+    setTargetToggleProfile(null);
+  };
+
+  const departments = Array.from(
+    new Set(
+      profiles
+        .map((p) => p.teacherProfileId?.department)
+        .filter(Boolean)
+    )
+  );
+
+  // Full-page form view matching Assign Substitute dialog layout
+  if (dialogOpen) {
+    return (
+      <SalaryProfileDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSave={handleSaveProfile}
+        profile={selectedProfile}
+        teachersWithoutProfile={teachersWithoutProfile}
+        saving={saving}
+      />
+    );
+  }
 
   return (
     <div className="salary-profiles-page campus-tab-page">
+      {/* Top Header */}
       <div className="salary-profiles-heading">
-        <div><span className="salary-profiles-eyebrow">Finance / compensation</span><h1>Salary Profiles</h1><p>Maintain base salary, allowances, and recurring deductions for teaching staff.</p></div>
-        <button type="button" className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer border-0" onClick={() => openEdit(null)}><Plus size={14} /> Add Profile</button>
+        <div>
+          <span className="salary-profiles-eyebrow">Finance / compensation</span>
+          <h1>Salary Profiles</h1>
+          <p>Maintain base salary, allowances, and recurring deductions for teaching staff.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleOpenAdd}
+          className="toolbar-btn toolbar-btn-primary"
+        >
+          <Plus size={14} /> Add Profile
+        </button>
       </div>
 
-      <div className="campus-kpi-track salary-profiles-kpis">
-        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Users size={16} /></div><div className="kpi-info"><span className="kpi-label">Configured Staff</span><span className="kpi-value">{profiles.length}</span></div></div></div>
-        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><BadgeDollarSign size={16} /></div><div className="kpi-info"><span className="kpi-label">Base Payroll</span><span className="kpi-value">{formatPKR(totalBase)}</span></div></div></div>
-        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><WalletCards size={16} /></div><div className="kpi-info"><span className="kpi-label">Allowances</span><span className="kpi-value">{formatPKR(totalAllowances)}</span></div></div></div>
-        <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><ReceiptText size={16} /></div><div className="kpi-info"><span className="kpi-label">Recurring Deductions</span><span className="kpi-value">{formatPKR(totalDeductions)}</span></div></div></div>
-      </div>
+      {/* KPI Track */}
+      <SalarySummaryCard profiles={profiles} />
 
+      {/* Alert for unconfigured teachers */}
+      <TeachersWithoutProfileAlert
+        count={teachersWithoutProfile.length}
+        onAddProfile={handleOpenAdd}
+      />
+
+      {/* Toolbar Filters */}
       <div className="campus-toolbar">
-        <div className="toolbar-left"><div className="toolbar-search"><Search size={13} /><input type="search" placeholder="Search teacher..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>{search && <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => setSearch('')}>Reset</button>}</div>
-        <div className="toolbar-actions"><span className="salary-profiles-result-count">{visibleProfiles.length} of {profiles.length} profiles</span></div>
+        <div className="toolbar-left">
+          <div className="toolbar-search">
+            <Search size={13} />
+            <input
+              type="search"
+              placeholder="Search teacher..."
+              value={filters.search}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))
+              }
+            />
+          </div>
+
+          <select
+            className="toolbar-select"
+            value={filters.department || ''}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, department: e.target.value, page: 1 }))
+            }
+          >
+            <option value="">All Departments</option>
+            {departments.map((dept) => (
+              <option key={dept} value={dept}>
+                {dept}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="toolbar-select"
+            value={filters.isActive === '' ? '' : filters.isActive ? 'true' : 'false'}
+            onChange={(e) =>
+              setFilters((f) => ({
+                ...f,
+                isActive: e.target.value === '' ? '' : e.target.value === 'true',
+                page: 1,
+              }))
+            }
+          >
+            <option value="">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+
+          {(filters.search || filters.department || filters.isActive !== '') && (
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-outline"
+              onClick={() =>
+                setFilters({
+                  search: '',
+                  department: '',
+                  isActive: '',
+                  page: 1,
+                  limit: 20,
+                })
+              }
+            >
+              Reset
+            </button>
+          )}
+        </div>
+
+        <div className="toolbar-actions">
+          <span className="salary-profiles-result-count">
+            {profiles.length} of {pagination.total} profiles
+          </span>
+        </div>
       </div>
 
-      <div className="campus-table-container salary-profiles-table-wrap">
-        <div className="overflow-x-auto"><table className="salary-profiles-table">
-          <thead>
-            <tr>
-              <th>Teacher</th><th>Base salary</th><th>Allowances</th><th>Tax</th><th>Other</th><th className="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleProfiles.length === 0 ? <tr><td colSpan="6" className="salary-profiles-empty">No salary profiles match this search.</td></tr> : visibleProfiles.map((p) => (
-              <tr key={p._id}>
-                <td><div className="salary-profile-person"><span>{(p.teacherProfileId?.user?.name || 'T').slice(0, 1)}</span><div><strong>{p.teacherProfileId?.user?.name || p.teacherProfileId?.employeeId || p.teacherProfileId || 'Unknown teacher'}</strong><small>{p.teacherProfileId?.designation || p.teacherProfileId?.department || 'Teaching staff'}</small></div></div>
-                </td>
-                <td><strong className="salary-amount">{formatPKR(p.baseSalary)}</strong></td>
-                <td>
-                  {p.allowances && p.allowances.length > 0
-                    ? <div className="allowance-stack">{p.allowances.map((a, i) => (
-                      <div key={i}><span>{a.name}</span><strong>{formatPKR(a.amount)}</strong></div>
-                    ))}</div>
-                    : <span className="salary-muted">No allowances</span>}
-                </td>
-                <td><span className="salary-deduction">{formatPKR(p.taxDeduction)}</span></td>
-                <td><span className="salary-deduction">{formatPKR(p.otherDeduction)}</span></td>
-                <td className="text-right"><button type="button" onClick={() => openEdit(p)} className="salary-edit-btn"><Edit2 size={13} /> Edit</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
+      {/* Table */}
+      <SalaryProfilesTable
+        profiles={profiles}
+        loading={loading}
+        onEdit={handleOpenEdit}
+        onToggleStatus={handlePromptToggleStatus}
+      />
+
+      {/* Pagination Footer */}
+      <div className="salary-payroll-pagination border-t border-slate-200 bg-white px-5 py-3">
+        <p>
+          Showing{' '}
+          <strong>
+            {profiles.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0}
+          </strong>{' '}
+          to{' '}
+          <strong>
+            {Math.min(pagination.page * pagination.limit, pagination.total)}
+          </strong>{' '}
+          of <strong>{pagination.total}</strong> profiles
+        </p>
+        <div className="payroll-page-controls">
+          <button
+            type="button"
+            className="payroll-page-btn"
+            disabled={pagination.page <= 1}
+            onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
+          >
+            ‹
+          </button>
+          <span className="text-xs font-semibold px-2">{pagination.page}</span>
+          <button
+            type="button"
+            className="payroll-page-btn"
+            disabled={pagination.page * pagination.limit >= pagination.total}
+            onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
+          >
+            ›
+          </button>
+        </div>
       </div>
-      {dialogOpen && (
-        <EditProfileDialog
-          profile={selectedProfile}
-          teachers={teachers}
-          onClose={closeDialog}
-          onSave={handleSave}
-        />
-      )}
+
+      {/* Deactivate AlertDialog */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="max-w-md bg-white border border-slate-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold text-slate-900">
+              Deactivate Salary Profile?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground mt-2">
+              Deactivating this salary profile will skip{' '}
+              <strong>
+                {targetToggleProfile?.teacherProfileId?.user?.name || 'this teacher'}
+              </strong>{' '}
+              during all future monthly payroll generations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+            <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeactivate}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-};
-
-export default SalaryProfiles;
+}

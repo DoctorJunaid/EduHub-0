@@ -5,11 +5,13 @@ import { selectTimetable } from "../Slices/timetableSlice.js";
 import { selectStudentAttendanceHistory } from "../Slices/studentAttendanceSlice.js";
 import { selectResults } from "../Slices/resultsSlice.js";
 import { studentAttendanceSummary } from "../../Admins/Campus Admin/Attendance/Students/studentAttendanceData.js";
-import { isDemoRecord } from '../demoProvenance.js';
+import { isDemoRecord } from "../demoProvenance.js";
 
 export function matchCurrentStudent(user, students) {
   if (user?.role !== "student") return null;
-  const byId = students.find((student) => student.id === user.id);
+  const byId = students.find(
+    (student) => String(student.id || student._id) === String(user.id),
+  );
   if (byId) return byId;
   const email = user.email?.trim().toLowerCase();
   if (!email) return null;
@@ -57,6 +59,7 @@ export function summarizeStudentAttendance(rows) {
     marked: summary.marked,
     rate: summary.rate,
     policyPending,
+    risk: summary.rate != null && summary.rate < 75,
   };
 }
 
@@ -77,31 +80,59 @@ export const selectStudentDashboard = createSelector(
         cgpa: null,
         results: [],
       };
+    const rawSubjects = Array.isArray(student.subjects)
+      ? student.subjects
+      : String(student.subjects || "").split(",");
     const courses = [
       ...new Set(
-        (student.subjects || "")
-          .split(",")
-          .map((subject) => subject.trim())
+        rawSubjects
+          .map((subject) =>
+            typeof subject === "object"
+              ? subject.name || subject.title || subject.subject || ""
+              : subject,
+          )
+          .map((subject) => String(subject).trim())
           .filter(Boolean),
       ),
     ];
     // Match the existing program/section relationship; never include other sections to fill the reference.
+    const className = student.program || student.gradeOrClass;
     const classes =
-      student.program && student.section
+      className && student.section
         ? timetable
             .filter(
               (session) =>
-                session.program === student.program &&
+                (session.program === className ||
+                  session.gradeOrClass === className ||
+                  session.className === className) &&
                 session.section === student.section &&
-                courses.some(course => course.toLowerCase() === session.subject.trim().toLowerCase()),
+                courses.some(
+                  (course) =>
+                    course.toLowerCase() ===
+                    session.subject.trim().toLowerCase(),
+                ),
             )
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
         : [];
     const rows = attendanceHistory.filter(
       (row) => row.student.id === student.id,
     );
-    const retiredSummary = student.academicSummaryDemo && results.some(row => row.studentId === student.id && (!isDemoRecord(row) || row.userModified));
-    const academicStudent = retiredSummary ? { ...student, cgpa: null, completedCredits: null, academicStanding: '', academicSummaryDemo: false } : student;
+    const retiredSummary =
+      student.academicSummaryDemo &&
+      results.some(
+        (row) =>
+          row.studentId === student.id &&
+          (!isDemoRecord(row) || row.userModified),
+      );
+    const academicStudent = retiredSummary
+      ? {
+          ...student,
+          cgpa: null,
+          completedCredits: null,
+          academicStanding: "",
+          academicSummaryDemo: false,
+        }
+      : student;
     return {
       student: academicStudent,
       courses,

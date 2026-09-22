@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Activity,
   UserPlus,
@@ -16,8 +17,15 @@ import {
   DollarSign,
   BookOpen,
   Users,
+  Loader2,
 } from 'lucide-react';
 import { useInstitution } from '@/context/InstitutionContext';
+import {
+  fetchActivityLogs,
+  selectActivityLogsHasMore,
+  selectActivityLogsIsFetchingMore,
+  selectActivityLogsPage,
+} from '@/store/Slices/activityLogSlice.js';
 
 // Map backend action types to icon + tone
 const ACTION_CONFIG = {
@@ -72,8 +80,13 @@ function timeAgo(dateString) {
 }
 
 export default function CampusActivitySidebar({ onSelectStudent, students = [], faculty = [], activityLogs = [] }) {
+  const dispatch = useDispatch();
   const { isSchool } = useInstitution();
   const [filter, setFilter] = useState('all');
+
+  const hasMore = useSelector(selectActivityLogsHasMore);
+  const isFetchingMore = useSelector(selectActivityLogsIsFetchingMore);
+  const currentPage = useSelector(selectActivityLogsPage);
 
   const activities = useMemo(() => {
     let list = [];
@@ -209,6 +222,26 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
     }
   };
 
+  const handleFilterClick = (key) => {
+    setFilter(key);
+    dispatch(fetchActivityLogs({ category: key, page: 1, limit: 8, append: false }));
+  };
+
+  const handleFeedScroll = (e) => {
+    if (!hasMore || isFetchingMore || activityLogs.length === 0) return;
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 40) {
+      dispatch(
+        fetchActivityLogs({
+          category: filter,
+          page: currentPage + 1,
+          limit: 8,
+          append: true,
+        })
+      );
+    }
+  };
+
   return (
     <aside className="campus-activity-sidebar" aria-label="Campus Activity and Audit Logs">
       {/* Sidebar Header */}
@@ -232,15 +265,15 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
             key={key}
             type="button"
             className={`activity-filter-chip ${filter === key ? 'is-active' : ''}`}
-            onClick={() => setFilter(key)}
+            onClick={() => handleFilterClick(key)}
           >
             {label}
           </button>
         ))}
       </div>
 
-      {/* Activity Timeline List */}
-      <div className="activity-feed-list">
+      {/* Activity Timeline List (Streaming Scroll) */}
+      <div className="activity-feed-list" onScroll={handleFeedScroll}>
         {filteredActivities.map((item) => {
           const Icon = item.icon;
           const isClickable = Boolean(item.studentName);
@@ -267,7 +300,20 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
           );
         })}
 
-        {filteredActivities.length === 0 && (
+        {isFetchingMore && (
+          <div style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#71717a', fontSize: '11px', fontWeight: '500' }}>
+            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+            <span>Streaming older logs...</span>
+          </div>
+        )}
+
+        {!hasMore && filteredActivities.length > 0 && !isFetchingMore && (
+          <div style={{ padding: '14px 12px', textAlign: 'center', color: '#a1a1aa', fontSize: '11px', fontWeight: '500' }}>
+            • End of activity logs •
+          </div>
+        )}
+
+        {filteredActivities.length === 0 && !isFetchingMore && (
           <div style={{ padding: '32px 18px', textAlign: 'center', color: '#a1a1aa', fontSize: '12px' }}>
             No activity logs found for this filter.
           </div>

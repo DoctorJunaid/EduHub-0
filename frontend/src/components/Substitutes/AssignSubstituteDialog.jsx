@@ -16,7 +16,27 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
   useEffect(() => {
     if (!isOpen) return;
     setFormData((current) => ({ ...current, date: selectedDate || current.date }));
-    api.get("/campus/faculty").then((res) => res.data.success && setAllTeachers(res.data.data)).catch(() => toast.error("Failed to load teachers."));
+
+    const fetchTeachers = async () => {
+      try {
+        let res = await api.get("/campus-admin/faculty");
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          setAllTeachers(res.data.data);
+          return;
+        }
+      } catch (err) {
+        try {
+          let res = await api.get("/campus-admin/teachers");
+          if (res.data?.success && Array.isArray(res.data.data)) {
+            setAllTeachers(res.data.data);
+            return;
+          }
+        } catch (e) {
+          toast.error("Failed to load teachers.", { id: "substitute-load-teachers-error" });
+        }
+      }
+    };
+    fetchTeachers();
   }, [isOpen, selectedDate]);
 
   useEffect(() => {
@@ -30,7 +50,7 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
           setAvailableTeachers(teachers);
           if (!teachers.some((teacher) => teacher._id === formData.substituteTeacherId)) setFormData((current) => ({ ...current, substituteTeacherId: "" }));
         }
-      } catch { toast.error("Failed to find available teachers."); }
+      } catch { toast.error("Failed to find available teachers.", { id: "substitute-suggest-error" }); }
       finally { setLoadingSuggestions(false); }
     };
     fetchSuggestions();
@@ -39,12 +59,12 @@ const AssignSubstituteDialog = ({ isOpen, onClose, onSuccess, selectedDate }) =>
   const change = (event) => setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
   const submit = async (event) => {
     event.preventDefault();
-    if (!formData.originalTeacherId || !formData.substituteTeacherId) return toast.error("Select both the original and substitute teacher.");
+    if (!formData.originalTeacherId || !formData.substituteTeacherId) return toast.error("Select both the original and substitute teacher.", { id: "substitute-select-error" });
     try {
       setSubmitting(true);
       const res = await api.post("/campus/substitutes", formData);
       if (res.data.success) { toast.success("Substitute assigned successfully."); onSuccess(); }
-    } catch (err) { toast.error(err.response?.data?.message || "Failed to assign substitute."); }
+    } catch (err) { toast.error(err.response?.data?.message || "Failed to assign substitute.", { id: "substitute-submit-error" }); }
     finally { setSubmitting(false); }
   };
   if (!isOpen) return null;

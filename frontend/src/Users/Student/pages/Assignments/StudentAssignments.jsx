@@ -18,6 +18,8 @@ import { assignmentAction } from "@/store/assignmentData";
 import AssignmentStatusBadge from "../../components/AssignmentStatusBadge";
 import AssignmentSubmissionForm from "../../components/AssignmentSubmissionForm";
 import AssignmentFeedbackDialog from "../../components/AssignmentFeedbackDialog";
+import StudentDiaryEntry from "../../components/StudentDiaryEntry";
+import { selectStudentDiary } from "@/store/selectors/studentDiary";
 import "./StudentAssignments.css";
 
 function AssignmentAction({ assignment }) {
@@ -48,16 +50,10 @@ function AssignmentAction({ assignment }) {
 }
 export default function StudentAssignments() {
   const assignments = useSelector(selectStudentAssignments);
+  const diaryEntries = useSelector(selectStudentDiary);
   const student = useSelector(selectCurrentStudent);
   return (
     <section className="student-assignments">
-      <header className="sa-page-heading">
-        <h1>My Assignments &amp; Submissions</h1>
-        <p>
-          Submit project deliverables, track review statuses, and view teacher
-          grading remarks.
-        </p>
-      </header>
       <Card className="sa-card">
         <div className="sa-card-heading">
           <h2>
@@ -139,6 +135,28 @@ export default function StudentAssignments() {
             )}
           </TableBody>
         </Table>
+      </Card>
+      <Card className="sa-card sa-diary-stream">
+        <div className="sa-card-heading">
+          <h2>
+            <span>
+              <FileText aria-hidden="true" />
+            </span>
+            Daily Diary &amp; Teacher Notes
+          </h2>
+          <p>{diaryEntries.length} published entries</p>
+        </div>
+        <div className="sa-diary-list" aria-live="polite">
+          {diaryEntries.map((entry) => (
+            <StudentDiaryEntry key={entry.id} entry={entry} />
+          ))}
+          {!diaryEntries.length && (
+            <p className="sa-diary-empty">
+              Diary notes and homework will appear when published by your class
+              teacher.
+            </p>
+          )}
+        </div>
       </Card>
     </section>
   );

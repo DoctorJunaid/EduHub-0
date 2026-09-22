@@ -44,7 +44,7 @@ export default function CampusOverview() {
     if (!rawTimetable || rawTimetable.length === 0) dispatch(fetchSchedules());
     dispatch(fetchExams());
     dispatch(fetchFees());
-    dispatch(fetchActivityLogs());
+    dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
   }, [dispatch]);
 
   // Strictly use real API records - no mock fallbacks

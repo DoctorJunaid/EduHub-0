@@ -39,7 +39,7 @@ const SalaryPayroll = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load payroll data");
+      toast.error("Failed to load payroll data", { id: "payroll-load-error" });
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ const SalaryPayroll = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to generate payroll");
+      toast.error(err.response?.data?.message || "Failed to generate payroll", { id: "payroll-generate-error" });
     } finally {
       setGenerating(false);
     }

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance.js';
+import { validAssignment, validSubmission } from '../assignmentData.js';
 
 // ─── Async Thunks ────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ export const gradeAssignment = createAsyncThunk(
   }
 );
 
-// ─── Slice ────────────────────────────────────────────────────────────────────
+// ─── Slices ────────────────────────────────────────────────────────────────────
 
 const assignmentsSlice = createSlice({
   name: 'assignments',
@@ -96,16 +97,17 @@ const assignmentsSlice = createSlice({
     error: null,
   },
   reducers: {
-    // Legacy local action — kept for backward compatibility
+    assignmentsLoaded: (state, { payload }) => {
+      state.records = Array.isArray(payload) ? payload : [];
+    },
     assignmentSaved(state, { payload }) {
+      if (!validAssignment(payload)) return;
       const existing = state.records.find((r) => r.id === payload.id || r._id === payload._id);
       if (existing) Object.assign(existing, payload);
       else state.records.push(payload);
     },
     assignmentDeleted(state, { payload }) {
-      state.records = state.records.filter(
-        (r) => r.id !== payload && r._id !== payload
-      );
+      state.records = state.records.filter((r) => r.id !== payload && r._id !== payload);
     },
   },
   extraReducers: (builder) => {
@@ -151,19 +153,38 @@ const assignmentsSlice = createSlice({
   },
 });
 
-// Submissions slice (kept for backward compat with existing student views)
-const submissions = {
-  name: 'submissions',
+const submissions = createSlice({
+  name: "submissions",
   initialState: { records: [] },
-  reducer: (state = { records: [] }, action) => state,
-};
+  reducers: {
+    submissionsLoaded: (state, { payload }) => {
+      state.records = Array.isArray(payload) ? payload : [];
+    },
+    submissionSaved(state, { payload }) {
+      if (!validSubmission(payload) || payload.status !== "Submitted") return;
+      const existing = state.records.find(
+        (record) =>
+          record.assignmentId === payload.assignmentId &&
+          record.studentId === payload.studentId,
+      );
+      if (existing?.status === "Graded") return;
+      if (existing) existing.notes = payload.notes;
+      else if (!state.records.some((record) => record.id === payload.id))
+        state.records.push(payload);
+    },
+    submissionGraded(state, { payload }) {
+      const record = state.records.find((item) => item.id === payload.id);
+      if (!record || !Number.isFinite(payload.score) || payload.score < 0) return;
+      record.status = "Graded";
+      record.score = payload.score;
+      record.feedback = typeof payload.feedback === "string" ? payload.feedback : record.feedback || "";
+    },
+  },
+});
 
-export const { assignmentSaved, assignmentDeleted } = assignmentsSlice.actions;
-export const selectAssignments = (state) => state.assignments.records;
-export const selectAssignmentsStatus = (state) => state.assignments.status;
 export default assignmentsSlice.reducer;
 export const submissionsReducer = submissions.reducer;
-
-// Legacy exports for backward compatibility with existing student components
-export const submissionSaved = () => ({ type: 'submissions/submissionSaved' });
-export const submissionGraded = () => ({ type: 'submissions/submissionGraded' });
+export const { assignmentsLoaded, assignmentSaved, assignmentDeleted } = assignmentsSlice.actions;
+export const { submissionsLoaded, submissionSaved, submissionGraded } = submissions.actions;
+export const selectAssignments = (state) => state.assignments.records;
+export const selectAssignmentsStatus = (state) => state.assignments.status;
