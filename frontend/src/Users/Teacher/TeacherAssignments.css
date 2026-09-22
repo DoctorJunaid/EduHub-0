@@ -3,20 +3,7 @@
   max-width: 1600px;
   margin: auto;
 }
-.teacher-assignments-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 26px;
-}
-.teacher-assignments-heading h1 {
-  margin: 0;
-  font-size: clamp(1.7rem, 2.2vw, 2.35rem);
-}
-.teacher-assignments-heading p:not(.page-eyebrow) {
-  color: var(--muted-foreground);
-  margin: 8px 0 0;
-}
+
 .teacher-assignment-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -249,12 +236,12 @@
   .teacher-assignments {
     padding: 16px;
   }
-  .teacher-assignments-heading {
+  .teacher-assignments-toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 14px;
   }
-  .teacher-assignments-heading button {
+  .teacher-assignments-toolbar button {
     width: 100%;
   }
   .teacher-assignment-cards {
@@ -271,4 +258,76 @@
   .teacher-submission-tools select {
     width: 100%;
   }
+}
+.teacher-assignment-card-select {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.teacher-assignment-card-select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 5px;
+}
+.teacher-assignment-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 2px;
+}
+.teacher-assignment-card-select strong,
+.teacher-assignment-card-select .teacher-assignment-description {
+  padding-right: 52px;
+}
+.teacher-assignments-empty {
+  grid-column: 1 / -1;
+  padding: 30px;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+
+.teacher-submission-review {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--muted);
+}
+.teacher-submission-review p {
+  margin: 0;
+  color: var(--muted-foreground);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.teacher-submission-review a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.teacher-assignments-footer,
+.teacher-attendance-footer,
+.teacher-gradebook-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.teacher-assignments-card-pages { margin: 0 0 12px auto; }
+@media (max-width: 560px) {
+  .teacher-assignments-footer,
+  .teacher-attendance-footer,
+  .teacher-gradebook-footer { flex-wrap: wrap; }
 }

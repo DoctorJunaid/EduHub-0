@@ -3,16 +3,7 @@
   max-width: 1600px;
   margin: auto;
 }
-.teacher-classes-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 26px;
-}
-.teacher-classes-heading h1 {
-  margin: 0;
-  font-size: clamp(1.7rem, 2.2vw, 2.35rem);
-}
+
 .teacher-classes-card {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -165,14 +156,6 @@
   .teacher-classes {
     padding: 16px;
   }
-  .teacher-classes-heading {
-    align-items: flex-start;
-    gap: 14px;
-    flex-direction: column;
-  }
-  .teacher-classes-heading button {
-    width: 100%;
-  }
   .teacher-class-filters {
     grid-template-columns: 1fr;
     padding: 16px;
@@ -183,4 +166,10 @@
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+.teacher-scheduling-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
 }

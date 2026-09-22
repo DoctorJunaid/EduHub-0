@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -10,8 +10,11 @@ import {
   Search,
   Users,
 } from "lucide-react";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
-import { selectTimetable } from "@/store/Slices/timetableSlice";
+import {
+  selectAssignedTeacherClasses,
+  selectStudentsForAssignedClasses,
+  selectTeacherIdentity,
+} from "./teacherScope";
 import { Button } from "@/components/ui/button";
 import "./TeacherDashboard.css";
 
@@ -25,60 +28,51 @@ const initials = (name = "") =>
     .toUpperCase() || "ST";
 
 export default function TeacherDashboard() {
-  const user = useSelector(selectCurrentUser);
-  const timetable = useSelector(selectTimetable);
+  const classes = useSelector(selectAssignedTeacherClasses);
+  const teacher = useSelector(selectTeacherIdentity);
+  const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
   const assignments = useSelector((state) => state.assignments?.records || []);
   const submissions = useSelector((state) => state.submissions?.records || []);
   const diary = useSelector((state) => state.diary?.records || []);
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
-  const teacherId = user?.id || user?._id;
-  const teacherName = user?.name || user?.fullName;
-
-  const classes = useMemo(
-    () =>
-      timetable.filter((item) => {
-        if (!teacherId && !teacherName) return true;
-        return (
-          item.teacherId === teacherId ||
-          item.instructorId === teacherId ||
-          item.instructor === teacherName ||
-          item.teacherName === teacherName
-        );
-      }),
-    [timetable, teacherId, teacherName],
-  );
+  const teacherId = teacher?.id;
+  const classIds = new Set(classes.map((item) => item.id || item._id));
   const filteredClasses = classes.filter((item) =>
-    `${item.title} ${item.subject || ""} ${item.className || ""} ${item.room || ""}`
+    `${item.title || ""} ${item.subject || ""} ${item.className || ""} ${item.section || ""} ${item.room || ""} ${item.teacherName || item.instructor || ""} ${(item.days || []).join(" ")} ${item.dayOfWeek || ""} ${item.startTime || ""} ${item.endTime || ""}`
       .toLowerCase()
       .includes(scheduleSearch.toLowerCase()),
   );
   const assignedCourseCount = new Set(
     classes
-      .map((item) => item.courseId || item.subjectId || item.title)
+      .map((item) => item.courseId || item.subjectId || item.title || item.subject)
       .filter(Boolean),
   ).size;
+  const assignedAssignments = assignments.filter((assignment) => classIds.has(assignment.classId));
+  const assignedAssignmentIds = new Set(assignedAssignments.map((assignment) => assignment.id));
   const pending = submissions.filter(
-    (item) =>
-      item.status === "Submitted" &&
-      assignments.some((assignment) => assignment.id === item.assignmentId),
+    (item) => item.status === "Submitted" && assignedAssignmentIds.has(item.assignmentId),
   );
+  const assignmentTitle = (submission) =>
+    assignedAssignments.find((assignment) => assignment.id === submission.assignmentId)?.title ||
+    submission.assignmentTitle ||
+    submission.assignmentId;
   const filteredSubmissions = pending.filter((item) =>
-    `${item.studentName || item.studentId} ${item.assignmentTitle || item.assignmentId}`
+    `${item.studentName || item.studentId} ${assignmentTitle(item)}`
       .toLowerCase()
       .includes(submissionSearch.toLowerCase()),
   );
-  const enrolledStudents = new Set(
-    classes.flatMap((item) => item.studentIds || []),
-  ).size;
+  const enrolledStudentCount = enrolledStudents.length;
   const metric = [
     [BookOpen, "Assigned Courses", assignedCourseCount],
     [FileText, "Pending Submissions", pending.length],
-    [Users, "Enrolled Students", enrolledStudents],
+    [Users, "Enrolled Students", enrolledStudentCount],
     [
       Clock3,
       "Daily Diaries Posted",
-      diary.filter((item) => !teacherId || item.teacherId === teacherId).length,
+      diary.filter(
+        (item) => classIds.has(item.classId) && item.teacherId === teacherId,
+      ).length,
     ],
   ];
 
@@ -87,16 +81,7 @@ export default function TeacherDashboard() {
       className="teacher-dashboard"
       aria-labelledby="teacher-dashboard-title"
     >
-      <div className="teacher-heading">
-        <div>
-          <p className="page-eyebrow">Teacher portal</p>
-          <h1 id="teacher-dashboard-title">Teacher Overview</h1>
-          <p>
-            Manage assigned classes, student work, attendance, and academic
-            records.
-          </p>
-        </div>
-      </div>
+      <h1 id="teacher-dashboard-title" className="sr-only">Teacher Overview</h1>
       <section className="teacher-metrics" aria-label="Teaching summary">
         {metric.map(([Icon, label, value]) => (
           <article className="teacher-metric" key={label}>
@@ -160,11 +145,11 @@ export default function TeacherDashboard() {
                 <td>{item.room || item.roomNumber || "—"}</td>
                 <td>
                   <Link
-                    to={`/teacher/attendance?classId=${item.id || item._id}`}
+                    to={`/teacher/attendance?classId=${encodeURIComponent(item.id || item._id)}`}
                   >
                     Attendance
                   </Link>
-                  <Link to={`/teacher/diary?classId=${item.id || item._id}`}>
+                  <Link to={`/teacher/diary?classId=${encodeURIComponent(item.id || item._id)}`}>
                     Diary
                   </Link>
                 </td>
@@ -207,7 +192,7 @@ export default function TeacherDashboard() {
                     <strong>{item.studentName || item.studentId}</strong>
                   </span>
                 </td>
-                <td>{item.assignmentTitle || item.assignmentId}</td>
+                <td>{assignmentTitle(item)}</td>
                 <td>{item.submittedAt || item.submissionDate || "—"}</td>
                 <td>
                   <span className="teacher-status">Needs Grading</span>
@@ -215,7 +200,7 @@ export default function TeacherDashboard() {
                 <td>—</td>
                 <td>
                   <Button size="sm" asChild>
-                    <Link to={`/teacher/assignments?submissionId=${item.id}`}>
+                    <Link to={`/teacher/assignments?submissionId=${encodeURIComponent(item.id)}`}>
                       Evaluate
                     </Link>
                   </Button>

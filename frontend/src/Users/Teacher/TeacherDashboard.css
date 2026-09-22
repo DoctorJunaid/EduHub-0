@@ -3,15 +3,6 @@
   max-width: 1600px;
   margin: auto;
 }
-.teacher-heading h1 {
-  margin: 0;
-  font-size: clamp(1.7rem, 2.2vw, 2.35rem);
-  color: var(--foreground);
-}
-.teacher-heading p:not(.page-eyebrow) {
-  margin: 8px 0 0;
-  color: var(--muted-foreground);
-}
 .page-eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -23,7 +14,7 @@
 .teacher-metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  margin: 28px 0 14px;
+  margin: 0 0 14px;
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: 12px;

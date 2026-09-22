@@ -61,6 +61,10 @@ export const replyToStudentConversation =
       participantMessageSent({
         conversationId,
         senderId: conversation.self,
+        receiverId: participantKey(
+          conversation.role === "Faculty" ? "faculty" : "student",
+          conversation.participant.id,
+        ),
         body,
       }),
     );

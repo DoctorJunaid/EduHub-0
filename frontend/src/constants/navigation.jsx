@@ -114,6 +114,11 @@ export const TEACHER_NAV = [
     icon: <LayoutDashboard size={20} />,
   },
   {
+    label: "My Salary",
+    path: "/my-payslips",
+    icon: <ClipboardList size={20} />,
+  },
+  {
     label: "My Classes",
     path: "/teacher/classes",
     icon: <BookOpen size={20} />,

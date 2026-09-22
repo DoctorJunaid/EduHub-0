@@ -1,10 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { Clock3, MoreVertical, Plus, Search } from "lucide-react";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
-import { selectTimetable } from "@/store/Slices/timetableSlice";
+import { Clock3, MoreVertical, Search } from "lucide-react";
+import {
+  selectAssignedTeacherClasses,
+  selectTeacherIdentity,
+} from "./teacherScope";
 import { dayLabel, timeLabel, weekdays } from "@/lib/schedule";
+import TeacherPagination from "./TeacherPagination";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,29 +35,15 @@ const daysFor = (days = []) =>
     .filter((day) => day > 0);
 
 export default function MyClasses() {
-  const user = useSelector(selectCurrentUser);
-  const records = useSelector(selectTimetable);
+  const records = useSelector(selectAssignedTeacherClasses);
+  const teacher = useSelector(selectTeacherIdentity);
   const [query, setQuery] = useState("");
   const [subject, setSubject] = useState("");
   const [room, setRoom] = useState("");
   const [day, setDay] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 8;
-  const teacherId = user?.id || user?._id;
-  const teacherName = user?.name || user?.fullName;
-  const classes = useMemo(
-    () =>
-      records.filter((record) => {
-        if (!teacherId && !teacherName) return true;
-        return (
-          record.teacherId === teacherId ||
-          record.instructorId === teacherId ||
-          record.instructor === teacherName ||
-          record.teacherName === teacherName
-        );
-      }),
-    [records, teacherId, teacherName],
-  );
+  const classes = records;
   const subjects = [
     ...new Set(
       classes
@@ -77,6 +66,11 @@ export default function MyClasses() {
       value(record, "subject", "title", "periodName"),
       value(record, "section", "className", "program"),
       value(record, "room", "roomNumber"),
+      value(record, "instructor", "teacherName") || teacher?.name,
+      ...(Array.isArray(record.days) ? record.days.map(String) : []),
+      record.dayOfWeek,
+      record.startTime,
+      record.endTime,
     ]
       .join(" ")
       .toLowerCase();
@@ -90,26 +84,23 @@ export default function MyClasses() {
   });
   const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
   const rows = visible.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => {
+    setPage((current) => Math.min(current, pageCount));
+  }, [pageCount]);
   const resetPage = (setter) => (event) => {
     setter(event.target.value);
     setPage(1);
   };
   const instructor = (record) =>
     value(record, "instructor", "teacherName") ||
-    teacherName ||
+    teacher?.name ||
     "Assigned instructor";
 
   return (
     <main className="teacher-classes" aria-labelledby="teacher-classes-title">
-      <header className="teacher-classes-heading">
-        <div>
-          <p className="page-eyebrow">Home / Classes</p>
-          <h1 id="teacher-classes-title">My Classes</h1>
-        </div>
-        <Button disabled title="Class scheduling is managed by Campus Admin">
-          <Plus size={17} /> Admin-managed schedules
-        </Button>
-      </header>
+      <h1 id="teacher-classes-title" className="sr-only">
+        My Classes
+      </h1>
       <section className="teacher-classes-card">
         <div className="teacher-class-filters">
           <label className="teacher-class-search">
@@ -212,12 +203,12 @@ export default function MyClasses() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link to={`/teacher/attendance?classId=${id}`}>
+                            <Link to={`/teacher/attendance?classId=${encodeURIComponent(id)}`}>
                               Take Attendance
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link to={`/teacher/diary?classId=${id}`}>
+                            <Link to={`/teacher/diary?classId=${encodeURIComponent(id)}`}>
                               Daily Diary
                             </Link>
                           </DropdownMenuItem>
@@ -250,27 +241,7 @@ export default function MyClasses() {
             {Math.min(page * pageSize, visible.length)} of {visible.length}{" "}
             records
           </span>
-          <div>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage((current) => current - 1)}
-              aria-label="Previous page"
-            >
-              ‹
-            </Button>
-            <strong>{page}</strong>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={page >= pageCount}
-              onClick={() => setPage((current) => current + 1)}
-              aria-label="Next page"
-            >
-              ›
-            </Button>
-          </div>
+          <TeacherPagination page={page} pageCount={pageCount} onPageChange={setPage} label="Class pages" />
         </footer>
       </section>
     </main>

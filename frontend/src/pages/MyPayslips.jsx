@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import { toast } from "react-hot-toast";
+import "./MyPayslips.css";
 
 export default function MyPayslips() {
   const [month, setMonth] = useState("");
@@ -27,41 +28,68 @@ export default function MyPayslips() {
   }, [month]);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white">My Payslips</h1>
-          <p className="text-gray-400 mt-1">View your approved and paid salary records.</p>
-        </div>
+    <div className="teacher-payslips p-8 max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <h1 className="teacher-payslips-title sr-only">My Payslips</h1>
         <input
           type="month"
           value={month}
           onChange={(event) => setMonth(event.target.value)}
-          className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white"
+          className="teacher-payslips-month rounded-lg px-4 py-2"
         />
       </div>
       <div className="overflow-x-auto glass-panel p-4 rounded-xl">
-        {loading ? <div className="text-center text-gray-400 py-8">Loading payslips...</div> : (
-          <table className="min-w-full text-left text-white">
-            <thead className="border-b border-gray-700">
-              <tr><th className="px-4 py-3">Month</th><th className="px-4 py-3">Gross</th><th className="px-4 py-3">Net</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Action</th></tr>
+        {loading ? (
+          <div className="teacher-payslips-muted text-center py-8">
+            Loading payslips...
+          </div>
+        ) : (
+          <table className="teacher-payslips-table min-w-full text-left">
+            <thead className="teacher-payslips-thead">
+              <tr>
+                <th className="px-4 py-3">Month</th>
+                <th className="px-4 py-3">Gross</th>
+                <th className="px-4 py-3">Net</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Action</th>
+              </tr>
             </thead>
             <tbody>
               {payslips.map((payslip) => (
-                <tr key={payslip._id} className="border-b border-gray-800/50">
+                <tr key={payslip._id} className="teacher-payslips-row">
                   <td className="px-4 py-3">{payslip.month}</td>
-                  <td className="px-4 py-3">PKR {payslip.grossSalary?.toLocaleString("en-PK")}</td>
-                  <td className="px-4 py-3 font-semibold text-blue-400">PKR {payslip.netSalary?.toLocaleString("en-PK")}</td>
+                  <td className="px-4 py-3">
+                    PKR {payslip.grossSalary?.toLocaleString("en-PK")}
+                  </td>
+                  <td className="teacher-payslips-net px-4 py-3 font-semibold">
+                    PKR {payslip.netSalary?.toLocaleString("en-PK")}
+                  </td>
                   <td className="px-4 py-3">{payslip.status}</td>
-                  <td className="px-4 py-3"><button onClick={() => setSelectedPayslip(payslip)} className="text-blue-400 hover:text-blue-300">View payslip</button></td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setSelectedPayslip(payslip)}
+                      className="teacher-payslips-link"
+                    >
+                      View payslip
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-        {!loading && payslips.length === 0 && <div className="text-center text-gray-400 py-8">No payslips found.</div>}
+        {!loading && payslips.length === 0 && (
+          <div className="teacher-payslips-muted text-center py-8">
+            No payslips found.
+          </div>
+        )}
       </div>
-      {selectedPayslip && <PayslipDialog payslip={selectedPayslip} onClose={() => setSelectedPayslip(null)} />}
+      {selectedPayslip && (
+        <PayslipDialog
+          payslip={selectedPayslip}
+          onClose={() => setSelectedPayslip(null)}
+        />
+      )}
     </div>
   );
 }
