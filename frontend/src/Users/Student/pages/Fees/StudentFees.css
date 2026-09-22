@@ -1,49 +1,367 @@
-.student-fees-page { display:flex; flex-direction:column; gap:22px; min-width:0; color:var(--foreground); }
-.sf-page-heading h1 { font-size:30px; font-weight:700; line-height:1.3; margin-bottom:6px; }
-.sf-page-heading p { font-size:15px; color:var(--muted-foreground); }
-.sf-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
-.student-fees-page .sf-stat,.student-fees-page .sf-history { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--card); box-shadow:var(--shadow-sm); min-width:0; }
-.student-fees-page .sf-stat { display:flex; flex-direction:row; align-items:flex-start; padding:20px; gap:16px; min-height:140px; }
-.sf-stat .summary-icon { display:grid; place-items:center; width:48px; height:48px; flex-shrink:0; border-radius:var(--radius-md); background:var(--color-success-bg); color:var(--color-success); }
-.sf-stat .summary-icon svg { width:26px; height:26px; }
-.sf-stat > div { display:flex; flex-direction:column; gap:12px; min-width:0; }
-.sf-stat .summary-label { font-size:13px; font-weight:600; color:var(--muted-foreground); }
-.sf-stat strong { font-size:25px; line-height:1.3; font-weight:700; overflow-wrap:anywhere; }
-.sf-stat:nth-child(n+3) strong { font-size:21px; }
-.sf-stat small { font-size:12px; color:var(--muted-foreground); line-height:1.5; }
-.student-fees-page .sf-history { padding:22px; gap:22px; }
-.sf-history-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
-.sf-history-heading h2 { display:flex; align-items:center; gap:16px; font-size:19px; font-weight:700; }
-.sf-history-heading h2 span { display:flex; padding:10px; border-radius:var(--radius-md); background:var(--color-success-bg); color:var(--color-success); }
-.sf-history-heading p { color:var(--muted-foreground); font-size:12px; }
-.sf-history table { min-width:1080px; width:100%; border-collapse:collapse; }
-.sf-history th { padding:12px 10px; text-transform:uppercase; text-align:left; font-size:11px; color:var(--muted-foreground); }
-.sf-history td { padding:22px 10px; font-size:13px; color:var(--muted-foreground); border-top:1px solid var(--border); }
-.sf-history th:first-child,.sf-history td:first-child { padding-left:0; white-space:normal; width:21%; }
-.sf-history td strong { display:block; color:var(--foreground); font-weight:600; }
-.sf-history td small { display:block; margin-top:4px; font-size:12px; }
-.sf-history td:nth-child(3) { font-weight:600; color:var(--foreground); }
-.sf-history th:last-child,.sf-history td:last-child { text-align:right; padding-right:0; }
-.sf-history button,.student-challan-dialog [data-slot=dialog-footer] button { padding:9px 14px; min-height:36px; font-size:12px; border-radius:var(--radius-md); }
-.sf-history button { border:1px solid var(--border); color:var(--foreground); }
-.sf-status { padding:6px 12px; border-radius:20px; font-size:12px; }
-.sf-status-paid { color:var(--color-success); background:var(--color-success-bg); }
-.sf-status-pending { color:var(--color-warning); background:var(--color-warning-bg); }
-.sf-status-overdue { color:var(--color-danger); background:var(--color-danger-bg); }
-.sf-history .sf-empty { padding:40px 16px; text-align:center; }
-.student-challan-dialog { width:calc(100% - 32px); max-width:580px; max-height:calc(100dvh - 32px); overflow-y:auto; padding:24px; gap:20px; background:var(--card); color:var(--foreground); border:1px solid var(--border); border-radius:var(--radius-lg); }
-.student-challan-dialog [data-slot=dialog-header] { gap:10px; text-align:left; padding-right:20px; }
-.student-challan-sheet h2 { font-size:18px; font-weight:700; }
-.student-challan-sheet p { font-size:12px; color:var(--muted-foreground); margin:8px 0 12px; }
-.student-challan-sheet table { width:100%; border-collapse:collapse; }
-.student-challan-sheet th,.student-challan-sheet td { padding:9px 0; text-align:left; border-bottom:1px solid var(--border); font-size:13px; overflow-wrap:anywhere; }
-.student-challan-sheet th { width:43%; padding-right:12px; font-weight:600; }
-.student-challan-sheet td { color:var(--muted-foreground); }
-.student-challan-dialog [data-slot=dialog-footer] { gap:8px; }
-.dark .student-fees-page :is(.summary-icon,.sf-history-heading h2 span,.sf-status-paid) { color:var(--color-green-light); }
-@media(max-width:1200px) { .sf-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:600px) { .sf-stats { grid-template-columns:1fr; } .sf-page-heading h1 { font-size:26px; } .student-fees-page .sf-history { padding:16px; } }
+.student-fees-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px 20px 20px;
+  color: var(--foreground);
+}
+.sf-page-heading h1 {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.sf-page-heading p {
+  font-size: 15px;
+  color: var(--muted-foreground);
+}
+.sf-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.student-fees-page .sf-stat,
+.student-fees-page .sf-history {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.student-fees-page .sf-stat {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 16px;
+  min-height: 140px;
+}
+.sf-stat .summary-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.sf-stat .summary-icon svg {
+  width: 26px;
+  height: 26px;
+}
+.sf-stat > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.sf-stat .summary-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+.sf-stat strong {
+  font-size: 25px;
+  line-height: 1.3;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.sf-stat:nth-child(n + 3) strong {
+  font-size: 21px;
+}
+.sf-stat small {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+.student-fees-page .sf-history {
+  padding: 16px 18px;
+  gap: 14px;
+}
+.sf-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.sf-history-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 19px;
+  font-weight: 700;
+}
+.sf-history-heading h2 span {
+  display: flex;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.sf-history-heading p {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.sf-history table {
+  min-width: 1080px;
+  width: 100%;
+  border-collapse: collapse;
+}
+.sf-history th {
+  padding: 12px 10px;
+  text-transform: uppercase;
+  text-align: left;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.sf-history td {
+  padding: 22px 10px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border);
+}
+.sf-history th:first-child,
+.sf-history td:first-child {
+  padding-left: 0;
+  white-space: normal;
+  width: 21%;
+}
+.sf-history td strong {
+  display: block;
+  color: var(--foreground);
+  font-weight: 600;
+}
+.sf-history td small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.sf-history td:nth-child(3) {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.sf-history th:last-child,
+.sf-history td:last-child {
+  text-align: right;
+  padding-right: 0;
+}
+.sf-history button,
+.student-challan-dialog [data-slot="dialog-footer"] button {
+  padding: 9px 14px;
+  min-height: 36px;
+  font-size: 12px;
+  border-radius: var(--radius-md);
+}
+.sf-history button {
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+.sf-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.sf-status-paid {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+.sf-status-pending {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.sf-status-overdue {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+.sf-history .sf-empty {
+  padding: 40px 16px;
+  text-align: center;
+}
+.student-challan-dialog {
+  width: calc(100% - 32px);
+  max-width: 580px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 24px;
+  gap: 20px;
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.student-challan-dialog [data-slot="dialog-header"] {
+  gap: 10px;
+  text-align: left;
+  padding-right: 20px;
+}
+.student-challan-sheet h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.student-challan-sheet p {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 8px 0 12px;
+}
+.student-challan-sheet table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.student-challan-sheet th,
+.student-challan-sheet td {
+  padding: 9px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.student-challan-sheet th {
+  width: 43%;
+  padding-right: 12px;
+  font-weight: 600;
+}
+.student-challan-sheet td {
+  color: var(--muted-foreground);
+}
+.student-challan-dialog [data-slot="dialog-footer"] {
+  gap: 8px;
+}
+.dark
+  .student-fees-page
+  :is(.summary-icon, .sf-history-heading h2 span, .sf-status-paid) {
+  color: var(--color-green-light);
+}
+@media (max-width: 1200px) {
+  .sf-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .sf-stats {
+    grid-template-columns: 1fr;
+  }
+  .sf-page-heading h1 {
+    font-size: 26px;
+  }
+  .student-fees-page .sf-history {
+    padding: 16px;
+  }
+}
 
-.sf-demo-note { padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--muted); color:var(--muted-foreground); font-size:13px; }
+.sf-demo-note {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
 
-.sf-stat:nth-child(4) strong { font-size:18px; }
+.sf-stat:nth-child(4) strong {
+  font-size: 18px;
+}
+
+.student-fees-page {
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+.sf-page-heading h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.sf-page-heading p {
+  font-size: 12px;
+}
+.sf-stats {
+  gap: 0;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
+}
+.student-fees-page .sf-stat {
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  gap: 12px;
+  min-height: 56px;
+  border: none;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  box-shadow: none;
+}
+.student-fees-page .sf-stat:last-child {
+  border-right: none;
+}
+.sf-stat .summary-icon {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: #09090b;
+}
+.sf-stat .summary-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.sf-stat > div {
+  gap: 1px;
+}
+.sf-stat .summary-label {
+  font-size: 10px;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+.sf-stat strong {
+  font-size: 18px;
+  line-height: 1.1;
+}
+.sf-stat:nth-child(n + 3) strong,
+.sf-stat:nth-child(4) strong {
+  font-size: 18px;
+}
+.sf-stat small {
+  display: none;
+}
+.student-fees-page .sf-history {
+  padding: 10px 12px;
+  gap: 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.sf-history-heading {
+  gap: 8px;
+}
+.sf-history-heading h2 {
+  gap: 8px;
+  font-size: 15px;
+}
+.sf-history-heading h2 span {
+  padding: 6px;
+}
+.sf-history th {
+  padding: 6px 8px;
+  font-size: 10px;
+}
+.sf-history td {
+  padding: 8px;
+  font-size: 11px;
+}
+.sf-history td small {
+  margin-top: 2px;
+  font-size: 10px;
+}
+.sf-history button {
+  padding: 5px 8px;
+  min-height: 28px;
+  font-size: 11px;
+}
+.sf-demo-note {
+  padding: 8px 10px;
+  font-size: 11px;
+}

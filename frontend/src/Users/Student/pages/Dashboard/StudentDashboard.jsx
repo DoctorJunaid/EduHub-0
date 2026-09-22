@@ -11,19 +11,14 @@ import { Link } from "react-router-dom";
 import {
   BookOpen,
   ChartNoAxesColumnIncreasing,
-  Trophy,
   FileText,
   CalendarDays,
   ClipboardList,
   Clock3,
   ArrowRight,
-  WalletCards,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/Button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableHeader,
@@ -33,10 +28,7 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import SummaryCard from "@/components/common/SummaryCard";
-import {
-  selectStudentDashboard,
-  selectStudentProfile,
-} from "@/store/selectors/studentDashboard";
+import { selectStudentDashboard } from "@/store/selectors/studentDashboard";
 import { dateKey, parseDate } from "@/lib/dates";
 import { timeLabel, dayLabel } from "@/lib/schedule";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -44,9 +36,9 @@ import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const { isSchool } = useInstitution();
-  const { student, courses, timetable, attendance, cgpa, results } =
-    useSelector(selectStudentDashboard);
-  const profile = useSelector(selectStudentProfile);
+  const { student, courses, timetable, attendance } = useSelector(
+    selectStudentDashboard,
+  );
   const diary = useSelector(selectStudentDiary);
   const assignments = useSelector(selectStudentAssignments);
   const [today, setToday] = useState(() => dateKey(new Date()));
@@ -77,9 +69,11 @@ export default function StudentDashboard() {
     {
       label: isSchool ? "Enrolled Subjects" : "Enrolled Courses",
       icon: BookOpen,
-      value: student ? (isSchool ? 7 : courses.length) : "—",
+      value: student ? courses.length : "—",
       description: student
-        ? (isSchool ? "Subjects assigned to your grade" : "Subjects on your student record")
+        ? isSchool
+          ? "Subjects assigned to your grade"
+          : "Subjects on your student record"
         : "Student record not linked",
     },
     {
@@ -87,29 +81,15 @@ export default function StudentDashboard() {
       icon: ChartNoAxesColumnIncreasing,
       value:
         attendance?.rate == null
-          ? "96.2%"
+          ? "—"
           : `${Number(attendance.rate.toFixed(1))}%`,
       description: isSchool
-        ? "Classroom attendance record"
+        ? "Daily attendance record"
         : !attendance?.marked
-        ? "No attendance recorded"
-        : attendance.policyPending
-          ? "Attendance policy not set"
-          : `${attendance.present} / ${attendance.marked} recorded lectures present`,
-    },
-    {
-      label: isSchool ? "Terminal Grade" : "Current CGPA",
-      icon: Trophy,
-      value: isSchool
-        ? "Grade A+ (88.5%)"
-        : (cgpa == null ? "—" : cgpa.toFixed(2)),
-      description: isSchool
-        ? "Position: 2nd in Class"
-        : (cgpa != null
-          ? "Recorded cumulative GPA"
-          : results.length
-            ? `${results.length} results recorded; CGPA unavailable`
-            : "CGPA not recorded"),
+          ? "No attendance recorded"
+          : attendance.policyPending
+            ? "Attendance policy not set"
+            : `${attendance.present} / ${attendance.marked} recorded days present`,
     },
     {
       label: isSchool ? "Homework Tasks" : "Pending Tasks",
@@ -119,71 +99,14 @@ export default function StudentDashboard() {
             (assignment) => assignment.status === "Pending Submission",
           ).length
         : "—",
-      description: isSchool ? "Homework awaiting teacher check" : "Assignments awaiting submission",
+      description: isSchool
+        ? "Homework awaiting teacher check"
+        : "Assignments awaiting submission",
     },
   ];
 
   return (
     <section className="student-dashboard" aria-label="Student dashboard">
-      <Card
-        id="student-profile-summary"
-        className="sd-profile"
-        tabIndex={-1}
-        aria-labelledby="student-name"
-      >
-        <div className="sd-profile-person">
-          <Avatar>
-            <AvatarFallback>{profile.initials}</AvatarFallback>
-          </Avatar>
-          <div className="sd-profile-copy">
-            <div className="sd-profile-heading">
-              <h1 id="student-name">{profile.name}</h1>
-              <Badge
-                variant="secondary"
-                className={`sd-status sd-status-${student?.status?.toLowerCase() || "unknown"}`}
-              >
-                {profile.roleLabel}
-              </Badge>
-            </div>
-            {student ? (
-              <p className="sd-profile-details">
-                {student.roll && <strong>{student.roll}</strong>}
-                {student.program && (
-                  <span>
-                    {student.program}
-                    {student.section ? ` (${student.section})` : ""}
-                  </span>
-                )}
-                {student.semester && <span>{student.semester}</span>}
-              </p>
-            ) : (
-              <p className="sd-profile-details">{profile.email}</p>
-            )}
-          </div>
-        </div>
-        <div className="sd-quick-actions">
-          <Button className="btn-primary" asChild>
-            <Link to="/student/assignments">
-              <ClipboardList aria-hidden="true" />
-              {isSchool ? "Homework & Diary" : "My Assignments"}
-            </Link>
-          </Button>
-          <Button variant="outline" className="btn-secondary" asChild>
-            <Link to="/student/fees">
-              <WalletCards aria-hidden="true" />
-              {isSchool ? "School Fee Challan" : "Fee Vouchers"}
-            </Link>
-          </Button>
-        </div>
-      </Card>
-      {!student && (
-        <Alert className="sd-record-notice">
-          <AlertDescription>
-            No student record is linked to this account. Ask your institute to
-            verify the email address on your student record.
-          </AlertDescription>
-        </Alert>
-      )}
       <div className="sd-stats">
         {stats.map((stat) => (
           <SummaryCard key={stat.label} {...stat} className="sd-stat" />
@@ -196,11 +119,17 @@ export default function StudentDashboard() {
               <CalendarDays aria-hidden="true" />
             </span>
             <div>
-              <h2>{isSchool ? "Today's Period Timetable" : "Today's Class Timetable"}</h2>
+              <h2>
+                {isSchool
+                  ? "Today's Period Timetable"
+                  : "Today's Class Timetable"}
+              </h2>
               <p>
                 {student?.section
                   ? `${isSchool ? "Daily period routine" : "Weekly lecture schedule"} for Section ${student.section}`
-                  : (isSchool ? "Your daily periods" : "Your class schedule")}{" "}
+                  : isSchool
+                    ? "Your daily periods"
+                    : "Your class schedule"}{" "}
                 <span aria-hidden="true">·</span>{" "}
                 <time dateTime={today}>
                   {parseDate(today).toLocaleDateString("en-US", {

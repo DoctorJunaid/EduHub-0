@@ -1,8 +1,9 @@
 .student-grades-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   min-width: 0;
+  padding: 18px 20px 20px;
   color: var(--foreground);
 }
 .sg-page-heading {
@@ -10,6 +11,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  flex-wrap: wrap;
 }
 .sg-page-heading h1 {
   font-size: 30px;
@@ -33,7 +35,10 @@
 .sg-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 0;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
 }
 .student-grades-page .sg-stat,
 .student-grades-page .sg-sheet {
@@ -46,55 +51,65 @@
 .student-grades-page .sg-stat {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px;
-  min-height: 138px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  min-height: 56px;
+  border: none;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  box-shadow: none;
+}
+.student-grades-page .sg-stat:last-child {
+  border-right: none;
 }
 .sg-stat .summary-icon {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: auto;
+  height: auto;
   flex-shrink: 0;
-  color: var(--color-success);
-  background: var(--color-success-bg);
-  border-radius: var(--radius-md);
+  color: #09090b;
+  background: transparent;
+  border-radius: 0;
 }
 .sg-stat .summary-icon svg {
-  width: 26px;
-  height: 26px;
+  width: 16px;
+  height: 16px;
 }
 .sg-stat > div {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1px;
   min-width: 0;
 }
 .sg-stat .summary-label {
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--muted-foreground);
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
 }
 .sg-stat strong {
-  font-size: 28px;
-  line-height: 1.2;
+  font-size: 18px;
+  line-height: 1.1;
   font-weight: 700;
 }
 .sg-stat:nth-child(n + 3) strong {
-  font-size: 22px;
+  font-size: 18px;
 }
 .sg-stat small {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--muted-foreground);
+  display: none;
 }
 .sg-period {
   display: flex;
   align-items: center;
-  align-self: flex-end;
+  align-self: center;
   gap: 12px;
   font-size: 13px;
+  font-weight: 600;
   color: var(--muted-foreground);
   max-width: 100%;
 }
@@ -107,9 +122,13 @@
   color: var(--foreground);
   background: var(--card);
 }
+.sg-period select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
 .student-grades-page .sg-sheet {
-  padding: 22px;
-  gap: 18px;
+  padding: 16px 18px;
+  gap: 12px;
 }
 .sg-sheet-heading {
   display: flex;
@@ -189,7 +208,7 @@
   font-size: 12px;
 }
 .sg-sheet td:nth-child(2),
-.sg-sheet td:nth-child(5) {
+.sg-sheet td:nth-child(3) {
   color: var(--foreground);
   font-weight: 600;
 }
@@ -197,10 +216,130 @@
   padding: 36px 16px;
   text-align: center;
 }
+.sg-result-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.sg-result-footer > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sg-result-footer strong {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sg-result-footer > div:first-child span {
+  font-weight: 700;
+}
+.sg-signatures {
+  display: flex;
+  gap: 32px;
+  color: var(--muted-foreground);
+}
+.sg-signatures span {
+  min-width: 150px;
+  padding-top: 24px;
+  border-top: 1px solid var(--foreground);
+  text-align: center;
+  font-size: 12px;
+}
 .dark
   .student-grades-page
   :is(.summary-icon, .sg-sheet-title > span, .sg-transcript-badge, .sg-grade) {
   color: var(--color-green-light);
+}
+
+.student-grades-page {
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+.sg-page-heading {
+  gap: 10px;
+}
+.sg-page-heading h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.sg-page-heading p {
+  font-size: 12px;
+}
+.sg-page-heading button {
+  padding: 6px 8px;
+  min-height: 28px;
+  font-size: 11px;
+}
+.sg-period {
+  gap: 6px;
+  font-size: 11px;
+}
+.sg-period select {
+  padding: 7px 9px;
+  font-size: 11px;
+}
+.sg-stats {
+  gap: 0;
+}
+.student-grades-page .sg-stat {
+  gap: 12px;
+  padding: 10px 16px;
+  min-height: 56px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.student-grades-page .sg-sheet {
+  padding: 10px 12px;
+  gap: 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.sg-sheet-heading {
+  gap: 8px;
+}
+.sg-sheet-title {
+  gap: 8px;
+}
+.sg-sheet-title > span {
+  padding: 6px;
+}
+.sg-sheet h2 {
+  font-size: 15px;
+}
+.sg-sheet-title p {
+  margin-top: 2px;
+  font-size: 10px;
+}
+.sg-sheet th {
+  padding: 6px 8px;
+  font-size: 10px;
+}
+.sg-sheet td {
+  padding: 8px;
+  font-size: 11px;
+}
+.sg-result-footer {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 12px;
+  font-size: 11px;
+}
+.sg-signatures {
+  gap: 12px;
+}
+.sg-signatures span {
+  min-width: 0;
+  flex: 1;
+  padding-top: 18px;
+  font-size: 10px;
 }
 @media (max-width: 1200px) {
   .sg-stats {
@@ -216,7 +355,7 @@
     grid-template-columns: 1fr;
   }
   .sg-page-heading h1 {
-    font-size: 26px;
+    font-size: 20px;
   }
   .student-grades-page .sg-sheet {
     padding: 16px;

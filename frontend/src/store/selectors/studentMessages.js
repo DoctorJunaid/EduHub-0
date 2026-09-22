@@ -5,6 +5,7 @@ import {
   validParticipantConversation,
 } from "../participantConversations.js";
 import { participantMessageSent } from "../Slices/messagesSlice.js";
+import axiosInstance from "../../api/axiosInstance.js";
 
 export const selectStudentConversations = createSelector(
   [
@@ -57,12 +58,31 @@ export const replyToStudentConversation =
     if (!state.auth.isAuthenticated || !conversation?.participant)
       return "This conversation is no longer available.";
     if (typeof body !== "string" || !body.trim()) return "Enter a message.";
-    dispatch(
-      participantMessageSent({
-        conversationId,
-        senderId: conversation.self,
-        body,
-      }),
-    );
-    return null;
+    const message = {
+      conversationId,
+      senderId: conversation.self,
+      body,
+    };
+    if (!localStorage.getItem("eduHubToken")) {
+      dispatch(participantMessageSent(message));
+      return null;
+    }
+    const conversationIdValue = conversationId.replace(/^thread:/, "");
+    return axiosInstance
+      .post(`/student/conversations/${conversationIdValue}/messages`, {
+        body: body.trim(),
+      })
+      .then(({ data }) => {
+        dispatch(
+          participantMessageSent({
+            ...message,
+            id: data.data?.id,
+            createdAt: data.data?.createdAt,
+          }),
+        );
+        return null;
+      })
+      .catch(
+        (error) => error.response?.data?.message || "Unable to send message.",
+      );
   };
