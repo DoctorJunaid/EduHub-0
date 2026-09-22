@@ -1,0 +1,10 @@
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+const AlertDialog = Dialog;
+const AlertDialogContent = DialogContent;
+const AlertDialogHeader = DialogHeader;
+const AlertDialogFooter = DialogFooter;
+const AlertDialogTitle = DialogTitle;
+const AlertDialogDescription = DialogDescription;
+const AlertDialogCancel = DialogClose;
+const AlertDialogAction = DialogClose;
+export { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction };

@@ -14,7 +14,7 @@ import teacherAttendenceRoutes from "./teacherAttendance.routes.js";
 import settingsRoutes from "./settings.routes.js";
 import substituteRoutes from "./substitute.routes.js";
 import salaryPolicyRoutes from "./salaryPolicy.routes.js";
-import teacherSalaryProfileRoutes from "./teacherSalaryProfile.routes.js";
+import salaryProfileRoutes from "./salaryProfile.routes.js";
 import payrollRoutes from "./payroll.routes.js";
 import studentRoutes from "./student.routes.js";
 
@@ -37,14 +37,16 @@ router.use("/institute-admin", instituteAdminRoutes);
 // Optional existing tracks / services
 router.use("/inquiries", inquiryRoutes);
 router.use("/campus-admin", campusAdminRoutes);
+router.use("/campus/faculty", campusAdminRoutes);
 
 router.use("/campus/attendance/teachers", teacherAttendenceRoutes);
 router.use("/campus/attendence/teachers", teacherAttendenceRoutes);
 
 router.use("/settings", settingsRoutes);
 router.use("/campus/substitutes", substituteRoutes);
-router.use("/campus/salary", salaryPolicyRoutes);
-router.use("/campus/salary/profiles", teacherSalaryProfileRoutes);
+router.use("/campus/salary/profiles", salaryProfileRoutes);
 router.use("/campus/salary/payroll", payrollRoutes);
+router.use("/campus/salary/policy", salaryPolicyRoutes);
+router.use("/campus/salary", salaryPolicyRoutes);
 
 export default router;

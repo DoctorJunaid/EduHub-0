@@ -1,5 +1,6 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import * as svc from "../services/teacherAttendance.service.js";
+import { logActivity } from "../models/activityLog.model.js";
 
 const getCampusId = (req) => {
   const campusId = req.user?.campusId;
@@ -97,6 +98,18 @@ export const markAttendance = asyncHandler(async (req, res) => {
       req.body
     );
 
+    logActivity({
+      campus: campusId,
+      action: "teacher_attendance_marked",
+      category: "attendance",
+      title: "Teacher Attendance Marked",
+      description: `Attendance recorded — ${req.body.status || 'Present'}`,
+      entityType: "attendance",
+      entityId: data._id,
+      performedBy: req.user?._id,
+      metadata: { status: req.body.status, date: req.body.date },
+    });
+
     return res.status(201).json({
       success: true,
       message: "Attendance recorded successfully",
@@ -127,6 +140,18 @@ export const updateAttendance = asyncHandler(async (req, res) => {
       campusId,
       req.body
     );
+
+    logActivity({
+      campus: campusId,
+      action: "teacher_attendance_marked",
+      category: "attendance",
+      title: "Teacher Attendance Updated",
+      description: `Attendance updated to ${req.body.status || 'Present'}`,
+      entityType: "attendance",
+      entityId: data._id,
+      performedBy: req.user?._id,
+      metadata: { status: req.body.status, date: req.body.date },
+    });
 
     return res.status(200).json({
       success: true,
@@ -168,6 +193,18 @@ export const checkIn = asyncHandler(async (req, res) => {
   const campusId = getCampusId(req);
   const teacherProfileId = req.body.teacherProfileId || req.user?._id;
   const data = await svc.checkIn(campusId, req.user?._id, teacherProfileId, req.body.date);
+
+  logActivity({
+    campus: campusId,
+    action: "teacher_attendance_marked",
+    category: "attendance",
+    title: "Teacher Checked In",
+    description: `Teacher check-in recorded for ${req.body.date || 'today'}`,
+    entityType: "attendance",
+    entityId: data._id,
+    performedBy: req.user?._id,
+  });
+
   return res.status(200).json({ success: true, message: "Check-in recorded", data });
 });
 
@@ -178,5 +215,17 @@ export const checkOut = asyncHandler(async (req, res) => {
   const campusId = getCampusId(req);
   const teacherProfileId = req.body.teacherProfileId || req.user?._id;
   const data = await svc.checkOut(campusId, req.user?._id, teacherProfileId, req.body.date);
+
+  logActivity({
+    campus: campusId,
+    action: "teacher_attendance_marked",
+    category: "attendance",
+    title: "Teacher Checked Out",
+    description: `Teacher check-out recorded for ${req.body.date || 'today'}`,
+    entityType: "attendance",
+    entityId: data._id,
+    performedBy: req.user?._id,
+  });
+
   return res.status(200).json({ success: true, message: "Check-out recorded", data });
 });

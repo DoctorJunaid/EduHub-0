@@ -16,6 +16,7 @@ import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
 import Settings from "./components/Settings/Settings";
 import SalaryProfiles from "./pages/SalaryProfiles";
+import MySalary from "./pages/MySalary";
 import SalaryPayroll from "./pages/SalaryPayroll";
 import SubstituteAssignments from "./components/Substitutes/SubstituteAssignments";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
@@ -175,6 +176,28 @@ const App = () => {
           </Route>
         </Route>
 
+      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager"]} />}>
+        <Route element={<MainLayout />}>
+          <Route path="dashboard" element={<CampusOverview />} />
+          <Route path="faculty" element={<FacultyDirectory />} />
+          <Route path="students" element={<StudentsDirectory />} />
+          <Route path="timetable" element={<ClassTimetable />} />
+          <Route path="exams" element={<ExamSchedules />} />
+          <Route path="faculty-attendance" element={<FacultyAttendance />} />
+          <Route path="student-attendance" element={<StudentAttendance />} />
+          <Route path="results" element={<ExamResults />} />
+          <Route path="fees" element={<FeeManagement />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="substitutes" element={<SubstituteAssignments />} />
+          <Route path="salary-profiles" element={<SalaryProfiles />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={["campus_admin", "campus_manager", "institute_admin", "accountant", "principal"]} />}>
+        <Route element={<MainLayout />}>
+          <Route path="salary-profiles" element={<SalaryProfiles />} />
+          <Route path="salary-payroll" element={<SalaryPayroll />} />
         <Route
           element={
             <ProtectedRoute
@@ -209,6 +232,7 @@ const App = () => {
           <Route path="teacher/gradebook" element={<TeacherPage />} />
           <Route path="teacher/messages" element={<TeacherPage />} />
           <Route path="my-payslips" element={<MyPayslips />} />
+          <Route path="my-salary" element={<MySalary />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>

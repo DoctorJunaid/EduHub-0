@@ -33,7 +33,7 @@ export default function CampusOverview() {
     dispatch(fetchSchedules());
     dispatch(fetchExams());
     dispatch(fetchFees());
-    dispatch(fetchActivityLogs());
+    dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
   }, [dispatch]);
 
   // Redux Selectors with real database state
