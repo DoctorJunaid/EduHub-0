@@ -1,6 +1,7 @@
-import { useId, useState } from "react";
+import { useId, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectStudents } from "@/store/Slices/studentsSlice";
+import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
 import { Users, School, GraduationCap, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ const DEFAULT_PROGRAMS = [
   "BS Software Engineering",
   "BS Artificial Intelligence",
   "BS Data Science",
+  "BBA",
   "FSc Pre-Engineering",
   "FSc Pre-Medical",
 ];
@@ -35,8 +37,8 @@ const DEFAULT_SCHOOL_CLASSES = [
 
 export default function StudentForm({
   student,
-  programs = DEFAULT_PROGRAMS,
-  campuses = ["Main Campus"],
+  programs = [],
+  campuses = [],
   editAllFields = true,
   onSave,
   onClose,
@@ -45,14 +47,41 @@ export default function StudentForm({
   const id = useId();
   const editing = Boolean(student);
   const records = useSelector(selectStudents);
+  const user = useSelector(selectCurrentUser);
+  const realUserCampus =
+    user?.campusId?.name ||
+    user?.campusName ||
+    user?.campus ||
+    "";
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const safeOptionsList = isSchool
-    ? DEFAULT_SCHOOL_CLASSES
-    : (programs && programs.length ? programs : DEFAULT_PROGRAMS);
+  const safeCampuses = useMemo(() => {
+    const rawList = (campuses || []).map((c) =>
+      typeof c === "object" ? c.label || c.value || c.name : c
+    );
+    const combined = [
+      realUserCampus,
+      student?.campus,
+      student?.campusId?.name,
+      ...rawList,
+    ].filter(Boolean);
+    const unique = [...new Set(combined)];
+    return unique.length > 0 ? unique : [realUserCampus || "Main Campus"];
+  }, [campuses, realUserCampus, student]);
 
-  const safeCampuses = campuses && campuses.length ? campuses : ["Main Campus"];
+  const safeOptionsList = useMemo(() => {
+    if (programs && programs.length > 0) return programs;
+    return isSchool ? DEFAULT_SCHOOL_CLASSES : DEFAULT_PROGRAMS;
+  }, [programs, isSchool]);
+
+  const defaultCampus =
+    student?.campus ||
+    student?.campusId?.name ||
+    realUserCampus ||
+    safeCampuses[0] ||
+    "Main Campus";
 
   const [values, setValues] = useState(() => ({
     name: student?.name ?? "",
@@ -61,9 +90,13 @@ export default function StudentForm({
     studentPhone: student?.studentPhone ?? student?.phone ?? "",
     program: student?.gradeOrClass ?? student?.program ?? safeOptionsList[0] ?? "",
     section: student?.section ?? (isSchool ? "A" : ""),
-    semester: student?.semester ?? (isSchool ? "2024-2025" : ""),
-    subjects: student?.subjects ?? (isSchool ? "Mathematics, General Science, English, Urdu, Social Studies, Islamiat" : ""),
-    campus: student?.campus ?? (typeof safeCampuses[0] === "object" ? safeCampuses[0].value : safeCampuses[0]) ?? "",
+    semester: student?.semester ?? (isSchool ? "2024-2025" : "1st Semester"),
+    subjects:
+      student?.subjects ??
+      (isSchool
+        ? "Mathematics, General Science, English, Urdu, Social Studies, Islamiat"
+        : ""),
+    campus: defaultCampus,
     status: student?.status ?? "Active",
     guardian: student?.guardian ?? "",
     guardianPhone: student?.guardianPhone ?? "",
@@ -194,13 +227,13 @@ export default function StudentForm({
             placeholder: isSchool ? "e.g. Hamza Tariq" : "e.g. Ali Raza"
           })}
           {field("roll", isSchool ? "Roll No / Admission No" : "Roll Number / Student ID", {
-            placeholder: isSchool ? "e.g. 10-A-01 or ADM-2024-52" : "e.g. NUST-CS-2024-001"
+            placeholder: isSchool ? "e.g. 10-A-01 or ADM-2024-52" : "e.g. CS-2024-001"
           })}
 
           {field("email", isSchool ? "Student / Parent Email" : "Email Address", {
             type: "email",
             optional: isSchool,
-            placeholder: isSchool ? "parent.contact@gmail.com" : "ali.raza@nust.edu.pk",
+            placeholder: isSchool ? "parent.contact@gmail.com" : "student@example.com",
           })}
           {field("studentPhone", isSchool ? "Student / Home Phone (Optional)" : "Student Phone (Optional)", {
             type: "tel",

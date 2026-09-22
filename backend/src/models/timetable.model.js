@@ -105,12 +105,12 @@ const timetableSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-timetableSchema.pre("validate", function validateTimetable(next) {
+timetableSchema.pre("validate", function validateTimetable() {
   const start = normalizeTimeString(this.startTime);
   const end = normalizeTimeString(this.endTime);
   if (!start || !end) {
     this.invalidate("startTime", "Invalid start or end time format.");
-    return next();
+    return;
   }
   this.startTime = start;
   this.endTime = end;
@@ -131,6 +131,9 @@ timetableSchema.pre("validate", function validateTimetable(next) {
     if (!this.subject && this.breakTitle) {
       this.subject = this.breakTitle;
     }
+    if (!this.breakTitle && this.subject) {
+      this.breakTitle = this.subject;
+    }
   } else {
     const requiredFields = [
       ["program", "Program is required for class slots."],
@@ -143,8 +146,6 @@ timetableSchema.pre("validate", function validateTimetable(next) {
       if (!this[field]?.trim()) this.invalidate(field, message);
     }
   }
-
-  next();
 });
 
 timetableSchema.index({ campusId: 1, institutionType: 1, days: 1 });

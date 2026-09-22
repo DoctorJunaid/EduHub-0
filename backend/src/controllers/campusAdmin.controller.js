@@ -324,11 +324,14 @@ export const deleteStudent = async (req, res) => {
 export const createClassSchedule = async (req, res) => {
   try {
     const { campusId, instituteId } = getContext(req);
+    console.log("=== CREATE CLASS SCHEDULE ENDPOINT HIT ===");
+    console.log("req.body:", req.body);
     const record = await campusAdminService.createClassSchedule(
       campusId,
       instituteId,
       req.body,
     );
+    console.log("Created record returned from service:", record);
     logActivity({
       campus: campusId,
       action: "schedule_created",
@@ -887,6 +890,102 @@ export const createActivityLogEntry = async (req, res) => {
       performedBy: req.user?._id,
     });
     return res.status(201).json({ success: true, data: log });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+// --- Assignment Controllers ---
+export const createAssignment = async (req, res) => {
+  try {
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.createAssignment(campusId, instituteId, {
+      ...req.body,
+      instructor: req.body.instructor || req.user?.name || "",
+      instructorId: req.body.instructorId || req.user?._id || null,
+    });
+    logActivity({
+      campus: campusId,
+      action: "assignment_created",
+      category: "academic",
+      title: "Assignment Created",
+      description: `"${req.body.title || 'New assignment'}" assigned to ${req.body.program || req.body.gradeOrClass || 'class'} — Due: ${req.body.dueDate || 'TBD'}`,
+      entityType: "assignment",
+      entityId: record._id,
+      performedBy: req.user?._id,
+      metadata: { title: req.body.title, subject: req.body.subject, dueDate: req.body.dueDate },
+    });
+    res.status(201).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const getAssignments = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const records = await campusAdminService.getAllAssignments(campusId, req.query);
+    res.status(200).json({ success: true, count: records.length, data: records });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+export const getAssignmentById = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.getAssignmentById(req.params.id, campusId);
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 404);
+  }
+};
+
+export const updateAssignment = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.updateAssignment(req.params.id, campusId, req.body);
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const deleteAssignment = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    await campusAdminService.deleteAssignment(req.params.id, campusId);
+    res.status(200).json({ success: true, message: "Assignment deleted successfully." });
+  } catch (error) {
+    handleError(res, error, 404);
+  }
+};
+
+export const submitAssignment = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const studentId = req.body.studentId || req.user?._id;
+    if (!studentId) return res.status(400).json({ success: false, message: "Student ID required." });
+    const record = await campusAdminService.submitAssignment(
+      req.params.id, campusId, studentId, req.body
+    );
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const gradeAssignmentSubmission = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const { studentId, score, feedback } = req.body;
+    if (!studentId || score === undefined) {
+      return res.status(400).json({ success: false, message: "studentId and score are required." });
+    }
+    const record = await campusAdminService.gradeSubmission(
+      req.params.id, campusId, studentId, { score, feedback }
+    );
+    res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
   }

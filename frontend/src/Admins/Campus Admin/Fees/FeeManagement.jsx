@@ -81,13 +81,10 @@ export default function FeeManagement() {
 
     const interval = setInterval(() => {
       dispatch(fetchFees());
-    }, 15000);
-    const onFocus = () => dispatch(fetchFees());
-    window.addEventListener("focus", onFocus);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
     };
   }, [dispatch]);
 

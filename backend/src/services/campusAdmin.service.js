@@ -11,6 +11,13 @@ import TeacherAttendance from "../models/teacherAttendance.model.js";
 import User from "../models/user.model.js";
 import FeeStructure from "../models/feeStructure.model.js";
 import Timetable from "../models/timetable.model.js";
+import Assignment from "../models/assignment.model.js";
+import {
+  parseTimeToMinutes,
+  normalizeTimeString,
+  timesOverlap,
+  WEEKDAYS,
+} from "../utils/timetableTime.js";
 
 class CampusAdminService {
   // --- Dashboard Aggregated Statistics ---
@@ -199,6 +206,108 @@ class CampusAdminService {
   }
 
   // --- Class Schedule Operations ---
+  async validateScheduleConflicts(campusId, payload, excludeId = null) {
+    if (!campusId || !payload || !payload.days || !payload.days.length) return;
+    const newStart = parseTimeToMinutes(payload.startTime);
+    const newEnd = parseTimeToMinutes(payload.endTime);
+    if (newStart === null || newEnd === null || newEnd <= newStart) return;
+
+    const query = {
+      campusId,
+      days: { $in: payload.days },
+      status: { $ne: "Cancelled" },
+    };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+
+    const existingRecords = await Timetable.find(query);
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+    for (const record of existingRecords) {
+      const commonDays = payload.days.filter(
+        (d) => Array.isArray(record.days) && record.days.includes(d)
+      );
+      if (!commonDays.length) continue;
+
+      const recStart = parseTimeToMinutes(record.startTime);
+      const recEnd = parseTimeToMinutes(record.endTime);
+      if (recStart === null || recEnd === null) continue;
+
+      const overlaps = Math.max(newStart, recStart) < Math.min(newEnd, recEnd);
+      if (!overlaps) continue;
+
+      const conflictingDayStr = commonDays
+        .map((d) => dayNames[d - 1] || `Day ${d}`)
+        .join(", ");
+
+      // 1. Break vs Class conflict
+      if (!payload.isBreak && record.isBreak) {
+        throw new Error(
+          `Cannot schedule class during designated break period '${record.subject || record.breakTitle || "Break"}' on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+        );
+      }
+      if (payload.isBreak && !record.isBreak) {
+        throw new Error(
+          `Cannot schedule break period during existing class '${record.subject}' on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+        );
+      }
+      if (payload.isBreak && record.isBreak) {
+        throw new Error(
+          `Another break '${record.subject || record.breakTitle}' is already scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+        );
+      }
+
+      // 2. Room conflict (only between regular classes, ignore generic rooms)
+      const ignoredRooms = [
+        "",
+        "tbd",
+        "n/a",
+        "cafeteria / grounds",
+        "campus grounds / cafeteria",
+        "campus cafeteria / ground",
+        "break area",
+        "school grounds",
+      ];
+      const pRoom = (payload.room || "").trim().toLowerCase();
+      const rRoom = (record.room || "").trim().toLowerCase();
+      if (pRoom && rRoom && pRoom === rRoom && !ignoredRooms.includes(pRoom)) {
+        throw new Error(
+          `Room '${payload.room}' is already occupied on ${conflictingDayStr} by ${record.subject} (${record.startTime} - ${record.endTime}).`
+        );
+      }
+
+      // 3. Instructor conflict (only between regular classes, ignore generic instructors)
+      const ignoredInstructors = [
+        "",
+        "tbd",
+        "unassigned",
+        "assigned teacher",
+        "campus administration",
+        "campus staff",
+        "duty staff",
+      ];
+      const pInst = (payload.instructor || "").trim().toLowerCase();
+      const rInst = (record.instructor || "").trim().toLowerCase();
+      if (pInst && rInst && pInst === rInst && !ignoredInstructors.includes(pInst)) {
+        throw new Error(
+          `Instructor '${payload.instructor}' is already assigned on ${conflictingDayStr} to ${record.subject} (${record.startTime} - ${record.endTime}).`
+        );
+      }
+
+      // 4. Class & Section conflict (same class & section cannot have two classes simultaneously)
+      const pProg = (payload.program || "").trim().toLowerCase();
+      const rProg = (record.program || "").trim().toLowerCase();
+      const pSec = (payload.section || "").trim().toLowerCase();
+      const rSec = (record.section || "").trim().toLowerCase();
+      if (pProg && rProg && pProg === rProg && pSec && rSec && pSec === rSec) {
+        throw new Error(
+          `Class ${payload.program} Section ${payload.section} already has '${record.subject}' scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+        );
+      }
+    }
+  }
+
   async createClassSchedule(campusIdOrData, maybeInstituteId, maybeData) {
     let campusId, instituteId, data;
     if (typeof campusIdOrData === "object" && campusIdOrData !== null && !maybeData) {
@@ -219,24 +328,34 @@ class CampusAdminService {
     if (!days || !days.length) {
       days = [1, 2, 3, 4, 5];
     }
+    days = days.map((d) => parseInt(d, 10)).filter((d) => !isNaN(d) && d >= 1 && d <= 7);
+
+    const startTime = normalizeTimeString(data.startTime) || data.startTime || "08:30";
+    const endTime = normalizeTimeString(data.endTime) || data.endTime || "09:20";
 
     const payload = {
       ...data,
       campusId: campusId || data.campusId,
-      instituteId: instituteId || data.instituteId || null,
+      instituteId:
+        typeof maybeInstituteId === "string" ? maybeInstituteId : null,
+      days,
       institutionType: data.institutionType || "School",
       program: data.program || data.className || data.gradeOrClass || "Grade 10",
       section: data.section || "A",
-      subject: data.subject || "General",
-      instructor: data.instructor || data.teacherName || "Assigned Teacher",
-      room: data.room || data.roomNumber || "Room 101",
-      days,
-      startTime: data.startTime || "08:30",
-      endTime: data.endTime || "09:20",
+      subject: data.subject || data.breakTitle || (data.isBreak ? "Lunch & Prayer Break" : "General"),
+      instructor: data.instructor || data.teacherName || (data.isBreak ? "Campus Administration" : "Assigned Teacher"),
+      room: data.room || data.roomNumber || (data.isBreak ? "Cafeteria / Grounds" : "Room 101"),
+      startTime,
+      endTime,
       status: data.status || "Active",
+      isBreak: Boolean(data.isBreak),
+      breakTitle: data.breakTitle || (data.isBreak ? (data.subject || "Lunch & Prayer Break") : ""),
     };
 
-    return await Timetable.create(payload);
+    await this.validateScheduleConflicts(payload.campusId, payload);
+
+    const created = await Timetable.create(payload);
+    return created;
   }
 
   async getAllClassSchedules(campusIdOrFilter = {}, maybeFilter = {}) {
@@ -255,11 +374,35 @@ class CampusAdminService {
       const dayNum = dayMap[filter.dayOfWeek];
       if (dayNum) query.days = dayNum;
     }
+
+    const conditions = [];
+
     if (filter.program || filter.className || filter.gradeOrClass) {
       const prog = filter.program || filter.className || filter.gradeOrClass;
-      query.$or = [{ program: prog }, { className: prog }, { gradeOrClass: prog }];
+      conditions.push({
+        $or: [
+          { program: prog },
+          { className: prog },
+          { gradeOrClass: prog },
+          { isBreak: true },
+        ],
+      });
     }
-    if (filter.section) query.section = filter.section;
+    if (filter.section) {
+      conditions.push({
+        $or: [
+          { section: filter.section },
+          { section: `Section ${filter.section}` },
+          { section: "All sections" },
+          { section: "" },
+          { isBreak: true },
+        ],
+      });
+    }
+    if (conditions.length > 0) {
+      query.$and = conditions;
+    }
+
     if (filter.subject) query.subject = new RegExp(filter.subject, "i");
     if (filter.institutionType) query.institutionType = filter.institutionType;
 
@@ -300,19 +443,45 @@ class CampusAdminService {
     } else {
       updateData = campusIdOrUpdate;
     }
+    if (updateData && updateData.days) {
+      updateData.days = updateData.days
+        .map((d) => parseInt(d, 10))
+        .filter((d) => !isNaN(d) && d >= 1 && d <= 7);
+    }
+    if (updateData && updateData.startTime) {
+      const normStart = normalizeTimeString(updateData.startTime);
+      if (normStart) updateData.startTime = normStart;
+    }
+    if (updateData && updateData.endTime) {
+      const normEnd = normalizeTimeString(updateData.endTime);
+      if (normEnd) updateData.endTime = normEnd;
+    }
+
     const query = { _id: id };
     if (campusId) query.campusId = campusId;
 
-    let record = await Timetable.findOneAndUpdate(query, updateData, {
-      new: true,
-      runValidators: true,
-    });
-    if (!record) {
-      record = await ClassSchedule.findOneAndUpdate(query, updateData, {
+    const existing = await Timetable.findOne(query);
+    if (existing) {
+      const mergedPayload = {
+        ...existing.toObject(),
+        ...updateData,
+        campusId: campusId || existing.campusId,
+      };
+      if (updateData.days) mergedPayload.days = updateData.days;
+
+      await this.validateScheduleConflicts(mergedPayload.campusId, mergedPayload, id);
+
+      const record = await Timetable.findOneAndUpdate(query, updateData, {
         new: true,
         runValidators: true,
       });
+      return record;
     }
+
+    let record = await ClassSchedule.findOneAndUpdate(query, updateData, {
+      new: true,
+      runValidators: true,
+    });
     if (!record) throw new Error("Class schedule not found.");
     return record;
   }
@@ -329,32 +498,218 @@ class CampusAdminService {
   }
 
   // --- Exam Schedule Operations ---
+  async validateExamConflicts(campusId, payload, excludeId = null) {
+    if (!campusId || !payload) return;
+    const dateStr = payload.date
+      ? payload.date.slice(0, 10)
+      : payload.examDate
+      ? new Date(payload.examDate).toISOString().split("T")[0]
+      : null;
+    const newStart = parseTimeToMinutes(payload.startTime);
+    const newEnd = parseTimeToMinutes(payload.endTime);
+    if (!dateStr || newStart === null || newEnd === null || newEnd <= newStart) return;
+
+    const query = {
+      campusId,
+      $or: [
+        { date: dateStr },
+        {
+          examDate: {
+            $gte: new Date(`${dateStr}T00:00:00.000Z`),
+            $lte: new Date(`${dateStr}T23:59:59.999Z`),
+          },
+        },
+      ],
+    };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+
+    const existingExams = await ExamSchedule.find(query);
+
+    // 1. Check Cohort Daily Exam Cap (Max 2 exams per day; 1 is standard, 2 is rare, 3+ strictly prohibited)
+    const pClass = (payload.program || payload.className || payload.gradeOrClass || payload.department || "").trim().toLowerCase();
+    const pSec = (payload.section || "").trim().toLowerCase();
+
+    const cohortExamsOnDay = existingExams.filter((ex) => {
+      const exClass = (ex.program || ex.className || ex.gradeOrClass || ex.department || "").trim().toLowerCase();
+      const exSec = (ex.section || "").trim().toLowerCase();
+      return pClass && exClass && pClass === exClass && pSec && exSec && pSec === exSec;
+    });
+
+    if (cohortExamsOnDay.length >= 2) {
+      const names = cohortExamsOnDay.map((e) => `'${e.subject || e.examName}'`).join(" and ");
+      throw new Error(
+        `Class ${payload.program || payload.className || payload.gradeOrClass} Section ${payload.section} already has 2 exams scheduled on ${dateStr} (${names}). Maximum allowed is 2 exams per day.`
+      );
+    }
+
+    if (cohortExamsOnDay.length === 1) {
+      const existingExam = cohortExamsOnDay[0];
+      const exStart = parseTimeToMinutes(existingExam.startTime);
+      const exEnd = parseTimeToMinutes(existingExam.endTime);
+
+      if (exStart !== null && exEnd !== null) {
+        // Direct overlap check
+        const overlaps = Math.max(newStart, exStart) < Math.min(newEnd, exEnd);
+        if (overlaps) {
+          throw new Error(
+            `Class ${payload.program || payload.className || payload.gradeOrClass} Section ${payload.section} already has an exam scheduled for '${existingExam.subject}' on ${dateStr} (${existingExam.startTime} - ${existingExam.endTime}).`
+          );
+        }
+
+        // Rest interval check (minimum 30 minutes between papers on a dual-exam day)
+        const gap = newStart >= exEnd ? (newStart - exEnd) : (exStart - newEnd);
+        if (gap < 30) {
+          throw new Error(
+            `Dual-exam day for Class ${payload.program || payload.className || payload.gradeOrClass} Section ${payload.section} requires at least a 30-minute rest interval between papers. Existing exam '${existingExam.subject}' runs ${existingExam.startTime} - ${existingExam.endTime} (Gap: ${gap} mins).`
+          );
+        }
+      }
+    }
+
+    // 2. Room & Invigilator Overlap Conflicts across campus
+    for (const existing of existingExams) {
+      const exStart = parseTimeToMinutes(existing.startTime);
+      const exEnd = parseTimeToMinutes(existing.endTime);
+      if (exStart === null || exEnd === null) continue;
+
+      const overlaps = Math.max(newStart, exStart) < Math.min(newEnd, exEnd);
+      if (!overlaps) continue;
+
+      // Room conflict
+      const pRoom = (payload.room || payload.roomNumber || "").trim().toLowerCase();
+      const exRoom = (existing.room || existing.roomNumber || "").trim().toLowerCase();
+      const ignoredRooms = ["", "tbd", "n/a"];
+      if (pRoom && exRoom && pRoom === exRoom && !ignoredRooms.includes(pRoom)) {
+        throw new Error(
+          `Exam Hall/Room '${payload.room || payload.roomNumber}' is already occupied on ${dateStr} by ${existing.subject} (${existing.startTime} - ${existing.endTime}).`
+        );
+      }
+
+      // Invigilator conflict
+      const pInv = (payload.invigilator || payload.teacherName || "").trim().toLowerCase();
+      const exInv = (existing.invigilator || "").trim().toLowerCase();
+      const ignoredInvigilators = ["", "tbd", "unassigned", "assigned invigilator", "duty staff"];
+      if (pInv && exInv && pInv === exInv && !ignoredInvigilators.includes(pInv)) {
+        throw new Error(
+          `Invigilator '${payload.invigilator}' is already supervising ${existing.subject} on ${dateStr} (${existing.startTime} - ${existing.endTime}).`
+        );
+      }
+    }
+  }
+
   async createExamSchedule(campusId, instituteId, data) {
+    const startTime = normalizeTimeString(data.startTime) || data.startTime || "09:00";
+    const endTime = normalizeTimeString(data.endTime) || data.endTime || "12:00";
+    const date = data.date
+      ? data.date.slice(0, 10)
+      : data.examDate
+      ? new Date(data.examDate).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+    const examDate = data.examDate
+      ? new Date(data.examDate)
+      : new Date(`${date}T12:00:00.000Z`);
+
+    const program = data.program || data.className || data.gradeOrClass || data.department || "";
+    const className =
+      data.className ||
+      data.program ||
+      data.gradeOrClass ||
+      data.department ||
+      (data.section ? `Class ${data.section}` : "Grade 10");
+    const gradeOrClass = data.gradeOrClass || className;
+    const department = data.department || className;
+    const room = data.room || data.roomNumber || "Hall A";
+    const examType = data.examType || "Midterm";
+    const examName =
+      data.examName ||
+      `${examType} Examination - ${data.subject || "Subject"}`;
+
+    const startM = parseTimeToMinutes(startTime) ?? 9 * 60;
+    const sessionOrShift =
+      data.sessionOrShift ||
+      (startM < 12 * 60 ? "Morning" : startM < 16 * 60 ? "Afternoon" : "Evening");
+
     const payload = {
       ...data,
       campusId,
       instituteId: instituteId || null,
-      className: data.className || data.gradeOrClass || "Grade 10",
-      gradeOrClass: data.gradeOrClass || data.className || "Grade 10",
-      room: data.room || data.roomNumber || "",
-      roomNumber: data.roomNumber || data.room || "",
-      invigilator: data.invigilator || data.teacherName || "",
-      date: data.date || (data.examDate ? new Date(data.examDate).toISOString().split("T")[0] : ""),
-      examDate: data.examDate || (data.date ? new Date(data.date) : new Date()),
+      institutionType: data.institutionType || "School",
+      program: program || className,
+      examName,
+      examType,
+      subject: data.subject || "General Examination",
+      className,
+      gradeOrClass,
+      department,
+      section: data.section || "A",
+      room,
+      roomNumber: room,
+      invigilator:
+        data.invigilator || data.teacherName || "Assigned Invigilator",
+      totalMarks:
+        Number(data.totalMarks) > 0 ? Number(data.totalMarks) : 100,
+      startTime,
+      endTime,
+      date,
+      examDate,
+      sessionOrShift,
+      isDualExamDay: false,
     };
-    return await ExamSchedule.create(payload);
+
+    await this.validateExamConflicts(campusId, payload);
+
+    const existingSameCohort = await ExamSchedule.findOne({
+      campusId,
+      $or: [
+        { date },
+        {
+          examDate: {
+            $gte: new Date(`${date}T00:00:00.000Z`),
+            $lte: new Date(`${date}T23:59:59.999Z`),
+          },
+        },
+      ],
+      $or: [{ program }, { className }, { gradeOrClass }],
+      section: payload.section,
+    });
+
+    if (existingSameCohort) {
+      payload.isDualExamDay = true;
+    }
+
+    const created = await ExamSchedule.create(payload);
+
+    if (existingSameCohort) {
+      await ExamSchedule.updateOne(
+        { _id: existingSameCohort._id },
+        { isDualExamDay: true }
+      );
+    }
+
+    return created;
   }
 
   async getAllExamSchedules(campusId, filter = {}) {
     const query = { campusId };
     if (filter.examType) query.examType = filter.examType;
-    if (filter.className || filter.gradeOrClass) {
+    if (filter.program || filter.className || filter.gradeOrClass || filter.department) {
+      const term = filter.program || filter.className || filter.gradeOrClass || filter.department;
       query.$or = [
-        { className: filter.className || filter.gradeOrClass },
-        { gradeOrClass: filter.className || filter.gradeOrClass },
+        { program: term },
+        { className: term },
+        { gradeOrClass: term },
+        { department: term },
       ];
     }
     if (filter.section) query.section = filter.section;
+    if (filter.room) {
+      query.$or = [{ room: filter.room }, { roomNumber: filter.room }];
+    }
+    if (filter.invigilator) {
+      query.invigilator = new RegExp(filter.invigilator, "i");
+    }
     if (filter.subject) query.subject = new RegExp(filter.subject, "i");
 
     return await ExamSchedule.find(query)
@@ -372,22 +727,102 @@ class CampusAdminService {
   }
 
   async updateExamSchedule(id, campusId, updateData) {
-    const payload = { ...updateData };
-    if (payload.gradeOrClass && !payload.className) payload.className = payload.gradeOrClass;
-    if (payload.date && !payload.examDate) payload.examDate = new Date(payload.date);
+    const existing = await ExamSchedule.findOne({ _id: id, campusId });
+    if (!existing) throw new Error("Exam schedule not found.");
+
+    const mergedPayload = {
+      ...existing.toObject(),
+      ...updateData,
+      campusId,
+    };
+    if (updateData.startTime) {
+      mergedPayload.startTime =
+        normalizeTimeString(updateData.startTime) || updateData.startTime;
+    }
+    if (updateData.endTime) {
+      mergedPayload.endTime =
+        normalizeTimeString(updateData.endTime) || updateData.endTime;
+    }
+    if (updateData.date) {
+      mergedPayload.date = updateData.date.slice(0, 10);
+      mergedPayload.examDate = new Date(`${mergedPayload.date}T12:00:00.000Z`);
+    }
+    if (updateData.room) {
+      mergedPayload.room = updateData.room;
+      mergedPayload.roomNumber = updateData.room;
+    }
+    if (updateData.department) {
+      mergedPayload.className = updateData.department;
+      mergedPayload.gradeOrClass = updateData.department;
+      mergedPayload.department = updateData.department;
+    }
+    if (updateData.totalMarks !== undefined) {
+      mergedPayload.totalMarks = Number(updateData.totalMarks) || 100;
+    }
+
+    const startM = parseTimeToMinutes(mergedPayload.startTime) ?? 9 * 60;
+    mergedPayload.sessionOrShift =
+      mergedPayload.sessionOrShift ||
+      (startM < 12 * 60 ? "Morning" : startM < 16 * 60 ? "Afternoon" : "Evening");
+
+    await this.validateExamConflicts(campusId, mergedPayload, id);
 
     const record = await ExamSchedule.findOneAndUpdate(
       { _id: id, campusId },
-      payload,
+      mergedPayload,
       { new: true, runValidators: true }
     );
-    if (!record) throw new Error("Exam schedule not found.");
+
+    if (record.date) {
+      const cohortExams = await ExamSchedule.find({
+        campusId,
+        $or: [
+          { date: record.date },
+          {
+            examDate: {
+              $gte: new Date(`${record.date}T00:00:00.000Z`),
+              $lte: new Date(`${record.date}T23:59:59.999Z`),
+            },
+          },
+        ],
+        section: record.section,
+      });
+      const isDual = cohortExams.length >= 2;
+      await ExamSchedule.updateMany(
+        { _id: { $in: cohortExams.map((e) => e._id) } },
+        { isDualExamDay: isDual }
+      );
+    }
+
     return record;
   }
 
   async deleteExamSchedule(id, campusId) {
     const record = await ExamSchedule.findOneAndDelete({ _id: id, campusId });
     if (!record) throw new Error("Exam schedule not found.");
+
+    if (record.date) {
+      const remaining = await ExamSchedule.find({
+        campusId,
+        $or: [
+          { date: record.date },
+          {
+            examDate: {
+              $gte: new Date(`${record.date}T00:00:00.000Z`),
+              $lte: new Date(`${record.date}T23:59:59.999Z`),
+            },
+          },
+        ],
+        section: record.section,
+      });
+      if (remaining.length === 1) {
+        await ExamSchedule.updateOne(
+          { _id: remaining[0]._id },
+          { isDualExamDay: false }
+        );
+      }
+    }
+
     return record;
   }
 
@@ -840,6 +1275,89 @@ class CampusAdminService {
     const record = await Performance.findOneAndDelete({ _id: id, campusId });
     if (!record) throw new Error("Performance record not found.");
     return record;
+  }
+
+  // --- Assignment Operations ---
+  async createAssignment(campusId, instituteId, data) {
+    const payload = {
+      ...data,
+      campusId,
+      instituteId: instituteId || null,
+      program: data.program || data.gradeOrClass || "",
+      gradeOrClass: data.gradeOrClass || data.program || "",
+      section: data.section || "",
+      dueDate: data.dueDate ? new Date(data.dueDate) : new Date(Date.now() + 7 * 86400000),
+      totalMarks: Number(data.totalMarks || 100),
+      status: data.status || "Active",
+      submissions: [],
+    };
+    return await Assignment.create(payload);
+  }
+
+  async getAllAssignments(campusId, filter = {}) {
+    const query = { campusId };
+    if (filter.program) query.$or = [{ program: filter.program }, { gradeOrClass: filter.program }];
+    if (filter.gradeOrClass) query.$or = [{ program: filter.gradeOrClass }, { gradeOrClass: filter.gradeOrClass }];
+    if (filter.section) query.section = filter.section;
+    if (filter.subject) query.subject = new RegExp(filter.subject, "i");
+    if (filter.status && filter.status !== "all") query.status = filter.status;
+    if (filter.instructorId) query.instructorId = filter.instructorId;
+    return await Assignment.find(query).sort({ dueDate: 1, createdAt: -1 });
+  }
+
+  async getAssignmentById(id, campusId) {
+    const record = await Assignment.findOne({ _id: id, campusId });
+    if (!record) throw new Error("Assignment not found.");
+    return record;
+  }
+
+  async updateAssignment(id, campusId, updateData) {
+    const payload = { ...updateData };
+    if (payload.dueDate) payload.dueDate = new Date(payload.dueDate);
+    if (payload.totalMarks !== undefined) payload.totalMarks = Number(payload.totalMarks);
+    const record = await Assignment.findOneAndUpdate(
+      { _id: id, campusId },
+      payload,
+      { new: true, runValidators: true }
+    );
+    if (!record) throw new Error("Assignment not found.");
+    return record;
+  }
+
+  async deleteAssignment(id, campusId) {
+    const record = await Assignment.findOneAndDelete({ _id: id, campusId });
+    if (!record) throw new Error("Assignment not found.");
+    return record;
+  }
+
+  async submitAssignment(assignmentId, campusId, studentId, data) {
+    const assignment = await Assignment.findOne({ _id: assignmentId, campusId });
+    if (!assignment) throw new Error("Assignment not found.");
+    const existing = assignment.submissions.find((s) => String(s.studentId) === String(studentId));
+    if (existing) {
+      existing.notes = data.notes || existing.notes;
+      existing.submittedAt = new Date();
+      existing.status = "Submitted";
+    } else {
+      assignment.submissions.push({
+        studentId,
+        status: "Submitted",
+        notes: data.notes || "",
+        submittedAt: new Date(),
+      });
+    }
+    return await assignment.save();
+  }
+
+  async gradeSubmission(assignmentId, campusId, studentId, { score, feedback }) {
+    const assignment = await Assignment.findOne({ _id: assignmentId, campusId });
+    if (!assignment) throw new Error("Assignment not found.");
+    const submission = assignment.submissions.find((s) => String(s.studentId) === String(studentId));
+    if (!submission) throw new Error("Submission not found.");
+    submission.score = Number(score);
+    submission.feedback = feedback || "";
+    submission.status = "Graded";
+    return await assignment.save();
   }
 }
 

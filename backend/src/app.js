@@ -54,11 +54,21 @@ app.use((req, res, next) => {
 });
 
 
-// Rate limiting (100 requests per 10 mins)
+// Rate limiting (skip in development/localhost to prevent accidental blocking)
 const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 100,
-  message: "Too many requests from this IP, please try again in 10 minutes",
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === "production" ? 3000 : 100000,
+  skip: (req) => {
+    if (process.env.NODE_ENV !== "production") return true;
+    const ip = req.ip || req.socket?.remoteAddress || "";
+    return ip === "127.0.0.1" || ip === "::1" || ip.endsWith("127.0.0.1");
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests from this IP, please try again later.",
+  },
 });
 app.use("/api/", limiter);
 

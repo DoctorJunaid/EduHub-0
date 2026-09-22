@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { Users, School, GraduationCap, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { facultyStatuses } from "./facultyData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
+import { selectCurrentUser } from "@/store/Slices/authSlice.js";
 
 const DEFAULT_DESIGNATIONS = [
   "Lecturer",
@@ -49,6 +51,8 @@ const DEFAULT_CAMPUSES = ["Main Campus"];
 
 export default function FacultyForm({ teacher, options = {}, onSave, onClose }) {
   const { isSchool } = useInstitution();
+  const currentUser = useSelector(selectCurrentUser);
+  const realUserCampus = currentUser?.campusId?.name || currentUser?.campus;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const designations = isSchool
@@ -59,10 +63,13 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
     ? DEFAULT_SCHOOL_DEPARTMENTS
     : (options?.department && options.department.length ? options.department : DEFAULT_DEPARTMENTS);
 
-  const campuses =
-    options?.campus && options.campus.length
-      ? options.campus
-      : DEFAULT_CAMPUSES;
+  const campuses = (() => {
+    const rawList = [
+      ...(options?.campus || []),
+      realUserCampus,
+    ].filter(Boolean);
+    return rawList.length ? [...new Set(rawList)] : (realUserCampus ? [realUserCampus] : DEFAULT_CAMPUSES);
+  })();
 
   const [values, setValues] = useState(() => ({
     name: teacher?.name ?? "",
@@ -72,7 +79,7 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
     department: teacher?.department ?? departments[0],
     phone: teacher?.phone ?? "",
     subjects: teacher?.subjects ?? (isSchool ? "Mathematics, General Science (Grade 9 & 10)" : ""),
-    campus: teacher?.campus ?? campuses[0] ?? "Main Campus",
+    campus: teacher?.campus ?? realUserCampus ?? campuses[0] ?? "Main Campus",
     status: teacher?.status ?? "Active",
   }));
 
@@ -137,7 +144,7 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
               id="faculty-email"
               type="email"
               required
-              placeholder={isSchool ? "ayesha.siddiqa@school.edu.pk" : "usman.khan@nust.edu.pk"}
+              placeholder={isSchool ? "ayesha.siddiqa@school.edu.pk" : "usman.khan@campus.edu.pk"}
               value={values.email}
               onChange={(e) => handleChange("email", e.target.value)}
             />

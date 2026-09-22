@@ -83,6 +83,15 @@ export const fetchFees = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch fee vouchers');
     }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { fees } = getState();
+      if (fees?.status === 'loading') {
+        return false;
+      }
+    },
   }
 );
 

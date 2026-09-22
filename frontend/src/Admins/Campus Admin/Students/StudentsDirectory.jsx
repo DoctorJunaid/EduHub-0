@@ -30,11 +30,9 @@ import {
   deleteStudent,
   fetchStudents,
 } from "@/store/Slices/studentsSlice.js";
+import { selectCurrentUser } from "@/store/Slices/authSlice";
 import {
   studentStatuses,
-  studentPrograms,
-  studentSemesters,
-  studentCampuses,
   filterStudents,
   paginateStudents,
 } from "./studentData.js";
@@ -65,42 +63,70 @@ export default function StudentsDirectory() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
+  const user = useSelector(selectCurrentUser);
+  const realUserCampus =
+    user?.campusId?.name ||
+    user?.campusName ||
+    user?.campus ||
+    "";
+
+  const campuses = useMemo(() => {
+    const list = [
+      realUserCampus,
+      ...students.map((s) => s.campus || s.campusId?.name).filter(Boolean),
+    ].filter(Boolean);
+    const unique = [...new Set(list)];
+    return unique.length > 0 ? unique : [realUserCampus || "Main Campus"];
+  }, [students, realUserCampus]);
+
   const programs = useMemo(() => {
-    if (isSchool) {
-      const cls = [
-        ...new Set(students.map((student) => student.gradeOrClass || student.program).filter(Boolean)),
-      ];
-      return cls.length > 0 ? cls : ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6", "Grade 5"];
-    }
-    return [
-      ...new Set([
-        ...studentPrograms,
-        ...students.map((student) => student.program).filter(Boolean),
-      ]),
+    const fromStudents = [
+      ...new Set(
+        students
+          .map((student) => student.gradeOrClass || student.program || student.class)
+          .filter(Boolean)
+      ),
     ];
+
+    if (isSchool) {
+      const defaultSchoolClasses = [
+        "Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6",
+        "Grade 5", "Grade 4", "Grade 3", "Grade 2", "Grade 1",
+        "Kindergarten (KG)", "Nursery"
+      ];
+      return [...new Set([...fromStudents, ...defaultSchoolClasses])];
+    }
+
+    const defaultCollegePrograms = [
+      "BS Computer Science",
+      "BS Software Engineering",
+      "BS Artificial Intelligence",
+      "BS Data Science",
+      "BBA",
+      "FSc Pre-Engineering",
+      "FSc Pre-Medical",
+    ];
+    return [...new Set([...fromStudents, ...defaultCollegePrograms])];
   }, [students, isSchool]);
 
   const semesters = useMemo(() => {
     if (isSchool) {
-      const sec = [...new Set(students.map((student) => student.section).filter(Boolean))];
-      return sec.length > 0 ? sec : ["Section A", "Section B", "Section C", "Section D"];
+      const fromStudents = [
+        ...new Set(students.map((student) => student.section).filter(Boolean)),
+      ];
+      const defaultSections = ["Section A", "Section B", "Section C", "Section D"];
+      return [...new Set([...fromStudents, ...defaultSections])];
     }
-    return [
-      ...new Set([
-        ...studentSemesters,
-        ...students.map((student) => student.semester).filter(Boolean),
-      ]),
-    ];
-  }, [students, isSchool]);
 
-  const campuses = useMemo(() => {
-    return [
-      ...new Set([
-        ...studentCampuses,
-        ...students.map((student) => student.campus).filter(Boolean),
-      ]),
+    const fromStudents = [
+      ...new Set(students.map((student) => student.semester).filter(Boolean)),
     ];
-  }, [students]);
+    const defaultSemesters = [
+      "1st Semester", "2nd Semester", "3rd Semester", "4th Semester",
+      "5th Semester", "6th Semester", "7th Semester", "8th Semester"
+    ];
+    return [...new Set([...fromStudents, ...defaultSemesters])];
+  }, [students, isSchool]);
 
   const filtered = useMemo(() => filterStudents(students, filters), [students, filters]);
   const result = useMemo(() => paginateStudents(filtered, page, pageSize), [filtered, page, pageSize]);

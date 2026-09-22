@@ -6,19 +6,6 @@ import { weekdays } from "../../../lib/schedule.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
 
-const SCHOOL_GRADE_OPTIONS = [
-  "Grade 10",
-  "Grade 9",
-  "Grade 8",
-  "Grade 7",
-  "Grade 6",
-  "Grade 5",
-  "Grade 4",
-  "Grade 3",
-  "Grade 2",
-  "Grade 1",
-];
-
 export default function ScheduleClassForm({
   record,
   defaults,
@@ -27,9 +14,12 @@ export default function ScheduleClassForm({
   onClose,
 }) {
   const { isSchool } = useInstitution();
-  const programList = isSchool
-    ? SCHOOL_GRADE_OPTIONS
-    : (options?.program?.length ? options.program : ["BS Computer Science"]);
+  // Use dynamic classes from real DB (passed as options.program) or sensible defaults
+  const programList = options?.program?.length
+    ? options.program
+    : isSchool
+    ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6", "Grade 5"]
+    : ["BS Computer Science", "BS Software Engineering", "BBA"];
 
   const [values, setValues] = useState(() => ({
     subject: record?.subject ?? defaults?.subject ?? "",

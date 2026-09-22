@@ -17,7 +17,7 @@ const normalizeSchedule = (item) => {
 
   let days = [1, 2, 3, 4, 5];
   if (Array.isArray(item.days) && item.days.length > 0) {
-    days = item.days;
+    days = item.days.map(d => parseInt(d, 10)).filter(d => !isNaN(d) && d >= 1 && d <= 7);
   } else if (item.dayOfWeek) {
     const idx = WEEKDAYS.indexOf(item.dayOfWeek);
     days = [idx !== -1 ? idx + 1 : 1];
@@ -52,11 +52,29 @@ export const fetchSchedules = createAsyncThunk(
   'timetable/fetchSchedules',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/campus-admin/timetables', { params });
+      let response;
+      try {
+        response = await axiosInstance.get('/campus-admin/timetables', { params });
+      } catch (err) {
+        if (err.response?.status === 404) {
+          response = await axiosInstance.get('/campus-admin/schedules', { params });
+        } else {
+          throw err;
+        }
+      }
       return response.data.data || response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch schedules');
     }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { timetable } = getState();
+      if (timetable?.status === 'loading') {
+        return false;
+      }
+    },
   }
 );
 
@@ -71,7 +89,16 @@ export const addSchedule = createAsyncThunk(
         const firstDay = payload.days[0];
         payload.dayOfWeek = typeof firstDay === 'number' ? WEEKDAYS[firstDay - 1] : firstDay;
       }
-      const response = await axiosInstance.post('/campus-admin/timetables', payload);
+      let response;
+      try {
+        response = await axiosInstance.post('/campus-admin/timetables', payload);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          response = await axiosInstance.post('/campus-admin/schedules', payload);
+        } else {
+          throw err;
+        }
+      }
       return response.data.data || response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to add schedule');
@@ -93,7 +120,16 @@ export const updateSchedule = createAsyncThunk(
         const firstDay = payload.days[0];
         payload.dayOfWeek = typeof firstDay === 'number' ? WEEKDAYS[firstDay - 1] : firstDay;
       }
-      const response = await axiosInstance.put(`/campus-admin/timetables/${id}`, payload);
+      let response;
+      try {
+        response = await axiosInstance.put(`/campus-admin/timetables/${id}`, payload);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          response = await axiosInstance.put(`/campus-admin/schedules/${id}`, payload);
+        } else {
+          throw err;
+        }
+      }
       return response.data.data || response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update schedule');
@@ -107,7 +143,15 @@ export const deleteSchedule = createAsyncThunk(
   'timetable/deleteSchedule',
   async (scheduleId, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/campus-admin/timetables/${scheduleId}`);
+      try {
+        await axiosInstance.delete(`/campus-admin/timetables/${scheduleId}`);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          await axiosInstance.delete(`/campus-admin/schedules/${scheduleId}`);
+        } else {
+          throw err;
+        }
+      }
       return scheduleId;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete schedule');

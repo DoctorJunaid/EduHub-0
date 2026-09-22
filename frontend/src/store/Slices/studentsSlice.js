@@ -4,14 +4,26 @@ import axiosInstance from '../../api/axiosInstance.js';
 const initialsFor = (name) =>
   (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
 
-export const fetchStudents = createAsyncThunk('students/fetchAll', async (campusId, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.get('/campus-admin/students');
-    return response.data.data || response.data;
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch students');
+export const fetchStudents = createAsyncThunk(
+  'students/fetchAll',
+  async (campusId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/campus-admin/students');
+      return response.data.data || response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch students');
+    }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { students } = getState();
+      if (students?.status === 'loading') {
+        return false;
+      }
+    },
   }
-});
+);
 
 export const addStudent = createAsyncThunk('students/add', async (studentData, { rejectWithValue }) => {
   try {
@@ -82,6 +94,7 @@ const studentsSlice = createSlice({
         state.records = list.map(student => ({
           ...student,
           id: student._id || student.id,
+          campus: student.campus || student.campusId?.name || '',
           initials: student.initials || initialsFor(student.name || 'Unknown Student')
         }));
       })
@@ -94,18 +107,21 @@ const studentsSlice = createSlice({
         const newStudent = {
           ...payload,
           id: payload._id || payload.id,
+          campus: payload.campus || payload.campusId?.name || '',
           initials: payload.initials || initialsFor(payload.name || 'Unknown Student')
         };
         state.records.push(newStudent);
       })
       // Update
       .addCase(updateStudent.fulfilled, (state, { payload }) => {
-        const index = state.records.findIndex(s => s.id === (payload._id || payload.id));
+        const id = payload._id || payload.id;
+        const index = state.records.findIndex(s => s.id === id);
         if (index !== -1) {
           state.records[index] = {
             ...state.records[index],
             ...payload,
-            id: payload._id || payload.id,
+            id,
+            campus: payload.campus || payload.campusId?.name || state.records[index].campus || '',
             initials: payload.initials || initialsFor(payload.name || 'Unknown Student')
           };
         }

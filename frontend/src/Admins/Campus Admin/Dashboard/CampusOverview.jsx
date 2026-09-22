@@ -10,6 +10,8 @@ import { fetchExams } from '@/store/Slices/examsSlice.js';
 import { fetchFees } from '@/store/Slices/feesSlice.js';
 import { fetchActivityLogs, selectActivityLogs } from '@/store/Slices/activityLogSlice.js';
 
+import { selectCurrentUser } from '@/store/Slices/authSlice.js';
+
 // Forms & Modal Dialogs
 import FacultyForm from '@/Admins/Campus Admin/Faculty/FacultyForm';
 import StudentForm from '@/Admins/Campus Admin/Students/StudentForm';
@@ -27,16 +29,8 @@ export default function CampusOverview() {
   const dispatch = useDispatch();
   const { isSchool } = useInstitution();
 
-  React.useEffect(() => {
-    dispatch(fetchStudents());
-    dispatch(fetchFaculty());
-    dispatch(fetchSchedules());
-    dispatch(fetchExams());
-    dispatch(fetchFees());
-    dispatch(fetchActivityLogs());
-  }, [dispatch]);
-
   // Redux Selectors with real database state
+  const currentUser = useSelector(selectCurrentUser);
   const rawStudents = useSelector(selectStudents);
   const rawFaculty = useSelector(selectFaculty);
   const rawTimetable = useSelector(selectTimetable);
@@ -44,10 +38,21 @@ export default function CampusOverview() {
   const facultyStatus = useSelector(selectFacultyStatus);
   const activityLogs = useSelector(selectActivityLogs);
 
+  React.useEffect(() => {
+    if (!rawStudents || rawStudents.length === 0) dispatch(fetchStudents());
+    if (!rawFaculty || rawFaculty.length === 0) dispatch(fetchFaculty());
+    if (!rawTimetable || rawTimetable.length === 0) dispatch(fetchSchedules());
+    dispatch(fetchExams());
+    dispatch(fetchFees());
+    dispatch(fetchActivityLogs());
+  }, [dispatch]);
+
   // Strictly use real API records - no mock fallbacks
   const students = useMemo(() => rawStudents || [], [rawStudents]);
   const faculty = useMemo(() => rawFaculty || [], [rawFaculty]);
   const timetable = useMemo(() => rawTimetable || [], [rawTimetable]);
+
+  const realUserCampus = currentUser?.campusId?.name || currentUser?.campus || '';
 
   // Modal Dialog states
   const [addingStudent, setAddingStudent] = useState(false);
@@ -57,34 +62,59 @@ export default function CampusOverview() {
 
   // Dynamic select options for faculty modal
   const facultyOptions = useMemo(() => {
-    return Object.fromEntries(
-      ['designation', 'department', 'campus'].map((key) => [
-        key,
-        [...new Set(faculty.map((teacher) => teacher[key]).filter(Boolean))],
-      ])
-    );
-  }, [faculty]);
+    const campusOptions = [...new Set([
+      realUserCampus,
+      ...faculty.map((t) => t.campus),
+      ...students.map((s) => s.campus),
+    ].filter(Boolean))];
 
-  // Programs and campuses for Student form
-  const studentPrograms = [
-    'BS Computer Science',
-    'BS Software Engineering',
-    'BS Artificial Intelligence',
-    'BS Data Science',
-  ];
+    return {
+      ...Object.fromEntries(
+        ['designation', 'department'].map((key) => [
+          key,
+          [...new Set(faculty.map((teacher) => teacher[key]).filter(Boolean))],
+        ])
+      ),
+      campus: campusOptions.length ? campusOptions : (realUserCampus ? [realUserCampus] : ['Main Campus']),
+    };
+  }, [faculty, students, realUserCampus]);
 
-  const studentCampuses = [
-    'NUST Main Campus (H-12)',
-    'FAST-NUCES Islamabad',
-    'LUMS Lahore',
-  ];
+  // Dynamic programs and campuses for Student form
+  const studentPrograms = useMemo(() => {
+    if (isSchool) {
+      const fromStudents = students.map((s) => s.program || s.gradeOrClass).filter(Boolean);
+      return [...new Set([
+        ...fromStudents,
+        'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5',
+        'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'
+      ])];
+    }
+    const fromStudents = students.map((s) => s.program).filter(Boolean);
+    const defaults = [
+      'BS Computer Science',
+      'BS Software Engineering',
+      'BS Artificial Intelligence',
+      'BS Data Science',
+    ];
+    return [...new Set([...fromStudents, ...defaults])];
+  }, [isSchool, students]);
+
+  const studentCampuses = useMemo(() => {
+    const list = [
+      realUserCampus,
+      ...students.map((s) => s.campus),
+      ...faculty.map((f) => f.campus),
+    ].filter(Boolean);
+    return list.length ? [...new Set(list)] : [realUserCampus || 'Main Campus'];
+  }, [realUserCampus, students, faculty]);
 
   // Export summary
   const handleExportSummary = () => {
+    const activeCampusName = realUserCampus || 'Main Campus';
     const csvContent = isSchool
       ? [
           'Category,Metric,Details',
-          'School,"The City School (Federal Campus)","Islamabad"',
+          `School,"${currentUser?.instituteId?.name || 'School Campus'}","${activeCampusName}"`,
           `Enrolled Students,"${students.length}","95.4% Attendance"`,
           `Teaching Staff,"${faculty.length}","100% On Duty"`,
           'Classes & Sections,"10 Grades • 24 Sections","Grade 1 to 10 (A, B, C)"',
@@ -92,11 +122,11 @@ export default function CampusOverview() {
         ].join('\n')
       : [
           'Category,Metric,Details',
-          'Campus,"NUST Main Campus (H-12)","Sector H-12, Islamabad"',
+          `Campus,"${activeCampusName}","Active Operations"`,
           `Enrolled Students,"${students.length}","94.2% Attendance"`,
           `Faculty Members,"${faculty.length}","98% On Duty"`,
-          `Active Classes,"${timetable.length}","18 Labs Active"`,
-          'Programs,"4 Programs","BS CS, SE, AI, DS"',
+          `Active Classes,"${timetable.length}","Active Labs"`,
+          `Programs,"${studentPrograms.length} Programs","${studentPrograms.slice(0, 4).join(', ')}"`,
         ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

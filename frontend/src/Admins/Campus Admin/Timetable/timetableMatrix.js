@@ -263,11 +263,18 @@ export const institutionMatrixConfigs = {
   }
 };
 
-export function getMatrixConfig(educationType) {
-  return institutionMatrixConfigs[educationType] ?? institutionMatrixConfigs.College;
+export function getMatrixConfig(educationType, includeSaturday = true) {
+  const base = institutionMatrixConfigs[educationType] ?? institutionMatrixConfigs.College;
+  const days = includeSaturday
+    ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  return {
+    ...base,
+    days,
+  };
 }
 
 export function getTemplateRecords(educationType) {
-  const config = getMatrixConfig(educationType);
+  const config = getMatrixConfig(educationType, false);
   return buildRecordsFromMatrix(educationType, config);
 }

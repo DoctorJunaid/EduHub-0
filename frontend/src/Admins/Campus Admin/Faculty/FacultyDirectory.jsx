@@ -33,6 +33,7 @@ import {
   deleteFaculty,
   fetchFaculty,
 } from "@/store/Slices/facultySlice";
+import { selectCurrentUser } from "@/store/Slices/authSlice";
 import toast from "react-hot-toast";
 import FacultyForm from "./FacultyForm";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -47,6 +48,9 @@ export default function FacultyDirectory() {
     dispatch(fetchFaculty());
   }, [dispatch]);
 
+  const currentUser = useSelector(selectCurrentUser);
+  const realUserCampus = currentUser?.campusId?.name || currentUser?.campus || "";
+
   const rawFaculty = useSelector(selectFaculty);
   const facultyRecords = useMemo(() => rawFaculty || [], [rawFaculty]);
 
@@ -54,17 +58,17 @@ export default function FacultyDirectory() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const options = useMemo(() => {
-    return Object.fromEntries(
-      ["designation", "department", "campus"].map((key) => [
-        key,
-        [
-          ...new Set(
-            facultyRecords.map((teacher) => teacher[key]).filter(Boolean),
-          ),
-        ],
-      ]),
-    );
-  }, [facultyRecords]);
+    const campusList = [
+      realUserCampus,
+      ...facultyRecords.map((teacher) => teacher.campus).filter(Boolean),
+    ].filter(Boolean);
+
+    return {
+      designation: [...new Set(facultyRecords.map((t) => t.designation).filter(Boolean))],
+      department: [...new Set(facultyRecords.map((t) => t.department).filter(Boolean))],
+      campus: campusList.length ? [...new Set(campusList)] : (realUserCampus ? [realUserCampus] : ["Main Campus"]),
+    };
+  }, [facultyRecords, realUserCampus]);
 
   const [filters, setFilters] = useState({
     search: "",
