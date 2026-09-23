@@ -37,7 +37,7 @@ export default function SalaryProfilesTable({
               <th>Allowances</th>
               <th>Gross Salary</th>
               <th>Status</th>
-              <th className="text-right min-w-[185px] pr-5">Actions</th>
+              <th className="text-center min-w-[140px]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -137,17 +137,8 @@ export default function SalaryProfilesTable({
                         {profile.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="text-right min-w-[185px] pr-5" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-2.5">
-                        <button
-                          type="button"
-                          aria-label={`Edit ${name}`}
-                          title="Edit Profile"
-                          className="salary-action-edit-icon"
-                          onClick={() => onEdit(profile)}
-                        >
-                          <Pencil size={14} className="text-slate-700 shrink-0" />
-                        </button>
+                    <td className="text-center min-w-[140px]" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center">
                         {profile.isActive ? (
                           <button
                             type="button"

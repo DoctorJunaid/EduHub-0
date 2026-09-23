@@ -74,7 +74,7 @@ router.post("/:id/approve", authorize(...approveRoles), async (req, res) => {
   }
 });
 
-router.post("/:id/mark-paid", authorize("accountant"), async (req, res) => {
+router.post("/:id/mark-paid", authorize("accountant", "campus_admin", "campus_manager"), async (req, res) => {
   try {
     const data = await payrollService.markPaid(req.params.id, req.user.campusId);
     res.json({ success: true, data });

@@ -19,23 +19,29 @@ const profilePopulation = {
   },
 };
 
-const cleanPayload = (payload = {}) => ({
-  baseSalary: Number(payload.baseSalary),
-  allowances: (payload.allowances || []).map((item) => ({
-    name: String(item.name || '').trim(),
-    amount: Number(item.amount || 0),
-  })),
-  taxDeduction: Number(payload.taxDeduction || 0),
-  otherDeduction: Number(payload.otherDeduction || 0),
-  bankAccount: {
-    bankName: String(payload.bankAccount?.bankName || '').trim(),
-    accountNumber: String(payload.bankAccount?.accountNumber || '').trim(),
-    iban: String(payload.bankAccount?.iban || '').trim(),
-  },
-});
+const cleanPayload = (payload = {}) => {
+  const rawBase = payload.baseSalary !== undefined && payload.baseSalary !== null && payload.baseSalary !== ''
+    ? Number(payload.baseSalary)
+    : 0;
+
+  return {
+    baseSalary: Number.isFinite(rawBase) ? rawBase : 0,
+    allowances: (payload.allowances || []).map((item) => ({
+      name: String(item.name || '').trim(),
+      amount: Number.isFinite(Number(item.amount)) ? Number(item.amount) : 0,
+    })),
+    taxDeduction: Number.isFinite(Number(payload.taxDeduction)) ? Number(payload.taxDeduction) : 0,
+    otherDeduction: Number.isFinite(Number(payload.otherDeduction)) ? Number(payload.otherDeduction) : 0,
+    bankAccount: {
+      bankName: String(payload.bankAccount?.bankName || '').trim(),
+      accountNumber: String(payload.bankAccount?.accountNumber || '').trim(),
+      iban: String(payload.bankAccount?.iban || '').trim(),
+    },
+  };
+};
 
 function validatePayload(payload) {
-  if (!Number.isFinite(payload.baseSalary) || payload.baseSalary < 0) {
+  if (typeof payload.baseSalary !== 'number' || !Number.isFinite(payload.baseSalary) || payload.baseSalary < 0) {
     throw createError('baseSalary is required and must be a non-negative number', 400);
   }
   for (const allowance of payload.allowances) {
@@ -224,6 +230,10 @@ export async function getProfileByTeacherId(campusId, targetId) {
  * Create or update a salary profile (Upsert).
  */
 export async function upsertProfile(campusId, targetId, userId, rawPayload) {
+  if (!targetId || String(targetId).trim() === '' || String(targetId).trim() === 'undefined') {
+    throw createError('A valid teacher selection is required to configure a salary profile', 400);
+  }
+
   let salaryProfileDoc = null;
 
   if (mongoose.Types.ObjectId.isValid(String(targetId))) {
@@ -258,16 +268,18 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
   }
 
   if (!teacher) {
+    const uniqueId = String(Date.now()).slice(-6) + Math.random().toString(36).substring(2, 5);
     const info = {
-      name: `Teacher ${String(targetId).slice(-4)}`,
-      email: `teacher.${String(targetId).slice(-4)}@eduhub.edu.pk`,
-      employeeId: `EMP-${String(targetId).slice(-4).toUpperCase()}`,
+      name: `Teacher ${uniqueId.toUpperCase()}`,
+      email: `teacher.${uniqueId}@eduhub.edu.pk`,
+      employeeId: `EMP-${uniqueId.toUpperCase()}`,
     };
 
     const userDoc = await User.create({
       name: info.name,
       email: info.email,
       role: 'teacher',
+      passwordHash: 'teacher123',
       employeeId: info.employeeId,
       department: 'Academic',
       designation: 'Teacher',
@@ -307,7 +319,7 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
     { teacherProfileId },
     {
       $set: { ...updateData, campusId: targetCampusId },
-      $setOnInsert: { campusId: targetCampusId, teacherProfileId },
+      $setOnInsert: { teacherProfileId },
     },
     { new: true, upsert: true, runValidators: true }
   ).populate(profilePopulation);

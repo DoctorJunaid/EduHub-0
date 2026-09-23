@@ -63,9 +63,14 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     const dailySalary = profile.baseSalary / policy.workingDaysPerMonth;
 
     // 4. Fetch attendance for this teacher for the month
+    // NOTE: TeacherAttendance.teacherProfileId refs "User" (not TeacherProfile),
+    // so attendance records store the User._id in that field.
+    // We fetch the linked User._id from TeacherProfile and query by that.
     const teacherProfile = await TeacherProfile.findById(teacherId).select("user").lean();
-    const attendanceTeacherIds = [teacherId];
-    if (teacherProfile?.user) attendanceTeacherIds.push(teacherProfile.user);
+    // User._id is the primary key stored in attendance; TeacherProfile._id as fallback
+    const attendanceTeacherIds = teacherProfile?.user
+      ? [teacherProfile.user, teacherId]
+      : [teacherId];
 
     const attendanceRecords = await TeacherAttendance.find({
       campusId,
@@ -73,10 +78,11 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       date: { $gte: startDate, $lte: endDate },
     }).lean();
 
-    const presentDays = attendanceRecords.filter((a) => a.status === "Present").length;
-    const absentDays = attendanceRecords.filter((a) => a.status === "Absent").length;
-    const lateCount = attendanceRecords.filter((a) => a.status === "Late").length;
-    const leaveDays = attendanceRecords.filter((a) => a.status === "On Leave").length;
+    // Compare case-insensitively to handle both "Present" and "present" enum values
+    const presentDays = attendanceRecords.filter((a) => a.status?.toLowerCase() === "present").length;
+    const absentDays = attendanceRecords.filter((a) => a.status?.toLowerCase() === "absent").length;
+    const lateCount = attendanceRecords.filter((a) => a.status?.toLowerCase() === "late").length;
+    const leaveDays = attendanceRecords.filter((a) => a.status?.toLowerCase() === "on leave").length;
 
     // 5. Fetch substitute duties where this teacher WAS the substitute
     const subDuties = await SubstituteAssignment.find({

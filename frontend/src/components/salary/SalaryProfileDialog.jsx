@@ -93,6 +93,13 @@ export default function SalaryProfileDialog({
     fetchTeachers();
   }, [open, initialTeachersWithoutProfile]);
 
+  useEffect(() => {
+    if (open && !profile && teacherOptions.length > 0 && !selectedTeacherId) {
+      const firstId = String(teacherOptions[0]._id || teacherOptions[0].id || '');
+      if (firstId) setSelectedTeacherId(firstId);
+    }
+  }, [open, profile, teacherOptions, selectedTeacherId]);
+
   // Populate form fields on edit or reset on create
   useEffect(() => {
     if (!open) return;
@@ -124,7 +131,9 @@ export default function SalaryProfileDialog({
         iban: profile.bankAccount?.iban || '',
       });
     } else {
-      setSelectedTeacherId('');
+      const firstTeacher = Array.isArray(teacherOptions) && teacherOptions.length > 0 ? teacherOptions[0] : null;
+      const firstId = firstTeacher ? String(firstTeacher._id || firstTeacher.id || '') : '';
+      setSelectedTeacherId(firstId);
       setBaseSalary(0);
       setAllowances([]);
       setTaxDeduction(0);
@@ -132,7 +141,7 @@ export default function SalaryProfileDialog({
       setBankAccount({ bankName: '', accountNumber: '', iban: '' });
     }
     setValidationError('');
-  }, [profile, open]);
+  }, [profile, open, teacherOptions]);
 
   if (!open) return null;
 
@@ -195,8 +204,8 @@ export default function SalaryProfileDialog({
       targetTeacherId = targetTeacherId._id || targetTeacherId.id || targetTeacherId.user?._id || targetTeacherId.user;
     }
 
-    if (!targetTeacherId || String(targetTeacherId).trim() === '') {
-      setValidationError('Please select a teacher from the dropdown');
+    if (!targetTeacherId || String(targetTeacherId).trim() === '' || String(targetTeacherId).trim() === 'undefined') {
+      setValidationError('Please select a valid teacher from the dropdown');
       return;
     }
 
