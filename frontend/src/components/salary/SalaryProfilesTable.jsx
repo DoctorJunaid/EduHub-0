@@ -37,7 +37,7 @@ export default function SalaryProfilesTable({
               <th>Allowances</th>
               <th>Gross Salary</th>
               <th>Status</th>
-              <th className="text-right">Actions</th>
+              <th className="text-right min-w-[185px] pr-5">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -137,35 +137,38 @@ export default function SalaryProfilesTable({
                         {profile.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="text-right min-w-[185px] pr-5" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-2.5">
                         <button
                           type="button"
                           aria-label={`Edit ${name}`}
-                          className="salary-edit-btn"
+                          title="Edit Profile"
+                          className="salary-action-edit-icon"
                           onClick={() => onEdit(profile)}
                         >
-                          <Pencil size={12} /> Edit
+                          <Pencil size={14} className="text-slate-700 shrink-0" />
                         </button>
                         {profile.isActive ? (
                           <button
                             type="button"
                             aria-label={`Deactivate ${name}`}
-                            className="salary-edit-btn hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50"
+                            className="salary-action-btn salary-action-deactivate"
                             onClick={() => onToggleStatus(profile)}
                             title="Deactivate Profile"
                           >
-                            <PowerOff size={12} className="text-rose-500" /> Deactivate
+                            <PowerOff size={13} className="text-rose-600 shrink-0" />
+                            <span>Deactivate</span>
                           </button>
                         ) : (
                           <button
                             type="button"
                             aria-label={`Reactivate ${name}`}
-                            className="salary-edit-btn bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 font-semibold shadow-xs"
+                            className="salary-action-btn salary-action-reactivate"
                             onClick={() => onToggleStatus(profile)}
                             title="Reactivate Profile"
                           >
-                            <Power size={12} className="text-emerald-600" /> Reactivate
+                            <Power size={13} className="text-emerald-600 shrink-0" />
+                            <span>Reactivate</span>
                           </button>
                         )}
                       </div>

@@ -15,14 +15,14 @@ const slice = createSlice({
       state.records = Array.isArray(payload) ? payload : [];
     },
     participantMessageSent: {
-      prepare: ({ conversationId, senderId, receiverId, body }) => ({
+      prepare: ({ conversationId, senderId, receiverId, body, id, createdAt }) => ({
         payload: {
           conversationId,
           senderId,
           receiverId,
           body: typeof body === "string" ? body.trim() : "",
-          id: nanoid(),
-          createdAt: new Date().toISOString(),
+          id: id || nanoid(),
+          createdAt: createdAt || new Date().toISOString(),
         },
       }),
       reducer: (state, { payload }) => {

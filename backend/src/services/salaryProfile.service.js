@@ -62,8 +62,16 @@ export async function listProfiles(campusId, { search = '', department = '', isA
   const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
 
   const query = {};
+  if (campusId) query.campusId = campusId;
   if (isActive === 'true' || isActive === true) query.isActive = true;
   if (isActive === 'false' || isActive === false) query.isActive = false;
+
+  const countQuery = campusId ? { campusId } : {};
+  const [totalCount, activeCount, deactivatedCount] = await Promise.all([
+    TeacherSalaryProfile.countDocuments(countQuery),
+    TeacherSalaryProfile.countDocuments({ ...countQuery, isActive: true }),
+    TeacherSalaryProfile.countDocuments({ ...countQuery, isActive: false }),
+  ]);
 
   const rawRecords = await TeacherSalaryProfile.find(query)
     .populate(profilePopulation)
@@ -180,7 +188,17 @@ export async function listProfiles(campusId, { search = '', department = '', isA
   const total = filtered.length;
   const paginated = filtered.slice((safePage - 1) * safeLimit, safePage * safeLimit);
 
-  return { records: paginated, total, page: safePage, limit: safeLimit };
+  return {
+    records: paginated,
+    total,
+    page: safePage,
+    limit: safeLimit,
+    summary: {
+      total: totalCount,
+      active: activeCount,
+      deactivated: deactivatedCount,
+    },
+  };
 }
 
 /**

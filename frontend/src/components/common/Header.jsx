@@ -55,12 +55,19 @@ const Header = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
+  const currentRole = user?.role || userRole;
+
   useEffect(() => {
     let active = true;
     const loadAlerts = async () => {
       try {
         const token = localStorage.getItem("eduHubToken");
         if (!token) return;
+
+        if (!["institute_admin", "super_admin"].includes(currentRole)) {
+          return;
+        }
+
         const res = await axiosInstance.get("/institute-admin/alerts");
         const list = res.data?.data || [];
         if (active && Array.isArray(list) && list.length > 0) {
@@ -86,14 +93,14 @@ const Header = ({
           );
         }
       } catch {
-        // Fallback gracefully if not logged in or offline
+        // Fallback gracefully if not logged in or unauthorized
       }
     };
     loadAlerts();
     return () => {
       active = false;
     };
-  }, []);
+  }, [currentRole]);
 
   const institute = user?.role === "Institute Admin";
   const location = useLocation();

@@ -18,6 +18,9 @@ import { formatFeeAmount } from "@/store/feeReferenceData";
 import StudentChallanDialog from "../../components/StudentChallanDialog";
 import { selectStudentFees } from "./studentFeeSelectors";
 import "./StudentFees.css";
+import SubmitPaymentDialog from "./SubmitPaymentDialog";
+import axiosInstance from "@/api/axiosInstance";
+import toast from "react-hot-toast";
 
 function PrintChallan({ voucher, student, demo }) {
   const [open, setOpen] = useState(false);
@@ -38,8 +41,22 @@ function PrintChallan({ voucher, student, demo }) {
   );
 }
 export default function StudentFees() {
-  const { student, vouchers, paid, pending, demo } =
-    useSelector(selectStudentFees);
+  const { student, vouchers, paid, pending, demo } = useSelector(selectStudentFees);
+  const [paymentVoucher, setPaymentVoucher] = useState(null);
+
+  const handleSubmitPayment = async (data) => {
+    try {
+      await axiosInstance.post(`/api/student/fees/${paymentVoucher._id || paymentVoucher.id}/submit-payment`, data);
+      toast.success("Payment submitted successfully. Pending admin confirmation.");
+      setPaymentVoucher(null);
+      // Wait a moment and then reload or we just let them know.
+      // Ideally we'd dispatch fetch fees again, but for now this works.
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit payment.");
+    }
+  };
+
   const stats = [
     {
       label: "Total Paid Fees",
@@ -131,11 +148,22 @@ export default function StudentFees() {
                 </TableCell>
                 <TableCell>{voucher.paymentMethod || "Not recorded"}</TableCell>
                 <TableCell>
-                  <PrintChallan
-                    voucher={voucher}
-                    student={student}
-                    demo={demo}
-                  />
+                  <div className="flex gap-2 items-center">
+                    <PrintChallan
+                      voucher={voucher}
+                      student={student}
+                      demo={demo}
+                    />
+                    {!demo && voucher.paymentStatus !== "Paid" && voucher.paymentStatus !== "Pending Confirmation" && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => setPaymentVoucher(voucher)}
+                      >
+                        Submit Payment
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -151,6 +179,14 @@ export default function StudentFees() {
           </TableBody>
         </Table>
       </Card>
+      
+      {paymentVoucher && (
+        <SubmitPaymentDialog
+          voucher={paymentVoucher}
+          onClose={() => setPaymentVoucher(null)}
+          onSubmit={handleSubmitPayment}
+        />
+      )}
     </section>
   );
 }

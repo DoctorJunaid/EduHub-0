@@ -43,9 +43,15 @@ import {
   deleteStudentAttendance,
   createFeeRecord,
   getFeeRecords,
+  getStudentPayments,
   getFeeRecordById,
   updateFeeRecord,
   deleteFeeRecord,
+  getPendingPayments,
+  getFeePayments,
+  recordPayment,
+  confirmPayment,
+  rejectPayment,
   generateMonthlyFees,
   getFeeStructures,
   saveFeeStructure,
@@ -87,6 +93,7 @@ router
 router.post("/students/new", createStudentForCampus);
 router.delete("/students/:id", removeStudentFromCampus);
 router.put("/students/:id", updateStudentInCampus);
+router.get("/students/:id/payments", getStudentPayments);
 
 router.route("/faculty").get(getCampusFaculty);
 
@@ -161,11 +168,14 @@ router.post("/fees/generate-monthly", generateMonthlyFees);
 router.route("/fees/structures").get(getFeeStructures).post(saveFeeStructure);
 router.delete("/fees/structures/:id", deleteFeeStructure);
 router.route("/fees").get(getFeeRecords).post(createFeeRecord);
-router
-  .route("/fees/:id")
+router.route("/fees/:id")
   .get(getFeeRecordById)
   .put(updateFeeRecord)
   .delete(deleteFeeRecord);
+router.get("/fees/payments/pending", getPendingPayments);
+router.route("/fees/:id/payments").get(getFeePayments).post(recordPayment);
+router.post("/fees/payments/:paymentId/confirm", confirmPayment);
+router.post("/fees/payments/:paymentId/reject", rejectPayment);
 
 // Performance / Exam Results Records
 router

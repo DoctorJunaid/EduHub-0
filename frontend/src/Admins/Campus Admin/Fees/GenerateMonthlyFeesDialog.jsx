@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Calendar, Wand2, Users, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Calendar, Users, AlertCircle, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/Input";
 import { generateMonthlyFees, fetchFees, selectFees, selectFeeStructures } from "@/store/Slices/feesSlice.js";
 import { selectStudents } from "@/store/Slices/studentsSlice.js";
 import { formatPKR } from "@/lib/currency";
@@ -120,80 +121,47 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        style={{
-          maxWidth: "620px",
-          width: "92vw",
-          padding: "24px",
-          borderRadius: "12px",
-          background: "#ffffff",
-        }}
-        aria-describedby="gen-monthly-desc"
-      >
-        <DialogHeader style={{ borderBottom: "1px solid #e4e4e7", paddingBottom: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "8px",
-                background: "#f4f4f5",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#4f46e5",
-              }}
-            >
-              <Wand2 size={20} />
-            </div>
-            <div>
-              <DialogTitle style={{ fontSize: "16px", fontWeight: "700", color: "#09090b" }}>
-                Generate Monthly Fee Vouchers
-              </DialogTitle>
-              <DialogDescription id="gen-monthly-desc" style={{ fontSize: "12px", color: "#71717a" }}>
-                Automatically generate monthly fee slips in bulk for all students or specific grades.
-              </DialogDescription>
-            </div>
+      <DialogContent className="sm:max-w-[620px] w-[95vw]" aria-describedby="gen-monthly-desc">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-6 pt-6 pb-5 border-b border-border">
+          <div className="size-10 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
+            <Calendar className="size-5 text-white" />
           </div>
-        </DialogHeader>
+          <div>
+            <DialogTitle className="text-base font-semibold text-foreground leading-tight">
+              Generate Monthly Fee Vouchers
+            </DialogTitle>
+            <DialogDescription id="gen-monthly-desc" className="text-xs text-muted-foreground mt-0.5">
+              Automatically generate monthly fee slips in bulk for all students or specific grades.
+            </DialogDescription>
+          </div>
+        </div>
 
-        <form onSubmit={handleGenerate} style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "14px" }}>
+        <form onSubmit={handleGenerate} className="flex flex-col gap-4 px-6 pt-5 pb-6">
           {/* Target Month & Grade Selection */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <Label htmlFor="gen-month" style={{ fontSize: "12px", fontWeight: "600" }}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="gen-month" className="text-xs font-semibold text-foreground">
                 Billing Month *
               </Label>
-              <input
+              <Input
                 id="gen-month"
                 type="month"
                 required
                 value={month}
                 onChange={(e) => handleMonthChange(e.target.value)}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid #d4d4d8",
-                  fontSize: "13px",
-                }}
               />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <Label htmlFor="gen-grade" style={{ fontSize: "12px", fontWeight: "600" }}>
+            <div className="space-y-1.5">
+              <Label htmlFor="gen-grade" className="text-xs font-semibold text-foreground">
                 Target {isSchool ? "Class / Grade" : "Program"} *
               </Label>
               <select
                 id="gen-grade"
                 value={targetGrade}
                 onChange={(e) => setTargetGrade(e.target.value)}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid #d4d4d8",
-                  fontSize: "13px",
-                  background: "#ffffff",
-                }}
+                className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               >
                 <option value="all">All {isSchool ? "School Classes" : "Enrolled Programs"}</option>
                 {availableGrades.map((g) => (
@@ -206,31 +174,25 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
           </div>
 
           {/* Fee Category & Fallback Amount */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "12px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <Label htmlFor="gen-cat" style={{ fontSize: "12px", fontWeight: "600" }}>
+          <div className="grid grid-cols-[1.2fr_0.8fr] gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="gen-cat" className="text-xs font-semibold text-foreground">
                 Fee Category *
               </Label>
-              <input
+              <Input
                 id="gen-cat"
                 required
                 value={feeCategory}
                 onChange={(e) => setFeeCategory(e.target.value)}
                 placeholder="e.g. Monthly Tuition Fee"
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid #d4d4d8",
-                  fontSize: "13px",
-                }}
               />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <Label htmlFor="gen-amount" style={{ fontSize: "12px", fontWeight: "600" }}>
+            <div className="space-y-1.5">
+              <Label htmlFor="gen-amount" className="text-xs font-semibold text-foreground">
                 Base Fee (PKR) *
               </Label>
-              <input
+              <Input
                 id="gen-amount"
                 type="number"
                 required
@@ -238,42 +200,31 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
                 value={defaultAmount}
                 onChange={(e) => setDefaultAmount(e.target.value)}
                 placeholder="5000"
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid #d4d4d8",
-                  fontSize: "13px",
-                }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
 
-          {/* Due Date & Description */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            <Label htmlFor="gen-due" style={{ fontSize: "12px", fontWeight: "600" }}>
+          {/* Due Date */}
+          <div className="space-y-1.5">
+            <Label htmlFor="gen-due" className="text-xs font-semibold text-foreground">
               Payment Due Date *
             </Label>
-            <input
+            <Input
               id="gen-due"
               type="date"
               required
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              style={{
-                padding: "8px 10px",
-                borderRadius: "6px",
-                border: "1px solid #d4d4d8",
-                fontSize: "13px",
-              }}
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <Label htmlFor="gen-desc" style={{ fontSize: "12px", fontWeight: "600" }}>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="gen-desc" className="text-xs font-semibold text-foreground">
                 Description / Particulars (Prints on Challan)
               </Label>
-              <span style={{ fontSize: "11px", color: "#71717a" }}>Includes class rate card if set</span>
+              <span className="text-[11px] text-muted-foreground">Includes class rate card if set</span>
             </div>
             <textarea
               id="gen-desc"
@@ -281,68 +232,41 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Regular Monthly Tuition Fee, Computer Lab and Library dues."
-              style={{
-                padding: "8px 10px",
-                borderRadius: "6px",
-                border: "1px solid #d4d4d8",
-                fontSize: "12px",
-                resize: "vertical",
-              }}
+              className="w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
             />
           </div>
 
           {/* Live Batch Preview Box */}
-          <div
-            style={{
-              background: "#fafafa",
-              border: "1px solid #e4e4e7",
-              borderRadius: "8px",
-              padding: "12px 14px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Users size={18} color="#4f46e5" />
+          <div className="bg-zinc-50 border border-border rounded-xl p-3 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <Users className="size-5 text-zinc-600" />
               <div>
-                <strong style={{ fontSize: "13px", color: "#09090b", display: "block" }}>
+                <strong className="text-sm font-semibold text-foreground block">
                   {preview.toCreate} Students to be Billed
                 </strong>
-                <span style={{ fontSize: "11px", color: "#71717a" }}>
-                  Total enrolled: {preview.total} · Already billed for {month}: {preview.alreadyBilled}
+                <span className="text-xs text-muted-foreground">
+                  Total enrolled: {preview.total} &middot; Already billed for {month}: {preview.alreadyBilled}
                 </span>
               </div>
             </div>
             {structures.length > 0 && (
-              <span
-                style={{
-                  fontSize: "10px",
-                  background: "#dbeafe",
-                  color: "#1e40af",
-                  padding: "3px 8px",
-                  borderRadius: "999px",
-                  fontWeight: "600",
-                }}
-              >
+              <span className="text-[10px] bg-zinc-900 text-white px-2.5 py-1 rounded-full font-semibold">
                 {structures.length} Class Rates Active
               </span>
             )}
           </div>
 
-          <DialogFooter style={{ borderTop: "1px solid #e4e4e7", paddingTop: "14px", marginTop: "6px" }}>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || preview.toCreate === 0}
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              <Wand2 size={14} />
               {isSubmitting ? "Generating Vouchers..." : `Generate ${preview.toCreate} Vouchers`}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

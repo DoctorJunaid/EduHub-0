@@ -461,3 +461,117 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Fee Toolbar Ultra-Compact Fit & Overlap Prevention
+   ========================================================================== */
+
+.campus-toolbar.fee-toolbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 0 14px !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+.campus-toolbar.fee-toolbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.fee-toolbar .toolbar-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  flex-shrink: 0 !important;
+  min-width: max-content !important;
+  flex-wrap: nowrap !important;
+}
+
+.fee-toolbar .toolbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
+  flex-wrap: nowrap !important;
+}
+
+.fee-toolbar-search {
+  width: 115px !important;
+  min-width: 105px !important;
+  max-width: 125px !important;
+  flex-shrink: 0 !important;
+}
+
+.fee-toolbar-search input {
+  padding-left: 26px !important;
+  padding-right: 6px !important;
+  font-size: 11px !important;
+}
+
+.fee-toolbar-select {
+  height: 32px !important;
+  font-size: 11px !important;
+  padding: 0 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.fee-toolbar-date {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  width: 98px !important;
+  min-width: 95px !important;
+  max-width: 105px !important;
+  padding: 0 4px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  color: #09090b !important;
+  outline: none !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  transition: border-color 0.15s ease !important;
+}
+
+.fee-toolbar-date:focus {
+  border-color: #09090b !important;
+}
+
+.fee-toolbar-btn {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.fee-btn-extra {
+  display: none;
+}
+
+@media (min-width: 1380px) {
+  .fee-btn-extra {
+    display: inline;
+  }
+  .fee-toolbar-btn {
+    padding: 0 10px !important;
+  }
+}
+
