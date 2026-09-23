@@ -23,7 +23,7 @@ import {
   assignmentSaved,
   submissionGraded,
 } from "@/store/Slices/assignmentsSlice";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import toast from "react-hot-toast";
 import {
   Dialog,

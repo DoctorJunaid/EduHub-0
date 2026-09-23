@@ -5,7 +5,7 @@ import { selectStudents } from "@/store/Slices/studentsSlice";
 import { selectExams } from "@/store/Slices/examsSlice";
 import { resultSaved, selectResults } from "@/store/Slices/resultsSlice";
 import { selectAssignedTeacherClasses, selectTeacherIdentity, studentsForClass } from "./teacherScope";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

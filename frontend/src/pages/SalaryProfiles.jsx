@@ -33,6 +33,7 @@ export default function SalaryProfiles() {
     filters,
     setFilters,
     pagination,
+    summary,
     teachersWithoutProfile,
     upsert,
     deactivate,
@@ -48,8 +49,15 @@ export default function SalaryProfiles() {
   const [targetToggleProfile, setTargetToggleProfile] = useState(null);
 
   const handleOpenAdd = (teacher = null) => {
-    if (teacher && (teacher._id || teacher.user)) {
-      setSelectedProfile({ teacherProfileId: teacher, baseSalary: 0, allowances: [] });
+    if (teacher && typeof teacher === 'object') {
+      setSelectedProfile({
+        teacherProfileId: teacher._id || teacher.id,
+        teacherProfile: teacher,
+        baseSalary: '',
+        allowances: [],
+        taxDeduction: 0,
+        otherDeduction: 0,
+      });
     } else {
       setSelectedProfile(null);
     }
@@ -61,42 +69,39 @@ export default function SalaryProfiles() {
     setDialogOpen(true);
   };
 
-  const handleSaveProfile = async (teacherId, payload) => {
+  const getProfileTargetId = (p) => {
+    if (!p) return null;
+    if (p._id) return p._id;
+    if (p.teacherProfileId) {
+      if (typeof p.teacherProfileId === 'object') {
+        return p.teacherProfileId._id || p.teacherProfileId.id;
+      }
+      return p.teacherProfileId;
+    }
+    return null;
+  };
+
+  const handleSaveProfile = async ({ teacherId, payload }) => {
     setSaving(true);
     try {
       await upsert(teacherId, payload);
       setDialogOpen(false);
       setSelectedProfile(null);
-    } catch (error) {
-      console.error(error);
+    } catch {
+      // Error handled in hook toast
     } finally {
       setSaving(false);
     }
   };
 
-  const getProfileTargetId = (profile) => {
-    if (!profile) return null;
-    let tid = profile._id || profile.id;
+  const handlePromptToggleStatus = (p) => {
+    const tid = getProfileTargetId(p);
     if (!tid) {
-      if (typeof profile.teacherProfileId === 'object' && profile.teacherProfileId !== null) {
-        tid =
-          profile.teacherProfileId._id ||
-          profile.teacherProfileId.id ||
-          profile.teacherProfileId.user?._id ||
-          profile.teacherProfileId.user;
-      } else if (typeof profile.teacherProfileId === 'string') {
-        tid = profile.teacherProfileId;
-      }
+      toast.error('Unable to identify profile ID');
+      return;
     }
-    return tid ? String(tid) : null;
-  };
-
-  const handlePromptToggleStatus = (profile) => {
-    const tid = getProfileTargetId(profile);
-    if (!tid) return;
-
-    if (profile.isActive) {
-      setTargetToggleProfile(profile);
+    if (p.isActive) {
+      setTargetToggleProfile(p);
       setConfirmOpen(true);
     } else {
       activate(tid);
@@ -123,8 +128,9 @@ export default function SalaryProfiles() {
     )
   );
 
-  const activeCount = profiles.filter((p) => p.isActive).length;
-  const deactivatedCount = profiles.filter((p) => !p.isActive).length;
+  const totalCount = summary?.total ?? pagination.total ?? profiles.length;
+  const activeCount = summary?.active ?? profiles.filter((p) => p.isActive).length;
+  const deactivatedCount = summary?.deactivated ?? profiles.filter((p) => !p.isActive).length;
 
   const targetTeacher =
     targetToggleProfile?.teacherProfileId &&
@@ -162,21 +168,8 @@ export default function SalaryProfiles() {
 
   return (
     <div className="salary-profiles-page campus-tab-page">
-      {/* Top Header */}
-      <div className="salary-profiles-heading">
-        <div>
-          <span className="salary-profiles-eyebrow">Finance / compensation</span>
-          <h1>Salary Profiles</h1>
-          <p>Maintain base salary, allowances, and recurring deductions for teaching staff.</p>
-        </div>
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="toolbar-btn toolbar-btn-primary"
-        >
-          <Plus size={14} /> Add Profile
-        </button>
-      </div>
+      {/* Top KPI Summary Track */}
+      <SalarySummaryCard profiles={profiles} />
 
       {/* Segmented Status Filter Tabs Bar */}
       <div className="salary-status-nav">
@@ -189,7 +182,7 @@ export default function SalaryProfiles() {
             <Users size={14} />
             <span>All Staff</span>
             <span className="salary-status-badge salary-status-badge-all">
-              {pagination.total || profiles.length}
+              {totalCount}
             </span>
           </button>
 
@@ -217,10 +210,16 @@ export default function SalaryProfiles() {
             </span>
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={handleOpenAdd}
+          className="toolbar-btn toolbar-btn-primary ml-auto"
+        >
+          <Plus size={14} /> Add Profile
+        </button>
       </div>
 
-      {/* KPI Track */}
-      <SalarySummaryCard profiles={profiles} />
 
       {/* Alert for unconfigured teachers */}
       <TeachersWithoutProfileAlert
