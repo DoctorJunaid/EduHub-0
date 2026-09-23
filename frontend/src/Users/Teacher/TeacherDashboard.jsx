@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { selectTimetable } from "@/store/Slices/timetableSlice";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import "./TeacherDashboard.css";
 
 const initials = (name = "") =>

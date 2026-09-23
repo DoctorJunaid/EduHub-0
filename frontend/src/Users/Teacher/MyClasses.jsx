@@ -5,7 +5,7 @@ import { Clock3, MoreVertical, Plus, Search } from "lucide-react";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { selectTimetable } from "@/store/Slices/timetableSlice";
 import { dayLabel, timeLabel, weekdays } from "@/lib/schedule";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   DropdownMenu,
   DropdownMenuContent,

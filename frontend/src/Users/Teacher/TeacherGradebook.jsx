@@ -5,7 +5,7 @@ import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { selectTimetable } from "@/store/Slices/timetableSlice";
 import { selectStudents } from "@/store/Slices/studentsSlice";
 import { resultSaved, selectResults } from "@/store/Slices/resultsSlice";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Dialog,
   DialogContent,

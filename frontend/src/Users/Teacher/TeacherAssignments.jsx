@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { selectTimetable } from "@/store/Slices/timetableSlice";
 import { assignmentDeleted, assignmentSaved, submissionGraded } from "@/store/Slices/assignmentsSlice";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Dialog,
   DialogContent,
