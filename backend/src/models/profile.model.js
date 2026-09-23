@@ -254,17 +254,35 @@ const feeRecordSchema = new mongoose.Schema(
     },
     amount: { type: Number, required: true, min: 0 },
     paidAmount: { type: Number, default: 0, min: 0 },
+    previousArrears: { type: Number, default: 0, min: 0 },
+    totalPayable: { type: Number, default: 0, min: 0 },
     dueDate: { type: Date, required: true },
     paymentDate: { type: Date, default: null },
     status: {
       type: String,
       required: true,
-      enum: ["GENERATED", "UNPAID", "PARTIALLY_PAID", "PAID", "OVERDUE", "WAIVED", "CANCELLED", "pending", "paid"],
+      enum: [
+        "GENERATED",
+        "UNPAID",
+        "PARTIALLY_PAID",
+        "PAID",
+        "OVERDUE",
+        "WAIVED",
+        "CANCELLED",
+        "pending",
+        "paid",
+        "overdue",
+        "partially_paid",
+      ],
       default: "UNPAID",
     },
     challanNo: { type: String, default: "" },
+    receiptNo: { type: String, default: "" },
     month: { type: String, default: "" },
     semester: { type: String, default: "" },
+    gradeOrClass: { type: String, default: "" },
+    academicSession: { type: String, default: "" },
+    isAdmissionFee: { type: Boolean, default: false },
     description: { type: String, default: "" },
     breakdown: [
       {
@@ -272,7 +290,37 @@ const feeRecordSchema = new mongoose.Schema(
         amount: { type: Number, default: 0 },
       },
     ],
+    discount: {
+      amount: { type: Number, default: 0 },
+      reason: { type: String, default: "" },
+    },
+    waiver: {
+      amount: { type: Number, default: 0 },
+      reason: { type: String, default: "" },
+      waivedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      waivedAt: { type: Date, default: null },
+    },
+    omitted: {
+      isOmitted: { type: Boolean, default: false },
+      reason: { type: String, default: "" },
+      omittedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      omittedAt: { type: Date, default: null },
+    },
+    lateFine: {
+      amount: { type: Number, default: 0 },
+      applied: { type: Boolean, default: false },
+    },
     notes: { type: String, default: "" },
+    auditTrail: [
+      {
+        action: { type: String, required: true },
+        performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+        timestamp: { type: Date, default: Date.now },
+        details: { type: String, default: "" },
+        previousValue: { type: mongoose.Schema.Types.Mixed, default: null },
+        newValue: { type: mongoose.Schema.Types.Mixed, default: null },
+      },
+    ],
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Institute",
@@ -290,6 +338,9 @@ const feeRecordSchema = new mongoose.Schema(
 );
 
 feeRecordSchema.index({ campusId: 1, status: 1 });
+feeRecordSchema.index({ campusId: 1, month: 1, studentId: 1, feeType: 1 });
+feeRecordSchema.index({ campusId: 1, studentId: 1, status: 1 });
+feeRecordSchema.index({ challanNo: 1 });
 
 const performanceSchema = new mongoose.Schema(
   {

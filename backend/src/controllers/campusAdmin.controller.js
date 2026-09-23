@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import campusAdminService from "../services/campusAdmin.service.js";
+import feeService from "../services/fee.service.js";
 import ActivityLog, { logActivity } from "../models/activityLog.model.js";
 
 // Helper to safely extract campus and institute context
@@ -750,10 +751,11 @@ export const deleteFeeRecord = async (req, res) => {
 export const generateMonthlyFees = async (req, res) => {
   try {
     const { campusId, instituteId } = getContext(req);
-    const result = await campusAdminService.generateMonthlyFees(
+    const result = await feeService.generateMonthlyFees(
       campusId,
       instituteId,
       req.body,
+      req.user,
     );
     res.status(200).json({ success: true, data: result });
   } catch (error) {
@@ -795,6 +797,38 @@ export const deleteFeeStructure = async (req, res) => {
   }
 };
 
+// --- Financial Ledger & Reports ---
+export const getFinancialLedger = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const data = await feeService.getFinancialLedger(campusId, req.query);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+// --- Fee Waiver & Omission Controllers ---
+export const waiveFeeRecord = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await feeService.waiveFeeRecord(req.params.id, campusId, req.user, req.body);
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const omitFeeRecord = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await feeService.omitFeeRecord(req.params.id, campusId, req.user, req.body.reason);
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
 // --- Payment Processing Controllers ---
 export const getPendingPayments = async (req, res) => {
   try {
@@ -829,23 +863,13 @@ export const getFeePayments = async (req, res) => {
 export const recordPayment = async (req, res) => {
   try {
     const { campusId, instituteId } = getContext(req);
-    const record = await campusAdminService.recordPayment(
+    const record = await feeService.recordPayment(
       req.params.id,
       campusId,
       instituteId,
-      { ...req.body, submittedBy: req.user?._id }
+      req.body,
+      req.user,
     );
-    logActivity({
-      campus: campusId,
-      action: "payment_recorded",
-      category: "fees",
-      title: "Fee Payment Recorded",
-      description: `Payment of Rs ${req.body.amount} recorded for voucher ${record.feeRecord.challanNo}`,
-      entityType: "payment",
-      entityId: record.payment._id,
-      performedBy: req.user?._id,
-      metadata: { amount: req.body.amount, method: req.body.paymentMethod },
-    });
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -855,22 +879,12 @@ export const recordPayment = async (req, res) => {
 export const confirmPayment = async (req, res) => {
   try {
     const { campusId } = getContext(req);
-    const record = await campusAdminService.confirmPayment(
+    const record = await feeService.confirmPayment(
       req.params.paymentId,
       campusId,
-      req.user?._id,
-      req.body.notes
+      req.user,
+      req.body.notes,
     );
-    logActivity({
-      campus: campusId,
-      action: "payment_confirmed",
-      category: "fees",
-      title: "Fee Payment Confirmed",
-      description: `Payment of Rs ${record.payment.amount} confirmed for voucher ${record.feeRecord.challanNo}`,
-      entityType: "payment",
-      entityId: record.payment._id,
-      performedBy: req.user?._id,
-    });
     res.status(200).json({ success: true, data: record });
   } catch (error) {
     handleError(res, error, 400);
@@ -880,11 +894,11 @@ export const confirmPayment = async (req, res) => {
 export const rejectPayment = async (req, res) => {
   try {
     const { campusId } = getContext(req);
-    const record = await campusAdminService.rejectPayment(
+    const record = await feeService.rejectPayment(
       req.params.paymentId,
       campusId,
-      req.user?._id,
-      req.body.notes
+      req.user,
+      req.body.reason || req.body.notes,
     );
     res.status(200).json({ success: true, data: record });
   } catch (error) {

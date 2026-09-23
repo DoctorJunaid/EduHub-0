@@ -36,9 +36,15 @@ const normalizeFee = (item) => {
   const paymentStatus =
     rawStatus === "paid"
       ? "Paid"
-      : rawStatus === "overdue"
-        ? "Overdue"
-        : "Pending";
+      : rawStatus === "partially_paid" || rawStatus === "partially paid"
+        ? "Partially Paid"
+        : rawStatus === "overdue"
+          ? "Overdue"
+          : rawStatus === "waived"
+            ? "Waived"
+            : rawStatus === "cancelled"
+              ? "Cancelled"
+              : "Pending";
   const dueDate = item.dueDate
     ? new Date(item.dueDate).toISOString().split("T")[0]
     : "";
@@ -54,6 +60,9 @@ const normalizeFee = (item) => {
       }))
     : [];
 
+  const previousArrears = Number(item.previousArrears || 0);
+  const totalPayable = Number(item.totalPayable || (amount + previousArrears));
+
   const normalized = {
     ...item,
     id: String(id),
@@ -61,6 +70,7 @@ const normalizeFee = (item) => {
     studentId: String(studentId || ""),
     voucherNo: String(voucherNo),
     challanNo: String(voucherNo),
+    receiptNo: item.receiptNo || "",
     feeCategory: String(feeCategory),
     feeType: String(feeCategory),
     semester: String(semester),
@@ -68,13 +78,20 @@ const normalizeFee = (item) => {
     notes: String(description),
     breakdown,
     amount,
+    previousArrears,
+    totalPayable,
     paidAmount: Number(
       item.paidAmount || (paymentStatus === "Paid" ? amount : 0),
     ),
+    remainingAmount: Math.max(0, totalPayable - Number(item.paidAmount || (paymentStatus === "Paid" ? amount : 0))),
     paymentStatus,
     status: paymentStatus.toLowerCase(),
     dueDate,
     paymentDate,
+    waiver: item.waiver || null,
+    omitted: item.omitted || null,
+    discount: item.discount || null,
+    auditTrail: Array.isArray(item.auditTrail) ? item.auditTrail : [],
     createdAt: item.createdAt
       ? new Date(item.createdAt).toISOString()
       : new Date().toISOString(),
@@ -247,13 +264,58 @@ export const deleteFeeStructure = createAsyncThunk(
   },
 );
 
+export const fetchFinancialLedger = createAsyncThunk(
+  "fees/fetchFinancialLedger",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get("/campus-admin/fees/ledger", { params });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch financial ledger",
+      );
+    }
+  },
+);
+
+export const waiveFeeVoucher = createAsyncThunk(
+  "fees/waiveFeeVoucher",
+  async ({ id, amount, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/campus-admin/fees/${id}/waive`, { amount, reason });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to waive fee voucher",
+      );
+    }
+  },
+);
+
+export const omitFeeVoucher = createAsyncThunk(
+  "fees/omitFeeVoucher",
+  async ({ id, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/campus-admin/fees/${id}/omit`, { reason });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to omit fee voucher",
+      );
+    }
+  },
+);
+
 const slice = createSlice({
   name: "fees",
   initialState: {
     records: [],
     structures: [],
+    ledger: [],
+    summary: null,
     status: "idle",
     structuresStatus: "idle",
+    ledgerStatus: "idle",
     error: null,
   },
   reducers: {
@@ -361,14 +423,44 @@ const slice = createSlice({
       })
       .addCase(deleteFeeStructure.fulfilled, (state, { payload }) => {
         state.structures = state.structures.filter((s) => s._id !== payload);
+      })
+      .addCase(fetchFinancialLedger.pending, (state) => {
+        state.ledgerStatus = "loading";
+      })
+      .addCase(fetchFinancialLedger.fulfilled, (state, { payload }) => {
+        state.ledgerStatus = "succeeded";
+        state.ledger = (payload?.records || []).map(normalizeFee);
+        state.summary = payload?.summary || null;
+      })
+      .addCase(fetchFinancialLedger.rejected, (state, { payload }) => {
+        state.ledgerStatus = "failed";
+        state.error = payload;
+      })
+      .addCase(waiveFeeVoucher.fulfilled, (state, { payload }) => {
+        const id = payload._id || payload.id;
+        const index = state.records.findIndex((r) => r.id === id || r._id === id);
+        if (index !== -1) {
+          state.records[index] = normalizeFee(payload);
+        }
+      })
+      .addCase(omitFeeVoucher.fulfilled, (state, { payload }) => {
+        const id = payload._id || payload.id;
+        const index = state.records.findIndex((r) => r.id === id || r._id === id);
+        if (index !== -1) {
+          state.records[index] = normalizeFee(payload);
+        }
       });
   },
 });
 
+const EMPTY_ARRAY = [];
 export const { feesLoaded, voucherSaved, voucherMarkedPaid } = slice.actions;
 export const selectFees = (state) => state.fees.records;
 export const selectFeesStatus = (state) => state.fees.status;
-export const selectFeeStructures = (state) => state.fees.structures || [];
+export const selectFeeStructures = (state) => state.fees.structures || EMPTY_ARRAY;
+export const selectFinancialLedger = (state) => state.fees.ledger || EMPTY_ARRAY;
+export const selectFinancialSummary = (state) => state.fees.summary;
+export const selectLedgerStatus = (state) => state.fees.ledgerStatus;
 export const selectJoinedFees = createSelector(
   [selectFees, selectStudents],
   joinVouchers,

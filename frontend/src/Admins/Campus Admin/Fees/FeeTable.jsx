@@ -1,5 +1,4 @@
-import { MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Receipt, CreditCard } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
@@ -14,121 +13,186 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
 
 export default function FeeTable({ rows, onAction }) {
-  const columnDefs = [
-    { label: "Student / Voucher", width: "23%", align: "left" },
-    { label: "Fee Category", width: "17%", align: "left" },
-    { label: "Amount (PKR)", width: "14%", align: "left" },
-    { label: "Due Date", width: "12%", align: "left" },
-    { label: "Payment Status", width: "12%", align: "center" },
-    { label: "Payment Date", width: "10%", align: "left" },
-    { label: "Actions", width: "12%", align: "right" },
-  ];
-
   return (
-    <Table aria-label="Fee vouchers">
+    <Table aria-label="Fee vouchers table">
       <TableHeader>
         <TableRow>
-          {columnDefs.map(({ label, width, align }) => (
-            <TableHead scope="col" key={label} style={{ width, textAlign: align }}>
-              {label}
-            </TableHead>
-          ))}
+          <TableHead style={{ width: "24%" }}>Student &amp; Voucher</TableHead>
+          <TableHead style={{ width: "16%" }}>Category &amp; Term</TableHead>
+          <TableHead style={{ width: "15%" }}>Total Payable</TableHead>
+          <TableHead style={{ width: "12%" }}>Due Date</TableHead>
+          <TableHead className="text-center" style={{ width: "11%" }}>Payment Status</TableHead>
+          <TableHead style={{ width: "10%" }}>Paid Date</TableHead>
+          <TableHead className="text-center" style={{ width: "12%" }}>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((voucher) => (
-          <TableRow key={voucher.id}>
-            <TableCell style={{ width: "23%" }}>
-              <div className="fee-person">
-                <Avatar>
-                  <AvatarFallback>
-                    {voucher.student.initials || voucher.student.name[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 overflow-hidden">
-                  <strong className="block truncate text-foreground">{voucher.student.name}</strong>
-                  <small className="block truncate text-muted-foreground">{voucher.voucherNo}</small>
+        {rows.map((voucher) => {
+          const totalBilled = voucher.totalPayable > 0 ? voucher.totalPayable : voucher.amount;
+          const isPaid = voucher.paymentStatus === "Paid";
+          const isPartiallyPaid = voucher.paymentStatus === "Partially Paid";
+          const isWaivedOrCancelled = voucher.paymentStatus === "Waived" || voucher.paymentStatus === "Cancelled";
+
+          return (
+            <TableRow key={voucher.id}>
+              {/* Student & Voucher */}
+              <TableCell style={{ width: "24%", overflow: "hidden" }}>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", minWidth: 0, overflow: "hidden" }}
+                  onClick={() => onAction("view", voucher.id)}
+                >
+                  <Avatar style={{ width: "28px", height: "28px", fontSize: "11px", fontWeight: "600", background: "#f4f4f5", color: "#09090b", flexShrink: 0 }}>
+                    <AvatarFallback>{voucher.student?.initials || voucher.student?.name?.[0] || "S"}</AvatarFallback>
+                  </Avatar>
+                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                    <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                      {voucher.student?.name}
+                    </strong>
+                    <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block", fontFamily: "monospace" }}>
+                      {voucher.voucherNo}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </TableCell>
-            <TableCell className="w-[17%] truncate">
-              {voucher.feeCategory}
-              <small className="block truncate text-muted-foreground">{voucher.semester || "—"}</small>
-            </TableCell>
-            <TableCell style={{ width: "14%" }}>
-              <strong>{formatPKR(voucher.amount)}</strong>
-            </TableCell>
-            <TableCell style={{ width: "12%", whiteSpace: "nowrap" }}>{voucher.dueDate}</TableCell>
-            <TableCell style={{ width: "12%", textAlign: "center", whiteSpace: "nowrap" }}>
-              <FeeStatusBadge status={voucher.paymentStatus} />
-            </TableCell>
-            <TableCell style={{ width: "10%", whiteSpace: "nowrap" }}>{voucher.paymentDate || "—"}</TableCell>
-            <TableCell style={{ width: "12%", textAlign: "right" }}>
-              <div className="fee-actions">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              </TableCell>
+
+              {/* Category & Term */}
+              <TableCell style={{ width: "16%", overflow: "hidden" }}>
+                <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                  <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                    {voucher.feeCategory}
+                  </strong>
+                  <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}>
+                    {voucher.semester || "Regular Term"}
+                  </span>
+                </div>
+              </TableCell>
+
+              {/* Amount & Arrears */}
+              <TableCell style={{ width: "15%", overflow: "hidden" }}>
+                <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                  <strong style={{ fontSize: "13px", fontWeight: "700", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                    {formatPKR(totalBilled)}
+                  </strong>
+                  {voucher.paidAmount > 0 && !isPaid ? (
+                    <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}>
+                      Paid: {formatPKR(voucher.paidAmount)} &middot; Bal: {formatPKR(voucher.remainingAmount)}
+                    </span>
+                  ) : voucher.previousArrears > 0 ? (
+                    <span style={{ fontSize: "10px", color: "#b45309", fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}>
+                      Inc. Arrears: {formatPKR(voucher.previousArrears)}
+                    </span>
+                  ) : null}
+                </div>
+              </TableCell>
+
+              {/* Due Date */}
+              <TableCell style={{ width: "12%", overflow: "hidden" }}>
+                <span style={{ fontSize: "12px", color: "#52525b", whiteSpace: "nowrap" }}>
+                  {voucher.dueDate}
+                </span>
+              </TableCell>
+
+              {/* Status */}
+              <TableCell className="text-center" style={{ width: "11%", overflow: "hidden" }}>
+                <FeeStatusBadge status={voucher.paymentStatus} />
+              </TableCell>
+
+              {/* Paid Date */}
+              <TableCell style={{ width: "10%", overflow: "hidden" }}>
+                <span style={{ fontSize: "12px", color: voucher.paymentDate ? "#52525b" : "#d4d4d8", whiteSpace: "nowrap" }}>
+                  {voucher.paymentDate || "—"}
+                </span>
+              </TableCell>
+
+              {/* Actions */}
+              <TableCell className="text-center" style={{ width: "12%", overflow: "hidden" }}>
+                <div className="campus-action-icons" style={{ justifyContent: "center" }}>
+                  {isPaid ? (
                     <button
                       type="button"
-                      className="table-icon-btn"
-                      style={{ width: "24px", height: "26px" }}
-                      aria-label={`Actions for voucher ${voucher.voucherNo}`}
+                      onClick={() => onAction("receipt", voucher.id)}
+                      className="toolbar-btn toolbar-btn-outline"
+                      style={{ height: "26px", minHeight: "26px", fontSize: "11px", padding: "0 8px", cursor: "pointer" }}
+                      title="View Official Receipt"
                     >
-                      <MoreHorizontal size={15} />
+                      <Receipt size={12} style={{ color: "#16a34a" }} />
+                      Receipt
                     </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onSelect={() => onAction("view", voucher.id)}
+                  ) : !isWaivedOrCancelled ? (
+                    <button
+                      type="button"
+                      onClick={() => onAction("paid", voucher.id)}
+                      className={`toolbar-btn ${isPartiallyPaid ? "toolbar-btn-outline" : "toolbar-btn-primary"}`}
+                      style={{ height: "26px", minHeight: "26px", fontSize: "11px", padding: "0 8px", cursor: "pointer" }}
+                      title={isPartiallyPaid ? "Pay Remaining Balance" : "Record Payment"}
                     >
-                      View details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => onAction("print", voucher.id)}
-                    >
-                      Print Challan
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => onAction("edit", voucher.id)}
-                    >
-                      Edit voucher
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={voucher.paymentStatus === "Paid"}
-                      onSelect={() => onAction("paid", voucher.id)}
-                    >
-                      Mark Paid
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      style={{ color: "#ef4444" }}
-                      onSelect={() => onAction("delete", voucher.id)}
-                    >
-                      Delete voucher
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant={voucher.paymentStatus === "Paid" ? "secondary" : "default"}
-                  size="sm"
-                  disabled={voucher.paymentStatus === "Paid"}
-                  onClick={() => onAction("paid", voucher.id)}
-                  aria-label={`Mark voucher ${voucher.voucherNo} paid`}
-                >
-                  {voucher.paymentStatus === "Paid" ? "Paid" : "Mark Paid"}
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-        {!rows.length && (
+                      <CreditCard size={12} />
+                      {isPartiallyPaid ? "Pay Bal" : "Record Pay"}
+                    </button>
+                  ) : null}
+
+                  {/* Dropdown for Secondary Actions */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="campus-icon-btn"
+                        title="More Actions"
+                        style={{ cursor: "pointer" }}
+                        aria-label={`More actions for voucher ${voucher.voucherNo}`}
+                      >
+                        <MoreHorizontal size={13} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44 text-xs">
+                      <DropdownMenuItem onSelect={() => onAction("view", voucher.id)}>
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onAction("print", voucher.id)}>
+                        Print Challan
+                      </DropdownMenuItem>
+                      {(voucher.paidAmount > 0 || isPaid) && (
+                        <DropdownMenuItem onSelect={() => onAction("receipt", voucher.id)}>
+                          Print Official Receipt
+                        </DropdownMenuItem>
+                      )}
+                      {!isPaid && !isWaivedOrCancelled && (
+                        <>
+                          <DropdownMenuItem onSelect={() => onAction("paid", voucher.id)}>
+                            Record Payment
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => onAction("waive", voucher.id)}>
+                            Waive / Concession
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => onAction("edit", voucher.id)}>
+                        Edit Voucher
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                        onSelect={() => onAction("delete", voucher.id)}
+                      >
+                        Delete Voucher
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+        {rows.length === 0 && (
           <TableRow>
-            <TableCell colSpan={7} className="tt-empty">
-              No vouchers match the current filters. Add a fee voucher to get
-              started.
+            <TableCell colSpan={7} style={{ textAlign: "center", padding: "28px", color: "#71717a", fontSize: "12px" }}>
+              No fee vouchers match your search and filter criteria.
             </TableCell>
           </TableRow>
         )}

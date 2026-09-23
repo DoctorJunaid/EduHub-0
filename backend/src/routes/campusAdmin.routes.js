@@ -56,6 +56,9 @@ import {
   getFeeStructures,
   saveFeeStructure,
   deleteFeeStructure,
+  getFinancialLedger,
+  waiveFeeRecord,
+  omitFeeRecord,
   createPerformanceRecord,
   getPerformanceRecords,
   getPerformanceRecordById,
@@ -80,7 +83,7 @@ import { authorize } from "../middleware/role.middleware.js";
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("campus_admin", "campus_manager"));
+router.use(authorize("campus_admin", "campus_manager", "accountant", "principal"));
 
 // Real-time Aggregated Campus / School Dashboard Statistics
 router.get("/dashboard/stats", getDashboardStats);
@@ -165,6 +168,7 @@ router
 
 // Fee Records & School Monthly Fee System
 router.post("/fees/generate-monthly", generateMonthlyFees);
+router.get("/fees/ledger", getFinancialLedger);
 router.route("/fees/structures").get(getFeeStructures).post(saveFeeStructure);
 router.delete("/fees/structures/:id", deleteFeeStructure);
 router.route("/fees").get(getFeeRecords).post(createFeeRecord);
@@ -172,6 +176,8 @@ router.route("/fees/:id")
   .get(getFeeRecordById)
   .put(updateFeeRecord)
   .delete(deleteFeeRecord);
+router.post("/fees/:id/waive", waiveFeeRecord);
+router.post("/fees/:id/omit", omitFeeRecord);
 router.get("/fees/payments/pending", getPendingPayments);
 router.route("/fees/:id/payments").get(getFeePayments).post(recordPayment);
 router.post("/fees/payments/:paymentId/confirm", confirmPayment);

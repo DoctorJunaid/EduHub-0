@@ -12,6 +12,7 @@ import {
   StudentConversation,
 } from "../models/studentPortal.model.js";
 import PaymentTransaction from "../models/paymentTransaction.model.js";
+import feeService from "../services/fee.service.js";
 
 const id = (value) => (value ? String(value) : "");
 
@@ -291,47 +292,21 @@ export const sendConversationMessage = async (req, res) => {
   });
 };
 
-export const submitFeePayment = async (req, res) => {
+export const getStudentFees = async (req, res) => {
   try {
-    const feeRecord = await FeeRecord.findOne({
-      _id: req.params.id,
-      campusId: req.user.campusId,
-      studentId: req.user._id,
-    });
-    if (!feeRecord) {
-      return res.status(404).json({ success: false, message: "Fee record not found." });
-    }
-
-    const amount = Number(req.body.amount || 0);
-    if (amount <= 0) {
-      return res.status(400).json({ success: false, message: "Payment amount must be greater than zero." });
-    }
-
-    const remaining = feeRecord.amount - feeRecord.paidAmount;
-    if (amount > remaining) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Payment amount (${amount}) exceeds remaining balance (${remaining}).` 
-      });
-    }
-
-    const payment = await PaymentTransaction.create({
-      feeRecordId: feeRecord._id,
-      studentId: req.user._id,
-      campusId: req.user.campusId,
-      instituteId: req.user.instituteId || null,
-      amount,
-      paymentDate: new Date(),
-      paymentMethod: req.body.paymentMethod || "Bank Transfer",
-      referenceNo: req.body.referenceNo || "",
-      receiptUrl: req.body.receiptUrl || "",
-      status: "PENDING",
-      submittedBy: req.user._id,
-      notes: req.body.notes || "Submitted by student via portal",
-    });
-
-    return res.status(201).json({ success: true, data: payment });
+    const student = req.user;
+    const data = await feeService.getStudentFeeHistory(student._id, student.campusId);
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const submitFeePayment = async (req, res) => {
+  try {
+    const payment = await feeService.submitStudentPayment(req.params.id, req.user, req.body);
+    return res.status(201).json({ success: true, data: payment });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };

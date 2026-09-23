@@ -1,21 +1,17 @@
 import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Calendar, Users, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Calendar, Users, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/Input";
 import { generateMonthlyFees, fetchFees, selectFees, selectFeeStructures } from "@/store/Slices/feesSlice.js";
 import { selectStudents } from "@/store/Slices/studentsSlice.js";
-import { formatPKR } from "@/lib/currency";
 import { useInstitution } from "@/context/InstitutionContext";
 
 export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
@@ -28,16 +24,21 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
   const now = new Date();
   const defaultMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-  // Default due date: 10th of next/current month
   const defaultDueDate = new Date(now.getFullYear(), now.getMonth(), 10) > now
     ? new Date(now.getFullYear(), now.getMonth(), 10).toISOString().split("T")[0]
     : new Date(now.getFullYear(), now.getMonth() + 1, 10).toISOString().split("T")[0];
+
+  const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const nextMonthStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}`;
+  const followingMonthDate = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+  const followingMonthStr = `${followingMonthDate.getFullYear()}-${String(followingMonthDate.getMonth() + 1).padStart(2, "0")}`;
 
   const [month, setMonth] = useState(defaultMonthStr);
   const [targetGrade, setTargetGrade] = useState("all");
   const [feeCategory, setFeeCategory] = useState("Monthly Tuition Fee");
   const [defaultAmount, setDefaultAmount] = useState(5000);
   const [dueDate, setDueDate] = useState(defaultDueDate);
+  const [includeArrears, setIncludeArrears] = useState(true);
   const [description, setDescription] = useState(
     `Regular Monthly Tuition Fee and Academic Dues for ${defaultMonthStr}`
   );
@@ -83,6 +84,11 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
   const handleMonthChange = (val) => {
     setMonth(val);
     setDescription(`Regular Monthly Tuition Fee and Academic Dues for ${val}`);
+    // Auto-update due date to 10th of chosen month
+    if (val && val.includes("-")) {
+      const [y, m] = val.split("-");
+      setDueDate(`${y}-${m}-10`);
+    }
   };
 
   const handleGenerate = async (e) => {
@@ -90,7 +96,7 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
     if (!month) return toast.error("Please select a valid month.");
     if (!dueDate) return toast.error("Please select a due date.");
     if (preview.toCreate === 0) {
-      return toast.error("All eligible students have already been billed for this month.");
+      return toast.error("All eligible students have already been billed for this month. Switch to next month.");
     }
 
     setIsSubmitting(true);
@@ -103,6 +109,7 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
           description,
           gradeOrClass: targetGrade,
           defaultAmount: Number(defaultAmount) || 5000,
+          includeArrears,
         })
       ).unwrap();
 
@@ -121,151 +128,266 @@ export default function GenerateMonthlyFeesDialog({ onClose, onGenerated }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[620px] w-[95vw]" aria-describedby="gen-monthly-desc">
+      <DialogContent
+        className="sm:max-w-[620px] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-zinc-200 shadow-2xl bg-white gap-0"
+        showCloseButton={false}
+        aria-describedby="gen-monthly-desc"
+      >
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 pt-6 pb-5 border-b border-border">
-          <div className="size-10 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
-            <Calendar className="size-5 text-white" />
+        <div className="flex items-center justify-between px-7 py-5 border-b border-zinc-200 bg-white flex-shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="size-11 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
+              <Calendar className="size-5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-semibold text-zinc-900 leading-tight">
+                Generate Monthly Fee Vouchers
+              </DialogTitle>
+              <DialogDescription id="gen-monthly-desc" className="text-xs text-zinc-500 mt-1">
+                Automatically issue bulk monthly challans with rate card matching.
+              </DialogDescription>
+            </div>
           </div>
-          <div>
-            <DialogTitle className="text-base font-semibold text-foreground leading-tight">
-              Generate Monthly Fee Vouchers
-            </DialogTitle>
-            <DialogDescription id="gen-monthly-desc" className="text-xs text-muted-foreground mt-0.5">
-              Automatically generate monthly fee slips in bulk for all students or specific grades.
-            </DialogDescription>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+          >
+            <span className="text-xl leading-none">&times;</span>
+          </button>
         </div>
 
-        <form onSubmit={handleGenerate} className="flex flex-col gap-4 px-6 pt-5 pb-6">
-          {/* Target Month & Grade Selection */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="gen-month" className="text-xs font-semibold text-foreground">
-                Billing Month *
-              </Label>
-              <Input
-                id="gen-month"
-                type="month"
-                required
-                value={month}
-                onChange={(e) => handleMonthChange(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="gen-grade" className="text-xs font-semibold text-foreground">
-                Target {isSchool ? "Class / Grade" : "Program"} *
-              </Label>
-              <select
-                id="gen-grade"
-                value={targetGrade}
-                onChange={(e) => setTargetGrade(e.target.value)}
-                className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleGenerate} className="flex flex-col flex-1 min-h-0 overflow-hidden m-0">
+          <div className="px-7 py-6 space-y-5 overflow-y-auto flex-1 min-h-0">
+            {/* Quick Month Selectors */}
+            <div className="flex items-center gap-2 pb-1">
+              <span className="text-[11px] font-medium text-zinc-500">Quick Month:</span>
+              <button
+                type="button"
+                onClick={() => handleMonthChange(defaultMonthStr)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+                  month === defaultMonthStr
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                }`}
               >
-                <option value="all">All {isSchool ? "School Classes" : "Enrolled Programs"}</option>
-                {availableGrades.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
+                Current ({defaultMonthStr})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMonthChange(nextMonthStr)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+                  month === nextMonthStr
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                Next ({nextMonthStr})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMonthChange(followingMonthStr)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+                  month === followingMonthStr
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                {followingMonthStr}
+              </button>
             </div>
-          </div>
 
-          {/* Fee Category & Fallback Amount */}
-          <div className="grid grid-cols-[1.2fr_0.8fr] gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="gen-cat" className="text-xs font-semibold text-foreground">
-                Fee Category *
-              </Label>
-              <Input
-                id="gen-cat"
-                required
-                value={feeCategory}
-                onChange={(e) => setFeeCategory(e.target.value)}
-                placeholder="e.g. Monthly Tuition Fee"
-              />
-            </div>
+            {/* Target Month & Grade Selection */}
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="gen-month" className="text-xs font-semibold text-zinc-700">
+                  Billing Month *
+                </Label>
+                <Input
+                  id="gen-month"
+                  type="month"
+                  required
+                  value={month}
+                  onChange={(e) => handleMonthChange(e.target.value)}
+                  className="h-10 text-sm px-3.5 rounded-lg"
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="gen-amount" className="text-xs font-semibold text-foreground">
-                Base Fee (PKR) *
-              </Label>
-              <Input
-                id="gen-amount"
-                type="number"
-                required
-                min={0}
-                value={defaultAmount}
-                onChange={(e) => setDefaultAmount(e.target.value)}
-                placeholder="5000"
-                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
-
-          {/* Due Date */}
-          <div className="space-y-1.5">
-            <Label htmlFor="gen-due" className="text-xs font-semibold text-foreground">
-              Payment Due Date *
-            </Label>
-            <Input
-              id="gen-due"
-              type="date"
-              required
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="gen-desc" className="text-xs font-semibold text-foreground">
-                Description / Particulars (Prints on Challan)
-              </Label>
-              <span className="text-[11px] text-muted-foreground">Includes class rate card if set</span>
-            </div>
-            <textarea
-              id="gen-desc"
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Regular Monthly Tuition Fee, Computer Lab and Library dues."
-              className="w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-            />
-          </div>
-
-          {/* Live Batch Preview Box */}
-          <div className="bg-zinc-50 border border-border rounded-xl p-3 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <Users className="size-5 text-zinc-600" />
-              <div>
-                <strong className="text-sm font-semibold text-foreground block">
-                  {preview.toCreate} Students to be Billed
-                </strong>
-                <span className="text-xs text-muted-foreground">
-                  Total enrolled: {preview.total} &middot; Already billed for {month}: {preview.alreadyBilled}
-                </span>
+              <div className="space-y-2">
+                <Label htmlFor="gen-grade" className="text-xs font-semibold text-zinc-700">
+                  Target {isSchool ? "Class / Grade" : "Program"} *
+                </Label>
+                <select
+                  id="gen-grade"
+                  value={targetGrade}
+                  onChange={(e) => setTargetGrade(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+                >
+                  <option value="all">All {isSchool ? "School Classes" : "Enrolled Programs"}</option>
+                  {availableGrades.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-            {structures.length > 0 && (
-              <span className="text-[10px] bg-zinc-900 text-white px-2.5 py-1 rounded-full font-semibold">
-                {structures.length} Class Rates Active
-              </span>
-            )}
+
+            {/* Fee Category & Fallback Amount */}
+            <div className="grid grid-cols-[1.2fr_0.8fr] gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="gen-cat" className="text-xs font-semibold text-zinc-700">
+                  Fee Category / Title *
+                </Label>
+                <Input
+                  id="gen-cat"
+                  required
+                  value={feeCategory}
+                  onChange={(e) => setFeeCategory(e.target.value)}
+                  placeholder="e.g. Monthly Tuition Fee"
+                  className="h-10 text-sm px-3.5 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gen-amount" className="text-xs font-semibold text-zinc-700">
+                  Base Fee (PKR) *
+                </Label>
+                <Input
+                  id="gen-amount"
+                  type="number"
+                  required
+                  min={0}
+                  value={defaultAmount}
+                  onChange={(e) => setDefaultAmount(e.target.value)}
+                  placeholder="5000"
+                  className="h-10 text-sm px-3.5 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-2">
+              <Label htmlFor="gen-due" className="text-xs font-semibold text-zinc-700">
+                Payment Due Date *
+              </Label>
+              <Input
+                id="gen-due"
+                type="date"
+                required
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="h-10 text-sm px-3.5 rounded-lg"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="gen-desc" className="text-xs font-semibold text-zinc-700">
+                  Description / Particulars (Prints on Challan)
+                </Label>
+                <span className="text-[10px] text-zinc-400">Class rate card auto-applied</span>
+              </div>
+              <textarea
+                id="gen-desc"
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. Regular Monthly Tuition Fee, Computer Lab and Library dues."
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors resize-y"
+              />
+            </div>
+
+            {/* Carry Forward Unpaid Arrears Toggle */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-zinc-200 bg-zinc-50/70">
+              <div className="space-y-0.5 pr-4">
+                <span className="text-xs font-semibold text-zinc-900 block">
+                  Carry Forward Unpaid Arrears
+                </span>
+                <p className="text-xs text-zinc-500">
+                  Automatically add previously unpaid fee balances into this voucher's total payable
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={includeArrears}
+                onClick={() => setIncludeArrears(!includeArrears)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  includeArrears ? "bg-zinc-900" : "bg-zinc-300"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out mt-[2px] ml-[2px] ${
+                    includeArrears ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Live Batch Preview Box */}
+            <div className={`border rounded-xl p-3.5 flex flex-col gap-2.5 transition-colors ${
+              preview.toCreate === 0 ? "bg-amber-50/80 border-amber-200" : "bg-zinc-100/70 border-zinc-200"
+            }`}>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className={`size-8 rounded-lg flex items-center justify-center ${
+                    preview.toCreate === 0 ? "bg-amber-200 text-amber-900" : "bg-zinc-200 text-zinc-700"
+                  }`}>
+                    <Users className="size-4" />
+                  </div>
+                  <div>
+                    <strong className="text-xs font-semibold text-zinc-900 block">
+                      {preview.toCreate} Students to be Billed
+                    </strong>
+                    <span className="text-[11px] text-zinc-500">
+                      Total enrolled: {preview.total} &middot; Already billed for {month}: {preview.alreadyBilled}
+                    </span>
+                  </div>
+                </div>
+                {structures.length > 0 && (
+                  <span className="text-[10px] bg-zinc-900 text-white px-2.5 py-1 rounded-full font-semibold">
+                    {structures.length} Rates Active
+                  </span>
+                )}
+              </div>
+
+              {preview.toCreate === 0 && (
+                <div className="flex items-center justify-between pt-2.5 border-t border-amber-200 text-xs">
+                  <span className="text-amber-800 text-[11px] font-medium">
+                    All students are billed for <strong>{month}</strong>. Switch to next month to issue upcoming vouchers.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleMonthChange(nextMonthStr)}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-amber-900 text-white hover:bg-amber-800 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer flex-shrink-0"
+                  >
+                    Switch to {nextMonthStr} &rarr;
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          {/* Form Actions Footer */}
+          <div className="px-7 py-5 border-t border-zinc-200 bg-white flex items-center justify-end gap-3 flex-shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="h-10 px-5 rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 text-sm font-semibold transition-colors cursor-pointer"
+            >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
               type="submit"
               disabled={isSubmitting || preview.toCreate === 0}
+              className="h-10 px-6 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
             >
               {isSubmitting ? "Generating Vouchers..." : `Generate ${preview.toCreate} Vouchers`}
-            </Button>
+            </button>
           </div>
         </form>
       </DialogContent>

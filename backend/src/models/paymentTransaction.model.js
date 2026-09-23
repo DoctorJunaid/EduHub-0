@@ -68,6 +68,15 @@ const paymentTransactionSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    receiptNo: {
+      type: String,
+      default: "",
+      index: true,
+    },
+    rejectionReason: {
+      type: String,
+      default: "",
+    },
     notes: { 
       type: String, 
       default: "" 
@@ -77,6 +86,7 @@ const paymentTransactionSchema = new mongoose.Schema(
 );
 
 paymentTransactionSchema.index({ campusId: 1, feeRecordId: 1 });
+paymentTransactionSchema.index({ campusId: 1, studentId: 1 });
 paymentTransactionSchema.index({ campusId: 1, status: 1 });
 
 const PaymentTransaction = mongoose.model("PaymentTransaction", paymentTransactionSchema);

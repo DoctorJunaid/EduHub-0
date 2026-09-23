@@ -7,10 +7,12 @@ import { formatPKR } from "@/lib/currency";
 
 export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
   const id = useId();
-  const [amount, setAmount] = useState((voucher.amount - (voucher.paidAmount || 0)).toString());
+  const totalBilled = voucher.totalPayable > 0 ? voucher.totalPayable : voucher.amount || 0;
+  const remaining = Math.max(0, totalBilled - (voucher.paidAmount || 0));
+  const [amount, setAmount] = useState(String(remaining));
   const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
   const [referenceNo, setReferenceNo] = useState("");
-  const [paymentDate, setPaymentDate] = useState("");
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(false);
 
   return (
@@ -36,13 +38,13 @@ export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
         }}>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="tt-field">
-              <Label htmlFor={`${id}-amount`}>Amount Paid</Label>
+              <Label htmlFor={`${id}-amount`}>Amount Paid (PKR)</Label>
               <Input
                 id={`${id}-amount`}
                 type="number"
                 required
                 min="1"
-                max={voucher.amount - (voucher.paidAmount || 0)}
+                max={remaining}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />

@@ -141,7 +141,7 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Pending", "Inactive", "Suspended", "Graduated", "On Leave"],
+      enum: ["Active", "Pending", "Inactive", "Suspended", "Graduated", "On Leave", "Withdrawn", "Transferred"],
       default: "Active",
     },
     baseFee: {

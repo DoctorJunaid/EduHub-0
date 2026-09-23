@@ -58,18 +58,6 @@ export const replyToStudentConversation =
     if (!state.auth.isAuthenticated || !conversation?.participant)
       return "This conversation is no longer available.";
     if (typeof body !== "string" || !body.trim()) return "Enter a message.";
-    dispatch(
-      participantMessageSent({
-        conversationId,
-        senderId: conversation.self,
-        receiverId: participantKey(
-          conversation.role === "Faculty" ? "faculty" : "student",
-          conversation.participant.id,
-        ),
-        body,
-      }),
-    );
-    return null;
     const message = {
       conversationId,
       senderId: conversation.self,

@@ -6,6 +6,7 @@ import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import dns from "dns";
+import feeSchedulerService from "./services/feeScheduler.service.js";
 
 // Set custom DNS servers (e.g., Google Public DNS)
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
@@ -16,6 +17,9 @@ const startServer = async () => {
   try {
     // 1. Establish database connection
     await connectDB();
+
+    // Initialize background fee automation
+    feeSchedulerService.start();
 
     // 2. Start HTTP server
     const server = app.listen(PORT, () => {

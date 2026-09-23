@@ -19,12 +19,27 @@ const feeStructureSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    admissionFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     tuitionFee: {
       type: Number,
       default: 0,
       min: 0,
     },
     labFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    computerFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    libraryFee: {
       type: Number,
       default: 0,
       min: 0,
@@ -48,6 +63,10 @@ const feeStructureSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     description: {
       type: String,

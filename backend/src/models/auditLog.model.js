@@ -11,7 +11,16 @@ const auditLogSchema = new mongoose.Schema(
     entityType: {
       type: String,
       required: true,
-      enum: ["AttendanceApproval", "PayrollAdjustment", "MonthlyPayroll", "SubstituteAssignment", "TeacherAttendance"],
+      enum: [
+        "AttendanceApproval",
+        "PayrollAdjustment",
+        "MonthlyPayroll",
+        "SubstituteAssignment",
+        "TeacherAttendance",
+        "FeeRecord",
+        "PaymentTransaction",
+        "FeeStructure",
+      ],
       index: true,
     },
     entityId: {
@@ -22,7 +31,20 @@ const auditLogSchema = new mongoose.Schema(
     action: {
       type: String,
       required: true,
-      enum: ["created", "approved", "rejected", "applied", "carried_forward", "cancelled", "updated"],
+      enum: [
+        "created",
+        "approved",
+        "rejected",
+        "applied",
+        "carried_forward",
+        "cancelled",
+        "updated",
+        "waived",
+        "omitted",
+        "confirmed",
+        "generated",
+        "paid",
+      ],
     },
     performedBy: {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

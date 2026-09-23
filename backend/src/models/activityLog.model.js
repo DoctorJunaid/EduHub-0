@@ -30,6 +30,12 @@ const activityLogSchema = new mongoose.Schema(
         "fee_created",
         "fee_updated",
         "fee_deleted",
+        "fee_generated",
+        "fee_waived",
+        "fee_omitted",
+        "payment_recorded",
+        "payment_confirmed",
+        "payment_rejected",
         "performance_created",
         "system_event",
       ],
@@ -52,7 +58,7 @@ const activityLogSchema = new mongoose.Schema(
     },
     entityType: {
       type: String,
-      enum: ["student", "faculty", "schedule", "exam", "attendance", "fee", "performance", "system"],
+      enum: ["student", "faculty", "schedule", "exam", "attendance", "fee", "payment", "performance", "system"],
     },
     entityId: {
       type: mongoose.Schema.Types.ObjectId,

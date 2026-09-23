@@ -11,9 +11,14 @@ import {
   Search,
   Settings2,
   Wand2,
+  FileText,
+  RefreshCw,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Progress from "@/components/common/Progress";
 import Pagination from "@/components/common/Pagination";
@@ -28,7 +33,10 @@ import {
   deleteFeeVoucher,
   fetchFeeStructures,
   voucherSaved,
-  voucherMarkedPaid,
+  fetchFinancialLedger,
+  selectFinancialLedger,
+  selectFinancialSummary,
+  selectLedgerStatus,
 } from "@/store/Slices/feesSlice.js";
 import { formatPKR } from "@/lib/currency";
 import { downloadCsv } from "@/lib/csv";
@@ -48,9 +56,11 @@ import PrintChallanDialog from "./PrintChallanDialog";
 import GenerateMonthlyFeesDialog from "./GenerateMonthlyFeesDialog";
 import FeeStructureDialog from "./FeeStructureDialog";
 import PendingPaymentsDialog from "./PendingPaymentsDialog";
+import WaiveFeeDialog from "./WaiveFeeDialog";
+import PaymentReceiptDialog from "./PaymentReceiptDialog";
 import axiosInstance from "@/api/axiosInstance";
 import { useInstitution } from "@/context/InstitutionContext";
-import "../Timetable/ClassTimetable.css";
+import "../CampusShared.css";
 import "./FeeManagement.css";
 
 const defaultFilters = {
@@ -69,6 +79,11 @@ export default function FeeManagement() {
   const feesStatus = useSelector(selectFeesStatus);
   const joined = useSelector(selectJoinedFees);
 
+  const financialLedger = useSelector(selectFinancialLedger) || [];
+  const financialSummary = useSelector(selectFinancialSummary);
+  const ledgerStatus = useSelector(selectLedgerStatus);
+
+  const [activeTab, setActiveTab] = useState("vouchers"); // "vouchers" | "ledger"
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -76,10 +91,16 @@ export default function FeeManagement() {
   const [notice, setNotice] = useState("");
   const [allActivity, setAllActivity] = useState(false);
 
+  // Financial Ledger local filters
+  const [ledgerSearch, setLedgerSearch] = useState("");
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const [ledgerPageSize, setLedgerPageSize] = useState(10);
+
   useEffect(() => {
     dispatch(fetchFees());
     dispatch(fetchStudents());
     dispatch(fetchFeeStructures());
+    dispatch(fetchFinancialLedger());
 
     const interval = setInterval(() => {
       dispatch(fetchFees());
@@ -116,6 +137,7 @@ export default function FeeManagement() {
           await dispatch(deleteFeeVoucher(id)).unwrap();
           toast.success("Voucher deleted successfully.");
           dispatch(fetchFees());
+          dispatch(fetchFinancialLedger());
         } catch (err) {
           toast.error(typeof err === "string" ? err : "Failed to delete voucher.");
         }
@@ -147,6 +169,7 @@ export default function FeeManagement() {
         toast.success("Voucher created successfully.");
       }
       dispatch(fetchFees());
+      dispatch(fetchFinancialLedger());
     } catch (err) {
       dispatch(voucherSaved(values));
       toast.success(typeof err === "string" ? err : "Voucher saved.");
@@ -161,288 +184,553 @@ export default function FeeManagement() {
     toast.success(`Exported ${filtered.length} vouchers.`);
   };
 
+  // Export Financial Ledger to CSV
+  const exportLedgerCsv = () => {
+    const headers = [
+      "Voucher No",
+      "Month",
+      "Student Name",
+      "Roll No",
+      "Class / Grade",
+      "Particulars",
+      "Base Fee",
+      "Arrears",
+      "Waiver",
+      "Total Payable",
+      "Paid Amount",
+      "Remaining Balance",
+      "Status",
+      "Receipt No",
+      "Due Date",
+    ];
+    const rows = financialLedger.map((row) => [
+      row.voucherNo,
+      row.month,
+      row.student?.name || "—",
+      row.student?.roll || "—",
+      row.student?.gradeOrClass || row.gradeOrClass || "—",
+      row.feeCategory,
+      row.amount,
+      row.previousArrears || 0,
+      row.waiver?.amount || 0,
+      row.totalPayable,
+      row.paidAmount,
+      row.remainingBalance,
+      row.status,
+      row.receiptNo || "—",
+      row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "—",
+    ]);
+    downloadCsv("financial-ledger.csv", headers, rows);
+    toast.success(`Exported ${financialLedger.length} ledger records.`);
+  };
+
+  // Filtered Financial Ledger
+  const filteredLedger = useMemo(() => {
+    if (!ledgerSearch.trim()) return financialLedger;
+    const term = ledgerSearch.toLowerCase().trim();
+    return financialLedger.filter((row) => {
+      const studentName = (row.student?.name || "").toLowerCase();
+      const roll = (row.student?.roll || "").toLowerCase();
+      const voucherNo = (row.voucherNo || "").toLowerCase();
+      const receiptNo = (row.receiptNo || "").toLowerCase();
+      const grade = (row.student?.gradeOrClass || row.gradeOrClass || "").toLowerCase();
+      return (
+        studentName.includes(term) ||
+        roll.includes(term) ||
+        voucherNo.includes(term) ||
+        receiptNo.includes(term) ||
+        grade.includes(term)
+      );
+    });
+  }, [financialLedger, ledgerSearch]);
+
+  const visibleLedger = useMemo(() => {
+    const start = (ledgerPage - 1) * ledgerPageSize;
+    return filteredLedger.slice(start, start + ledgerPageSize);
+  }, [filteredLedger, ledgerPage, ledgerPageSize]);
+
   const recent = [...filtered].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
 
   return (
-    <section
-      className="campus-tab-page fee-management"
-      aria-label="Fee Management"
-    >
-      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
+    <section className="campus-tab-page fee-management" aria-label="Fee Management">
+      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px height) */}
       <div className="campus-kpi-track">
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <Coins size={16} />
+        {activeTab === "vouchers" ? (
+          <>
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <Coins size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Total Fee Collected</span>
+                  <strong className="kpi-value">{formatPKR(summary.Paid)}</strong>
+                </div>
+              </div>
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Total Fee Collected</span>
-              <span className="kpi-value">{formatPKR(summary.Paid)}</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <Clock size={16} />
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <Clock size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Pending / Unpaid</span>
+                  <strong className="kpi-value">{formatPKR(summary.Pending)}</strong>
+                </div>
+              </div>
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Pending / Unpaid</span>
-              <span className="kpi-value">{formatPKR(summary.Pending)}</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <CircleAlert size={16} />
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <CircleAlert size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Overdue Dues</span>
+                  <strong className="kpi-value">{formatPKR(summary.Overdue)}</strong>
+                </div>
+              </div>
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Overdue Dues</span>
-              <span className="kpi-value">{formatPKR(summary.Overdue)}</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <ChartNoAxesCombined size={16} />
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <ChartNoAxesCombined size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Collection Rate</span>
+                  <strong className="kpi-value">{summary.rate.toFixed(1)}%</strong>
+                </div>
+              </div>
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Collection Rate</span>
-              <span className="kpi-value">{summary.rate.toFixed(1)}%</span>
+          </>
+        ) : (
+          <>
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <Coins size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Total Expected</span>
+                  <strong className="kpi-value">{formatPKR(financialSummary?.totalExpected || 0)}</strong>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <Coins size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Total Collected</span>
+                  <strong className="kpi-value">{formatPKR(financialSummary?.totalCollected || 0)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <Clock size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Total Outstanding</span>
+                  <strong className="kpi-value">{formatPKR(financialSummary?.totalOutstanding || 0)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="campus-kpi-card">
+              <div className="kpi-wrap">
+                <div className="kpi-icon">
+                  <ChartNoAxesCombined size={16} />
+                </div>
+                <div className="kpi-info">
+                  <span className="kpi-label">Recovery Rate</span>
+                  <strong className="kpi-value">{((financialSummary?.recoveryRate ?? financialSummary?.collectionRate ?? 0)).toFixed(1)}%</strong>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* 2. Contiguous 56px Toolbar */}
-      <div className="campus-toolbar fee-toolbar">
+      {/* 2. Contiguous 48px Toolbar Directly Under KPI Track */}
+      <div className="campus-toolbar">
         <div className="toolbar-left">
-          <div className="toolbar-search fee-toolbar-search">
-            <Search size={13} />
-            <input
-              type="search"
-              placeholder="Search..."
-              value={filters.search}
-              onChange={(e) => change("search", e.target.value)}
-              aria-label="Search student or voucher"
-            />
-          </div>
-
-          <select
-            className="toolbar-select fee-toolbar-select"
-            aria-label="Filter by Category"
-            style={{ maxWidth: "90px" }}
-            value={filters.feeCategory}
-            onChange={(e) => change("feeCategory", e.target.value)}
+          {/* Sub-tab view buttons matching standard toolbar buttons */}
+          <button
+            type="button"
+            className={`toolbar-btn ${activeTab === "vouchers" ? "toolbar-btn-primary" : "toolbar-btn-outline"}`}
+            onClick={() => setActiveTab("vouchers")}
           >
-            <option value="">All Categories</option>
-            {options.feeCategory.map((val) => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
-
-          <select
-            className="toolbar-select fee-toolbar-select"
-            aria-label="Filter by Status"
-            style={{ maxWidth: "82px" }}
-            value={filters.paymentStatus}
-            onChange={(e) => change("paymentStatus", e.target.value)}
+            <BookOpen size={12} />
+            Fee Vouchers ({joined.length})
+          </button>
+          <button
+            type="button"
+            className={`toolbar-btn ${activeTab === "ledger" ? "toolbar-btn-primary" : "toolbar-btn-outline"}`}
+            onClick={() => {
+              setActiveTab("ledger");
+              dispatch(fetchFinancialLedger());
+            }}
           >
-            <option value="">All Statuses</option>
-            {paymentStatuses.map((val) => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
+            <FileText size={12} />
+            Financial Ledger ({financialLedger.length})
+          </button>
 
-          <select
-            className="toolbar-select fee-toolbar-select"
-            aria-label={isSchool ? "Filter by Term" : "Filter by Semester"}
-            style={{ maxWidth: "78px" }}
-            value={filters.semester}
-            onChange={(e) => change("semester", e.target.value)}
-          >
-            <option value="">{isSchool ? "All Terms" : "All Semesters"}</option>
-            {options.semester.map((val) => (
-              <option key={val} value={val}>{isSchool ? String(val).replace(/Semester\s+/i, "Term ") : val}</option>
-            ))}
-          </select>
+          <span style={{ width: "1px", height: "18px", background: "#e4e4e7", margin: "0 2px" }} />
 
-          <input
-            type="date"
-            aria-label="Filter by due date"
-            title="Filter by due date"
-            value={filters.dueDate}
-            onChange={(e) => change("dueDate", e.target.value)}
-            className="fee-toolbar-date"
-          />
+          {activeTab === "vouchers" ? (
+            <>
+              <div className="toolbar-search">
+                <Search size={13} />
+                <input
+                  type="text"
+                  placeholder={isSchool ? "Search student or challan..." : "Search student or voucher..."}
+                  value={filters.search}
+                  onChange={(e) => change("search", e.target.value)}
+                  aria-label="Search records"
+                />
+              </div>
 
-          {(filters.search || filters.feeCategory || filters.paymentStatus || filters.semester || filters.dueDate) && (
-            <button
-              type="button"
-              className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
-              onClick={reset}
-              title="Reset all filters"
-              style={{ padding: "0 6px" }}
-            >
-              Reset
-            </button>
+              <select
+                className="toolbar-select"
+                aria-label="Filter by Category"
+                value={filters.feeCategory}
+                onChange={(e) => change("feeCategory", e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {options.feeCategory.map((val) => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+
+              <select
+                className="toolbar-select"
+                aria-label="Filter by Status"
+                value={filters.paymentStatus}
+                onChange={(e) => change("paymentStatus", e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                {paymentStatuses.map((val) => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+
+              <select
+                className="toolbar-select"
+                aria-label={isSchool ? "Filter by Term" : "Filter by Semester"}
+                value={filters.semester}
+                onChange={(e) => change("semester", e.target.value)}
+              >
+                <option value="">{isSchool ? "All Terms" : "All Semesters"}</option>
+                {options.semester.map((val) => (
+                  <option key={val} value={val}>{isSchool ? String(val).replace(/Semester\s+/i, "Term ") : val}</option>
+                ))}
+              </select>
+
+              <input
+                type="date"
+                aria-label="Filter by due date"
+                title="Filter by due date"
+                value={filters.dueDate}
+                onChange={(e) => change("dueDate", e.target.value)}
+                className="toolbar-select"
+              />
+
+              {(filters.search || filters.feeCategory || filters.paymentStatus || filters.semester || filters.dueDate) && (
+                <button
+                  type="button"
+                  className="toolbar-btn toolbar-btn-outline"
+                  onClick={reset}
+                  title="Reset all filters"
+                >
+                  Reset
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="toolbar-search" style={{ width: "220px", maxWidth: "260px" }}>
+              <Search size={13} />
+              <input
+                type="text"
+                placeholder="Search student, roll, voucher, receipt..."
+                value={ledgerSearch}
+                onChange={(e) => {
+                  setLedgerSearch(e.target.value);
+                  setLedgerPage(1);
+                }}
+                aria-label="Search ledger"
+              />
+            </div>
           )}
         </div>
 
-        <div className="toolbar-actions fee-toolbar-actions">
-          <button
-            type="button"
-            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
-            onClick={() => setModal({ mode: "structure" })}
-            title="School Fee Structure Setup"
-          >
-            <Settings2 size={13} />
-            <span>Fee Setup</span>
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
-            onClick={() => setModal({ mode: "generate" })}
-            title="Generate Monthly Fee Vouchers"
-          >
-            <Wand2 size={13} />
-            <span>Generate<span className="fee-btn-extra"> Monthly</span></span>
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
-            onClick={() => setModal({ mode: "pending" })}
-            title="Review Pending Payments"
-          >
-            <Clock size={13} />
-            <span><span className="fee-btn-extra">Review </span>Pending</span>
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
-            onClick={exportFees}
-            title="Export CSV"
-          >
-            <Download size={13} />
-            <span>Export<span className="fee-btn-extra"> CSV</span></span>
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn toolbar-btn-primary fee-toolbar-btn"
-            disabled={!students.length}
-            onClick={() => onAction("add")}
-            title="Add Fee Voucher"
-          >
-            <Plus size={13} />
-            <span>Add <span className="fee-btn-extra">Fee </span>Voucher</span>
-          </button>
+        <div className="toolbar-actions">
+          {activeTab === "vouchers" ? (
+            <>
+              <button
+                type="button"
+                className="toolbar-btn toolbar-btn-outline"
+                onClick={() => setModal({ mode: "structure" })}
+                title="School Fee Structure Setup"
+              >
+                <Settings2 size={13} />
+                Fee Setup
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn toolbar-btn-outline"
+                onClick={() => setModal({ mode: "generate" })}
+                title="Generate Monthly Fee Vouchers"
+              >
+                <Wand2 size={13} />
+                Generate Monthly
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn toolbar-btn-outline"
+                onClick={() => setModal({ mode: "pending" })}
+                title="Review Pending Payments"
+              >
+                <Clock size={13} />
+                Pending
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn toolbar-btn-outline"
+                onClick={exportFees}
+                title="Export CSV"
+              >
+                <Download size={13} />
+                Export
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn toolbar-btn-primary"
+                disabled={!students.length}
+                onClick={() => onAction("add")}
+                title="Add Fee Voucher"
+              >
+                <Plus size={13} />
+                Add Voucher
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => dispatch(fetchFinancialLedger())}
+                disabled={ledgerStatus === "loading"}
+                className="toolbar-btn toolbar-btn-outline"
+                title="Refresh Ledger"
+              >
+                <RefreshCw size={13} className={ledgerStatus === "loading" ? "animate-spin" : ""} />
+                Refresh
+              </button>
+              <button
+                type="button"
+                onClick={exportLedgerCsv}
+                className="toolbar-btn toolbar-btn-outline"
+                title="Export Ledger CSV"
+              >
+                <Download size={13} />
+                Export Ledger
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* 3. Progress Ribbon */}
-      <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #e4e4e7", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "12px", fontWeight: "600", color: "#09090b" }}>Overall Recovery:</span>
-          <span style={{ fontSize: "12px", color: "#71717a" }}>
-            <strong>{formatPKR(summary.Paid)}</strong> of {formatPKR(summary.total)} target
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "240px" }}>
-          <div style={{ flex: 1 }}>
-            <Progress value={summary.rate} label="Fee collection rate" />
-          </div>
-          <span style={{ fontSize: "11px", fontWeight: "700", color: "#09090b" }}>{summary.rate.toFixed(1)}%</span>
-        </div>
+      {/* 3. Frameless Table Container */}
+      <div className="campus-table-container">
+        {activeTab === "vouchers" ? (
+          <FeeTable rows={visible.records} onAction={onAction} />
+        ) : (
+          <table aria-label="Financial Ledger Table">
+            <thead>
+              <tr>
+                <th style={{ width: "13%" }}>Voucher #</th>
+                <th style={{ width: "8%" }}>Month</th>
+                <th style={{ width: "20%" }}>Student &amp; Roll</th>
+                <th style={{ width: "16%" }}>Particulars</th>
+                <th style={{ width: "13%" }}>Total Payable</th>
+                <th style={{ width: "10%" }}>Paid Amount</th>
+                <th className="text-center" style={{ width: "10%" }}>Status</th>
+                <th className="text-center" style={{ width: "10%" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleLedger.map((row) => (
+                <tr key={row._id}>
+                  <td style={{ width: "13%", overflow: "hidden" }}>
+                    <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "600", color: "#09090b" }}>
+                      {row.voucherNo}
+                    </span>
+                  </td>
+                  <td style={{ width: "8%", overflow: "hidden" }}>
+                    <span style={{ fontSize: "12px", color: "#52525b" }}>
+                      {row.month}
+                    </span>
+                  </td>
+                  <td style={{ width: "20%", overflow: "hidden" }}>
+                    <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
+                      <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
+                        {row.student?.name || "Student"}
+                      </strong>
+                      <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, display: "block" }}>
+                        Roll: {row.student?.roll || "—"} &middot; {row.student?.gradeOrClass || row.gradeOrClass || "General"}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ width: "16%", overflow: "hidden" }}>
+                    <span style={{ fontSize: "12px", color: "#09090b" }}>
+                      {row.feeCategory}
+                    </span>
+                  </td>
+                  <td style={{ width: "13%", overflow: "hidden" }}>
+                    <strong style={{ fontSize: "13px", fontWeight: "700", color: "#09090b" }}>
+                      {formatPKR(row.totalPayable)}
+                    </strong>
+                  </td>
+                  <td style={{ width: "10%", overflow: "hidden" }}>
+                    <span style={{ fontSize: "12px", color: row.paidAmount > 0 ? "#16a34a" : "#71717a", fontWeight: "600" }}>
+                      {formatPKR(row.paidAmount)}
+                    </span>
+                  </td>
+                  <td className="text-center" style={{ width: "10%", overflow: "hidden" }}>
+                    <FeeStatusBadge status={row.status} />
+                  </td>
+                  <td className="text-center" style={{ width: "10%", overflow: "hidden" }}>
+                    <div className="campus-action-icons" style={{ justifyContent: "center" }}>
+                      {row.paidAmount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => onAction("receipt", row._id)}
+                          className="toolbar-btn toolbar-btn-outline"
+                          style={{ height: "26px", minHeight: "26px", fontSize: "11px", padding: "0 8px", cursor: "pointer" }}
+                          title="View Receipt"
+                        >
+                          <Receipt size={12} style={{ color: "#16a34a" }} />
+                          Receipt
+                        </button>
+                      )}
+                      {row.remainingBalance > 0 && row.status !== "WAIVED" && row.status !== "CANCELLED" && (
+                        <button
+                          type="button"
+                          onClick={() => onAction("waive", row._id)}
+                          className="toolbar-btn toolbar-btn-outline"
+                          style={{ height: "26px", minHeight: "26px", fontSize: "11px", padding: "0 8px", cursor: "pointer" }}
+                          title="Waive Dues"
+                        >
+                          Waive
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {visibleLedger.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "28px", color: "#71717a", fontSize: "12px" }}>
+                    No financial ledger entries match your criteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* 4. Table Panel */}
-      <div style={{ padding: "16px 20px", width: "100%", boxSizing: "border-box" }}>
-        <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
-          <div className="campus-table-container">
-            <FeeTable rows={visible.records} onAction={onAction} />
-          </div>
-
-          <div className="campus-footer" style={{ borderTop: "1px solid #e4e4e7" }}>
-            <div className="footer-info">
-              {notice && <span style={{ color: "#16a34a", marginRight: "12px", fontWeight: "600" }}>{notice}</span>}
-              Showing {filtered.length > 0 ? (visible.currentPage - 1) * pageSize + 1 : 0} to{" "}
-              {Math.min(visible.currentPage * pageSize, filtered.length)} of {filtered.length} fee vouchers
+      {/* 4. Frameless Footer Matching Application Standard */}
+      <div className="campus-footer">
+        {activeTab === "vouchers" ? (
+          <>
+            <div className="campus-footer-info">
+              Showing <strong>{filtered.length ? (page - 1) * pageSize + 1 : 0}</strong> to{" "}
+              <strong>{Math.min(page * pageSize, filtered.length)}</strong> of <strong>{filtered.length}</strong> vouchers
             </div>
 
-            <Pagination
-              total={filtered.length}
-              page={visible.currentPage}
-              pageSize={pageSize}
-              onPage={setPage}
-              onPageSize={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-              label="vouchers"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 5. Recent Activity Panel */}
-      <div style={{ padding: "0 20px 20px 20px" }}>
-        <div style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", padding: "14px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-            <span style={{ fontSize: "13px", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              <Clock size={14} />
-              Recent Payment Activity
-            </span>
-            <Button
-              variant="ghost"
-              style={{ fontSize: "11px", height: "26px" }}
-              disabled={recent.length <= 4}
-              onClick={() => setAllActivity(!allActivity)}
-            >
-              {allActivity ? "Show Less" : "View All"}
-            </Button>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
-            {recent.slice(0, allActivity ? recent.length : 4).map((voucher) => (
-              <button
-                key={voucher.id}
-                type="button"
-                className="fee-activity-item"
-                onClick={() => onAction("view", voucher.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "10px",
-                  padding: "10px 12px",
-                  border: "1px solid #e4e4e7",
-                  borderRadius: "6px",
-                  background: "#fafafa",
-                  cursor: "pointer",
-                  textAlign: "left"
-                }}
+            <div className="campus-pagination">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+                aria-label="Previous page"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Avatar style={{ width: "28px", height: "28px", fontSize: "10px", background: "#f4f4f5", color: "#09090b" }}>
-                    <AvatarFallback>{voucher.student.initials}</AvatarFallback>
-                  </Avatar>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <strong style={{ fontSize: "12px", color: "#09090b" }}>{voucher.student.name}</strong>
-                    <span style={{ fontSize: "11px", color: "#71717a" }}>{voucher.feeCategory} · {formatPKR(voucher.amount)}</span>
-                  </div>
-                </div>
-                <FeeStatusBadge status={voucher.paymentStatus} />
-              </button>
-            ))}
-          </div>
-        </div>
+                <ChevronLeft size={14} />
+              </Button>
+
+              {Array.from({ length: Math.ceil(filtered.length / pageSize) || 1 }, (_, i) => i + 1).map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  className={`campus-page-btn ${num === page ? "is-active" : ""}`}
+                  onClick={() => setPage(num)}
+                >
+                  {num}
+                </button>
+              ))}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={page >= (Math.ceil(filtered.length / pageSize) || 1)}
+                onClick={() => setPage(page + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight size={14} />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="campus-footer-info">
+              Showing <strong>{filteredLedger.length ? (ledgerPage - 1) * ledgerPageSize + 1 : 0}</strong> to{" "}
+              <strong>{Math.min(ledgerPage * ledgerPageSize, filteredLedger.length)}</strong> of <strong>{filteredLedger.length}</strong> records
+            </div>
+
+            <div className="campus-pagination">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={ledgerPage <= 1}
+                onClick={() => setLedgerPage(ledgerPage - 1)}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={14} />
+              </Button>
+
+              {Array.from({ length: Math.ceil(filteredLedger.length / ledgerPageSize) || 1 }, (_, i) => i + 1).map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  className={`campus-page-btn ${num === ledgerPage ? "is-active" : ""}`}
+                  onClick={() => setLedgerPage(num)}
+                >
+                  {num}
+                </button>
+              ))}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={ledgerPage >= (Math.ceil(filteredLedger.length / ledgerPageSize) || 1)}
+                onClick={() => setLedgerPage(ledgerPage + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight size={14} />
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modals */}
@@ -468,14 +756,31 @@ export default function FeeManagement() {
           onClose={close}
           onConfirm={async (paymentData) => {
             try {
-              await axiosInstance.post(`/api/campus-admin/fees/${selected._id || selected.id}/payments`, paymentData);
+              await axiosInstance.post(`/campus-admin/fees/${selected._id || selected.id}/payments`, paymentData);
               toast.success(`Payment recorded for voucher ${selected.voucherNo}.`);
               dispatch(fetchFees());
+              dispatch(fetchFinancialLedger());
             } catch (err) {
               const msg = err.response?.data?.message || err.message || "Failed to record payment.";
               toast.error(msg);
             }
             close();
+          }}
+        />
+      )}
+      {modal?.mode === "receipt" && selected && (
+        <PaymentReceiptDialog
+          voucher={selected}
+          onClose={close}
+        />
+      )}
+      {modal?.mode === "waive" && selected && (
+        <WaiveFeeDialog
+          voucher={selected}
+          onClose={close}
+          onUpdated={() => {
+            dispatch(fetchFees());
+            dispatch(fetchFinancialLedger());
           }}
         />
       )}
@@ -485,14 +790,23 @@ export default function FeeManagement() {
       {modal?.mode === "generate" && (
         <GenerateMonthlyFeesDialog
           onClose={close}
-          onGenerated={() => dispatch(fetchFees())}
+          onGenerated={() => {
+            dispatch(fetchFees());
+            dispatch(fetchFinancialLedger());
+          }}
         />
       )}
       {modal?.mode === "structure" && (
         <FeeStructureDialog onClose={close} />
       )}
       {modal?.mode === "pending" && (
-        <PendingPaymentsDialog onClose={close} onConfirm={() => dispatch(fetchFees())} />
+        <PendingPaymentsDialog
+          onClose={close}
+          onConfirm={() => {
+            dispatch(fetchFees());
+            dispatch(fetchFinancialLedger());
+          }}
+        />
       )}
     </section>
   );

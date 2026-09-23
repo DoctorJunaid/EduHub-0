@@ -44,70 +44,58 @@ export default function PrintChallanDialog({ voucher, onClose }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        style={{
-          maxWidth: "1050px",
-          width: "95vw",
-          maxHeight: "92vh",
-          overflowY: "auto",
-          padding: "24px",
-          background: "#ffffff",
-          borderRadius: "12px",
-        }}
+        className="max-w-[1080px] w-[95vw] max-h-[92vh] overflow-y-auto p-0 rounded-2xl border border-zinc-200 shadow-2xl bg-white flex flex-col gap-0"
         aria-describedby="challan-dialog-desc"
+        showCloseButton={false}
       >
-        <DialogHeader style={{ borderBottom: "1px solid #e4e4e7", paddingBottom: "14px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: "#f4f4f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#09090b",
-                }}
-              >
-                <Building2 size={20} />
-              </div>
-              <div>
-                <DialogTitle style={{ fontSize: "16px", fontWeight: "700", color: "#09090b" }}>
-                  Official Fee Challan Voucher
-                </DialogTitle>
-                <DialogDescription id="challan-dialog-desc" style={{ fontSize: "12px", color: "#71717a" }}>
-                  Printable 3-part bank deposit slip for Voucher #{voucher.voucherNo}
-                </DialogDescription>
-              </div>
+        <div className="flex items-center justify-between px-7 py-5 border-b border-zinc-200 bg-white flex-shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="size-11 rounded-xl bg-zinc-900 text-white flex items-center justify-center flex-shrink-0">
+              <Building2 className="size-5" />
             </div>
-
-            <div style={{ display: "flex", gap: "8px" }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrint}
-                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-              >
-                <Printer size={14} />
-                Print Challan
-              </Button>
+            <div>
+              <DialogTitle className="text-base font-semibold text-zinc-900 leading-tight">
+                Official Fee Challan Voucher
+              </DialogTitle>
+              <DialogDescription id="challan-dialog-desc" className="text-xs text-zinc-500 mt-1">
+                Printable 3-part bank deposit slip for Voucher #{voucher.voucherNo}
+              </DialogDescription>
             </div>
           </div>
-        </DialogHeader>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold"
+            >
+              <Printer size={14} />
+              Print Challan
+            </Button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+            >
+              <span className="text-xl leading-none">&times;</span>
+            </button>
+          </div>
+        </div>
 
         {/* Printable 3-Part Bank Slip Canvas */}
-        <div
-          ref={sheetRef}
-          className="fee-challan-canvas"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "16px",
-            background: "#ffffff",
-            padding: "16px 0",
-          }}
-        >
+        <div className="px-7 py-6">
+          <div
+            ref={sheetRef}
+            className="fee-challan-canvas"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "16px",
+              background: "#ffffff",
+              padding: "0",
+            }}
+          >
           {copies.map((copy, index) => (
             <div
               key={copy.name}
@@ -342,17 +330,18 @@ export default function PrintChallanDialog({ voucher, onClose }) {
               </div>
             </div>
           ))}
+          </div>
         </div>
 
-        <DialogFooter style={{ borderTop: "1px solid #e4e4e7", paddingTop: "14px", marginTop: "10px" }}>
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex items-center justify-end gap-3 px-7 py-5 border-t border-zinc-200 bg-zinc-50 flex-shrink-0">
+          <Button type="button" variant="outline" onClick={onClose} className="h-10 px-5 text-sm font-semibold">
             Close
           </Button>
-          <Button onClick={handlePrint} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <Button type="button" onClick={handlePrint} className="h-10 px-6 text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 inline-flex items-center gap-2 shadow-sm">
             <Printer size={15} />
             Print All Copies
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

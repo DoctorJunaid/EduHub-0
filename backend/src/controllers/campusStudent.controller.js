@@ -3,6 +3,7 @@ import Campus from "../models/campus.model.js";
 import Institute from "../models/institute.model.js";
 import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
 import { logActivity } from "../models/activityLog.model.js";
+import feeService from "../services/fee.service.js";
 
 // @desc    Get students belonging to campus admin/manager's campus
 // @route   GET /api/v1/campus-admin/students
@@ -277,6 +278,13 @@ export const createStudentForCampus = async (req, res) => {
       );
     } catch (profileErr) {
       console.warn("Could not sync StudentProfile:", profileErr.message);
+    }
+
+    // Auto-generate admission fee voucher if configured
+    try {
+      await feeService.generateAdmissionFee(campusId, instituteId, student, req.body, req.user);
+    } catch (feeErr) {
+      console.warn("Could not generate admission fee voucher:", feeErr.message);
     }
 
     logActivity({
@@ -579,6 +587,15 @@ export const updateStudentInCampus = async (req, res) => {
 
     if (updateData.studentPhone && !updateData.phone) {
       updateData.phone = updateData.studentPhone;
+    }
+
+    // Automatically synchronize isActive when student status changes
+    if (updateData.status) {
+      if (["Inactive", "Withdrawn", "Graduated", "Suspended"].includes(updateData.status)) {
+        updateData.isActive = false;
+      } else if (updateData.status === "Active") {
+        updateData.isActive = true;
+      }
     }
 
     const student = await User.findOneAndUpdate(

@@ -9,15 +9,16 @@ import { formatPKR } from "@/lib/currency";
 
 export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
   const id = useId();
-  const [paymentDate, setPaymentDate] = useState("");
-  const [amount, setAmount] = useState((voucher.amount - voucher.paidAmount).toString());
+  const effectiveTotal = voucher?.totalPayable > 0 ? voucher.totalPayable : voucher?.amount || 0;
+  const remaining = Math.max(0, effectiveTotal - (voucher?.paidAmount || 0));
+
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
+  const [amount, setAmount] = useState(String(remaining));
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [referenceNo, setReferenceNo] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const remaining = voucher.amount - voucher.paidAmount;
 
   return (
     <Dialog
@@ -26,34 +27,51 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
         if (!open) onClose();
       }}
     >
-      <DialogContent aria-describedby={`${id}-description`} className="sm:max-w-[520px] w-[95vw]">
+      <DialogContent
+        aria-describedby={`${id}-description`}
+        className="sm:max-w-[580px] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-zinc-200 shadow-2xl bg-white gap-0"
+        showCloseButton={false}
+      >
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 pt-6 pb-5 border-b border-border">
-          <div className="size-10 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
-            <CreditCard className="size-5 text-white" />
+        <div className="flex items-center justify-between px-7 py-5 border-b border-zinc-200 bg-white flex-shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="size-11 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
+              <CreditCard className="size-5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-semibold text-zinc-900 leading-tight">
+                Record Payment
+              </DialogTitle>
+              <DialogDescription id={`${id}-description`} className="text-xs text-zinc-500 mt-1">
+                {voucher.voucherNo} &middot; {voucher.student?.name}
+              </DialogDescription>
+            </div>
           </div>
-          <div>
-            <DialogTitle className="text-base font-semibold text-foreground leading-tight">Record Payment</DialogTitle>
-            <DialogDescription id={`${id}-description`} className="text-xs text-muted-foreground mt-0.5">
-              {voucher.voucherNo} &middot; {voucher.student?.name}
-            </DialogDescription>
+          <button
+            type="button"
+            onClick={onClose}
+            className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+          >
+            <span className="text-xl leading-none">&times;</span>
+          </button>
+        </div>
+
+        {/* Amount Summary Ribbon */}
+        <div className="mx-7 mt-6 bg-zinc-50 border border-zinc-200 rounded-xl p-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Total Payable</span>
+            <span className="text-base font-bold text-zinc-900">{formatPKR(effectiveTotal)}</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Already Paid</span>
+            <span className="text-base font-bold text-emerald-700">{formatPKR(voucher.paidAmount || 0)}</span>
+          </div>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Remaining</span>
+            <span className="text-base font-bold text-rose-600">{formatPKR(remaining)}</span>
           </div>
         </div>
 
-        <div className="mx-6 mt-5 bg-zinc-50 border border-border rounded-xl p-3 flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground uppercase font-semibold">Total Fee</span>
-            <span className="text-sm font-semibold text-foreground">{formatPKR(voucher.amount)}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground uppercase font-semibold">Already Paid</span>
-            <span className="text-sm font-semibold text-foreground">{formatPKR(voucher.paidAmount)}</span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-muted-foreground uppercase font-semibold">Remaining</span>
-            <span className="text-sm font-bold text-foreground">{formatPKR(remaining)}</span>
-          </div>
-        </div>
         <form
           onSubmit={async (event) => {
             event.preventDefault();
@@ -77,89 +95,105 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
               setLoading(false);
             }
           }}
-          className="flex flex-col gap-4 px-6 pt-4 pb-6"
+          className="flex flex-col flex-1 min-h-0 overflow-hidden m-0"
         >
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-amount`} className="text-xs font-semibold text-foreground">Amount Paid *</Label>
-              <Input
-                id={`${id}-amount`}
-                type="number"
-                required
-                max={remaining}
-                min={1}
-                value={amount}
-                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                onChange={(event) => {
-                  setAmount(event.target.value);
-                  setError("");
-                }}
-              />
+          <div className="px-7 py-6 space-y-5 overflow-y-auto flex-1 min-h-0">
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor={`${id}-amount`} className="text-xs font-semibold text-zinc-700">Amount Paid *</Label>
+                <Input
+                  id={`${id}-amount`}
+                  type="number"
+                  required
+                  max={remaining}
+                  min={1}
+                  value={amount}
+                  className="h-10 text-sm px-3.5 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  onChange={(event) => {
+                    setAmount(event.target.value);
+                    setError("");
+                  }}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor={`${id}-date`} className="text-xs font-semibold text-zinc-700">Payment Date *</Label>
+                <Input
+                  id={`${id}-date`}
+                  type="date"
+                  required
+                  value={paymentDate}
+                  className="h-10 text-sm px-3.5 rounded-lg"
+                  onChange={(event) => {
+                    setPaymentDate(event.target.value);
+                    setError("");
+                  }}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor={`${id}-method`} className="text-xs font-semibold text-zinc-700">Payment Method *</Label>
+                <select
+                  id={`${id}-method`}
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="h-10 w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Online">Online</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor={`${id}-ref`} className="text-xs font-semibold text-zinc-700">Reference / Receipt No</Label>
+                <Input
+                  id={`${id}-ref`}
+                  type="text"
+                  placeholder="e.g. TR-98214"
+                  value={referenceNo}
+                  className="h-10 text-sm px-3.5 rounded-lg"
+                  onChange={(event) => setReferenceNo(event.target.value)}
+                />
+              </div>
             </div>
             
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-date`} className="text-xs font-semibold text-foreground">Payment Date *</Label>
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-notes`} className="text-xs font-semibold text-zinc-700">Notes (Optional)</Label>
               <Input
-                id={`${id}-date`}
-                type="date"
-                required
-                value={paymentDate}
-                onChange={(event) => {
-                  setPaymentDate(event.target.value);
-                  setError("");
-                }}
-              />
-            </div>
-            
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-method`} className="text-xs font-semibold text-foreground">Payment Method *</Label>
-              <select
-                id={`${id}-method`}
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
-              >
-                <option value="Cash">Cash</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Cheque">Cheque</option>
-                <option value="Online">Online</option>
-              </select>
-            </div>
-            
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-ref`} className="text-xs font-semibold text-foreground">Reference / Receipt No</Label>
-              <Input
-                id={`${id}-ref`}
+                id={`${id}-notes`}
                 type="text"
-                value={referenceNo}
-                onChange={(event) => setReferenceNo(event.target.value)}
+                placeholder="Additional details or remarks"
+                value={notes}
+                className="h-10 text-sm px-3.5 rounded-lg"
+                onChange={(event) => setNotes(event.target.value)}
               />
             </div>
-          </div>
-          
-          <div className="space-y-1.5">
-            <Label htmlFor={`${id}-notes`} className="text-xs font-semibold text-foreground">Notes (Optional)</Label>
-            <Input
-              id={`${id}-notes`}
-              type="text"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </div>
 
-          {error && (
-            <p role="alert" className="text-sm font-medium text-destructive">
-              {error}
-            </p>
-          )}
+            {error && (
+              <p role="alert" className="text-xs font-medium text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-200">
+                {error}
+              </p>
+            )}
+          </div>
           
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+          <div className="px-7 py-5 border-t border-zinc-200 bg-white flex items-center justify-end gap-3 flex-shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="h-10 px-5 rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 text-sm font-semibold transition-colors cursor-pointer"
+            >
               Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Confirm Payment"}
-            </Button>
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-6 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
+            >
+              {loading ? "Recording..." : "Confirm Payment"}
+            </button>
           </div>
         </form>
       </DialogContent>
