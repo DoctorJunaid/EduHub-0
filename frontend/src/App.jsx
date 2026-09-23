@@ -28,6 +28,8 @@ import FacultyDirectory from "./Admins/Campus Admin/Faculty/FacultyDirectory";
 import StudentsDirectory from "./Admins/Campus Admin/Students/StudentsDirectory";
 import ClassTimetable from "./Admins/Campus Admin/Timetable/ClassTimetable";
 import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
+import AcademicsConfig from "./Admins/Campus Admin/Academics/AcademicsConfig";
+import TeacherAssignments from "./Admins/Campus Admin/Faculty/TeacherAssignments";
 import SuperAdminDashboard from "./Admins/Super Admin/Dashboard/SuperAdminDashboard";
 import Institutes from "./Admins/Super Admin/Institutes/Institutes";
 import ManageInstitutePage from "./Admins/Super Admin/Institutes/ManageInstitutePage";
@@ -173,6 +175,8 @@ const App = () => {
             <Route path="messages" element={<Messages />} />
             <Route path="settings" element={<Settings />} />
             <Route path="substitutes" element={<SubstituteAssignments />} />
+            <Route path="academics" element={<AcademicsConfig />} />
+            <Route path="teacher-assignments" element={<TeacherAssignments />} />
           </Route>
         </Route>
 

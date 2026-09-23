@@ -18,6 +18,7 @@ import salaryProfileRoutes from "./salaryProfile.routes.js";
 import payrollRoutes from "./payroll.routes.js";
 import attendanceApprovalRoutes from "./attendanceApproval.routes.js";
 import studentRoutes from "./student.routes.js";
+import academicRoutes from "./academic.routes.js";
 
 const router = express.Router();
 
@@ -39,6 +40,8 @@ router.use("/institute-admin", instituteAdminRoutes);
 router.use("/inquiries", inquiryRoutes);
 router.use("/campus-admin", campusAdminRoutes);
 router.use("/campus/faculty", campusAdminRoutes);
+
+router.use("/academic", academicRoutes);
 
 router.use("/campus/attendance/teachers", teacherAttendenceRoutes);
 router.use("/campus/attendence/teachers", teacherAttendenceRoutes);

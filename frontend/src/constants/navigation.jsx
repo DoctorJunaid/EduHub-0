@@ -63,6 +63,18 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <Calendar size={20} />,
   },
   {
+    label: isSchool ? "Classes & Subjects" : "Academic Programs",
+    path: "/academics",
+    group: "Academics",
+    icon: <BookOpen size={20} />,
+  },
+  {
+    label: "Teacher Assignments",
+    path: "/teacher-assignments",
+    group: "Academics",
+    icon: <ClipboardList size={20} />,
+  },
+  {
     label: "Exam Schedules",
     path: "/exams",
     group: "Academics",

@@ -10,8 +10,10 @@ import {
   Coffee,
   GraduationCap,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { minutes } from "../../../lib/schedule.js";
+import axiosInstance from "@/api/axiosInstance.js";
 
 const SCHOOL_PERIOD_PRESETS = [
   { id: "p1", name: "Period 1 (08:00 - 08:50)", start: "08:00", end: "08:50", type: "class" },
@@ -66,10 +68,19 @@ export default function QuickScheduleModal({
   // Form Mode: "class" or "break"
   const [mode, setMode] = useState(initialIsBreak ? "break" : "class");
 
-  const [targetClass, setTargetClass] = useState(currentClass?.program || (isSchool ? "Grade 10" : "BS Computer Science"));
-  const [targetSection, setTargetSection] = useState(currentClass?.section || "A");
-  const [subject, setSubject] = useState("");
-  const [instructor, setInstructor] = useState("");
+  // Pre-defined academic data fetched from database
+  const [dbGrades, setDbGrades] = useState([]);
+  const [dbSections, setDbSections] = useState([]);
+  const [dbGradeSubjects, setDbGradeSubjects] = useState([]);
+  const [dbAssignedTeachers, setDbAssignedTeachers] = useState([]);
+  const [allFaculty, setAllFaculty] = useState([]);
+
+  // Form selections
+  const [selectedGradeId, setSelectedGradeId] = useState("");
+  const [selectedSectionId, setSelectedSectionId] = useState("");
+  const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
+  const [subjectText, setSubjectText] = useState("");
   const [room, setRoom] = useState("");
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
@@ -77,16 +88,45 @@ export default function QuickScheduleModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Sync state when modal opens or initial props change
+  // 1. Fetch initial grades and campus faculty once when modal is open
   useEffect(() => {
+    if (!isOpen) return;
+
+    axiosInstance
+      .get("/academic/grades")
+      .then((res) => {
+        setDbGrades(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((err) => console.error("Error fetching grades:", err));
+
+    axiosInstance
+      .get("/campus/faculty")
+      .then((res) => {
+        const facList = res.data?.data || res.data || [];
+        setAllFaculty(Array.isArray(facList) ? facList : []);
+      })
+      .catch((err) => console.error("Error fetching faculty:", err));
+  }, [isOpen]);
+
+  // 2. Sync state when modal opens or editRecord changes
+  useEffect(() => {
+    if (!isOpen) return;
+
     if (editRecord) {
       const isBreak = Boolean(editRecord.isBreak);
       setMode(isBreak ? "break" : "class");
-      setTargetClass(editRecord.program || editRecord.gradeOrClass || currentClass?.program || "Grade 10");
-      setTargetSection(editRecord.section || currentClass?.section || "A");
-      setSubject(editRecord.subject || editRecord.breakTitle || "");
-      setInstructor(editRecord.instructor || editRecord.teacherName || "");
-      setRoom(editRecord.room || editRecord.roomNumber || "");
+
+      const gId = editRecord.gradeId?._id || editRecord.gradeId || "";
+      const sId = editRecord.sectionId?._id || editRecord.sectionId || "";
+      const subId = editRecord.subjectId?._id || editRecord.subjectId || "";
+      const tId = editRecord.teacherId?._id || editRecord.teacherId || "";
+
+      setSelectedGradeId(gId);
+      setSelectedSectionId(sId);
+      setSelectedSubjectId(subId);
+      setSelectedTeacherId(tId);
+      setSubjectText(editRecord.subject || editRecord.breakTitle || "");
+      setRoom(editRecord.room || editRecord.roomNumber || (isSchool ? "Room 101" : "Hall 1"));
       setStartTime(editRecord.startTime || "08:00");
       setEndTime(editRecord.endTime || "08:50");
       const recordDays = Array.isArray(editRecord.days) && editRecord.days.length ? editRecord.days : [1];
@@ -94,17 +134,80 @@ export default function QuickScheduleModal({
     } else {
       const isBreak = Boolean(initialIsBreak);
       setMode(isBreak ? "break" : "class");
-      setTargetClass(currentClass?.program || (isSchool ? "Grade 10" : "BS Computer Science"));
-      setTargetSection(currentClass?.section || "A");
-      setSubject(isBreak ? "Lunch & Prayer Break" : "");
-      setInstructor(isBreak ? "Campus Administration" : (options?.instructor?.[0] || ""));
-      setRoom(isBreak ? "Campus Cafeteria / Ground" : (options?.room?.[0] || (isSchool ? "Room 101" : "Hall 1")));
+
+      // Match currentClass if provided
+      const matchedGrade = dbGrades.find(
+        (g) => g.name?.trim().toLowerCase() === currentClass?.program?.trim().toLowerCase()
+      );
+      const gId = matchedGrade?._id || (dbGrades[0]?._id ?? "");
+
+      setSelectedGradeId(gId);
+      setSelectedSectionId("");
+      setSelectedSubjectId("");
+      setSelectedTeacherId("");
+      setSubjectText(isBreak ? "Lunch & Prayer Break" : "");
+      setRoom(isBreak ? "Campus Grounds / Cafeteria" : (options?.room?.[0] || (isSchool ? "Room 101" : "Hall 1")));
       setStartTime(initialStartTime);
       setEndTime(initialEndTime);
       setDays([initialDay || 1]);
     }
     setError("");
-  }, [isOpen, editRecord, initialDay, initialStartTime, initialEndTime, initialIsBreak]);
+  }, [isOpen, editRecord, initialDay, initialStartTime, initialEndTime, initialIsBreak, dbGrades.length]);
+
+  // 3. Whenever selectedGradeId changes, load sections and grade-subjects
+  useEffect(() => {
+    if (!selectedGradeId) {
+      setDbSections([]);
+      setDbGradeSubjects([]);
+      return;
+    }
+
+    axiosInstance
+      .get(`/academic/sections?gradeId=${selectedGradeId}`)
+      .then((res) => {
+        const secs = Array.isArray(res.data) ? res.data : [];
+        setDbSections(secs);
+        // Default section if currentClass section matches
+        if (!selectedSectionId) {
+          const matchSec = secs.find(
+            (s) => s.name?.trim().toLowerCase() === currentClass?.section?.trim().toLowerCase()
+          );
+          if (matchSec) setSelectedSectionId(matchSec._id);
+          else if (secs.length > 0) setSelectedSectionId(secs[0]._id);
+        }
+      })
+      .catch((err) => console.error("Error fetching sections:", err));
+
+    axiosInstance
+      .get(`/academic/grade-subjects?gradeId=${selectedGradeId}`)
+      .then((res) => {
+        const gsList = Array.isArray(res.data) ? res.data : [];
+        setDbGradeSubjects(gsList);
+      })
+      .catch((err) => console.error("Error fetching grade subjects:", err));
+  }, [selectedGradeId]);
+
+  // 4. Whenever selectedGradeId, selectedSectionId, or selectedSubjectId change, load assigned teachers
+  useEffect(() => {
+    if (!selectedGradeId || !selectedSectionId || !selectedSubjectId) {
+      setDbAssignedTeachers([]);
+      return;
+    }
+
+    axiosInstance
+      .get(
+        `/academic/teacher-assignments?gradeId=${selectedGradeId}&sectionId=${selectedSectionId}&subjectId=${selectedSubjectId}`
+      )
+      .then((res) => {
+        const assignments = Array.isArray(res.data) ? res.data : [];
+        const teachers = assignments.map((a) => a.teacherId).filter(Boolean);
+        setDbAssignedTeachers(teachers);
+        if (teachers.length > 0 && !selectedTeacherId) {
+          setSelectedTeacherId(teachers[0]._id);
+        }
+      })
+      .catch((err) => console.error("Error fetching assigned teachers:", err));
+  }, [selectedGradeId, selectedSectionId, selectedSubjectId]);
 
   // Calculate duration in minutes
   const durationMinutes = useMemo(() => {
@@ -143,27 +246,60 @@ export default function QuickScheduleModal({
     setEndTime(preset.end);
     if (preset.type === "break") {
       setMode("break");
-      setSubject(preset.name.split(" (")[0]);
+      setSubjectText(preset.name.split(" (")[0]);
       setRoom("Campus Grounds / Cafeteria");
-      setInstructor("Duty Staff");
     } else {
       setMode("class");
-      if (subject.includes("Break") || subject.includes("Lunch") || subject.includes("Recess")) {
-        setSubject("");
-      }
     }
+  };
+
+  const handleGradeChange = (gradeId) => {
+    setSelectedGradeId(gradeId);
+    setSelectedSectionId("");
+    setSelectedSubjectId("");
+    setSelectedTeacherId("");
+    setError("");
+  };
+
+  const handleSectionChange = (sectionId) => {
+    setSelectedSectionId(sectionId);
+    setSelectedTeacherId("");
+    setError("");
+  };
+
+  const handleSubjectChange = (subjectId) => {
+    setSelectedSubjectId(subjectId);
+    setSelectedTeacherId("");
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!subject.trim()) {
-      setError(mode === "break" ? "Please enter a break name (e.g. Lunch & Prayer Break)." : "Please enter a subject name.");
-      return;
+
+    if (mode === "class") {
+      if (!selectedGradeId) {
+        setError("Please select a pre-defined Grade/Class.");
+        return;
+      }
+      if (!selectedSectionId) {
+        setError("Please select a Section.");
+        return;
+      }
+      if (!selectedSubjectId) {
+        setError("Please select a Subject assigned to this Grade.");
+        return;
+      }
+      if (!selectedTeacherId) {
+        setError("Please select a Teacher for this subject.");
+        return;
+      }
+    } else {
+      if (!subjectText.trim()) {
+        setError("Please enter or select a break interval name.");
+        return;
+      }
     }
-    if (mode === "class" && !instructor.trim()) {
-      setError("Please assign a teacher to this period.");
-      return;
-    }
+
     if (endTime <= startTime) {
       setError("End time must be after start time.");
       return;
@@ -175,15 +311,36 @@ export default function QuickScheduleModal({
 
     setIsSubmitting(true);
     setError("");
+
     try {
       const isBreak = mode === "break";
+
+      // Resolve human-readable names for UI grid compatibility
+      const targetGradeObj = dbGrades.find((g) => g._id === selectedGradeId);
+      const targetSectionObj = dbSections.find((s) => s._id === selectedSectionId);
+      const targetGradeSub = dbGradeSubjects.find((gs) => gs.subjectId?._id === selectedSubjectId);
+      const targetTeacherObj =
+        dbAssignedTeachers.find((t) => t._id === selectedTeacherId) ||
+        allFaculty.find((f) => (f._id || f.id) === selectedTeacherId);
+
+      const resolvedProgram = targetGradeObj?.name || currentClass?.program || (isSchool ? "Grade 10" : "BS Computer Science");
+      const resolvedSection = targetSectionObj?.name || currentClass?.section || "A";
+      const resolvedSubject = isBreak ? subjectText.trim() : (targetGradeSub?.subjectId?.name || "Subject");
+      const resolvedInstructor = isBreak
+        ? "Duty Staff"
+        : (targetTeacherObj?.name || "Assigned Faculty");
+
       await onSave({
-        subject: subject.trim(),
-        breakTitle: isBreak ? subject.trim() : "",
+        gradeId: isBreak ? null : selectedGradeId,
+        sectionId: isBreak ? null : selectedSectionId,
+        subjectId: isBreak ? null : selectedSubjectId,
+        teacherId: isBreak ? null : selectedTeacherId,
+        program: resolvedProgram,
+        section: resolvedSection,
+        subject: resolvedSubject,
+        breakTitle: isBreak ? subjectText.trim() : "",
         isBreak,
-        program: targetClass.trim(),
-        section: targetSection.trim(),
-        instructor: isBreak ? (instructor.trim() || "Campus Staff") : instructor.trim(),
+        instructor: resolvedInstructor,
         room: room.trim() || (isSchool ? "Room 101" : "Hall 1"),
         startTime,
         endTime,
@@ -191,6 +348,7 @@ export default function QuickScheduleModal({
         institutionType: isSchool ? "School" : "College",
         status: "Active",
       });
+
       onClose();
     } catch (err) {
       setError(typeof err === "string" ? err : err?.message || "Failed to schedule class");
@@ -198,6 +356,9 @@ export default function QuickScheduleModal({
       setIsSubmitting(false);
     }
   };
+
+  const activeGradeName = dbGrades.find((g) => g._id === selectedGradeId)?.name || currentClass?.program || "Class";
+  const activeSectionName = dbSections.find((s) => s._id === selectedSectionId)?.name || currentClass?.section || "A";
 
   return (
     <div
@@ -229,7 +390,7 @@ export default function QuickScheduleModal({
                 <span className="qs-header-meta-label">Target Routine:</span>
                 <span className="qs-header-badge">
                   <GraduationCap size={12} style={{ color: "#71717a" }} />
-                  {targetClass} • Sec {targetSection}
+                  {activeGradeName} • Sec {activeSectionName}
                 </span>
               </div>
             </div>
@@ -252,7 +413,6 @@ export default function QuickScheduleModal({
               type="button"
               onClick={() => {
                 setMode("class");
-                if (subject.includes("Break") || subject.includes("Lunch")) setSubject("");
               }}
               className={`qs-segmented-btn ${mode === "class" ? "active-class" : ""}`}
             >
@@ -263,7 +423,7 @@ export default function QuickScheduleModal({
               type="button"
               onClick={() => {
                 setMode("break");
-                if (!subject) setSubject("Lunch & Prayer Break");
+                if (!subjectText) setSubjectText("Lunch & Prayer Break");
               }}
               className={`qs-segmented-btn ${mode === "break" ? "active-break" : ""}`}
             >
@@ -310,49 +470,167 @@ export default function QuickScheduleModal({
         >
           {/* Scrollable Form Body */}
           <div className="qs-body">
-            {/* Target Class & Section Confirmation Group */}
-            <div className="qs-card-group">
-              <div className="qs-card-title-row">
-                <span className="qs-card-title">
-                  <GraduationCap size={14} /> Target Class & Section
-                </span>
-                <span style={{ fontSize: "11px", color: "#64748b" }}>Assigned Routine</span>
-              </div>
-              <div className="qs-row-2col">
-                <div>
-                  <label className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
-                    Class / Grade *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={targetClass}
-                    onChange={(e) => setTargetClass(e.target.value)}
-                    placeholder="e.g. Grade 10"
-                    className="qs-input"
-                  />
-                </div>
-                <div>
-                  <label className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
-                    Section *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={targetSection}
-                    onChange={(e) => setTargetSection(e.target.value)}
-                    placeholder="e.g. A"
-                    className="qs-input"
-                  />
-                </div>
-              </div>
-            </div>
+            {mode === "class" ? (
+              <>
+                {/* Predefined Dynamic Dropdowns: Grade & Section */}
+                <div className="qs-card-group">
+                  <div className="qs-card-title-row">
+                    <span className="qs-card-title">
+                      <GraduationCap size={14} /> Academic Class & Section (Pre-defined)
+                    </span>
+                    <a
+                      href="/academics"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: "11px", color: "#2563eb", textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "3px" }}
+                    >
+                      Academic Setup <ExternalLink size={11} />
+                    </a>
+                  </div>
 
-            {/* Subject or Break Name Input */}
-            <div>
-              <label className="qs-label">
-                <span>{mode === "break" ? "Break / Recess Name *" : "Subject / Course Name *"}</span>
-                {mode === "break" && (
+                  <div className="qs-row-2col">
+                    <div>
+                      <label className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
+                        Grade / Class *
+                      </label>
+                      <select
+                        required
+                        value={selectedGradeId}
+                        onChange={(e) => handleGradeChange(e.target.value)}
+                        className="qs-input"
+                      >
+                        <option value="">-- Select Grade / Class --</option>
+                        {dbGrades.map((g) => (
+                          <option key={g._id} value={g._id}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
+                        Section *
+                      </label>
+                      <select
+                        required
+                        value={selectedSectionId}
+                        onChange={(e) => handleSectionChange(e.target.value)}
+                        disabled={!selectedGradeId}
+                        className="qs-input"
+                      >
+                        <option value="">
+                          {!selectedGradeId ? "-- Choose Grade First --" : dbSections.length === 0 ? "No sections found" : "-- Select Section --"}
+                        </option>
+                        {dbSections.map((s) => (
+                          <option key={s._id} value={s._id}>
+                            Section {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Predefined Dynamic Dropdown: Subject */}
+                <div>
+                  <label className="qs-label">
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      <BookOpen size={13} style={{ color: "#64748b" }} /> Subject / Course (Configured for Class) *
+                    </span>
+                  </label>
+                  <select
+                    required
+                    value={selectedSubjectId}
+                    onChange={(e) => handleSubjectChange(e.target.value)}
+                    disabled={!selectedGradeId}
+                    className="qs-input"
+                    style={{ height: "44px", fontSize: "14px" }}
+                  >
+                    <option value="">
+                      {!selectedGradeId
+                        ? "-- Select Grade First --"
+                        : dbGradeSubjects.length === 0
+                        ? "No subjects mapped to this grade yet"
+                        : "-- Select Subject --"}
+                    </option>
+                    {dbGradeSubjects.map((gs) => (
+                      <option key={gs.subjectId?._id} value={gs.subjectId?._id}>
+                        {gs.subjectId?.name} {gs.subjectId?.code ? `(${gs.subjectId.code})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Predefined Dynamic Dropdown: Teacher & Classroom */}
+                <div className="qs-row-2col">
+                  <div>
+                    <label className="qs-label">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <User size={13} style={{ color: "#64748b" }} /> Subject Teacher *
+                      </span>
+                    </label>
+                    <select
+                      required
+                      value={selectedTeacherId}
+                      onChange={(e) => setSelectedTeacherId(e.target.value)}
+                      disabled={!selectedSubjectId}
+                      className="qs-input"
+                    >
+                      <option value="">
+                        {!selectedSubjectId
+                          ? "-- Select Subject First --"
+                          : dbAssignedTeachers.length > 0
+                          ? "-- Select Assigned Teacher --"
+                          : "-- Select Campus Teacher --"}
+                      </option>
+                      {dbAssignedTeachers.length > 0 && (
+                        <optgroup label="✓ Assigned to This Subject">
+                          {dbAssignedTeachers.map((t) => (
+                            <option key={t._id} value={t._id}>
+                              {t.name} (Assigned)
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <optgroup label={dbAssignedTeachers.length > 0 ? "Other Faculty" : "Campus Faculty"}>
+                        {allFaculty.map((f) => (
+                          <option key={f._id || f.id} value={f._id || f.id}>
+                            {f.name} ({f.department || "Faculty"})
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="qs-label">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <Building size={13} style={{ color: "#64748b" }} /> Classroom / Lab *
+                      </span>
+                    </label>
+                    <input
+                      list="qs-room-suggestions"
+                      type="text"
+                      required
+                      placeholder="e.g. Room 101, Science Lab"
+                      value={room}
+                      onChange={(e) => setRoom(e.target.value)}
+                      className="qs-input"
+                    />
+                    <datalist id="qs-room-suggestions">
+                      {(options?.room || ["Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"]).map((r) => (
+                        <option key={r} value={r} />
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Break Interval Mode */
+              <div>
+                <label className="qs-label">
+                  <span>Break / Recess Interval Name *</span>
                   <span
                     style={{
                       fontSize: "11px",
@@ -364,65 +642,18 @@ export default function QuickScheduleModal({
                       fontWeight: 600,
                     }}
                   >
-                    Spans Across All Weekday Columns
+                    Spans Across Campus Routine
                   </span>
-                )}
-              </label>
-              <input
-                type="text"
-                required
-                placeholder={
-                  mode === "break"
-                    ? "e.g. Lunch & Prayer Break, Morning Recess"
-                    : "e.g. Mathematics, English Language, Physics, Biology"
-                }
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="qs-input"
-                style={{ height: "44px", fontSize: "14px" }}
-              />
-            </div>
-
-            {/* Teacher and Room (Class Mode Only) */}
-            {mode === "class" && (
-              <div className="qs-row-2col">
-                <div>
-                  <label className="qs-label">
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                      <User size={13} style={{ color: "#64748b" }} /> Subject Teacher *
-                    </span>
-                  </label>
-                  <input
-                    list="teacher-suggestions-list"
-                    type="text"
-                    required
-                    value={instructor}
-                    onChange={(e) => setInstructor(e.target.value)}
-                    placeholder="Select or enter teacher name"
-                    className="qs-input"
-                  />
-                  <datalist id="teacher-suggestions-list">
-                    {(options?.instructor || []).map((t) => (
-                      <option key={t} value={t} />
-                    ))}
-                  </datalist>
-                </div>
-
-                <div>
-                  <label className="qs-label">
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                      <Building size={13} style={{ color: "#64748b" }} /> Classroom / Lab *
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Room 101, Science Lab"
-                    value={room}
-                    onChange={(e) => setRoom(e.target.value)}
-                    className="qs-input"
-                  />
-                </div>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Lunch & Prayer Break, Morning Recess"
+                  value={subjectText}
+                  onChange={(e) => setSubjectText(e.target.value)}
+                  className="qs-input"
+                  style={{ height: "44px", fontSize: "14px" }}
+                />
               </div>
             )}
 
@@ -526,7 +757,7 @@ export default function QuickScheduleModal({
             )}
           </div>
 
-          {/* 5. Fixed Pinned Footer (Never Squished or Clipped) */}
+          {/* 5. Fixed Pinned Footer */}
           <div className="qs-footer">
             <button
               type="button"

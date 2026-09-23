@@ -14,7 +14,10 @@ import {
   Coffee,
   Check,
   Edit3,
+  Settings,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import axiosInstance from "@/api/axiosInstance.js";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
@@ -99,6 +102,18 @@ export default function ClassTimetable() {
     setEducationType(isSchool ? "School" : "College");
   }, [isSchool]);
 
+  // Pre-defined academic data from database
+  const [dbGrades, setDbGrades] = useState([]);
+  const [dbSections, setDbSections] = useState([]);
+
+  useEffect(() => {
+    axiosInstance.get("/academic/grades")
+      .then((res) => {
+        setDbGrades(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((err) => console.error("Error fetching grades in timetable:", err));
+  }, []);
+
   // Custom dynamically added classes and sections by user
   const [customClasses, setCustomClasses] = useState([]);
   const [customSections, setCustomSections] = useState([]);
@@ -107,8 +122,9 @@ export default function ClassTimetable() {
   const [isAddingCustomSection, setIsAddingCustomSection] = useState(false);
   const [customSectionInput, setCustomSectionInput] = useState("");
 
-  // Derive dynamic list of available Classes/Grades
+  // Derive dynamic list of available Classes/Grades (Prioritizes pre-defined database grades!)
   const availableClasses = useMemo(() => {
+    const fromGrades = dbGrades.map((g) => g.name).filter(Boolean);
     const fromStudents = students
       .map((s) => s.gradeOrClass || s.program)
       .filter(Boolean);
@@ -118,21 +134,39 @@ export default function ClassTimetable() {
     const defaults = isSchool
       ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"]
       : ["BS Computer Science", "BS Software Engineering", "BBA", "BS Data Science"];
-    const unique = [...new Set([...customClasses, ...fromStudents, ...fromRecords, ...defaults])];
+    const unique = [...new Set([...fromGrades, ...customClasses, ...fromStudents, ...fromRecords, ...defaults])];
     return unique;
-  }, [students, records, customClasses, isSchool]);
+  }, [dbGrades, students, records, customClasses, isSchool]);
 
-  // Derive dynamic list of Sections
+  // Active Selected Class
+  const [selectedClass, setSelectedClass] = useState(() => availableClasses[0] || (isSchool ? "Grade 10" : "BS Computer Science"));
+
+  // Fetch pre-defined sections whenever selectedClass changes
+  useEffect(() => {
+    const matchedGrade = dbGrades.find(
+      (g) => g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase()
+    );
+    if (matchedGrade?._id) {
+      axiosInstance.get(`/academic/sections?gradeId=${matchedGrade._id}`)
+        .then((res) => {
+          setDbSections(Array.isArray(res.data) ? res.data : []);
+        })
+        .catch((err) => console.error("Error fetching sections in timetable:", err));
+    } else {
+      setDbSections([]);
+    }
+  }, [selectedClass, dbGrades]);
+
+  // Derive dynamic list of Sections (Prioritizes pre-defined database sections!)
   const availableSections = useMemo(() => {
+    const fromDb = dbSections.map((s) => s.name).filter(Boolean);
     const fromStudents = students.map((s) => s.section).filter(Boolean);
     const fromRecords = records.map((r) => r.section).filter(Boolean);
     const defaults = ["A", "B", "C", "D"];
-    const unique = [...new Set([...customSections, ...fromStudents, ...fromRecords, ...defaults])];
+    const unique = [...new Set([...fromDb, ...customSections, ...fromStudents, ...fromRecords, ...defaults])];
     return unique;
-  }, [students, records, customSections]);
+  }, [dbSections, students, records, customSections]);
 
-  // Active Selected Class & Section
-  const [selectedClass, setSelectedClass] = useState(() => availableClasses[0] || (isSchool ? "Grade 10" : "BS Computer Science"));
   const [selectedSection, setSelectedSection] = useState(() => availableSections[0] || "A");
 
   // Keep selectedClass synchronized if availableClasses changes and current selection is missing
@@ -707,6 +741,54 @@ export default function ClassTimetable() {
             <Coffee size={14} />
             + Add Lunch / Break
           </button>
+
+          {/* Direct Shortcut to Pre-defined Academic Setup */}
+          <Link
+            to="/academics"
+            title="Configure Pre-defined Classes, Sections & Subjects"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "7px 12px",
+              borderRadius: "8px",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              background: "#ffffff",
+              color: "#334155",
+              border: "1.5px solid #cbd5e1",
+              textDecoration: "none",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Settings size={13} style={{ color: "#64748b" }} />
+            Academic Setup
+          </Link>
+
+          {/* Direct Shortcut to Teacher Assignments */}
+          <Link
+            to="/teacher-assignments"
+            title="Assign Faculty to Subjects & Sections"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "7px 12px",
+              borderRadius: "8px",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              background: "#ffffff",
+              color: "#334155",
+              border: "1.5px solid #cbd5e1",
+              textDecoration: "none",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Users size={13} style={{ color: "#64748b" }} />
+            Assign Teachers
+          </Link>
         </div>
       </div>
 

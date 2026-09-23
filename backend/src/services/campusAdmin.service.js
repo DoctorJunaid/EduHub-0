@@ -278,7 +278,12 @@ class CampusAdminService {
         );
       }
 
-      // 3. Instructor conflict (only between regular classes, ignore generic instructors)
+      // 3. Instructor conflict (both by teacherId and instructor string)
+      if (payload.teacherId && record.teacherId && String(payload.teacherId) === String(record.teacherId)) {
+        throw new Error(
+          `Instructor is already assigned on ${conflictingDayStr} to '${record.subject || "another class"}' (${record.startTime} - ${record.endTime}).`
+        );
+      }
       const ignoredInstructors = [
         "",
         "tbd",
@@ -296,7 +301,19 @@ class CampusAdminService {
         );
       }
 
-      // 4. Class & Section conflict (same class & section cannot have two classes simultaneously)
+      // 4. Class & Section conflict (both by gradeId+sectionId and program+section string)
+      if (
+        payload.gradeId &&
+        record.gradeId &&
+        String(payload.gradeId) === String(record.gradeId) &&
+        payload.sectionId &&
+        record.sectionId &&
+        String(payload.sectionId) === String(record.sectionId)
+      ) {
+        throw new Error(
+          `This Class and Section already has '${record.subject}' scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+        );
+      }
       const pProg = (payload.program || "").trim().toLowerCase();
       const rProg = (record.program || "").trim().toLowerCase();
       const pSec = (payload.section || "").trim().toLowerCase();
@@ -341,10 +358,14 @@ class CampusAdminService {
         typeof maybeInstituteId === "string" ? maybeInstituteId : null,
       days,
       institutionType: data.institutionType || "School",
-      program: data.program || data.className || data.gradeOrClass || "Grade 10",
-      section: data.section || "A",
-      subject: data.subject || data.breakTitle || (data.isBreak ? "Lunch & Prayer Break" : "General"),
-      instructor: data.instructor || data.teacherName || (data.isBreak ? "Campus Administration" : "Assigned Teacher"),
+      program: data.program || "",
+      section: data.section || "",
+      subject: data.subject || "",
+      instructor: data.instructor || "",
+      gradeId: data.gradeId || null,
+      sectionId: data.sectionId || null,
+      subjectId: data.subjectId || null,
+      teacherId: data.teacherId || null,
       room: data.room || data.roomNumber || (data.isBreak ? "Cafeteria / Grounds" : "Room 101"),
       startTime,
       endTime,
@@ -356,6 +377,20 @@ class CampusAdminService {
     await this.validateScheduleConflicts(payload.campusId, payload);
 
     const created = await Timetable.create(payload);
+    const populated = await Timetable.findById(created._id)
+      .populate("gradeId", "name")
+      .populate("sectionId", "name")
+      .populate("subjectId", "name code")
+      .populate("teacherId", "name email");
+
+    if (populated) {
+      const doc = populated.toObject();
+      if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
+      if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
+      if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+      if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      return doc;
+    }
     return created;
   }
 
@@ -407,7 +442,23 @@ class CampusAdminService {
     if (filter.subject) query.subject = new RegExp(filter.subject, "i");
     if (filter.institutionType) query.institutionType = filter.institutionType;
 
-    let records = await Timetable.find(query).sort({ days: 1, startTime: 1 });
+    let records = await Timetable.find(query)
+      .populate("gradeId", "name")
+      .populate("sectionId", "name")
+      .populate("subjectId", "name code")
+      .populate("teacherId", "name email")
+      .sort({ days: 1, startTime: 1 });
+
+    // Map populated names back to string fields for frontend compatibility
+    records = records.map(r => {
+      const doc = r.toObject();
+      if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
+      if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
+      if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+      if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      return doc;
+    });
+
     if (!records.length && filter.campusId) {
       const legacyQuery = { campusId: filter.campusId };
       if (filter.dayOfWeek) legacyQuery.dayOfWeek = filter.dayOfWeek;
@@ -472,11 +523,24 @@ class CampusAdminService {
 
       await this.validateScheduleConflicts(mergedPayload.campusId, mergedPayload, id);
 
-      const record = await Timetable.findOneAndUpdate(query, updateData, {
+      const updated = await Timetable.findOneAndUpdate(query, updateData, {
         new: true,
         runValidators: true,
-      });
-      return record;
+      })
+        .populate("gradeId", "name")
+        .populate("sectionId", "name")
+        .populate("subjectId", "name code")
+        .populate("teacherId", "name email");
+
+      if (updated) {
+        const doc = updated.toObject();
+        if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
+        if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
+        if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+        if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+        return doc;
+      }
+      return updated;
     }
 
     let record = await ClassSchedule.findOneAndUpdate(query, updateData, {

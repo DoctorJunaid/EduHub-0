@@ -30,8 +30,8 @@ const studentProfileSchema = new mongoose.Schema(
       unique: true,
     },
     studentId: { type: String, required: true, unique: true },
-    gradeOrClass: { type: String, required: true },
-    section: { type: String, required: true },
+    gradeId: { type: mongoose.Schema.Types.ObjectId, ref: "Grade", required: true },
+    sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section", required: true },
     rollNumber: { type: String, required: true },
     guardianDetails: {
       name: { type: String, required: true },

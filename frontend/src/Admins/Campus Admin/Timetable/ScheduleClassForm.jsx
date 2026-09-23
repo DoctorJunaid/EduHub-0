@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { Calendar, School, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, School, Clock, Settings } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { scheduleStatuses } from "./timetableData.js";
 import { weekdays } from "../../../lib/schedule.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
+import axiosInstance from "@/api/axiosInstance";
+import { Link } from "react-router-dom";
 
 export default function ScheduleClassForm({
   record,
@@ -14,46 +16,80 @@ export default function ScheduleClassForm({
   onClose,
 }) {
   const { isSchool } = useInstitution();
-  // Use dynamic classes from real DB (passed as options.program) or sensible defaults
-  const programList = options?.program?.length
-    ? options.program
-    : isSchool
-    ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6", "Grade 5"]
-    : ["BS Computer Science", "BS Software Engineering", "BBA"];
+  
+  // Data states
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [subjects, setSubjects] = useState([]); // Specifically gradeSubjects
+  const [teachers, setTeachers] = useState([]); // Specifically assigned teachers for this grade/section/subject
 
   const [values, setValues] = useState(() => ({
-    subject: record?.subject ?? defaults?.subject ?? "",
-    program:
-      record?.program ?? defaults?.program ?? programList[0] ?? "",
-    section: record?.section ?? defaults?.section ?? (isSchool ? "A" : ""),
-    instructor:
-      record?.instructor ?? defaults?.instructor ?? options?.instructor?.[0] ?? "",
-    room: record?.room ?? defaults?.room ?? options?.room?.[0] ?? (isSchool ? "Room 101" : "Hall 1"),
-    days: record?.days ?? defaults?.days ?? (isSchool ? [1, 2, 3, 4, 5] : []),
-    startTime: record?.startTime ?? defaults?.startTime ?? (isSchool ? "08:30" : "09:00"),
-    endTime: record?.endTime ?? defaults?.endTime ?? (isSchool ? "09:20" : "10:00"),
-    status: record?.status ?? defaults?.status ?? "Active",
+    gradeId: record?.gradeId || defaults?.gradeId || "",
+    sectionId: record?.sectionId || defaults?.sectionId || "",
+    subjectId: record?.subjectId || defaults?.subjectId || "",
+    teacherId: record?.teacherId || defaults?.teacherId || "",
+    room: record?.room || defaults?.room || options?.room?.[0] || (isSchool ? "Room 101" : "Hall 1"),
+    days: record?.days || defaults?.days || (isSchool ? [1, 2, 3, 4, 5] : []),
+    startTime: record?.startTime || defaults?.startTime || (isSchool ? "08:30" : "09:00"),
+    endTime: record?.endTime || defaults?.endTime || (isSchool ? "09:20" : "10:00"),
+    status: record?.status || defaults?.status || "Active",
   }));
   const [error, setError] = useState("");
 
+  // Fetch initial grades
+  useEffect(() => {
+    axiosInstance.get("/academic/grades").then(res => setGrades(res.data)).catch(console.error);
+  }, []);
+
+  // Fetch sections and subjects when grade changes
+  useEffect(() => {
+    if (!values.gradeId) {
+      setSections([]);
+      setSubjects([]);
+      return;
+    }
+    axiosInstance.get(`/academic/sections?gradeId=${values.gradeId}`).then(res => setSections(res.data)).catch(console.error);
+    axiosInstance.get(`/academic/grade-subjects?gradeId=${values.gradeId}`).then(res => setSubjects(res.data.map(gs => gs.subjectId).filter(Boolean))).catch(console.error);
+  }, [values.gradeId]);
+
+  // Fetch assigned teachers when grade, section, subject are all selected
+  useEffect(() => {
+    if (!values.gradeId || !values.sectionId || !values.subjectId) {
+      setTeachers([]);
+      return;
+    }
+    axiosInstance.get(`/academic/teacher-assignments?gradeId=${values.gradeId}&sectionId=${values.sectionId}&subjectId=${values.subjectId}`)
+      .then(res => setTeachers(res.data.map(ta => ta.teacherId).filter(Boolean)))
+      .catch(console.error);
+  }, [values.gradeId, values.sectionId, values.subjectId]);
+
   const change = (key, value) => {
-    setValues((previous) => ({ ...previous, [key]: value }));
+    setValues((prev) => {
+      const next = { ...prev, [key]: value };
+      
+      // Cascading resets
+      if (key === "gradeId") {
+        next.sectionId = "";
+        next.subjectId = "";
+        next.teacherId = "";
+      } else if (key === "sectionId" || key === "subjectId") {
+        next.teacherId = "";
+      }
+      
+      return next;
+    });
     setError("");
   };
 
   const submit = (event) => {
     event.preventDefault();
     if (!values.days.length) return setError("Please select at least one weekday.");
-    if (values.endTime <= values.startTime)
-      return setError("End time must be after start time.");
-    onSave(
-      Object.fromEntries(
-        Object.entries(values).map(([key, value]) => [
-          key,
-          typeof value === "string" ? value.trim() : value,
-        ]),
-      ),
-    );
+    if (values.endTime <= values.startTime) return setError("End time must be after start time.");
+    if (!values.gradeId || !values.sectionId || !values.subjectId || !values.teacherId) {
+      return setError("Please complete all academic assignments (Grade, Section, Subject, Teacher).");
+    }
+
+    onSave({ ...values });
   };
 
   return (
@@ -66,10 +102,10 @@ export default function ScheduleClassForm({
       subtitle={
         isSchool
           ? record
-            ? `Editing period schedule for ${record.subject} (${record.section || "Section A"}).`
+            ? `Editing period schedule for this subject.`
             : "Define period timings, teacher incharge, grade & section, and classroom allocation."
           : record
-            ? `Editing schedule for ${record.subject} (${record.section || "Regular"}).`
+            ? `Editing schedule for this course.`
             : "Define lecture timings, recurring weekdays, and room allocation for this class."
       }
       parentName={isSchool ? "Class Routine & Timetable" : "Class Timetable"}
@@ -78,63 +114,80 @@ export default function ScheduleClassForm({
     >
       <form onSubmit={submit}>
         <div className="activity-form-grid">
-          <div className="activity-section-title">
-            {isSchool ? "Subject & Grade Allocation" : "Course & Class Assignment"}
-          </div>
-
-          <div className="activity-form-field span-2">
-            <Label htmlFor="tt-subject">{isSchool ? "Subject / Period Name *" : "Subject / Course Name *"}</Label>
-            <input
-              id="tt-subject"
-              required
-              placeholder={
-                isSchool
-                  ? "e.g. Mathematics, English Language, Physics, Urdu, Computer Studies"
-                  : "e.g. Advanced Web Design, Data Structures"
-              }
-              value={values.subject}
-              onChange={(e) => change("subject", e.target.value)}
-            />
+          <div className="activity-section-title flex justify-between items-center">
+            <span>{isSchool ? "Subject & Grade Allocation" : "Course & Class Assignment"}</span>
+            <Link to="/academics" className="text-xs flex items-center gap-1 text-primary hover:underline">
+              <Settings size={14} /> Manage Academics
+            </Link>
           </div>
 
           <div className="activity-form-field">
             <Label htmlFor="tt-program">{isSchool ? "Assigned Class / Grade *" : "Academic Program *"}</Label>
             <select
               id="tt-program"
-              value={values.program}
-              onChange={(e) => change("program", e.target.value)}
+              value={values.gradeId}
+              onChange={(e) => change("gradeId", e.target.value)}
+              required
             >
-              {programList.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
+              <option value="" disabled>Select {isSchool ? "Grade" : "Program"}</option>
+              {grades.map((p) => (
+                <option key={p._id} value={p._id}>{p.name}</option>
               ))}
             </select>
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="tt-section">{isSchool ? "Section (A, B, C) *" : "Class Section *"}</Label>
-            <input
+            <Label htmlFor="tt-section">{isSchool ? "Section *" : "Class Section *"}</Label>
+            <select
               id="tt-section"
+              value={values.sectionId}
+              onChange={(e) => change("sectionId", e.target.value)}
               required
-              placeholder={isSchool ? "e.g. Section A" : "e.g. CS-4A"}
-              value={values.section}
-              onChange={(e) => change("section", e.target.value)}
-            />
+              disabled={!values.gradeId || sections.length === 0}
+            >
+              <option value="" disabled>{!values.gradeId ? "Select Grade first" : sections.length === 0 ? "No sections configured" : "Select Section"}</option>
+              {sections.map((s) => (
+                <option key={s._id} value={s._id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="activity-form-field span-2">
+            <Label htmlFor="tt-subject">{isSchool ? "Subject / Period Name *" : "Subject / Course Name *"}</Label>
+            <select
+              id="tt-subject"
+              value={values.subjectId}
+              onChange={(e) => change("subjectId", e.target.value)}
+              required
+              disabled={!values.gradeId || subjects.length === 0}
+            >
+              <option value="" disabled>{!values.gradeId ? "Select Grade first" : subjects.length === 0 ? "No subjects assigned to this grade" : "Select Subject"}</option>
+              {subjects.map((s) => s ? (
+                <option key={s._id} value={s._id}>{s.name} {s.code ? `(${s.code})` : ""}</option>
+              ) : null)}
+            </select>
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="tt-instructor">{isSchool ? "Assigned Teacher *" : "Assigned Instructor *"}</Label>
+            <div className="flex justify-between items-center mb-1.5">
+              <Label htmlFor="tt-instructor">{isSchool ? "Assigned Teacher *" : "Assigned Instructor *"}</Label>
+              <Link to="/teacher-assignments" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+                Configure Assignments
+              </Link>
+            </div>
             <select
               id="tt-instructor"
-              value={values.instructor}
-              onChange={(e) => change("instructor", e.target.value)}
+              value={values.teacherId}
+              onChange={(e) => change("teacherId", e.target.value)}
+              required
+              disabled={!values.gradeId || !values.sectionId || !values.subjectId || teachers.length === 0}
             >
-              {(options?.instructor || ["Ms. Ayesha Khan", "Mr. Bilal Raza"]).map((inst) => (
-                <option key={inst} value={inst}>
-                  {inst}
-                </option>
-              ))}
+              <option value="" disabled>
+                {!values.subjectId ? "Select Subject first" : teachers.length === 0 ? "No teacher assigned for this specific class" : "Select Teacher"}
+              </option>
+              {teachers.map((inst) => inst ? (
+                <option key={inst._id} value={inst._id}>{inst.name}</option>
+              ) : null)}
             </select>
           </div>
 

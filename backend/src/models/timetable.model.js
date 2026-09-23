@@ -20,30 +20,21 @@ const timetableSchema = new mongoose.Schema(
       trim: true,
       enum: INSTITUTION_TYPES,
     },
-    program: {
-      type: String,
-      trim: true,
-      default: "",
+    gradeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Grade",
     },
-    section: {
-      type: String,
-      trim: true,
-      default: "",
+    sectionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Section",
     },
-    subject: {
-      type: String,
-      trim: true,
-      default: "",
+    subjectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
     },
-    instructor: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    instructorId: {
+    teacherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: null,
     },
     room: {
       type: String,
@@ -122,40 +113,37 @@ timetableSchema.pre("validate", function validateTimetable() {
   }
 
   if (this.isBreak) {
-    if (!this.breakTitle && !this.subject) {
+    if (!this.breakTitle && !this.subjectId) {
       this.invalidate(
         "breakTitle",
-        "Break slots require breakTitle or subject.",
+        "Break slots require breakTitle or subjectId.",
       );
-    }
-    if (!this.subject && this.breakTitle) {
-      this.subject = this.breakTitle;
-    }
-    if (!this.breakTitle && this.subject) {
-      this.breakTitle = this.subject;
     }
   } else {
     const requiredFields = [
-      ["program", "Program is required for class slots."],
-      ["section", "Section is required for class slots."],
-      ["subject", "Subject is required for class slots."],
-      ["instructor", "Instructor is required for class slots."],
+      ["gradeId", "Grade/Program is required for class slots."],
+      ["sectionId", "Section is required for class slots."],
+      ["subjectId", "Subject is required for class slots."],
+      ["teacherId", "Teacher is required for class slots."],
       ["room", "Room is required for class slots."],
     ];
     for (const [field, message] of requiredFields) {
-      if (!this[field]?.trim()) this.invalidate(field, message);
+      const val = this[field];
+      if (!val || (typeof val === "string" && !val.trim())) {
+        this.invalidate(field, message);
+      }
     }
   }
 });
 
 timetableSchema.index({ campusId: 1, institutionType: 1, days: 1 });
 timetableSchema.index({ campusId: 1, days: 1, room: 1 });
-timetableSchema.index({ campusId: 1, days: 1, instructor: 1 });
+timetableSchema.index({ campusId: 1, days: 1, teacherId: 1 });
 timetableSchema.index({
   campusId: 1,
   days: 1,
-  program: 1,
-  section: 1,
+  gradeId: 1,
+  sectionId: 1,
 });
 
 const Timetable =
