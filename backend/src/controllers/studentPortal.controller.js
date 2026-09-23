@@ -11,6 +11,7 @@ import {
   StudentDiary,
   StudentConversation,
 } from "../models/studentPortal.model.js";
+import PaymentTransaction from "../models/paymentTransaction.model.js";
 
 const id = (value) => (value ? String(value) : "");
 
@@ -44,7 +45,7 @@ export const getStudentPortal = async (req, res) => {
     $or: [{ className }, { gradeOrClass: className }],
     section: student.section,
   };
-  const [schedules, exams, attendance, fees, results] = await Promise.all([
+  const [schedules, exams, attendance, fees, payments, results] = await Promise.all([
     ClassSchedule.find(classFilter).sort({ dayOfWeek: 1, startTime: 1 }).lean(),
     ExamSchedule.find({
       campusId,
@@ -58,6 +59,9 @@ export const getStudentPortal = async (req, res) => {
       .lean(),
     FeeRecord.find({ campusId, studentId: student._id })
       .sort({ dueDate: -1 })
+      .lean(),
+    PaymentTransaction.find({ campusId, studentId: student._id })
+      .sort({ createdAt: -1 })
       .lean(),
     Performance.find({ campusId, studentId: student._id })
       .sort({ createdAt: -1 })
@@ -122,6 +126,13 @@ export const getStudentPortal = async (req, res) => {
         ...row,
         id: id(row._id),
         _id: id(row._id),
+        studentId: id(row.studentId),
+      })),
+      payments: payments.map((row) => ({
+        ...row,
+        id: id(row._id),
+        _id: id(row._id),
+        feeRecordId: id(row.feeRecordId),
         studentId: id(row.studentId),
       })),
       results: results.map((row) => ({
@@ -278,4 +289,49 @@ export const sendConversationMessage = async (req, res) => {
       receiverId: `faculty:${id(receiverId)}`,
     },
   });
+};
+
+export const submitFeePayment = async (req, res) => {
+  try {
+    const feeRecord = await FeeRecord.findOne({
+      _id: req.params.id,
+      campusId: req.user.campusId,
+      studentId: req.user._id,
+    });
+    if (!feeRecord) {
+      return res.status(404).json({ success: false, message: "Fee record not found." });
+    }
+
+    const amount = Number(req.body.amount || 0);
+    if (amount <= 0) {
+      return res.status(400).json({ success: false, message: "Payment amount must be greater than zero." });
+    }
+
+    const remaining = feeRecord.amount - feeRecord.paidAmount;
+    if (amount > remaining) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Payment amount (${amount}) exceeds remaining balance (${remaining}).` 
+      });
+    }
+
+    const payment = await PaymentTransaction.create({
+      feeRecordId: feeRecord._id,
+      studentId: req.user._id,
+      campusId: req.user.campusId,
+      instituteId: req.user.instituteId || null,
+      amount,
+      paymentDate: new Date(),
+      paymentMethod: req.body.paymentMethod || "Bank Transfer",
+      referenceNo: req.body.referenceNo || "",
+      receiptUrl: req.body.receiptUrl || "",
+      status: "PENDING",
+      submittedBy: req.user._id,
+      notes: req.body.notes || "Submitted by student via portal",
+    });
+
+    return res.status(201).json({ success: true, data: payment });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
 };

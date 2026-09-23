@@ -3,6 +3,7 @@ import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
+import { Button } from "@/components/ui/Button";
 
 export default function VoucherDetails({ voucher, onClose, onPrint }) {
   const { isSchool } = useInstitution();
@@ -17,61 +18,61 @@ export default function VoucherDetails({ voucher, onClose, onPrint }) {
       onBack={onClose}
       maxWidth={850}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+      <div className="flex flex-col gap-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Student Name
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.student.name}</strong>
+            <strong className="text-[15px] text-foreground">{voucher.student.name}</strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Voucher Serial No.
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.voucherNo}</strong>
+            <strong className="text-[15px] text-foreground">{voucher.voucherNo}</strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Fee Category
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.feeCategory}</strong>
+            <strong className="text-[15px] text-foreground">{voucher.feeCategory}</strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               {isSchool ? "Term / Period" : "Semester"}
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>
+            <strong className="text-[15px] text-foreground">
               {isSchool ? (voucher.semester?.replace(/Semester/i, "Term") || "Annual Term") : (voucher.semester || "—")}
             </strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Total Amount
             </span>
-            <strong style={{ fontSize: "18px", color: "#09090b" }}>{formatPKR(voucher.amount)}</strong>
+            <strong className="text-lg text-foreground">{formatPKR(voucher.amount)}</strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Payment Due Date
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.dueDate}</strong>
+            <strong className="text-[15px] text-foreground">{voucher.dueDate}</strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Settlement / Payment Date
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{voucher.paymentDate || "Unpaid"}</strong>
+            <strong className="text-[15px] text-foreground">{voucher.paymentDate || "Unpaid"}</strong>
           </div>
 
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
               Payment Status
             </span>
             <FeeStatusBadge status={voucher.paymentStatus} />
@@ -80,21 +81,21 @@ export default function VoucherDetails({ voucher, onClose, onPrint }) {
 
         {/* Voucher Description & Line Items Particulars */}
         {(voucher.description || voucher.notes || (Array.isArray(voucher.breakdown) && voucher.breakdown.length > 0)) && (
-          <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
-            <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "6px" }}>
+          <div className="p-4 border border-border rounded-lg bg-muted/30">
+            <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-2">
               Voucher Description & Fee Particulars
             </span>
             {(voucher.description || voucher.notes) && (
-              <p style={{ margin: "0 0 10px 0", fontSize: "13px", color: "#3f3f46", lineHeight: "1.5" }}>
+              <p className="m-0 mb-3 text-sm text-foreground/80 leading-relaxed">
                 {voucher.description || voucher.notes}
               </p>
             )}
             {Array.isArray(voucher.breakdown) && voucher.breakdown.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", borderTop: "1px solid #e4e4e7", paddingTop: "8px" }}>
+              <div className="flex flex-col gap-1.5 mt-2 pt-2 border-t border-border">
                 {voucher.breakdown.map((item, idx) => (
-                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                    <span style={{ color: "#71717a" }}>{item.title}</span>
-                    <strong style={{ color: "#09090b" }}>{formatPKR(item.amount)}</strong>
+                  <div key={idx} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{item.title}</span>
+                    <strong className="text-foreground">{formatPKR(item.amount)}</strong>
                   </div>
                 ))}
               </div>
@@ -102,20 +103,15 @@ export default function VoucherDetails({ voucher, onClose, onPrint }) {
           </div>
         )}
 
-        <div className="activity-form-actions" style={{ display: "flex", gap: "10px" }}>
-          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+        <div className="flex gap-3 border-t border-border pt-4 mt-2">
+          <Button variant="outline" onClick={onClose}>
             Back to Fee Management
-          </button>
+          </Button>
           {onPrint && (
-            <button
-              type="button"
-              className="toolbar-btn toolbar-btn-primary"
-              onClick={() => onPrint(voucher)}
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-            >
-              <Printer size={15} />
+            <Button onClick={() => onPrint(voucher)}>
+              <Printer className="size-4" />
               Print Bank Challan
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -795,6 +795,103 @@ export const deleteFeeStructure = async (req, res) => {
   }
 };
 
+// --- Payment Processing Controllers ---
+export const getPendingPayments = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const payments = await campusAdminService.getPendingPayments(campusId);
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+export const getStudentPayments = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const payments = await campusAdminService.getStudentPayments(req.params.id, campusId);
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+export const getFeePayments = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const payments = await campusAdminService.getFeePayments(req.params.id, campusId);
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    handleError(res, error, 500);
+  }
+};
+
+export const recordPayment = async (req, res) => {
+  try {
+    const { campusId, instituteId } = getContext(req);
+    const record = await campusAdminService.recordPayment(
+      req.params.id,
+      campusId,
+      instituteId,
+      { ...req.body, submittedBy: req.user?._id }
+    );
+    logActivity({
+      campus: campusId,
+      action: "payment_recorded",
+      category: "fees",
+      title: "Fee Payment Recorded",
+      description: `Payment of Rs ${req.body.amount} recorded for voucher ${record.feeRecord.challanNo}`,
+      entityType: "payment",
+      entityId: record.payment._id,
+      performedBy: req.user?._id,
+      metadata: { amount: req.body.amount, method: req.body.paymentMethod },
+    });
+    res.status(201).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const confirmPayment = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.confirmPayment(
+      req.params.paymentId,
+      campusId,
+      req.user?._id,
+      req.body.notes
+    );
+    logActivity({
+      campus: campusId,
+      action: "payment_confirmed",
+      category: "fees",
+      title: "Fee Payment Confirmed",
+      description: `Payment of Rs ${record.payment.amount} confirmed for voucher ${record.feeRecord.challanNo}`,
+      entityType: "payment",
+      entityId: record.payment._id,
+      performedBy: req.user?._id,
+    });
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
+export const rejectPayment = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await campusAdminService.rejectPayment(
+      req.params.paymentId,
+      campusId,
+      req.user?._id,
+      req.body.notes
+    );
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
 // --- Performance Controllers ---
 export const createPerformanceRecord = async (req, res) => {
   try {

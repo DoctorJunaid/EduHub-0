@@ -100,6 +100,7 @@ export default function StudentForm({
     status: student?.status ?? "Active",
     guardian: student?.guardian ?? "",
     guardianPhone: student?.guardianPhone ?? "",
+    baseFee: student?.baseFee ?? 0,
   }));
 
   const field = (
@@ -277,6 +278,25 @@ export default function StudentForm({
           </div>
 
           {field("status", "Enrollment Status", { options: studentStatuses })}
+
+          <div className="activity-section-title">
+            Financial Details
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor={`${id}-baseFee`}>Predefined Monthly Fee (PKR) *</Label>
+            <input
+              id={`${id}-baseFee`}
+              name="baseFee"
+              type="number"
+              min="0"
+              value={values.baseFee}
+              required
+              placeholder="e.g. 5000"
+              onChange={(e) => setValues((prev) => ({ ...prev, baseFee: e.target.value }))}
+            />
+          </div>
+          <div className="activity-form-field"></div>
 
           <div className="activity-section-title">
             {isSchool ? "Parent / Guardian Record" : "Guardian Information"}

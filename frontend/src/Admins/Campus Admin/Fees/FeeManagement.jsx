@@ -43,10 +43,12 @@ import FeeVoucherForm from "./FeeVoucherForm";
 import FeeTable from "./FeeTable";
 import FeeStatusBadge from "./FeeStatusBadge";
 import VoucherDetails from "./VoucherDetails";
-import MarkPaidDialog from "./MarkPaidDialog";
+import RecordPaymentDialog from "./RecordPaymentDialog";
 import PrintChallanDialog from "./PrintChallanDialog";
 import GenerateMonthlyFeesDialog from "./GenerateMonthlyFeesDialog";
 import FeeStructureDialog from "./FeeStructureDialog";
+import PendingPaymentsDialog from "./PendingPaymentsDialog";
+import axiosInstance from "@/api/axiosInstance";
 import { useInstitution } from "@/context/InstitutionContext";
 import "../Timetable/ClassTimetable.css";
 import "./FeeManagement.css";
@@ -220,13 +222,13 @@ export default function FeeManagement() {
       </div>
 
       {/* 2. Contiguous 56px Toolbar */}
-      <div className="campus-toolbar">
+      <div className="campus-toolbar fee-toolbar">
         <div className="toolbar-left">
-          <div className="toolbar-search" style={{ width: "130px", maxWidth: "145px" }}>
+          <div className="toolbar-search fee-toolbar-search">
             <Search size={13} />
             <input
               type="search"
-              placeholder="Search voucher..."
+              placeholder="Search..."
               value={filters.search}
               onChange={(e) => change("search", e.target.value)}
               aria-label="Search student or voucher"
@@ -234,9 +236,9 @@ export default function FeeManagement() {
           </div>
 
           <select
-            className="toolbar-select"
+            className="toolbar-select fee-toolbar-select"
             aria-label="Filter by Category"
-            style={{ maxWidth: "105px" }}
+            style={{ maxWidth: "90px" }}
             value={filters.feeCategory}
             onChange={(e) => change("feeCategory", e.target.value)}
           >
@@ -247,9 +249,9 @@ export default function FeeManagement() {
           </select>
 
           <select
-            className="toolbar-select"
+            className="toolbar-select fee-toolbar-select"
             aria-label="Filter by Status"
-            style={{ maxWidth: "95px" }}
+            style={{ maxWidth: "82px" }}
             value={filters.paymentStatus}
             onChange={(e) => change("paymentStatus", e.target.value)}
           >
@@ -260,9 +262,9 @@ export default function FeeManagement() {
           </select>
 
           <select
-            className="toolbar-select"
+            className="toolbar-select fee-toolbar-select"
             aria-label={isSchool ? "Filter by Term" : "Filter by Semester"}
-            style={{ maxWidth: "95px" }}
+            style={{ maxWidth: "78px" }}
             value={filters.semester}
             onChange={(e) => change("semester", e.target.value)}
           >
@@ -275,59 +277,71 @@ export default function FeeManagement() {
           <input
             type="date"
             aria-label="Filter by due date"
+            title="Filter by due date"
             value={filters.dueDate}
             onChange={(e) => change("dueDate", e.target.value)}
-            style={{ height: "32px", width: "115px", fontSize: "11px", background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "6px", padding: "0 6px", boxSizing: "border-box" }}
+            className="fee-toolbar-date"
           />
 
           {(filters.search || filters.feeCategory || filters.paymentStatus || filters.semester || filters.dueDate) && (
             <button
               type="button"
-              className="toolbar-btn toolbar-btn-outline"
+              className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
               onClick={reset}
+              title="Reset all filters"
+              style={{ padding: "0 6px" }}
             >
               Reset
             </button>
           )}
         </div>
 
-        <div className="toolbar-actions">
+        <div className="toolbar-actions fee-toolbar-actions">
           <button
             type="button"
-            className="toolbar-btn toolbar-btn-outline"
+            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
             onClick={() => setModal({ mode: "structure" })}
             title="School Fee Structure Setup"
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            <Settings2 size={14} />
-            Fee Setup
+            <Settings2 size={13} />
+            <span>Fee Setup</span>
           </button>
           <button
             type="button"
-            className="toolbar-btn toolbar-btn-outline"
+            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
             onClick={() => setModal({ mode: "generate" })}
             title="Generate Monthly Fee Vouchers"
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            <Wand2 size={14} />
-            Generate Monthly
+            <Wand2 size={13} />
+            <span>Generate<span className="fee-btn-extra"> Monthly</span></span>
           </button>
           <button
             type="button"
-            className="toolbar-btn toolbar-btn-outline"
+            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
+            onClick={() => setModal({ mode: "pending" })}
+            title="Review Pending Payments"
+          >
+            <Clock size={13} />
+            <span><span className="fee-btn-extra">Review </span>Pending</span>
+          </button>
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-outline fee-toolbar-btn"
             onClick={exportFees}
+            title="Export CSV"
           >
-            <Download size={14} />
-            Export CSV
+            <Download size={13} />
+            <span>Export<span className="fee-btn-extra"> CSV</span></span>
           </button>
           <button
             type="button"
-            className="toolbar-btn toolbar-btn-primary"
+            className="toolbar-btn toolbar-btn-primary fee-toolbar-btn"
             disabled={!students.length}
             onClick={() => onAction("add")}
+            title="Add Fee Voucher"
           >
-            <Plus size={14} />
-            Add Fee Voucher
+            <Plus size={13} />
+            <span>Add <span className="fee-btn-extra">Fee </span>Voucher</span>
           </button>
         </div>
       </div>
@@ -449,25 +463,17 @@ export default function FeeManagement() {
         />
       )}
       {modal?.mode === "paid" && selected && (
-        <MarkPaidDialog
+        <RecordPaymentDialog
           voucher={selected}
           onClose={close}
-          onConfirm={async (paymentDate) => {
+          onConfirm={async (paymentData) => {
             try {
-              await dispatch(
-                updateFeeVoucher({
-                  _id: selected._id || selected.id,
-                  id: selected._id || selected.id,
-                  paymentStatus: "Paid",
-                  status: "paid",
-                  paymentDate,
-                }),
-              ).unwrap();
-              toast.success(`Voucher ${selected.voucherNo} marked as Paid.`);
+              await axiosInstance.post(`/api/campus-admin/fees/${selected._id || selected.id}/payments`, paymentData);
+              toast.success(`Payment recorded for voucher ${selected.voucherNo}.`);
               dispatch(fetchFees());
             } catch (err) {
-              dispatch(voucherMarkedPaid({ id: selected.id, paymentDate }));
-              toast.success(`Voucher ${selected.voucherNo} marked as Paid.`);
+              const msg = err.response?.data?.message || err.message || "Failed to record payment.";
+              toast.error(msg);
             }
             close();
           }}
@@ -484,6 +490,9 @@ export default function FeeManagement() {
       )}
       {modal?.mode === "structure" && (
         <FeeStructureDialog onClose={close} />
+      )}
+      {modal?.mode === "pending" && (
+        <PendingPaymentsDialog onClose={close} onConfirm={() => dispatch(fetchFees())} />
       )}
     </section>
   );

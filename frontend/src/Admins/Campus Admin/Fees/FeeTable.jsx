@@ -50,15 +50,15 @@ export default function FeeTable({ rows, onAction }) {
                     {voucher.student.initials || voucher.student.name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div style={{ minWidth: 0, overflow: "hidden" }}>
-                  <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{voucher.student.name}</strong>
-                  <small style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#71717a" }}>{voucher.voucherNo}</small>
+                <div className="min-w-0 overflow-hidden">
+                  <strong className="block truncate text-foreground">{voucher.student.name}</strong>
+                  <small className="block truncate text-muted-foreground">{voucher.voucherNo}</small>
                 </div>
               </div>
             </TableCell>
-            <TableCell style={{ width: "17%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <TableCell className="w-[17%] truncate">
               {voucher.feeCategory}
-              <small>{voucher.semester || "—"}</small>
+              <small className="block truncate text-muted-foreground">{voucher.semester || "—"}</small>
             </TableCell>
             <TableCell style={{ width: "14%" }}>
               <strong>{formatPKR(voucher.amount)}</strong>
@@ -111,15 +111,15 @@ export default function FeeTable({ rows, onAction }) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <button
-                  type="button"
-                  className="fee-mark-paid"
+                <Button
+                  variant={voucher.paymentStatus === "Paid" ? "secondary" : "default"}
+                  size="sm"
                   disabled={voucher.paymentStatus === "Paid"}
                   onClick={() => onAction("paid", voucher.id)}
                   aria-label={`Mark voucher ${voucher.voucherNo} paid`}
                 >
                   {voucher.paymentStatus === "Paid" ? "Paid" : "Mark Paid"}
-                </button>
+                </Button>
               </div>
             </TableCell>
           </TableRow>

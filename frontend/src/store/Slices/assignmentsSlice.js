@@ -2,9 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance.js';
 import { validAssignment, validSubmission } from '../assignmentData.js';
 
-const assignments = createSlice({
-  name: "assignments",
-  initialState: { records: [] },
 // ─── Async Thunks ────────────────────────────────────────────────────────────
 
 export const fetchAssignments = createAsyncThunk(
@@ -196,7 +193,6 @@ const submissions = createSlice({
   },
 });
 
-export default assignments.reducer;
 export default assignmentsSlice.reducer;
 export const submissionsReducer = submissions.reducer;
 export const { assignmentsLoaded, assignmentSaved, assignmentDeleted } = assignmentsSlice.actions;

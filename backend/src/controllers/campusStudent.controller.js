@@ -243,6 +243,7 @@ export const createStudentForCampus = async (req, res) => {
       guardianPhone: guardianPhone ? guardianPhone.trim() : "",
       status: status || "Active",
       passwordHash: password || "student123",
+      baseFee: req.body.baseFee ? Number(req.body.baseFee) : 0,
     });
 
     await student.populate([
@@ -566,6 +567,7 @@ export const updateStudentInCampus = async (req, res) => {
       "guardianPhone",
       "status",
       "isActive",
+      "baseFee",
     ];
 
     const updateData = {};
