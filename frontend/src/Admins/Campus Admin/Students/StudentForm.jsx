@@ -5,7 +5,7 @@ import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
 import { Users, School, GraduationCap, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { studentStatuses } from "./studentData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";

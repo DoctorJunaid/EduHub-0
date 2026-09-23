@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Popover } from 'radix-ui';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { dateKey, parseDate, longDate, shortDate } from '@/lib/dates';
 import { mondayOf, shiftDays } from '@/lib/schedule';
 import './DatePicker.css';

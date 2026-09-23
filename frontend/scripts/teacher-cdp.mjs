@@ -314,11 +314,22 @@ if (command === "assignments") {
     "/teacher/assignments",
     "document.querySelector('.teacher-assignments') !== null",
   );
-  await clickText("button", "Create Assignment");
+  const createButton = await evaluate(`(() => {
+    const button = [...document.querySelectorAll('button')]
+      .find((node) => node.textContent.trim().includes('Create Assignment'));
+    window.__createAssignmentEvents = [];
+    for (const type of ['pointerdown', 'mousedown', 'mouseup', 'click'])
+      button?.addEventListener(type, () => window.__createAssignmentEvents.push(type));
+    return button ? { disabled: button.disabled, type: button.type } : null;
+  })()`);
+  if (!createButton || createButton.disabled)
+    throw new Error("Create Assignment is missing or unexpectedly disabled.");
+  await realClick(".teacher-assignments-toolbar .teacher-primary-action");
   await waitFor(
     "document.querySelector('[role=dialog] form') !== null",
     "Create Assignment dialog did not open.",
   );
+  await wait(300);
   await setValue("[role=dialog] input[name=title]", createdTitle);
   await setValue("[role=dialog] input[name=dueDate]", "2026-10-15");
   await setValue("[role=dialog] input[name=totalMarks]", "40");
@@ -326,9 +337,7 @@ if (command === "assignments") {
     "[role=dialog] textarea[name=description]",
     "Created by the browser workflow check.",
   );
-  await evaluate(
-    "document.querySelector('[role=dialog] form').requestSubmit()",
-  );
+  await realClick("[role=dialog] button[type=submit]");
   await waitFor(
     `document.body.innerText.includes(${JSON.stringify(createdTitle)}) && !document.querySelector('[role=dialog]')`,
     "Created assignment did not render or dialog did not close.",
@@ -337,6 +346,7 @@ if (command === "assignments") {
     `JSON.parse(localStorage.getItem('eduhub_assignments')).records.find((row) => row.title === ${JSON.stringify(createdTitle)})?.id || ''`,
   );
   if (!createdId) throw new Error("Created assignment was not persisted.");
+  const physicalEvents = await evaluate("window.__createAssignmentEvents");
 
   await evaluate("location.reload()");
   await waitFor(
@@ -428,6 +438,8 @@ if (command === "assignments") {
   console.log(
     JSON.stringify(
       {
+        createButton,
+        physicalEvents,
         createdId,
         editedTitle: editedRecord.title,
         persistedGrade: await evaluate(
@@ -447,15 +459,73 @@ if (command === "assignments") {
   );
 }
 
+if (command === "create-trace") {
+  await go(
+    "/teacher/assignments",
+    "document.querySelector('.teacher-assignments') !== null",
+  );
+  await evaluate(`(() => {
+    window.__assignmentTrace = [];
+    document.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('button')) window.__assignmentTrace.push('pointer:' + event.target.closest('button').textContent.trim());
+    }, true);
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('button')) window.__assignmentTrace.push('click:' + event.target.closest('button').textContent.trim());
+    }, true);
+    document.addEventListener('submit', () => window.__assignmentTrace.push('submit'), true);
+    document.addEventListener('invalid', (event) => window.__assignmentTrace.push('invalid:' + event.target.name), true);
+  })()`);
+  const before = await evaluate(`(() => {
+    const button = [...document.querySelectorAll('button')].find((node) => node.textContent.includes('Create Assignment'));
+    const rect = button.getBoundingClientRect();
+    return { disabled: button.disabled, type: button.type, pointerEvents: getComputedStyle(button).pointerEvents, topElement: document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.outerHTML.slice(0, 180) };
+  })()`);
+  await realClick(".teacher-assignments-toolbar .teacher-primary-action");
+  await waitFor("document.querySelector('[role=dialog] form') !== null", "Create dialog did not open.");
+  await wait(300);
+  await setValue("[role=dialog] input[name=title]", "Create Trace Assignment");
+  await setValue("[role=dialog] input[name=dueDate]", "2026-10-15");
+  await setValue("[role=dialog] input[name=totalMarks]", "40");
+  await setValue("[role=dialog] textarea[name=description]", "Create trace description");
+  const formBefore = await evaluate(`(() => {
+    const form = document.querySelector('[role=dialog] form');
+    const button = form.querySelector('button[type=submit]');
+    button.scrollIntoView({ block: 'center', inline: 'center' });
+    const rect = button.getBoundingClientRect();
+    const top = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return { valid: form.checkValidity(), values: Object.fromEntries(new FormData(form)), dialog: Boolean(form), submit: { rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom }, pointerEvents: getComputedStyle(button).pointerEvents, topElement: top?.outerHTML.slice(0, 220), viewport: { width: innerWidth, height: innerHeight } } };
+  })()`);
+  await realClick("[role=dialog] button[type=submit]");
+  await wait(750);
+  console.log(JSON.stringify({
+    before,
+    formBefore,
+    events: await evaluate("window.__assignmentTrace"),
+    after: await evaluate(`({ dialog: Boolean(document.querySelector('[role=dialog]')), assignments: JSON.parse(localStorage.getItem('eduhub_assignments')).records, text: document.querySelector('.teacher-assignment-cards').innerText, toasts: document.querySelector('[data-rht-toaster]').innerText })`),
+  }, null, 2));
+}
+
 if (command === "attendance") {
   await go(
     "/teacher/attendance?classId=class-awd",
     "document.querySelector('.teacher-attendance') !== null",
   );
+  await clickText("button", "Mark All Absent");
+  await waitFor(
+    "[...document.querySelectorAll('.teacher-attendance tbody tr')].every((row) => row.innerText.includes('Absent'))",
+    "Bulk Absent did not update every row.",
+  );
   await clickText("button", "Mark All Present");
   await waitFor(
     "[...document.querySelectorAll('.teacher-attendance tbody tr')].every((row) => row.innerText.includes('Present'))",
     "Bulk Present did not update every row.",
+  );
+  await evaluate(
+    "[...document.querySelectorAll('.teacher-attendance tbody tr')][0].querySelectorAll('button')[2].click()",
+  );
+  await waitFor(
+    "[...document.querySelectorAll('.teacher-attendance tbody tr')][0].innerText.includes('Late')",
+    "Individual Late did not update the intended row.",
   );
   await evaluate(
     "[...document.querySelectorAll('.teacher-attendance tbody tr')][1].querySelectorAll('button')[1].click()",
@@ -474,6 +544,14 @@ if (command === "attendance") {
     "document.querySelectorAll('.teacher-attendance-status').length === 2",
     "Attendance did not render after reload.",
     20000,
+  );
+  await evaluate(
+    "[...document.querySelectorAll('.teacher-attendance tbody tr')][0].querySelectorAll('button')[0].click()",
+  );
+  await clickText("button", "Save Attendance");
+  await waitFor(
+    "JSON.parse(localStorage.getItem('eduhub_student_attendance')).records[0].status === 'Present'",
+    "Edited attendance did not persist.",
   );
   const persisted = await evaluate(
     "JSON.parse(localStorage.getItem('eduhub_student_attendance')).records",
@@ -781,7 +859,7 @@ if (command === "navigation") {
     "document.querySelector('a[href=\"/teacher/diary?classId=class-awd\"]').click()",
   );
   await waitFor(
-    "location.pathname === '/teacher/diary' && new URLSearchParams(location.search).get('classId') === 'class-awd'",
+    "location.pathname === '/teacher/diary' && new URLSearchParams(location.search).get('classId') === 'class-awd' && [...document.querySelectorAll('button')].some((node) => node.textContent.includes('New Diary Entry'))",
     "Dashboard Diary action lost class context.",
     20000,
   );
@@ -800,6 +878,10 @@ if (command === "navigation") {
 }
 
 if (command === "responsive") {
+  await go(
+    "/teacher/assignments",
+    "document.querySelector('.teacher-assignments') !== null",
+  );
   for (const [width, height] of [
     [1600, 900],
     [1366, 768],
@@ -812,15 +894,12 @@ if (command === "responsive") {
       deviceScaleFactor: 1,
       mobile: width < 600,
     });
-    await go(
-      "/teacher/assignments",
-      "document.querySelector('.teacher-assignments') !== null",
-    );
     await clickText("button", "Create Assignment");
     await waitFor(
       "document.querySelector('[role=dialog]') !== null",
       "Responsive assignment dialog did not open.",
     );
+    await wait(300);
     const bounds = await evaluate(
       "(() => { const r=document.querySelector('[role=dialog]').getBoundingClientRect(); return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height,viewportWidth:innerWidth,viewportHeight:innerHeight}; })()",
     );
@@ -845,8 +924,95 @@ if (command === "responsive") {
       null,
       2,
     ),
-    w,
   );
+}
+
+if (command === "disabled-button") {
+  await evaluate(`(() => {
+    localStorage.setItem('eduhub_timetable', JSON.stringify({ version: 1, records: [] }));
+    location.href = '/teacher/assignments';
+  })()`);
+  await waitFor(
+    "document.querySelector('.teacher-assignments-toolbar button')?.disabled === true",
+    "Create Assignment did not become disabled without assigned classes.",
+    20000,
+  );
+  const before = await evaluate(`(() => {
+    const button = document.querySelector('.teacher-assignments-toolbar button');
+    window.__disabledCreateClicks = 0;
+    button.addEventListener('click', () => window.__disabledCreateClicks++);
+    return { disabled: button.disabled, pointerEvents: getComputedStyle(button).pointerEvents };
+  })()`);
+  await realClick(".teacher-assignments-toolbar button");
+  await wait(250);
+  const after = await evaluate(`({ clicks: window.__disabledCreateClicks, dialog: Boolean(document.querySelector('[role=dialog]')) })`);
+  if (!before.disabled || after.clicks || after.dialog)
+    throw new Error(`Disabled Button accepted interaction: ${JSON.stringify({ before, after })}`);
+  console.log(JSON.stringify({ before, after }, null, 2));
+}
+
+if (command === "attendance-future") {
+  await go(
+    "/teacher/attendance?classId=class-awd",
+    "document.querySelector('.teacher-attendance input[type=date]') !== null",
+  );
+  const max = await evaluate("document.querySelector('.teacher-attendance input[type=date]').max");
+  const future = await evaluate(`(() => { const date = new Date(${JSON.stringify(max)} + 'T12:00:00'); date.setDate(date.getDate() + 1); return date.toISOString().slice(0, 10); })()`);
+  await setValue(".teacher-attendance input[type=date]", future);
+  await waitFor(
+    "[...document.querySelectorAll('button')].find((node) => node.textContent.includes('Save Attendance'))?.disabled === true",
+    "Future attendance did not disable Save Attendance.",
+  );
+  const result = await evaluate(`(() => { const input=document.querySelector('.teacher-attendance input[type=date]'); const button=[...document.querySelectorAll('button')].find((node) => node.textContent.includes('Save Attendance')); return { value: input.value, max: input.max, nativeValid: input.checkValidity(), saveDisabled: button.disabled }; })()`);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+if (command === "messages-mobile") {
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
+  await go(
+    "/teacher/messages",
+    "document.querySelector('.teacher-conversation-item') !== null",
+  );
+  await realClick(".teacher-conversation-item");
+  await waitFor(
+    "document.querySelector('.teacher-messages-workspace')?.classList.contains('mobile-detail-open')",
+    "Mobile conversation detail did not open.",
+  );
+  await realClick(".teacher-message-back");
+  await waitFor(
+    "!document.querySelector('.teacher-messages-workspace')?.classList.contains('mobile-detail-open')",
+    "Mobile back action did not return to the conversation list.",
+  );
+  await send("Emulation.clearDeviceMetricsOverride");
+  console.log(JSON.stringify({ mobileDetail: true, mobileBack: true }, null, 2));
+}
+
+if (command === "salary") {
+  await go(
+    "/my-salary",
+    "document.querySelector('.salary-profiles-page .salary-edit-btn') !== null",
+  );
+  const profileEmpty = await evaluate("document.querySelector('.salary-profiles-page').innerText.includes('No Salary Profile Found')");
+  await realClick(".salary-edit-btn");
+  await waitFor(
+    "location.pathname === '/my-payslips' && document.querySelector('.teacher-payslips input[type=month]') !== null",
+    "View My Payslips did not navigate to the payslip history.",
+    20000,
+  );
+  await setValue(".teacher-payslips input[type=month]", "2026-09");
+  await wait(1000);
+  console.log(JSON.stringify({
+    profileEmpty,
+    route: await evaluate("location.pathname"),
+    month: await evaluate("document.querySelector('.teacher-payslips input[type=month]').value"),
+    emptyState: await evaluate("document.querySelector('.teacher-payslips').innerText.includes('No payslips found')"),
+    payslipRows: await evaluate("document.querySelectorAll('.teacher-payslips tbody tr').length"),
+  }, null, 2));
 }
 
 socket.close();

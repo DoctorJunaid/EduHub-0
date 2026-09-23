@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, MessageCircle, MoreVertical, Paperclip, Search, Send } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { filterConversations, LOCAL_SENDER_ID, messageSent, selectConversations } from "@/store/Slices/messagesSlice";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { selectFaculty } from "@/store/Slices/facultySlice";

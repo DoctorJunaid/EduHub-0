@@ -4,7 +4,7 @@ import { WalletCards, Clock3, Link2, FileText } from "lucide-react";
 import SummaryCard from "@/components/common/SummaryCard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
   Table,

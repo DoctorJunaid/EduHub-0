@@ -15,7 +15,7 @@ import {
   selectStudentsForAssignedClasses,
   selectTeacherIdentity,
 } from "./teacherScope";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import "./TeacherDashboard.css";
 
 const initials = (name = "") =>

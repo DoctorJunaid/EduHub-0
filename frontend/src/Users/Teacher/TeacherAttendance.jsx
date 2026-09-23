@@ -19,7 +19,7 @@ import {
   selectStudentAttendance,
   studentAttendanceMarked,
 } from "@/store/Slices/studentAttendanceSlice";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,

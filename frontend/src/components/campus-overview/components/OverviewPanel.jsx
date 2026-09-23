@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 export default function OverviewPanel({ title, description, icon: Icon, action, children, className = '' }) {
   return (

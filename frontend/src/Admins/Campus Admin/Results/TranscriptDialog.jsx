@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Award, FileText, Download, Printer, School, GraduationCap } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableHeader,

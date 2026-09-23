@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { printElement } from '@/lib/print';
 import { formatFeeAmount } from '@/store/feeReferenceData';
 

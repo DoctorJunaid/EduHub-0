@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 export default function Pagination({ total, page, pageSize, onPage, onPageSize, label = 'records' }) {
   const count = Math.max(1, Math.ceil(total / pageSize));
   const current = Math.min(page, count);

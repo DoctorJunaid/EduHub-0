@@ -3,7 +3,7 @@ import { formatPKR } from "@/lib/currency";
 import FeeStatusBadge from "./FeeStatusBadge";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 export default function VoucherDetails({ voucher, onClose, onPrint }) {
   const { isSchool } = useInstitution();

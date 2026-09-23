@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/Input";
 import { generateMonthlyFees, fetchFees, selectFees, selectFeeStructures } from "@/store/Slices/feesSlice.js";

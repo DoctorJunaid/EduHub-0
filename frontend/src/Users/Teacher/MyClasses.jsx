@@ -8,7 +8,7 @@ import {
 } from "./teacherScope";
 import { dayLabel, timeLabel, weekdays } from "@/lib/schedule";
 import TeacherPagination from "./TeacherPagination";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,

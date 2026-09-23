@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Building2, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import PasswordInput from "@/components/common/PasswordInput";
 import { validateSignup } from "./signupValidation";
 import AuthLayout from "./components/AuthLayout";
