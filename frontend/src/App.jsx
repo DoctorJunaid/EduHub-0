@@ -18,6 +18,7 @@ import Settings from "./components/Settings/Settings";
 import SalaryProfiles from "./pages/SalaryProfiles";
 import MySalary from "./pages/MySalary";
 import SalaryPayroll from "./pages/SalaryPayroll";
+import PayrollApprovals from "./pages/PayrollApprovals";
 import SubstituteAssignments from "./components/Substitutes/SubstituteAssignments";
 import ProtectedRoute, { AuthEntry } from "./auth/ProtectedRoute";
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -191,6 +192,7 @@ const App = () => {
           <Route element={<MainLayout />}>
             <Route path="salary-profiles" element={<SalaryProfiles />} />
             <Route path="salary-payroll" element={<SalaryPayroll />} />
+            <Route path="payroll-approvals" element={<PayrollApprovals />} />
           </Route>
         </Route>
 

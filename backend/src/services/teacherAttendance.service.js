@@ -1,5 +1,9 @@
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import User from "../models/user.model.js";
+import {
+  createPendingApprovalFromAbsence,
+  cancelPendingApprovalOnAttendanceChange,
+} from "./attendanceApproval.service.js";
 
 // ---- Date Helpers ----
 export function normalizeDate(d) {
@@ -303,6 +307,7 @@ export async function markAttendance(campusId, markedBy, payload) {
   }
 
   const normalized = normalizeDate(date || new Date());
+  const previousRecord = await TeacherAttendance.findOne({ teacherProfileId, date: normalized }).lean();
 
   const record = await TeacherAttendance.findOneAndUpdate(
     { teacherProfileId, date: normalized },
@@ -321,6 +326,21 @@ export async function markAttendance(campusId, markedBy, payload) {
     .populate("teacherProfileId", "name email department designation")
     .populate("markedBy", "name email");
 
+  // Trigger Approval Workflow if Absent
+  if (status === "Absent") {
+    try {
+      await createPendingApprovalFromAbsence(campusId, record._id, markedBy);
+    } catch (err) {
+      console.error("[markAttendance] Failed to create pending approval:", err.message);
+    }
+  } else if (previousRecord && previousRecord.status === "Absent" && status !== "Absent") {
+    try {
+      await cancelPendingApprovalOnAttendanceChange(campusId, record._id, `Attendance status changed from Absent to ${status}`);
+    } catch (err) {
+      console.error("[markAttendance] Failed to cancel pending approval:", err.message);
+    }
+  }
+
   return record;
 }
 
@@ -334,6 +354,8 @@ export async function updateAttendance(id, campusId, payload) {
     }
   }
 
+  const previousRecord = await TeacherAttendance.findOne({ _id: id, campusId }).lean();
+
   const record = await TeacherAttendance.findOneAndUpdate(
     { _id: id, campusId },
     updateData,
@@ -346,6 +368,20 @@ export async function updateAttendance(id, campusId, payload) {
     const err = new Error("Attendance record not found");
     err.statusCode = 404;
     throw err;
+  }
+
+  if (record.status === "Absent" && previousRecord?.status !== "Absent") {
+    try {
+      await createPendingApprovalFromAbsence(campusId, record._id, record.markedBy);
+    } catch (err) {
+      console.error("[updateAttendance] Failed to create pending approval:", err.message);
+    }
+  } else if (previousRecord?.status === "Absent" && record.status !== "Absent") {
+    try {
+      await cancelPendingApprovalOnAttendanceChange(campusId, record._id, `Attendance status updated from Absent to ${record.status}`);
+    } catch (err) {
+      console.error("[updateAttendance] Failed to cancel pending approval:", err.message);
+    }
   }
 
   return record;
@@ -362,6 +398,14 @@ export async function deleteAttendance(id, campusId) {
     const err = new Error("Attendance record not found");
     err.statusCode = 404;
     throw err;
+  }
+
+  if (record.status === "Absent") {
+    try {
+      await cancelPendingApprovalOnAttendanceChange(campusId, record._id, "Attendance record deleted");
+    } catch (err) {
+      console.error("[deleteAttendance] Failed to cancel pending approval:", err.message);
+    }
   }
 
   return record;
@@ -392,6 +436,14 @@ export async function checkIn(campusId, markedBy, teacherProfileId, dateStr) {
     const error = new Error("This teacher has already checked in today.");
     error.statusCode = 409;
     throw error;
+  }
+
+  if (existing && existing.status === "Absent") {
+    try {
+      await cancelPendingApprovalOnAttendanceChange(campusId, existing._id, "Teacher checked in (status updated to Present)");
+    } catch (err) {
+      console.error("[checkIn] Failed to cancel pending approval:", err.message);
+    }
   }
 
   const checkInTime = new Date().toISOString();

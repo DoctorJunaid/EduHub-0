@@ -11,6 +11,7 @@ import {
   Home,
   Radio,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -104,6 +105,12 @@ export const getCampusAdminNav = (isSchool = false) => [
     path: "/salary-payroll",
     group: "Finance",
     icon: <ClipboardList size={20} />,
+  },
+  {
+    label: "Salary Approvals",
+    path: "/payroll-approvals",
+    group: "Finance",
+    icon: <ShieldCheck size={20} />,
   },
   { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
 ];
