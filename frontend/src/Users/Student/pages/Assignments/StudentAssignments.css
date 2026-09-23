@@ -1,8 +1,9 @@
 .student-assignments {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   min-width: 0;
+  padding: 18px 20px 20px;
   color: var(--foreground);
 }
 .sa-page-heading h1 {
@@ -16,12 +17,12 @@
   color: var(--muted-foreground);
 }
 .sa-card {
-  padding: 20px 24px;
-  gap: 16px;
+  padding: 16px 18px;
+  gap: 12px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   background: var(--card);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   min-width: 0;
 }
 .sa-card-heading {
@@ -62,7 +63,7 @@
   text-align: left;
 }
 .sa-card td {
-  padding: 20px 10px;
+  padding: 12px 10px;
   font-size: 13px;
   color: var(--muted-foreground);
   border-top: 1px solid var(--border);
@@ -188,7 +189,7 @@
 }
 @media (max-width: 700px) {
   .sa-page-heading h1 {
-    font-size: 26px;
+    font-size: 20px;
   }
   .sa-card {
     padding: 16px;
@@ -208,4 +209,52 @@
 }
 .dark .sa-card-heading h2 span {
   color: var(--color-green-light);
+}
+
+.student-assignments {
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+.sa-page-heading h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.sa-page-heading p {
+  font-size: 12px;
+}
+.sa-card {
+  padding: 10px 12px;
+  gap: 8px;
+  border-radius: 8px;
+}
+.sa-card-heading {
+  gap: 8px;
+}
+.sa-card-heading h2 {
+  gap: 8px;
+  font-size: 15px;
+}
+.sa-card-heading h2 span {
+  padding: 6px;
+}
+.sa-card th {
+  padding: 6px 8px;
+  font-size: 10px;
+}
+.sa-card td {
+  padding: 8px;
+  font-size: 11px;
+}
+.sa-card td small {
+  margin-top: 2px;
+  font-size: 10px;
+}
+.sa-card button {
+  min-height: 28px;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.sa-card td.sa-empty {
+  padding: 24px 10px;
 }

@@ -28,13 +28,15 @@ export default function StudentAttendance() {
     useSelector(selectStudentAttendancePage);
   const stats = [
     {
-      label: "Overall Attendance",
+      label: "Attendance Rate",
       icon: Users,
       value: attendance?.rate == null ? "—" : percentage(attendance.rate),
-      description: "Reference threshold: 75% (demo)",
+      description: attendance?.risk
+        ? "Attendance risk: below 75%"
+        : "School attendance record",
     },
     {
-      label: "Lectures Attended",
+      label: "Days Present",
       icon: BookOpen,
       value: student ? attendance.present : "—",
       description: "Recorded Present",
@@ -46,23 +48,16 @@ export default function StudentAttendance() {
       description: "Recorded Absent",
     },
     {
-      label: "Late / Leave",
+      label: "Leaves",
       icon: Clock3,
-      value: student ? late + leave : "—",
+      value: student ? leave : "—",
       description: student
-        ? `${late} Late · ${leave} On Leave`
+        ? `${leave} approved leave days${late ? ` · ${late} late arrivals` : ""}`
         : "Student record not linked",
     },
   ];
   return (
     <section className="student-attendance-page">
-      <header className="sta-page-heading">
-        <h1>Attendance Record &amp; History</h1>
-        <p>
-          Daily attendance logs, course-wise eligibility threshold, and overall
-          attendance percentage.
-        </p>
-      </header>
       <div className="sta-stats">
         {stats.map((stat) => (
           <SummaryCard key={stat.label} {...stat} className="sta-stat" />
@@ -81,7 +76,7 @@ export default function StudentAttendance() {
             <span>
               <ChartNoAxesColumnIncreasing aria-hidden="true" />
             </span>
-            Course-Wise Attendance Percentage
+            Daily Attendance Progress
           </h2>
         </div>
         <div className="sta-courses">
@@ -91,7 +86,7 @@ export default function StudentAttendance() {
                 <h3>{course.title}</h3>
                 <span>
                   {course.attendance.marked
-                    ? `${course.attendance.present}/${course.attendance.marked} lectures${course.attendance.rate == null ? " · Percentage unavailable" : ` (${percentage(course.attendance.rate)})`}`
+                    ? `${course.attendance.present}/${course.attendance.marked} recorded days${course.attendance.rate == null ? " · Percentage unavailable" : ` (${percentage(course.attendance.rate)})`}`
                     : "No attendance recorded"}
                 </span>
               </div>
@@ -124,7 +119,7 @@ export default function StudentAttendance() {
             </span>
             Daily Attendance Log
           </h2>
-          <p>Recent lecture check-in history</p>
+          <p>Recent daily attendance history</p>
         </div>
         <Table aria-label="Daily attendance history">
           <TableHeader>

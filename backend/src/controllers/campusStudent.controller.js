@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
+import Institute from "../models/institute.model.js";
 import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
 import { logActivity } from "../models/activityLog.model.js";
 
@@ -39,12 +40,23 @@ export const getCampusStudents = async (req, res) => {
       campusId: campusId,
     })
       .select("-passwordHash")
+      .populate("campusId", "name location code")
+      .populate("instituteId", "name type board")
       .sort({ createdAt: -1 });
+
+    const formatted = students.map((s) => {
+      const obj = s.toObject ? s.toObject() : { ...s };
+      return {
+        ...obj,
+        campus: obj.campusId?.name || obj.campus || "",
+        institute: obj.instituteId?.name || obj.institute || "",
+      };
+    });
 
     return res.status(200).json({
       success: true,
-      count: students.length,
-      data: students,
+      count: formatted.length,
+      data: formatted,
     });
   } catch (error) {
     console.error("Get Campus Students Error:", error);
@@ -233,8 +245,15 @@ export const createStudentForCampus = async (req, res) => {
       passwordHash: password || "student123",
     });
 
+    await student.populate([
+      { path: "campusId", select: "name location code" },
+      { path: "instituteId", select: "name type board" },
+    ]);
+
     const studentResponse = student.toObject();
     delete studentResponse.passwordHash;
+    studentResponse.campus = student.campusId?.name || "";
+    studentResponse.institute = student.instituteId?.name || "";
 
     // Sync StudentProfile so downstream services (attendance, fees, payroll) find the profile
     try {
@@ -342,11 +361,22 @@ export const getCampusFaculty = async (req, res) => {
       campusId,
     })
       .select("-passwordHash")
+      .populate("campusId", "name location code")
+      .populate("instituteId", "name type board")
       .sort({ createdAt: -1 });
+
+    const formatted = faculty.map((f) => {
+      const obj = f.toObject ? f.toObject() : { ...f };
+      return {
+        ...obj,
+        campus: obj.campusId?.name || obj.campus || "",
+        institute: obj.instituteId?.name || obj.institute || "",
+      };
+    });
 
     return res
       .status(200)
-      .json({ success: true, count: faculty.length, data: faculty });
+      .json({ success: true, count: formatted.length, data: formatted });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -412,8 +442,15 @@ export const createFacultyForCampus = async (req, res) => {
       passwordHash: password || "teacher123",
     });
 
+    await faculty.populate([
+      { path: "campusId", select: "name location code" },
+      { path: "instituteId", select: "name type board" },
+    ]);
+
     const facultyResponse = faculty.toObject();
     delete facultyResponse.passwordHash;
+    facultyResponse.campus = faculty.campusId?.name || "";
+    facultyResponse.institute = faculty.instituteId?.name || "";
 
     // Sync TeacherProfile for timetable, payroll, and substitute modules
     try {
@@ -546,7 +583,10 @@ export const updateStudentInCampus = async (req, res) => {
       { _id: studentId, role: "student", campusId },
       updateData,
       { new: true, runValidators: true },
-    ).select("-passwordHash");
+    )
+      .select("-passwordHash")
+      .populate("campusId", "name location code")
+      .populate("instituteId", "name type board");
 
     if (!student) {
       return res
@@ -566,7 +606,11 @@ export const updateStudentInCampus = async (req, res) => {
       metadata: { name: student.name, updatedFields: Object.keys(updateData) },
     });
 
-    return res.status(200).json({ success: true, data: student });
+    const studentResponse = student.toObject();
+    studentResponse.campus = student.campusId?.name || "";
+    studentResponse.institute = student.instituteId?.name || "";
+
+    return res.status(200).json({ success: true, data: studentResponse });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -603,7 +647,10 @@ export const updateFacultyInCampus = async (req, res) => {
       { _id: facultyId, role: { $in: ["faculty", "teacher"] }, campusId },
       updateData,
       { new: true, runValidators: true },
-    ).select("-passwordHash");
+    )
+      .select("-passwordHash")
+      .populate("campusId", "name location code")
+      .populate("instituteId", "name type board");
 
     if (!faculty) {
       return res
@@ -623,7 +670,11 @@ export const updateFacultyInCampus = async (req, res) => {
       metadata: { name: faculty.name, updatedFields: Object.keys(updateData) },
     });
 
-    return res.status(200).json({ success: true, data: faculty });
+    const facultyResponse = faculty.toObject();
+    facultyResponse.campus = faculty.campusId?.name || "";
+    facultyResponse.institute = faculty.instituteId?.name || "";
+
+    return res.status(200).json({ success: true, data: facultyResponse });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

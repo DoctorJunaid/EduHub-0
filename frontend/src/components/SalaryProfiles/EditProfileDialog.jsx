@@ -236,7 +236,7 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
           <button
             type="submit"
             form="salaryProfileForm"
-            className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 shadow-md shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer min-w-[140px]"
+            className="px-5 py-2.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 border border-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer min-w-[140px]"
           >
             {profile ? (
               <>

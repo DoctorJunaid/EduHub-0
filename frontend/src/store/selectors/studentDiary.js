@@ -10,22 +10,25 @@ export const selectStudentDiary = createSelector(
       .filter(validDiaryEntry)
       .flatMap((entry) => {
         const course = courses.find((item) =>
-          item.routines.some((routine) => routine.id === entry.classId),
+          item.routines.some(
+            (routine) => String(routine.id) === String(entry.classId),
+          ),
         );
-        if (!course) return [];
-        const routine = course.routines.find(
-          (item) => item.id === entry.classId,
+        const routine = course?.routines.find(
+          (item) => String(item.id) === String(entry.classId),
         );
         const assignment = assignments.find(
           (item) =>
-            item.id === entry.assignmentId && item.classId === entry.classId,
+            String(item.id) === String(entry.assignmentId) &&
+            String(item.classId) === String(entry.classId),
         );
         return [
           {
             ...entry,
-            subject: course.title,
-            section: course.section,
-            instructor: routine.instructor,
+            subject: course?.title || entry.subject || "Class Diary",
+            section: course?.section || entry.section || "",
+            instructor:
+              routine?.instructor || entry.instructor || "Assigned Teacher",
             assignment,
           },
         ];

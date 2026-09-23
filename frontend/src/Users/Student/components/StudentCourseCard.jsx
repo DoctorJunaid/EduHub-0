@@ -20,15 +20,14 @@ export default function StudentCourseCard({ course }) {
   const attendanceHint = course.attendance.policyPending
     ? "Late/leave attendance policy is not configured."
     : course.attendance.marked
-      ? `${course.attendance.present} of ${course.attendance.marked} recorded lectures present.`
-      : "No attendance recorded for this course.";
+      ? `${course.attendance.present} of ${course.attendance.marked} recorded days present.`
+      : "No attendance recorded for this subject.";
   return (
     <Card className="student-course-card">
       <div className="sc-card-top">
         <Badge variant="secondary" className="sc-section">
           {course.section ? `Sec ${course.section}` : "Section unavailable"}
         </Badge>
-        <span className="sc-credits">{course.creditHours == null ? "Credits not available" : `${course.creditHours} Credit Hours`}</span>
       </div>
       <h2>{course.title}</h2>
       <div className="sc-routines">
@@ -59,7 +58,6 @@ export default function StudentCourseCard({ course }) {
         ))}
       </div>
       <div className="sc-card-footer">
-        <span>{course.semester || "Semester not recorded"}</span>
         <span
           title={attendanceHint}
           aria-label={`Attendance: ${attendanceText}. ${attendanceHint}`}

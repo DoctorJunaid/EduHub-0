@@ -22,7 +22,12 @@ export default function ExamForm({ record, options, onSave, onClose }) {
     );
     const message = validateExam(cleaned);
     if (message) return setError(message);
-    onSave({ ...cleaned, totalMarks: Number(cleaned.totalMarks) });
+    onSave({
+      ...cleaned,
+      totalMarks: Number(cleaned.totalMarks) > 0 ? Number(cleaned.totalMarks) : 100,
+      className: cleaned.department || cleaned.section || "General",
+      examName: `${cleaned.examType || "Midterm"} Examination - ${cleaned.subject}`,
+    });
   };
 
   return (

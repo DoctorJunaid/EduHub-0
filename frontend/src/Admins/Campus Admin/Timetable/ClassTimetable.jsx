@@ -9,128 +9,527 @@ import {
   Building,
   Users,
   BookOpen,
+  School,
+  GraduationCap,
+  Coffee,
+  Check,
+  Edit3,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   selectTimetable,
+  selectTimetableStatus,
   fetchSchedules,
   addSchedule,
   updateSchedule,
   deleteSchedule,
+  classUpdated,
 } from "@/store/Slices/timetableSlice.js";
 import { selectFaculty, fetchFaculty } from "@/store/Slices/facultySlice.js";
 import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
-import {
-  educationTypeOptions,
-  timetableTemplates,
-} from "./timetableData.js";
-import { filterSchedules, mondayOf, shiftDays } from "../../../lib/schedule.js";
+import { getMatrixConfig } from "./timetableData.js";
+import { mondayOf, shiftDays, minutes } from "../../../lib/schedule.js";
 import { useInstitution } from "@/context/InstitutionContext";
 import toast from "react-hot-toast";
 import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
-import ScheduleClassForm from "./ScheduleClassForm";
+import QuickScheduleModal from "./QuickScheduleModal";
 import ClassDetailsDialog from "./ClassDetailsDialog";
+import ScheduleClassForm from "./ScheduleClassForm";
 import "./ClassTimetable.css";
+
+const WEEKDAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 export default function ClassTimetable() {
   const { isSchool } = useInstitution();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(fetchSchedules());
-    dispatch(fetchFaculty());
-    dispatch(fetchStudents());
-  }, [dispatch]);
-
+  // Real database records from Redux
   const rawRecords = useSelector(selectTimetable);
+  const timetableStatus = useSelector(selectTimetableStatus);
   const records = useMemo(() => {
     return Array.isArray(rawRecords) ? rawRecords : [];
   }, [rawRecords]);
 
-  const faculty = useSelector(selectFaculty);
-  const students = useSelector(selectStudents);
-  const [view, setView] = useState("week");
-  const [week, setWeek] = useState(() => mondayOf(new Date()));
-  const [filters, setFilters] = useState({
-    program: "",
-    section: "",
-    instructor: "",
-    room: "",
-  });
-  const [modal, setModal] = useState(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [educationType, setEducationType] = useState(() => isSchool ? "School" : "Colleges");
+  const rawFaculty = useSelector(selectFaculty);
+  const faculty = useMemo(() => {
+    return Array.isArray(rawFaculty) ? rawFaculty : [];
+  }, [rawFaculty]);
+
+  const rawStudents = useSelector(selectStudents);
+  const students = useMemo(() => {
+    return Array.isArray(rawStudents) ? rawStudents : [];
+  }, [rawStudents]);
+
+  // Load initial timetable once on mount
+  useEffect(() => {
+    dispatch(fetchSchedules());
+  }, [dispatch]);
+
+  // Lazily load faculty and students if not already populated
+  useEffect(() => {
+    if (!rawFaculty || rawFaculty.length === 0) {
+      dispatch(fetchFaculty());
+    }
+  }, [dispatch, rawFaculty?.length]);
 
   useEffect(() => {
-    setEducationType(isSchool ? "School" : "Colleges");
+    if (!rawStudents || rawStudents.length === 0) {
+      dispatch(fetchStudents());
+    }
+  }, [dispatch, rawStudents?.length]);
+
+  const [view, setView] = useState("week");
+  const [week, setWeek] = useState(() => mondayOf(new Date()));
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [educationType, setEducationType] = useState(() => (isSchool ? "School" : "College"));
+  const [includeSaturday, setIncludeSaturday] = useState(true);
+
+  useEffect(() => {
+    setEducationType(isSchool ? "School" : "College");
   }, [isSchool]);
 
-  const options = useMemo(() => {
-    const studentPrograms = [...new Set(students.map((s) => s.gradeOrClass || s.program).filter(Boolean))];
-    const studentSections = [...new Set(students.map((s) => s.section).filter(Boolean))];
-    const teacherNames = [...new Set(faculty.map((f) => f.name).filter(Boolean))];
+  // Custom dynamically added classes and sections by user
+  const [customClasses, setCustomClasses] = useState([]);
+  const [customSections, setCustomSections] = useState([]);
+  const [isAddingCustomClass, setIsAddingCustomClass] = useState(false);
+  const [customClassInput, setCustomClassInput] = useState("");
+  const [isAddingCustomSection, setIsAddingCustomSection] = useState(false);
+  const [customSectionInput, setCustomSectionInput] = useState("");
 
-    return {
-      program: studentPrograms.length ? studentPrograms : ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"],
-      section: studentSections.length ? studentSections : ["Section A", "Section B", "Section C"],
-      instructor: teacherNames.length ? teacherNames : [...new Set(records.map((r) => r.instructor).filter(Boolean))],
-      room: [...new Set(records.map((r) => r.room).filter(Boolean)), "Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"],
-    };
-  }, [records, students, faculty]);
+  // Derive dynamic list of available Classes/Grades
+  const availableClasses = useMemo(() => {
+    const fromStudents = students
+      .map((s) => s.gradeOrClass || s.program)
+      .filter(Boolean);
+    const fromRecords = records
+      .map((r) => r.program || r.className || r.gradeOrClass)
+      .filter(Boolean);
+    const defaults = isSchool
+      ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"]
+      : ["BS Computer Science", "BS Software Engineering", "BBA", "BS Data Science"];
+    const unique = [...new Set([...customClasses, ...fromStudents, ...fromRecords, ...defaults])];
+    return unique;
+  }, [students, records, customClasses, isSchool]);
 
-  const filtered = useMemo(
-    () => filterSchedules(records, filters),
-    [records, filters],
-  );
-  const templateRecords = timetableTemplates[educationType];
-  const selected = records.find((record) => record.id === modal?.id || record._id === modal?.id);
-  const close = () => setModal(null);
-  const onAction = (mode, id) => setModal({ mode, id });
+  // Derive dynamic list of Sections
+  const availableSections = useMemo(() => {
+    const fromStudents = students.map((s) => s.section).filter(Boolean);
+    const fromRecords = records.map((r) => r.section).filter(Boolean);
+    const defaults = ["A", "B", "C", "D"];
+    const unique = [...new Set([...customSections, ...fromStudents, ...fromRecords, ...defaults])];
+    return unique;
+  }, [students, records, customSections]);
 
-  const save = async (values) => {
-    try {
-      if (selected) {
-        await dispatch(
-          updateSchedule({ ...values, id: selected._id || selected.id })
-        ).unwrap();
-        toast.success("Schedule updated successfully!");
-      } else {
-        await dispatch(addSchedule(values)).unwrap();
-        toast.success("Class routine scheduled successfully!");
-      }
-      setFilters({ program: "", section: "", instructor: "", room: "" });
-      close();
-    } catch (err) {
-      toast.error(typeof err === "string" ? err : "Failed to save schedule");
+  // Active Selected Class & Section
+  const [selectedClass, setSelectedClass] = useState(() => availableClasses[0] || (isSchool ? "Grade 10" : "BS Computer Science"));
+  const [selectedSection, setSelectedSection] = useState(() => availableSections[0] || "A");
+
+  // Keep selectedClass synchronized if availableClasses changes and current selection is missing
+  useEffect(() => {
+    if (availableClasses.length && !availableClasses.includes(selectedClass)) {
+      setSelectedClass(availableClasses[0]);
+    }
+  }, [availableClasses, selectedClass]);
+
+  // Handle adding custom class
+  const handleSaveCustomClass = (e) => {
+    e.preventDefault();
+    if (customClassInput.trim()) {
+      const name = customClassInput.trim();
+      setCustomClasses((prev) => [...new Set([...prev, name])]);
+      setSelectedClass(name);
+      setCustomClassInput("");
+      setIsAddingCustomClass(false);
+      toast.success(`Class "${name}" selected!`);
     }
   };
 
-  // Real KPI Calculations
-  const totalClasses = records.length;
-  const activeInstructors =
-    new Set(records.map((r) => r.instructor).filter(Boolean)).size || 0;
-  const lectureHalls =
-    new Set(records.map((r) => r.room).filter(Boolean)).size || 0;
-  const totalHours = Math.round(records.length * 0.75);
+  // Handle adding custom section
+  const handleSaveCustomSection = (e) => {
+    e.preventDefault();
+    if (customSectionInput.trim()) {
+      const sec = customSectionInput.trim();
+      setCustomSections((prev) => [...new Set([...prev, sec])]);
+      setSelectedSection(sec);
+      setCustomSectionInput("");
+      setIsAddingCustomSection(false);
+      toast.success(`Section "${sec}" selected!`);
+    }
+  };
+
+  // Dynamic Options for form dropdowns from real database
+  const options = useMemo(() => {
+    const teacherNames = [
+      ...new Set(
+        faculty
+          .map((f) => f.name)
+          .concat(records.map((r) => r.instructor || r.teacherName))
+          .filter(Boolean)
+      ),
+    ];
+    const roomNames = [
+      ...new Set(
+        records
+          .map((r) => r.room || r.roomNumber)
+          .concat(isSchool ? ["Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"] : ["Hall A", "Hall B", "Lab 3", "Auditorium"])
+          .filter(Boolean)
+      ),
+    ];
+
+    return {
+      program: availableClasses,
+      section: availableSections,
+      instructor: teacherNames.length
+        ? teacherNames
+        : [isSchool ? "Ms. Ayesha Khan" : "Dr. Usman Khan"],
+      room: roomNames,
+    };
+  }, [faculty, records, availableClasses, availableSections, isSchool]);
+
+  // Filter real records specifically for the active Class and Section
+  const classRoutineRecords = useMemo(() => {
+    return records.filter((r) => {
+      // Break slots apply across all classes
+      if (r.isBreak) return true;
+
+      const prog = (r.program || r.gradeOrClass || r.className || "").trim().toLowerCase();
+      const targetProg = (selectedClass || "").trim().toLowerCase();
+      const matchProg = !targetProg || prog === targetProg;
+
+      const sec = (r.section || "").trim().toLowerCase();
+      const targetSec = (selectedSection || "").trim().toLowerCase();
+      const matchSec =
+        !targetSec ||
+        !sec ||
+        sec === targetSec ||
+        sec === `section ${targetSec}` ||
+        sec === "all sections";
+
+      return matchProg && matchSec;
+    });
+  }, [records, selectedClass, selectedSection]);
+
+  const matrixConfig = useMemo(
+    () => getMatrixConfig(educationType, includeSaturday),
+    [educationType, includeSaturday]
+  );
+
+  // Modal Dialogs & Actions
+  const [quickModalOpen, setQuickModalOpen] = useState(false);
+  const [quickModalSlot, setQuickModalSlot] = useState({
+    days: [1],
+    startTime: "08:00",
+    endTime: "08:50",
+    isBreak: false,
+  });
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [fullFormOpen, setFullFormOpen] = useState(false);
+  const [viewingRecord, setViewingRecord] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Open Quick Schedule Modal
+  const handleOpenQuickAdd = (slotDefaults, isBreak = false) => {
+    setEditingRecord(null);
+    if (slotDefaults) {
+      setQuickModalSlot({
+        days: slotDefaults.days || [1],
+        startTime: slotDefaults.startTime || (isBreak ? "12:30" : "08:00"),
+        endTime: slotDefaults.endTime || (isBreak ? "13:15" : "08:50"),
+        isBreak,
+      });
+    } else {
+      setQuickModalSlot({
+        days: [1],
+        startTime: isBreak ? "12:30" : "08:00",
+        endTime: isBreak ? "13:15" : "08:50",
+        isBreak,
+      });
+    }
+    setQuickModalOpen(true);
+  };
+
+  // Action Dispatcher from Grid or List
+  const onAction = (mode, id, defaults) => {
+    let record = records.find((r) => (r.id || r._id) === id);
+    if (!record && defaults && typeof defaults === "object") {
+      record = defaults;
+    }
+    if (mode === "add") {
+      handleOpenQuickAdd(defaults);
+    } else if (mode === "edit" && record) {
+      setEditingRecord(record);
+      setQuickModalSlot({
+        days: record.days || (record.isBreak ? [1, 2, 3, 4, 5, 6] : [1]),
+        startTime: record.startTime,
+        endTime: record.endTime,
+        isBreak: Boolean(record.isBreak),
+      });
+      setQuickModalOpen(true);
+    } else if (mode === "delete" && record) {
+      setDeleteTarget(record);
+    } else if (mode === "view" && record) {
+      setViewingRecord(record);
+    }
+  };
+
+  // Save Routine from QuickScheduleModal
+  const handleSaveQuickSchedule = async (values) => {
+    if (editingRecord) {
+      await dispatch(
+        updateSchedule({
+          ...values,
+          id: editingRecord._id || editingRecord.id,
+        })
+      ).unwrap();
+      toast.success(values.isBreak ? "Break interval updated!" : "Schedule routine updated successfully!");
+    } else {
+      await dispatch(
+        addSchedule({
+          ...values,
+          program: values.program || selectedClass,
+          section: values.section || selectedSection,
+          institutionType: educationType,
+        })
+      ).unwrap();
+      toast.success(
+        values.isBreak
+          ? "Break interval added to campus routine!"
+          : isSchool
+          ? "Class period scheduled successfully!"
+          : "Class routine scheduled successfully!"
+      );
+    }
+    dispatch(fetchSchedules());
+  };
+
+  // Interactive Drag & Drop Handler with Duration Preservation & Optimistic UI
+  const handleMoveClass = async (recordId, targetDay, targetStartTime, sourceDay) => {
+    const record = records.find((r) => (r.id || r._id) === recordId);
+    if (!record) return;
+
+    // 1. Snapshot previous state for rollback if network fails
+    const previousDays = Array.isArray(record.days) && record.days.length ? [...record.days] : [1];
+    const previousDayOfWeek = record.dayOfWeek;
+    const previousStartTime = record.startTime;
+    const previousEndTime = record.endTime;
+
+    // 2. Compute exact duration of the dragged class to PRESERVE 1-hr, 50-min, 90-min, etc.
+    const origStart = minutes(record.startTime);
+    const origEnd = minutes(record.endTime);
+    const originalDurationMinutes = origEnd > origStart ? origEnd - origStart : 50;
+
+    // Preserve the original class duration exactly!
+    const targetStartMin = minutes(targetStartTime);
+    const targetEndMin = targetStartMin + originalDurationMinutes;
+    const resolvedEndTime = `${String(Math.floor(targetEndMin / 60)).padStart(2, "0")}:${String(targetEndMin % 60).padStart(2, "0")}`;
+    const resolvedDayName = WEEKDAY_NAMES[targetDay - 1] || "Monday";
+
+    // 3. If dragging a single day of a multi-day recurring class to a DIFFERENT time slot:
+    // Split: remove the dragged day from the original schedule and create a separate slot for that day
+    if (previousDays.length > 1 && targetStartTime !== previousStartTime) {
+      const dayToRemove = sourceDay || targetDay;
+      const remainingDays = previousDays.filter((d) => d !== dayToRemove);
+      try {
+        // Update parent routine to remove this day
+        await dispatch(
+          updateSchedule({
+            ...record,
+            id: record._id || record.id,
+            days: remainingDays,
+            dayOfWeek: WEEKDAY_NAMES[remainingDays[0] - 1] || "Monday",
+          })
+        ).unwrap();
+
+        // Create new single-day slot at the new time
+        await dispatch(
+          addSchedule({
+            program: record.program || selectedClass,
+            section: record.section || selectedSection,
+            subject: record.subject,
+            instructor: record.instructor || record.teacherName,
+            room: record.room || record.roomNumber,
+            startTime: targetStartTime,
+            endTime: resolvedEndTime,
+            days: [targetDay],
+            dayOfWeek: resolvedDayName,
+            isBreak: Boolean(record.isBreak),
+            institutionType: educationType,
+            status: record.status || "Active",
+          })
+        ).unwrap();
+
+        dispatch(fetchSchedules());
+        toast.success(`Moved ${record.subject} on ${resolvedDayName} to ${targetStartTime} – ${resolvedEndTime}`);
+      } catch (err) {
+        dispatch(fetchSchedules());
+        toast.error(typeof err === "string" ? err : err?.message || "Failed to move period. Reverted to original slot.");
+      }
+      return;
+    }
+
+    let newDays = [...previousDays];
+    if (sourceDay && newDays.includes(sourceDay)) {
+      newDays = newDays.map((d) => (d === sourceDay ? targetDay : d));
+    } else {
+      newDays = [targetDay];
+    }
+    newDays = [...new Set(newDays)].sort((a, b) => a - b);
+    const primaryDayName = WEEKDAY_NAMES[newDays[0] - 1] || "Monday";
+
+    // 4. INSTANT SHIFT: Optimistically update local/redux state immediately (0ms lag)
+    dispatch(
+      classUpdated({
+        ...record,
+        id: record._id || record.id,
+        days: newDays,
+        dayOfWeek: primaryDayName,
+        startTime: targetStartTime,
+        endTime: resolvedEndTime,
+      })
+    );
+
+    // 5. Fire API call asynchronously in background
+    try {
+      await dispatch(
+        updateSchedule({
+          ...record,
+          id: record._id || record.id,
+          days: newDays,
+          dayOfWeek: primaryDayName,
+          startTime: targetStartTime,
+          endTime: resolvedEndTime,
+          program: record.program || selectedClass,
+          section: record.section || selectedSection,
+          subject: record.subject,
+          instructor: record.instructor || record.teacherName,
+          room: record.room || record.roomNumber,
+        })
+      ).unwrap();
+
+      toast.success(`Rescheduled ${record.subject} to ${resolvedDayName} (${targetStartTime} – ${resolvedEndTime})`);
+    } catch (err) {
+      // IF FAILED: Immediately revert card back to original position!
+      dispatch(
+        classUpdated({
+          ...record,
+          id: record._id || record.id,
+          days: previousDays,
+          dayOfWeek: previousDayOfWeek,
+          startTime: previousStartTime,
+          endTime: previousEndTime,
+        })
+      );
+      toast.error(typeof err === "string" ? err : err?.message || "Failed to move period. Reverted to original slot.");
+    }
+  };
+
+  // Overall stats
+  const totalPeriodsForClass = classRoutineRecords.filter((r) => !r.isBreak).length;
+  const activeInstructorsForClass = new Set(
+    classRoutineRecords.map((r) => r.instructor || r.teacherName).filter(Boolean)
+  ).size;
+  const activeRoomsForClass = new Set(
+    classRoutineRecords.map((r) => r.room || r.roomNumber).filter(Boolean)
+  ).size;
 
   return (
     <section
       className="campus-tab-page class-timetable"
       aria-label="Class Timetable Management"
     >
-      {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
-      <div className="campus-kpi-track">
+      {/* Loading state */}
+      {timetableStatus === "loading" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
+            padding: "14px 18px",
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: "8px",
+            marginBottom: "12px",
+            fontSize: "13px",
+            fontWeight: 600,
+            color: "#1d4ed8",
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            style={{ animation: "spin 1s linear infinite" }}
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          Loading timetable from database…
+        </div>
+      )}
+
+      {/* Error / Retry state */}
+      {timetableStatus === "failed" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "10px",
+            padding: "12px 18px",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: "8px",
+            marginBottom: "12px",
+          }}
+          role="alert"
+        >
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#dc2626" }}>
+            Failed to load timetable. Check your connection.
+          </span>
+          <button
+            type="button"
+            onClick={() => dispatch(fetchSchedules())}
+            style={{
+              padding: "5px 14px",
+              background: "#dc2626",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {/* 1. KPI Cards Row */}
+      <div className="campus-kpi-track class-timetable-kpi">
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <BookOpen size={16} />
+              <BookOpen size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Scheduled Periods" : "Scheduled Classes"}</span>
-              <span className="kpi-value">{totalClasses}</span>
+              <span className="kpi-label">{isSchool ? "Active Class Periods" : "Class Schedule Count"}</span>
+              <span className="kpi-value">{totalPeriodsForClass}</span>
             </div>
           </div>
         </div>
@@ -138,11 +537,11 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Users size={16} />
+              <Users size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Teachers on Duty" : "Active Instructors"}</span>
-              <span className="kpi-value">{activeInstructors}</span>
+              <span className="kpi-label">{isSchool ? "Class Teachers" : "Instructors"}</span>
+              <span className="kpi-value">{activeInstructorsForClass}</span>
             </div>
           </div>
         </div>
@@ -150,11 +549,11 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Building size={16} />
+              <Building size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Classrooms & Labs" : "Rooms Allocated"}</span>
-              <span className="kpi-value">{lectureHalls}</span>
+              <span className="kpi-label">{isSchool ? "Allocated Rooms" : "Rooms Used"}</span>
+              <span className="kpi-value">{activeRoomsForClass}</span>
             </div>
           </div>
         </div>
@@ -162,109 +561,237 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Clock size={16} />
+              <Clock size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Teaching Periods" : "Weekly Hours"}</span>
-              <span className="kpi-value">{isSchool ? `${records.length * 5} periods` : `${totalHours} hrs`}</span>
+              <span className="kpi-label">{isSchool ? "Weekly Periods" : "Campus Total"}</span>
+              <span className="kpi-value">{totalPeriodsForClass * (includeSaturday ? 6 : 5)} slots</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Contiguous 56px Toolbar */}
+      {/* 2. Top Active Class & Section Selection Header Banner (Selectable & Directly Editable) */}
+      <div className="class-routine-header-banner">
+        <div className="class-banner-info">
+          <span className="class-banner-badge">
+            {isSchool ? <School size={13} /> : <GraduationCap size={13} />}
+            {isSchool ? "Class Routine & Timetable" : "Academic Schedule Matrix"}
+          </span>
+          <h2 className="class-banner-title">
+            {selectedClass} • Section {selectedSection}
+          </h2>
+          <p className="class-banner-sub">
+            {totalPeriodsForClass} periods configured • {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} • Drag cards to reschedule
+          </p>
+        </div>
+
+        <div className="class-banner-controls">
+          {/* Class / Grade Selector & Editable Custom Input */}
+          <div className="class-selector-group">
+            <span className="class-selector-label">Grade / Class</span>
+            {isAddingCustomClass ? (
+              <form onSubmit={handleSaveCustomClass} className="flex items-center gap-1">
+                <input
+                  type="text"
+                  autoFocus
+                  required
+                  placeholder="e.g. Grade 11"
+                  value={customClassInput}
+                  onChange={(e) => setCustomClassInput(e.target.value)}
+                  className="custom-input-pill"
+                />
+                <button type="submit" className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold">
+                  <Check size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCustomClass(false)}
+                  className="px-2 py-1 bg-zinc-200 text-zinc-700 rounded-md text-xs"
+                >
+                  ✕
+                </button>
+              </form>
+            ) : (
+              <div className="flex items-center gap-1">
+                <select
+                  className="class-header-select"
+                  aria-label="Select Class"
+                  value={selectedClass}
+                  onChange={(e) => {
+                    if (e.target.value === "__add_new__") {
+                      setIsAddingCustomClass(true);
+                    } else {
+                      setSelectedClass(e.target.value);
+                    }
+                  }}
+                >
+                  {availableClasses.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                  <option value="__add_new__">+ Add New Grade/Class...</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Section Selector & Editable Custom Input */}
+          <div className="class-selector-group">
+            <span className="class-selector-label">Section</span>
+            {isAddingCustomSection ? (
+              <form onSubmit={handleSaveCustomSection} className="flex items-center gap-1">
+                <input
+                  type="text"
+                  autoFocus
+                  required
+                  placeholder="e.g. Rose"
+                  value={customSectionInput}
+                  onChange={(e) => setCustomSectionInput(e.target.value)}
+                  className="custom-input-pill"
+                />
+                <button type="submit" className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold">
+                  <Check size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCustomSection(false)}
+                  className="px-2 py-1 bg-zinc-200 text-zinc-700 rounded-md text-xs"
+                >
+                  ✕
+                </button>
+              </form>
+            ) : (
+              <div className="flex items-center gap-1">
+                <select
+                  className="class-header-select"
+                  aria-label="Select Section"
+                  value={selectedSection}
+                  onChange={(e) => {
+                    if (e.target.value === "__add_new_sec__") {
+                      setIsAddingCustomSection(true);
+                    } else {
+                      setSelectedSection(e.target.value);
+                    }
+                  }}
+                >
+                  {availableSections.map((s) => (
+                    <option key={s} value={s}>
+                      Section {s}
+                    </option>
+                  ))}
+                  <option value="__add_new_sec__">+ Add New Section...</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Schedule Period Button */}
+          <button
+            type="button"
+            className="banner-add-btn"
+            onClick={() => handleOpenQuickAdd()}
+          >
+            <Plus size={14} />
+            {isSchool ? "Schedule Period" : "Schedule Class"}
+          </button>
+
+          {/* Add Lunch / Break Quick Button */}
+          <button
+            type="button"
+            className="banner-break-btn"
+            onClick={() => handleOpenQuickAdd(undefined, true)}
+            title="Add Lunch, Recess, or Prayer Break"
+          >
+            <Coffee size={14} />
+            + Add Lunch / Break
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Timetable Views Tabs (Week Matrix & List) */}
       <Tabs
         value={view}
         onValueChange={setView}
-        style={{ width: "100%", display: "flex", flexDirection: "column" }}
+        className="class-timetable-tabs"
       >
         <div className="campus-toolbar">
           <div className="toolbar-left">
-            <TabsList
-              style={{
-                height: "32px",
-                padding: "2px",
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "6px",
-                display: "inline-flex",
-                alignItems: "center",
-              }}
-            >
-              <TabsTrigger
-                value="week"
-                style={{
-                  height: "26px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "0 10px",
-                  borderRadius: "4px",
-                }}
-              >
-                Week
-              </TabsTrigger>
-              <TabsTrigger
-                value="list"
-                style={{
-                  height: "26px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "0 10px",
-                  borderRadius: "4px",
-                }}
-              >
-                List
-              </TabsTrigger>
+            <TabsList className="tt-view-tabs">
+              <TabsTrigger value="week">Weekly Matrix</TabsTrigger>
+              <TabsTrigger value="list">All Scheduled List</TabsTrigger>
             </TabsList>
 
+            {/* 5-Day vs 6-Day (Saturday) Toggle */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
+                gap: "3px",
+                padding: "3px",
+                background: "#f4f4f5",
                 border: "1px solid #e4e4e7",
-                borderRadius: "6px",
-                background: "#ffffff",
-                height: "32px",
-                boxSizing: "border-box",
+                borderRadius: "8px",
               }}
             >
               <button
                 type="button"
+                onClick={() => setIncludeSaturday(false)}
                 style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "11.5px",
+                  fontWeight: !includeSaturday ? 700 : 500,
+                  color: !includeSaturday ? "#09090b" : "#71717a",
+                  background: !includeSaturday ? "#ffffff" : "transparent",
+                  boxShadow: !includeSaturday ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
                   border: "none",
-                  background: "transparent",
                   cursor: "pointer",
-                  padding: "0 5px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#71717a",
-                  height: "100%",
-                }}
-                aria-label="Previous week"
-                onClick={() => setWeek(shiftDays(week, -7))}
-              >
-                <ChevronLeft size={13} />
-              </button>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  color: "#09090b",
-                  padding: "0 4px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
+                  transition: "all 0.15s ease",
                   whiteSpace: "nowrap",
                 }}
               >
-                <CalendarDays size={12} style={{ color: "#71717a" }} />
+                5 Days (Mon-Fri)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncludeSaturday(true)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "11.5px",
+                  fontWeight: includeSaturday ? 700 : 500,
+                  color: includeSaturday ? "#09090b" : "#71717a",
+                  background: includeSaturday ? "#ffffff" : "transparent",
+                  boxShadow: includeSaturday ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                6 Days (+Saturday)
+              </button>
+            </div>
+
+            <div className="tt-week-nav">
+              <button
+                type="button"
+                className="tt-week-nav-btn"
+                aria-label="Previous week"
+                onClick={() => setWeek(shiftDays(week, -7))}
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <span className="tt-week-range">
+                <CalendarDays size={12} aria-hidden="true" />
                 {week.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                 })}{" "}
                 –{" "}
-                {shiftDays(week, 6).toLocaleDateString("en-US", {
+                {shiftDays(week, includeSaturday ? 5 : 4).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -272,21 +799,11 @@ export default function ClassTimetable() {
               </span>
               <button
                 type="button"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  padding: "0 5px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#71717a",
-                  height: "100%",
-                }}
+                className="tt-week-nav-btn"
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
               >
-                <ChevronRight size={13} />
+                <ChevronRight size={14} />
               </button>
             </div>
 
@@ -295,161 +812,65 @@ export default function ClassTimetable() {
               className="toolbar-btn toolbar-btn-outline"
               onClick={() => setWeek(mondayOf(new Date()))}
             >
-              Today
+              This Week
             </button>
-
-            {Object.keys(filters).map((key) => (
-              <select
-                key={key}
-                className="toolbar-select"
-                aria-label={`Filter by ${key}`}
-                value={filters[key]}
-                onChange={(event) => {
-                  setFilters((previous) => ({
-                    ...previous,
-                    [key]: event.target.value,
-                  }));
-                  setPage(1);
-                }}
-              >
-                <option value="">
-                  All{" "}
-                  {key === "program"
-                    ? (isSchool ? "Classes" : "Programs")
-                    : key === "section"
-                      ? "Sections"
-                      : key === "instructor"
-                        ? (isSchool ? "Teachers" : "Faculty")
-                        : "Rooms"}
-                </option>
-                {options[key]?.map((val) => (
-                  <option key={val} value={val}>
-                    {val}
-                  </option>
-                ))}
-              </select>
-            ))}
           </div>
 
           <div className="toolbar-actions">
             <button
               type="button"
-              className="toolbar-btn toolbar-btn-primary"
-              onClick={() => onAction("add")}
+              className="toolbar-btn toolbar-btn-outline"
+              onClick={() => setFullFormOpen(true)}
+              title="Open full detailed schedule form"
             >
-              <Plus size={14} />
-              {isSchool ? "Schedule Period" : "Schedule Class"}
+              Detailed Form
             </button>
           </div>
         </div>
 
-        {/* 3. Panel Content */}
-        <div
-          style={{
-            padding: "16px 20px",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
-        >
-          <TabsContent value="week" style={{ margin: 0, padding: 0 }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+        <div className="tt-panel-content">
+          <TabsContent value="week">
+            <div className="tt-panel-card">
               <div className="tt-template-heading">
                 <div>
                   <span className="tt-template-title">
-                    {isSchool ? "School Weekly Timetable & Period Matrix" : "Weekly Schedule Matrix"}
+                    {selectedClass} — Section {selectedSection} Routine
                   </span>
                   <small>
-                    {isSchool ? "Class periods, Morning Assembly, and Break schedule" : "Template preview for the selected education type"}
+                    Big, flexible cells with interactive drag-and-drop. Drag any period to move it to a different day or slot.
                   </small>
                 </div>
-                <label className="tt-type-control">
-                  <span>Institution type</span>
-                  <select
-                    className="toolbar-select"
-                    aria-label="Institution type"
-                    value={educationType}
-                    onChange={(event) => setEducationType(event.target.value)}
-                  >
-                    {educationTypeOptions.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "16px",
-                    fontSize: "11px",
-                    color: "#71717a",
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "2px",
-                        background: "#09090b",
-                      }}
-                    />
-                    Regular Class
+                <div className="tt-legend tt-legend-inline">
+                  <span>
+                    <i className="tt-legend-class" />
+                    Class Period
                   </span>
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "2px",
-                        background: "#f59e0b",
-                      }}
-                    />
+                  <span>
+                    <i className="tt-legend-break" />
                     Break / Interval
                   </span>
                 </div>
               </div>
-              <div style={{ padding: "12px" }}>
+
+              {/* Pure Real Data Grid with Big Flexible Cells & Interactive Drag & Drop */}
+              <div className="tt-grid-panel">
                 <TimetableGrid
-                  records={templateRecords}
+                  records={classRoutineRecords}
                   week={week}
+                  matrixConfig={matrixConfig}
                   onView={(id) => onAction("view", id)}
+                  onAction={onAction}
+                  onQuickAdd={(defaults) => handleOpenQuickAdd(defaults)}
+                  onMoveClass={handleMoveClass}
                 />
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="list" style={{ margin: 0, padding: 0 }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+          <TabsContent value="list">
+            <div className="tt-panel-card tt-list-panel">
               <ScheduledClasses
-                records={filtered}
+                records={classRoutineRecords}
                 page={page}
                 pageSize={pageSize}
                 onPage={setPage}
@@ -464,35 +885,81 @@ export default function ClassTimetable() {
         </div>
       </Tabs>
 
-      {/* Modal Dialogs */}
-      {(modal?.mode === "add" || (modal?.mode === "edit" && selected)) && (
+      {/* 4. Quick Schedule Modal (In-place, fast, presets, Saturday, and break support) */}
+      <QuickScheduleModal
+        isOpen={quickModalOpen}
+        onClose={() => {
+          setQuickModalOpen(false);
+          setEditingRecord(null);
+        }}
+        onSave={handleSaveQuickSchedule}
+        currentClass={{ program: selectedClass, section: selectedSection }}
+        initialDay={quickModalSlot.days?.[0] || 1}
+        initialStartTime={quickModalSlot.startTime}
+        initialEndTime={quickModalSlot.endTime}
+        options={options}
+        isSchool={isSchool}
+        editRecord={editingRecord}
+        initialIsBreak={Boolean(quickModalSlot.isBreak)}
+        includeSaturday={includeSaturday}
+      />
+
+      {/* 5. Full Detailed Form (Optional fallback) */}
+      {fullFormOpen && (
         <ScheduleClassForm
-          record={selected}
+          defaults={{
+            program: selectedClass,
+            section: selectedSection,
+          }}
           options={options}
-          onSave={save}
-          onClose={close}
+          onSave={async (values) => {
+            try {
+              await dispatch(
+                addSchedule({
+                  ...values,
+                  institutionType: educationType,
+                })
+              ).unwrap();
+              toast.success("Schedule routine created successfully!");
+              setFullFormOpen(false);
+              dispatch(fetchSchedules());
+            } catch (err) {
+              toast.error(typeof err === "string" ? err : err?.message || "Failed to schedule routine");
+            }
+          }}
+          onClose={() => setFullFormOpen(false)}
         />
       )}
-      {modal?.mode === "view" && selected && (
-        <ClassDetailsDialog record={selected} onClose={close} />
+
+      {/* 6. Class Details Dialog */}
+      {viewingRecord && (
+        <ClassDetailsDialog
+          record={viewingRecord}
+          onClose={() => setViewingRecord(null)}
+        />
       )}
+
+      {/* 7. Delete Confirmation Dialog */}
       <ConfirmDialog
-        open={modal?.mode === "delete" && Boolean(selected)}
-        title="Delete Scheduled Class?"
-        description={`Are you sure you want to delete ${selected?.subject ?? "this class"}? This action cannot be undone.`}
+        open={Boolean(deleteTarget)}
+        title="Delete Scheduled Period / Break?"
+        description={`Are you sure you want to delete ${deleteTarget?.subject || deleteTarget?.breakTitle || "this routine"} from ${selectedClass}? This action will remove it from the database.`}
         confirmText="Delete"
         cancelText="Cancel"
-        onCancel={close}
+        onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
-          if (selected) {
+          if (deleteTarget) {
             try {
-              await dispatch(deleteSchedule(selected._id || selected.id)).unwrap();
-              toast.success("Class routine removed successfully");
+              await dispatch(
+                deleteSchedule(deleteTarget._id || deleteTarget.id)
+              ).unwrap();
+              toast.success("Routine removed successfully");
+              dispatch(fetchSchedules());
             } catch (err) {
-              toast.error("Failed to delete class routine");
+              toast.error("Failed to delete routine");
             }
           }
-          close();
+          setDeleteTarget(null);
         }}
       />
     </section>

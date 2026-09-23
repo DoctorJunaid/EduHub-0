@@ -2,11 +2,10 @@ import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   ChartNoAxesColumnIncreasing,
-  GraduationCap,
-  CalendarDays,
   Trophy,
   Printer,
   FileText,
+  Medal,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -25,87 +24,110 @@ import { selectStudentGrades } from "@/store/selectors/studentGrades";
 import "./StudentGrades.css";
 
 export default function StudentGrades() {
-  const { student, cgpa, periods } = useSelector(selectStudentGrades);
+  const { student, periods } = useSelector(selectStudentGrades);
   const [selected, setSelected] = useState("");
   const period =
     periods.find((item) => item.key === selected) ??
     periods.find((item) => item.semester === student?.semester) ??
     periods[0];
   const sheet = useRef(null);
+  const totalMarks =
+    period?.rows.reduce((sum, row) => sum + (Number(row.totalMarks) || 0), 0) ||
+    0;
+  const marksObtained =
+    period?.rows.reduce((sum, row) => sum + (Number(row.score) || 0), 0) || 0;
+  const percentage = totalMarks
+    ? Math.round((marksObtained / totalMarks) * 100)
+    : null;
+  const overallGrade =
+    period?.overallGrade ||
+    student?.overallGrade ||
+    (percentage == null
+      ? null
+      : percentage >= 80
+        ? "A"
+        : percentage >= 70
+          ? "B"
+          : percentage >= 60
+            ? "C"
+            : percentage >= 50
+              ? "D"
+              : "F");
+  const classPosition =
+    period?.classPosition ||
+    student?.classPosition ||
+    student?.position ||
+    null;
+  const resultStatus = period?.resultStatus || student?.resultStatus || null;
+  const termLabel = (item) => {
+    const source = item?.term || item?.semester || "Exam Term";
+    if (/midterm/i.test(source)) return "Mid-Term";
+    if (/final|annual/i.test(source)) return "Final Exam";
+    if (/first|1st/i.test(source)) return "1st Term";
+    return source;
+  };
   const stats = [
     {
-      label: "Cumulative GPA (CGPA)",
+      label: "Total Marks Obtained",
+      icon: FileText,
+      value: period?.rows.length ? `${marksObtained} / ${totalMarks}` : "—",
+    },
+    {
+      label: "Overall Percentage",
       icon: ChartNoAxesColumnIncreasing,
-      value: cgpa == null ? "—" : cgpa.toFixed(2),
-      description:
-        cgpa == null ? "CGPA not recorded" : "Recorded cumulative GPA",
+      value: percentage == null ? "—" : `${percentage}%`,
     },
     {
-      label: "Completed Credits",
-      icon: GraduationCap,
-      value: Number.isFinite(student?.completedCredits)
-        ? student.completedCredits
-        : "—",
-      description: student?.academicSummaryDemo
-        ? "Recorded demo credits"
-        : "Recorded completed credits",
-    },
-    {
-      label: "Current Semester",
-      icon: CalendarDays,
-      value: student?.semester || "—",
-      description: student?.program || "Student record not linked",
-    },
-    {
-      label: "Academic Standing",
+      label: "Overall Grade",
       icon: Trophy,
-      value: student?.academicStanding || "—",
-      description: student?.academicSummaryDemo
-        ? "Demo academic standing"
-        : "Recorded standing",
+      value: overallGrade ? `Grade ${overallGrade}` : "—",
+    },
+    {
+      label: "Class Position",
+      icon: Medal,
+      value: classPosition ? `${classPosition} Position` : "Not published",
     },
   ];
   return (
     <section className="student-grades-page">
-      <header className="sg-page-heading">
-        <div>
-          <h1>Academic Results &amp; CGPA Transcript</h1>
-          <p>
-            Semester evaluation breakdown, letter grades, GPA index, and faculty
-            remarks.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          disabled={!period?.rows.length}
-          onClick={() =>
-            printElement(sheet.current, `${student.name} - Academic Results`)
-          }
-        >
-          <Printer aria-hidden="true" />
-          Print Official Transcript
-        </Button>
-      </header>
       <div className="sg-stats">
         {stats.map((stat) => (
           <SummaryCard key={stat.label} {...stat} className="sg-stat" />
         ))}
       </div>
-      {periods.length > 1 && (
+      <header className="sg-page-heading">
         <label className="sg-period">
-          Academic period
+          <span>Exam Term</span>
           <select
-            value={period.key}
+            value={period?.key || ""}
+            disabled={!periods.length}
             onChange={(event) => setSelected(event.target.value)}
           >
-            {periods.map((item) => (
-              <option key={item.key} value={item.key}>
-                {item.semester} · {item.academicYear}
-              </option>
-            ))}
+            {periods.length ? (
+              periods.map((item) => (
+                <option key={item.key} value={item.key}>
+                  {termLabel(item)} · {item.academicYear}
+                </option>
+              ))
+            ) : (
+              <option value="">No published term</option>
+            )}
           </select>
         </label>
-      )}
+        <Button
+          variant="outline"
+          disabled={!period?.rows.length}
+          onClick={() =>
+            printElement(
+              sheet.current,
+              `${student?.name || "Student"} - Result Card`,
+            )
+          }
+        >
+          <Printer aria-hidden="true" />
+          Download Result Card (PDF)
+        </Button>
+      </header>
       <Card className="sg-sheet" ref={sheet}>
         <div className="sg-sheet-heading">
           <div className="sg-sheet-title">
@@ -113,18 +135,18 @@ export default function StudentGrades() {
               <FileText aria-hidden="true" />
             </span>
             <div>
-              <h2>
-                Semester Grade Sheet{period ? ` (${period.semester})` : ""}
-              </h2>
+              <h2>Student Exam Result Card</h2>
               <p>
                 {student?.name || "Student record not linked"}
                 {student?.roll ? ` · Roll No: ${student.roll}` : ""}
               </p>
-              {period && (
-                <p>
-                  {student?.program} · Academic Year: {period.academicYear}
-                </p>
-              )}
+              <p>
+                {student?.gradeOrClass ||
+                  student?.className ||
+                  "Class not linked"}
+                {student?.section ? ` - Section ${student.section}` : ""}
+                {period ? ` · Session ${period.academicYear}` : ""}
+              </p>
             </div>
           </div>
           <Badge
@@ -132,24 +154,18 @@ export default function StudentGrades() {
             className="sg-transcript-badge"
             data-print-hide
           >
-            Official Transcript · Demo
+            {period ? termLabel(period) : "Result Card"}
           </Badge>
         </div>
-        <p className="sg-note">
-          Frontend academic report; not institutionally certified. Grades and
-          GPA are recorded exam awards, not a calculated semester or
-          credit-weighted CGPA.
-        </p>
-        <Table aria-label="Semester academic results">
+        <Table aria-label="Student exam results">
           <TableHeader>
             <TableRow>
               {[
-                "Course / Subject",
-                "Marks Obtained",
+                "Subject",
                 "Total Marks",
+                "Marks Obtained",
                 "Letter Grade",
-                "Grade Point (GPA)",
-                "Faculty Evaluation Remarks",
+                "Teacher Remarks",
               ].map((heading) => (
                 <TableHead key={heading} scope="col">
                   {heading}
@@ -162,32 +178,20 @@ export default function StudentGrades() {
               <TableRow key={row.id}>
                 <TableCell>
                   <strong>{row.exam.subject}</strong>
-                  <small>
-                    {row.exam.examType}
-                    {row.courseCode ? ` · ${row.courseCode}` : ""}
-                  </small>
-                  <small>
-                    {Number.isFinite(row.creditHours)
-                      ? `${row.creditHours} Credit Hours`
-                      : "Credit hours not available"}
-                  </small>
                 </TableCell>
-                <TableCell>{row.score}</TableCell>
                 <TableCell>{row.totalMarks}</TableCell>
+                <TableCell>{row.score}</TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="sg-grade">
                     {row.grade || "—"}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  {row.gpa == null ? "—" : row.gpa.toFixed(2)}
                 </TableCell>
                 <TableCell>{row.remarks.trim() || "No remarks"}</TableCell>
               </TableRow>
             ))}
             {!period?.rows.length && (
               <TableRow>
-                <TableCell colSpan={6} className="sg-empty">
+                <TableCell colSpan={5} className="sg-empty">
                   {student
                     ? "No academic results available yet."
                     : "Your academic results will appear when your student record is linked."}
@@ -196,10 +200,16 @@ export default function StudentGrades() {
             )}
           </TableBody>
         </Table>
-        <p className="sg-print-summary">
-          Recorded CGPA: {cgpa == null ? "Not available" : cgpa.toFixed(2)} ·
-          Completed credits: {student?.completedCredits ?? "Not available"}
-        </p>
+        <div className="sg-result-footer">
+          <div>
+            <strong>Final Result Status</strong>
+            <span>{resultStatus || "Not published"}</span>
+          </div>
+          <div className="sg-signatures">
+            <span>Class Teacher Signature</span>
+            <span>Principal Signature</span>
+          </div>
+        </div>
       </Card>
     </section>
   );

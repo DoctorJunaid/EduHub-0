@@ -54,6 +54,8 @@ const classScheduleSchema = new mongoose.Schema(
     className: { type: String, required: true, trim: true },
     gradeOrClass: { type: String, trim: true, default: "" },
     section: { type: String, required: true, trim: true },
+    days: { type: [Number], default: [] },
+    isBreak: { type: Boolean, default: false },
     dayOfWeek: {
       type: String,
       required: true,
@@ -103,14 +105,17 @@ classScheduleSchema.index({ campusId: 1, dayOfWeek: 1 });
 
 const examScheduleSchema = new mongoose.Schema(
   {
-    examName: { type: String, required: true, trim: true },
+    examName: { type: String, trim: true },
     examType: {
       type: String,
       required: true,
       default: "Midterm",
     },
-    className: { type: String, required: true, trim: true },
+    institutionType: { type: String, trim: true, default: "School" },
+    program: { type: String, trim: true, default: "" },
+    className: { type: String, trim: true, default: "" },
     gradeOrClass: { type: String, trim: true, default: "" },
+    department: { type: String, trim: true, default: "" },
     section: { type: String, required: true, trim: true },
     subject: { type: String, required: true, trim: true },
     examDate: { type: Date, required: true },
@@ -119,6 +124,13 @@ const examScheduleSchema = new mongoose.Schema(
     endTime: { type: String, required: true },
     roomNumber: { type: String, default: "" },
     room: { type: String, default: "" },
+    totalMarks: { type: Number, default: 100 },
+    sessionOrShift: {
+      type: String,
+      enum: ["Morning", "Afternoon", "Evening", "Standard"],
+      default: "Morning",
+    },
+    isDualExamDay: { type: Boolean, default: false },
     teacherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -141,7 +153,36 @@ const examScheduleSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+examScheduleSchema.pre("validate", function validateExamSchedule() {
+  if (!this.examName) {
+    this.examName = `${this.examType || "Midterm"} Examination - ${this.subject || "Course"}`;
+  }
+  if (!this.program) {
+    this.program = this.className || this.gradeOrClass || this.department || "";
+  }
+  if (!this.className) {
+    this.className = this.program || this.gradeOrClass || this.department || (this.section ? `Class ${this.section}` : "Grade 10");
+  }
+  if (!this.gradeOrClass) {
+    this.gradeOrClass = this.program || this.className;
+  }
+  if (!this.department) {
+    this.department = this.program || this.className;
+  }
+  if (!this.date && this.examDate) {
+    try {
+      this.date = new Date(this.examDate).toISOString().split("T")[0];
+    } catch {
+      // ignore
+    }
+  }
+  if (this.room && !this.roomNumber) this.roomNumber = this.room;
+  if (this.roomNumber && !this.room) this.room = this.roomNumber;
+});
+
 examScheduleSchema.index({ campusId: 1, examDate: 1 });
+examScheduleSchema.index({ campusId: 1, date: 1, room: 1 });
+examScheduleSchema.index({ campusId: 1, date: 1, invigilator: 1 });
 
 const studentAttendanceSchema = new mongoose.Schema(
   {

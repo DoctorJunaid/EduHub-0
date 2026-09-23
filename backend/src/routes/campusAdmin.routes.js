@@ -59,6 +59,13 @@ import {
   createBulkStudentAttendance,
   getActivityLogs,
   createActivityLogEntry,
+  createAssignment,
+  getAssignments,
+  getAssignmentById,
+  updateAssignment,
+  deleteAssignment,
+  submitAssignment,
+  gradeAssignmentSubmission,
 } from "../controllers/campusAdmin.controller.js";
 import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
@@ -99,6 +106,21 @@ router
 router.route("/schedules").get(getClassSchedules).post(createClassSchedule);
 router
   .route("/schedules/:id")
+  .get(getClassScheduleById)
+  .put(updateClassSchedule)
+  .delete(deleteClassSchedule);
+
+// Timetables alias (for timetable matrix & schedules - supports plural and singular)
+router.route("/timetables").get(getClassSchedules).post(createClassSchedule);
+router
+  .route("/timetables/:id")
+  .get(getClassScheduleById)
+  .put(updateClassSchedule)
+  .delete(deleteClassSchedule);
+
+router.route("/timetable").get(getClassSchedules).post(createClassSchedule);
+router
+  .route("/timetable/:id")
   .get(getClassScheduleById)
   .put(updateClassSchedule)
   .delete(deleteClassSchedule);
@@ -158,5 +180,15 @@ router
 
 // Activity Logs (Audit Trail)
 router.route("/activity-logs").get(getActivityLogs).post(createActivityLogEntry);
+
+// Assignments (Campus-admin created, teacher/student visible)
+router.route("/assignments").get(getAssignments).post(createAssignment);
+router
+  .route("/assignments/:id")
+  .get(getAssignmentById)
+  .put(updateAssignment)
+  .delete(deleteAssignment);
+router.post("/assignments/:id/submit", submitAssignment);
+router.post("/assignments/:id/grade", gradeAssignmentSubmission);
 
 export default router;

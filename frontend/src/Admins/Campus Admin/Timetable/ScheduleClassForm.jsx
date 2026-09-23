@@ -6,40 +6,33 @@ import { weekdays } from "../../../lib/schedule.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
 
-const SCHOOL_GRADE_OPTIONS = [
-  "Grade 10",
-  "Grade 9",
-  "Grade 8",
-  "Grade 7",
-  "Grade 6",
-  "Grade 5",
-  "Grade 4",
-  "Grade 3",
-  "Grade 2",
-  "Grade 1",
-];
-
 export default function ScheduleClassForm({
   record,
+  defaults,
   options,
   onSave,
   onClose,
 }) {
   const { isSchool } = useInstitution();
-  const programList = isSchool
-    ? SCHOOL_GRADE_OPTIONS
-    : (options?.program?.length ? options.program : ["BS Computer Science"]);
+  // Use dynamic classes from real DB (passed as options.program) or sensible defaults
+  const programList = options?.program?.length
+    ? options.program
+    : isSchool
+    ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6", "Grade 5"]
+    : ["BS Computer Science", "BS Software Engineering", "BBA"];
 
   const [values, setValues] = useState(() => ({
-    subject: record?.subject ?? "",
-    program: record?.program ?? programList[0] ?? "",
-    section: record?.section ?? (isSchool ? "A" : ""),
-    instructor: record?.instructor ?? options?.instructor?.[0] ?? "",
-    room: record?.room ?? options?.room?.[0] ?? (isSchool ? "Room 101" : "Hall 1"),
-    days: record?.days ?? [1, 2, 3, 4, 5],
-    startTime: record?.startTime ?? (isSchool ? "08:30" : "09:00"),
-    endTime: record?.endTime ?? (isSchool ? "09:20" : "10:00"),
-    status: record?.status ?? "Active",
+    subject: record?.subject ?? defaults?.subject ?? "",
+    program:
+      record?.program ?? defaults?.program ?? programList[0] ?? "",
+    section: record?.section ?? defaults?.section ?? (isSchool ? "A" : ""),
+    instructor:
+      record?.instructor ?? defaults?.instructor ?? options?.instructor?.[0] ?? "",
+    room: record?.room ?? defaults?.room ?? options?.room?.[0] ?? (isSchool ? "Room 101" : "Hall 1"),
+    days: record?.days ?? defaults?.days ?? (isSchool ? [1, 2, 3, 4, 5] : []),
+    startTime: record?.startTime ?? defaults?.startTime ?? (isSchool ? "08:30" : "09:00"),
+    endTime: record?.endTime ?? defaults?.endTime ?? (isSchool ? "09:20" : "10:00"),
+    status: record?.status ?? defaults?.status ?? "Active",
   }));
   const [error, setError] = useState("");
 

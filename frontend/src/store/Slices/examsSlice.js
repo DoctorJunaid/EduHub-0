@@ -37,6 +37,15 @@ export const fetchExams = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch exams');
     }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { exams } = getState();
+      if (exams?.status === 'loading') {
+        return false;
+      }
+    },
   }
 );
 
