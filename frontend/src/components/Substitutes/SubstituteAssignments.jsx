@@ -160,7 +160,12 @@ const SubstituteAssignments = () => {
           <table className="substitutes-table">
             <thead>
               <tr className="bg-gray-800/50 border-b border-gray-700/50">
-                <th>Period &amp; time</th><th>Class coverage</th><th>Original teacher</th><th>Substitute teacher</th><th>Status</th><th className="text-right">Actions</th>
+                <th>Period &amp; time</th>
+                <th>Class coverage</th>
+                <th>Original teacher</th>
+                <th>Substitute teacher</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -186,30 +191,67 @@ const SubstituteAssignments = () => {
 
                   return (
                     <tr key={assignment._id}>
-                      <td><strong>Period {assignment.period}</strong><small>{assignment.startTime} - {assignment.endTime}</small>
+                      <td>
+                        <strong>Period {assignment.period}</strong>
+                        <small>{assignment.startTime} - {assignment.endTime}</small>
                       </td>
-                      <td><strong>{assignment.className} {assignment.section && <span className="muted">/ {assignment.section}</span>}</strong><small className="subject-label">{assignment.subject}</small>
+                      <td>
+                        <strong>{assignment.className} {assignment.section && <span className="muted">/ {assignment.section}</span>}</strong>
+                        <small className="subject-label">{assignment.subject}</small>
                       </td>
-                      <td><div className="substitute-person"><span className="person-avatar">{origAvatar}</span><span><strong>{origName}</strong><small>{assignment.reason}</small></span></div>
+                      <td>
+                        <div className="substitute-person">
+                          <span className="person-avatar">{origAvatar}</span>
+                          <span>
+                            <strong>{origName}</strong>
+                            <small>{assignment.reason}</small>
+                          </span>
+                        </div>
                       </td>
-                      <td><div className="substitute-person"><span className="person-avatar person-avatar-accent">{subAvatar}</span><span><strong>{subName}</strong>{assignment.bonusEligible && <small className="bonus-label">Bonus: PKR {assignment.bonusAmount}</small>}</span></div>
+                      <td>
+                        <div className="substitute-person">
+                          <span className="person-avatar person-avatar-accent">{subAvatar}</span>
+                          <span>
+                            <strong>{subName}</strong>
+                            {assignment.bonusEligible && <small className="bonus-label">Bonus: PKR {assignment.bonusAmount}</small>}
+                          </span>
+                        </div>
                       </td>
-                      <td><span className={`substitute-status ${getStatusBadgeClass(assignment.status)}`}>{assignment.status}</span>
+                      <td>
+                        <span className={`substitute-status ${getStatusBadgeClass(assignment.status)}`}>
+                          {assignment.status}
+                        </span>
                       </td>
-                      <td className="text-right"><div className="substitute-actions">
+                      <td>
+                        <div className="substitute-actions">
                           {assignment.status === 'Pending Approval' && (
-                            <button onClick={() => handleUpdateStatus(assignment._id, 'Assigned')} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition" title="Approve">
-                              <Check className="w-4 h-4" />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(assignment._id, 'Assigned')}
+                              className="action-icon-btn action-approve"
+                              title="Approve"
+                            >
+                              <Check size={16} />
                             </button>
                           )}
                           {assignment.status === 'Assigned' && (
-                            <button onClick={() => handleUpdateStatus(assignment._id, 'Completed')} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition" title="Mark Completed">
-                              <Check className="w-4 h-4" />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(assignment._id, 'Completed')}
+                              className="action-icon-btn action-complete"
+                              title="Mark Completed"
+                            >
+                              <Check size={16} />
                             </button>
                           )}
                           {['Assigned', 'Pending Approval'].includes(assignment.status) && (
-                            <button onClick={() => handleCancel(assignment._id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Cancel">
-                              <X className="w-4 h-4" />
+                            <button
+                              type="button"
+                              onClick={() => handleCancel(assignment._id)}
+                              className="action-icon-btn action-cancel"
+                              title="Cancel"
+                            >
+                              <X size={16} />
                             </button>
                           )}
                         </div>

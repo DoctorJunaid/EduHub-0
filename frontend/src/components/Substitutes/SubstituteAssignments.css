@@ -93,6 +93,7 @@
   padding: 13px 16px;
   border-bottom: 1px solid #f0f0f2;
   vertical-align: middle;
+  text-align: left;
 }
 
 .substitutes-table tbody tr:hover { background: #fafafa; }
@@ -158,30 +159,43 @@
 .status-default { color: #52525b; background: #fafafa; border-color: #e4e4e7; }
 
 .substitute-actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
-.substitute-actions button {
+.action-icon-btn {
   width: 28px;
   height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #71717a;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all 0.15s ease;
+  padding: 0;
 }
 
-.substitute-actions button:hover { color: #09090b; background: #f4f4f5; border-color: #e4e4e7; }
-.substitute-actions button:first-child { color: #16a34a; }
-.substitute-actions button:nth-child(2) { color: #2563eb; }
-.substitute-actions button:last-child { color: #dc2626; }
+.action-approve,
+.action-complete {
+  color: #16a34a;
+}
+.action-approve:hover,
+.action-complete:hover {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.action-cancel {
+  color: #ef4444;
+}
+.action-cancel:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
 
 .substitutes-empty {
   height: 220px;
