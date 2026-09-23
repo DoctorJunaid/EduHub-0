@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import { toast } from "react-hot-toast";
-import { Play, Eye, ChevronLeft, ChevronRight, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clock3, ReceiptText } from "lucide-react";
+import { Play, Eye, ChevronLeft, ChevronRight, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clock3, ReceiptText, ShieldCheck } from "lucide-react";
 import { selectCurrentRole } from "../store/Slices/authSlice";
 import "./SalaryPayroll.css";
 
 const SalaryPayroll = () => {
+  const navigate = useNavigate();
   const [payrolls, setPayrolls] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -142,7 +144,10 @@ const SalaryPayroll = () => {
     <div className="salary-payroll-page campus-tab-page">
       <div className="salary-payroll-heading">
         <div><span className="salary-payroll-eyebrow">Finance / monthly close</span><h1>Salary &amp; Payroll</h1><p>Generate, review, approve, and settle monthly teacher payroll.</p></div>
-        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}><Play size={13} /> {generating ? "Generating..." : "Generate Payroll"}</button>
+        <div className="flex items-center gap-2">
+          <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => navigate("/payroll-approvals")}><ShieldCheck size={14} className="text-indigo-600" /> Deduction Approvals</button>
+          <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}><Play size={13} /> {generating ? "Generating..." : "Generate Payroll"}</button>
+        </div>
       </div>
 
       <div className="campus-kpi-track salary-payroll-kpis">

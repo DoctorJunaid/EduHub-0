@@ -4,6 +4,7 @@ import { SalaryPolicy } from "../models/salaryPolicy.model.js";
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import { SubstituteAssignment } from "../models/substituteAssignment.model.js";
 import { TeacherProfile } from "../models/profile.model.js";
+import { PayrollAdjustment } from "../models/payrollAdjustment.model.js";
 import moment from "moment";
 import PDFDocument from "pdfkit";
 
@@ -188,6 +189,30 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       });
     }
 
+    // 8b. Incorporate pending carry-forward PayrollAdjustments for this teacher & month
+    const pendingAdjustments = await PayrollAdjustment.find({
+      campusId,
+      teacherProfileId: teacherId,
+      targetMonth: month,
+      status: "Pending",
+    });
+
+    for (const adj of pendingAdjustments) {
+      if (adj.type === "Deduction") {
+        deductions.push({
+          reason: `Carry-forward: ${adj.description || "Approved deduction adjustment"}`,
+          category: "Absent",
+          amount: adj.amount,
+        });
+      } else if (adj.type === "Bonus") {
+        bonuses.push({
+          reason: `Carry-forward: ${adj.description || "Approved substitute bonus"}`,
+          category: "Substitute",
+          amount: adj.amount,
+        });
+      }
+    }
+
     // 9. Compute totals
     const allowancesTotal = (profile.allowances || []).reduce((sum, a) => sum + (a.amount || 0), 0);
     const grossSalary = profile.baseSalary + allowancesTotal; // PAY-05
@@ -196,7 +221,7 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     const netSalary = grossSalary - deductionsTotal + bonusesTotal; // PAY-08
 
     // 10. Upsert (PAY-01, PAY-02)
-    await MonthlyPayroll.findOneAndUpdate(
+    const payrollRecord = await MonthlyPayroll.findOneAndUpdate(
       { teacherProfileId: teacherId, month },
       {
         $set: {
@@ -219,6 +244,13 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       },
       { upsert: true, new: true }
     );
+
+    if (pendingAdjustments.length > 0 && payrollRecord) {
+      await PayrollAdjustment.updateMany(
+        { _id: { $in: pendingAdjustments.map((a) => a._id) } },
+        { $set: { status: "Applied", appliedPayrollId: payrollRecord._id } }
+      );
+    }
 
     generated++;
   }

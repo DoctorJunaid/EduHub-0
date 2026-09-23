@@ -16,6 +16,7 @@ import substituteRoutes from "./substitute.routes.js";
 import salaryPolicyRoutes from "./salaryPolicy.routes.js";
 import salaryProfileRoutes from "./salaryProfile.routes.js";
 import payrollRoutes from "./payroll.routes.js";
+import attendanceApprovalRoutes from "./attendanceApproval.routes.js";
 import studentRoutes from "./student.routes.js";
 
 const router = express.Router();
@@ -46,6 +47,7 @@ router.use("/settings", settingsRoutes);
 router.use("/campus/substitutes", substituteRoutes);
 router.use("/campus/salary/profiles", salaryProfileRoutes);
 router.use("/campus/salary/payroll", payrollRoutes);
+router.use("/campus/salary/approvals", attendanceApprovalRoutes);
 router.use("/campus/salary/policy", salaryPolicyRoutes);
 router.use("/campus/salary", salaryPolicyRoutes);
 
