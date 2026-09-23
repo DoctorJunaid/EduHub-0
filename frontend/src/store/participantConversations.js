@@ -1,4 +1,6 @@
 export const participantKey = (type, id) => `${type}:${id}`;
+export const participantConversationId = (participantIds) =>
+  `thread:${encodeURIComponent([...participantIds].sort().join("::"))}`;
 export function validParticipantConversation(record) {
   if (
     !record ||

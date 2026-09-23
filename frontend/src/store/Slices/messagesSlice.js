@@ -1,3 +1,5 @@
+import { createSelector, createSlice, nanoid } from '@reduxjs/toolkit';
+import { participantConversationId, validParticipantConversation } from '../participantConversations.js';
 import { createSelector, createSlice, nanoid } from "@reduxjs/toolkit";
 import { validParticipantConversation } from "../participantConversations.js";
 
@@ -12,6 +14,12 @@ const slice = createSlice({
       state.records = Array.isArray(payload) ? payload : [];
     },
     participantMessageSent: {
+      prepare: ({ conversationId, senderId, receiverId, body }) => ({
+        payload: {
+          conversationId,
+          senderId,
+          receiverId,
+          body: typeof body === 'string' ? body.trim() : '',
       prepare: ({ conversationId, senderId, body }) => ({
         payload: {
           conversationId,
@@ -22,6 +30,24 @@ const slice = createSlice({
         },
       }),
       reducer: (state, { payload }) => {
+        if (!payload.body || !payload.senderId) return;
+        let conversation = state.records.find((record) => record.id === payload.conversationId);
+        if (!conversation) {
+          if (!payload.receiverId || payload.senderId === payload.receiverId) return;
+          const participantIds = [payload.senderId, payload.receiverId].sort();
+          if (payload.conversationId !== participantConversationId(participantIds)) return;
+          conversation = {
+            id: payload.conversationId,
+            participantIds,
+            messages: [],
+            updatedAt: payload.createdAt,
+          };
+          state.records.push(conversation);
+        }
+        if (!validParticipantConversation(conversation) || !conversation.participantIds.includes(payload.senderId)) return;
+        const receiverId = conversation.participantIds.find((id) => id !== payload.senderId);
+        if (!receiverId || (payload.receiverId && receiverId !== payload.receiverId)) return;
+        const createdAt = new Date(Math.max(Date.parse(payload.createdAt), Date.parse(conversation.updatedAt))).toISOString();
         const conversation = state.records.find(
           (record) => record.id === payload.conversationId,
         );
