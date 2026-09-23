@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { Button } from "@/components/ui/Button"
+import { Button } from "@/components/ui/button"
 
 function Dialog({
   ...props
@@ -68,7 +68,6 @@ function DialogContent({
           position: 'fixed',
           top: '50%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
           margin: 0,
           ...style,
         }}

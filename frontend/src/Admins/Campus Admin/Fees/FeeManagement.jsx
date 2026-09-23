@@ -12,7 +12,7 @@ import {
   Settings2,
   Wand2,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Progress from "@/components/common/Progress";

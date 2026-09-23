@@ -1,7 +1,8 @@
-import { createSelector, createSlice, nanoid } from '@reduxjs/toolkit';
-import { participantConversationId, validParticipantConversation } from '../participantConversations.js';
 import { createSelector, createSlice, nanoid } from "@reduxjs/toolkit";
-import { validParticipantConversation } from "../participantConversations.js";
+import {
+  participantConversationId,
+  validParticipantConversation,
+} from "../participantConversations.js";
 
 // A local sender marker, not an invented authenticated account.
 export const LOCAL_SENDER_ID = "local-demo-sender";
@@ -19,11 +20,6 @@ const slice = createSlice({
           conversationId,
           senderId,
           receiverId,
-          body: typeof body === 'string' ? body.trim() : '',
-      prepare: ({ conversationId, senderId, body }) => ({
-        payload: {
-          conversationId,
-          senderId,
           body: typeof body === "string" ? body.trim() : "",
           id: nanoid(),
           createdAt: new Date().toISOString(),
@@ -31,11 +27,17 @@ const slice = createSlice({
       }),
       reducer: (state, { payload }) => {
         if (!payload.body || !payload.senderId) return;
-        let conversation = state.records.find((record) => record.id === payload.conversationId);
+        let conversation = state.records.find(
+          (record) => record.id === payload.conversationId,
+        );
         if (!conversation) {
-          if (!payload.receiverId || payload.senderId === payload.receiverId) return;
+          if (!payload.receiverId || payload.senderId === payload.receiverId)
+            return;
           const participantIds = [payload.senderId, payload.receiverId].sort();
-          if (payload.conversationId !== participantConversationId(participantIds)) return;
+          if (
+            payload.conversationId !== participantConversationId(participantIds)
+          )
+            return;
           conversation = {
             id: payload.conversationId,
             participantIds,
@@ -44,15 +46,7 @@ const slice = createSlice({
           };
           state.records.push(conversation);
         }
-        if (!validParticipantConversation(conversation) || !conversation.participantIds.includes(payload.senderId)) return;
-        const receiverId = conversation.participantIds.find((id) => id !== payload.senderId);
-        if (!receiverId || (payload.receiverId && receiverId !== payload.receiverId)) return;
-        const createdAt = new Date(Math.max(Date.parse(payload.createdAt), Date.parse(conversation.updatedAt))).toISOString();
-        const conversation = state.records.find(
-          (record) => record.id === payload.conversationId,
-        );
         if (
-          !payload.body ||
           !validParticipantConversation(conversation) ||
           !conversation.participantIds.includes(payload.senderId)
         )
@@ -60,6 +54,11 @@ const slice = createSlice({
         const receiverId = conversation.participantIds.find(
           (id) => id !== payload.senderId,
         );
+        if (
+          !receiverId ||
+          (payload.receiverId && receiverId !== payload.receiverId)
+        )
+          return;
         const createdAt = new Date(
           Math.max(
             Date.parse(payload.createdAt),

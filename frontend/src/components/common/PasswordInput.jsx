@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 export default function PasswordInput({ label, ...props }) {
   const [visible, setVisible] = useState(false);

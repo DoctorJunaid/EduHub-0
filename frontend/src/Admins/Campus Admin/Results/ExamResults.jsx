@@ -12,7 +12,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LineChart from "@/components/common/charts/LineChart";
 import DonutChart from "@/components/common/charts/DonutChart";

@@ -9,7 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { submitStudentAssignment } from "@/store/submitStudentAssignment";
 
 export default function AssignmentSubmissionForm({ assignment, onSaved }) {

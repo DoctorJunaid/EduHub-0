@@ -1,6 +1,6 @@
 import { ArrowUp, MoreVertical } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 export default function OverviewStatCard({ icon: Icon, value, label, change, period }) {
   return (

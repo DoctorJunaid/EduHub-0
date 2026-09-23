@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { formatPKR } from "@/lib/currency";
 import { printElement } from "@/lib/print";
 import { useInstitution } from "@/context/InstitutionContext";
