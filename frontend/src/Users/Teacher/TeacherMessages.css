@@ -1,1 +1,219 @@
-.teacher-messages{padding:26px 24px;max-width:1600px;margin:auto;height:calc(100vh - 100px);display:flex;flex-direction:column}.teacher-messages-heading h1{margin:0;font-size:clamp(1.7rem,2.2vw,2.35rem)}.teacher-messages-workspace{display:grid;grid-template-columns:360px 1fr;min-height:0;flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;margin-top:18px}.teacher-conversation-panel{border-right:1px solid var(--border);min-height:0;display:flex;flex-direction:column}.teacher-message-search{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:7px;margin:16px;padding:0 11px;color:var(--muted-foreground)}.teacher-message-search input{border:0;outline:0;background:transparent;color:var(--foreground);padding:11px 0;width:100%}.teacher-conversation-list{overflow:auto}.teacher-conversation-item{display:flex;align-items:center;gap:12px;width:100%;padding:15px 18px;text-align:left;border:0;border-top:1px solid var(--border);background:transparent;color:var(--foreground);cursor:pointer}.teacher-conversation-item:hover,.teacher-conversation-item.selected{background:color-mix(in srgb,#d9f8e8 35%,transparent)}.teacher-conversation-item.selected{box-shadow:inset 3px 0 #149766}.teacher-conversation-item span:last-child{display:grid;min-width:0}.teacher-conversation-item strong{font-size:.9rem}.teacher-conversation-item small{color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}.teacher-chat-panel{min-width:0;display:flex;flex-direction:column}.teacher-chat-header{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--border)}.teacher-chat-header>div{flex:1}.teacher-chat-header h2{margin:0;font-size:1rem}.teacher-chat-header p{margin:4px 0 0;color:#149766;font-size:.82rem}.teacher-message-history{flex:1;overflow:auto;padding:24px}.teacher-message-row{display:flex;gap:10px;align-items:flex-start;margin:0 0 18px}.teacher-message-row.outgoing{justify-content:flex-end}.teacher-message-row>div{max-width:min(620px,80%)}.teacher-message-row p{margin:0;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--muted);line-height:1.45;overflow-wrap:anywhere}.teacher-message-row.outgoing p{background:#149766;color:#fff;border-color:#149766}.teacher-message-row time{display:block;color:var(--muted-foreground);font-size:.72rem;margin-top:5px}.teacher-message-composer{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:24px;margin:16px;padding:4px 8px}.teacher-message-composer textarea{resize:none;outline:0;border:0;background:transparent;color:var(--foreground);font:inherit;flex:1;padding:10px}.teacher-send{border-radius:50%;background:#149766;color:#fff}.teacher-messages-demo{text-align:center;color:var(--muted-foreground);font-size:.7rem;margin:-9px 0 10px}.teacher-message-empty{display:grid;justify-items:center;gap:8px;padding:35px;color:var(--muted-foreground);text-align:center}.teacher-no-selection{margin:auto}.teacher-avatar{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--muted);font-size:.75rem;font-weight:700}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:800px){.teacher-messages{height:auto;min-height:calc(100vh - 100px);padding:18px 14px}.teacher-messages-workspace{grid-template-columns:1fr}.teacher-chat-panel{display:none}.teacher-messages-workspace:has(.teacher-conversation-item.selected) .teacher-conversation-panel{display:none}.teacher-messages-workspace:has(.teacher-conversation-item.selected) .teacher-chat-panel{display:flex;min-height:620px}.teacher-conversation-panel{border-right:0}.teacher-message-history{min-height:350px}}
+.teacher-messages {
+  padding: 26px 24px;
+  max-width: 1600px;
+  margin: auto;
+  height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+}
+.teacher-messages-workspace {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  min-height: 0;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  overflow: hidden;
+  margin-top: 0;
+}
+.teacher-conversation-panel {
+  border-right: 1px solid var(--border);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.teacher-message-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin: 16px;
+  padding: 0 11px;
+  color: var(--muted-foreground);
+}
+.teacher-message-search input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--foreground);
+  padding: 11px 0;
+  width: 100%;
+}
+.teacher-conversation-list {
+  overflow: auto;
+}
+.teacher-conversation-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 18px;
+  text-align: left;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+.teacher-conversation-item:hover,
+.teacher-conversation-item.selected {
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.teacher-conversation-item.selected {
+  box-shadow: inset 3px 0 #149766;
+}
+.teacher-conversation-item span:last-child {
+  display: grid;
+  min-width: 0;
+}
+.teacher-conversation-item strong {
+  font-size: 0.9rem;
+}
+.teacher-conversation-item small {
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 4px;
+}
+.teacher-chat-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.teacher-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.teacher-chat-header > div {
+  flex: 1;
+}
+.teacher-chat-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.teacher-chat-header p {
+  margin: 4px 0 0;
+  color: #149766;
+  font-size: 0.82rem;
+}
+.teacher-message-history {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+.teacher-message-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 18px;
+}
+.teacher-message-row.outgoing {
+  justify-content: flex-end;
+}
+.teacher-message-row > div {
+  max-width: min(620px, 80%);
+}
+.teacher-message-row p {
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--muted);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.teacher-message-row.outgoing p {
+  background: #149766;
+  color: #fff;
+  border-color: #149766;
+}
+.teacher-message-row time {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  margin-top: 5px;
+}
+.teacher-message-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  margin: 16px;
+  padding: 4px 8px;
+}
+.teacher-message-composer textarea {
+  resize: none;
+  outline: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  flex: 1;
+  padding: 10px;
+}
+.teacher-send {
+  border-radius: 50%;
+  background: #149766;
+  color: #fff;
+}
+.teacher-messages-demo {
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+  margin: -9px 0 10px;
+}
+.teacher-message-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 35px;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+.teacher-no-selection {
+  margin: auto;
+}
+.teacher-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.teacher-message-back { display: none; }
+@media (max-width: 800px) {
+  .teacher-messages {
+    height: auto;
+    min-height: calc(100vh - 100px);
+    padding: 18px 14px;
+  }
+  .teacher-messages-workspace { grid-template-columns: 1fr; height: auto; min-height: 0; }
+  .teacher-conversation-panel { border-right: 0; display: flex; min-height: 55vh; }
+  .teacher-chat-panel { display: none; }
+  .teacher-messages-workspace.mobile-detail-open .teacher-conversation-panel { display: none; }
+  .teacher-messages-workspace.mobile-detail-open .teacher-chat-panel { display: flex; min-height: 70vh; }
+  .teacher-message-back { display: inline-flex; }
+  .teacher-message-history { min-height: 40vh; }
+}

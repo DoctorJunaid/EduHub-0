@@ -10,6 +10,7 @@ import {
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import User from "../models/user.model.js";
 import FeeStructure from "../models/feeStructure.model.js";
+import PaymentTransaction from "../models/paymentTransaction.model.js";
 import Timetable from "../models/timetable.model.js";
 import Assignment from "../models/assignment.model.js";
 import {
@@ -1040,6 +1041,130 @@ class CampusAdminService {
     return record;
   }
 
+  async getFeePayments(feeRecordId, campusId) {
+    return await PaymentTransaction.find({ feeRecordId, campusId })
+      .populate("submittedBy", "name email")
+      .populate("confirmedBy", "name email")
+      .sort({ createdAt: -1 });
+  }
+
+  async getPendingPayments(campusId) {
+    return await PaymentTransaction.find({ campusId, status: "PENDING" })
+      .populate("feeRecordId")
+      .populate("submittedBy", "name email roll")
+      .sort({ createdAt: -1 });
+  }
+
+  async getStudentPayments(studentId, campusId) {
+    return await PaymentTransaction.find({ studentId, campusId })
+      .populate("feeRecordId")
+      .populate("submittedBy", "name email")
+      .populate("confirmedBy", "name email")
+      .sort({ createdAt: -1 });
+  }
+
+  async recordPayment(feeRecordId, campusId, instituteId, data) {
+    const feeRecord = await FeeRecord.findOne({ _id: feeRecordId, campusId });
+    if (!feeRecord) throw new Error("Fee record not found.");
+
+    const amount = Number(data.amount || 0);
+    if (amount <= 0) throw new Error("Payment amount must be greater than zero.");
+    
+    const remaining = feeRecord.amount - feeRecord.paidAmount;
+    if (amount > remaining) {
+      throw new Error(`Payment amount (${amount}) exceeds remaining balance (${remaining}).`);
+    }
+
+    const payment = await PaymentTransaction.create({
+      feeRecordId,
+      studentId: feeRecord.studentId,
+      campusId,
+      instituteId: instituteId || null,
+      amount,
+      paymentDate: data.paymentDate ? new Date(data.paymentDate) : new Date(),
+      paymentMethod: data.paymentMethod || "Cash",
+      referenceNo: data.referenceNo || "",
+      receiptUrl: data.receiptUrl || "",
+      status: data.status || "CONFIRMED",
+      submittedBy: data.submittedBy || null,
+      confirmedBy: data.status === "CONFIRMED" ? data.submittedBy : null,
+      confirmationDate: data.status === "CONFIRMED" ? new Date() : null,
+      notes: data.notes || "",
+    });
+
+    if (payment.status === "CONFIRMED") {
+      await this.updateFeeRecordStatus(feeRecordId, campusId);
+    }
+
+    return { payment, feeRecord: await FeeRecord.findById(feeRecordId) };
+  }
+
+  async confirmPayment(paymentId, campusId, adminId, notes) {
+    const payment = await PaymentTransaction.findOne({ _id: paymentId, campusId });
+    if (!payment) throw new Error("Payment transaction not found.");
+    if (payment.status !== "PENDING") throw new Error(`Payment is already ${payment.status}.`);
+
+    const feeRecord = await FeeRecord.findOne({ _id: payment.feeRecordId, campusId });
+    if (!feeRecord) throw new Error("Associated fee record not found.");
+
+    const remaining = feeRecord.amount - feeRecord.paidAmount;
+    if (payment.amount > remaining) {
+      throw new Error(`Payment amount (${payment.amount}) exceeds remaining balance (${remaining}).`);
+    }
+
+    payment.status = "CONFIRMED";
+    payment.confirmedBy = adminId;
+    payment.confirmationDate = new Date();
+    if (notes) payment.notes = notes;
+    await payment.save();
+
+    const updatedFeeRecord = await this.updateFeeRecordStatus(payment.feeRecordId, campusId);
+    return { payment, feeRecord: updatedFeeRecord };
+  }
+
+  async rejectPayment(paymentId, campusId, adminId, notes) {
+    const payment = await PaymentTransaction.findOne({ _id: paymentId, campusId });
+    if (!payment) throw new Error("Payment transaction not found.");
+    if (payment.status !== "PENDING") throw new Error(`Payment is already ${payment.status}.`);
+
+    payment.status = "REJECTED";
+    payment.confirmedBy = adminId;
+    payment.confirmationDate = new Date();
+    if (notes) payment.notes = notes;
+    await payment.save();
+
+    return { payment, feeRecord: await FeeRecord.findById(payment.feeRecordId) };
+  }
+
+  async updateFeeRecordStatus(feeRecordId, campusId) {
+    const feeRecord = await FeeRecord.findOne({ _id: feeRecordId, campusId });
+    if (!feeRecord) return null;
+
+    const confirmedPayments = await PaymentTransaction.find({
+      feeRecordId,
+      campusId,
+      status: "CONFIRMED"
+    });
+
+    const totalPaid = confirmedPayments.reduce((sum, p) => sum + p.amount, 0);
+    feeRecord.paidAmount = totalPaid;
+
+    if (totalPaid >= feeRecord.amount) {
+      feeRecord.status = "PAID";
+      feeRecord.paymentDate = new Date();
+    } else if (totalPaid > 0) {
+      feeRecord.status = "PARTIALLY_PAID";
+      if (new Date() > feeRecord.dueDate) {
+        feeRecord.status = "OVERDUE";
+      }
+    } else {
+      feeRecord.status = new Date() > feeRecord.dueDate ? "OVERDUE" : "UNPAID";
+    }
+
+    await feeRecord.save();
+    return feeRecord;
+  }
+
   async generateMonthlyFees(campusId, instituteId, options = {}) {
     const month = options.month || new Date().toISOString().slice(0, 7);
     const dueDate = options.dueDate ? new Date(options.dueDate) : new Date(Date.now() + 14 * 86400000);
@@ -1100,7 +1225,10 @@ class CampusAdminService {
       let amount = defaultAmount;
       let breakdown = [{ title: feeCategory, amount: defaultAmount }];
 
-      if (matchedStructure) {
+      if (student.baseFee && student.baseFee > 0) {
+        amount = student.baseFee;
+        breakdown = [{ title: "Monthly Tuition Fee", amount: student.baseFee }];
+      } else if (matchedStructure) {
         const tuition = Number(matchedStructure.tuitionFee || 0);
         const lab = Number(matchedStructure.labFee || 0);
         const sports = Number(matchedStructure.sportsFee || 0);
@@ -1134,7 +1262,7 @@ class CampusAdminService {
         paidAmount: 0,
         dueDate,
         paymentDate: null,
-        status: "pending",
+        status: "UNPAID",
         description: matchedStructure?.description || description,
         notes: matchedStructure?.description || description,
         breakdown,

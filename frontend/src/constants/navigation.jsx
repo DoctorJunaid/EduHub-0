@@ -118,6 +118,8 @@ export const TEACHER_NAV = [
   },
   {
     label: "My Salary",
+    path: "/my-payslips",
+    icon: <ClipboardList size={20} />,
     path: "/my-salary",
     icon: <Wallet size={20} />,
   },

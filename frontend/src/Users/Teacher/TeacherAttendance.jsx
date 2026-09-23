@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Check,
+
   CheckCheck,
   CircleAlert,
   CircleCheck,
@@ -12,9 +12,9 @@ import {
   Users,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
-import { selectTimetable } from "@/store/Slices/timetableSlice";
 import { selectStudents } from "@/store/Slices/studentsSlice";
+import { selectAssignedTeacherClasses, studentsForClass } from "./teacherScope";
+import { dateKey as localDateKey } from "@/lib/dates";
 import {
   selectStudentAttendance,
   studentAttendanceMarked,
@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import toast from "react-hot-toast";
 import "./TeacherAttendance.css";
+import TeacherPagination from "./TeacherPagination";
 
-const dateKey = () => new Date().toISOString().slice(0, 10);
+const dateKey = () => localDateKey(new Date());
 const get = (row, ...keys) =>
   keys
     .map((key) => row?.[key])
@@ -46,55 +47,38 @@ const initials = (name = "") =>
 export default function TeacherAttendance() {
   const dispatch = useDispatch();
   const [params] = useSearchParams();
-  const user = useSelector(selectCurrentUser);
-  const timetable = useSelector(selectTimetable);
+  const classes = useSelector(selectAssignedTeacherClasses);
   const students = useSelector(selectStudents);
   const records = useSelector(selectStudentAttendance);
   const [classId, setClassId] = useState(params.get("classId") || "");
   const [date, setDate] = useState(dateKey());
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState({});
-  const teacherId = user?.id || user?._id;
-  const teacherName = user?.name || user?.fullName;
-  const classes = useMemo(
-    () =>
-      timetable.filter(
-        (row) =>
-          (teacherId || teacherName) && (row.teacherId === teacherId ||
-          row.instructorId === teacherId ||
-          row.instructor === teacherName ||
-          row.teacherName === teacherName),
-      ),
-    [timetable, teacherId, teacherName],
-  );
-  const selected =
-    classes.find((row) => (row.id || row._id) === classId) || classes[0];
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    const requestedClassId = params.get("classId");
+    if (requestedClassId && classes.some((row) => String(row.id || row._id) === requestedClassId)) {
+      setClassId(requestedClassId);
+    }
+  }, [params, classes]);
+  const selected = classes.find((row) => String(row.id || row._id) === classId) || classes[0];
   const selectedId = selected?.id || selected?._id || "";
-  const enrolled = selected
-    ? students.filter(
-        (student) =>
-          (student.section || "") ===
-            (selected.section || selected.className || "") ||
-          ((student.program || student.gradeOrClass) ===
-            (selected.program || selected.className) &&
-            !selected.section),
-      )
-    : [];
+  const enrolled = selected ? studentsForClass(students, selected) : [];
+  const draftKey = (studentId) => `${selectedId}:${date}:${studentId}`;
   const statusFor = (student) =>
-    draft[student.id || student._id] ||
-    records.find(
-      (record) =>
-        record.studentId === (student.id || student._id) &&
-        record.classId === selectedId &&
-        record.date === date,
-    )?.status ||
+    draft[draftKey(student.id || student._id)] ||
+    records.find((record) => record.studentId === (student.id || student._id) && record.classId === selectedId && record.date === date)?.status ||
     "";
-  const rows = enrolled.filter((student) =>
+  const filteredStudents = enrolled.filter((student) =>
     `${student.name} ${student.roll || student.rollNo || student.rollNumber || ""}`
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
-  const counts = rows.reduce(
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const rows = filteredStudents.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => setPage((current) => Math.min(current, pageCount)), [pageCount]);
+  const counts = filteredStudents.reduce(
     (acc, student) => {
       const status = statusFor(student);
       if (status) acc[status] += 1;
@@ -103,16 +87,17 @@ export default function TeacherAttendance() {
     { Present: 0, Absent: 0, Late: 0, "On Leave": 0 },
   );
   const mark = (studentId, status) =>
-    setDraft((current) => ({ ...current, [studentId]: status }));
+    setDraft((current) => ({ ...current, [draftKey(studentId)]: status }));
   const markAll = (status) =>
     setDraft((current) => ({
       ...current,
       ...Object.fromEntries(
-        enrolled.map((student) => [student.id || student._id, status]),
+        enrolled.map((student) => [draftKey(student.id || student._id), status]),
       ),
     }));
   const save = () => {
-    if (date > dateKey()) return toast.error("Future attendance cannot be recorded.");
+    if (date > dateKey())
+      return toast.error("Future attendance cannot be recorded.");
     if (!selectedId || !date)
       return toast.error("Select a class and date first.");
     const changed = enrolled
@@ -123,6 +108,7 @@ export default function TeacherAttendance() {
         date,
         status: statusFor(student),
       }));
+    if (!changed.length) return toast.error("Mark at least one student before saving.");
     changed.forEach((record) => dispatch(studentAttendanceMarked(record)));
     setDraft({});
     toast.success(
@@ -135,18 +121,14 @@ export default function TeacherAttendance() {
       className="teacher-attendance"
       aria-labelledby="teacher-attendance-title"
     >
-      <header className="teacher-attendance-heading">
-        <div>
-          <p className="page-eyebrow">Home / Attendance</p>
-          <h1 id="teacher-attendance-title">Take Student Attendance</h1>
-          <p>Mark attendance for students enrolled in your assigned class.</p>
-        </div>
-        <Button onClick={save} disabled={!selectedId || !enrolled.length}>
+      <header className="teacher-attendance-toolbar">
+        <h1 id="teacher-attendance-title" className="sr-only">Take Student Attendance</h1>
+        <Button className="teacher-primary-action" onClick={save} disabled={!selectedId || !enrolled.length || date > dateKey()}>
           <Save size={17} /> Save Attendance
         </Button>
       </header>
       <section className="teacher-attendance-metrics">
-        <Metric icon={Users} label="Total Students" value={rows.length} />
+        <Metric icon={Users} label="Total Students" value={filteredStudents.length} />
         <Metric icon={CircleCheck} label="Present" value={counts.Present} />
         <Metric icon={CircleX} label="Absent" value={counts.Absent} />
         <Metric
@@ -162,13 +144,13 @@ export default function TeacherAttendance() {
             <span className="sr-only">Search students</span>
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => { setSearch(event.target.value); setPage(1); }}
               placeholder="Search students, roll number..."
             />
           </label>
           <select
             value={selectedId}
-            onChange={(event) => setClassId(event.target.value)}
+            onChange={(event) => { setClassId(event.target.value); setPage(1); }}
           >
             <option value="">Select assigned class</option>
             {classes.map((row) => (
@@ -180,6 +162,7 @@ export default function TeacherAttendance() {
           </select>
           <input
             type="date"
+            max={dateKey()}
             value={date}
             onChange={(event) => setDate(event.target.value)}
             aria-label="Attendance date"
@@ -289,7 +272,7 @@ export default function TeacherAttendance() {
               })}
             </tbody>
           </table>
-          {!rows.length && (
+          {!filteredStudents.length && (
             <div className="teacher-attendance-empty">
               {selected
                 ? enrolled.length
@@ -300,7 +283,8 @@ export default function TeacherAttendance() {
           )}
         </div>
         <footer className="teacher-attendance-footer">
-          Showing {rows.length} of {enrolled.length} records
+          <span>Showing {filteredStudents.length ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filteredStudents.length)} of {filteredStudents.length} matching records</span>
+          <TeacherPagination page={page} pageCount={pageCount} onPageChange={setPage} label="Attendance pages" />
         </footer>
       </section>
     </main>

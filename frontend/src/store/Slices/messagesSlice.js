@@ -1,5 +1,5 @@
 import { createSelector, createSlice, nanoid } from "@reduxjs/toolkit";
-import { validParticipantConversation } from "../participantConversations.js";
+import { participantConversationId, validParticipantConversation } from "../participantConversations.js";
 
 // A local sender marker, not an invented authenticated account.
 export const LOCAL_SENDER_ID = "local-demo-sender";
@@ -12,34 +12,35 @@ const slice = createSlice({
       state.records = Array.isArray(payload) ? payload : [];
     },
     participantMessageSent: {
-      prepare: ({ conversationId, senderId, body }) => ({
+      prepare: ({ conversationId, senderId, receiverId, body, id, createdAt }) => ({
         payload: {
           conversationId,
           senderId,
+          receiverId,
           body: typeof body === "string" ? body.trim() : "",
-          id: nanoid(),
-          createdAt: new Date().toISOString(),
+          id: id || nanoid(),
+          createdAt: createdAt || new Date().toISOString(),
         },
       }),
       reducer: (state, { payload }) => {
-        const conversation = state.records.find(
-          (record) => record.id === payload.conversationId,
-        );
-        if (
-          !payload.body ||
-          !validParticipantConversation(conversation) ||
-          !conversation.participantIds.includes(payload.senderId)
-        )
-          return;
-        const receiverId = conversation.participantIds.find(
-          (id) => id !== payload.senderId,
-        );
-        const createdAt = new Date(
-          Math.max(
-            Date.parse(payload.createdAt),
-            Date.parse(conversation.updatedAt),
-          ),
-        ).toISOString();
+        if (!payload.body || !payload.senderId) return;
+        let conversation = state.records.find((record) => record.id === payload.conversationId);
+        if (!conversation) {
+          if (!payload.receiverId || payload.senderId === payload.receiverId) return;
+          const participantIds = [payload.senderId, payload.receiverId].sort();
+          if (payload.conversationId !== participantConversationId(participantIds)) return;
+          conversation = {
+            id: payload.conversationId,
+            participantIds,
+            messages: [],
+            updatedAt: payload.createdAt,
+          };
+          state.records.push(conversation);
+        }
+        if (!validParticipantConversation(conversation) || !conversation.participantIds.includes(payload.senderId)) return;
+        const receiverId = conversation.participantIds.find((id) => id !== payload.senderId);
+        if (!receiverId || (payload.receiverId && receiverId !== payload.receiverId)) return;
+        const createdAt = new Date(Math.max(Date.parse(payload.createdAt), Date.parse(conversation.updatedAt))).toISOString();
         conversation.messages.push({
           id: payload.id,
           conversationId: conversation.id,

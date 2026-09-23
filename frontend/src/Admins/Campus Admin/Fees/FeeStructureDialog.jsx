@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Settings2, Plus, Trash2, Edit2, Sparkles, Building, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Edit2, LayoutGrid, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/Input";
 import {
   fetchFeeStructures,
   saveFeeStructure,
@@ -20,6 +19,34 @@ import {
 } from "@/store/Slices/feesSlice.js";
 import { formatPKR } from "@/lib/currency";
 import { useInstitution } from "@/context/InstitutionContext";
+
+/* ─── reusable field wrapper ─── */
+function Field({ label, required, children }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-xs font-semibold text-zinc-700 tracking-wide">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/* ─── number input without spin arrows ─── */
+function NumInput({ id, placeholder = "0", value, onChange }) {
+  return (
+    <Input
+      id={id}
+      type="number"
+      min={0}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+    />
+  );
+}
 
 export default function FeeStructureDialog({ onClose }) {
   const dispatch = useDispatch();
@@ -43,9 +70,7 @@ export default function FeeStructureDialog({ onClose }) {
     dispatch(fetchFeeStructures());
   }, [dispatch]);
 
-  const handleChange = (key, val) => {
-    setForm((prev) => ({ ...prev, [key]: val }));
-  };
+  const handleChange = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
   const handleEdit = (s) => {
     setEditingId(s._id);
@@ -63,23 +88,12 @@ export default function FeeStructureDialog({ onClose }) {
 
   const handleResetForm = () => {
     setEditingId(null);
-    setForm({
-      gradeOrClass: "",
-      tuitionFee: "",
-      labFee: "",
-      sportsFee: "",
-      examFee: "",
-      otherFee: "",
-      lateFeeFine: "200",
-      description: "",
-    });
+    setForm({ gradeOrClass: "", tuitionFee: "", labFee: "", sportsFee: "", examFee: "", otherFee: "", lateFeeFine: "200", description: "" });
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.gradeOrClass.trim()) {
-      return toast.error("Please enter a class or grade name.");
-    }
+    if (!form.gradeOrClass.trim()) return toast.error("Please enter a class or grade name.");
 
     setIsSaving(true);
     try {
@@ -94,7 +108,6 @@ export default function FeeStructureDialog({ onClose }) {
           lateFeeFine: Number(form.lateFeeFine) || 0,
         })
       ).unwrap();
-
       toast.success(`Fee structure for ${form.gradeOrClass} saved!`);
       handleResetForm();
     } catch (err) {
@@ -116,33 +129,6 @@ export default function FeeStructureDialog({ onClose }) {
     }
   };
 
-  const handlePopulateStandardSchool = async () => {
-    const defaultSchoolGrades = [
-      { gradeOrClass: "Playgroup", tuitionFee: 3500, labFee: 0, sportsFee: 300, examFee: 200, otherFee: 500, description: "Early childhood learning & activity dues" },
-      { gradeOrClass: "Nursery", tuitionFee: 4000, labFee: 0, sportsFee: 300, examFee: 200, otherFee: 500, description: "Nursery tuition & development charges" },
-      { gradeOrClass: "Prep", tuitionFee: 4500, labFee: 200, sportsFee: 300, examFee: 300, otherFee: 500, description: "Prep basic schooling & activity dues" },
-      { gradeOrClass: "Grade 1", tuitionFee: 5000, labFee: 300, sportsFee: 300, examFee: 400, otherFee: 500, description: "Primary class regular monthly charges" },
-      { gradeOrClass: "Grade 2", tuitionFee: 5200, labFee: 300, sportsFee: 300, examFee: 400, otherFee: 500, description: "Primary class regular monthly charges" },
-      { gradeOrClass: "Grade 3", tuitionFee: 5500, labFee: 400, sportsFee: 400, examFee: 500, otherFee: 600, description: "Primary class regular monthly charges" },
-      { gradeOrClass: "Grade 4", tuitionFee: 5800, labFee: 400, sportsFee: 400, examFee: 500, otherFee: 600, description: "Primary class regular monthly charges" },
-      { gradeOrClass: "Grade 5", tuitionFee: 6200, labFee: 500, sportsFee: 500, examFee: 600, otherFee: 700, description: "Primary completion board preparation dues" },
-      { gradeOrClass: "Grade 6", tuitionFee: 6800, labFee: 600, sportsFee: 500, examFee: 700, otherFee: 800, description: "Middle school science & academic charges" },
-      { gradeOrClass: "Grade 7", tuitionFee: 7200, labFee: 600, sportsFee: 500, examFee: 700, otherFee: 800, description: "Middle school science & academic charges" },
-      { gradeOrClass: "Grade 8", tuitionFee: 7800, labFee: 700, sportsFee: 500, examFee: 800, otherFee: 900, description: "Middle school board preparation charges" },
-      { gradeOrClass: "Grade 9", tuitionFee: 8800, labFee: 1000, sportsFee: 600, examFee: 1000, otherFee: 1000, description: "Matric part-1 science lab & tuition dues" },
-      { gradeOrClass: "Grade 10", tuitionFee: 9500, labFee: 1200, sportsFee: 600, examFee: 1200, otherFee: 1000, description: "Matriculation board exams & science lab dues" },
-    ];
-
-    try {
-      for (const item of defaultSchoolGrades) {
-        await dispatch(saveFeeStructure(item)).unwrap();
-      }
-      toast.success("Standard school fee structures populated!");
-    } catch (err) {
-      toast.error("Failed to populate standard rates.");
-    }
-  };
-
   const calculatedTotal =
     (Number(form.tuitionFee) || 0) +
     (Number(form.labFee) || 0) +
@@ -153,297 +139,197 @@ export default function FeeStructureDialog({ onClose }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        style={{
-          maxWidth: "850px",
-          width: "95vw",
-          maxHeight: "92vh",
-          overflowY: "auto",
-          padding: "24px",
-          borderRadius: "12px",
-          background: "#ffffff",
-        }}
+        className="max-w-[880px] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0"
         aria-describedby="fee-struct-desc"
       >
-        <DialogHeader style={{ borderBottom: "1px solid #e4e4e7", paddingBottom: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: "#f4f4f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#09090b",
-                }}
-              >
-                <Settings2 size={20} />
-              </div>
-              <div>
-                <DialogTitle style={{ fontSize: "16px", fontWeight: "700", color: "#09090b" }}>
-                  School Fee Structure Setup
-                </DialogTitle>
-                <DialogDescription id="fee-struct-desc" style={{ fontSize: "12px", color: "#71717a" }}>
-                  Configure standard monthly tuition and auxiliary rate cards per grade or class.
-                </DialogDescription>
-              </div>
-            </div>
 
-            {structures.length === 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePopulateStandardSchool}
-                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-              >
-                <Sparkles size={14} color="#4f46e5" />
-                Populate Standard School Rates
-              </Button>
-            )}
+        {/* ── HEADER ── */}
+        <div className="flex items-center gap-4 px-8 pt-7 pb-6 border-b border-zinc-200 flex-shrink-0">
+          <div className="size-11 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
+            <LayoutGrid className="size-5 text-white" />
           </div>
-        </DialogHeader>
-
-        {/* 1. Add / Edit Rate Form */}
-        <form
-          onSubmit={handleSave}
-          style={{
-            background: "#fafafa",
-            border: "1px solid #e4e4e7",
-            borderRadius: "8px",
-            padding: "16px",
-            marginTop: "14px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <strong style={{ fontSize: "13px", color: "#09090b" }}>
-              {editingId ? `Edit Fee Rate: ${form.gradeOrClass}` : "Add / Configure Class Fee Rate"}
-            </strong>
-            <div style={{ fontSize: "12px", fontWeight: "700", color: "#09090b" }}>
-              Total Monthly Fee: <span style={{ color: "#4f46e5" }}>{formatPKR(calculatedTotal)}</span>
-            </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-[17px] font-semibold text-zinc-900 leading-tight">
+              School Fee Structure Setup
+            </DialogTitle>
+            <DialogDescription id="fee-struct-desc" className="text-sm text-zinc-500 mt-0.5">
+              Configure standard monthly tuition and auxiliary rate cards per grade or class.
+            </DialogDescription>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "10px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-grade" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Class / Grade Name *
-              </Label>
-              <input
-                id="fs-grade"
-                required
-                placeholder="e.g. Grade 1, Grade 10"
-                value={form.gradeOrClass}
-                onChange={(e) => handleChange("gradeOrClass", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-tuition" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Tuition Fee (PKR)
-              </Label>
-              <input
-                id="fs-tuition"
-                type="number"
-                min={0}
-                placeholder="0"
-                value={form.tuitionFee}
-                onChange={(e) => handleChange("tuitionFee", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-lab" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Lab / Computer (PKR)
-              </Label>
-              <input
-                id="fs-lab"
-                type="number"
-                min={0}
-                placeholder="0"
-                value={form.labFee}
-                onChange={(e) => handleChange("labFee", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-sports" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Sports / Activities (PKR)
-              </Label>
-              <input
-                id="fs-sports"
-                type="number"
-                min={0}
-                placeholder="0"
-                value={form.sportsFee}
-                onChange={(e) => handleChange("sportsFee", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: "10px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-exam" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Exam Fee (PKR)
-              </Label>
-              <input
-                id="fs-exam"
-                type="number"
-                min={0}
-                placeholder="0"
-                value={form.examFee}
-                onChange={(e) => handleChange("examFee", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-other" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Other / Utility (PKR)
-              </Label>
-              <input
-                id="fs-other"
-                type="number"
-                min={0}
-                placeholder="0"
-                value={form.otherFee}
-                onChange={(e) => handleChange("otherFee", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Label htmlFor="fs-desc" style={{ fontSize: "11px", fontWeight: "600" }}>
-                Description / Particulars Note
-              </Label>
-              <input
-                id="fs-desc"
-                placeholder="e.g. Regular monthly tuition & laboratory dues"
-                value={form.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                style={{ padding: "6px 8px", fontSize: "12px", border: "1px solid #d4d4d8", borderRadius: "5px" }}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
-            {editingId && (
-              <Button type="button" variant="outline" size="sm" onClick={handleResetForm}>
-                Cancel Edit
-              </Button>
-            )}
-            <Button type="submit" size="sm" disabled={isSaving}>
-              {editingId ? "Update Rate Card" : "Save Class Fee"}
-            </Button>
-          </div>
-        </form>
-
-        {/* 2. Existing Rate Cards Table */}
-        <div style={{ marginTop: "16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <strong style={{ fontSize: "13px", color: "#09090b" }}>
-              Configured Class Fee Rates ({structures.length})
-            </strong>
-          </div>
-
-          {structures.length === 0 ? (
-            <div style={{ padding: "24px", textAlign: "center", background: "#fafafa", borderRadius: "8px", border: "1px solid #e4e4e7", color: "#71717a", fontSize: "12px" }}>
-              No fee structures configured yet. Click "Populate Standard School Rates" above or add a class manually.
-            </div>
-          ) : (
-            <div style={{ border: "1px solid #e4e4e7", borderRadius: "8px", overflow: "hidden" }}>
-              <table style={{ width: "100%", fontSize: "12px", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ background: "#f4f4f5", borderBottom: "1px solid #e4e4e7", textAlign: "left" }}>
-                    <th style={{ padding: "8px 12px" }}>Class / Grade</th>
-                    <th style={{ padding: "8px 12px" }}>Tuition</th>
-                    <th style={{ padding: "8px 12px" }}>Lab</th>
-                    <th style={{ padding: "8px 12px" }}>Sports</th>
-                    <th style={{ padding: "8px 12px" }}>Exam/Other</th>
-                    <th style={{ padding: "8px 12px" }}>Total Monthly</th>
-                    <th style={{ padding: "8px 12px", textAlign: "right" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {structures.map((s) => {
-                    const total =
-                      (s.tuitionFee || 0) +
-                      (s.labFee || 0) +
-                      (s.sportsFee || 0) +
-                      (s.examFee || 0) +
-                      (s.otherFee || 0);
-
-                    return (
-                      <tr key={s._id} style={{ borderBottom: "1px solid #f4f4f5" }}>
-                        <td style={{ padding: "8px 12px", fontWeight: "600", color: "#09090b" }}>
-                          {s.gradeOrClass}
-                          {s.description && (
-                            <div style={{ fontSize: "10px", color: "#71717a", fontWeight: "normal" }}>
-                              {s.description}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ padding: "8px 12px" }}>{formatPKR(s.tuitionFee || 0)}</td>
-                        <td style={{ padding: "8px 12px" }}>{formatPKR(s.labFee || 0)}</td>
-                        <td style={{ padding: "8px 12px" }}>{formatPKR(s.sportsFee || 0)}</td>
-                        <td style={{ padding: "8px 12px" }}>{formatPKR((s.examFee || 0) + (s.otherFee || 0))}</td>
-                        <td style={{ padding: "8px 12px", fontWeight: "700", color: "#4f46e5" }}>
-                          {formatPKR(total)}
-                        </td>
-                        <td style={{ padding: "8px 12px", textAlign: "right" }}>
-                          <div style={{ display: "inline-flex", gap: "6px" }}>
-                            <button
-                              type="button"
-                              onClick={() => handleEdit(s)}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "#4f46e5",
-                                padding: "4px",
-                              }}
-                              aria-label={`Edit ${s.gradeOrClass}`}
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(s._id, s.gradeOrClass)}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "#dc2626",
-                                padding: "4px",
-                              }}
-                              aria-label={`Delete ${s.gradeOrClass}`}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
 
-        <DialogFooter style={{ borderTop: "1px solid #e4e4e7", paddingTop: "14px", marginTop: "16px" }}>
-          <Button type="button" onClick={onClose}>
+        {/* ── SCROLLABLE BODY ── */}
+        <div className="overflow-y-auto flex-1 px-8 py-7 space-y-7">
+
+          {/* Add / Edit form */}
+          <form onSubmit={handleSave}>
+            {/* Section header row */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                  {editingId ? "Edit Rate Card" : "Add Rate Card"}
+                </span>
+                {editingId && (
+                  <span className="text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200 px-2.5 py-0.5 rounded-full">
+                    {form.gradeOrClass}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-zinc-500">
+                Total Monthly: <strong className="text-zinc-900 font-bold">{formatPKR(calculatedTotal)}</strong>
+              </span>
+            </div>
+
+            {/* Input grid — row 1 */}
+            <div className="grid grid-cols-4 gap-5 mb-5">
+              <Field label="Class / Grade Name" required>
+                <Input
+                  id="fs-grade"
+                  required
+                  placeholder="e.g. Grade 1"
+                  value={form.gradeOrClass}
+                  onChange={(e) => handleChange("gradeOrClass", e.target.value)}
+                />
+              </Field>
+              <Field label="Tuition Fee (PKR)">
+                <NumInput id="fs-tuition" value={form.tuitionFee} onChange={(e) => handleChange("tuitionFee", e.target.value)} />
+              </Field>
+              <Field label="Lab / Computer (PKR)">
+                <NumInput id="fs-lab" value={form.labFee} onChange={(e) => handleChange("labFee", e.target.value)} />
+              </Field>
+              <Field label="Sports / Activities (PKR)">
+                <NumInput id="fs-sports" value={form.sportsFee} onChange={(e) => handleChange("sportsFee", e.target.value)} />
+              </Field>
+            </div>
+
+            {/* Input grid — row 2 */}
+            <div className="grid grid-cols-4 gap-5 mb-6">
+              <Field label="Exam Fee (PKR)">
+                <NumInput id="fs-exam" value={form.examFee} onChange={(e) => handleChange("examFee", e.target.value)} />
+              </Field>
+              <Field label="Other / Utility (PKR)">
+                <NumInput id="fs-other" value={form.otherFee} onChange={(e) => handleChange("otherFee", e.target.value)} />
+              </Field>
+              <div className="col-span-2">
+                <Field label="Description / Particulars">
+                  <Input
+                    id="fs-desc"
+                    placeholder="e.g. Regular monthly tuition & laboratory dues"
+                    value={form.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                  />
+                </Field>
+              </div>
+            </div>
+
+            {/* Form actions */}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-zinc-400">
+                {editingId ? "Updating existing rate card" : "New rate card will be added to the list below"}
+              </p>
+              <div className="flex items-center gap-3">
+                {editingId && (
+                  <Button type="button" variant="outline" onClick={handleResetForm}>
+                    Cancel Edit
+                  </Button>
+                )}
+                <Button type="submit" disabled={isSaving} className="gap-2 px-6">
+                  <Check className="size-4" />
+                  {isSaving ? "Saving..." : editingId ? "Update Rate Card" : "Save Class Fee"}
+                </Button>
+              </div>
+            </div>
+          </form>
+
+          {/* Divider */}
+          <div className="border-t border-zinc-100" />
+
+          {/* ── Configured Rates Table ── */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                Configured Class Fee Rates ({structures.length})
+              </span>
+            </div>
+
+            {structures.length === 0 ? (
+              <div className="border border-dashed border-zinc-200 rounded-xl py-12 text-center">
+                <p className="text-sm font-medium text-zinc-500">No fee structures configured yet.</p>
+                <p className="text-xs text-zinc-400 mt-1">Add a class using the form above.</p>
+              </div>
+            ) : (
+              <div className="border border-zinc-200 rounded-xl overflow-hidden">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-50 border-b border-zinc-200">
+                      <th className="text-left px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Class / Grade</th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Tuition</th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Lab</th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Sports</th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Exam+Other</th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Total / Month</th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {structures.map((s) => {
+                      const total = (s.tuitionFee || 0) + (s.labFee || 0) + (s.sportsFee || 0) + (s.examFee || 0) + (s.otherFee || 0);
+                      return (
+                        <tr
+                          key={s._id}
+                          className={`border-b border-zinc-100 last:border-0 hover:bg-zinc-50/60 transition-colors ${editingId === s._id ? "bg-zinc-50" : ""}`}
+                        >
+                          <td className="px-4 py-3">
+                            <span className="font-semibold text-zinc-900 text-[13px]">{s.gradeOrClass}</span>
+                            {s.description && (
+                              <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[160px]">{s.description}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR(s.tuitionFee || 0)}</td>
+                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR(s.labFee || 0)}</td>
+                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR(s.sportsFee || 0)}</td>
+                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR((s.examFee || 0) + (s.otherFee || 0))}</td>
+                          <td className="px-4 py-3 text-right font-bold text-zinc-900 text-[13px]">{formatPKR(total)}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(s)}
+                                className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
+                                aria-label={`Edit ${s.gradeOrClass}`}
+                              >
+                                <Edit2 className="size-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(s._id, s.gradeOrClass)}
+                                className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                aria-label={`Delete ${s.gradeOrClass}`}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── STICKY FOOTER ── */}
+        <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-zinc-200 bg-zinc-50/60 flex-shrink-0">
+          <Button type="button" variant="outline" onClick={onClose} className="px-6">
+            Close
+          </Button>
+          <Button type="button" onClick={onClose} className="px-6">
             Done
           </Button>
-        </DialogFooter>
+        </div>
+
       </DialogContent>
     </Dialog>
   );

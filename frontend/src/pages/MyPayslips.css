@@ -1,0 +1,71 @@
+.teacher-payslips {
+  color: var(--foreground);
+}
+.teacher-payslips-title {
+  color: var(--foreground);
+}
+.teacher-payslips-muted {
+  color: var(--muted-foreground);
+}
+.teacher-payslips-month {
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+}
+.teacher-payslips-table {
+  color: var(--foreground);
+}
+.teacher-payslips-thead {
+  border-color: var(--border);
+}
+.teacher-payslips-row {
+  border-color: var(--border);
+}
+.teacher-payslips-net {
+  color: var(--primary);
+}
+.teacher-payslips-link {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.teacher-payslips-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.teacher-payslips .payroll-payslip-dialog {
+  padding: 16px;
+  background: rgb(9 9 11 / 58%);
+  backdrop-filter: blur(3px);
+}
+.teacher-payslips .payroll-payslip-dialog > div {
+  width: min(680px, calc(100vw - 32px));
+  max-width: 680px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  margin: 0;
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 22%);
+}
+.teacher-payslips .payroll-payslip-dialog :is(.payslip-header, .payslip-footer) {
+  border-color: var(--border);
+  background: var(--card);
+}
+.teacher-payslips .payroll-payslip-dialog .text-white { color: var(--foreground); }
+.teacher-payslips .payroll-payslip-dialog :is(.text-gray-300, .text-gray-400) { color: var(--muted-foreground); }
+.teacher-payslips .payroll-payslip-dialog :is(.bg-gray-800\/50, .bg-gray-800\/30) { background: var(--muted); }
+.teacher-payslips .payroll-payslip-dialog :is(.border-gray-700\/50, .border-gray-700\/30) { border-color: var(--border); }
+.teacher-payslips .payroll-payslip-dialog .text-blue-400 { color: var(--primary); }
+.teacher-payslips .payroll-payslip-dialog .bg-blue-600 { background: var(--primary); color: var(--primary-foreground); }
+.teacher-payslips .payroll-payslip-dialog button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+@media (max-width: 560px) {
+  .teacher-payslips .payroll-payslip-dialog { padding: 12px; }
+  .teacher-payslips .payroll-payslip-dialog > div { width: calc(100vw - 24px); }
+}

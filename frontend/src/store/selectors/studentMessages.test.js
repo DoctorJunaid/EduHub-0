@@ -4,12 +4,26 @@ import { configureStore } from '@reduxjs/toolkit';
 import auth, { demoLoggedIn } from '../Slices/authSlice.js';
 import students from '../Slices/studentsSlice.js';
 import faculty from '../Slices/facultySlice.js';
-import messages, { messageSent, selectConversations, validConversations } from '../Slices/messagesSlice.js';
+import messages, { messageSent, participantMessageSent, selectConversations, validConversations } from '../Slices/messagesSlice.js';
 import { selectStudentConversations, searchStudentConversations, replyToStudentConversation } from './studentMessages.js';
 import { loadDemoState, persistDemoState } from '../persistence.js';
+import { participantConversationId } from '../participantConversations.js';
 const reducer = { auth, students, faculty, messages };
 const thread = { id: 'thread:test', participantIds: ['student:student-demo-1', 'faculty:faculty-demo-1'], messages: [], updatedAt: '2026-09-10T00:00:00.000Z' };
-const create = (records = [thread]) => { const store = configureStore({ reducer, preloadedState: { messages: { records } } }); store.dispatch(demoLoggedIn({ role: 'student', email: 'ali.raza@nust.edu.pk' })); return store; };
+const student = { id: 'student-demo-1', name: 'Ali Raza', roll: 'NUST-CS-2023-042', email: 'ali.raza@nust.edu.pk', studentPhone: '03001234567', program: 'BS Computer Science', section: 'CS-4A', semester: '4th Semester', subjects: 'Advanced Web Design', campus: 'Main Campus', status: 'Active', guardian: 'Raza Khan', guardianPhone: '03007654321', initials: 'AR' };
+const facultyMember = { id: 'faculty-demo-1', name: 'Dr. Usman Khan', email: 'dr.usman@nu.edu.pk', designation: 'Associate Professor', qualification: 'Ph.D.', department: 'Computer Science', phone: '03000000000', subjects: 'Advanced Web Design', campus: 'Main Campus', status: 'Active', initials: 'UK' };
+const create = (records = [thread]) => {
+  const store = configureStore({
+    reducer,
+    preloadedState: {
+      students: { records: [student] },
+      faculty: { records: [facultyMember] },
+      messages: { records },
+    },
+  });
+  store.dispatch(demoLoggedIn({ role: 'student', email: student.email }));
+  return store;
+};
 test('Student inbox excludes legacy anonymous messages and other participants, with no invented contacts', () => {
   const store = create([thread, { ...thread, id: 'thread:other', participantIds: ['student:student-demo-2', 'faculty:faculty-demo-1'] }]);
   store.dispatch(messageSent({ participantType: 'student', participantId: 'student-demo-1', body: 'Private legacy content' }));
@@ -37,11 +51,49 @@ test('participant conversations persist alongside legacy records and reject forg
   const unsubscribe = persistDemoState(store, storage);
   store.dispatch(replyToStudentConversation({ conversationId: thread.id, body: 'Persist this' }));
   store.dispatch(messageSent({ participantType: 'faculty', participantId: 'faculty-demo-1', body: 'Legacy' }));
-  const restored = configureStore({ reducer, preloadedState: loadDemoState(storage) });
+  const { demoLifecycle: _demoLifecycle, ...persistedState } = loadDemoState(storage);
+  const restored = configureStore({ reducer, preloadedState: persistedState });
   assert.equal(selectStudentConversations(restored.getState())[0].lastMessage, 'Persist this');
   assert.equal(restored.getState().messages.records.length, 2);
   const saved = restored.getState().messages.records[0];
   assert.equal(validConversations([{ ...saved, messages: [{ ...saved.messages[0], senderId: 'student:unrelated' }] }]), false);
   assert.equal(validConversations([{ ...saved, participantIds: ['student:student-demo-1', 'student:student-demo-1'] }]), false);
   unsubscribe();
+});
+
+test("Teacher and Student messages share one persisted participant conversation", () => {
+  const store = create([]);
+  const conversationId = participantConversationId([
+    "faculty:faculty-demo-1",
+    "student:student-demo-1",
+  ]);
+  store.dispatch(participantMessageSent({
+    conversationId,
+    senderId: "faculty:faculty-demo-1",
+    receiverId: "student:student-demo-1",
+    body: "Assignment feedback is ready.",
+  }));
+  assert.equal(store.getState().messages.records.length, 1);
+  let conversation = store.getState().messages.records[0];
+  assert.equal(conversation.messages[0].receiverId, "student:student-demo-1");
+
+  store.dispatch(participantMessageSent({
+    conversationId,
+    senderId: "student:student-demo-1",
+    receiverId: "faculty:faculty-demo-1",
+    body: "Thank you.",
+  }));
+  conversation = store.getState().messages.records[0];
+  assert.equal(conversation.messages.length, 2);
+  assert.equal(conversation.messages[1].senderId, "student:student-demo-1");
+  assert.equal(conversation.messages[1].receiverId, "faculty:faculty-demo-1");
+  assert.equal(validConversations([conversation]), true);
+
+  store.dispatch(participantMessageSent({
+    conversationId,
+    senderId: "faculty:faculty-unrelated",
+    receiverId: "student:student-demo-1",
+    body: "Forged sender.",
+  }));
+  assert.equal(store.getState().messages.records[0].messages.length, 2);
 });

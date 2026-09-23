@@ -144,6 +144,10 @@ const userSchema = new mongoose.Schema(
       enum: ["Active", "Pending", "Inactive", "Suspended", "Graduated", "On Leave"],
       default: "Active",
     },
+    baseFee: {
+      type: Number,
+      default: 0,
+    },
     isActive: {
       type: Boolean,
       default: true,

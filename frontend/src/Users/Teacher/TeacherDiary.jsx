@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FileText, MoreVertical, Plus } from "lucide-react";
+import { dateKey, validDate } from "@/lib/dates";
 import { useSearchParams } from "react-router-dom";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
-import { selectTimetable } from "@/store/Slices/timetableSlice";
+import { selectAssignedTeacherClasses, selectTeacherIdentity } from "./teacherScope";
 import {
   diaryDeleted,
   diarySaved,
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -24,39 +25,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import toast from "react-hot-toast";
-import ConfirmDialog from "@/components/common/ConfirmDialog";
+import TeacherConfirmDialog from "./TeacherConfirmDialog";
 import "./TeacherDiary.css";
 
 const get = (row, ...keys) =>
   keys
     .map((key) => row?.[key])
     .find((item) => item !== undefined && item !== null && item !== "") || "";
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => dateKey(new Date());
 
 export default function TeacherDiary() {
   const dispatch = useDispatch();
   const [params] = useSearchParams();
-  const user = useSelector(selectCurrentUser);
-  const timetable = useSelector(selectTimetable);
+  const teacher = useSelector(selectTeacherIdentity);
+  const classes = useSelector(selectAssignedTeacherClasses);
   const diary = useSelector(selectDiary);
   const [form, setForm] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const teacherId = user?.id || user?._id;
-  const teacherName = user?.name || user?.fullName;
-  const classes = useMemo(
-    () =>
-      timetable.filter(
-        (row) =>
-          (teacherId || teacherName) && (row.teacherId === teacherId ||
-          row.instructorId === teacherId ||
-          row.instructor === teacherName ||
-          row.teacherName === teacherName),
-      ),
-    [timetable, teacherId, teacherName],
-  );
   const classIds = new Set(classes.map((row) => row.id || row._id));
   const entries = diary
-    .filter((entry) => classIds.size === 0 || classIds.has(entry.classId))
+    .filter((entry) => classIds.has(entry.classId))
     .sort((a, b) => b.date.localeCompare(a.date));
   const openNew = () =>
     setForm({
@@ -73,14 +61,16 @@ export default function TeacherDiary() {
     const selected = classes.find(
       (row) => (row.id || row._id) === data.classId,
     );
-    if (!selected || !data.title.trim() || !data.recap.trim())
+    if (!selected || !validDate(data.date) || !data.title.trim() || !data.recap.trim())
       return toast.error(
         "Select a class and complete the topic and lecture summary.",
       );
+    if (form.id && !entries.some((entry) => entry.id === form.id && entry.teacherId === teacher?.id)) return toast.error("This diary entry is no longer available for editing.");
     dispatch(
       diarySaved({
         ...data,
-        teacherId: teacherId || "",
+        id: form.id,
+        teacherId: teacher?.id || "",
         sectionId: selected.sectionId || selected.section || "",
         title: data.title.trim(),
         recap: data.recap.trim(),
@@ -91,8 +81,13 @@ export default function TeacherDiary() {
     setForm(null);
     toast.success("Diary entry saved.");
   };
-  const edit = (entry) => setForm(entry);
+  const edit = (entry) => {
+    if (entry.teacherId !== teacher?.id) return;
+    setForm(entry);
+  };
   const remove = () => {
+    const entry = entries.find((item) => item.id === deleteId);
+    if (entry?.teacherId !== teacher?.id) return setDeleteId(null);
     dispatch(diaryDeleted(deleteId));
     setDeleteId(null);
     toast.success("Diary entry deleted.");
@@ -100,16 +95,9 @@ export default function TeacherDiary() {
 
   return (
     <main className="teacher-diary" aria-labelledby="teacher-diary-title">
-      <header className="teacher-diary-heading">
-        <div>
-          <p className="page-eyebrow">Home / Diary</p>
-          <h1 id="teacher-diary-title">Daily Lecture Diary</h1>
-          <p>
-            Share class summaries, homework, and recommended study material with
-            enrolled students.
-          </p>
-        </div>
-        <Button onClick={openNew} disabled={!classes.length}>
+      <header className="teacher-diary-toolbar">
+        <h1 id="teacher-diary-title" className="sr-only">Daily Lecture Diary</h1>
+        <Button className="teacher-primary-action" onClick={openNew} disabled={!classes.length}>
           <Plus size={17} /> New Diary Entry
         </Button>
       </header>
@@ -140,7 +128,7 @@ export default function TeacherDiary() {
                     · Date: <time dateTime={entry.date}>{entry.date}</time>
                   </p>
                 </div>
-                <DropdownMenu>
+                {entry.teacherId === teacher?.id && <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
@@ -161,7 +149,7 @@ export default function TeacherDiary() {
                       Delete Entry
                     </DropdownMenuItem>
                   </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu>}
               </header>
               <div className="teacher-diary-panels">
                 <section>
@@ -192,7 +180,7 @@ export default function TeacherDiary() {
         open={Boolean(form)}
         onOpenChange={(open) => !open && setForm(null)}
       >
-        <DialogContent>
+        <DialogContent className="teacher-dialog">
           <DialogHeader>
             <DialogTitle>
               {form?.id ? "Edit Diary Entry" : "New Diary Entry"}
@@ -203,61 +191,30 @@ export default function TeacherDiary() {
           </DialogHeader>
           {form && (
             <form className="teacher-diary-form" onSubmit={save}>
-              <label>
-                Class / Section
-                <select name="classId" defaultValue={form.classId} required>
-                  {classes.map((row) => (
-                    <option key={row.id || row._id} value={row.id || row._id}>
-                      {get(row, "subject", "title", "periodName")} ·{" "}
-                      {get(row, "section", "className")}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Date
-                <input
-                  type="date"
-                  name="date"
-                  defaultValue={form.date}
-                  required
-                />
-              </label>
-              <label>
-                Lecture / Topic Title
-                <input name="title" defaultValue={form.title} required />
-              </label>
-              <label>
-                Class Lecture Summary
-                <textarea
-                  name="recap"
-                  defaultValue={form.recap}
-                  rows="3"
-                  required
-                />
-              </label>
-              <label>
-                Homework / Practice Task
-                <textarea
-                  name="homework"
-                  defaultValue={form.homework}
-                  rows="3"
-                />
-              </label>
-              <label>
-                Recommended Study Material
-                <textarea
-                  name="resources"
-                  defaultValue={form.resources}
-                  rows="2"
-                />
-              </label>
-              <Button type="submit">Save Diary Entry</Button>
+              <div className="teacher-dialog-body">
+                <label>Class / Section<select name="classId" defaultValue={form.classId} required>{classes.map((row) => <option key={row.id || row._id} value={row.id || row._id}>{get(row, "subject", "title", "periodName")} · {get(row, "section", "className")}</option>)}</select></label>
+                <label>Date<input type="date" name="date" defaultValue={form.date} required /></label>
+                <label>Lecture / Topic Title<input name="title" defaultValue={form.title} required /></label>
+                <label>Class Lecture Summary<textarea name="recap" defaultValue={form.recap} rows="3" required /></label>
+                <label>Homework / Practice Task<textarea name="homework" defaultValue={form.homework} rows="3" /></label>
+                <label>Recommended Study Material<textarea name="resources" defaultValue={form.resources} rows="2" /></label>
+              </div>
+              <DialogFooter className="teacher-dialog-footer">
+                <Button type="button" variant="outline" onClick={() => setForm(null)}>Cancel</Button>
+                <Button className="teacher-primary-action" type="submit">Save Diary Entry</Button>
+              </DialogFooter>
             </form>
           )}
         </DialogContent>
       </Dialog>
-      <ConfirmDialog open={Boolean(deleteId)} title="Delete diary entry?" description="This removes your diary entry from the shared frontend record." confirmText="Delete Entry" onConfirm={remove} onCancel={() => setDeleteId(null)} />
+      <TeacherConfirmDialog
+        open={Boolean(deleteId)}
+        title="Delete diary entry?"
+        description="This removes your diary entry from the shared frontend record."
+        confirmText="Delete Entry"
+        onConfirm={remove}
+        onCancel={() => setDeleteId(null)}
+      />
     </main>
   );
 }

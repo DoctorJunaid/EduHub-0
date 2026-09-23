@@ -5,6 +5,7 @@ import {
   getStudentPortal,
   submitAssignment,
   sendConversationMessage,
+  submitFeePayment
 } from "../controllers/studentPortal.controller.js";
 
 const router = express.Router();
@@ -12,5 +13,6 @@ router.use(protect, authorize("student"));
 router.get("/portal", getStudentPortal);
 router.post("/assignments/:id/submission", submitAssignment);
 router.post("/conversations/:id/messages", sendConversationMessage);
+router.post("/fees/:id/submit-payment", submitFeePayment);
 
 export default router;

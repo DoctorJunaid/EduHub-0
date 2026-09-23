@@ -1,5 +1,6 @@
 import MainLayout from "@/layouts/MainLayout";
 import { TEACHER_NAV } from "@/constants/navigation";
+import "./TeacherUI.css";
 
 export default function TeacherLayout() {
   return (

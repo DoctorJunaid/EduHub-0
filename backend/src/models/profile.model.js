@@ -259,7 +259,8 @@ const feeRecordSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      default: "pending",
+      enum: ["GENERATED", "UNPAID", "PARTIALLY_PAID", "PAID", "OVERDUE", "WAIVED", "CANCELLED", "pending", "paid"],
+      default: "UNPAID",
     },
     challanNo: { type: String, default: "" },
     month: { type: String, default: "" },
