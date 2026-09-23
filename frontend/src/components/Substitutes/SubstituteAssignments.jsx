@@ -5,6 +5,15 @@ import { toast } from "react-hot-toast";
 import AssignSubstituteDialog from "./AssignSubstituteDialog";
 import "./SubstituteAssignments.css";
 
+const getTeacherName = (teacher) => {
+  if (!teacher) return "Teacher";
+  if (typeof teacher === "string") return teacher;
+  if (teacher.name) return teacher.name;
+  if (teacher.user?.name) return teacher.user.name;
+  if (teacher.employeeId) return `Teacher (${teacher.employeeId})`;
+  return "Teacher";
+};
+
 const SubstituteAssignments = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +33,7 @@ const SubstituteAssignments = () => {
       if (res.data.success) {
         setAssignments(res.data.data);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to load substitutes");
     } finally {
       setLoading(false);
@@ -39,7 +48,7 @@ const SubstituteAssignments = () => {
         toast.success("Assignment cancelled");
         fetchAssignments();
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to cancel assignment");
     }
   };
@@ -51,20 +60,22 @@ const SubstituteAssignments = () => {
         toast.success(`Status updated to ${status}`);
         fetchAssignments();
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to update status");
     }
   };
 
   const visibleAssignments = assignments.filter((assignment) => {
     const query = search.trim().toLowerCase();
+    const origTeacherName = getTeacherName(assignment.originalTeacherId);
+    const subTeacherName = getTeacherName(assignment.substituteTeacherId);
     const matchesSearch = !query || [
       assignment.className,
       assignment.section,
       assignment.subject,
       assignment.reason,
-      assignment.originalTeacherId?.user?.name,
-      assignment.substituteTeacherId?.user?.name,
+      origTeacherName,
+      subTeacherName,
     ].some((value) => String(value || "").toLowerCase().includes(query));
     return matchesSearch && (!statusFilter || assignment.status === statusFilter);
   });
@@ -78,12 +89,18 @@ const SubstituteAssignments = () => {
   }, { total: 0, pending: 0, active: 0, completed: 0 });
 
   const getStatusBadgeClass = (status) => {
-    switch(status) {
-      case 'Pending Approval': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'Assigned': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'Completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'Cancelled': case 'Declined': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    switch (status) {
+      case "Pending Approval":
+        return "status-pending";
+      case "Assigned":
+        return "status-assigned";
+      case "Completed":
+        return "status-completed";
+      case "Cancelled":
+      case "Declined":
+        return "status-cancelled";
+      default:
+        return "status-default";
     }
   };
 
@@ -161,38 +178,45 @@ const SubstituteAssignments = () => {
                   </td>
                 </tr>
               ) : (
-                visibleAssignments.map((assignment) => (
-                  <tr key={assignment._id}>
-                    <td><strong>Period {assignment.period}</strong><small>{assignment.startTime} - {assignment.endTime}</small>
-                    </td>
-                    <td><strong>{assignment.className} {assignment.section && <span className="muted">/ {assignment.section}</span>}</strong><small className="subject-label">{assignment.subject}</small>
-                    </td>
-                    <td><div className="substitute-person"><span className="person-avatar">{(assignment.originalTeacherId?.user?.name || "U").slice(0, 1)}</span><span><strong>{assignment.originalTeacherId?.user?.name || "Unknown"}</strong><small>{assignment.reason}</small></span></div>
-                    </td>
-                    <td><div className="substitute-person"><span className="person-avatar person-avatar-accent">{(assignment.substituteTeacherId?.user?.name || "U").slice(0, 1)}</span><span><strong>{assignment.substituteTeacherId?.user?.name || "Unknown"}</strong>{assignment.bonusEligible && <small className="bonus-label">Bonus: PKR {assignment.bonusAmount}</small>}</span></div>
-                    </td>
-                    <td><span className={`substitute-status ${getStatusBadgeClass(assignment.status)}`}>{assignment.status}</span>
-                    </td>
-                    <td className="text-right"><div className="substitute-actions">
-                        {assignment.status === 'Pending Approval' && (
-                          <button onClick={() => handleUpdateStatus(assignment._id, 'Assigned')} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition" title="Approve">
-                            <Check className="w-4 h-4" />
-                          </button>
-                        )}
-                        {assignment.status === 'Assigned' && (
-                          <button onClick={() => handleUpdateStatus(assignment._id, 'Completed')} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition" title="Mark Completed">
-                            <Check className="w-4 h-4" />
-                          </button>
-                        )}
-                        {['Assigned', 'Pending Approval'].includes(assignment.status) && (
-                          <button onClick={() => handleCancel(assignment._id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Cancel">
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                visibleAssignments.map((assignment) => {
+                  const origName = getTeacherName(assignment.originalTeacherId);
+                  const subName = getTeacherName(assignment.substituteTeacherId);
+                  const origAvatar = (origName || "U").slice(0, 1).toUpperCase();
+                  const subAvatar = (subName || "U").slice(0, 1).toUpperCase();
+
+                  return (
+                    <tr key={assignment._id}>
+                      <td><strong>Period {assignment.period}</strong><small>{assignment.startTime} - {assignment.endTime}</small>
+                      </td>
+                      <td><strong>{assignment.className} {assignment.section && <span className="muted">/ {assignment.section}</span>}</strong><small className="subject-label">{assignment.subject}</small>
+                      </td>
+                      <td><div className="substitute-person"><span className="person-avatar">{origAvatar}</span><span><strong>{origName}</strong><small>{assignment.reason}</small></span></div>
+                      </td>
+                      <td><div className="substitute-person"><span className="person-avatar person-avatar-accent">{subAvatar}</span><span><strong>{subName}</strong>{assignment.bonusEligible && <small className="bonus-label">Bonus: PKR {assignment.bonusAmount}</small>}</span></div>
+                      </td>
+                      <td><span className={`substitute-status ${getStatusBadgeClass(assignment.status)}`}>{assignment.status}</span>
+                      </td>
+                      <td className="text-right"><div className="substitute-actions">
+                          {assignment.status === 'Pending Approval' && (
+                            <button onClick={() => handleUpdateStatus(assignment._id, 'Assigned')} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition" title="Approve">
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          {assignment.status === 'Assigned' && (
+                            <button onClick={() => handleUpdateStatus(assignment._id, 'Completed')} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition" title="Mark Completed">
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          {['Assigned', 'Pending Approval'].includes(assignment.status) && (
+                            <button onClick={() => handleCancel(assignment._id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Cancel">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

@@ -20,7 +20,7 @@ const SalaryPayroll = () => {
   const role = useSelector(selectCurrentRole);
   const canEdit = ["campus_admin", "campus_manager"].includes(role);
   const canApprove = ["campus_admin", "institute_admin", "principal"].includes(role);
-  const canPay = role === "accountant";
+  const canPay = ["accountant", "campus_admin", "campus_manager"].includes(role);
 
   // Default to current month
   const now = new Date();

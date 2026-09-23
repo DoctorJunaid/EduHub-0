@@ -40,7 +40,7 @@
 
 /* Premium Segmented Status Nav Tabs */
 .salary-status-nav {
-  padding: 8px 20px;
+  padding: 10px 20px;
   background: #ffffff;
   border-bottom: 1px solid #e4e4e7;
   display: flex;
@@ -51,56 +51,56 @@
 .salary-status-tabs {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   padding: 3px;
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
-  border-radius: 10px;
+  border-radius: 9px;
 }
 
 .salary-status-tab-btn {
+  height: 30px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 0 11px;
   color: #52525b;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
 }
-
 
 .salary-status-tab-btn:hover {
   color: #18181b;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .salary-status-tab-btn.is-active {
   color: #09090b;
   background: #ffffff;
   border-color: #e4e4e7;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-weight: 600;
 }
 
 .salary-status-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 18px;
+  min-width: 18px;
+  height: 17px;
   padding: 0 6px;
   border-radius: 9999px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
 }
 
 .salary-status-badge-all {
@@ -116,25 +116,21 @@
 .salary-status-badge-active {
   color: #15803d;
   background: #dcfce7;
-  border: 1px solid #bbf7d0;
 }
 
 .is-active .salary-status-badge-active {
   color: #ffffff;
   background: #16a34a;
-  border-color: #15803d;
 }
 
 .salary-status-badge-deactivated {
   color: #b91c1c;
-  background: #ffe4e6;
-  border: 1px solid #fecdd3;
+  background: #fee2e2;
 }
 
 .is-active .salary-status-badge-deactivated {
   color: #ffffff;
-  background: #e11d48;
-  border-color: #be123c;
+  background: #dc2626;
 }
 
 .salary-profiles-kpis .campus-kpi-card {
@@ -274,28 +270,16 @@
   user-select: none;
 }
 
-.salary-action-edit-icon {
-  width: 30px;
-  height: 28px;
-  min-width: 30px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  color: #334155;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-  flex-shrink: 0;
+.salary-action-edit {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
 }
 
-.salary-action-edit-icon:hover {
-  color: #0f172a;
-  background: #e2e8f0;
-  border-color: #94a3b8;
+.salary-action-edit:hover {
+  color: #1e40af;
+  background: #dbeafe;
+  border-color: #93c5fd;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 

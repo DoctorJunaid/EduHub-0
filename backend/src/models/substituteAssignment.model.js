@@ -20,21 +20,26 @@ const substituteAssignmentSchema = new mongoose.Schema(
     startTime: {
       type: String,
       required: true,
+      default: "08:00",
     },
     endTime: {
       type: String,
       required: true,
+      default: "08:45",
     },
     className: {
       type: String,
       required: true,
+      trim: true,
     },
     subject: {
       type: String,
       required: true,
+      trim: true,
     },
     section: {
       type: String,
+      trim: true,
       default: "",
     },
     originalTeacherId: {
@@ -53,6 +58,7 @@ const substituteAssignmentSchema = new mongoose.Schema(
       type: String,
       enum: ["Teacher Absent", "On Leave", "Training", "Emergency", "Other"],
       required: true,
+      default: "Teacher Absent",
     },
     status: {
       type: String,
@@ -81,7 +87,21 @@ const substituteAssignmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Unique constraint: A single class/section can only have one substitute per period per date
-substituteAssignmentSchema.index({ className: 1, section: 1, date: 1, period: 1 }, { unique: true });
+// Pre-save hook: Normalize date to UTC midnight
+substituteAssignmentSchema.pre("save", function (next) {
+  if (this.date) {
+    const d = new Date(this.date);
+    this.date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+  }
+  if (typeof next === "function") next();
+});
 
-export const SubstituteAssignment = mongoose.models.SubstituteAssignment || mongoose.model("SubstituteAssignment", substituteAssignmentSchema);
+// Unique constraint: A single class/section can only have one active substitute per period per date
+substituteAssignmentSchema.index(
+  { className: 1, section: 1, date: 1, period: 1 },
+  { unique: true }
+);
+
+export const SubstituteAssignment =
+  mongoose.models.SubstituteAssignment ||
+  mongoose.model("SubstituteAssignment", substituteAssignmentSchema);

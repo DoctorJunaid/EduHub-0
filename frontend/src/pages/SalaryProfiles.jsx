@@ -81,7 +81,15 @@ export default function SalaryProfiles() {
     return null;
   };
 
-  const handleSaveProfile = async ({ teacherId, payload }) => {
+  const handleSaveProfile = async (targetIdOrObj, payloadData) => {
+    let teacherId = targetIdOrObj;
+    let payload = payloadData;
+
+    if (targetIdOrObj && typeof targetIdOrObj === 'object' && !payloadData) {
+      teacherId = targetIdOrObj.teacherId;
+      payload = targetIdOrObj.payload;
+    }
+
     setSaving(true);
     try {
       await upsert(teacherId, payload);
@@ -229,19 +237,29 @@ export default function SalaryProfiles() {
 
       {/* Banner Notice when viewing Deactivated Staff */}
       {filters.isActive === false && (
-        <div className="mx-5 my-3 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 flex items-center justify-between text-xs shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <UserX size={16} className="text-rose-600 shrink-0" />
-            <span>
-              <strong>Viewing Deactivated Teachers.</strong> Deactivated profiles are excluded from monthly payroll runs. Click <strong>[Reactivate]</strong> on any row below to restore them.
-            </span>
+        <div className="mx-4 sm:mx-5 my-2.5 px-3.5 py-2.5 bg-rose-50/90 border border-rose-200/90 rounded-xl flex items-center justify-between gap-3 text-xs transition-all shadow-2xs box-border">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-7 w-7 rounded-lg bg-rose-100 border border-rose-300/80 flex items-center justify-center shrink-0">
+              <UserX className="h-3.5 w-3.5 text-rose-700" />
+            </div>
+            <div className="min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-rose-950 text-xs whitespace-nowrap">Viewing Deactivated Staff</span>
+              <span className="hidden lg:inline-block text-[11px] text-rose-800/90 whitespace-nowrap">
+                — deactivated profiles are excluded from monthly payroll runs
+              </span>
+            </div>
           </div>
+
           <button
             type="button"
-            className="text-[11px] font-bold text-rose-700 underline hover:text-rose-900 shrink-0 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-lg cursor-pointer shrink-0 whitespace-nowrap"
+            style={{
+              background: 'linear-gradient(135deg, #be123c 0%, #e11d48 100%)',
+              boxShadow: '0 2px 8px rgba(190,18,60,0.25), inset 0 1px 0 rgba(255,255,255,0.10)',
+            }}
             onClick={() => setFilters((f) => ({ ...f, isActive: '', page: 1 }))}
           >
-            Show All
+            <span>Show All Staff</span>
           </button>
         </div>
       )}
