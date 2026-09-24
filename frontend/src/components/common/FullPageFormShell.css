@@ -268,6 +268,294 @@
   margin-top: 2px;
 }
 
+/* Faculty Directory's full-page teacher form */
+.full-page-activity.faculty-form-page {
+  padding: 7px;
+}
+
+.faculty-form-page .activity-container {
+  max-width: 100% !important;
+}
+
+.faculty-form-page .activity-header {
+  margin-bottom: 16px;
+}
+
+.faculty-form-page .activity-back-btn,
+.faculty-form-page .activity-title-row {
+  display: none;
+}
+
+.faculty-form-page .activity-content-card {
+  padding: 22px;
+  border-radius: 12px;
+}
+
+.faculty-form-page .activity-form-grid {
+  gap: 14px 18px;
+}
+
+.faculty-form-page .activity-section-title {
+  margin: 5px 0 8px;
+  padding-bottom: 8px;
+}
+
+.faculty-form-page .activity-form-field {
+  gap: 6px;
+}
+
+.faculty-form-page .activity-form-field input,
+.faculty-form-page .activity-form-field select {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.faculty-form-page .activity-form-field input:focus,
+.faculty-form-page .activity-form-field select:focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.faculty-form-page .activity-form-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+/* Student Directory uses the same compact full-width form treatment. */
+.full-page-activity.student-form-page {
+  padding: 7px;
+}
+
+.student-form-page .activity-container {
+  max-width: 100% !important;
+}
+
+.student-form-page .activity-header {
+  margin-bottom: 16px;
+}
+
+.student-form-page .activity-back-btn,
+.student-form-page .activity-title-row {
+  display: none;
+}
+
+.student-form-page .activity-content-card {
+  padding: 22px;
+  border-radius: 12px;
+}
+
+.student-form-page .activity-form-grid {
+  gap: 14px 18px;
+}
+
+.student-form-page .activity-section-title {
+  margin: 5px 0 8px;
+  padding-bottom: 8px;
+}
+
+.student-form-page .activity-form-field {
+  gap: 6px;
+}
+
+.student-form-page .activity-form-field input,
+.student-form-page .activity-form-field select {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.student-form-page .activity-form-field input:focus,
+.student-form-page .activity-form-field select:focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.student-form-page .activity-form-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+/* Student profile record uses the full-width page spacing of the forms. */
+.full-page-activity.student-profile-page {
+  padding: 7px;
+}
+
+.student-profile-page .activity-container {
+  max-width: 100% !important;
+}
+
+.student-profile-page .activity-back-btn {
+  display: none;
+}
+
+.student-profile-page .activity-content-card {
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.student-profile-data {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-profile-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.student-profile-tabs-list {
+  margin-bottom: 8px;
+}
+
+.student-profile-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.student-profile-info-grid > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.student-profile-financial-content .student-profile-info-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .student-profile-info-grid,
+  .student-profile-financial-content .student-profile-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Faculty Attendance's record form matches the compact directory forms. */
+.full-page-activity.attendance-form-page {
+  padding: 7px;
+}
+
+.attendance-form-page .activity-container {
+  max-width: 100% !important;
+}
+
+.attendance-form-page .activity-header {
+  margin-bottom: 16px;
+}
+
+.attendance-form-page .activity-back-btn,
+.attendance-form-page .activity-title-row {
+  display: none;
+}
+
+.attendance-form-page .activity-content-card {
+  padding: 22px;
+  border-radius: 12px;
+}
+
+.attendance-form-page .activity-form-grid {
+  gap: 14px 18px;
+}
+
+.attendance-form-page .activity-section-title {
+  margin: 5px 0 8px;
+  padding-bottom: 8px;
+}
+
+.attendance-form-page .activity-form-field {
+  gap: 6px;
+}
+
+.attendance-form-page .activity-form-field input,
+.attendance-form-page .activity-form-field select {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.attendance-form-page .activity-form-field input:focus,
+.attendance-form-page .activity-form-field select:focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.attendance-form-page .activity-form-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+/* Student Attendance form follows the same compact full-width treatment. */
+.full-page-activity.student-attendance-form-page {
+  padding: 7px;
+}
+
+.student-attendance-form-page .activity-container {
+  max-width: 100% !important;
+}
+
+.student-attendance-form-page .activity-header {
+  margin-bottom: 16px;
+}
+
+.student-attendance-form-page .activity-back-btn,
+.student-attendance-form-page .activity-title-row {
+  display: none;
+}
+
+.student-attendance-form-page .activity-content-card {
+  padding: 22px;
+  border-radius: 12px;
+}
+
+.student-attendance-form-page .activity-form-grid {
+  gap: 14px 18px;
+}
+
+.student-attendance-form-page .activity-section-title {
+  margin: 5px 0 8px;
+  padding-bottom: 8px;
+}
+
+.student-attendance-form-page .activity-form-field {
+  gap: 6px;
+}
+
+.student-attendance-form-page .activity-form-field input,
+.student-attendance-form-page .activity-form-field select {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.student-attendance-form-page .activity-form-field input:focus,
+.student-attendance-form-page .activity-form-field select:focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.student-attendance-form-page .activity-form-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
 @media (max-width: 768px) {
   .full-page-activity {
     padding: 16px 16px 48px;
@@ -280,5 +568,55 @@
   .activity-form-field.span-3,
   .activity-section-title {
     grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .full-page-activity.faculty-form-page {
+    padding: 7px;
+  }
+
+  .full-page-activity.student-form-page {
+    padding: 7px;
+  }
+
+  .full-page-activity.student-profile-page {
+    padding: 7px;
+  }
+
+  .full-page-activity.attendance-form-page {
+    padding: 7px;
+  }
+
+  .full-page-activity.student-attendance-form-page {
+    padding: 7px;
+  }
+
+  .faculty-form-page .activity-content-card {
+    padding: 14px;
+  }
+
+  .student-form-page .activity-content-card {
+    padding: 14px;
+  }
+
+  .student-profile-page .activity-content-card {
+    padding: 8px;
+  }
+
+  .student-profile-info-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-profile-financial-content .student-profile-info-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-form-page .activity-content-card {
+    padding: 14px;
+  }
+
+  .student-attendance-form-page .activity-content-card {
+    padding: 14px;
   }
 }

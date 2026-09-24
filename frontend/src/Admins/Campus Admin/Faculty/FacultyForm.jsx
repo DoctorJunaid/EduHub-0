@@ -120,6 +120,8 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
       parentName={isSchool ? "Teaching Staff" : "Faculty Directory"}
       icon={isSchool ? <School size={22} /> : <GraduationCap size={22} />}
       onBack={onClose}
+      maxWidth={1600}
+      className="faculty-form-page"
     >
       <form onSubmit={submit}>
         <div className="activity-form-grid">

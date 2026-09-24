@@ -34,6 +34,8 @@ export default function StudentAttendanceForm({ students, classes, date, records
       parentName="Student Attendance"
       icon={<Users size={22} />}
       onBack={onClose}
+      maxWidth={1600}
+      className="student-attendance-form-page"
     >
       <form onSubmit={submit}>
         <div className="activity-form-grid">

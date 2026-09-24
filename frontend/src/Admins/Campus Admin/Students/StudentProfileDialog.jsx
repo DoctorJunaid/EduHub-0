@@ -42,16 +42,17 @@ export default function StudentProfileDialog({ student, onClose }) {
       parentName="Students Directory"
       icon={isSchool ? <School size={24} /> : <GraduationCap size={24} />}
       onBack={onClose}
-      maxWidth={720}
+      maxWidth={1600}
+      className="student-profile-page"
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div className="student-profile-data">
         {/* Profile Card Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", paddingBottom: "16px", borderBottom: "1px solid #e4e4e7" }}>
-          <Avatar style={{ width: "64px", height: "64px", fontSize: "20px", fontWeight: "700", background: "#09090b", color: "#ffffff" }}>
+        <div className="student-profile-person">
+          <Avatar style={{ width: "48px", height: "48px", fontSize: "16px", fontWeight: "700", background: "#09090b", color: "#ffffff" }}>
             <AvatarFallback>{student.initials || student.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#09090b", margin: 0 }}>{student.name}</h2>
+            <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#09090b", margin: 0 }}>{student.name}</h2>
             <p style={{ fontSize: "13px", color: "#71717a", margin: "4px 0 0" }}>
               {isSchool ? `Roll No: ${student.roll || student.rollNo || "10-A-01"}` : (student.email || student.roll)} · {student.studentPhone || student.phone || "Emergency Contact Verified"}
             </p>
@@ -59,15 +60,15 @@ export default function StudentProfileDialog({ student, onClose }) {
         </div>
 
         <Tabs defaultValue="academic" className="w-full">
-          <TabsList className="mb-4">
+          <TabsList className="student-profile-tabs-list">
             <TabsTrigger value="academic">Academic Profile</TabsTrigger>
             <TabsTrigger value="financial">Financial Record</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="academic" className="flex flex-col gap-5">
+          <TabsContent value="academic" className="student-profile-tab-content">
             {/* Info Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            <div className="student-profile-info-grid">
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   {isSchool ? "Class / Grade" : "Program / Degree"}
                 </span>
@@ -76,7 +77,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                 </strong>
               </div>
 
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   {isSchool ? "Section & Shift" : "Section & Semester"}
                 </span>
@@ -85,14 +86,14 @@ export default function StudentProfileDialog({ student, onClose }) {
                 </strong>
               </div>
 
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   {isSchool ? "School Campus" : "Campus Branch"}
                 </span>
                 <strong style={{ fontSize: "14px", color: "#09090b" }}>{student.campus || "Main School Campus"}</strong>
               </div>
 
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   Enrollment Status
                 </span>
@@ -103,7 +104,7 @@ export default function StudentProfileDialog({ student, onClose }) {
             </div>
 
             {/* Subjects Card */}
-            <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
+            <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
               <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "6px" }}>
                 {isSchool ? "Enrolled School Subjects" : "Enrolled Subjects"}
               </span>
@@ -114,16 +115,16 @@ export default function StudentProfileDialog({ student, onClose }) {
               </p>
             </div>
 
-            {/* Academic Performance */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+            {/* Academic Performance and Guardian Details */}
+            <div className="student-profile-info-grid student-profile-details-grid">
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   Attendance Record
                 </span>
                 <strong style={{ fontSize: "14px", color: "#09090b" }}>{student.attendance || "96.4%"}</strong>
               </div>
 
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   {isSchool ? "Terminal Evaluation & Rank" : "Cumulative GPA (CGPA)"}
                 </span>
@@ -133,18 +134,15 @@ export default function StudentProfileDialog({ student, onClose }) {
                     : (student.cgpa ? `${student.cgpa} / 4.00` : "3.80 / 4.00")}
                 </strong>
               </div>
-            </div>
-            
-            {/* Guardian Info */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+              {/* Guardian Info */}
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   Father / Guardian Name
                 </span>
                 <strong style={{ fontSize: "14px", color: "#09090b" }}>{student.guardian || "Muhammad Tariq"}</strong>
               </div>
 
-              <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
+              <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   Emergency Parent Contact
                 </span>
@@ -153,19 +151,19 @@ export default function StudentProfileDialog({ student, onClose }) {
             </div>
           </TabsContent>
 
-          <TabsContent value="financial" className="flex flex-col gap-5">
+          <TabsContent value="financial" className="student-profile-tab-content student-profile-financial-content">
             {loading ? (
               <p className="text-sm text-zinc-500">Loading financial data...</p>
             ) : (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-                  <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fff", borderColor: "#fecaca" }}>
+                <div className="student-profile-info-grid">
+                  <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fff", borderColor: "#fecaca" }}>
                     <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#dc2626", display: "block", marginBottom: "4px" }}>
                       Total Outstanding Dues
                     </span>
                     <strong style={{ fontSize: "18px", color: "#b91c1c" }}>{formatPKR(totalDue)}</strong>
                   </div>
-                  <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fff", borderColor: "#bbf7d0" }}>
+                  <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fff", borderColor: "#bbf7d0" }}>
                     <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#16a34a", display: "block", marginBottom: "4px" }}>
                       Total Confirmed Paid
                     </span>
@@ -173,7 +171,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                   </div>
                 </div>
 
-                <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
+                <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
                   <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#09090b" }}>Fee Vouchers</h3>
                   {fees.length === 0 ? (
                     <p style={{ fontSize: "13px", color: "#71717a" }}>No fee records found.</p>
@@ -201,7 +199,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                   )}
                 </div>
 
-                <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
+                <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
                   <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#09090b" }}>Payment History</h3>
                   {payments.length === 0 ? (
                     <p style={{ fontSize: "13px", color: "#71717a" }}>No payments recorded.</p>

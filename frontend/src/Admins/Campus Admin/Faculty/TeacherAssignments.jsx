@@ -14,7 +14,6 @@ export default function TeacherAssignments() {
   const [sections, setSections] = useState([]);
   const [gradeSubjects, setGradeSubjects] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { page, pageSize, setPage, setPageSize } = usePaginationParams({
     defaultPage: 1,
     defaultPageSize: 20,
@@ -109,8 +108,6 @@ export default function TeacherAssignments() {
     const start = (currentPage - 1) * pageSize;
     return assignments.slice(start, start + pageSize);
   }, [assignments, currentPage, pageSize]);
-
-  if (loading) return <div className="p-8">Loading teacher assignments...</div>;
 
   return (
     <div className="teacher-academic-assignments-page mx-auto w-full space-y-4 p-2 sm:p-3">

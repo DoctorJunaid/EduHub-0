@@ -56,6 +56,8 @@ export default function AttendanceForm({
       parentName="Staff Attendance"
       icon={<Clock size={22} />}
       onBack={onClose}
+      maxWidth={1600}
+      className="attendance-form-page"
     >
       <form onSubmit={submit}>
         <div className="activity-form-grid">
