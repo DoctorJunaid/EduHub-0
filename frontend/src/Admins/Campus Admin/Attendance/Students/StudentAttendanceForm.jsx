@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Users } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { attendanceStatuses } from '@/lib/attendance';
@@ -6,12 +6,46 @@ import { timeLabel } from '@/lib/schedule';
 import { validStudentAttendance } from './studentAttendanceData.js';
 import FullPageFormShell from '@/components/common/FullPageFormShell';
 
-export default function StudentAttendanceForm({ students, classes, date, records, onSave, onClose }) {
+const DEFAULT_PERIODS = [
+  { id: 'daily-session', subject: 'General Daily Attendance', section: 'All', startTime: '08:00', endTime: '14:00', room: 'Classroom' },
+  { id: 'period-1', subject: 'Period 1 (08:00 – 08:45)', section: 'Standard', startTime: '08:00', endTime: '08:45', room: 'Classroom' },
+  { id: 'period-2', subject: 'Period 2 (08:45 – 09:30)', section: 'Standard', startTime: '08:45', endTime: '09:30', room: 'Classroom' },
+  { id: 'period-3', subject: 'Period 3 (09:30 – 10:15)', section: 'Standard', startTime: '09:30', endTime: '10:15', room: 'Classroom' },
+  { id: 'period-4', subject: 'Period 4 (10:45 – 11:30)', section: 'Standard', startTime: '10:45', endTime: '11:30', room: 'Classroom' },
+  { id: 'period-5', subject: 'Period 5 (11:30 – 12:15)', section: 'Standard', startTime: '11:30', endTime: '12:15', room: 'Classroom' },
+  { id: 'period-6', subject: 'Period 6 (12:15 – 13:00)', section: 'Standard', startTime: '12:15', endTime: '13:00', room: 'Classroom' },
+];
+
+export default function StudentAttendanceForm({ students = [], classes = [], date, records = [], onSave, onClose }) {
   const [values, setValues] = useState({ studentId: '', classId: '', date, status: '' });
   const [error, setError] = useState('');
 
+  const selectedStudent = useMemo(() => {
+    return students.find((s) => (s.id || s._id) === values.studentId);
+  }, [students, values.studentId]);
+
+  const availableSessions = useMemo(() => {
+    if (Array.isArray(classes) && classes.length > 0) {
+      if (selectedStudent) {
+        const studentClass = selectedStudent.gradeOrClass || selectedStudent.program;
+        const matching = classes.filter((c) => {
+          const cClass = c.className || c.gradeOrClass || c.program;
+          const matchClass = !studentClass || !cClass || String(cClass).toLowerCase() === String(studentClass).toLowerCase();
+          const matchSection = !selectedStudent.section || !c.section || String(c.section).toLowerCase() === String(selectedStudent.section).toLowerCase();
+          return matchClass && matchSection;
+        });
+        if (matching.length > 0) return matching;
+      }
+      return classes;
+    }
+    return DEFAULT_PERIODS;
+  }, [classes, selectedStudent]);
+
   const existing = records.find(
-    (record) => record.studentId === values.studentId && record.classId === values.classId && record.date === values.date,
+    (record) =>
+      (record.studentId === values.studentId || record.studentId?._id === values.studentId) &&
+      record.classId === values.classId &&
+      record.date === values.date,
   );
 
   const change = (key, value) => {
@@ -21,9 +55,9 @@ export default function StudentAttendanceForm({ students, classes, date, records
 
   const submit = (event) => {
     event.preventDefault();
-    if (!validStudentAttendance(values)) return setError('Please select a student, class, valid date, and approved status.');
-    if (!students.some((student) => student.id === values.studentId) || !classes.some((session) => session.id === values.classId))
-      return setError('Select an existing student and timetable class.');
+    if (!validStudentAttendance(values)) return setError('Please select a student, lecture session, valid date, and status.');
+    if (!students.some((student) => (student.id || student._id) === values.studentId))
+      return setError('Select an existing student from the roster.');
     onSave(values);
   };
 
@@ -47,14 +81,20 @@ export default function StudentAttendanceForm({ students, classes, date, records
               id="att-stud-id"
               value={values.studentId}
               required
-              onChange={(e) => change('studentId', e.target.value)}
+              onChange={(e) => {
+                const sId = e.target.value;
+                change('studentId', sId);
+              }}
             >
               <option value="">Select student from roster</option>
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.name} — {student.roll} ({student.program})
-                </option>
-              ))}
+              {students.map((student) => {
+                const sId = student.id || student._id;
+                return (
+                  <option key={sId} value={sId}>
+                    {student.name} — {student.roll || student.rollNo || student.admissionNo || 'STD'} ({student.gradeOrClass || student.program || 'Class'})
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -66,10 +106,10 @@ export default function StudentAttendanceForm({ students, classes, date, records
               required
               onChange={(e) => change('classId', e.target.value)}
             >
-              <option value="">Select class lecture</option>
-              {classes.map((session) => (
-                <option key={session.id} value={session.id}>
-                  {session.subject} — Section {session.section} ({timeLabel(session.startTime)}) — {session.room}
+              <option value="">Select class lecture session</option>
+              {availableSessions.map((session) => (
+                <option key={session.id || session._id} value={session.id || session._id}>
+                  {session.subject || 'Lecture'} {session.section ? `— Section ${session.section}` : ''} ({session.startTime ? timeLabel(session.startTime) : '08:00'} – {session.endTime ? timeLabel(session.endTime) : '14:00'}) {session.room ? `— ${session.room}` : ''}
                 </option>
               ))}
             </select>
