@@ -36,9 +36,12 @@ router.use("/student", studentRoutes);
 router.use("/super-admin", superAdminRoutes);
 router.use("/institute-admin", instituteAdminRoutes);
 
-// Optional existing tracks / services
 router.use("/inquiries", inquiryRoutes);
 router.use("/campus-admin", campusAdminRoutes);
+router.use("/campus/faculty", (req, res, next) => {
+  req.url = "/faculty" + (req.url === "/" ? "" : req.url);
+  campusAdminRoutes(req, res, next);
+});
 
 router.use("/academic", academicRoutes);
 

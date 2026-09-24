@@ -107,13 +107,22 @@ export default function ClassTimetable() {
   // Pre-defined academic data from database
   const [dbGrades, setDbGrades] = useState([]);
   const [dbSections, setDbSections] = useState([]);
+  const [isLoadingAcademic, setIsLoadingAcademic] = useState(false);
 
+  // Fetch real grades for campus
   useEffect(() => {
-    axiosInstance.get("/academic/grades")
+    setIsLoadingAcademic(true);
+    axiosInstance
+      .get("/academic/grades")
       .then((res) => {
-        setDbGrades(Array.isArray(res.data) ? res.data : []);
+        const grades = Array.isArray(res.data) ? res.data : [];
+        setDbGrades(grades);
+        if (grades.length > 0 && !selectedClass) {
+          setSelectedClass(grades[0].name);
+        }
       })
-      .catch((err) => console.error("Error fetching grades in timetable:", err));
+      .catch((err) => console.error("Error fetching grades in timetable:", err))
+      .finally(() => setIsLoadingAcademic(false));
   }, []);
 
   // Custom dynamically added classes and sections by user
@@ -124,34 +133,51 @@ export default function ClassTimetable() {
   const [isAddingCustomSection, setIsAddingCustomSection] = useState(false);
   const [customSectionInput, setCustomSectionInput] = useState("");
 
-  // Derive dynamic list of available Classes/Grades (Prioritizes pre-defined database grades!)
+  // Derive dynamic list of available Classes/Grades (Prioritizes real database grades!)
   const availableClasses = useMemo(() => {
     const fromGrades = dbGrades.map((g) => g.name).filter(Boolean);
-    const fromStudents = students
-      .map((s) => s.gradeOrClass || s.program)
-      .filter(Boolean);
-    const fromRecords = records
-      .map((r) => r.program || r.className || r.gradeOrClass)
-      .filter(Boolean);
+    if (fromGrades.length > 0) {
+      const fromRecords = records
+        .map((r) => r.program || r.className || r.gradeOrClass)
+        .filter(Boolean);
+      return [...new Set([...fromGrades, ...customClasses, ...fromRecords])];
+    }
+    const fromStudents = students.map((s) => s.gradeOrClass || s.program).filter(Boolean);
+    const fromRecords = records.map((r) => r.program || r.className || r.gradeOrClass).filter(Boolean);
     const defaults = isSchool
       ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"]
       : ["BS Computer Science", "BS Software Engineering", "BBA", "BS Data Science"];
-    const unique = [...new Set([...fromGrades, ...customClasses, ...fromStudents, ...fromRecords, ...defaults])];
-    return unique;
+    return [...new Set([...customClasses, ...fromStudents, ...fromRecords, ...defaults])];
   }, [dbGrades, students, records, customClasses, isSchool]);
 
   // Active Selected Class
-  const [selectedClass, setSelectedClass] = useState(() => availableClasses[0] || (isSchool ? "Grade 10" : "BS Computer Science"));
+  const [selectedClass, setSelectedClass] = useState(() => (isSchool ? "10" : "BS Computer Science"));
 
   // Fetch pre-defined sections whenever selectedClass changes
   useEffect(() => {
+    const normalize = (str) => (str || "").trim().toLowerCase().replace(/^(grade|class)\s+/i, "");
     const matchedGrade = dbGrades.find(
-      (g) => g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase()
+      (g) =>
+        g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase() ||
+        normalize(g.name) === normalize(selectedClass)
     );
     if (matchedGrade?._id) {
-      axiosInstance.get(`/academic/sections?gradeId=${matchedGrade._id}`)
+      axiosInstance
+        .get(`/academic/sections?gradeId=${matchedGrade._id}`)
         .then((res) => {
-          setDbSections(Array.isArray(res.data) ? res.data : []);
+          const secs = Array.isArray(res.data) ? res.data : [];
+          setDbSections(secs);
+          if (secs.length > 0) {
+            const hasCurrent = secs.some(
+              (s) =>
+                s.name?.trim().toLowerCase() === selectedSection?.trim().toLowerCase() ||
+                s.name?.trim().toLowerCase().replace(/^section\s+/i, "") ===
+                  selectedSection?.trim().toLowerCase().replace(/^section\s+/i, "")
+            );
+            if (!hasCurrent) {
+              setSelectedSection(secs[0].name);
+            }
+          }
         })
         .catch((err) => console.error("Error fetching sections in timetable:", err));
     } else {
@@ -159,17 +185,19 @@ export default function ClassTimetable() {
     }
   }, [selectedClass, dbGrades]);
 
-  // Derive dynamic list of Sections (Prioritizes pre-defined database sections!)
+  // Derive dynamic list of Sections (Prioritizes real database sections for active class!)
   const availableSections = useMemo(() => {
     const fromDb = dbSections.map((s) => s.name).filter(Boolean);
+    if (fromDb.length > 0) {
+      return [...new Set([...fromDb, ...customSections])];
+    }
     const fromStudents = students.map((s) => s.section).filter(Boolean);
     const fromRecords = records.map((r) => r.section).filter(Boolean);
     const defaults = ["A", "B", "C", "D"];
-    const unique = [...new Set([...fromDb, ...customSections, ...fromStudents, ...fromRecords, ...defaults])];
-    return unique;
+    return [...new Set([...customSections, ...fromStudents, ...fromRecords, ...defaults])];
   }, [dbSections, students, records, customSections]);
 
-  const [selectedSection, setSelectedSection] = useState(() => availableSections[0] || "A");
+  const [selectedSection, setSelectedSection] = useState("A");
 
   // Keep selectedClass synchronized if availableClasses changes and current selection is missing
   useEffect(() => {
@@ -178,11 +206,21 @@ export default function ClassTimetable() {
     }
   }, [availableClasses, selectedClass]);
 
-  // Handle adding custom class
-  const handleSaveCustomClass = (e) => {
+  // Handle adding custom class with backend persistence
+  const handleSaveCustomClass = async (e) => {
     e.preventDefault();
-    if (customClassInput.trim()) {
-      const name = customClassInput.trim();
+    const name = customClassInput.trim();
+    if (!name) return;
+    try {
+      const res = await axiosInstance.post("/academic/grades", { name });
+      const newGrade = res.data;
+      setDbGrades((prev) => [...prev, newGrade]);
+      setSelectedClass(name);
+      setCustomClassInput("");
+      setIsAddingCustomClass(false);
+      toast.success(`Class "${name}" created and saved!`);
+    } catch (err) {
+      console.warn("Could not persist to /academic/grades, updating locally:", err);
       setCustomClasses((prev) => [...new Set([...prev, name])]);
       setSelectedClass(name);
       setCustomClassInput("");
@@ -191,17 +229,41 @@ export default function ClassTimetable() {
     }
   };
 
-  // Handle adding custom section
-  const handleSaveCustomSection = (e) => {
+  // Handle adding custom section with backend persistence
+  const handleSaveCustomSection = async (e) => {
     e.preventDefault();
-    if (customSectionInput.trim()) {
-      const sec = customSectionInput.trim();
-      setCustomSections((prev) => [...new Set([...prev, sec])]);
-      setSelectedSection(sec);
-      setCustomSectionInput("");
-      setIsAddingCustomSection(false);
-      toast.success(`Section "${sec}" selected!`);
+    const secName = customSectionInput.trim();
+    if (!secName) return;
+
+    const normalize = (str) => (str || "").trim().toLowerCase().replace(/^(grade|class)\s+/i, "");
+    const matchedGrade = dbGrades.find(
+      (g) =>
+        g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase() ||
+        normalize(g.name) === normalize(selectedClass)
+    );
+
+    if (matchedGrade?._id) {
+      try {
+        const res = await axiosInstance.post("/academic/sections", {
+          name: secName,
+          gradeId: matchedGrade._id,
+        });
+        const newSec = res.data;
+        setDbSections((prev) => [...prev, newSec]);
+        setSelectedSection(secName);
+        setCustomSectionInput("");
+        setIsAddingCustomSection(false);
+        toast.success(`Section "${secName}" created and saved!`);
+        return;
+      } catch (err) {
+        console.warn("Could not persist section to DB, using local state:", err);
+      }
     }
+    setCustomSections((prev) => [...new Set([...prev, secName])]);
+    setSelectedSection(secName);
+    setCustomSectionInput("");
+    setIsAddingCustomSection(false);
+    toast.success(`Section "${secName}" selected!`);
   };
 
   // Dynamic Options for form dropdowns from real database
@@ -233,28 +295,53 @@ export default function ClassTimetable() {
     };
   }, [faculty, records, availableClasses, availableSections, isSchool]);
 
-  // Filter real records specifically for the active Class and Section
+  // Filter real records specifically for the active Class and Section (matches relational IDs and fuzzy names)
   const classRoutineRecords = useMemo(() => {
+    const normalizeClass = (str) =>
+      (str || "").trim().toLowerCase().replace(/^(grade|class)\s+/i, "");
+    const normalizeSec = (str) =>
+      (str || "").trim().toLowerCase().replace(/^section\s+/i, "");
+
+    const activeGrade = dbGrades.find(
+      (g) =>
+        g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase() ||
+        normalizeClass(g.name) === normalizeClass(selectedClass)
+    );
+    const activeGradeId = activeGrade?._id;
+
+    const activeSection = dbSections.find(
+      (s) =>
+        s.name?.trim().toLowerCase() === selectedSection?.trim().toLowerCase() ||
+        normalizeSec(s.name) === normalizeSec(selectedSection)
+    );
+    const activeSectionId = activeSection?._id;
+
     return records.filter((r) => {
       // Break slots apply across all classes
       if (r.isBreak) return true;
 
-      const prog = (r.program || r.gradeOrClass || r.className || "").trim().toLowerCase();
-      const targetProg = (selectedClass || "").trim().toLowerCase();
-      const matchProg = !targetProg || prog === targetProg;
+      const rGradeId = r.gradeId?._id || r.gradeId;
+      const prog = (r.program || r.gradeOrClass || r.className || "").trim();
+      const matchProg =
+        !selectedClass ||
+        (activeGradeId && rGradeId && String(rGradeId) === String(activeGradeId)) ||
+        prog.toLowerCase() === selectedClass.trim().toLowerCase() ||
+        normalizeClass(prog) === normalizeClass(selectedClass);
 
-      const sec = (r.section || "").trim().toLowerCase();
-      const targetSec = (selectedSection || "").trim().toLowerCase();
+      const rSectionId = r.sectionId?._id || r.sectionId;
+      const sec = (r.section || "").trim();
       const matchSec =
-        !targetSec ||
+        !selectedSection ||
         !sec ||
-        sec === targetSec ||
-        sec === `section ${targetSec}` ||
-        sec === "all sections";
+        (activeSectionId && rSectionId && String(rSectionId) === String(activeSectionId)) ||
+        sec.toLowerCase() === selectedSection.trim().toLowerCase() ||
+        normalizeSec(sec) === normalizeSec(selectedSection) ||
+        normalizeSec(sec) === "all" ||
+        normalizeSec(sec) === "all sections";
 
       return matchProg && matchSec;
     });
-  }, [records, selectedClass, selectedSection]);
+  }, [records, selectedClass, selectedSection, dbGrades, dbSections]);
 
   const matrixConfig = useMemo(
     () => getMatrixConfig(educationType, includeSaturday),
@@ -346,7 +433,7 @@ export default function ClassTimetable() {
           : "Class routine scheduled successfully!"
       );
     }
-    dispatch(fetchSchedules());
+    dispatch(fetchSchedules(true));
   };
 
   // Interactive Drag & Drop Handler with Duration Preservation & Optimistic UI
@@ -470,7 +557,7 @@ export default function ClassTimetable() {
     }
   };
 
-  // Overall stats
+  // Overall dynamic stats calculated from real filtered routine records
   const totalPeriodsForClass = classRoutineRecords.filter((r) => !r.isBreak).length;
   const activeInstructorsForClass = new Set(
     classRoutineRecords.map((r) => r.instructor || r.teacherName).filter(Boolean)
@@ -478,6 +565,12 @@ export default function ClassTimetable() {
   const activeRoomsForClass = new Set(
     classRoutineRecords.map((r) => r.room || r.roomNumber).filter(Boolean)
   ).size;
+  const totalWeeklySlots = useMemo(() => {
+    return classRoutineRecords.reduce((acc, r) => {
+      const dayCount = Array.isArray(r.days) && r.days.length ? r.days.length : 1;
+      return acc + dayCount;
+    }, 0);
+  }, [classRoutineRecords]);
 
   return (
     <section
@@ -601,7 +694,7 @@ export default function ClassTimetable() {
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Weekly Periods" : "Campus Total"}</span>
-              <span className="kpi-value">{totalPeriodsForClass * (includeSaturday ? 6 : 5)} slots</span>
+              <span className="kpi-value">{totalWeeklySlots} slots</span>
             </div>
           </div>
         </div>
@@ -615,10 +708,10 @@ export default function ClassTimetable() {
             {isSchool ? "Class Routine & Timetable" : "Academic Schedule Matrix"}
           </span>
           <h2 className="class-banner-title">
-            {selectedClass} • Section {selectedSection}
+            {selectedClass} • {selectedSection.toLowerCase().startsWith("section ") ? selectedSection : `Section ${selectedSection}`}
           </h2>
           <p className="class-banner-sub">
-            {totalPeriodsForClass} periods configured • {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} • Drag cards to reschedule
+            {totalPeriodsForClass} {totalPeriodsForClass === 1 ? "period" : "periods"} configured • {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} • Drag cards to reschedule
           </p>
         </div>
 
@@ -712,11 +805,16 @@ export default function ClassTimetable() {
                     }
                   }}
                 >
-                  {availableSections.map((s) => (
-                    <option key={s} value={s}>
-                      Section {s}
-                    </option>
-                  ))}
+                  {availableSections.map((s) => {
+                    const label = s.toLowerCase().startsWith("section ")
+                      ? s
+                      : `Section ${s}`;
+                    return (
+                      <option key={s} value={s}>
+                        {label}
+                      </option>
+                    );
+                  })}
                   <option value="__add_new_sec__">+ Add New Section...</option>
                 </select>
               </div>
@@ -983,6 +1081,7 @@ export default function ClassTimetable() {
         editRecord={editingRecord}
         initialIsBreak={Boolean(quickModalSlot.isBreak)}
         includeSaturday={includeSaturday}
+        faculty={faculty}
       />
 
       {/* 5. Full Detailed Form (Optional fallback) */}

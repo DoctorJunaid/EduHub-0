@@ -359,7 +359,7 @@ export const removeStudentFromCampus = async (req, res) => {
 // @access  Private / Campus Admin & Campus Manager
 export const getCampusFaculty = async (req, res) => {
   try {
-    const { campusId } = req.user;
+    const campusId = req.user?.campusId?._id || req.user?.campusId || req.query?.campusId;
     if (!campusId)
       return res
         .status(400)

@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { minutes } from "../../../lib/schedule.js";
 import axiosInstance from "@/api/axiosInstance.js";
+import { useSelector } from "react-redux";
+import { selectFaculty } from "@/store/Slices/facultySlice.js";
 
 const SCHOOL_PERIOD_PRESETS = [
   { id: "p1", name: "Period 1 (08:00 - 08:50)", start: "08:00", end: "08:50", type: "class" },
@@ -58,8 +60,10 @@ export default function QuickScheduleModal({
   editRecord = null,
   initialIsBreak = false,
   includeSaturday = true,
+  faculty = [],
 }) {
   const presets = isSchool ? SCHOOL_PERIOD_PRESETS : COLLEGE_SLOT_PRESETS;
+  const reduxFaculty = useSelector(selectFaculty);
 
   const activeWeekdays = useMemo(() => {
     return includeSaturday ? WEEKDAY_NAMES : WEEKDAY_NAMES.filter((w) => w.day !== 6);
@@ -73,7 +77,24 @@ export default function QuickScheduleModal({
   const [dbSections, setDbSections] = useState([]);
   const [dbGradeSubjects, setDbGradeSubjects] = useState([]);
   const [dbAssignedTeachers, setDbAssignedTeachers] = useState([]);
-  const [allFaculty, setAllFaculty] = useState([]);
+  const [allFaculty, setAllFaculty] = useState(() => {
+    if (Array.isArray(faculty) && faculty.length > 0) return faculty;
+    if (Array.isArray(reduxFaculty) && reduxFaculty.length > 0) return reduxFaculty;
+    return [];
+  });
+
+  // Sync with redux or prop if updated
+  useEffect(() => {
+    const list =
+      Array.isArray(faculty) && faculty.length > 0
+        ? faculty
+        : Array.isArray(reduxFaculty) && reduxFaculty.length > 0
+        ? reduxFaculty
+        : null;
+    if (list && list.length > 0) {
+      setAllFaculty((prev) => (prev.length === 0 ? list : prev));
+    }
+  }, [faculty, reduxFaculty]);
 
   // Form selections
   const [selectedGradeId, setSelectedGradeId] = useState("");
@@ -100,12 +121,31 @@ export default function QuickScheduleModal({
       .catch((err) => console.error("Error fetching grades:", err));
 
     axiosInstance
-      .get("/campus/faculty")
+      .get("/campus-admin/faculty")
       .then((res) => {
         const facList = res.data?.data || res.data || [];
-        setAllFaculty(Array.isArray(facList) ? facList : []);
+        if (Array.isArray(facList) && facList.length > 0) {
+          setAllFaculty(facList);
+        }
       })
-      .catch((err) => console.error("Error fetching faculty:", err));
+      .catch((err) => {
+        console.error("Error fetching faculty from /campus-admin/faculty:", err);
+        // Fallback: try /campus-admin/teachers
+        axiosInstance
+          .get("/campus-admin/teachers")
+          .then((res) => {
+            const list = res.data?.data || res.data || [];
+            if (Array.isArray(list) && list.length > 0) {
+              const mapped = list.map((t) => ({
+                _id: t._id,
+                name: t.user?.name || t.name,
+                department: t.department || t.user?.department || "Faculty",
+              }));
+              setAllFaculty((prev) => (prev.length === 0 ? mapped : prev));
+            }
+          })
+          .catch((e) => console.error("Error fetching teachers fallback:", e));
+      });
   }, [isOpen]);
 
   // 2. Sync state when modal opens or editRecord changes
@@ -208,6 +248,14 @@ export default function QuickScheduleModal({
       })
       .catch((err) => console.error("Error fetching assigned teachers:", err));
   }, [selectedGradeId, selectedSectionId, selectedSubjectId]);
+
+  // Filter out already-assigned teachers from general campus faculty to avoid duplicate options
+  const displayFaculty = useMemo(() => {
+    if (!allFaculty || !allFaculty.length) return [];
+    if (!dbAssignedTeachers.length) return allFaculty;
+    const assignedIds = new Set(dbAssignedTeachers.map((t) => String(t._id || t.id)));
+    return allFaculty.filter((f) => !assignedIds.has(String(f._id || f.id)));
+  }, [allFaculty, dbAssignedTeachers]);
 
   // Calculate duration in minutes
   const durationMinutes = useMemo(() => {
@@ -320,21 +368,24 @@ export default function QuickScheduleModal({
       const targetSectionObj = dbSections.find((s) => s._id === selectedSectionId);
       const targetGradeSub = dbGradeSubjects.find((gs) => gs.subjectId?._id === selectedSubjectId);
       const targetTeacherObj =
-        dbAssignedTeachers.find((t) => t._id === selectedTeacherId) ||
-        allFaculty.find((f) => (f._id || f.id) === selectedTeacherId);
+        dbAssignedTeachers.find((t) => (t._id || t.id) === selectedTeacherId || t.name === selectedTeacherId) ||
+        allFaculty.find((f) => (f._id || f.id) === selectedTeacherId || f.name === selectedTeacherId);
 
       const resolvedProgram = targetGradeObj?.name || currentClass?.program || (isSchool ? "Grade 10" : "BS Computer Science");
       const resolvedSection = targetSectionObj?.name || currentClass?.section || "A";
       const resolvedSubject = isBreak ? subjectText.trim() : (targetGradeSub?.subjectId?.name || "Subject");
       const resolvedInstructor = isBreak
         ? "Duty Staff"
-        : (targetTeacherObj?.name || "Assigned Faculty");
+        : (targetTeacherObj?.name || selectedTeacherId || "Assigned Faculty");
+      const resolvedTeacherId = isBreak
+        ? null
+        : (targetTeacherObj?._id || targetTeacherObj?.id || (selectedTeacherId && selectedTeacherId.length === 24 ? selectedTeacherId : null));
 
       await onSave({
         gradeId: isBreak ? null : selectedGradeId,
         sectionId: isBreak ? null : selectedSectionId,
         subjectId: isBreak ? null : selectedSubjectId,
-        teacherId: isBreak ? null : selectedTeacherId,
+        teacherId: resolvedTeacherId,
         program: resolvedProgram,
         section: resolvedSection,
         subject: resolvedSubject,
@@ -593,13 +644,29 @@ export default function QuickScheduleModal({
                           ))}
                         </optgroup>
                       )}
-                      <optgroup label={dbAssignedTeachers.length > 0 ? "Other Faculty" : "Campus Faculty"}>
-                        {allFaculty.map((f) => (
-                          <option key={f._id || f.id} value={f._id || f.id}>
-                            {f.name} ({f.department || "Faculty"})
-                          </option>
-                        ))}
-                      </optgroup>
+                      {displayFaculty.length > 0 && (
+                        <optgroup label={dbAssignedTeachers.length > 0 ? "Other Faculty" : "Campus Faculty"}>
+                          {displayFaculty.map((f) => (
+                            <option key={f._id || f.id} value={f._id || f.id}>
+                              {f.name} ({f.department || "Faculty"})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {dbAssignedTeachers.length === 0 && displayFaculty.length === 0 && Array.isArray(options?.instructor) && options.instructor.length > 0 && (
+                        <optgroup label="Available Faculty">
+                          {options.instructor.map((inst, idx) => (
+                            <option key={`opt-inst-${idx}`} value={inst}>
+                              {inst}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {dbAssignedTeachers.length === 0 && displayFaculty.length === 0 && (!options?.instructor || options.instructor.length === 0) && (
+                        <option value="" disabled>
+                          No teachers registered yet
+                        </option>
+                      )}
                     </select>
                   </div>
 
