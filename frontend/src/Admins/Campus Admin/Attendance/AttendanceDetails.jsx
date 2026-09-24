@@ -21,16 +21,11 @@ export default function AttendanceDetails({ record, person, onEdit, onClose }) {
       parentName="Staff Attendance"
       icon={<Clock size={22} />}
       onBack={onClose}
-      maxWidth={850}
+      maxWidth="100%"
+      className="faculty-attendance-details-page"
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "16px",
-          }}
-        >
+      <div className="faculty-attendance-details-content">
+        <div className="faculty-attendance-details-grid">
           <div
             style={{
               padding: "16px",
