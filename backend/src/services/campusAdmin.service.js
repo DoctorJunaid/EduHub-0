@@ -945,11 +945,13 @@ class CampusAdminService {
     const query = { campusId };
 
     if (filter.date) {
-      const d = new Date(filter.date);
-      d.setHours(0, 0, 0, 0);
-      const nextD = new Date(d);
-      nextD.setDate(nextD.getDate() + 1);
-      query.date = { $gte: d, $lt: nextD };
+      const dateStr = String(filter.date).slice(0, 10);
+      const dStart = new Date(`${dateStr}T00:00:00.000Z`);
+      const dEnd = new Date(`${dateStr}T23:59:59.999Z`);
+      query.$or = [
+        { dateStr },
+        { date: { $gte: dStart, $lte: dEnd } },
+      ];
     }
     if (filter.status) {
       query.status = new RegExp(`^${filter.status}$`, "i");

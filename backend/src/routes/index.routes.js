@@ -51,6 +51,9 @@ router.use("/campus/salary/profiles", salaryProfileRoutes);
 router.use("/campus/salary/payroll", payrollRoutes);
 router.use("/campus/salary/approvals", attendanceApprovalRoutes);
 router.use("/campus/salary/policy", salaryPolicyRoutes);
-router.use("/campus/salary", salaryPolicyRoutes);
+import seedRoutes from "./seed.routes.js";
+
+router.use("/admin/seed", seedRoutes);
+router.use("/campus/seed", seedRoutes);
 
 export default router;

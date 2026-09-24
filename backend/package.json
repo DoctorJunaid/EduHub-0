@@ -7,7 +7,8 @@
     "test": "vitest run",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed:manager": "node src/scripts/seedCampusManager.js"
+    "seed:manager": "node src/scripts/seedCampusManager.js",
+    "seed:db": "node src/scripts/seedDatabaseDirect.js"
   },
   "keywords": [
     "eduhub",

@@ -21,18 +21,20 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import Pagination from "@/components/common/Pagination";
+import DataPagination from "@/components/shared/DataPagination";
 import { timeLabel } from "../../../lib/schedule.js";
 
 export default function ScheduledExams({
   records = [],
   page = 1,
-  pageSize = 10,
+  pageSize = 20,
   onPage,
   onPageSize,
   onAction,
 }) {
-  const current = Math.min(page, Math.max(1, Math.ceil(records.length / pageSize)));
+  const count = Math.max(1, Math.ceil(records.length / pageSize));
+  const current = Math.min(page, count);
+  const displayed = records.slice((current - 1) * pageSize, current * pageSize);
 
   const handleExportCSV = () => {
     if (!records.length) return;
@@ -106,15 +108,6 @@ export default function ScheduledExams({
               <span>Export CSV</span>
             </button>
           )}
-
-          <Pagination
-            total={records.length}
-            page={current}
-            pageSize={pageSize}
-            onPage={onPage}
-            onPageSize={onPageSize}
-            label="exams"
-          />
         </div>
       </div>
 
@@ -255,6 +248,15 @@ export default function ScheduledExams({
           )}
         </TableBody>
       </Table>
+      <DataPagination
+        page={current}
+        pageSize={pageSize}
+        total={records.length}
+        pageCount={count}
+        onPageChange={onPage}
+        onPageSizeChange={onPageSize}
+        itemLabel="exams"
+      />
     </Card>
   );
 }

@@ -19,6 +19,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
+import DataPagination from "@/components/shared/DataPagination";
 import { dayLabel, timeLabel } from "../../../lib/schedule.js";
 
 const WEEKDAY_ABBRS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -33,9 +34,9 @@ function formatDays(days) {
 }
 
 export default function ScheduledClasses({
-  records,
-  page,
-  pageSize,
+  records = [],
+  page = 1,
+  pageSize = 20,
   onPage,
   onPageSize,
   onAction,
@@ -48,39 +49,6 @@ export default function ScheduledClasses({
     <Card className="tt-card tt-table-panel">
       <div className="tt-panel-heading">
         <h2>Scheduled Classes</h2>
-        <div className="tt-pagination">
-          <span role="status">
-            Showing {displayed.length} of {records.length} records
-          </span>
-          <Button
-            variant="outline"
-            disabled={current === 1}
-            onClick={() => onPage(current - 1)}
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={15} />
-          </Button>
-          <Button aria-current="page">{current}</Button>
-          <Button
-            variant="outline"
-            disabled={current === count}
-            onClick={() => onPage(current + 1)}
-            aria-label="Next page"
-          >
-            <ChevronRight size={15} />
-          </Button>
-          <select
-            aria-label="Records per page"
-            value={pageSize}
-            onChange={(event) => onPageSize(Number(event.target.value))}
-          >
-            {[10, 25, 50].map((size) => (
-              <option value={size} key={size}>
-                {size} / page
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       <Table aria-label="Scheduled classes">
@@ -230,6 +198,15 @@ export default function ScheduledClasses({
           )}
         </TableBody>
       </Table>
+      <DataPagination
+        page={current}
+        pageSize={pageSize}
+        total={records.length}
+        pageCount={count}
+        onPageChange={onPage}
+        onPageSizeChange={onPageSize}
+        itemLabel="classes"
+      />
     </Card>
   );
 }

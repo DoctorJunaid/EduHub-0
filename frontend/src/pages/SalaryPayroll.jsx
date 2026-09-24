@@ -4,16 +4,20 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import { toast } from "react-hot-toast";
-import { Play, Eye, ChevronLeft, ChevronRight, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clock3, ReceiptText, ShieldCheck } from "lucide-react";
+import { Play, Eye, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clock3, ReceiptText, ShieldCheck } from "lucide-react";
 import { selectCurrentRole } from "../store/Slices/authSlice";
+import DataPagination from "../components/shared/DataPagination";
+import usePaginationParams from "../hooks/usePaginationParams";
 import "./SalaryPayroll.css";
 
 const SalaryPayroll = () => {
   const navigate = useNavigate();
   const [payrolls, setPayrolls] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
@@ -32,7 +36,7 @@ const SalaryPayroll = () => {
   const fetchPayrolls = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ month, page, limit });
+      const params = new URLSearchParams({ month, page, limit: pageSize });
       if (statusFilter) params.append("status", statusFilter);
       const res = await api.get(`/campus/salary/payroll?${params.toString()}`);
       if (res.data.success) {
@@ -49,7 +53,7 @@ const SalaryPayroll = () => {
 
   useEffect(() => {
     fetchPayrolls();
-  }, [month, page, statusFilter]);
+  }, [month, page, pageSize, statusFilter]);
 
   const handleGenerate = async () => {
     try {
@@ -206,32 +210,18 @@ const SalaryPayroll = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="salary-payroll-pagination">
-          <p>
-            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
-          </p>
-          <div className="payroll-page-controls">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="payroll-page-btn"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span>
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="payroll-page-btn"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <DataPagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        pageCount={Math.ceil(total / pageSize) || 1}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        itemLabel="payroll records"
+      />
 
       {/* Payslip Dialog */}
       {selectedPayslip && (

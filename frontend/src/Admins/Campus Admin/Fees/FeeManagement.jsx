@@ -21,7 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Progress from "@/components/common/Progress";
-import Pagination from "@/components/common/Pagination";
+import DataPagination from "@/components/shared/DataPagination";
+import usePaginationParams from "@/hooks/usePaginationParams";
 import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
 import {
   selectFees,
@@ -85,16 +86,26 @@ export default function FeeManagement() {
 
   const [activeTab, setActiveTab] = useState("vouchers"); // "vouchers" | "ledger"
   const [filters, setFilters] = useState(defaultFilters);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [modal, setModal] = useState(null);
   const [notice, setNotice] = useState("");
   const [allActivity, setAllActivity] = useState(false);
 
   // Financial Ledger local filters
   const [ledgerSearch, setLedgerSearch] = useState("");
-  const [ledgerPage, setLedgerPage] = useState(1);
-  const [ledgerPageSize, setLedgerPageSize] = useState(10);
+  const {
+    page: ledgerPage,
+    pageSize: ledgerPageSize,
+    setPage: setLedgerPage,
+    setPageSize: setLedgerPageSize,
+  } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+    keyPrefix: "ledger",
+  });
 
   useEffect(() => {
     dispatch(fetchFees());
@@ -648,90 +659,34 @@ export default function FeeManagement() {
         )}
       </div>
 
-      {/* 4. Frameless Footer Matching Application Standard */}
-      <div className="campus-footer">
-        {activeTab === "vouchers" ? (
-          <>
-            <div className="campus-footer-info">
-              Showing <strong>{filtered.length ? (page - 1) * pageSize + 1 : 0}</strong> to{" "}
-              <strong>{Math.min(page * pageSize, filtered.length)}</strong> of <strong>{filtered.length}</strong> vouchers
-            </div>
-
-            <div className="campus-pagination">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-                aria-label="Previous page"
-              >
-                <ChevronLeft size={14} />
-              </Button>
-
-              {Array.from({ length: Math.ceil(filtered.length / pageSize) || 1 }, (_, i) => i + 1).map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  className={`campus-page-btn ${num === page ? "is-active" : ""}`}
-                  onClick={() => setPage(num)}
-                >
-                  {num}
-                </button>
-              ))}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page >= (Math.ceil(filtered.length / pageSize) || 1)}
-                onClick={() => setPage(page + 1)}
-                aria-label="Next page"
-              >
-                <ChevronRight size={14} />
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="campus-footer-info">
-              Showing <strong>{filteredLedger.length ? (ledgerPage - 1) * ledgerPageSize + 1 : 0}</strong> to{" "}
-              <strong>{Math.min(ledgerPage * ledgerPageSize, filteredLedger.length)}</strong> of <strong>{filteredLedger.length}</strong> records
-            </div>
-
-            <div className="campus-pagination">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={ledgerPage <= 1}
-                onClick={() => setLedgerPage(ledgerPage - 1)}
-                aria-label="Previous page"
-              >
-                <ChevronLeft size={14} />
-              </Button>
-
-              {Array.from({ length: Math.ceil(filteredLedger.length / ledgerPageSize) || 1 }, (_, i) => i + 1).map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  className={`campus-page-btn ${num === ledgerPage ? "is-active" : ""}`}
-                  onClick={() => setLedgerPage(num)}
-                >
-                  {num}
-                </button>
-              ))}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={ledgerPage >= (Math.ceil(filteredLedger.length / ledgerPageSize) || 1)}
-                onClick={() => setLedgerPage(ledgerPage + 1)}
-                aria-label="Next page"
-              >
-                <ChevronRight size={14} />
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
+      {/* 4. Standardized DataPagination Footer */}
+      {activeTab === "vouchers" ? (
+        <DataPagination
+          page={visible.currentPage}
+          pageSize={pageSize}
+          total={filtered.length}
+          pageCount={visible.pageCount}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+          itemLabel="vouchers"
+        />
+      ) : (
+        <DataPagination
+          page={ledgerPage}
+          pageSize={ledgerPageSize}
+          total={filteredLedger.length}
+          pageCount={Math.ceil(filteredLedger.length / ledgerPageSize) || 1}
+          onPageChange={setLedgerPage}
+          onPageSizeChange={(size) => {
+            setLedgerPageSize(size);
+            setLedgerPage(1);
+          }}
+          itemLabel="ledger entries"
+        />
+      )}
 
       {/* Modals */}
       {(modal?.mode === "add" || (modal?.mode === "edit" && selectedRecord)) && (

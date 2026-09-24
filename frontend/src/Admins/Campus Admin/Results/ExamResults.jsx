@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LineChart from "@/components/common/charts/LineChart";
 import DonutChart from "@/components/common/charts/DonutChart";
-import Pagination from "@/components/common/Pagination";
+import DataPagination from "@/components/shared/DataPagination";
+import usePaginationParams from "@/hooks/usePaginationParams";
 import { selectStudents, fetchStudents } from "@/store/Slices/studentsSlice.js";
 import { selectExams, fetchExams } from "@/store/Slices/examsSlice.js";
 import {
@@ -63,8 +64,10 @@ export default function ExamResults() {
   const resultsStatus = useSelector(selectResultsStatus);
 
   const [filters, setFilters] = useState(initialFilters);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [modal, setModal] = useState(null);
   const [advanced, setAdvanced] = useState(false);
   const [allActivity, setAllActivity] = useState(false);
@@ -402,25 +405,18 @@ export default function ExamResults() {
             />
           </div>
 
-          <div className="campus-footer" style={{ borderTop: "1px solid #e4e4e7" }}>
-            <div className="footer-info">
-              {notice && <span style={{ color: "#16a34a", marginRight: "12px", fontWeight: "600" }}>{notice}</span>}
-              Showing {filtered.length > 0 ? (visible.currentPage - 1) * pageSize + 1 : 0} to{" "}
-              {Math.min(visible.currentPage * pageSize, filtered.length)} of {filtered.length} results
-            </div>
-
-            <Pagination
-              total={filtered.length}
-              page={visible.currentPage}
-              pageSize={pageSize}
-              onPage={setPage}
-              onPageSize={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-              label="results"
-            />
-          </div>
+          <DataPagination
+            page={visible.currentPage}
+            pageSize={pageSize}
+            total={filtered.length}
+            pageCount={visible.pageCount}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+            itemLabel="results"
+          />
         </div>
       </div>
 

@@ -59,6 +59,7 @@ import MyPayslips from "./pages/MyPayslips";
 import TeacherLayout from "./Users/Teacher/TeacherLayout";
 import TeacherDashboard from "./Users/Teacher/TeacherDashboard";
 import TeacherPage from "./Users/Teacher/TeacherPage";
+import AdminSeed from "./pages/AdminSeed";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -177,6 +178,8 @@ const App = () => {
             <Route path="substitutes" element={<SubstituteAssignments />} />
             <Route path="academics" element={<AcademicsConfig />} />
             <Route path="teacher-assignments" element={<TeacherAssignments />} />
+            <Route path="admin/seed" element={<AdminSeed />} />
+            <Route path="seed" element={<AdminSeed />} />
           </Route>
         </Route>
 

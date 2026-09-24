@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
+import DataPagination from "@/components/shared/DataPagination";
+import usePaginationParams from "@/hooks/usePaginationParams";
 
 export default function TeacherAssignments() {
   const [teachers, setTeachers] = useState([]);
@@ -13,6 +15,10 @@ export default function TeacherAssignments() {
   const [gradeSubjects, setGradeSubjects] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
 
   const [newAssignment, setNewAssignment] = useState({
     teacherId: "",
@@ -85,6 +91,13 @@ export default function TeacherAssignments() {
     .filter(gs => (gs.gradeId?._id || gs.gradeId) === newAssignment.gradeId)
     .map(gs => gs.subjectId)
     .filter(Boolean);
+
+  const pageCount = Math.max(1, Math.ceil(assignments.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const paginatedAssignments = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return assignments.slice(start, start + pageSize);
+  }, [assignments, currentPage, pageSize]);
 
   if (loading) return <div className="p-8">Loading teacher assignments...</div>;
 
@@ -175,9 +188,9 @@ export default function TeacherAssignments() {
                 </tr>
               </thead>
               <tbody>
-                {assignments.length === 0 ? (
+                {paginatedAssignments.length === 0 ? (
                   <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No assignments defined yet.</td></tr>
-                ) : assignments.map((a) => (
+                ) : paginatedAssignments.map((a) => (
                   <tr key={a._id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-medium">{a.teacherId?.name || "Unknown"}</td>
                     <td className="px-4 py-3">{a.gradeId?.name || "Unknown"}</td>
@@ -192,6 +205,18 @@ export default function TeacherAssignments() {
                 ))}
               </tbody>
             </table>
+            <DataPagination
+              page={currentPage}
+              pageSize={pageSize}
+              total={assignments.length}
+              pageCount={pageCount}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+              itemLabel="assignments"
+            />
           </div>
         </CardContent>
       </Card>

@@ -38,6 +38,8 @@ import {
 import AttendanceTable from "./AttendanceTable";
 import AttendanceForm from "./AttendanceForm";
 import AttendanceDetails from "./AttendanceDetails";
+import DataPagination from "@/components/shared/DataPagination";
+import { usePaginationParams } from "@/hooks/usePaginationParams";
 import "../Timetable/ClassTimetable.css";
 import "./FacultyAttendance.css";
 
@@ -152,8 +154,10 @@ export default function FacultyAttendance() {
   const summary = useSelector((state) => selectAttendanceSummary(state, date));
   const [view, setView] = useState("daily");
   const [filters, setFilters] = useState(initialFilters);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [modal, setModal] = useState(null);
   const [notice, setNotice] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
@@ -558,38 +562,16 @@ export default function FacultyAttendance() {
           </TabsContent>
         </div>
 
-        {/* 4. Frameless Consistent Footer */}
-        <div className="campus-footer">
-          <div className="footer-info">
-            {notice && <span style={{ color: "#16a34a", marginRight: "12px", fontWeight: "600" }}>{notice}</span>}
-            Showing {rows.length > 0 ? (current - 1) * pageSize + 1 : 0} to{" "}
-            {Math.min(current * pageSize, rows.length)} of {rows.length} {view === "history" ? "records" : "staff members"}
-          </div>
-
-          <div className="footer-pagination">
-            <button
-              type="button"
-              className="pagination-btn"
-              disabled={current === 1}
-              onClick={() => setPage(current - 1)}
-              aria-label="Previous page"
-            >
-              <ChevronLeft size={14} />
-            </button>
-            <span className="pagination-page">
-              {current} of {pageCount}
-            </span>
-            <button
-              type="button"
-              className="pagination-btn"
-              disabled={current === pageCount}
-              onClick={() => setPage(current + 1)}
-              aria-label="Next page"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
+        {/* Standardized DataPagination */}
+        <DataPagination
+          page={current}
+          pageSize={pageSize}
+          total={rows.length}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemLabel={view === "history" ? "records" : "staff members"}
+        />
       </Tabs>
 
       {/* Full-Page Stack Activity Forms */}

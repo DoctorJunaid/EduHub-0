@@ -13,7 +13,8 @@ import useSalaryProfiles from '../hooks/useSalaryProfiles';
 import SalarySummaryCard from '../components/salary/SalarySummaryCard';
 import TeachersWithoutProfileAlert from '../components/salary/TeachersWithoutProfileAlert';
 import SalaryProfilesTable from '../components/salary/SalaryProfilesTable';
-import SalaryProfileDialog from '../components/salary/SalaryProfileDialog';
+import DataPagination from '../components/shared/DataPagination';
+import usePaginationParams from '../hooks/usePaginationParams';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,11 @@ import {
 import './SalaryProfiles.css';
 
 export default function SalaryProfiles() {
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
+
   const {
     profiles,
     loading,
@@ -39,6 +45,13 @@ export default function SalaryProfiles() {
     deactivate,
     activate,
   } = useSalaryProfiles();
+
+  useEffect(() => {
+    setFilters((f) => {
+      if (f.page === page && f.limit === pageSize) return f;
+      return { ...f, page, limit: pageSize };
+    });
+  }, [page, pageSize, setFilters]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -345,38 +358,22 @@ export default function SalaryProfiles() {
       />
 
       {/* Pagination Footer */}
-      <div className="salary-payroll-pagination border-t border-slate-200 bg-white px-5 py-3">
-        <p>
-          Showing{' '}
-          <strong>
-            {profiles.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0}
-          </strong>{' '}
-          to{' '}
-          <strong>
-            {Math.min(pagination.page * pagination.limit, pagination.total)}
-          </strong>{' '}
-          of <strong>{pagination.total}</strong> profiles
-        </p>
-        <div className="payroll-page-controls">
-          <button
-            type="button"
-            className="payroll-page-btn"
-            disabled={pagination.page <= 1}
-            onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
-          >
-            ‹
-          </button>
-          <span className="text-xs font-semibold px-2">{pagination.page}</span>
-          <button
-            type="button"
-            className="payroll-page-btn"
-            disabled={pagination.page * pagination.limit >= pagination.total}
-            onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
-          >
-            ›
-          </button>
-        </div>
-      </div>
+      <DataPagination
+        page={pagination.page}
+        pageSize={pagination.limit}
+        total={pagination.total}
+        pageCount={Math.ceil(pagination.total / pagination.limit) || 1}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          setFilters((f) => ({ ...f, page: newPage }));
+        }}
+        onPageSizeChange={(newLimit) => {
+          setPageSize(newLimit);
+          setPage(1);
+          setFilters((f) => ({ ...f, limit: newLimit, page: 1 }));
+        }}
+        itemLabel="profiles"
+      />
 
       {/* Deactivate Salary Profile Modal */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>

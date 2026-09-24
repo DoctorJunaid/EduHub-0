@@ -39,7 +39,7 @@ import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
 import QuickScheduleModal from "./QuickScheduleModal";
 import ClassDetailsDialog from "./ClassDetailsDialog";
-import ScheduleClassForm from "./ScheduleClassForm";
+import usePaginationParams from "@/hooks/usePaginationParams";
 import "./ClassTimetable.css";
 
 const WEEKDAY_NAMES = [
@@ -93,8 +93,10 @@ export default function ClassTimetable() {
 
   const [view, setView] = useState("week");
   const [week, setWeek] = useState(() => mondayOf(new Date()));
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [educationType, setEducationType] = useState(() => (isSchool ? "School" : "College"));
   const [includeSaturday, setIncludeSaturday] = useState(true);
 

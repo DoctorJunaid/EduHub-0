@@ -42,19 +42,19 @@ export default function StudentAttendanceTable({ rows, page, pageSize, onMark })
             : student.program;
 
           return (
-            <TableRow key={studentAttendanceKey({ studentId: student.id, classId: session.id, date })}>
+            <TableRow key={studentAttendanceKey({ studentId: student?.id || student?._id || index, classId: session?.id || 'def', date })}>
               <TableCell style={{ width: '4%' }}>{visible.start + index + 1}</TableCell>
               <TableCell style={{ width: '23%' }}>
                 <div className="student-attendance-person">
                   <Avatar>
-                    <AvatarFallback>{student.initials || student.name[0]}</AvatarFallback>
+                    <AvatarFallback>{student?.initials || student?.name?.[0] || 'S'}</AvatarFallback>
                   </Avatar>
                   <div style={{ minWidth: 0, overflow: 'hidden' }}>
                     <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {student.name}
+                      {student?.name || 'Student'}
                     </strong>
                     <small style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#71717a' }}>
-                      {isSchool ? `Roll: ${student.roll || student.rollNo || "10-A-01"}` : student.roll}
+                      {isSchool ? `Roll: ${student?.roll || student?.rollNo || student?.admissionNo || "STD-001"}` : (student?.roll || 'STD-001')}
                     </small>
                   </div>
                 </div>
@@ -62,23 +62,23 @@ export default function StudentAttendanceTable({ rows, page, pageSize, onMark })
               <TableCell style={{ width: '16%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {displayClass}
                 <small style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {isSchool ? `Section ${student.section || "A"}` : student.section}
+                  {isSchool ? `Section ${student?.section || "A"}` : (student?.section || "A")}
                 </small>
               </TableCell>
               <TableCell style={{ width: '18%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 <span className="student-attendance-subject">
                   <i />
-                  {session.subject}
+                  {session?.subject || student?.gradeOrClass || "General Academic"}
                 </span>
                 <small className="student-attendance-room">
                   <MapPin size={12} />
-                  {session.room}
+                  {session?.room || "Classroom"}
                 </small>
               </TableCell>
               <TableCell style={{ width: '14%', whiteSpace: 'nowrap' }}>
                 {date}
                 <small style={{ display: 'block' }}>
-                  {timeLabel(session.startTime)} – {timeLabel(session.endTime)}
+                  {timeLabel(session?.startTime || "08:00")} – {timeLabel(session?.endTime || "14:00")}
                 </small>
               </TableCell>
               <TableCell style={{ width: '11%', textAlign: 'center', whiteSpace: 'nowrap' }}>

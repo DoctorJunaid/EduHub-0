@@ -21,6 +21,7 @@ import {
   TableCell,
 } from '@/components/ui/Table';
 import { useInstitution } from '@/context/InstitutionContext';
+import DataPagination from '@/components/shared/DataPagination';
 
 export default function CampusOperationsHub({
   students = [],
@@ -38,7 +39,7 @@ export default function CampusOperationsHub({
   const [programFilter, setProgramFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const [pageSize, setPageSize] = useState(10);
 
   React.useEffect(() => {
     setSearchQuery('');
@@ -738,45 +739,19 @@ export default function CampusOperationsHub({
         )}
       </div>
 
-      {/* Pagination & Count Footer */}
-      <div className="hub-footer">
-        <div className="hub-count-info">
-          Showing <strong>{displayedRows.length}</strong> of <strong>{totalCount}</strong> records
-        </div>
-
-        <div className="hub-pagination-controls">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={currentPage <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={14} />
-          </Button>
-
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((num) => (
-            <button
-              key={num}
-              className={`hub-page-btn ${num === currentPage ? 'is-active' : ''}`}
-              onClick={() => setPage(num)}
-              aria-current={num === currentPage ? 'page' : undefined}
-            >
-              {num}
-            </button>
-          ))}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={currentPage >= pageCount}
-            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-            aria-label="Next page"
-          >
-            <ChevronRight size={14} />
-          </Button>
-        </div>
-      </div>
+      {/* Standardized DataPagination */}
+      <DataPagination
+        page={currentPage}
+        pageSize={pageSize}
+        total={totalCount}
+        pageCount={pageCount}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        itemLabel={currentTab === "students" ? "students" : currentTab === "faculty" ? "teachers" : "records"}
+      />
     </div>
   );
 }
