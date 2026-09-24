@@ -25,17 +25,18 @@ export default function TeacherAssignments() {
     try {
       setLoading(true);
       const [tRes, gRes, gsRes, aRes] = await Promise.all([
-        axiosInstance.get("/campus/faculty"), // Existing endpoint for teachers
+        axiosInstance.get("/campus-admin/faculty"),
         axiosInstance.get("/academic/grades"),
         axiosInstance.get("/academic/grade-subjects"),
         axiosInstance.get("/academic/teacher-assignments"),
       ]);
-      setTeachers(tRes.data.data || tRes.data);
-      setGrades(gRes.data);
-      setGradeSubjects(gsRes.data);
-      setAssignments(aRes.data);
+      setTeachers(tRes.data.data || tRes.data || []);
+      setGrades(gRes.data || []);
+      setGradeSubjects(gsRes.data || []);
+      setAssignments(aRes.data || []);
     } catch (err) {
-      toast.error("Failed to fetch assignments data");
+      console.error("Failed to fetch assignments data:", err);
+      toast.error(err.response?.data?.message || "Failed to fetch assignments data");
     } finally {
       setLoading(false);
     }
@@ -80,9 +81,10 @@ export default function TeacherAssignments() {
   };
 
   // Filter subjects based on selected grade
-  const availableSubjects = gradeSubjects
-    .filter(gs => gs.gradeId?._id === newAssignment.gradeId)
-    .map(gs => gs.subjectId);
+  const availableSubjects = (gradeSubjects || [])
+    .filter(gs => (gs.gradeId?._id || gs.gradeId) === newAssignment.gradeId)
+    .map(gs => gs.subjectId)
+    .filter(Boolean);
 
   if (loading) return <div className="p-8">Loading teacher assignments...</div>;
 
