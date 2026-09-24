@@ -24,10 +24,10 @@ export default function TeacherAssignments() {
   const fetchData = async () => {
     setLoadError("");
     const [tRes, gRes, gsRes, aRes] = await Promise.allSettled([
-        axiosInstance.get("/campus-admin/faculty", { timeout: 12000 }),
-        axiosInstance.get("/academic/grades", { timeout: 12000 }),
-        axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
-        axiosInstance.get("/academic/teacher-assignments", { timeout: 12000 }),
+      axiosInstance.get("/campus-admin/faculty", { timeout: 12000 }),
+      axiosInstance.get("/academic/grades", { timeout: 12000 }),
+      axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
+      axiosInstance.get("/academic/teacher-assignments", { timeout: 12000 }),
     ]);
     const failures = [];
     const applyResult = (result, label, setter, normalize = (data) => data) => {
@@ -49,23 +49,6 @@ export default function TeacherAssignments() {
       const message = `Some assignment data could not be loaded. ${failures.join("; ")}`;
       setLoadError(message);
       toast.error(message);
-    try {
-      setLoading(true);
-      const [tRes, gRes, gsRes, aRes] = await Promise.all([
-        axiosInstance.get("/campus-admin/faculty"),
-        axiosInstance.get("/academic/grades"),
-        axiosInstance.get("/academic/grade-subjects"),
-        axiosInstance.get("/academic/teacher-assignments"),
-      ]);
-      setTeachers(tRes.data.data || tRes.data || []);
-      setGrades(gRes.data || []);
-      setGradeSubjects(gsRes.data || []);
-      setAssignments(aRes.data || []);
-    } catch (err) {
-      console.error("Failed to fetch assignments data:", err);
-      toast.error(err.response?.data?.message || "Failed to fetch assignments data");
-    } finally {
-      setLoading(false);
     }
   };
 
