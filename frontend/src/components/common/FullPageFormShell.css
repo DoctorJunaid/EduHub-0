@@ -421,6 +421,35 @@
 }
 
 .student-profile-tabs-list {
+  display: inline-flex !important;
+  column-gap: 8px !important;
+  margin-bottom: 8px;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"] {
+  height: 38px;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 0 14px;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px;
+  background: #fff !important;
+  color: #52525b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"]:hover {
+  background: #f4f4f5 !important;
+  color: #18181b !important;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"][data-state="active"] {
+  border-color: #09090b !important;
+  background: #09090b !important;
+  color: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
   margin: 4px 0 10px 0;
 }
 
@@ -434,6 +463,54 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+}
+
+/* Compact details layout for the faculty attendance record view. */
+.full-page-activity.faculty-attendance-details-page {
+  padding: 7px;
+}
+
+.faculty-attendance-details-page .activity-container {
+  width: 100%;
+  max-width: 100% !important;
+}
+
+.faculty-attendance-details-page .activity-header {
+  margin-bottom: 14px;
+}
+
+.faculty-attendance-details-page .activity-content-card {
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+.faculty-attendance-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faculty-attendance-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.faculty-attendance-details-grid > div {
+  min-width: 0;
+  padding: 12px !important;
+  border-radius: 9px !important;
+}
+
+.faculty-attendance-details-grid > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.faculty-attendance-details-content .activity-form-actions {
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e4e7;
 }
 
 .student-profile-info-grid > * {
@@ -617,6 +694,14 @@
   }
 
   .student-profile-financial-content .student-profile-info-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .faculty-attendance-details-page .activity-content-card {
+    padding: 14px;
+  }
+
+  .faculty-attendance-details-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 

@@ -199,13 +199,13 @@ export default function TeacherAssignments() {
                 {paginatedAssignments.length === 0 ? (
                   <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No assignments defined yet.</td></tr>
                 ) : paginatedAssignments.map((a) => (
-                  <tr key={a._id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-medium">{a.teacherId?.name || "Unknown"}</td>
-                    <td className="px-4 py-3">{a.gradeId?.name || "Unknown"}</td>
-                    <td className="px-4 py-3">{a.sectionId?.name || "Unknown"}</td>
-                    <td className="px-4 py-3">{a.subjectId?.name || "Unknown"}</td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteAssignment(a._id)} className="text-destructive">
+                  <tr key={a._id} className="border-b last:border-0 teacher-assignment-data-row">
+                    <td className="font-medium">{a.teacherId?.name || "Unknown"}</td>
+                    <td>{a.gradeId?.name || "Unknown"}</td>
+                    <td>{a.sectionId?.name || "Unknown"}</td>
+                    <td>{a.subjectId?.name || "Unknown"}</td>
+                    <td>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteAssignment(a._id)} className="text-destructive teacher-assignment-delete-button">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>
