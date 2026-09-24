@@ -465,10 +465,7 @@ const PayrollApprovals = () => {
           total={total}
           pageCount={Math.ceil(total / pageSize) || 1}
           onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
+          onPageSizeChange={setPageSize}
           itemLabel="approval requests"
         />
       </div>

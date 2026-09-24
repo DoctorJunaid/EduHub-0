@@ -219,10 +219,7 @@ export default function TeacherAssignments() {
               total={assignments.length}
               pageCount={pageCount}
               onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
+              onPageSizeChange={setPageSize}
               itemLabel="assignments"
             />
           </div>

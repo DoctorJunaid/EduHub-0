@@ -44,6 +44,7 @@ export default function StudentProfileDialog({ student, onClose }) {
       onBack={onClose}
       maxWidth={1600}
       className="student-profile-page"
+      hideTitleRow={true}
     >
       <div className="student-profile-data">
         {/* Profile Card Header */}
@@ -72,6 +73,20 @@ export default function StudentProfileDialog({ student, onClose }) {
               className="h-10 flex-none rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-600 shadow-sm data-[state=active]:border-zinc-900 data-[state=active]:bg-zinc-900 data-[state=active]:text-white"
             >
               Financial Record
+          <TabsList className="student-profile-tabs-list inline-flex h-11 items-center gap-1.5 rounded-xl border border-zinc-200/90 bg-zinc-100/90 p-1 shadow-xs">
+            <TabsTrigger
+              value="academic"
+              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
+              <span>Academic Profile</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="financial"
+              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
+            >
+              <Coins className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
+              <span>Financial Record</span>
             </TabsTrigger>
           </TabsList>
 
