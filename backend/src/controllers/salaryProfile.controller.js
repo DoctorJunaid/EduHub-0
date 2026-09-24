@@ -3,6 +3,12 @@ import * as salaryProfileService from '../services/salaryProfile.service.js';
 const getCampusId = (req) => req.user?.campusId;
 
 const handleControllerError = (res, error) => {
+  if (error.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      message: 'A salary profile already exists for this teacher profile.',
+    });
+  }
   const statusCode = error.statusCode || 500;
   return res.status(statusCode).json({
     success: false,

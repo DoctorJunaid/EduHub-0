@@ -49,6 +49,23 @@ export default function TeacherAssignments() {
       const message = `Some assignment data could not be loaded. ${failures.join("; ")}`;
       setLoadError(message);
       toast.error(message);
+    try {
+      setLoading(true);
+      const [tRes, gRes, gsRes, aRes] = await Promise.all([
+        axiosInstance.get("/campus-admin/faculty"),
+        axiosInstance.get("/academic/grades"),
+        axiosInstance.get("/academic/grade-subjects"),
+        axiosInstance.get("/academic/teacher-assignments"),
+      ]);
+      setTeachers(tRes.data.data || tRes.data || []);
+      setGrades(gRes.data || []);
+      setGradeSubjects(gsRes.data || []);
+      setAssignments(aRes.data || []);
+    } catch (err) {
+      console.error("Failed to fetch assignments data:", err);
+      toast.error(err.response?.data?.message || "Failed to fetch assignments data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,9 +108,10 @@ export default function TeacherAssignments() {
   };
 
   // Filter subjects based on selected grade
-  const availableSubjects = gradeSubjects
-    .filter(gs => gs.gradeId?._id === newAssignment.gradeId)
-    .map(gs => gs.subjectId);
+  const availableSubjects = (gradeSubjects || [])
+    .filter(gs => (gs.gradeId?._id || gs.gradeId) === newAssignment.gradeId)
+    .map(gs => gs.subjectId)
+    .filter(Boolean);
 
   return (
     <div className="teacher-academic-assignments-page mx-auto w-full space-y-4 p-2 sm:p-3">

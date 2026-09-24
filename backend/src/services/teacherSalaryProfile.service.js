@@ -56,7 +56,7 @@ export const listCampusTeachers = async (campusId) => {
  * @returns {Promise<Object>} - Upserted profile
  */
 export const upsertProfile = async (campusId, teacherId, payload) => {
-  const filter = { campusId, teacherProfileId: teacherId };
+  const filter = { teacherProfileId: teacherId };
   const update = { $set: { ...payload, campusId, teacherProfileId: teacherId } };
   const options = { new: true, upsert: true, setDefaultsOnInsert: true };
   const profile = await TeacherSalaryProfile.findOneAndUpdate(filter, update, options).lean();
