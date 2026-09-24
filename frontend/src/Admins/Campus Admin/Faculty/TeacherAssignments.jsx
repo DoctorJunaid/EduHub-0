@@ -12,7 +12,7 @@ export default function TeacherAssignments() {
   const [sections, setSections] = useState([]);
   const [gradeSubjects, setGradeSubjects] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const [newAssignment, setNewAssignment] = useState({
     teacherId: "",
@@ -22,6 +22,33 @@ export default function TeacherAssignments() {
   });
 
   const fetchData = async () => {
+    setLoadError("");
+    const [tRes, gRes, gsRes, aRes] = await Promise.allSettled([
+        axiosInstance.get("/campus-admin/faculty", { timeout: 12000 }),
+        axiosInstance.get("/academic/grades", { timeout: 12000 }),
+        axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
+        axiosInstance.get("/academic/teacher-assignments", { timeout: 12000 }),
+    ]);
+    const failures = [];
+    const applyResult = (result, label, setter, normalize = (data) => data) => {
+      if (result.status === "fulfilled") {
+        setter(normalize(result.value.data));
+        return;
+      }
+      const reason = result.reason;
+      const detail = reason.code === "ECONNABORTED"
+        ? "request timed out"
+        : (reason.response?.data?.message || reason.message || "request failed");
+      failures.push(`${label}: ${detail}`);
+    };
+    applyResult(tRes, "Teachers", setTeachers, (data) => Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    applyResult(gRes, "Grades", setGrades);
+    applyResult(gsRes, "Class subjects", setGradeSubjects);
+    applyResult(aRes, "Assignments", setAssignments);
+    if (failures.length) {
+      const message = `Some assignment data could not be loaded. ${failures.join("; ")}`;
+      setLoadError(message);
+      toast.error(message);
     try {
       setLoading(true);
       const [tRes, gRes, gsRes, aRes] = await Promise.all([
@@ -50,7 +77,7 @@ export default function TeacherAssignments() {
     const gradeId = e.target.value;
     setNewAssignment({ ...newAssignment, gradeId, sectionId: "", subjectId: "" });
     try {
-      const secRes = await axiosInstance.get(`/academic/sections?gradeId=${gradeId}`);
+      const secRes = await axiosInstance.get(`/academic/sections?gradeId=${gradeId}`, { timeout: 12000 });
       setSections(secRes.data);
     } catch (error) {
       toast.error("Failed to load sections");
@@ -86,24 +113,22 @@ export default function TeacherAssignments() {
     .map(gs => gs.subjectId)
     .filter(Boolean);
 
-  if (loading) return <div className="p-8">Loading teacher assignments...</div>;
-
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Teacher Academic Assignments</h1>
-        <p className="text-muted-foreground mt-2">
-          Assign teachers to specific classes, sections, and subjects. The Timetable uses these assignments to dynamically populate available teachers.
-        </p>
-      </div>
+    <div className="teacher-academic-assignments-page mx-auto w-full space-y-4 p-2 sm:p-3">
+      {loadError && (
+        <div className="teacher-academic-assignments-error" role="alert">
+          <span>Assignment data could not be loaded: {loadError}</span>
+          <Button type="button" variant="outline" onClick={fetchData}>Try again</Button>
+        </div>
+      )}
 
-      <Card>
-        <CardHeader>
+      <Card className="teacher-academic-assignments-card">
+        <CardHeader className="teacher-academic-assignments-card-header">
           <CardTitle>Create New Assignment</CardTitle>
           <CardDescription>Select a teacher and link them to a subject in a specific class section.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateAssignment} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-6">
+        <CardContent className="teacher-academic-assignments-card-content">
+          <form onSubmit={handleCreateAssignment} className="teacher-academic-assignments-form">
             <div className="grid items-center gap-1.5">
               <Label>Teacher</Label>
               <select 
@@ -163,7 +188,7 @@ export default function TeacherAssignments() {
             </Button>
           </form>
 
-          <div className="rounded-md border mt-8">
+          <div className="teacher-academic-assignments-table-wrap">
             <table className="w-full text-sm text-left">
               <thead className="bg-muted">
                 <tr>
