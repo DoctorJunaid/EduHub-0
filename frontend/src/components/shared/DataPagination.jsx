@@ -107,18 +107,18 @@ export default function DataPagination({
               value={String(pageSize)}
               onValueChange={(val) => {
                 const nextSize = Number(val);
-                if (onPageSizeChange && nextSize !== pageSize) {
+                if (onPageSizeChange && !isNaN(nextSize)) {
                   onPageSizeChange(nextSize);
                 }
               }}
               disabled={isLoading}
             >
               <SelectTrigger className="h-8 w-[72px] text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                <SelectValue placeholder={String(pageSize)} />
+                <SelectValue placeholder={String(pageSize)}>{pageSize}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" align="end" className="z-50 min-w-[72px]">
                 {pageSizeOptions.map((opt) => (
-                  <SelectItem key={opt} value={String(opt)} className="text-xs">
+                  <SelectItem key={opt} value={String(opt)} className="text-xs cursor-pointer">
                     {opt}
                   </SelectItem>
                 ))}

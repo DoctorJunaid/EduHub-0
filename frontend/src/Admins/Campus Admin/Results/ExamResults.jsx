@@ -411,10 +411,7 @@ export default function ExamResults() {
             total={filtered.length}
             pageCount={visible.pageCount}
             onPageChange={setPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
+            onPageSizeChange={setPageSize}
             itemLabel="results"
           />
         </div>

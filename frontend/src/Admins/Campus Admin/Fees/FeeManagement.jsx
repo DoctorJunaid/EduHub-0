@@ -667,10 +667,7 @@ export default function FeeManagement() {
           total={filtered.length}
           pageCount={visible.pageCount}
           onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
+          onPageSizeChange={setPageSize}
           itemLabel="vouchers"
         />
       ) : (
@@ -680,10 +677,7 @@ export default function FeeManagement() {
           total={filteredLedger.length}
           pageCount={Math.ceil(filteredLedger.length / ledgerPageSize) || 1}
           onPageChange={setLedgerPage}
-          onPageSizeChange={(size) => {
-            setLedgerPageSize(size);
-            setLedgerPage(1);
-          }}
+          onPageSizeChange={setLedgerPageSize}
           itemLabel="ledger entries"
         />
       )}

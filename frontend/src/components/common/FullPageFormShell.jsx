@@ -11,6 +11,7 @@ export default function FullPageFormShell({
   children,
   maxWidth = 1000,
   className = "",
+  hideTitleRow = false,
 }) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -43,13 +44,15 @@ export default function FullPageFormShell({
             <span className="activity-breadcrumb-active">{title}</span>
           </div>
 
-          <div className="activity-title-row">
-            {icon && <div className="activity-icon-box">{icon}</div>}
-            <div>
-              <h1 className="activity-title">{title}</h1>
-              {subtitle && <p className="activity-desc">{subtitle}</p>}
+          {!hideTitleRow && (
+            <div className="activity-title-row">
+              {icon && <div className="activity-icon-box">{icon}</div>}
+              <div>
+                <h1 className="activity-title">{title}</h1>
+                {subtitle && <p className="activity-desc">{subtitle}</p>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Content Area Card */}

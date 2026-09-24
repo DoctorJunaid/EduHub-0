@@ -286,10 +286,7 @@ const SubstituteAssignments = () => {
           total={filteredAssignments.length}
           pageCount={pageCount}
           onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
+          onPageSizeChange={setPageSize}
           itemLabel="substitute assignments"
         />
       </div>

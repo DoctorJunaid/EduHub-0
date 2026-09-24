@@ -34,8 +34,8 @@ import {
   fetchFaculty,
 } from "@/store/Slices/facultySlice";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
-import toast from "react-hot-toast";
 import FacultyForm from "./FacultyForm";
+import FacultyProfileDialog from "./FacultyProfileDialog";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { useInstitution } from "@/context/InstitutionContext";
 import DataPagination from "@/components/shared/DataPagination";
@@ -57,6 +57,7 @@ export default function FacultyDirectory() {
   const facultyRecords = useMemo(() => rawFaculty || [], [rawFaculty]);
 
   const [form, setForm] = useState(null);
+  const [viewingTeacher, setViewingTeacher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const options = useMemo(() => {
@@ -269,12 +270,19 @@ export default function FacultyDirectory() {
                 return (
                   <TableRow key={teacher.id || teacher._id}>
                     <TableCell style={{ width: "24%", overflow: "hidden" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, overflow: "hidden" }}>
+                      <div
+                        style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, overflow: "hidden", cursor: "pointer" }}
+                        onClick={() => setViewingTeacher(teacher)}
+                        title={`View profile for ${teacher.name}`}
+                      >
                         <Avatar style={{ width: "28px", height: "28px", fontSize: "11px", fontWeight: "600", background: "#f4f4f5", color: "#09090b", flexShrink: 0 }}>
                           <AvatarFallback>{teacher.initials || teacher.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div style={{ display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-                          <strong style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          <strong
+                            className="campus-clickable-link"
+                            style={{ fontSize: "13px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}
+                          >
                             {teacher.name}
                           </strong>
                           <span style={{ fontSize: "11px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
@@ -368,6 +376,13 @@ export default function FacultyDirectory() {
       />
 
       {/* Dialogs */}
+      {viewingTeacher && (
+        <FacultyProfileDialog
+          teacher={viewingTeacher}
+          onClose={() => setViewingTeacher(null)}
+        />
+      )}
+
       {form && (
         <FacultyForm
           teacher={form.teacher}

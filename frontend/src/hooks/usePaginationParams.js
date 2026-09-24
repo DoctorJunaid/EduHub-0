@@ -35,9 +35,9 @@ export function usePaginationParams({
         (prev) => {
           const next = new URLSearchParams(prev);
           const currentPage = parseInt(next.get(pageKey), 10) || defaultPage;
-          const nextVal = typeof newPageOrFn === "function" ? newPageOrFn(currentPage) : newPageOrFn;
+          const nextVal = typeof newPageOrFn === "function" ? newPageOrFn(currentPage) : Number(newPageOrFn);
 
-          if (nextVal <= 1) {
+          if (!nextVal || nextVal <= 1) {
             next.delete(pageKey);
           } else {
             next.set(pageKey, String(nextVal));
@@ -52,15 +52,16 @@ export function usePaginationParams({
 
   const setPageSize = useCallback(
     (newSize) => {
+      const numSize = Number(newSize) || defaultPageSize;
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          if (newSize === defaultPageSize) {
+          if (numSize === defaultPageSize) {
             next.delete(pageSizeKey);
           } else {
-            next.set(pageSizeKey, String(newSize));
+            next.set(pageSizeKey, String(numSize));
           }
-          // Reset to page 1 on page size change
+          // Reset to page 1 atomically
           next.delete(pageKey);
           return next;
         },
