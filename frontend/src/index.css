@@ -1692,3 +1692,687 @@ tbody tr:hover {
 .edu-badge-pending .edu-badge-dot {
   background: #d97706;
 }
+
+/* Academics configuration spacing and layout. These unlayered rules counter
+   the legacy global zero-padding reset while staying scoped to this page. */
+.academics-config-page {
+  width: 100%;
+  max-width: 100%;
+  padding: 7px;
+}
+
+.academics-config-tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.academics-config-tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  align-self: flex-start;
+}
+
+.academics-config-tabs > [data-slot="tabs-content"] {
+  width: 100%;
+  min-width: 0;
+}
+
+.academics-config-tab-list [data-slot="tabs-trigger"] {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  color: #52525b;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.academics-config-tab-list [data-slot="tabs-trigger"][data-state="active"] {
+  background: #18181b;
+  color: #fff;
+}
+
+.academics-config-card {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+.academics-config-card-header {
+  display: grid;
+  gap: 6px;
+  padding: 20px 22px 14px;
+}
+
+.academics-config-card-header [data-slot="card-title"] {
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.academics-config-card-header [data-slot="card-description"] {
+  color: #71717a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.academics-config-card-content {
+  width: 100%;
+  min-width: 0;
+  padding: 0 22px 22px;
+}
+
+.academics-config-grade-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.9fr) minmax(220px, 1.4fr) auto;
+  align-items: end;
+  gap: 16px;
+  width: 100%;
+  margin: 0 0 20px;
+}
+
+.academics-config-grade-form > div {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.academics-config-grade-form [data-slot="label"] {
+  color: #27272a;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.3;
+}
+
+.academics-config-grade-form input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+}
+
+.academics-config-grade-form input::placeholder {
+  color: #a1a1aa;
+}
+
+.academics-config-grade-form input:focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.academics-config-grade-form [data-slot="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.academics-config-card-content > div {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+}
+
+.academics-config-card-content table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.academics-config-card-content thead {
+  background: #f8f9fb;
+}
+
+.academics-config-card-content th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e4e7;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.academics-config-card-content td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f2;
+  color: #3f3f46;
+  vertical-align: middle;
+}
+
+.academics-config-card-content tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.academics-config-card-content tbody tr:hover td {
+  background: #fafafa;
+}
+
+.academics-config-card-content td [data-slot="button"] {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #71717a;
+}
+
+.academics-config-card-content td [data-slot="button"]:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+@media (max-width: 760px) {
+  .academics-config-page {
+    padding: 7px;
+  }
+
+  .academics-config-grade-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .academics-config-grade-form [data-slot="button"] {
+    width: 100%;
+  }
+
+  .academics-config-card-header {
+    padding: 17px 16px 12px;
+  }
+
+  .academics-config-card-content {
+    padding: 0 16px 16px;
+  }
+}
+
+/* Teacher assignment page shares the Academics Configuration visual system. */
+.teacher-academic-assignments-page {
+  width: 100%;
+  max-width: 100%;
+  padding: 7px;
+}
+
+.teacher-academic-assignments-heading {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.teacher-academic-assignments-heading h1 {
+  color: #18181b;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.teacher-academic-assignments-heading p {
+  max-width: 1000px;
+  color: #71717a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.teacher-academic-assignments-card {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+.teacher-academic-assignments-card-header {
+  display: grid;
+  gap: 6px;
+  padding: 20px 22px 14px;
+}
+
+.teacher-academic-assignments-card-header [data-slot="card-title"] {
+  color: #18181b;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.teacher-academic-assignments-card-header [data-slot="card-description"] {
+  color: #71717a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.teacher-academic-assignments-card-content {
+  width: 100%;
+  min-width: 0;
+  padding: 0 22px 22px;
+}
+
+.teacher-academic-assignments-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 14px;
+  width: 100%;
+  margin: 0 0 20px;
+}
+
+.teacher-academic-assignments-form > div {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.teacher-academic-assignments-form [data-slot="label"] {
+  color: #27272a;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.3;
+}
+
+.teacher-academic-assignments-form select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+}
+
+.teacher-academic-assignments-form select:focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.teacher-academic-assignments-form > [data-slot="button"] {
+  display: inline-flex;
+  min-width: 112px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.teacher-academic-assignments-table-wrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+}
+
+.teacher-academic-assignments-table-wrap table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.teacher-academic-assignments-table-wrap thead {
+  background: #f8f9fb;
+}
+
+.teacher-academic-assignments-table-wrap th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e4e7;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.teacher-academic-assignments-table-wrap td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f2;
+  color: #3f3f46;
+  vertical-align: middle;
+}
+
+.teacher-academic-assignments-table-wrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.teacher-academic-assignments-table-wrap tbody tr:hover td {
+  background: #fafafa;
+}
+
+.teacher-academic-assignments-table-wrap td [data-slot="button"] {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #71717a;
+}
+
+.teacher-academic-assignments-table-wrap td [data-slot="button"]:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.teacher-academic-assignments-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+.teacher-academic-assignments-error [data-slot="button"] {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fff;
+  color: #991b1b;
+}
+
+@media (max-width: 1100px) {
+  .teacher-academic-assignments-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teacher-academic-assignments-form > [data-slot="button"] {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-academic-assignments-page {
+    padding: 7px;
+  }
+
+  .teacher-academic-assignments-heading h1 {
+    font-size: 21px;
+  }
+
+  .teacher-academic-assignments-card-header {
+    padding: 17px 16px 12px;
+  }
+
+  .teacher-academic-assignments-card-content {
+    padding: 0 16px 16px;
+  }
+
+  .teacher-academic-assignments-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .teacher-academic-assignments-error {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.academics-config-load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+.academics-config-load-error [data-slot="button"] {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fff;
+  color: #991b1b;
+}
+
+@media (max-width: 640px) {
+  .academics-config-load-error {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/* Keep every Academics Configuration tab on the same page-specific design. */
+.academics-config-tabs [data-slot="card"] {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+.academics-config-tabs [data-slot="card-header"] {
+  display: grid;
+  gap: 6px;
+  padding: 20px 22px 14px;
+}
+
+.academics-config-tabs [data-slot="card-title"] {
+  color: #18181b;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.academics-config-tabs [data-slot="card-description"] {
+  color: #71717a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.academics-config-tabs [data-slot="card-content"] {
+  width: 100%;
+  min-width: 0;
+  padding: 0 22px 22px;
+}
+
+.academics-config-tabs [data-slot="card-content"] form:not(.academics-config-grade-form) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 16px;
+  width: 100%;
+  margin: 0 0 20px;
+}
+
+.academics-config-tabs [data-slot="card-content"] form > div {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.academics-config-tabs [data-slot="card-content"] form [data-slot="label"] {
+  color: #27272a;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.3;
+}
+
+.academics-config-tabs [data-slot="card-content"] form > div > :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+}
+
+.academics-config-tabs [data-slot="card-content"] form > div > :is(input, select):focus {
+  border-color: #71717a;
+  outline: 3px solid rgba(113, 113, 122, 0.14);
+}
+
+.academics-config-tabs [data-slot="card-content"] form > [data-slot="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.academics-config-tabs [data-slot="card-content"] > div {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+}
+
+.academics-config-tabs [data-slot="card-content"] table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.academics-config-tabs [data-slot="card-content"] thead {
+  background: #f8f9fb;
+}
+
+.academics-config-tabs [data-slot="card-content"] th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e4e7;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.academics-config-tabs [data-slot="card-content"] td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f2;
+  color: #3f3f46;
+  vertical-align: middle;
+}
+
+.academics-config-tabs [data-slot="card-content"] tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.academics-config-tabs [data-slot="card-content"] tbody tr:hover td {
+  background: #fafafa;
+}
+
+.academics-config-tabs [data-slot="card-content"] td [data-slot="button"] {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #71717a;
+}
+
+.academics-config-tabs [data-slot="card-content"] td [data-slot="button"]:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+@media (max-width: 760px) {
+  .academics-config-tabs [data-slot="card-header"] {
+    padding: 17px 16px 12px;
+  }
+
+  .academics-config-tabs [data-slot="card-content"] {
+    padding: 0 16px 16px;
+  }
+
+  .academics-config-tabs [data-slot="card-content"] form:not(.academics-config-grade-form) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .academics-config-tabs [data-slot="card-content"] form > [data-slot="button"] {
+    width: 100%;
+  }
+}
