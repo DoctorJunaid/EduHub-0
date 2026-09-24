@@ -1,12 +1,10 @@
 import { useRef } from "react";
-import { Printer, Receipt, Building2, CheckCircle2 } from "lucide-react";
+import { Printer, Receipt } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatPKR } from "@/lib/currency";
@@ -58,12 +56,21 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="w-[calc(100vw-2rem)] max-w-[760px] lg:max-w-[840px] max-h-[calc(100vh-2rem)] overflow-hidden p-0 rounded-2xl border border-zinc-200 shadow-2xl bg-white flex flex-col gap-0"
+        className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border border-zinc-200 shadow-2xl bg-white flex flex-col"
+        style={{
+          width: "calc(100vw - 2rem)",
+          maxWidth: "960px",
+          padding: 0,
+          gap: 0,
+        }}
         aria-describedby="receipt-dialog-desc"
         showCloseButton={false}
       >
-        <div className="flex items-center justify-between gap-4 px-6 py-5 sm:px-8 sm:py-6 border-b border-zinc-200 bg-white flex-shrink-0">
-          <div className="flex items-center gap-3.5">
+        <div
+          className="flex items-center justify-between border-b border-zinc-200 bg-white flex-shrink-0"
+          style={{ padding: "20px clamp(20px, 4vw, 32px)", gap: "16px" }}
+        >
+          <div className="flex items-center min-w-0" style={{ gap: "14px" }}>
             <div className="size-11 rounded-xl bg-emerald-700 text-white flex items-center justify-center flex-shrink-0">
               <Receipt className="size-5" />
             </div>
@@ -73,42 +80,54 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
               </DialogTitle>
               <DialogDescription
                 id="receipt-dialog-desc"
-                className="text-xs text-zinc-500 mt-1"
+                className="text-xs text-zinc-500"
+                style={{ marginTop: "4px" }}
               >
                 Acknowledgement of Fee Payment &middot; {receiptNo}
               </DialogDescription>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center flex-shrink-0" style={{ gap: "8px" }}>
             <Button
               variant="outline"
               size="sm"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold"
+              className="inline-flex items-center text-xs font-semibold"
+              style={{ height: "36px", padding: "0 14px", gap: "6px" }}
             >
               <Printer size={14} />
               Print
             </Button>
-            <button
+            <Button
               type="button"
               onClick={onClose}
               aria-label="Close payment receipt dialog"
-              className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+              variant="ghost"
+              size="icon-sm"
+              className="text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+              style={{ width: "32px", height: "32px" }}
             >
               <span className="text-xl leading-none">&times;</span>
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Printable Receipt Canvas */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
+        <div
+          className="flex-1 min-h-0 overflow-y-auto"
+          style={{ padding: "clamp(16px, 3vw, 24px)" }}
+        >
           <div
             ref={sheetRef}
-            className="bg-white border border-zinc-200 rounded-xl p-5 text-zinc-900 font-sans sm:p-7 md:p-8 print:p-8"
+            className="bg-white border border-zinc-200 rounded-xl text-zinc-900 font-sans"
+            style={{ padding: "clamp(16px, 4vw, 32px)" }}
           >
             {/* Header */}
-            <div className="border-b-2 border-zinc-900 pb-5 mb-5 flex flex-col gap-4 min-[480px]:flex-row min-[480px]:justify-between min-[480px]:items-start">
+            <div
+              className="border-b-2 border-zinc-900 flex flex-col min-[480px]:flex-row min-[480px]:justify-between min-[480px]:items-start"
+              style={{ paddingBottom: "20px", marginBottom: "20px", gap: "16px" }}
+            >
               <div>
                 <h2 className="text-lg font-bold tracking-tight uppercase text-zinc-900">
                   EduHub Campus Manager
@@ -116,7 +135,10 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
                 <p className="text-xs text-zinc-500 font-medium">
                   Official Accounts &amp; Finance Department
                 </p>
-                <span className="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold rounded">
+                <span
+                  className="inline-block bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold rounded"
+                  style={{ marginTop: "6px", padding: "3px 8px" }}
+                >
                   PAYMENT CONFIRMED
                 </span>
               </div>
@@ -127,14 +149,17 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
                 <strong className="text-sm font-mono font-bold text-zinc-900">
                   {receiptNo}
                 </strong>
-                <span className="text-xs text-zinc-500 block mt-0.5">
+                <span className="text-xs text-zinc-500 block" style={{ marginTop: "3px" }}>
                   {paymentDate}
                 </span>
               </div>
             </div>
 
             {/* Student & Voucher Details */}
-            <div className="grid grid-cols-1 gap-5 bg-zinc-50 p-4 rounded-lg border border-zinc-200 text-xs mb-5 sm:grid-cols-2 sm:p-5">
+            <div
+              className="grid grid-cols-1 bg-zinc-50 rounded-lg border border-zinc-200 text-xs sm:grid-cols-2"
+              style={{ padding: "20px", gap: "20px", marginBottom: "20px" }}
+            >
               <div className="min-w-0">
                 <span className="text-zinc-400 block text-[10px] uppercase font-semibold">
                   Student Name
@@ -142,7 +167,7 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
                 <strong className="text-zinc-900 text-sm block">
                   {studentName}
                 </strong>
-                <span className="text-zinc-600 block mt-0.5">
+                <span className="text-zinc-600 block" style={{ marginTop: "3px" }}>
                   Roll: {studentRoll}
                 </span>
                 <span className="text-zinc-600 block">
@@ -156,7 +181,7 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
                 <strong className="text-zinc-900 text-sm block font-mono">
                   {voucher.voucherNo}
                 </strong>
-                <span className="text-zinc-600 block mt-0.5">
+                <span className="text-zinc-600 block" style={{ marginTop: "3px" }}>
                   Category: {voucher.feeCategory}
                 </span>
                 <span className="text-zinc-600 block">
@@ -166,49 +191,49 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
             </div>
 
             {/* Payment Breakdown Table */}
-            <table className="w-full text-xs mb-5 border-collapse">
+            <table className="w-full text-xs border-collapse" style={{ marginBottom: "20px" }}>
               <thead>
                 <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px] uppercase">
-                  <th className="py-2.5 text-left">
+                  <th className="text-left" style={{ padding: "12px 0" }}>
                     Description / Particulars
                   </th>
-                  <th className="py-2.5 text-right">Amount</th>
+                  <th className="text-right" style={{ padding: "12px 0" }}>Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 <tr>
-                  <td className="py-3 font-medium text-zinc-800 break-words">
+                  <td className="font-medium text-zinc-800 break-words" style={{ padding: "14px 0" }}>
                     {voucher.feeCategory} ({voucher.semester || voucher.month})
                   </td>
-                  <td className="py-3 text-right text-zinc-700 whitespace-nowrap">
+                  <td className="text-right text-zinc-700 whitespace-nowrap" style={{ padding: "14px 0" }}>
                     {formatPKR(voucher.amount)}
                   </td>
                 </tr>
                 {voucher.previousArrears > 0 && (
                   <tr>
-                    <td className="py-2 text-zinc-600">
+                    <td className="text-zinc-600" style={{ padding: "12px 0" }}>
                       Previous Outstanding Arrears
                     </td>
-                    <td className="py-2 text-right text-zinc-700">
+                    <td className="text-right text-zinc-700" style={{ padding: "12px 0" }}>
                       {formatPKR(voucher.previousArrears)}
                     </td>
                   </tr>
                 )}
                 {voucher.waiver?.amount > 0 && (
                   <tr>
-                    <td className="py-2 text-purple-700">
+                    <td className="text-purple-700" style={{ padding: "12px 0" }}>
                       Fee Waiver / Concession ({voucher.waiver.reason})
                     </td>
-                    <td className="py-2 text-right text-purple-700">
+                    <td className="text-right text-purple-700" style={{ padding: "12px 0" }}>
                       -{formatPKR(voucher.waiver.amount)}
                     </td>
                   </tr>
                 )}
                 <tr className="border-t-2 border-zinc-900 font-bold text-sm bg-zinc-50">
-                  <td className="py-2.5 px-2 text-zinc-900">
+                  <td className="text-zinc-900" style={{ padding: "14px 8px" }}>
                     Total Amount Paid In This Receipt
                   </td>
-                  <td className="py-2.5 px-2 text-right text-emerald-700 font-mono">
+                  <td className="text-right text-emerald-700 font-mono" style={{ padding: "14px 8px" }}>
                     {formatPKR(paymentAmount)}
                   </td>
                 </tr>
@@ -216,7 +241,10 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
             </table>
 
             {/* Payment Method & Meta */}
-            <div className="grid grid-cols-1 gap-4 border-t border-zinc-200 pt-4 text-[11px] text-zinc-600 mb-7 sm:grid-cols-2">
+            <div
+              className="grid grid-cols-1 border-t border-zinc-200 text-[11px] text-zinc-600 sm:grid-cols-2"
+              style={{ paddingTop: "18px", marginBottom: "28px", gap: "16px", lineHeight: 1.7 }}
+            >
               <div className="min-w-0 break-words">
                 <p>
                   <strong>Payment Mode:</strong> {paymentMethod}
@@ -237,32 +265,40 @@ export default function PaymentReceiptDialog({ voucher, payment, onClose }) {
             </div>
 
             {/* Signatures */}
-            <div className="grid grid-cols-1 gap-7 pt-9 border-t border-dashed border-zinc-300 text-center text-[10px] text-zinc-500 sm:grid-cols-2 sm:gap-8">
+            <div
+              className="grid grid-cols-1 border-t border-dashed border-zinc-300 text-center text-[10px] text-zinc-500 sm:grid-cols-2"
+              style={{ paddingTop: "36px", gap: "32px" }}
+            >
               <div>
-                <div className="border-b border-zinc-400 w-32 mx-auto mb-1"></div>
+                <div className="border-b border-zinc-400 w-32 mx-auto" style={{ marginBottom: "8px" }}></div>
                 <span>Student / Depositor</span>
               </div>
               <div>
-                <div className="border-b border-zinc-400 w-32 mx-auto mb-1"></div>
+                <div className="border-b border-zinc-400 w-32 mx-auto" style={{ marginBottom: "8px" }}></div>
                 <span>Accounts Officer / Cashier</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col-reverse items-stretch justify-end gap-3 px-6 py-5 border-t border-zinc-200 bg-zinc-50 sm:flex-row sm:items-center sm:px-8 sm:py-6 sm:gap-4 flex-shrink-0">
+        <div
+          className="flex flex-col-reverse items-stretch justify-end border-t border-zinc-200 bg-zinc-50 sm:flex-row sm:items-center flex-shrink-0"
+          style={{ padding: "20px clamp(20px, 4vw, 32px)", gap: "12px" }}
+        >
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-11 w-full px-6 text-sm font-semibold sm:w-auto"
+            className="w-full text-sm font-semibold sm:w-auto"
+            style={{ height: "44px", padding: "0 24px" }}
           >
             Close
           </Button>
           <Button
             type="button"
             onClick={handlePrint}
-            className="h-11 w-full px-7 text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 inline-flex items-center gap-2 shadow-sm sm:w-auto"
+            className="w-full text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 inline-flex items-center shadow-sm sm:w-auto"
+            style={{ height: "44px", padding: "0 28px", gap: "8px" }}
           >
             <Printer size={15} />
             Print Receipt
