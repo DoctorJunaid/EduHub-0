@@ -12,6 +12,7 @@ import {
   Radio,
   Wallet,
   ShieldCheck,
+  Database,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -125,6 +126,12 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <ShieldCheck size={20} />,
   },
   { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
+  {
+    label: "Test Data",
+    path: "/admin/seed",
+    group: "System",
+    icon: <Database size={20} />,
+  },
 ];
 
 export const CAMPUS_ADMIN_NAV = getCampusAdminNav(false);

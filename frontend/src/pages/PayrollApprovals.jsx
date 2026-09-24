@@ -7,8 +7,6 @@ import {
   ShieldAlert,
   Clock,
   Search,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   CheckCircle2,
   XCircle,
@@ -23,13 +21,17 @@ import {
 } from "lucide-react";
 import { selectCurrentRole } from "../store/Slices/authSlice";
 import ApprovalProofDialog from "../components/Payroll/ApprovalProofDialog";
+import DataPagination from "../components/shared/DataPagination";
+import usePaginationParams from "../hooks/usePaginationParams";
 import "./PayrollApprovals.css";
 
 const PayrollApprovals = () => {
   const [approvals, setApprovals] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(15);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("Pending");
   const [search, setSearch] = useState("");
@@ -54,7 +56,7 @@ const PayrollApprovals = () => {
   const fetchApprovals = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ month, page, limit });
+      const params = new URLSearchParams({ month, page, limit: pageSize });
       if (statusFilter && statusFilter !== "All") {
         params.append("status", statusFilter);
       }
@@ -73,7 +75,7 @@ const PayrollApprovals = () => {
 
   useEffect(() => {
     fetchApprovals();
-  }, [month, page, statusFilter]);
+  }, [month, page, pageSize, statusFilter]);
 
   const handleApprove = async (id, { notes } = {}) => {
     try {
@@ -457,30 +459,18 @@ const PayrollApprovals = () => {
         )}
 
         {/* Table Footer with Pagination */}
-        <div className="approvals-table-footer">
-          <span className="footer-count">
-            Showing {filteredApprovals.length} of {total} total records
-          </span>
-          <div className="pagination-controls">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="page-btn"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="page-indicator">Page {page}</span>
-            <button
-              type="button"
-              disabled={page * limit >= total}
-              onClick={() => setPage((p) => p + 1)}
-              className="page-btn"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
+        <DataPagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          pageCount={Math.ceil(total / pageSize) || 1}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+          itemLabel="approval requests"
+        />
       </div>
 
       {/* Proof Modal */}

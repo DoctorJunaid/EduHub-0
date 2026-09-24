@@ -40,6 +40,7 @@ import ScheduledExams from "./ScheduledExams";
 import QuickExamModal from "./QuickExamModal";
 import ExamDetailsDialog from "./ExamDetailsDialog";
 import { checkCohortDailyExamLimit } from "./examData.js";
+import usePaginationParams from "@/hooks/usePaginationParams";
 import "../Timetable/ClassTimetable.css";
 import "./ExamSchedules.css";
 
@@ -107,8 +108,10 @@ export default function ExamSchedules() {
   const [view, setView] = useState("week");
   const [week, setWeek] = useState(() => mondayOf(new Date()));
   const [filters, setFilters] = useState(emptyFilters);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [educationType, setEducationType] = useState(() =>
     isSchool ? "School" : "College"
   );

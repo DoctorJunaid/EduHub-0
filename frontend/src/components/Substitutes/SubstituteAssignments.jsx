@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Search, Calendar as CalendarIcon, User, RefreshCw, X, Check, Clock3, CheckCircle2 } from "lucide-react";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import AssignSubstituteDialog from "./AssignSubstituteDialog";
+import DataPagination from "../shared/DataPagination";
+import usePaginationParams from "../../hooks/usePaginationParams";
 import "./SubstituteAssignments.css";
 
 const getTeacherName = (teacher) => {
@@ -21,6 +23,10 @@ const SubstituteAssignments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
 
   useEffect(() => {
     fetchAssignments();
@@ -65,20 +71,31 @@ const SubstituteAssignments = () => {
     }
   };
 
-  const visibleAssignments = assignments.filter((assignment) => {
+  const filteredAssignments = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const origTeacherName = getTeacherName(assignment.originalTeacherId);
-    const subTeacherName = getTeacherName(assignment.substituteTeacherId);
-    const matchesSearch = !query || [
-      assignment.className,
-      assignment.section,
-      assignment.subject,
-      assignment.reason,
-      origTeacherName,
-      subTeacherName,
-    ].some((value) => String(value || "").toLowerCase().includes(query));
-    return matchesSearch && (!statusFilter || assignment.status === statusFilter);
-  });
+    return assignments.filter((assignment) => {
+      const origTeacherName = getTeacherName(assignment.originalTeacherId);
+      const subTeacherName = getTeacherName(assignment.substituteTeacherId);
+      const matchesSearch = !query || [
+        assignment.className,
+        assignment.section,
+        assignment.subject,
+        assignment.reason,
+        origTeacherName,
+        subTeacherName,
+      ].some((value) => String(value || "").toLowerCase().includes(query));
+      return matchesSearch && (!statusFilter || assignment.status === statusFilter);
+    });
+  }, [assignments, search, statusFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredAssignments.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const paginatedAssignments = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredAssignments.slice(start, start + pageSize);
+  }, [filteredAssignments, currentPage, pageSize]);
+
+  const visibleAssignments = paginatedAssignments;
 
   const counts = assignments.reduce((summary, assignment) => {
     summary.total += 1;
@@ -263,6 +280,18 @@ const SubstituteAssignments = () => {
             </tbody>
           </table>
         </div>
+        <DataPagination
+          page={currentPage}
+          pageSize={pageSize}
+          total={filteredAssignments.length}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+          itemLabel="substitute assignments"
+        />
       </div>
     </div>
   );

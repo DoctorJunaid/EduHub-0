@@ -4,7 +4,8 @@ import { CircleCheck, CircleX, Download, Percent, Plus, Search, Users, CheckChec
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import Pagination from '@/components/common/Pagination';
+import DataPagination from '@/components/shared/DataPagination';
+import { usePaginationParams } from '@/hooks/usePaginationParams';
 import AttendanceDateNavigator from '@/components/common/AttendanceDateNavigator';
 import { selectStudents, fetchStudents } from '@/store/Slices/studentsSlice.js';
 import { selectTimetable, fetchSchedules } from '@/store/Slices/timetableSlice.js';
@@ -37,8 +38,10 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
   const [date, setDate] = useState(() => dateKey(new Date()));
   const [view, setView] = useState('daily');
   const [filters, setFilters] = useState(emptyFilters);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
   const [formOpen, setFormOpen] = useState(false);
   const [notice, setNotice] = useState('');
 
@@ -144,9 +147,10 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
 
   // Real Database Metrics
   const totalStudents = students.length;
-  const presentCount = rows.filter((r) => r.status === 'Present').length;
-  const absentCount = rows.filter((r) => r.status === 'Absent').length;
-  const rateDisplay = rows.length > 0 ? `${((presentCount / rows.length) * 100).toFixed(1)}%` : totalStudents > 0 ? '96.2%' : '0%';
+  const presentCount = rows.filter((r) => r.record?.status === 'Present' || r.status === 'Present').length;
+  const absentCount = rows.filter((r) => r.record?.status === 'Absent' || r.status === 'Absent').length;
+  const markedCount = rows.filter((r) => r.record?.status).length;
+  const rateDisplay = markedCount > 0 ? `${((presentCount / markedCount) * 100).toFixed(1)}%` : totalStudents > 0 ? '96.2%' : '0%';
 
   return (
     <section className="campus-tab-page student-attendance" aria-label="Student Attendance Management">
@@ -365,25 +369,16 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
           </TabsContent>
         </div>
 
-        {/* 4. Footer */}
-        <div className="campus-footer">
-          <div className="footer-info">
-            {notice && <span style={{ color: "#16a34a", marginRight: "12px", fontWeight: "600" }}>{notice}</span>}
-            Showing {rows.length ? pagination.start + 1 : 0} to {pagination.start + pagination.records.length} of {rows.length} sessions
-          </div>
-
-          <Pagination
-            total={rows.length}
-            page={pagination.currentPage}
-            pageSize={pageSize}
-            onPage={setPage}
-            onPageSize={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-            label="sessions"
-          />
-        </div>
+        {/* Standardized DataPagination */}
+        <DataPagination
+          page={pagination.currentPage}
+          pageSize={pageSize}
+          total={rows.length}
+          pageCount={pagination.pageCount}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="students"
+        />
       </Tabs>
 
       {/* Dialog */}

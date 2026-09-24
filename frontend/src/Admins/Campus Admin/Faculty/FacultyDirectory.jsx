@@ -38,6 +38,8 @@ import toast from "react-hot-toast";
 import FacultyForm from "./FacultyForm";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { useInstitution } from "@/context/InstitutionContext";
+import DataPagination from "@/components/shared/DataPagination";
+import { usePaginationParams } from "@/hooks/usePaginationParams";
 import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
@@ -77,8 +79,10 @@ export default function FacultyDirectory() {
     status: "",
   });
 
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
 
   const filtered = useMemo(() => filterFaculty(facultyRecords, filters), [facultyRecords, filters]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -352,39 +356,16 @@ export default function FacultyDirectory() {
         </Table>
       </div>
 
-      {/* 4. Frameless Footer */}
-      <div className="campus-footer">
-        <div className="footer-info">
-          Showing {displayed.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{" "}
-          {Math.min(currentPage * pageSize, filtered.length)} of {filtered.length} faculty members
-        </div>
-
-        <div className="footer-pagination">
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={currentPage === 1}
-            onClick={() => setPage(currentPage - 1)}
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={14} />
-          </button>
-
-          <span className="pagination-page">
-            {currentPage} of {pageCount}
-          </span>
-
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={currentPage === pageCount}
-            onClick={() => setPage(currentPage + 1)}
-            aria-label="Next page"
-          >
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      </div>
+      {/* Standardized DataPagination */}
+      <DataPagination
+        page={currentPage}
+        pageSize={pageSize}
+        total={filtered.length}
+        pageCount={pageCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel="teachers"
+      />
 
       {/* Dialogs */}
       {form && (

@@ -40,6 +40,8 @@ import toast from "react-hot-toast";
 import StudentForm from "./StudentForm";
 import StudentProfileDialog from "./StudentProfileDialog";
 import { useInstitution } from "@/context/InstitutionContext";
+import DataPagination from "@/components/shared/DataPagination";
+import { usePaginationParams } from "@/hooks/usePaginationParams";
 import "./StudentsDirectory.css";
 
 export default function StudentsDirectory() {
@@ -60,8 +62,10 @@ export default function StudentsDirectory() {
     semester: "",
     status: "",
   });
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
 
   const user = useSelector(selectCurrentUser);
   const realUserCampus =
@@ -404,46 +408,16 @@ export default function StudentsDirectory() {
         </Table>
       </div>
 
-      {/* 4. Frameless Footer */}
-      <div className="campus-footer">
-        <div className="campus-footer-info">
-          Showing <strong>{filtered.length ? result.start + 1 : 0}</strong> to{" "}
-          <strong>{result.start + result.records.length}</strong> of <strong>{filtered.length}</strong> students
-        </div>
-
-        <div className="campus-pagination">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={result.currentPage <= 1}
-            onClick={() => setPage(result.currentPage - 1)}
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={14} />
-          </Button>
-
-          {Array.from({ length: result.pageCount }, (_, i) => i + 1).map((num) => (
-            <button
-              key={num}
-              type="button"
-              className={`campus-page-btn ${num === result.currentPage ? "is-active" : ""}`}
-              onClick={() => setPage(num)}
-            >
-              {num}
-            </button>
-          ))}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={result.currentPage >= result.pageCount}
-            onClick={() => setPage(result.currentPage + 1)}
-            aria-label="Next page"
-          >
-            <ChevronRight size={14} />
-          </Button>
-        </div>
-      </div>
+      {/* Standardized DataPagination */}
+      <DataPagination
+        page={result.currentPage}
+        pageSize={pageSize}
+        total={filtered.length}
+        pageCount={result.pageCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel="students"
+      />
 
       {/* Modals & Dialogs */}
       {(modal?.mode === "add" || (modal?.mode === "edit" && selected)) && (
