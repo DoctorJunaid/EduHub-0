@@ -10,13 +10,14 @@ export default function FullPageFormShell({
   onBack,
   children,
   maxWidth = 1000,
+  className = "",
 }) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
   return (
-    <div className="full-page-activity">
+    <div className={`full-page-activity ${className}`.trim()}>
       <div className="activity-container" style={{ maxWidth: `${maxWidth}px` }}>
         {/* Top Header & Breadcrumbs */}
         <div className="activity-header">

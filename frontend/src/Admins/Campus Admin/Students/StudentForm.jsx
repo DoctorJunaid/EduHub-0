@@ -200,6 +200,8 @@ export default function StudentForm({
       parentName="Students Directory"
       icon={isSchool ? <School size={22} /> : <GraduationCap size={22} />}
       onBack={onClose}
+      maxWidth={1600}
+      className="student-form-page"
     >
       <form onSubmit={submit}>
         {hasStudentIdentityConflicts(records) && (
