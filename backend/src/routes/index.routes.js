@@ -39,7 +39,6 @@ router.use("/institute-admin", instituteAdminRoutes);
 // Optional existing tracks / services
 router.use("/inquiries", inquiryRoutes);
 router.use("/campus-admin", campusAdminRoutes);
-router.use("/campus/faculty", campusAdminRoutes);
 
 router.use("/academic", academicRoutes);
 

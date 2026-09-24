@@ -127,12 +127,6 @@ export async function listProfiles(campusId, { search = '', department = '', isA
           });
           existingTp = await TeacherProfile.findById(created._id).populate('user').lean();
         }
-        if (existingTp) {
-          await TeacherSalaryProfile.updateOne(
-            { _id: doc._id },
-            { $set: { teacherProfileId: existingTp._id } }
-          );
-        }
       }
 
       if (existingTp) {
@@ -235,20 +229,21 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
   }
 
   let salaryProfileDoc = null;
+  let teacher = null;
 
   if (mongoose.Types.ObjectId.isValid(String(targetId))) {
     salaryProfileDoc = await TeacherSalaryProfile.findOne({
       $or: [{ _id: targetId }, { teacherProfileId: targetId }],
     });
-  }
 
-  let teacher = null;
-  if (salaryProfileDoc) {
-    teacher = await TeacherProfile.findById(salaryProfileDoc.teacherProfileId).populate('user').lean();
-  }
+    if (salaryProfileDoc) {
+      teacher = await TeacherProfile.findById(salaryProfileDoc.teacherProfileId).populate('user').lean();
+    }
 
-  if (!teacher && mongoose.Types.ObjectId.isValid(String(targetId))) {
-    teacher = await TeacherProfile.findById(targetId).populate('user').lean();
+    if (!teacher) {
+      teacher = await TeacherProfile.findById(targetId).populate('user').lean();
+    }
+
     if (!teacher) {
       const userDoc = await User.findById(targetId).lean();
       if (userDoc) {
@@ -297,10 +292,16 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
     teacher = await TeacherProfile.findById(created._id).populate('user').lean();
   }
 
+  const teacherProfileId = teacher._id;
+
+  // Check if a salary profile already exists for this resolved teacher profile
+  if (!salaryProfileDoc) {
+    salaryProfileDoc = await TeacherSalaryProfile.findOne({ teacherProfileId });
+  }
+
   const payload = cleanPayload(rawPayload);
   validatePayload(payload);
 
-  const teacherProfileId = teacher._id;
   let targetCampusId = campusId || teacher.user?.campusId || teacher.campusId;
   if (!targetCampusId) {
     const anyCampus = await Campus.findOne().lean();
@@ -315,11 +316,14 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
     updateData.isActive = Boolean(rawPayload.isActive);
   }
 
+  const filter = salaryProfileDoc
+    ? { _id: salaryProfileDoc._id }
+    : { teacherProfileId };
+
   const profile = await TeacherSalaryProfile.findOneAndUpdate(
-    { teacherProfileId },
+    filter,
     {
-      $set: { ...updateData, campusId: targetCampusId },
-      $setOnInsert: { teacherProfileId },
+      $set: { ...updateData, campusId: targetCampusId, teacherProfileId },
     },
     { new: true, upsert: true, runValidators: true }
   ).populate(profilePopulation);
