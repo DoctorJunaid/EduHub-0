@@ -2,10 +2,8 @@ import { useId, useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,12 +37,21 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
     >
       <DialogContent
         aria-describedby={`${id}-description`}
-        className="w-[calc(100vw-2rem)] max-w-[680px] max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col p-0 rounded-2xl border border-zinc-200 shadow-2xl bg-white gap-0"
+        className="max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col rounded-2xl border border-zinc-200 shadow-2xl bg-white"
+        style={{
+          width: "calc(100vw - 2rem)",
+          maxWidth: "760px",
+          padding: 0,
+          gap: 0,
+        }}
         showCloseButton={false}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 px-6 py-5 sm:px-8 sm:py-6 border-b border-zinc-200 bg-white flex-shrink-0">
-          <div className="flex items-center gap-3.5">
+        <div
+          className="flex items-center justify-between border-b border-zinc-200 bg-white flex-shrink-0"
+          style={{ padding: "24px clamp(20px, 4vw, 32px)", gap: "16px" }}
+        >
+          <div className="flex items-center" style={{ gap: "14px" }}>
             <div className="size-11 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
               <CreditCard className="size-5 text-white" />
             </div>
@@ -54,25 +61,36 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
               </DialogTitle>
               <DialogDescription
                 id={`${id}-description`}
-                className="text-xs text-zinc-500 mt-1"
+                className="text-xs text-zinc-500"
+                style={{ marginTop: "4px" }}
               >
                 {voucher.voucherNo} &middot; {voucher.student?.name}
               </DialogDescription>
             </div>
           </div>
-          <button
+          <Button
             type="button"
             onClick={onClose}
             aria-label="Close record payment dialog"
-            className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+            variant="ghost"
+            size="icon-sm"
+            className="text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+            style={{ width: "32px", height: "32px", flexShrink: 0 }}
           >
             <span className="text-xl leading-none">&times;</span>
-          </button>
+          </Button>
         </div>
 
         {/* Amount Summary Ribbon */}
-        <div className="mx-6 mt-6 grid grid-cols-1 gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5 min-[480px]:grid-cols-3 sm:mx-8 sm:mt-7 sm:p-5 flex-shrink-0">
-          <div className="flex flex-col gap-1 min-w-0">
+        <div
+          className="grid grid-cols-1 rounded-xl border border-zinc-200 bg-zinc-50 min-[480px]:grid-cols-3 flex-shrink-0"
+          style={{
+            margin: "24px clamp(16px, 4vw, 32px) 0",
+            padding: "18px clamp(16px, 3vw, 20px)",
+            gap: "16px",
+          }}
+        >
+          <div className="flex flex-col min-w-0" style={{ gap: "4px" }}>
             <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
               Total Payable
             </span>
@@ -80,7 +98,10 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
               {formatPKR(effectiveTotal)}
             </span>
           </div>
-          <div className="flex flex-col gap-1 min-w-0 min-[480px]:border-l min-[480px]:border-zinc-200 min-[480px]:pl-5">
+          <div
+            className="flex flex-col min-w-0 min-[480px]:border-l min-[480px]:border-zinc-200"
+            style={{ gap: "4px" }}
+          >
             <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
               Already Paid
             </span>
@@ -88,7 +109,10 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
               {formatPKR(voucher.paidAmount || 0)}
             </span>
           </div>
-          <div className="flex flex-col gap-1 min-w-0 min-[480px]:items-end min-[480px]:border-l min-[480px]:border-zinc-200 min-[480px]:pl-5">
+          <div
+            className="flex flex-col min-w-0 min-[480px]:items-end min-[480px]:border-l min-[480px]:border-zinc-200"
+            style={{ gap: "4px" }}
+          >
             <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
               Remaining
             </span>
@@ -128,9 +152,15 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
           }}
           className="flex flex-col flex-1 min-h-0 overflow-hidden m-0"
         >
-          <div className="px-6 py-7 space-y-6 overflow-y-auto flex-1 min-h-0 sm:px-8 sm:py-8">
-            <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-              <div className="space-y-2">
+          <div
+            className="overflow-y-auto flex-1 min-h-0"
+            style={{ padding: "24px clamp(20px, 4vw, 32px)" }}
+          >
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2"
+              style={{ columnGap: "24px", rowGap: "24px" }}
+            >
+              <div className="flex flex-col" style={{ gap: "8px" }}>
                 <Label
                   htmlFor={`${id}-amount`}
                   className="text-xs font-semibold text-zinc-700"
@@ -144,7 +174,8 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                   max={remaining}
                   min={1}
                   value={amount}
-                  className="h-10 text-sm px-3.5 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="text-sm rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ height: "42px", padding: "0 14px" }}
                   onChange={(event) => {
                     setAmount(event.target.value);
                     setError("");
@@ -152,7 +183,7 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col" style={{ gap: "8px" }}>
                 <Label
                   htmlFor={`${id}-date`}
                   className="text-xs font-semibold text-zinc-700"
@@ -164,7 +195,8 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                   type="date"
                   required
                   value={paymentDate}
-                  className="h-10 text-sm px-3.5 rounded-lg"
+                  className="text-sm rounded-lg"
+                  style={{ height: "42px", padding: "0 14px" }}
                   onChange={(event) => {
                     setPaymentDate(event.target.value);
                     setError("");
@@ -172,7 +204,7 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col" style={{ gap: "8px" }}>
                 <Label
                   htmlFor={`${id}-method`}
                   className="text-xs font-semibold text-zinc-700"
@@ -183,7 +215,8 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                   id={`${id}-method`}
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="h-10 w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+                  className="w-full min-w-0 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-900 shadow-2xs outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+                  style={{ height: "42px", padding: "0 14px" }}
                 >
                   <option value="Cash">Cash</option>
                   <option value="Bank Transfer">Bank Transfer</option>
@@ -192,7 +225,7 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                 </select>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col" style={{ gap: "8px" }}>
                 <Label
                   htmlFor={`${id}-ref`}
                   className="text-xs font-semibold text-zinc-700"
@@ -204,13 +237,17 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                   type="text"
                   placeholder="e.g. TR-98214"
                   value={referenceNo}
-                  className="h-10 text-sm px-3.5 rounded-lg"
+                  className="text-sm rounded-lg"
+                  style={{ height: "42px", padding: "0 14px" }}
                   onChange={(event) => setReferenceNo(event.target.value)}
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div
+              className="flex flex-col"
+              style={{ gap: "8px", marginTop: "24px" }}
+            >
               <Label
                 htmlFor={`${id}-notes`}
                 className="text-xs font-semibold text-zinc-700"
@@ -222,7 +259,8 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
                 type="text"
                 placeholder="Additional details or remarks"
                 value={notes}
-                className="h-10 text-sm px-3.5 rounded-lg"
+                className="text-sm rounded-lg"
+                style={{ height: "42px", padding: "0 14px" }}
                 onChange={(event) => setNotes(event.target.value)}
               />
             </div>
@@ -230,29 +268,39 @@ export default function RecordPaymentDialog({ voucher, onConfirm, onClose }) {
             {error && (
               <p
                 role="alert"
-                className="text-xs font-medium text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-200"
+                className="text-xs font-medium text-rose-600 bg-rose-50 rounded-xl border border-rose-200"
+                style={{ marginTop: "20px", padding: "12px" }}
               >
                 {error}
               </p>
             )}
           </div>
 
-          <div className="flex flex-col-reverse items-stretch justify-end gap-3 border-t border-zinc-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:px-8 sm:py-6 sm:gap-4 flex-shrink-0">
-            <button
+          <div
+            className="flex flex-col-reverse items-stretch justify-end border-t border-zinc-200 bg-white sm:flex-row sm:items-center flex-shrink-0"
+            style={{
+              padding: "20px clamp(20px, 4vw, 32px)",
+              gap: "12px",
+            }}
+          >
+            <Button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="h-11 w-full px-6 rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 text-sm font-semibold transition-colors cursor-pointer sm:w-auto"
+              variant="outline"
+              className="w-full text-sm font-semibold sm:w-auto"
+              style={{ height: "44px", padding: "0 24px" }}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full px-7 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer sm:w-auto"
+              className="w-full text-sm font-semibold sm:w-auto"
+              style={{ height: "44px", padding: "0 28px" }}
             >
               {loading ? "Recording..." : "Confirm Payment"}
-            </button>
+            </Button>
           </div>
         </form>
       </DialogContent>
