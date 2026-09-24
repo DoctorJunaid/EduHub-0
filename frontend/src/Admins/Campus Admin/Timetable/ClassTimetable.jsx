@@ -958,10 +958,7 @@ export default function ClassTimetable() {
                 page={page}
                 pageSize={pageSize}
                 onPage={setPage}
-                onPageSize={(size) => {
-                  setPageSize(size);
-                  setPage(1);
-                }}
+                onPageSize={setPageSize}
                 onAction={onAction}
               />
             </div>
