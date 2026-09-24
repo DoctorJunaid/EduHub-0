@@ -61,18 +61,6 @@ export default function StudentProfileDialog({ student, onClose }) {
         </div>
 
         <Tabs defaultValue="academic" className="w-full">
-          <TabsList className="student-profile-tabs-list !gap-2 !bg-transparent !p-0">
-            <TabsTrigger
-              value="academic"
-              className="h-10 flex-none rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-600 shadow-sm data-[state=active]:border-zinc-900 data-[state=active]:bg-zinc-900 data-[state=active]:text-white"
-            >
-              Academic Profile
-            </TabsTrigger>
-            <TabsTrigger
-              value="financial"
-              className="h-10 flex-none rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-600 shadow-sm data-[state=active]:border-zinc-900 data-[state=active]:bg-zinc-900 data-[state=active]:text-white"
-            >
-              Financial Record
           <TabsList className="student-profile-tabs-list inline-flex h-11 items-center gap-1.5 rounded-xl border border-zinc-200/90 bg-zinc-100/90 p-1 shadow-xs">
             <TabsTrigger
               value="academic"
