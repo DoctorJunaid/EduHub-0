@@ -43,16 +43,14 @@ export const getCampusStudents = async (req, res) => {
       .select("-passwordHash")
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const formatted = students.map((s) => {
-      const obj = s.toObject ? s.toObject() : { ...s };
-      return {
-        ...obj,
-        campus: obj.campusId?.name || obj.campus || "",
-        institute: obj.instituteId?.name || obj.institute || "",
-      };
-    });
+    const formatted = students.map((s) => ({
+      ...s,
+      campus: s.campusId?.name || s.campus || "",
+      institute: s.instituteId?.name || s.institute || "",
+    }));
 
     return res.status(200).json({
       success: true,
@@ -372,16 +370,14 @@ export const getCampusFaculty = async (req, res) => {
       .select("-passwordHash")
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const formatted = faculty.map((f) => {
-      const obj = f.toObject ? f.toObject() : { ...f };
-      return {
-        ...obj,
-        campus: obj.campusId?.name || obj.campus || "",
-        institute: obj.instituteId?.name || obj.institute || "",
-      };
-    });
+    const formatted = faculty.map((f) => ({
+      ...f,
+      campus: f.campusId?.name || f.campus || "",
+      institute: f.instituteId?.name || f.institute || "",
+    }));
 
     return res
       .status(200)

@@ -96,3 +96,5 @@ monthlyPayrollSchema.index({ teacherProfileId: 1, month: 1 }, { unique: true });
 export const MonthlyPayroll =
   mongoose.models.MonthlyPayroll ||
   mongoose.model("MonthlyPayroll", monthlyPayrollSchema);
+
+export default MonthlyPayroll;

@@ -174,7 +174,7 @@ const SubstituteAssignments = () => {
       </div>
 
       <div className="campus-table-container substitutes-table-wrap">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto flex-1">
           <table className="substitutes-table">
             <thead>
               <tr className="bg-gray-800/50 border-b border-gray-700/50">

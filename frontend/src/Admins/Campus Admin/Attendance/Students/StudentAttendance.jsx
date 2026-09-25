@@ -214,7 +214,7 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
           setNotice('');
           if (val === 'daily') setFilters((prev) => ({ ...prev, studentId: '', from: '', to: '' }));
         }}
-        style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+        style={{ width: '100%', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
       >
         <div className="campus-toolbar">
           <div className="toolbar-left">
@@ -356,8 +356,8 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
         )}
 
         {/* 3. Frameless Table View */}
-        <div style={{ width: '100%', background: '#ffffff' }}>
-          <TabsContent value={view} style={{ margin: 0, padding: 0 }}>
+        <div style={{ width: '100%', background: '#ffffff', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <TabsContent value={view} style={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             <div className="campus-table-container">
               <StudentAttendanceTable
                 rows={rows}

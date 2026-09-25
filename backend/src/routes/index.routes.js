@@ -54,10 +54,14 @@ router.use("/campus/substitutes", substituteRoutes);
 router.use("/campus/salary/profiles", salaryProfileRoutes);
 router.use("/campus/salary/payroll", payrollRoutes);
 router.use("/campus/salary/approvals", attendanceApprovalRoutes);
+import teacherProfileRoutes from "./teacherProfile.routes.js";
 router.use("/campus/salary/policy", salaryPolicyRoutes);
 router.use("/campus/class-sessions", classSessionRoutes);
 router.use("/teacher/class-sessions", classSessionRoutes);
 import seedRoutes from "./seed.routes.js";
+
+router.use("/campus/teachers", teacherProfileRoutes);
+router.use("/campus-admin/teachers", teacherProfileRoutes);
 
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);

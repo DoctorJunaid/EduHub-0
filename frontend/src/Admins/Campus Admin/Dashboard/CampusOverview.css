@@ -140,13 +140,17 @@
   width: 100%;
   gap: 0;
   background: #ffffff;
-  min-height: auto;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
 }
 
 .campus-table-panel {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -376,6 +380,8 @@
 .campus-operations-hub {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  height: 100%;
   background: #ffffff;
   border: none;
   border-radius: 0;
@@ -513,7 +519,9 @@
 .hub-table-wrapper {
   overflow: hidden;
   width: 100%;
-  min-height: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .hub-table-wrapper table {

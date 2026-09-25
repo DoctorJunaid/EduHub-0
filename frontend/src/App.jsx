@@ -25,6 +25,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import CampusOverview from "./Admins/Campus Admin/Dashboard/CampusOverview";
 import FacultyDirectory from "./Admins/Campus Admin/Faculty/FacultyDirectory";
+import TeacherProfile from "./pages/TeacherProfile";
 import StudentsDirectory from "./Admins/Campus Admin/Students/StudentsDirectory";
 import ClassTimetable from "./Admins/Campus Admin/Timetable/ClassTimetable";
 import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
@@ -163,12 +164,24 @@ const App = () => {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={["campus_admin", "campus_manager"]} />
+            <ProtectedRoute
+              allowedRoles={[
+                "campus_admin",
+                "campus_manager",
+                "institute_admin",
+                "principal",
+                "super_admin",
+              ]}
+            />
           }
         >
           <Route element={<MainLayout />}>
             <Route path="dashboard" element={<CampusOverview />} />
             <Route path="faculty" element={<FacultyDirectory />} />
+            <Route path="faculty/:teacherId" element={<TeacherProfile />} />
+            <Route path="teachers/:teacherId" element={<TeacherProfile />} />
+            <Route path="teacher/:teacherId" element={<TeacherProfile />} />
+            <Route path="faculty-profile/:teacherId" element={<TeacherProfile />} />
             <Route path="students" element={<StudentsDirectory />} />
             <Route path="timetable" element={<ClassTimetable />} />
             <Route path="exams" element={<ExamSchedules />} />
