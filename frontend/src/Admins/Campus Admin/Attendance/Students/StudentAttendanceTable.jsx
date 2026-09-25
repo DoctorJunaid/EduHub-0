@@ -1,26 +1,22 @@
-import { ChevronDown, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MapPin } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableHeader, TableHead, TableBody, TableCell, TableRow } from '@/components/ui/Table';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import AttendanceStatusBadge from '@/components/common/AttendanceStatusBadge';
-import { attendanceStatuses } from '@/lib/attendance';
 import { timeLabel } from '@/lib/schedule';
 import { paginateStudents } from '../../Students/studentData.js';
 import { studentAttendanceKey } from './studentAttendanceData.js';
 import { useInstitution } from '@/context/InstitutionContext';
 
-export default function StudentAttendanceTable({ rows, page, pageSize, onMark }) {
+export default function StudentAttendanceTable({ rows, page, pageSize }) {
   const { isSchool } = useInstitution();
   const visible = paginateStudents(rows, page, pageSize);
   const columnDefs = [
-    { label: '#', width: '4%', align: 'left' },
-    { label: 'Student & Roll No.', width: '23%', align: 'left' },
-    { label: isSchool ? 'Class & Section' : 'Program / Section', width: '16%', align: 'left' },
-    { label: isSchool ? 'Subject & Period' : 'Subject & Class', width: '18%', align: 'left' },
-    { label: 'Date & Time', width: '14%', align: 'left' },
-    { label: 'Status', width: '11%', align: 'center' },
-    { label: 'Actions', width: '14%', align: 'right' },
+    { label: '#', width: '5%', align: 'left' },
+    { label: 'Student & Roll No.', width: '25%', align: 'left' },
+    { label: isSchool ? 'Class & Section' : 'Program / Section', width: '17%', align: 'left' },
+    { label: isSchool ? 'Subject & Period' : 'Subject & Class', width: '19%', align: 'left' },
+    { label: 'Date & Time', width: '16%', align: 'left' },
+    { label: 'Status', width: '18%', align: 'center' },
   ];
 
   return (
@@ -82,39 +78,14 @@ export default function StudentAttendanceTable({ rows, page, pageSize, onMark })
                 </small>
               </TableCell>
               <TableCell style={{ width: '11%', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                <AttendanceStatusBadge status={record?.status} />
-              </TableCell>
-              <TableCell style={{ width: '14%', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="student-attendance-action"
-                      aria-label={`Change attendance for ${student.name}, ${session.subject}, ${date}`}
-                    >
-                      {record?.status === 'Present' ? 'Mark Absent' : record ? 'Mark Present' : 'Set Status'}
-                      <ChevronDown size={13} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" aria-label="Attendance status">
-                    {attendanceStatuses.map((status) => (
-                      <DropdownMenuItem
-                        key={status}
-                        disabled={record?.status === status}
-                        onSelect={() => onMark(row, status)}
-                      >
-                        Mark {status}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <AttendanceStatusBadge status={record?.status} emptyLabel="Not Taken" />
               </TableCell>
             </TableRow>
           );
         })}
         {!visible.records.length && (
           <TableRow>
-            <TableCell colSpan={7} className="tt-empty">
+            <TableCell colSpan={6} className="tt-empty">
               {isSchool ? "No student attendance records match this date and filters." : "No student attendance sessions match this date and filters."}
             </TableCell>
           </TableRow>
