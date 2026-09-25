@@ -467,10 +467,23 @@ export default function ClassTimetable() {
         // Update parent routine to remove this day
         await dispatch(
           updateSchedule({
-            ...record,
             id: record._id || record.id,
             days: remainingDays,
             dayOfWeek: WEEKDAY_NAMES[remainingDays[0] - 1] || "Monday",
+            startTime: record.startTime,
+            endTime: record.endTime,
+            program: record.program || (record.gradeId?.name) || selectedClass,
+            section: record.section || (record.sectionId?.name) || selectedSection,
+            subject: record.subject || (record.subjectId?.name),
+            instructor: record.instructor || record.teacherName || (record.teacherId?.name),
+            room: record.room || record.roomNumber,
+            isBreak: Boolean(record.isBreak),
+            status: record.status || "Active",
+            gradeId: record.gradeId?._id || record.gradeId,
+            sectionId: record.sectionId?._id || record.sectionId,
+            subjectId: record.subjectId?._id || record.subjectId,
+            teacherId: record.teacherId?._id || record.teacherId,
+            campusId: record.campusId?._id || record.campusId,
           })
         ).unwrap();
 
@@ -523,20 +536,29 @@ export default function ClassTimetable() {
     );
 
     // 5. Fire API call asynchronously in background
+    // NOTE: Only send primitive fields — NOT the full populated record (gradeId, sectionId, teacherId
+    // objects nested in the record will bloat the payload and get rejected by the 50kb body limit on Vercel).
     try {
       await dispatch(
         updateSchedule({
-          ...record,
           id: record._id || record.id,
           days: newDays,
           dayOfWeek: primaryDayName,
           startTime: targetStartTime,
           endTime: resolvedEndTime,
-          program: record.program || selectedClass,
-          section: record.section || selectedSection,
-          subject: record.subject,
-          instructor: record.instructor || record.teacherName,
+          program: record.program || (record.gradeId?.name) || selectedClass,
+          section: record.section || (record.sectionId?.name) || selectedSection,
+          subject: record.subject || (record.subjectId?.name),
+          instructor: record.instructor || record.teacherName || (record.teacherId?.name),
           room: record.room || record.roomNumber,
+          isBreak: Boolean(record.isBreak),
+          institutionType: educationType,
+          status: record.status || "Active",
+          gradeId: record.gradeId?._id || record.gradeId,
+          sectionId: record.sectionId?._id || record.sectionId,
+          subjectId: record.subjectId?._id || record.subjectId,
+          teacherId: record.teacherId?._id || record.teacherId,
+          campusId: record.campusId?._id || record.campusId,
         })
       ).unwrap();
 
