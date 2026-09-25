@@ -19,6 +19,8 @@ import { selectCurrentRole } from "../store/Slices/authSlice";
 import ApprovalProofDialog from "../components/Payroll/ApprovalProofDialog";
 import DataPagination from "../components/shared/DataPagination";
 import usePaginationParams from "../hooks/usePaginationParams";
+import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import "./PayrollApprovals.css";
 
 const PayrollApprovals = () => {
@@ -217,10 +219,11 @@ const PayrollApprovals = () => {
           <button
             type="button"
             onClick={fetchApprovals}
+            disabled={loading}
             className="refresh-btn"
             title="Refresh list"
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            {loading ? <Spinner className="size-4" /> : <RefreshCw size={16} />}
           </button>
         </div>
       </div>
@@ -259,11 +262,15 @@ const PayrollApprovals = () => {
       </div>
 
       {/* Main Table Section */}
-      <div className="approvals-table-container">
-        {loading ? (
-          <div className="table-loading-state">
-            <div className="loading-spinner" />
-            <p>Loading verifiable proof records...</p>
+      <div className="approvals-table-container relative">
+        {loading && approvals.length > 0 && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center z-10">
+            <Spinner className="size-6 text-primary" />
+          </div>
+        )}
+        {loading && approvals.length === 0 ? (
+          <div className="p-4">
+            <TableSkeleton rows={5} columns={7} />
           </div>
         ) : filteredApprovals.length === 0 ? (
           <div className="table-empty-state">

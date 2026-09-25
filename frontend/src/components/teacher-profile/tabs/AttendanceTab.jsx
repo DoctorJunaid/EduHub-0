@@ -18,7 +18,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/Table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/ui/spinner";
 import DataPagination from "@/components/shared/DataPagination";
 
 export default function AttendanceTab({
@@ -35,17 +35,7 @@ export default function AttendanceTab({
   }, [onLoadAttendance, daysWindow]);
 
   if (loading && !attendanceData) {
-    return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Skeleton className="h-20 rounded-xl" />
-          <Skeleton className="h-20 rounded-xl" />
-          <Skeleton className="h-20 rounded-xl" />
-          <Skeleton className="h-20 rounded-xl" />
-        </div>
-        <Skeleton className="h-64 w-full rounded-2xl" />
-      </div>
-    );
+    return <PageLoader text="Loading attendance records..." />;
   }
 
   const summary = attendanceData?.summary || {

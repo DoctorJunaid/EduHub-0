@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function ConfirmTypedDialog({
   isOpen,
@@ -102,7 +103,8 @@ export default function ConfirmTypedDialog({
                 : "bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
             }`}
           >
-            {loading ? "Executing..." : confirmButtonText}
+            {loading && <Spinner className="mr-2 size-4 text-white" />}
+            {confirmButtonText}
           </button>
         </div>
       </div>

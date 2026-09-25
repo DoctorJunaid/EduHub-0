@@ -4,6 +4,8 @@ import { selectAuth } from "../../store/Slices/authSlice";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import { Lock, Edit2, RotateCcw, Save } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import PageLoader from "@/components/shared/PageLoader";
 
 const GeneralSettingsTab = () => {
   const { user } = useSelector(selectAuth);
@@ -115,7 +117,7 @@ const GeneralSettingsTab = () => {
     return <Lock className="text-gray-400 w-4 h-4 ml-2" title="Default Setting" />;
   };
 
-  if (loading) return <div className="p-8 text-center text-white">Loading settings...</div>;
+  if (loading) return <PageLoader message="Loading settings..." />;
 
   return (
     <div className="settings-tab-content space-y-8 animate-fadeIn">
@@ -123,10 +125,10 @@ const GeneralSettingsTab = () => {
         <div className="flex justify-end mb-4">
           <button
             onClick={handleReset}
-            className="flex items-center px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
+            className="flex items-center px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             disabled={saving}
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
+            {saving ? <Spinner className="w-4 h-4 mr-2" /> : <RotateCcw className="w-4 h-4 mr-2" />}
             Reset Defaults
           </button>
         </div>
@@ -285,8 +287,8 @@ const GeneralSettingsTab = () => {
             disabled={saving}
             className="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            <Save className="w-5 h-5 mr-2" />
-            {saving ? "Saving..." : "Save Settings"}
+            {saving ? <Spinner className="w-5 h-5 mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+            Save Settings
           </button>
         </div>
       </form>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Banknote, CreditCard, FileText, Receipt, ShieldCheck, Wallet } from 'lucide-react';
 import { getMySalaryProfile } from '../api/salaryProfile.api';
+import PageLoader from '@/components/shared/PageLoader';
 import './SalaryProfiles.css';
 
 const formatPKR = (amount) => `PKR ${Number(amount || 0).toLocaleString('en-PK')}`;
@@ -30,11 +31,7 @@ export default function MySalary() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="salary-profiles-page campus-tab-page salary-profiles-state">
-        Loading salary profile...
-      </div>
-    );
+    return <PageLoader message="Loading salary profile..." />;
   }
 
   if (error || !profile) {

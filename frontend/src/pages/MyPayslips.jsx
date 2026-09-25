@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import { toast } from "react-hot-toast";
 import "./MyPayslips.css";
 
@@ -40,9 +41,7 @@ export default function MyPayslips() {
       </div>
       <div className="overflow-x-auto glass-panel p-4 rounded-xl">
         {loading ? (
-          <div className="teacher-payslips-muted text-center py-8">
-            Loading payslips...
-          </div>
+          <TableSkeleton rows={5} columns={5} />
         ) : (
           <table className="teacher-payslips-table min-w-full text-left">
             <thead className="teacher-payslips-thead">

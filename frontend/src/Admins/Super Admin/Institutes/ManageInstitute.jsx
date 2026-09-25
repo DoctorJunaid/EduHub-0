@@ -4,7 +4,8 @@ import { useDispatch } from "react-redux";
 import { updateInstitute } from "@/store/Slices/institutesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
-import { Building2, User, MapPin, Loader2, Save, Plus, RefreshCw, Pencil, Send, Copy, Check } from "lucide-react";
+import { Building2, User, MapPin, Save, Plus, RefreshCw, Pencil, Send, Copy, Check } from "lucide-react";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/Input";
 
 const selectStyle = {
@@ -322,8 +323,8 @@ export default function ManageInstitute({ institute, onClose }) {
               disabled={savingDetails}
               style={{ display: "flex", alignItems: "center", gap: "6px", height: "36px", padding: "0 20px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "14px", cursor: "pointer", opacity: savingDetails ? 0.7 : 1 }}
             >
-              {savingDetails ? <Loader2 size={14} className="spin" /> : <Save size={14} />}
-              {savingDetails ? "Saving..." : "Save Changes"}
+              {savingDetails ? <Spinner className="size-3.5 text-white" /> : <Save size={14} />}
+              Save Changes
             </button>
           </div>
         </div>
@@ -333,8 +334,8 @@ export default function ManageInstitute({ institute, onClose }) {
       {activeTab === TAB_ADMIN && (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {adminLoading ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#71717a", padding: "16px 0" }}>
-              <Loader2 size={16} /> Loading admin info...
+            <div style={{ padding: "16px 0" }}>
+              <SpinnerCustom text="Loading admin info..." size="default" />
             </div>
           ) : adminInfo ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -361,8 +362,8 @@ export default function ManageInstitute({ institute, onClose }) {
                   disabled={resendingAdminEmail}
                   style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: resendingAdminEmail ? 0.7 : 1 }}
                 >
-                  {resendingAdminEmail ? <Loader2 size={13} className="spin" /> : <Send size={13} />}
-                  {resendingAdminEmail ? "Sending..." : "Resend Setup Email"}
+                  {resendingAdminEmail ? <Spinner className="size-3 text-white" /> : <Send size={13} />}
+                  Resend Setup Email
                 </button>
 
                 <button
@@ -437,8 +438,8 @@ export default function ManageInstitute({ institute, onClose }) {
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                     <button type="button" onClick={() => setIsEditingAdmin(false)} style={{ height: "32px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}>Cancel</button>
                     <button type="submit" disabled={savingAdmin} style={{ display: "flex", alignItems: "center", gap: "6px", height: "32px", padding: "0 14px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "12px", cursor: "pointer", opacity: savingAdmin ? 0.7 : 1 }}>
-                      {savingAdmin ? <Loader2 size={12} className="spin" /> : <Save size={12} />}
-                      {savingAdmin ? "Saving..." : "Save Admin Profile"}
+                      {savingAdmin ? <Spinner className="size-3 text-white" /> : <Save size={12} />}
+                      Save Admin Profile
                     </button>
                   </div>
                 </form>
@@ -479,8 +480,8 @@ export default function ManageInstitute({ institute, onClose }) {
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                 <button onClick={() => setShowAssignForm(false)} style={{ height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>Cancel</button>
                 <button onClick={assignAdmin} disabled={assigning} style={{ display: "flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: assigning ? 0.7 : 1 }}>
-                  {assigning ? <Loader2 size={13} /> : <User size={13} />}
-                  {assigning ? "Assigning..." : "Assign Admin"}
+                  {assigning ? <Spinner className="size-3 text-white" /> : <User size={13} />}
+                  Assign Admin
                 </button>
               </div>
             </div>
@@ -527,16 +528,16 @@ export default function ManageInstitute({ institute, onClose }) {
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                 <button onClick={() => setShowCampusForm(false)} style={{ height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>Cancel</button>
                 <button onClick={addCampus} disabled={addingCampus} style={{ display: "flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: addingCampus ? 0.7 : 1 }}>
-                  {addingCampus ? <Loader2 size={13} /> : <Plus size={13} />}
-                  {addingCampus ? "Adding..." : "Add Campus"}
+                  {addingCampus ? <Spinner className="size-3 text-white" /> : <Plus size={13} />}
+                  Add Campus
                 </button>
               </div>
             </div>
           )}
 
           {campusLoading ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#71717a", padding: "16px 0" }}>
-              <Loader2 size={16} /> Loading campuses...
+            <div style={{ padding: "16px 0" }}>
+              <SpinnerCustom text="Loading campuses..." size="default" />
             </div>
           ) : campuses.length === 0 ? (
             <div style={{ padding: "24px", background: "#fafafa", borderRadius: "10px", border: "1px dashed #e4e4e7", color: "#71717a", fontSize: "13px", textAlign: "center" }}>

@@ -14,6 +14,7 @@ import {
   Calendar,
   MessageSquare,
 } from "lucide-react";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import {
   getSalaryReviewCenter,
   reviewAdjustment,
@@ -215,7 +216,7 @@ export default function SalaryReviewCenter() {
             disabled={loading}
             className="rounded-xl text-xs flex items-center gap-1.5"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            {loading ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
             Sync
           </Button>
         </div>
@@ -338,8 +339,7 @@ export default function SalaryReviewCenter() {
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 text-xs">
-            <RefreshCw className="animate-spin inline-block mr-2" size={16} />
-            Loading salary adjustment items...
+            <SpinnerCustom text="Loading salary adjustment items..." size="lg" className="flex-col gap-2" />
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-xs">

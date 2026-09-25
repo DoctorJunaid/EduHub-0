@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Spinner } from "@/components/ui/spinner";
 import Progress from "@/components/common/Progress";
 import DataPagination from "@/components/shared/DataPagination";
 import usePaginationParams from "@/hooks/usePaginationParams";
@@ -542,7 +543,11 @@ export default function FeeManagement() {
                 className="toolbar-btn toolbar-btn-outline"
                 title="Refresh Ledger"
               >
-                <RefreshCw size={13} className={ledgerStatus === "loading" ? "animate-spin" : ""} />
+                {ledgerStatus === "loading" ? (
+                  <Spinner className="size-3.5 mr-1 text-primary" />
+                ) : (
+                  <RefreshCw size={13} />
+                )}
                 Refresh
               </button>
               <button

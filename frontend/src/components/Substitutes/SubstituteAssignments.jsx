@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Search, Calendar as CalendarIcon, User, RefreshCw, X, Check, Clock3, CheckCircle2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "../shared/TableSkeleton";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import AssignSubstituteDialog from "./AssignSubstituteDialog";
@@ -173,7 +175,12 @@ const SubstituteAssignments = () => {
         <div className="toolbar-actions"><span className="substitutes-result-count">{visibleAssignments.length} shown</span></div>
       </div>
 
-      <div className="campus-table-container substitutes-table-wrap">
+      <div className="campus-table-container substitutes-table-wrap relative">
+        {loading && assignments.length > 0 && (
+          <div className="absolute inset-0 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-lg">
+            <Spinner className="size-6 text-primary" />
+          </div>
+        )}
         <div className="overflow-x-auto flex-1">
           <table className="substitutes-table">
             <thead>
@@ -187,11 +194,10 @@ const SubstituteAssignments = () => {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {loading && assignments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-gray-400">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
-                    Loading assignments...
+                  <td colSpan="6" className="p-0">
+                    <TableSkeleton rows={5} columns={6} />
                   </td>
                 </tr>
               ) : visibleAssignments.length === 0 ? (

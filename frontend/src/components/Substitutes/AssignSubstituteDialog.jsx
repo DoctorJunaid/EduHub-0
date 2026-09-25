@@ -5,11 +5,11 @@ import {
   CheckCircle2,
   Clock,
   GraduationCap,
-  Loader2,
   UserCheck,
   UserPlus,
   UsersRound,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
@@ -562,7 +562,7 @@ const AssignSubstituteDialog = ({
             <div className="activity-form-field substitute-candidates">
               {loadingSuggestions ? (
                 <p className="substitute-form-notice">
-                  <Loader2 size={16} className="animate-spin" /> Finding available
+                  <Spinner className="size-4 text-zinc-700" /> Finding available
                   teachers…
                 </p>
               ) : availableTeachers.length === 0 ? (
@@ -650,6 +650,7 @@ const AssignSubstituteDialog = ({
                 type="button"
                 className="activity-cancel-btn"
                 onClick={onClose}
+                disabled={submitting}
               >
                 Cancel
               </button>
@@ -659,11 +660,11 @@ const AssignSubstituteDialog = ({
                 disabled={submitting || !ready}
               >
                 {submitting ? (
-                  <Loader2 size={15} className="animate-spin" />
+                  <Spinner className="mr-2 size-4" />
                 ) : (
                   <UserPlus size={15} />
                 )}
-                {submitting ? "Assigning…" : "Assign Substitute"}
+                Assign Substitute
               </button>
             </div>
           </div>

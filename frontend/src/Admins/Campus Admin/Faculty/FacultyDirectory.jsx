@@ -31,6 +31,7 @@ import {
 } from "./facultyData";
 import {
   selectFaculty,
+  selectFacultyStatus,
   addFaculty,
   updateFaculty,
   deleteFaculty,
@@ -43,12 +44,16 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { useInstitution } from "@/context/InstitutionContext";
 import DataPagination from "@/components/shared/DataPagination";
 import { usePaginationParams } from "@/hooks/usePaginationParams";
+import TableSkeleton from "@/components/shared/TableSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isSchool } = useInstitution();
+  const status = useSelector(selectFacultyStatus);
+  const isLoading = status === "loading";
 
   useEffect(() => {
     dispatch(fetchFaculty());
@@ -66,6 +71,7 @@ export default function FacultyDirectory() {
   const [form, setForm] = useState(null);
   const [viewingTeacher, setViewingTeacher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const options = useMemo(() => {
     const campusList = [
@@ -252,7 +258,12 @@ export default function FacultyDirectory() {
       </div>
 
       {/* 3. Frameless Border-to-Border Fixed Table */}
-      <div className="campus-table-container">
+      <div className="campus-table-container relative">
+        {isLoading && facultyRecords.length > 0 && (
+          <div className="absolute inset-0 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-lg">
+            <Spinner className="size-6 text-primary" />
+          </div>
+        )}
         <Table className="campus-table">
           <TableHeader>
             <TableRow>
@@ -265,7 +276,13 @@ export default function FacultyDirectory() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayed.length > 0 ? (
+            {isLoading && facultyRecords.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="p-0">
+                  <TableSkeleton rows={6} columns={6} />
+                </TableCell>
+              </TableRow>
+            ) : displayed.length > 0 ? (
               displayed.map((teacher) => {
                 const statusText = teacher.status || "Active";
                 const statusKey = statusText.toLowerCase().includes("active") || statusText.toLowerCase().includes("full")
@@ -433,17 +450,23 @@ export default function FacultyDirectory() {
         description={`Are you sure you want to delete ${deleteTarget?.name ?? "this faculty member"}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
-        onCancel={() => setDeleteTarget(null)}
+        loading={isDeleting}
+        onCancel={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
         onConfirm={async () => {
           if (deleteTarget) {
             try {
+              setIsDeleting(true);
               await dispatch(deleteFaculty(deleteTarget.id || deleteTarget._id)).unwrap();
               toast.success(`${deleteTarget.name || "Faculty member"} removed successfully!`);
+              setDeleteTarget(null);
             } catch (err) {
               toast.error(typeof err === "string" ? err : "Failed to remove faculty member");
+            } finally {
+              setIsDeleting(false);
             }
           }
-          setDeleteTarget(null);
         }}
       />
     </section>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,7 @@ export default function UnassignClassDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next && !submitting) onClose(); }}>
       <DialogContent className="sm:max-w-[420px] bg-white text-zinc-900">
         <DialogHeader>
           <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-2">
@@ -65,14 +66,8 @@ export default function UnassignClassDialog({
             disabled={submitting}
             className="bg-rose-600 hover:bg-rose-700 text-white text-xs h-9"
           >
-            {submitting ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                Unassigning...
-              </>
-            ) : (
-              "Yes, Unassign"
-            )}
+            {submitting && <Spinner className="mr-2 size-4" />}
+            Yes, Unassign
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 
@@ -13,6 +15,9 @@ export default function AcademicsConfig() {
   const [sections, setSections] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [gradeSubjects, setGradeSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
   const [loadError, setLoadError] = useState("");
 
   // Form states
@@ -23,32 +28,37 @@ export default function AcademicsConfig() {
 
   const fetchData = async () => {
     setLoadError("");
-    const [gRes, secRes, subRes, gsRes] = await Promise.allSettled([
-        axiosInstance.get("/academic/grades", { timeout: 12000 }),
-        axiosInstance.get("/academic/sections", { timeout: 12000 }),
-        axiosInstance.get("/academic/subjects", { timeout: 12000 }),
-        axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
-    ]);
-    const failures = [];
-    const applyResult = (result, label, setter) => {
-      if (result.status === "fulfilled") {
-        setter(result.value.data);
-        return;
+    setLoading(true);
+    try {
+      const [gRes, secRes, subRes, gsRes] = await Promise.allSettled([
+          axiosInstance.get("/academic/grades", { timeout: 12000 }),
+          axiosInstance.get("/academic/sections", { timeout: 12000 }),
+          axiosInstance.get("/academic/subjects", { timeout: 12000 }),
+          axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
+      ]);
+      const failures = [];
+      const applyResult = (result, label, setter) => {
+        if (result.status === "fulfilled") {
+          setter(result.value.data);
+          return;
+        }
+        const reason = result.reason;
+        const detail = reason.code === "ECONNABORTED"
+          ? "request timed out"
+          : (reason.response?.data?.message || reason.message || "request failed");
+        failures.push(`${label}: ${detail}`);
+      };
+      applyResult(gRes, "Grades", setGrades);
+      applyResult(secRes, "Sections", setSections);
+      applyResult(subRes, "Subjects", setSubjects);
+      applyResult(gsRes, "Class subjects", setGradeSubjects);
+      if (failures.length) {
+        const message = `Some academic data could not be loaded. ${failures.join("; ")}`;
+        setLoadError(message);
+        toast.error(message);
       }
-      const reason = result.reason;
-      const detail = reason.code === "ECONNABORTED"
-        ? "request timed out"
-        : (reason.response?.data?.message || reason.message || "request failed");
-      failures.push(`${label}: ${detail}`);
-    };
-    applyResult(gRes, "Grades", setGrades);
-    applyResult(secRes, "Sections", setSections);
-    applyResult(subRes, "Subjects", setSubjects);
-    applyResult(gsRes, "Class subjects", setGradeSubjects);
-    if (failures.length) {
-      const message = `Some academic data could not be loaded. ${failures.join("; ")}`;
-      setLoadError(message);
-      toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,94 +69,118 @@ export default function AcademicsConfig() {
   const handleCreateGrade = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const res = await axiosInstance.post("/academic/grades", newGrade);
       setGrades([...grades, res.data]);
       setNewGrade({ name: "", description: "" });
       toast.success("Grade created successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create grade");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteGrade = async (id) => {
     if (!window.confirm("Delete this grade? This will also delete related sections and assignments.")) return;
     try {
+      setIsDeletingId(id);
       await axiosInstance.delete(`/academic/grades/${id}`);
       setGrades(grades.filter((g) => g._id !== id));
       setSections(sections.filter((s) => s.gradeId?._id !== id));
       toast.success("Grade deleted");
     } catch (err) {
       toast.error("Failed to delete grade");
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
   const handleCreateSection = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const res = await axiosInstance.post("/academic/sections", newSection);
       setSections([...sections, res.data]);
       setNewSection({ name: "", gradeId: "" });
       toast.success("Section created successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create section");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteSection = async (id) => {
     if (!window.confirm("Delete this section?")) return;
     try {
+      setIsDeletingId(id);
       await axiosInstance.delete(`/academic/sections/${id}`);
       setSections(sections.filter((s) => s._id !== id));
       toast.success("Section deleted");
     } catch (err) {
       toast.error("Failed to delete section");
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
   const handleCreateSubject = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const res = await axiosInstance.post("/academic/subjects", newSubject);
       setSubjects([...subjects, res.data]);
       setNewSubject({ name: "", code: "", description: "" });
       toast.success("Subject created successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create subject");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteSubject = async (id) => {
     if (!window.confirm("Delete this subject?")) return;
     try {
+      setIsDeletingId(id);
       await axiosInstance.delete(`/academic/subjects/${id}`);
       setSubjects(subjects.filter((s) => s._id !== id));
       setGradeSubjects(gradeSubjects.filter(gs => gs.subjectId?._id !== id));
       toast.success("Subject deleted");
     } catch (err) {
       toast.error("Failed to delete subject");
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
   const handleAssignSubject = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const res = await axiosInstance.post("/academic/grade-subjects", newGradeSubject);
       setGradeSubjects([...gradeSubjects, res.data]);
       setNewGradeSubject({ ...newGradeSubject, subjectId: "" });
       toast.success("Subject assigned to grade");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to assign subject");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleRemoveSubjectFromGrade = async (id) => {
     if (!window.confirm("Remove this subject from the grade?")) return;
     try {
+      setIsDeletingId(id);
       await axiosInstance.delete(`/academic/grade-subjects/${id}`);
       setGradeSubjects(gradeSubjects.filter((gs) => gs._id !== id));
       toast.success("Subject removed");
     } catch (err) {
       toast.error("Failed to remove subject");
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
@@ -196,7 +230,9 @@ export default function AcademicsConfig() {
                     className="h-10 rounded-lg border-zinc-200 bg-white px-3 text-sm placeholder:text-zinc-400 focus-visible:border-zinc-400 focus-visible:ring-2 focus-visible:ring-zinc-200"
                   />
                 </div>
-                <Button type="submit" className="h-10 w-full rounded-lg px-4 md:w-auto"><Plus className="w-4 h-4" /> Add Grade</Button>
+                <Button type="submit" disabled={isSubmitting || !newGrade.name} className="h-10 w-full rounded-lg px-4 md:w-auto">
+                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Add Grade
+                </Button>
               </form>
 
               <div className="overflow-x-auto rounded-xl border border-zinc-200">
@@ -209,15 +245,29 @@ export default function AcademicsConfig() {
                     </tr>
                   </thead>
                   <tbody>
-                    {grades.length === 0 ? (
+                    {loading && grades.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="p-0">
+                          <TableSkeleton rows={4} columns={3} />
+                        </td>
+                      </tr>
+                    ) : grades.length === 0 ? (
                       <tr><td colSpan={3} className="px-4 py-8 text-center text-sm text-zinc-500">No grades defined yet.</td></tr>
                     ) : grades.map((g) => (
                       <tr key={g._id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/70">
                         <td className="px-4 py-4 font-medium text-zinc-900">{g.name}</td>
                         <td className="px-4 py-4 text-zinc-600">{g.description || "-"}</td>
                         <td className="px-4 py-4 text-center">
-                          <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${g.name}`} onClick={() => handleDeleteGrade(g._id)} className="mx-auto size-8 rounded-full text-zinc-500 hover:bg-red-50 hover:text-red-600">
-                            <Trash2 className="w-4 h-4" />
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={isDeletingId === g._id}
+                            aria-label={`Delete ${g.name}`} 
+                            onClick={() => handleDeleteGrade(g._id)} 
+                            className="mx-auto size-8 rounded-full text-zinc-500 hover:bg-red-50 hover:text-red-600"
+                          >
+                            {isDeletingId === g._id ? <Spinner className="size-4 text-destructive" /> : <Trash2 className="w-4 h-4" />}
                           </Button>
                         </td>
                       </tr>
@@ -261,7 +311,9 @@ export default function AcademicsConfig() {
                     required
                   />
                 </div>
-                <Button type="submit" disabled={!grades.length}><Plus className="w-4 h-4 mr-2" /> Add Section</Button>
+                <Button type="submit" disabled={isSubmitting || !grades.length || !newSection.gradeId || !newSection.name}>
+                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Add Section
+                </Button>
               </form>
 
               <div className="rounded-md border">
@@ -274,15 +326,27 @@ export default function AcademicsConfig() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sections.length === 0 ? (
+                    {loading && sections.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="p-0">
+                          <TableSkeleton rows={4} columns={3} />
+                        </td>
+                      </tr>
+                    ) : sections.length === 0 ? (
                       <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">No sections defined yet.</td></tr>
                     ) : sections.map((s) => (
                       <tr key={s._id} className="border-b last:border-0">
                         <td className="px-4 py-3 font-medium">{s.gradeId?.name || "Unknown Grade"}</td>
                         <td className="px-4 py-3">{s.name}</td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteSection(s._id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={isDeletingId === s._id}
+                            onClick={() => handleDeleteSection(s._id)} 
+                            className="text-destructive"
+                          >
+                            {isDeletingId === s._id ? <Spinner className="size-4 text-destructive" /> : <Trash2 className="w-4 h-4" />}
                           </Button>
                         </td>
                       </tr>
@@ -322,7 +386,9 @@ export default function AcademicsConfig() {
                     onChange={(e) => setNewSubject({ ...newSubject, code: e.target.value })}
                   />
                 </div>
-                <Button type="submit"><Plus className="w-4 h-4 mr-2" /> Add Subject</Button>
+                <Button type="submit" disabled={isSubmitting || !newSubject.name}>
+                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Add Subject
+                </Button>
               </form>
 
               <div className="rounded-md border">
@@ -335,15 +401,27 @@ export default function AcademicsConfig() {
                     </tr>
                   </thead>
                   <tbody>
-                    {subjects.length === 0 ? (
+                    {loading && subjects.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="p-0">
+                          <TableSkeleton rows={4} columns={3} />
+                        </td>
+                      </tr>
+                    ) : subjects.length === 0 ? (
                       <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">No subjects defined yet.</td></tr>
                     ) : subjects.map((s) => (
                       <tr key={s._id} className="border-b last:border-0">
                         <td className="px-4 py-3">{s.name}</td>
                         <td className="px-4 py-3">{s.code || "-"}</td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteSubject(s._id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={isDeletingId === s._id}
+                            onClick={() => handleDeleteSubject(s._id)} 
+                            className="text-destructive"
+                          >
+                            {isDeletingId === s._id ? <Spinner className="size-4 text-destructive" /> : <Trash2 className="w-4 h-4" />}
                           </Button>
                         </td>
                       </tr>
@@ -390,7 +468,9 @@ export default function AcademicsConfig() {
                     {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                   </select>
                 </div>
-                <Button type="submit" disabled={!grades.length || !subjects.length}><Plus className="w-4 h-4 mr-2" /> Assign Subject</Button>
+                <Button type="submit" disabled={isSubmitting || !grades.length || !subjects.length || !newGradeSubject.gradeId || !newGradeSubject.subjectId}>
+                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Assign Subject
+                </Button>
               </form>
 
               <div className="rounded-md border">
@@ -404,7 +484,13 @@ export default function AcademicsConfig() {
                     </tr>
                   </thead>
                   <tbody>
-                    {gradeSubjects.length === 0 ? (
+                    {loading && gradeSubjects.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-0">
+                          <TableSkeleton rows={4} columns={4} />
+                        </td>
+                      </tr>
+                    ) : gradeSubjects.length === 0 ? (
                       <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">No subjects assigned yet.</td></tr>
                     ) : gradeSubjects.map((gs) => (
                       <tr key={gs._id} className="border-b last:border-0">
@@ -412,8 +498,14 @@ export default function AcademicsConfig() {
                         <td className="px-4 py-3">{gs.subjectId?.name || "Unknown"}</td>
                         <td className="px-4 py-3">{gs.subjectId?.code || "-"}</td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveSubjectFromGrade(gs._id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={isDeletingId === gs._id}
+                            onClick={() => handleRemoveSubjectFromGrade(gs._id)} 
+                            className="text-destructive"
+                          >
+                            {isDeletingId === gs._id ? <Spinner className="size-4 text-destructive" /> : <Trash2 className="w-4 h-4" />}
                           </Button>
                         </td>
                       </tr>

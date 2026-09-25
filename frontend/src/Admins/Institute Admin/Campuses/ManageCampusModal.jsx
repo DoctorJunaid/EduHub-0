@@ -10,13 +10,14 @@ import {
   Check,
   Pencil,
   UserPlus,
-  Loader2,
   ExternalLink,
   ShieldAlert,
   GraduationCap,
   Users,
   MapPin,
 } from "lucide-react";
+import { PageLoader } from "@/components/shared/PageLoader";
+import { Spinner } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/Badge";
@@ -243,10 +244,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
         {/* Modal Content */}
         <div className="mcm-body">
           {loadingCampus ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#71717a" }}>
-              <Loader2 size={32} className="spin" style={{ margin: "0 auto 12px" }} />
-              <p style={{ fontSize: "14px", fontWeight: 600 }}>Loading campus records...</p>
-            </div>
+            <PageLoader text="Loading campus records..." />
           ) : activeTab === "manager" ? (
             <div>
               {manager ? (
@@ -310,11 +308,11 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                         title="Resend password setup email to manager"
                       >
                         {resendingEmail ? (
-                          <Loader2 size={14} className="spin" />
+                          <Spinner className="size-3.5 text-white mr-1.5" />
                         ) : (
                           <Send size={14} />
                         )}
-                        {resendingEmail ? "Sending..." : "Resend Setup Email"}
+                        Resend Setup Email
                       </button>
 
                       <button
@@ -456,8 +454,8 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                           Cancel
                         </button>
                         <button type="submit" className="mcm-btn-primary" disabled={savingManager}>
-                          {savingManager ? <Loader2 size={14} className="spin" /> : <Check size={14} />}
-                          {savingManager ? "Saving..." : "Save Changes"}
+                          {savingManager ? <Spinner className="size-3.5 text-white mr-1.5" /> : <Check size={14} />}
+                          Save Changes
                         </button>
                       </div>
                     </form>
@@ -546,8 +544,8 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                       Cancel
                     </button>
                     <button type="submit" className="mcm-btn-primary" disabled={appointingManager}>
-                      {appointingManager ? <Loader2 size={14} className="spin" /> : <UserPlus size={14} />}
-                      {appointingManager ? "Appointing..." : "Appoint & Send Setup Email"}
+                      {appointingManager ? <Spinner className="size-3.5 text-white mr-1.5" /> : <UserPlus size={14} />}
+                      Appoint & Send Setup Email
                     </button>
                   </div>
                 </form>
