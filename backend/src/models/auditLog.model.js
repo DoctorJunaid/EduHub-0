@@ -20,6 +20,9 @@ const auditLogSchema = new mongoose.Schema(
         "FeeRecord",
         "PaymentTransaction",
         "FeeStructure",
+        "TeacherClassSession",
+        "TeachingCreditConfig",
+        "SalaryAdjustmentReview",
       ],
       index: true,
     },
@@ -44,6 +47,8 @@ const auditLogSchema = new mongoose.Schema(
         "confirmed",
         "generated",
         "paid",
+        "disputed",
+        "resolved",
       ],
     },
     performedBy: {

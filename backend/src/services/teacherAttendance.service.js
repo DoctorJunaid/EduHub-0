@@ -1,5 +1,6 @@
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import User from "../models/user.model.js";
+import TeacherClassSession from "../models/teacherClassSession.model.js";
 import {
   createPendingApprovalFromAbsence,
   cancelPendingApprovalOnAttendanceChange,
@@ -339,6 +340,50 @@ export async function markAttendance(campusId, markedBy, payload) {
     } catch (err) {
       console.error("[markAttendance] Failed to cancel pending approval:", err.message);
     }
+  }
+
+  // Synchronize TeacherClassSession records for this teacher on this date
+  try {
+    const startOfDay = normalized;
+    const endOfDay = new Date(normalized.getTime() + 24 * 60 * 60 * 1000 - 1);
+    const sessions = await TeacherClassSession.find({
+      campusId,
+      originalTeacherId: teacherProfileId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      isSubstituted: false,
+    });
+
+    for (const sess of sessions) {
+      if (status === "Absent") {
+        sess.status = "Absent";
+        sess.attendanceStatus = "Absent";
+        sess.creditValue = 0;
+        sess.deductionValue = sess.deductionValue || 500;
+        sess.adjustmentReview.status = "Pending Review";
+        sess.adjustmentReview.proposedDeduction = sess.deductionValue;
+        sess.remarks = remarks || "Teacher marked absent for the day";
+        await sess.save();
+      } else if (status === "On Leave") {
+        sess.status = "Cancelled";
+        sess.attendanceStatus = "On Leave";
+        sess.creditValue = 0;
+        sess.deductionValue = 0;
+        sess.adjustmentReview.status = "None";
+        sess.remarks = remarks || "Teacher on approved leave";
+        await sess.save();
+      } else if (status === "Present" || status === "Late") {
+        if (sess.status === "Absent") {
+          sess.status = "Scheduled";
+          sess.attendanceStatus = status;
+          sess.creditValue = 1.0;
+          sess.deductionValue = 0;
+          sess.adjustmentReview.status = "None";
+          await sess.save();
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[markAttendance] Error syncing TeacherClassSession:", err.message);
   }
 
   return record;

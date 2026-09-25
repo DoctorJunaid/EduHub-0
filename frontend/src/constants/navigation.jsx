@@ -99,6 +99,12 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <Award size={20} />,
   },
   {
+    label: "Teaching Performance",
+    path: "/teaching-performance",
+    group: "Academics",
+    icon: <Award size={20} />,
+  },
+  {
     label: "Fee Management",
     path: "/fees",
     group: "Finance",
@@ -124,6 +130,12 @@ export const getCampusAdminNav = (isSchool = false) => [
     group: "Finance",
     icon: <ShieldCheck size={20} />,
   },
+  {
+    label: "Salary Review Center",
+    path: "/salary-review-center",
+    group: "Finance",
+    icon: <ShieldCheck size={20} />,
+  },
   { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
 ];
 
@@ -134,6 +146,11 @@ export const TEACHER_NAV = [
     label: "Overview",
     path: "/teacher",
     icon: <LayoutDashboard size={20} />,
+  },
+  {
+    label: "My Teaching Credits",
+    path: "/teacher/credits",
+    icon: <Award size={20} />,
   },
   {
     label: "My Salary",
