@@ -136,14 +136,9 @@ const SubstituteAssignments = () => {
   return (
     <div className="substitutes-container campus-tab-page">
       <div className="substitutes-heading">
-        <div>
-          <div className="substitutes-eyebrow">Staff operations / coverage</div>
-          <h1>Substitute Assignments</h1>
-          <p>Coordinate cover classes, approvals, and substitute workload for the selected day.</p>
-        </div>
-        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={() => setIsDialogOpen(true)}>
-          <Plus size={14} /> Assign Substitute
-        </button>
+        <nav className="substitutes-breadcrumb" aria-label="Breadcrumb">
+          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Substitutes</span>
+        </nav>
       </div>
 
       <div className="campus-kpi-track substitutes-kpis">
@@ -151,6 +146,12 @@ const SubstituteAssignments = () => {
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Clock3 size={16} /></div><div className="kpi-info"><span className="kpi-label">Pending Approval</span><span className="kpi-value">{counts.pending}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><User size={16} /></div><div className="kpi-info"><span className="kpi-label">Active Coverage</span><span className="kpi-value">{counts.active}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><CheckCircle2 size={16} /></div><div className="kpi-info"><span className="kpi-label">Completed</span><span className="kpi-value">{counts.completed}</span></div></div></div>
+      </div>
+
+      <div className="substitutes-action-row">
+        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={() => setIsDialogOpen(true)}>
+          <Plus size={14} /> Assign Substitute
+        </button>
       </div>
 
       <div className="campus-toolbar">

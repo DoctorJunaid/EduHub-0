@@ -34,6 +34,7 @@ export default function StudentProfileDialog({ student, onClose }) {
 
   const totalDue = fees.reduce((sum, fee) => sum + (fee.amount - fee.paidAmount), 0);
   const totalPaid = payments.filter(p => p.status === "CONFIRMED").reduce((sum, p) => sum + p.amount, 0);
+  const studentEmail = student.email || student.user?.email || student.loginEmail || "Email not available";
 
   return (
     <FullPageFormShell
@@ -55,7 +56,7 @@ export default function StudentProfileDialog({ student, onClose }) {
           <div>
             <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#09090b", margin: 0 }}>{student.name}</h2>
             <p style={{ fontSize: "13px", color: "#71717a", margin: "4px 0 0" }}>
-              {isSchool ? `Roll No: ${student.roll || student.rollNo || "10-A-01"}` : (student.email || student.roll)} · {student.studentPhone || student.phone || "Emergency Contact Verified"}
+              {isSchool ? `Roll No: ${student.roll || student.rollNo || "10-A-01"} · ${studentEmail}` : (student.email || student.user?.email || student.roll)} · {student.studentPhone || student.phone || "Emergency Contact Verified"}
             </p>
           </div>
         </div>

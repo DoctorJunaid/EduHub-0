@@ -11,13 +11,9 @@ import {
   CheckCircle2,
   XCircle,
   Calendar,
-  Filter,
   RefreshCw,
-  Sparkles,
-  ArrowUpDown,
   FileCheck2,
   DollarSign,
-  AlertTriangle,
 } from "lucide-react";
 import { selectCurrentRole } from "../store/Slices/authSlice";
 import ApprovalProofDialog from "../components/Payroll/ApprovalProofDialog";
@@ -164,27 +160,50 @@ const PayrollApprovals = () => {
   );
 
   return (
-    <div className="approvals-page-shell">
-      {/* Top Banner & Header */}
+    <div className="approvals-page-shell campus-tab-page">
       <div className="approvals-header">
-        <div className="approvals-header-left">
-          <div className="header-icon-box">
-            <ShieldCheck size={28} className="text-indigo-600 dark:text-indigo-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="approvals-title">Salary & Deduction Approvals</h1>
-              <span className="live-badge">
-                <Sparkles size={12} className="animate-spin text-amber-500" />
-                Audited Flow
-              </span>
-            </div>
-            <p className="approvals-subtitle">
-              Verify attendance absence proofs, mathematical deduction formulas, substitute bonus transfers, and cryptographic audit records.
-            </p>
-          </div>
-        </div>
+        <nav className="approvals-breadcrumb" aria-label="Breadcrumb">
+          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Payroll Approvals</span>
+        </nav>
+      </div>
 
+      <div className="approvals-kpi-grid campus-kpi-track">
+        <div className="kpi-card campus-kpi-card">
+          <div className="kpi-content">
+            <span className="kpi-label">Pending Review</span>
+            <div className="kpi-value text-amber-600 dark:text-amber-400">{pendingCount}</div>
+            <span className="kpi-subtext">Requires Admin authorization</span>
+          </div>
+          <div className="kpi-icon-box amber"><Clock size={22} /></div>
+        </div>
+        <div className="kpi-card campus-kpi-card">
+          <div className="kpi-content">
+            <span className="kpi-label">Approved &amp; Applied</span>
+            <div className="kpi-value text-emerald-600 dark:text-emerald-400">{approvedCount}</div>
+            <span className="kpi-subtext">Cryptographically linked</span>
+          </div>
+          <div className="kpi-icon-box emerald"><ShieldCheck size={22} /></div>
+        </div>
+        <div className="kpi-card campus-kpi-card">
+          <div className="kpi-content">
+            <span className="kpi-label">Rejected / Cancelled</span>
+            <div className="kpi-value text-rose-600 dark:text-rose-400">{rejectedCount}</div>
+            <span className="kpi-subtext">Zero deduction applied</span>
+          </div>
+          <div className="kpi-icon-box rose"><ShieldAlert size={22} /></div>
+        </div>
+        <div className="kpi-card campus-kpi-card">
+          <div className="kpi-content">
+            <span className="kpi-label">Total Deductions in Scope</span>
+            <div className="kpi-value text-slate-800 dark:text-white font-mono">PKR {totalDeductionSum.toLocaleString()}</div>
+            <span className="kpi-subtext">For month {month}</span>
+          </div>
+          <div className="kpi-icon-box indigo"><DollarSign size={22} /></div>
+        </div>
+      </div>
+
+      <div className="approvals-month-row">
+        <div className="approvals-month-label">Review month</div>
         <div className="approvals-header-right">
           <div className="month-picker-wrapper">
             <Calendar size={16} className="text-slate-400" />
@@ -203,61 +222,6 @@ const PayrollApprovals = () => {
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="approvals-kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-content">
-            <span className="kpi-label">Pending Review</span>
-            <div className="kpi-value text-amber-600 dark:text-amber-400">
-              {pendingCount}
-            </div>
-            <span className="kpi-subtext">Requires Admin authorization</span>
-          </div>
-          <div className="kpi-icon-box amber">
-            <Clock size={22} />
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-content">
-            <span className="kpi-label">Approved & Applied</span>
-            <div className="kpi-value text-emerald-600 dark:text-emerald-400">
-              {approvedCount}
-            </div>
-            <span className="kpi-subtext">Cryptographically linked</span>
-          </div>
-          <div className="kpi-icon-box emerald">
-            <ShieldCheck size={22} />
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-content">
-            <span className="kpi-label">Rejected / Cancelled</span>
-            <div className="kpi-value text-rose-600 dark:text-rose-400">
-              {rejectedCount}
-            </div>
-            <span className="kpi-subtext">Zero deduction applied</span>
-          </div>
-          <div className="kpi-icon-box rose">
-            <ShieldAlert size={22} />
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-content">
-            <span className="kpi-label">Total Deductions in Scope</span>
-            <div className="kpi-value text-slate-800 dark:text-white font-mono">
-              PKR {totalDeductionSum.toLocaleString()}
-            </div>
-            <span className="kpi-subtext">For month {month}</span>
-          </div>
-          <div className="kpi-icon-box indigo">
-            <DollarSign size={22} />
-          </div>
         </div>
       </div>
 

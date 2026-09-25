@@ -136,7 +136,7 @@ const GeneralSettingsTab = () => {
         {/* Schedule Section */}
         <div className="settings-card glass-panel p-6 rounded-xl">
           <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Schedule & Timings</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 settings-fields-grid">
             <div className="form-group">
               <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
                 Periods Per Day
@@ -199,7 +199,7 @@ const GeneralSettingsTab = () => {
         {/* Substitute Load Limits */}
         <div className="settings-card glass-panel p-6 rounded-xl">
           <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Substitute Load Limits</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 settings-fields-grid">
             <div className="form-group">
               <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
                 Max Substitutes / Day / Teacher

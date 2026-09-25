@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
+  Award,
   BookOpen,
   CalendarCheck,
+  CheckCircle2,
   ClipboardList,
   Clock3,
+  Coins,
   FileText,
   Search,
   Users,
@@ -15,7 +18,9 @@ import {
   selectStudentsForAssignedClasses,
   selectTeacherIdentity,
 } from "./teacherScope";
+import { getTodayClasses, getMySummary, markSessionStatus } from "@/api/classSession.api";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import "./TeacherDashboard.css";
 
 const initials = (name = "") =>
@@ -36,6 +41,42 @@ export default function TeacherDashboard() {
   const diary = useSelector((state) => state.diary?.records || []);
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
+  const [todaySessions, setTodaySessions] = useState([]);
+  const [creditSummary, setCreditSummary] = useState(null);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+
+  const fetchLiveCredits = async () => {
+    try {
+      setLoadingSessions(true);
+      const [todayRes, sumRes] = await Promise.all([
+        getTodayClasses(),
+        getMySummary({ month: new Date().toISOString().slice(0, 7) }),
+      ]);
+      if (todayRes.data?.success) setTodaySessions(todayRes.data.data || []);
+      if (sumRes.data?.success) setCreditSummary(sumRes.data.data || null);
+    } catch {
+      // Fallback gracefully
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveCredits();
+  }, []);
+
+  const handleQuickComplete = async (sessionId) => {
+    try {
+      const res = await markSessionStatus(sessionId, { status: "Completed" });
+      if (res.data?.success) {
+        toast.success("Teaching credit recorded!");
+        fetchLiveCredits();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to mark class completed.");
+    }
+  };
+
   const teacherId = teacher?.id;
   const classIds = new Set(classes.map((item) => item.id || item._id));
   const filteredClasses = classes.filter((item) =>
@@ -64,16 +105,11 @@ export default function TeacherDashboard() {
   );
   const enrolledStudentCount = enrolledStudents.length;
   const metric = [
+    [Award, "Monthly Credits", creditSummary?.totalCredits ?? "—"],
+    [Coins, "Bonus Earned", `PKR ${(creditSummary?.totalBonusEarned || 0).toLocaleString()}`],
     [BookOpen, "Assigned Courses", assignedCourseCount],
     [FileText, "Pending Submissions", pending.length],
     [Users, "Enrolled Students", enrolledStudentCount],
-    [
-      Clock3,
-      "Daily Diaries Posted",
-      diary.filter(
-        (item) => classIds.has(item.classId) && item.teacherId === teacherId,
-      ).length,
-    ],
   ];
 
   return (
@@ -94,6 +130,9 @@ export default function TeacherDashboard() {
         ))}
       </section>
       <nav className="teacher-quick-actions" aria-label="Teacher quick actions">
+        <Link to="/teacher/credits" className="font-bold text-blue-700 bg-blue-50/80 border border-blue-200">
+          <Award size={17} /> My Teaching Credits &amp; Sessions
+        </Link>
         <Link to="/teacher/assignments">
           <ClipboardList size={17} /> Assignments &amp; Grading
         </Link>
@@ -107,6 +146,105 @@ export default function TeacherDashboard() {
           <BookOpen size={17} /> Exam Marks &amp; Gradebook
         </Link>
       </nav>
+
+      {/* Today's Teaching Credits Table */}
+      <section className="teacher-table-card">
+        <header>
+          <div>
+            <h2>Today's Teaching Credits &amp; Periods</h2>
+            <p>Fulfill assigned lecture periods to accrue monthly teaching credits &amp; bonuses</p>
+          </div>
+          <div className="teacher-table-tools">
+            <Button variant="outline" asChild>
+              <Link to="/teacher/credits">All Credit Records →</Link>
+            </Button>
+          </div>
+        </header>
+        <div className="teacher-table-wrap">
+          {loadingSessions ? (
+            <div className="p-8 text-center text-slate-500 text-xs">Loading today's periods...</div>
+          ) : todaySessions.length === 0 ? (
+            <EmptyRow text="No teaching classes scheduled for today." />
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Period &amp; Time</th>
+                  <th>Class &amp; Section</th>
+                  <th>Subject</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Credits</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {todaySessions.map((sess) => (
+                  <tr key={sess._id}>
+                    <td>
+                      <strong>Period {sess.period}</strong> ({sess.startTime} – {sess.endTime})
+                    </td>
+                    <td>{sess.className} {sess.section ? `(${sess.section})` : ""}</td>
+                    <td><strong>{sess.subject}</strong></td>
+                    <td>
+                      {sess.isSubstituteDuty ? (
+                        <span className="text-purple-700 font-semibold">Substitution Duty</span>
+                      ) : sess.isSubstitutedOut ? (
+                        <span className="text-amber-700 font-semibold">Substituted Out</span>
+                      ) : (
+                        <span>Assigned Teacher</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        sess.status === "Completed"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : sess.status === "Missed" || sess.status === "Absent"
+                          ? "bg-rose-100 text-rose-800"
+                          : sess.status === "Substituted"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}>
+                        {sess.status}
+                      </span>
+                    </td>
+                    <td>
+                      {sess.status === "Completed" ? (
+                        <strong className="text-emerald-700">+{sess.creditValue || 1} Cr</strong>
+                      ) : sess.deductionValue > 0 ? (
+                        <strong className="text-rose-600">-PKR {sess.deductionValue}</strong>
+                      ) : (
+                        <span className="text-slate-400">1 Cr pending</span>
+                      )}
+                    </td>
+                    <td>
+                      {sess.status === "Scheduled" && !sess.isSubstitutedOut && (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-3 text-xs"
+                          onClick={() => handleQuickComplete(sess._id)}
+                        >
+                          <CheckCircle2 size={13} className="mr-1" /> Mark Done
+                        </Button>
+                      )}
+                      {sess.status === "Completed" && (
+                        <span className="text-emerald-600 font-bold flex items-center gap-1 text-xs">
+                          <CheckCircle2 size={13} /> Completed
+                        </span>
+                      )}
+                      {(sess.status === "Missed" || sess.status === "Absent") && (
+                        <Button size="sm" variant="outline" asChild className="h-7 text-xs">
+                          <Link to="/teacher/credits">Review Dispute</Link>
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
       <TeacherTable
         title="My Teaching Schedule & Classes"
         subtitle="Assigned weekly lectures and room allocations"

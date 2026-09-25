@@ -73,7 +73,7 @@ const limiter = rateLimit({
 app.use("/api/", limiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: "10kb" })); // Limit payload size to 10kb
+app.use(express.json({ limit: "50kb" })); // 50kb to handle populated timetable record payloads
 app.use(express.urlencoded({ extended: true }));
 
 // Data sanitization against NoSQL query injection

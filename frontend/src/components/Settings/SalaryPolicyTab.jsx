@@ -72,7 +72,7 @@ const SalaryPolicyTab = () => {
         {/* Deduction Rules Section */}
         <div className="settings-card glass-panel p-6 rounded-xl">
           <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Deduction Rules</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 settings-fields-grid">
             <div className="form-group">
               <label className="block text-sm font-medium text-gray-300 mb-2">Working Days Per Month (Divisor)</label>
               <input
@@ -156,7 +156,7 @@ const SalaryPolicyTab = () => {
         {/* Bonus Rates Section */}
         <div className="settings-card glass-panel p-6 rounded-xl">
           <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Bonus Rates (PKR)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 settings-fields-grid">
             <div className="form-group">
               <label className="block text-sm font-medium text-gray-300 mb-2">Substitute Bonus Per Class</label>
               <input

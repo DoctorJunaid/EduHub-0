@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import GeneralSettingsTab from "./GeneralSettingsTab";
 import SalaryPolicyTab from "./SalaryPolicyTab";
-import { Users, Settings as SettingsIcon } from "lucide-react";
+import TeachingCreditTab from "./TeachingCreditTab";
+import { Users, Settings as SettingsIcon, Award } from "lucide-react";
 import "./Settings.css";
 
 const Settings = () => {
@@ -10,6 +11,7 @@ const Settings = () => {
   const tabs = [
     { id: "general", label: "General Settings", icon: <SettingsIcon size={15} /> },
     { id: "salary", label: "Salary Policy", icon: <Users size={15} /> },
+    { id: "teachingCredit", label: "Teaching Credits & Substitution Rules", icon: <Award size={15} /> },
   ];
 
   return (
@@ -32,6 +34,7 @@ const Settings = () => {
       <div className="settings-content">
         {activeTab === "general" && <GeneralSettingsTab />}
         {activeTab === "salary" && <SalaryPolicyTab />}
+        {activeTab === "teachingCredit" && <TeachingCreditTab />}
       </div>
     </div>
   );
