@@ -1,32 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import TableSkeleton from "@/components/shared/TableSkeleton";
 import { toast } from "react-hot-toast";
+import { qk } from "@/lib/queryKeys";
 import "./MyPayslips.css";
 
 export default function MyPayslips() {
   const [month, setMonth] = useState("");
-  const [payslips, setPayslips] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
 
-  useEffect(() => {
-    const loadPayslips = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/campus/salary/payroll/my-payslips", {
-          params: month ? { month } : {},
-        });
-        setPayslips(response.data.data.records || []);
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to load payslips");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPayslips();
-  }, [month]);
+  const {
+    data: payslips = [],
+    isLoading: loading,
+  } = useQuery({
+    queryKey: qk.myPayslips({ month }),
+    queryFn: async () => {
+      const response = await api.get("/campus/salary/payroll/my-payslips", {
+        params: month ? { month } : {},
+      });
+      return response.data?.data?.records || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   return (
     <div className="teacher-payslips p-8 max-w-6xl mx-auto">

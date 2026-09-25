@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useId } from "react";
+import React, { useState, useId } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
   AlertCircle,
@@ -24,74 +25,108 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import "./SalaryReviewCenter.css";
 
 const formatPKR = (amt) =>
   `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
 
 export default function SalaryReviewCenter() {
+  const queryClient = useQueryClient();
   const currentMonthStr = new Date().toISOString().slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("Pending");
   const [typeFilter, setTypeFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
 
   // Adjust Amount Dialog State
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [activeItemForAdjust, setActiveItemForAdjust] = useState(null);
   const [adjustedAmount, setAdjustedAmount] = useState("");
   const [adjustRemark, setAdjustRemark] = useState("");
-  const [savingAdjust, setSavingAdjust] = useState(false);
 
   // Dispute Resolution Dialog State
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [activeItemForDispute, setActiveItemForDispute] = useState(null);
   const [disputeDecision, setDisputeDecision] = useState("Approve");
   const [disputeRemark, setDisputeRemark] = useState("");
-  const [savingDispute, setSavingDispute] = useState(false);
 
   const adjustAmountInputId = useId();
   const adjustRemarkInputId = useId();
   const disputeDecisionSelectId = useId();
   const disputeRemarkInputId = useId();
 
-  const loadItems = async (showToast = false) => {
-    try {
-      setLoading(true);
+  // Query review center items
+  const {
+    data: items = [],
+    isLoading: loading,
+    refetch,
+  } = useQuery({
+    queryKey: qk.payrollReview({ month: selectedMonth, status: statusFilter }),
+    queryFn: async () => {
       const res = await getSalaryReviewCenter({
         month: selectedMonth,
         status: statusFilter,
       });
-      if (res.data?.success) {
-        setItems(res.data.data || []);
-        if (showToast) toast.success("Review center items synchronized.");
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load review center items.");
-    } finally {
-      setLoading(false);
-    }
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const loadItems = async (showToast = false) => {
+    await refetch();
+    if (showToast) toast.success("Review center items synchronized.");
   };
 
-  useEffect(() => {
-    loadItems();
-  }, [selectedMonth, statusFilter]);
+  // Review mutation
+  const reviewMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const res = await reviewAdjustment(id, payload);
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success(
+        variables.payload.action === "Adjust"
+          ? "Adjustment amount updated successfully."
+          : `Adjustment ${variables.payload.action.toLowerCase()}d successfully.`
+      );
+      queryClient.invalidateQueries({ queryKey: ["payroll-review"] });
+      queryClient.invalidateQueries({ queryKey: ["payroll"] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to update adjustment.");
+    },
+  });
 
-  const handleSimpleReview = async (item, action) => {
-    try {
-      const res = await reviewAdjustment(item._id, {
+  // Dispute mutation
+  const disputeMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const res = await resolveDispute(id, payload);
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success(`Dispute resolved as ${variables.payload.decision}.`);
+      queryClient.invalidateQueries({ queryKey: ["payroll-review"] });
+      queryClient.invalidateQueries({ queryKey: ["payroll"] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to resolve dispute.");
+    },
+  });
+
+  const savingAdjust = reviewMutation.isPending;
+  const savingDispute = disputeMutation.isPending;
+
+  const handleSimpleReview = (item, action) => {
+    reviewMutation.mutate({
+      id: item._id,
+      payload: {
         action,
         remark: `${action} by Campus Manager`,
-      });
-      if (res.data?.success) {
-        toast.success(`Adjustment ${action.toLowerCase()}d successfully.`);
-        loadItems();
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update adjustment.");
-    }
+      },
+    });
   };
 
   const handleOpenAdjust = (item) => {
@@ -109,22 +144,17 @@ export default function SalaryReviewCenter() {
     }
 
     try {
-      setSavingAdjust(true);
-      const res = await reviewAdjustment(activeItemForAdjust._id, {
-        action: "Adjust",
-        adjustedAmount: Number(adjustedAmount),
-        remark: adjustRemark || "Amount adjusted by Campus Manager",
+      await reviewMutation.mutateAsync({
+        id: activeItemForAdjust._id,
+        payload: {
+          action: "Adjust",
+          adjustedAmount: Number(adjustedAmount),
+          remark: adjustRemark || "Amount adjusted by Campus Manager",
+        },
       });
-
-      if (res.data?.success) {
-        toast.success("Adjustment amount updated successfully.");
-        setAdjustOpen(false);
-        loadItems();
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to adjust amount.");
-    } finally {
-      setSavingAdjust(false);
+      setAdjustOpen(false);
+    } catch {
+      // Handled in onError
     }
   };
 
@@ -138,23 +168,18 @@ export default function SalaryReviewCenter() {
   const handleSaveDispute = async (e) => {
     e.preventDefault();
     try {
-      setSavingDispute(true);
-      const res = await resolveDispute(activeItemForDispute._id, {
-        decision: disputeDecision,
-        resolutionRemark: disputeRemark || `Dispute ${disputeDecision.toLowerCase()}d`,
-        adjustedStatus: disputeDecision === "Approve" ? "Approved Adjustment" : "Missed",
-        adjustedDeduction: disputeDecision === "Approve" ? 0 : activeItemForDispute.amount,
+      await disputeMutation.mutateAsync({
+        id: activeItemForDispute._id,
+        payload: {
+          decision: disputeDecision,
+          resolutionRemark: disputeRemark || `Dispute ${disputeDecision.toLowerCase()}d`,
+          adjustedStatus: disputeDecision === "Approve" ? "Approved Adjustment" : "Missed",
+          adjustedDeduction: disputeDecision === "Approve" ? 0 : activeItemForDispute.amount,
+        },
       });
-
-      if (res.data?.success) {
-        toast.success(`Dispute resolved as ${disputeDecision}.`);
-        setDisputeOpen(false);
-        loadItems();
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to resolve dispute.");
-    } finally {
-      setSavingDispute(false);
+      setDisputeOpen(false);
+    } catch {
+      // Handled in onError
     }
   };
 
@@ -174,7 +199,7 @@ export default function SalaryReviewCenter() {
     const matchesSearch =
       `${item.teacher?.name || ""} ${item.subject || ""} ${item.className || ""} ${item.disputeReason || ""}`
         .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        .includes(debouncedSearch.toLowerCase());
     const matchesType =
       typeFilter === "All" ? true : item.type === typeFilter;
     return matchesSearch && matchesType;

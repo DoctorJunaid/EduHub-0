@@ -29,10 +29,10 @@ export default function TeacherQuickSidebar({
   const employeeId = teacher?.employeeId || (teacher?._id ? `EMP-${String(teacher._id).slice(-4).toUpperCase()}` : "EMP-001");
   const hireDate = teacher?.hireDate
     ? new Date(teacher.hireDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
     : "Aug 15, 2020";
 
   const copyToClipboard = (text) => {
