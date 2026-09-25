@@ -84,9 +84,9 @@
     --text-heading: #f4f4f5;
     --text-main: #d4d4d8;
     --text-muted: #a1a1aa;
-    --card-bg: #111114;
-    --border-light: #18181b;
-    --border-strong: #27272a;
+    --card-bg: rgba(17, 17, 20, 0.6); /* Translucent for glassmorphism */
+    --border-light: rgba(255, 255, 255, 0.05);
+    --border-strong: rgba(255, 255, 255, 0.1);
     --sh-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);
     --sh-md: 0 4px 6px -1px rgba(0, 0, 0, 0.7);
     --sh-card: 0 4px 12px 0 rgba(0, 0, 0, 0.7);
@@ -99,10 +99,66 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Add subtle noise texture for premium feel */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
+  }
+
+  /* Utility for super smooth text gradients */
+  .text-gradient-emerald {
+    background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Premium Glassmorphism */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  }
+
+  .dark .glass-card {
+    background: rgba(17, 17, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Scroll-driven animations (Modern Web Guidance) */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports ((animation-timeline: view()) and (animation-range: entry)) {
+      @keyframes float-up-fade {
+        from {
+          opacity: 0;
+          transform: translateY(40px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .scroll-reveal {
+        animation: float-up-fade auto cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 30%;
+      }
+    }
   }
 }
 
@@ -167,12 +223,14 @@
 .marquee-track {
   display: inline-flex;
   gap: 32px;
-  animation: marquee 35s linear infinite;
+  animation: marquee 110s linear infinite;
   width: max-content;
+  will-change: transform;
 }
 
 .marquee-track.reverse {
-  animation: marquee-reverse 35s linear infinite;
+  animation: marquee-reverse 110s linear infinite;
+  will-change: transform;
 }
 
 .marquee-track:hover {

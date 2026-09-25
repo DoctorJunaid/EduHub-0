@@ -20,7 +20,7 @@ export default function BentoCard({
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      className={`group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-900/80 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.4)] transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.7)] hover:border-emerald-500/40 flex flex-col justify-between ${
+      className={`group relative rounded-3xl overflow-hidden glass-card transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.7)] hover:border-emerald-500/40 flex flex-col justify-between ${
         isLarge ? 'md:col-span-2' : ''
       } ${className}`}
     >
