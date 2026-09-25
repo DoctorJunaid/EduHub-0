@@ -147,11 +147,9 @@ const SalaryPayroll = () => {
   return (
     <div className="salary-payroll-page campus-tab-page">
       <div className="salary-payroll-heading">
-        <div><span className="salary-payroll-eyebrow">Finance / monthly close</span><h1>Salary &amp; Payroll</h1><p>Generate, review, approve, and settle monthly teacher payroll.</p></div>
-        <div className="flex items-center gap-2">
-          <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => navigate("/payroll-approvals")}><ShieldCheck size={14} className="text-indigo-600" /> Deduction Approvals</button>
-          <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}><Play size={13} /> {generating ? "Generating..." : "Generate Payroll"}</button>
-        </div>
+        <nav className="salary-payroll-breadcrumb" aria-label="Breadcrumb">
+          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Salary &amp; Payroll</span>
+        </nav>
       </div>
 
       <div className="campus-kpi-track salary-payroll-kpis">
@@ -159,6 +157,11 @@ const SalaryPayroll = () => {
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><ReceiptText size={16} /></div><div className="kpi-info"><span className="kpi-label">Net payroll</span><span className="kpi-value">{formatPKR(summary.net)}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Clock3 size={16} /></div><div className="kpi-info"><span className="kpi-label">Draft records</span><span className="kpi-value">{summary.draft}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><CircleCheck size={16} /></div><div className="kpi-info"><span className="kpi-label">Paid records</span><span className="kpi-value">{summary.paid}</span></div></div></div>
+      </div>
+
+      <div className="salary-payroll-action-row">
+        <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => navigate("/payroll-approvals")}><ShieldCheck size={14} className="text-indigo-600" /> Deduction Approvals</button>
+        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}><Play size={13} /> {generating ? "Generating..." : "Generate Payroll"}</button>
       </div>
 
       <div className="campus-toolbar">

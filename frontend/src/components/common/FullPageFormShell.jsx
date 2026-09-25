@@ -12,6 +12,7 @@ export default function FullPageFormShell({
   maxWidth = 1000,
   className = "",
   hideTitleRow = false,
+  hideBackButton = false,
 }) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -22,15 +23,17 @@ export default function FullPageFormShell({
       <div className="activity-container" style={{ maxWidth: `${maxWidth}px` }}>
         {/* Top Header & Breadcrumbs */}
         <div className="activity-header">
-          <button
-            type="button"
-            className="activity-back-btn"
-            onClick={onBack}
-            title={`Back to ${parentName}`}
-          >
-            <ArrowLeft size={16} />
-            <span>Back to {parentName}</span>
-          </button>
+          {!hideBackButton && (
+            <button
+              type="button"
+              className="activity-back-btn"
+              onClick={onBack}
+              title={`Back to ${parentName}`}
+            >
+              <ArrowLeft size={16} />
+              <span>Back to {parentName}</span>
+            </button>
+          )}
 
           <div className="activity-breadcrumbs">
             <span className="activity-breadcrumb-link" onClick={onBack}>

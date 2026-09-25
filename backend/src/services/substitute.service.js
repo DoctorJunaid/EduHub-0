@@ -5,6 +5,8 @@ import Timetable from "../models/timetable.model.js";
 import User from "../models/user.model.js";
 import { SalaryPolicy } from "../models/salaryPolicy.model.js";
 import { getEffectiveSettings } from "./settings.service.js";
+import TeacherClassSession from "../models/teacherClassSession.model.js";
+import TeachingCreditConfig from "../models/teachingCreditConfig.model.js";
 import moment from "moment";
 
 /**
@@ -390,6 +392,52 @@ export const assignSubstitute = async (campusId, userId, payload) => {
 
   await substitute.save();
 
+  // Synchronize with TeacherClassSession for real-time timetable and credit reflection
+  try {
+    const subUser = await resolveTeacherRef(payload.substituteTeacherId);
+    const origUser = await resolveTeacherRef(payload.originalTeacherId);
+    const subUserId = subUser?.user?._id || subUser?._id;
+    const origUserId = origUser?.user?._id || origUser?._id;
+
+    if (subUserId && origUserId) {
+      let session = await TeacherClassSession.findOne({
+        campusId,
+        date: targetDate,
+        period: Number(payload.period),
+        className: payload.className.trim(),
+        section: (payload.section || "").trim(),
+      });
+
+      if (!session) {
+        session = await TeacherClassSession.findOne({
+          campusId,
+          date: targetDate,
+          originalTeacherId: origUserId,
+          period: Number(payload.period),
+        });
+      }
+
+      if (session) {
+        session.actualTeacherId = subUserId;
+        session.isSubstituted = true;
+        session.substituteAssignmentId = substitute._id;
+        session.status = "Substituted";
+        session.bonusValue = bonusAmount;
+        session.creditValue = 1.0;
+        session.remarks = payload.notes || `Substituted by ${subUser?.name || "Teacher"}`;
+        session.adjustmentReview = {
+          status: "Pending Review",
+          proposedBonus: bonusAmount,
+          proposedDeduction: 0,
+          reviewRemark: "Substitute assignment created",
+        };
+        await session.save();
+      }
+    }
+  } catch (err) {
+    console.error("Error syncing TeacherClassSession from substitute assignment:", err.message);
+  }
+
   // Return doc with optional warning if load is approaching threshold
   let warning = null;
   if (dailyCount + 1 >= warningThreshold) {
@@ -424,6 +472,36 @@ export const updateSubstitute = async (id, campusId, payload) => {
   }
 
   await sub.save();
+
+  try {
+    if (payload.status === "Completed") {
+      await TeacherClassSession.updateMany(
+        { substituteAssignmentId: sub._id },
+        {
+          $set: {
+            status: "Completed",
+            attendanceStatus: "Present",
+            "adjustmentReview.status": "Pending Review",
+          },
+        }
+      );
+    } else if (payload.status === "Cancelled" || payload.status === "Declined") {
+      await TeacherClassSession.updateMany(
+        { substituteAssignmentId: sub._id },
+        {
+          $set: {
+            status: "Cancelled",
+            isSubstituted: false,
+            bonusValue: 0,
+            "adjustmentReview.status": "None",
+          },
+        }
+      );
+    }
+  } catch (err) {
+    console.error("Error updating TeacherClassSession on substitute update:", err.message);
+  }
+
   return sub;
 };
 
@@ -442,6 +520,22 @@ export const deleteSubstitute = async (id, campusId) => {
   sub.bonusEligible = false;
   sub.bonusAmount = 0;
   await sub.save();
+
+  try {
+    await TeacherClassSession.updateMany(
+      { substituteAssignmentId: sub._id },
+      {
+        $set: {
+          status: "Cancelled",
+          isSubstituted: false,
+          bonusValue: 0,
+          "adjustmentReview.status": "None",
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Error syncing TeacherClassSession on substitute cancellation:", err.message);
+  }
 
   return { message: "Substitute assignment cancelled successfully" };
 };

@@ -2,21 +2,20 @@
   color: #09090b;
 }
 .messages-heading {
-  margin-bottom: 24px;
+  min-height: 48px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
 }
-.messages-heading h1 {
-  font-size: 28px;
-  line-height: 1.25;
-  font-weight: 700;
-  margin: 0 0 6px;
-  letter-spacing: -0.02em;
-  color: #09090b;
-}
-.messages-heading p {
+.messages-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   color: #71717a;
-  font-size: 14px;
-  margin: 0;
+  font-size: 13px;
 }
+.messages-breadcrumb [aria-current="page"] { color: #18181b; font-weight: 600; }
 .messages-workspace {
   display: grid;
   grid-template-columns: minmax(280px, 31%) minmax(0, 1fr);

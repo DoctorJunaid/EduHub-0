@@ -5,6 +5,7 @@ import TeacherAttendance from "../models/teacherAttendance.model.js";
 import { SubstituteAssignment } from "../models/substituteAssignment.model.js";
 import { TeacherProfile } from "../models/profile.model.js";
 import { PayrollAdjustment } from "../models/payrollAdjustment.model.js";
+import TeacherClassSession from "../models/teacherClassSession.model.js";
 import moment from "moment";
 import PDFDocument from "pdfkit";
 
@@ -213,6 +214,47 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       }
     }
 
+    // 8c. Incorporate approved missed class deductions and substitute bonuses from TeacherClassSession
+    const teacherUserIds = attendanceTeacherIds;
+    const sessionDeductions = await TeacherClassSession.find({
+      campusId,
+      date: { $gte: startDate, $lte: endDate },
+      originalTeacherId: { $in: teacherUserIds },
+      status: { $in: ["Missed", "Absent"] },
+      "adjustmentReview.status": "Approved",
+      deductionValue: { $gt: 0 },
+    }).lean();
+
+    for (const sess of sessionDeductions) {
+      deductions.push({
+        reason: `Approved Missed Period ${sess.period}: ${sess.subject} (${sess.className}) on ${moment.utc(sess.date).format("YYYY-MM-DD")}`,
+        category: "Absent",
+        amount: sess.deductionValue,
+        note: `Session ID: ${sess._id}`,
+      });
+    }
+
+    const sessionBonuses = await TeacherClassSession.find({
+      campusId,
+      date: { $gte: startDate, $lte: endDate },
+      actualTeacherId: { $in: teacherUserIds },
+      isSubstituted: true,
+      status: "Completed",
+      "adjustmentReview.status": "Approved",
+      bonusValue: { $gt: 0 },
+    }).lean();
+
+    for (const sess of sessionBonuses) {
+      bonuses.push({
+        reason: `Approved Substitute Period ${sess.period}: ${sess.subject} (${sess.className}) on ${moment.utc(sess.date).format("YYYY-MM-DD")}`,
+        category: "Substitute",
+        amount: sess.bonusValue,
+        count: 1,
+        rate: sess.bonusValue,
+        note: `Session ID: ${sess._id}`,
+      });
+    }
+
     // 9. Compute totals
     const allowancesTotal = (profile.allowances || []).reduce((sum, a) => sum + (a.amount || 0), 0);
     const grossSalary = profile.baseSalary + allowancesTotal; // PAY-05
@@ -250,6 +292,19 @@ export const generatePayroll = async (campusId, userId, { month }) => {
         { _id: { $in: pendingAdjustments.map((a) => a._id) } },
         { $set: { status: "Applied", appliedPayrollId: payrollRecord._id } }
       );
+    }
+
+    if (payrollRecord) {
+      const sessionIdsToMark = [
+        ...sessionDeductions.map((s) => s._id),
+        ...sessionBonuses.map((s) => s._id),
+      ];
+      if (sessionIdsToMark.length > 0) {
+        await TeacherClassSession.updateMany(
+          { _id: { $in: sessionIdsToMark } },
+          { $set: { appliedToPayrollId: payrollRecord._id, appliedAt: new Date() } }
+        );
+      }
     }
 
     generated++;

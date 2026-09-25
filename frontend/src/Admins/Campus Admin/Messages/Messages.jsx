@@ -32,12 +32,11 @@ export default function Messages() {
   }, [selectedId, selected?.messages.length]);
 
   return (
-    <section className="messages-page" aria-labelledby="messages-title">
+    <section className="messages-page" aria-label="Messages">
       <div className="messages-heading">
-        <h1 id="messages-title">Messages &amp; Inbox</h1>
-        <p>
-          View and manage your conversations with students, faculty, and staff.
-        </p>
+        <nav className="messages-breadcrumb" aria-label="Breadcrumb">
+          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Messages</span>
+        </nav>
       </div>
       <div className="messages-workspace">
         <aside className="conversation-panel" aria-label="Conversations">

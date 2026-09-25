@@ -60,6 +60,9 @@ import MyPayslips from "./pages/MyPayslips";
 import TeacherLayout from "./Users/Teacher/TeacherLayout";
 import TeacherDashboard from "./Users/Teacher/TeacherDashboard";
 import TeacherPage from "./Users/Teacher/TeacherPage";
+import TeacherClassCredits from "./Users/Teacher/TeacherClassCredits";
+import TeachingPerformance from "./pages/TeachingPerformance";
+import SalaryReviewCenter from "./pages/SalaryReviewCenter";
 import AdminSeed from "./pages/AdminSeed";
 
 const App = () => {
@@ -188,6 +191,7 @@ const App = () => {
             <Route path="fees" element={<FeeManagement />} />
             <Route path="messages" element={<Messages />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="teaching-performance" element={<TeachingPerformance />} />
             <Route path="substitutes" element={<SubstituteAssignments />} />
             <Route path="academics" element={<AcademicsConfig />} />
             <Route path="teacher-assignments" element={<TeacherAssignments />} />
@@ -213,6 +217,7 @@ const App = () => {
             <Route path="salary-profiles" element={<SalaryProfiles />} />
             <Route path="salary-payroll" element={<SalaryPayroll />} />
             <Route path="payroll-approvals" element={<PayrollApprovals />} />
+            <Route path="salary-review-center" element={<SalaryReviewCenter />} />
           </Route>
         </Route>
 
@@ -221,6 +226,7 @@ const App = () => {
         >
           <Route element={<TeacherLayout />}>
             <Route path="teacher" element={<TeacherDashboard />} />
+            <Route path="teacher/credits" element={<TeacherClassCredits />} />
             <Route path="teacher/classes" element={<TeacherPage />} />
             <Route path="teacher/assignments" element={<TeacherPage />} />
             <Route path="teacher/attendance" element={<TeacherPage />} />
