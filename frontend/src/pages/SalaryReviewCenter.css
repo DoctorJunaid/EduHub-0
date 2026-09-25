@@ -1,0 +1,109 @@
+.salary-review-page.campus-tab-page {
+  min-height: 100%;
+  padding: 0;
+  gap: 0;
+  max-width: none;
+  margin: 0;
+  background: #fff;
+  color: #09090b;
+}
+.salary-review-heading {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e4e4e7;
+  box-sizing: border-box;
+}
+.salary-review-breadcrumb { display: flex; align-items: center; gap: 9px; color: #71717a; font-size: 13px; }
+.salary-review-breadcrumb [aria-current="page"] { color: #18181b; font-weight: 600; }
+.salary-review-kpis.campus-kpi-track { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 0; border-bottom: 1px solid #e4e4e7; }
+.salary-review-kpi.campus-kpi-card { min-height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border: 0; border-right: 1px solid #e4e4e7; }
+.salary-review-kpi:last-child { border-right: 0; }
+.salary-review-kpi > div { display: flex; flex-direction: column; gap: 3px; }
+.salary-review-kpi-label { color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.salary-review-kpi strong { color: #09090b; font-size: 18px; line-height: 1.1; }
+.salary-review-kpi small { color: #a1a1aa; font-size: 10px; }
+.salary-review-kpi-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; background: #f4f4f5; color: #3f3f46; }
+.salary-review-month-row { min-height: 48px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 7px 20px; border-bottom: 1px solid #e4e4e7; background: #fafafa; }
+.salary-review-month-row > label { color: #71717a; font-size: 11px; }
+.salary-review-month-controls { display: flex; align-items: center; gap: 8px; }
+.salary-review-month-input { height: 32px; padding: 0 8px; border: 1px solid #e4e4e7; border-radius: 6px; background: #fff; color: #18181b; font-size: 11px; }
+.salary-review-sync-btn { height: 32px; gap: 6px; padding: 0 10px; border: 1px solid #d4d4d8; border-radius: 6px; background: #fff; color: #18181b; font-size: 11px; font-weight: 600; }
+.salary-review-sync-btn:hover { background: #f4f4f5; }
+.salary-review-controls { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 20px; border-bottom: 1px solid #e4e4e7; background: #fafafa; }
+.salary-review-tabs { display: flex; align-items: center; gap: 3px; }
+.salary-review-tab { height: 30px; padding: 0 11px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #52525b; font-size: 11px; font-weight: 600; cursor: pointer; }
+.salary-review-tab:hover { background: #f4f4f5; color: #09090b; }
+.salary-review-tab.is-active { background: #09090b; color: #fff; }
+.salary-review-filters { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.salary-review-search { position: relative; width: min(300px, 30vw); }
+.salary-review-search > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #71717a; }
+.salary-review-search-input, .salary-review-type-filter { height: 32px; border: 1px solid #e4e4e7; border-radius: 6px; background: #fff; color: #18181b; font-size: 11px; }
+.salary-review-search-input { width: 100%; padding: 0 10px 0 30px; box-sizing: border-box; }
+.salary-review-type-filter { min-width: 150px; padding: 0 8px; }
+.salary-review-search-input:focus, .salary-review-type-filter:focus, .salary-review-month-input:focus, .salary-review-dialog-input:focus { outline: none; border-color: #09090b; box-shadow: 0 0 0 2px #f4f4f5; }
+.salary-review-table-wrap { width: 100%; overflow: hidden; border: 0; border-radius: 0; background: #fff; }
+.salary-review-table-summary { min-height: 40px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #e4e4e7; color: #52525b; font-size: 11px; font-weight: 600; }
+.salary-review-state { min-height: 210px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px; color: #71717a; text-align: center; font-size: 11px; }
+.salary-review-empty-icon { color: #71717a; margin-bottom: 2px; }
+.salary-review-state p { margin: 0; color: #3f3f46; font-size: 13px; font-weight: 650; }
+.salary-review-state span { color: #71717a; }
+.salary-review-table { width: 100%; border-collapse: collapse; color: #18181b; font-size: 11px; text-align: left; }
+.salary-review-table thead { background: #fafafa; color: #71717a; }
+.salary-review-table th { padding: 11px 14px; border-bottom: 1px solid #e4e4e7; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.salary-review-table td { padding: 11px 14px; border-bottom: 1px solid #f0f0f2; vertical-align: middle; }
+.salary-review-table tbody tr:hover { background: #fafafa; }
+.salary-review-type-badge, .salary-review-status { display: inline-flex; align-items: center; min-height: 21px; padding: 2px 8px; border: 1px solid #e4e4e7; border-radius: 999px; background: #f4f4f5; color: #3f3f46; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.salary-review-appeal { padding: 8px; border: 1px solid #e4e4e7; border-radius: 6px; background: #fafafa; color: #3f3f46; }
+.salary-review-appeal strong { display: block; margin-bottom: 3px; color: #52525b; font-size: 9px; text-transform: uppercase; }
+.salary-review-amount { color: #18181b; font-size: 12px; font-weight: 700; }
+.salary-review-page button.salary-review-btn, .salary-review-dialog button.salary-review-btn { min-height: 28px; padding: 0 9px; border-radius: 5px; font-size: 10px; font-weight: 650; }
+.salary-review-page button.salary-review-btn-primary, .salary-review-dialog button.salary-review-btn-primary { border: 1px solid #09090b; background: #09090b; color: #fff; }
+.salary-review-page button.salary-review-btn-primary:hover, .salary-review-dialog button.salary-review-btn-primary:hover { background: #27272a; }
+.salary-review-page button.salary-review-btn-outline, .salary-review-dialog button.salary-review-btn-outline { border: 1px solid #d4d4d8; background: #fff; color: #18181b; }
+.salary-review-page button.salary-review-btn-outline:hover, .salary-review-page button.salary-review-btn-danger:hover, .salary-review-dialog button.salary-review-btn-outline:hover, .salary-review-dialog button.salary-review-btn-danger:hover { background: #f4f4f5; }
+.salary-review-page button.salary-review-btn-danger, .salary-review-dialog button.salary-review-btn-danger { border: 1px solid #d4d4d8; background: #fff; color: #3f3f46; }
+.salary-review-action-result { display: inline-flex; align-items: center; gap: 4px; color: #52525b; font-size: 10px; font-weight: 650; }
+.salary-review-dialog { display: flex; flex-direction: column; gap: 12px; width: min(540px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 22px; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #18181b; }
+.salary-review-dialog [data-slot="dialog-header"] { gap: 6px; }
+.salary-review-dialog [data-slot="dialog-title"] { margin: 0; padding-right: 24px; color: #09090b; font-size: 20px; line-height: 1.25; }
+.salary-review-dialog [data-slot="dialog-description"] { margin: 0; color: #71717a; font-size: 12px; line-height: 1.5; }
+.salary-review-dialog > div.bg-slate-50 { display: flex; flex-direction: column; gap: 6px; margin: 0 !important; padding: 12px !important; border: 1px solid #e4e4e7; border-radius: 7px; line-height: 1.45; }
+.salary-review-dialog > form { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.salary-review-dialog > form > div { display: flex; flex-direction: column; gap: 5px; }
+.salary-review-dialog label { margin: 0 !important; color: #3f3f46; font-size: 10px; line-height: 1.35; }
+.salary-review-dialog-input { width: 100%; min-height: 36px; padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; background: #fff; color: #18181b; font-size: 12px; line-height: 1.4; box-sizing: border-box; }
+.salary-review-dialog textarea.salary-review-dialog-input { min-height: 76px; resize: vertical; }
+.salary-review-dialog select.salary-review-dialog-input { padding-right: 28px; }
+.salary-review-dialog [data-slot="dialog-footer"] { display: flex; flex-direction: row; justify-content: flex-end; gap: 8px; margin-top: 2px; padding-top: 12px; border-top: 1px solid #e4e4e7; }
+.salary-review-dialog .salary-review-btn { min-height: 32px; padding: 0 12px; }
+
+/* Neutralize legacy accent utility classes inside review details and dialogs. */
+.salary-review-page .bg-amber-50, .salary-review-dialog .bg-amber-50, .salary-review-dialog .bg-slate-50 { background: #fafafa !important; }
+.salary-review-page .border-amber-200, .salary-review-dialog .border-amber-200 { border-color: #e4e4e7 !important; }
+.salary-review-page .text-amber-900, .salary-review-page .text-amber-700, .salary-review-dialog .text-amber-900, .salary-review-dialog .text-amber-700 { color: #3f3f46 !important; }
+.salary-review-dialog .focus\:ring-blue-500:focus { --tw-ring-color: #09090b; }
+
+@media (max-width: 900px) {
+  .salary-review-kpis.campus-kpi-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .salary-review-kpi.campus-kpi-card { border-right: 0; border-bottom: 1px solid #e4e4e7; }
+  .salary-review-kpi:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .salary-review-heading { padding: 14px; }
+  .salary-review-kpi.campus-kpi-card { min-height: 62px; padding: 10px 14px; }
+  .salary-review-month-row, .salary-review-controls { padding-left: 14px; padding-right: 14px; }
+  .salary-review-controls { align-items: stretch; flex-direction: column; }
+  .salary-review-tabs { max-width: 100%; overflow-x: auto; }
+  .salary-review-tab { flex: 0 0 auto; }
+  .salary-review-filters { width: 100%; }
+  .salary-review-search { flex: 1; width: auto; }
+  .salary-review-type-filter { min-width: 120px; }
+  .salary-review-table { min-width: 980px; }
+}
+@media (max-width: 600px) {
+  .salary-review-kpis.campus-kpi-track { grid-template-columns: 1fr; }
+  .salary-review-kpi:last-child { grid-column: auto; }
+  .salary-review-month-row { justify-content: space-between; }
+}
