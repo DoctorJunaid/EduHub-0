@@ -30,7 +30,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
+import "./TeachingPerformance.css";
 
 const formatPKR = (amt) =>
   `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
@@ -166,272 +168,82 @@ export default function TeachingPerformance() {
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-        <div>
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest block mb-1">
-            Campus Manager Overview
-          </span>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Teacher Class Performance &amp; Credits
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Period-level fulfillment, teaching credits, substitutions, bonuses, and salary adjustments.
+    <div className="teaching-performance-page">
+      <header className="tp-page-header">
+        <div className="tp-page-intro">
+          <span className="tp-eyebrow">Campus Manager Overview</span>
+          <h1>Teacher Class Performance &amp; Credits</h1>
+          <p>
+            Period-level fulfillment, teaching credits, substitutions, bonuses,
+            and salary adjustments.
           </p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-          />
-          <Button
-            onClick={handleGenerateToday}
-            disabled={generating}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
-          >
+        <div className="tp-header-controls">
+          <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} aria-label="Select performance month" className="tp-month-select" />
+          <Button onClick={handleGenerateToday} disabled={generating} className="tp-generate-button">
             <Clock3 size={14} className={generating ? "animate-spin" : ""} />
-            Generate Today's Sessions
+            Generate Today&apos;s Sessions
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => loadPerformance(true)}
-            disabled={loading}
-            className="rounded-xl text-xs flex items-center gap-1.5"
-          >
+          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             Sync
           </Button>
         </div>
-      </div>
+      </header>
 
-      {/* Campus Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3.5">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-            Scheduled Classes
-          </span>
-          <span className="text-2xl font-black text-slate-900 mt-1 block">
-            {totals.scheduled || 0}
-          </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">
-            {performanceData?.totalTeachers || 0} Teachers
-          </span>
+      <section className="tp-summary-grid" aria-label="Teaching performance summary">
+        <article className="tp-summary-card"><span className="tp-summary-label">Scheduled Classes</span><strong className="tp-summary-value">{totals.scheduled || 0}</strong><span className="tp-summary-support">{performanceData?.totalTeachers || 0} Teachers</span></article>
+        <article className="tp-summary-card tp-tone-success"><span className="tp-summary-label">Completed (Credits)</span><strong className="tp-summary-value">{totals.completed || 0}</strong><span className="tp-summary-support">{totals.credits || 0} Teaching Credits</span></article>
+        <article className="tp-summary-card tp-tone-danger"><span className="tp-summary-label">Missed &amp; Absent</span><strong className="tp-summary-value">{(totals.missed || 0) + (totals.absent || 0)}</strong><span className="tp-summary-support">{totals.missed || 0} Missed, {totals.absent || 0} Absent</span></article>
+        <article className="tp-summary-card tp-tone-purple"><span className="tp-summary-label">Substitutions</span><strong className="tp-summary-value">{totals.substitutionsTaken || 0}</strong><span className="tp-summary-support">Duties fulfilled</span></article>
+        <article className="tp-summary-card tp-tone-purple"><span className="tp-summary-label">Bonus Accrued</span><strong className="tp-summary-value tp-summary-value-money">+{formatPKR(totals.bonusesEarned)}</strong><span className="tp-summary-support">Substitute rewards</span></article>
+        <article className="tp-summary-card tp-tone-warning"><span className="tp-summary-label">Pending Reviews</span><strong className="tp-summary-value">{totals.pendingReviews || 0}</strong><span className="tp-summary-support">Requires manager review</span></article>
+      </section>
+
+      <section className="tp-filter-bar" aria-label="Filter teaching performance">
+        <div className="tp-search-field">
+          <Search size={15} aria-hidden="true" />
+          <Input type="text" placeholder="Search teacher name, email, or designation..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="tp-search-input" />
         </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">
-            Completed (Credits)
-          </span>
-          <span className="text-2xl font-black text-emerald-600 mt-1 block">
-            {totals.completed || 0}
-          </span>
-          <span className="text-[11px] text-emerald-700 mt-0.5 block">
-            {totals.credits || 0} Teaching Credits
-          </span>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-rose-600 uppercase tracking-wider block">
-            Missed &amp; Absent
-          </span>
-          <span className="text-2xl font-black text-rose-600 mt-1 block">
-            {(totals.missed || 0) + (totals.absent || 0)}
-          </span>
-          <span className="text-[11px] text-rose-700 mt-0.5 block">
-            {totals.missed || 0} Missed, {totals.absent || 0} Absent
-          </span>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider block">
-            Substitutions
-          </span>
-          <span className="text-2xl font-black text-purple-700 mt-1 block">
-            {totals.substitutionsTaken || 0}
-          </span>
-          <span className="text-[11px] text-purple-700 mt-0.5 block">
-            Duties fulfilled
-          </span>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider block">
-            Bonus Accrued
-          </span>
-          <span className="text-xl font-black text-purple-700 mt-1 block">
-            +{formatPKR(totals.bonusesEarned)}
-          </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">
-            Substitute rewards
-          </span>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">
-            Pending Reviews
-          </span>
-          <span className="text-2xl font-black text-amber-700 mt-1 block">
-            {totals.pendingReviews || 0}
-          </span>
-          <span className="text-[11px] text-amber-600 mt-0.5 block">
-            Requires manager review
-          </span>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-white p-4 rounded-xl border border-slate-200">
-        <div className="relative flex-1 w-full">
-          <Search
-            size={15}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            type="text"
-            placeholder="Search teacher name, email, or designation..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter size={14} className="text-slate-500" />
-          <select
-            value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white font-medium text-slate-700"
-          >
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept} Department
-              </option>
-            ))}
+        <div className="tp-department-filter">
+          <Filter size={15} aria-hidden="true" />
+          <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="tp-department-select" aria-label="Filter by department">
+            {departments.map((dept) => (<option key={dept} value={dept}>{dept} Department</option>))}
           </select>
         </div>
-      </div>
+      </section>
 
-      {/* Teachers Performance Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Award size={18} className="text-blue-600" />
-            <h2 className="text-base font-bold text-slate-800">
-              Teacher Class Session &amp; Credit Ledger ({selectedMonth})
-            </h2>
-          </div>
-          <span className="text-xs font-semibold text-slate-500">
-            {filteredTeachers.length} teachers
-          </span>
-        </div>
-
+      <section className="tp-ledger-card">
+        <div className="tp-ledger-header"><div className="tp-ledger-heading"><Award size={18} aria-hidden="true" /><h2>Teacher Class Session &amp; Credit Ledger ({selectedMonth})</h2></div><span className="tp-teacher-count">{filteredTeachers.length} teachers</span></div>
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-sm">
-            <RefreshCw className="animate-spin inline-block mr-2" size={16} />
-            Loading teaching records...
-          </div>
+          <div className="p-12 text-center text-slate-500 text-sm"><RefreshCw className="animate-spin inline-block mr-2" size={16} />Loading teaching records...</div>
         ) : filteredTeachers.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-sm">
-            No teacher records found for this period.
-          </div>
+          <div className="p-12 text-center text-slate-400 text-sm">No teacher records found for this period.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Faculty Member</th>
-                  <th className="py-3.5 px-4 text-center">Scheduled</th>
-                  <th className="py-3.5 px-4 text-center">Completed</th>
-                  <th className="py-3.5 px-4 text-center">Missed / Absent</th>
-                  <th className="py-3.5 px-4 text-center">Substitutions</th>
-                  <th className="py-3.5 px-4 text-center">Credits</th>
-                  <th className="py-3.5 px-4 text-right">Bonuses</th>
-                  <th className="py-3.5 px-4 text-right">Deductions</th>
-                  <th className="py-3.5 px-4 text-center">Pending Reviews</th>
-                  <th className="py-3.5 px-4 text-right">Timeline</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
+          <div className="tp-table-scroll">
+            <table className="tp-ledger-table">
+              <colgroup><col className="tp-col-faculty" /><col span="5" className="tp-col-number" /><col span="2" className="tp-col-money" /><col className="tp-col-review" /><col className="tp-col-action" /></colgroup>
+              <thead><tr><th>Faculty Member</th><th className="tp-cell-center">Scheduled</th><th className="tp-cell-center">Completed</th><th className="tp-cell-center">Missed / Absent</th><th className="tp-cell-center">Substitutions</th><th className="tp-cell-center">Credits</th><th className="tp-cell-right">Bonuses</th><th className="tp-cell-right">Deductions</th><th className="tp-cell-center">Pending Reviews</th><th className="tp-cell-right">Timeline</th></tr></thead>
+              <tbody>
                 {filteredTeachers.map((t) => (
-                  <tr
-                    key={t.teacherId}
-                    className="hover:bg-slate-50/50 transition-colors"
-                  >
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div>
-                        <strong className="block text-slate-900 text-xs font-bold">
-                          {t.name}
-                        </strong>
-                        <span className="text-[11px] text-slate-500">
-                          {t.designation || "Teacher"} • {t.department || "Academics"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-semibold text-slate-800">
-                      {t.scheduled}
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-bold text-emerald-600">
-                      {t.completed}
-                    </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      {t.missed > 0 || t.absent > 0 ? (
-                        <span className="text-rose-600 font-bold">
-                          {t.missed} Missed / {t.absent} Absent
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">0</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <span className="text-purple-700 font-semibold">
-                        +{t.substitutionsTaken} taken
-                      </span>
-                      {t.substitutedOut > 0 && (
-                        <span className="text-amber-700 block text-[10px]">
-                          ({t.substitutedOut} out)
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-black text-blue-700 text-sm">
-                      {t.credits}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-purple-700">
-                      +{formatPKR(t.bonusesEarned)}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-rose-600">
-                      -{formatPKR(t.deductionsApproved)}
-                    </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      {t.pendingReviews > 0 ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                          {t.pendingReviews} Action(s)
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 text-xs">Clear</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleOpenTimeline(t)}
-                        className="rounded-lg h-7 px-2.5 text-xs font-semibold flex items-center gap-1"
-                      >
-                        <Eye size={13} /> Timeline
-                      </Button>
-                    </td>
+                  <tr key={t.teacherId}>
+                    <td><div className="tp-faculty-cell"><strong>{t.name}</strong><span>{t.designation || "Teacher"} {"\u2022"} {t.department || "Academics"}</span></div></td>
+                    <td className="tp-cell-center tp-number-cell">{t.scheduled}</td>
+                    <td className="tp-cell-center tp-number-cell tp-completed-value">{t.completed}</td>
+                    <td className="tp-cell-center tp-nowrap">{t.missed > 0 || t.absent > 0 ? <span className="text-rose-600 font-bold">{t.missed} Missed / {t.absent} Absent</span> : <span className="text-slate-400">0</span>}</td>
+                    <td className="tp-cell-center tp-nowrap"><span className="tp-substitution-value">+{t.substitutionsTaken} taken</span>{t.substitutedOut > 0 && <span className="tp-substitution-out">({t.substitutedOut} out)</span>}</td>
+                    <td className="tp-cell-center tp-credit-value">{t.credits}</td>
+                    <td className="tp-cell-right tp-money-value tp-bonus-value">+{formatPKR(t.bonusesEarned)}</td>
+                    <td className="tp-cell-right tp-money-value tp-deduction-value">-{formatPKR(t.deductionsApproved)}</td>
+                    <td className="tp-cell-center tp-nowrap">{t.pendingReviews > 0 ? <span className="tp-review-badge">{t.pendingReviews} Action(s)</span> : <span className="tp-clear-status">Clear</span>}</td>
+                    <td className="tp-cell-right tp-nowrap"><Button size="sm" variant="outline" onClick={() => handleOpenTimeline(t)} className="tp-timeline-button"><Eye size={13} /> Timeline</Button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
-
+      </section>
       {/* Teacher Timeline Modal */}
       <Dialog open={timelineOpen} onOpenChange={setTimelineOpen}>
         <DialogContent className="sm:max-w-4xl bg-white rounded-2xl p-6 max-h-[85vh] flex flex-col">
