@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   CalendarDays,
@@ -31,7 +32,9 @@ export default function CampusOperationsHub({
   onAddStudent,
   onAddTeacher,
   onViewStudentProfile,
+  onViewTeacherProfile,
 }) {
+  const navigate = useNavigate();
   const { isSchool } = useInstitution();
   const currentTab = isSchool && (activeTab === 'programs' || activeTab === 'classes') ? 'classes' : activeTab;
 
@@ -476,8 +479,18 @@ export default function CampusOperationsHub({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayedRows.map((teacher) => (
-                <TableRow key={teacher.id || teacher._id || teacher.name}>
+              {displayedRows.map((teacher) => {
+                const targetTeacherId = teacher._id || teacher.id || teacher.user?._id || teacher.userId || teacher.employeeId;
+                return (
+                  <TableRow
+                    key={targetTeacherId || teacher.name}
+                    className="cursor-pointer hover:bg-zinc-50"
+                    onClick={() => {
+                      if (targetTeacherId) {
+                        navigate(`/faculty/${targetTeacherId}`);
+                      }
+                    }}
+                  >
                   <TableCell>
                     <div className="hub-user-info">
                       <strong className="hub-student-link">{teacher.name}</strong>
@@ -504,7 +517,8 @@ export default function CampusOperationsHub({
                     </span>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+            })}
               {displayedRows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="hub-empty-cell">

@@ -177,7 +177,7 @@ const SalaryPayroll = () => {
         ) : payrolls.length === 0 ? (
           <div className="salary-payroll-state"><ReceiptText size={24} /><strong>No payroll records for {month}</strong><span>Generate payroll to create the monthly draft records.</span></div>
         ) : (
-          <div className="overflow-x-auto"><table className="salary-payroll-table">
+          <div className="overflow-x-auto flex-1"><table className="salary-payroll-table">
             <thead>
               <tr>
                 <th>Teacher</th><th>Gross</th><th>Deductions</th><th>Bonuses</th><th>Net salary</th><th>Status</th><th className="text-right">Actions</th>

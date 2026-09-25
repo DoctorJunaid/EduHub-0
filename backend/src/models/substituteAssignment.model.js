@@ -105,3 +105,5 @@ substituteAssignmentSchema.index(
 export const SubstituteAssignment =
   mongoose.models.SubstituteAssignment ||
   mongoose.model("SubstituteAssignment", substituteAssignmentSchema);
+
+export default SubstituteAssignment;

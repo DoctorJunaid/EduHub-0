@@ -184,35 +184,37 @@ export default function TeacherAssignments() {
             </Button>
           </form>
 
-          <div className="teacher-academic-assignments-table-wrap">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Teacher</th>
-                  <th className="px-4 py-3 font-medium">Grade/Class</th>
-                  <th className="px-4 py-3 font-medium">Section</th>
-                  <th className="px-4 py-3 font-medium">Subject</th>
-                  <th className="px-4 py-3 font-medium w-24">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedAssignments.length === 0 ? (
-                  <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No assignments defined yet.</td></tr>
-                ) : paginatedAssignments.map((a) => (
-                  <tr key={a._id} className="border-b last:border-0 teacher-assignment-data-row">
-                    <td className="font-medium">{a.teacherId?.name || "Unknown"}</td>
-                    <td>{a.gradeId?.name || "Unknown"}</td>
-                    <td>{a.sectionId?.name || "Unknown"}</td>
-                    <td>{a.subjectId?.name || "Unknown"}</td>
-                    <td>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteAssignment(a._id)} className="text-destructive teacher-assignment-delete-button">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
+          <div className="teacher-academic-assignments-table-wrap flex flex-col">
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Teacher</th>
+                    <th className="px-4 py-3 font-medium">Grade/Class</th>
+                    <th className="px-4 py-3 font-medium">Section</th>
+                    <th className="px-4 py-3 font-medium">Subject</th>
+                    <th className="px-4 py-3 font-medium w-24">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedAssignments.length === 0 ? (
+                    <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No assignments defined yet.</td></tr>
+                  ) : paginatedAssignments.map((a) => (
+                    <tr key={a._id} className="border-b last:border-0 teacher-assignment-data-row">
+                      <td className="font-medium">{a.teacherId?.name || "Unknown"}</td>
+                      <td>{a.gradeId?.name || "Unknown"}</td>
+                      <td>{a.sectionId?.name || "Unknown"}</td>
+                      <td>{a.subjectId?.name || "Unknown"}</td>
+                      <td>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteAssignment(a._id)} className="text-destructive teacher-assignment-delete-button">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <DataPagination
               page={currentPage}
               pageSize={pageSize}

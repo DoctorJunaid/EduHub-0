@@ -1,16 +1,25 @@
 import axios from 'axios';
 
-const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const isLocalhost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname.startsWith("192.168.") ||
+    window.location.hostname.startsWith("10.") ||
+    window.location.hostname.endsWith(".local") ||
+    window.location.port === "5173" ||
+    window.location.port === "3000");
 
 const defaultBaseUrl = isLocalhost
-  ? 'http://localhost:5000/api/v1'
-  : 'https://edu-hub-backend-blond.vercel.app/api/v1';
+  ? "http://localhost:5000/api/v1"
+  : "https://edu-hub-backend-blond.vercel.app/api/v1";
 
 // Create a configured axios instance pointing to the local dev or hosted backend
 const axiosInstance = axios.create({
-  baseURL: isLocalhost ? defaultBaseUrl : (import.meta?.env?.VITE_API_URL || defaultBaseUrl),
+  baseURL: import.meta?.env?.VITE_API_URL || defaultBaseUrl,
+  timeout: 15000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 

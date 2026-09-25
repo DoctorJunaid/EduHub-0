@@ -17,6 +17,24 @@
   position: relative;
 }
 
+.campus-tab-page > [data-slot="tabs"],
+.campus-tab-page [data-slot="tabs"],
+.campus-tab-page > div:has(.campus-table-container) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.campus-tab-page [data-slot="tabs-content"] {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
 .campus-tab-page:has(.full-page-activity) {
   min-height: auto !important;
   height: auto !important;

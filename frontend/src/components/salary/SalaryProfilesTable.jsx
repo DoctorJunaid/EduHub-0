@@ -26,7 +26,7 @@ export default function SalaryProfilesTable({
 
   return (
     <div className="campus-table-container salary-profiles-table-wrap">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto flex-1">
         <table className="salary-profiles-table">
           <thead>
             <tr>

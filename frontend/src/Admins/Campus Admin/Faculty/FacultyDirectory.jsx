@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   UserCheck,
@@ -11,6 +12,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -45,6 +47,7 @@ import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isSchool } = useInstitution();
 
   useEffect(() => {
@@ -271,13 +274,22 @@ export default function FacultyDirectory() {
                   ? "pending"
                   : "inactive";
 
+                const targetTeacherId = teacher._id || teacher.id || teacher.user?._id || teacher.userId || teacher.employeeId;
+
                 return (
-                  <TableRow key={teacher.id || teacher._id}>
+                  <TableRow
+                    key={targetTeacherId || teacher.name}
+                    className="cursor-pointer hover:bg-zinc-50 transition-colors"
+                    onClick={() => {
+                      if (targetTeacherId) {
+                        navigate(`/faculty/${targetTeacherId}`);
+                      }
+                    }}
+                  >
                     <TableCell style={{ width: "24%", overflow: "hidden" }}>
                       <div
-                        style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, overflow: "hidden", cursor: "pointer" }}
-                        onClick={() => setViewingTeacher(teacher)}
-                        title={`View profile for ${teacher.name}`}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, overflow: "hidden" }}
+                        title={`View full profile for ${teacher.name}`}
                       >
                         <Avatar style={{ width: "28px", height: "28px", fontSize: "11px", fontWeight: "600", background: "#f4f4f5", color: "#09090b", flexShrink: 0 }}>
                           <AvatarFallback>{teacher.initials || teacher.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -335,12 +347,28 @@ export default function FacultyDirectory() {
                     </TableCell>
 
                     <TableCell style={{ width: "8%", textAlign: "center", overflow: "hidden" }}>
-                      <div className="campus-action-icons">
+                      <div className="campus-action-icons" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="table-icon-btn"
+                          title="View Full Profile"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (targetTeacherId) {
+                              navigate(`/faculty/${targetTeacherId}`);
+                            }
+                          }}
+                        >
+                          <Eye size={13} />
+                        </button>
                         <button
                           type="button"
                           className="table-icon-btn"
                           title="Edit Faculty Details"
-                          onClick={() => setForm({ teacher })}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setForm({ teacher });
+                          }}
                         >
                           <Pencil size={13} />
                         </button>
@@ -348,7 +376,10 @@ export default function FacultyDirectory() {
                           type="button"
                           className="table-icon-btn delete"
                           title="Delete Faculty"
-                          onClick={() => setDeleteTarget(teacher)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget(teacher);
+                          }}
                         >
                           <Trash2 size={13} />
                         </button>

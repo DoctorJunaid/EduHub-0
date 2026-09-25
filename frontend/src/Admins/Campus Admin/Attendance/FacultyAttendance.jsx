@@ -425,7 +425,7 @@ export default function FacultyAttendance() {
           setPage(1);
           setNotice("");
         }}
-        style={{ width: "100%", display: "flex", flexDirection: "column" }}
+        style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
       >
         <div className="campus-toolbar">
           <div className="toolbar-left">
@@ -548,8 +548,8 @@ export default function FacultyAttendance() {
         )}
 
         {/* 3. Frameless Table View */}
-        <div style={{ width: "100%", background: "#ffffff" }}>
-          <TabsContent value={view} style={{ margin: 0, padding: 0 }}>
+        <div style={{ width: "100%", background: "#ffffff", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+          <TabsContent value={view} style={{ margin: 0, padding: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
             <div className="campus-table-container">
               <AttendanceTable
                 rows={rows}
