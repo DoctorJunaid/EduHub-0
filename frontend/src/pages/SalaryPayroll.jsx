@@ -118,7 +118,7 @@ const SalaryPayroll = () => {
   const formatPKR = (amount) =>
     `PKR ${(amount || 0).toLocaleString("en-PK")}`;
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / (pageSize || 20)) || 1;
   const filteredPayrolls = payrolls.filter((payroll) => {
     const name = payroll.teacherProfileId?.user?.name || payroll.teacherProfileId?.employeeId || "";
     return name.toLowerCase().includes(search.trim().toLowerCase());

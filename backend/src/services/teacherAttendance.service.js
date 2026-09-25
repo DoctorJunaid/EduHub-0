@@ -173,12 +173,12 @@ export async function getWeekly(campusId, dateStr) {
       const rec = recordsMap[`${teacher._id}_${day}`] || null;
       dailyRecords[day] = rec
         ? {
-            attendanceId: rec._id,
-            status: rec.status,
-            checkInTime: rec.checkInTime || "",
-            checkOutTime: rec.checkOutTime || "",
-            remarks: rec.remarks || "",
-          }
+          attendanceId: rec._id,
+          status: rec.status,
+          checkInTime: rec.checkInTime || "",
+          checkOutTime: rec.checkOutTime || "",
+          remarks: rec.remarks || "",
+        }
         : null;
     }
 

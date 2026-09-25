@@ -250,8 +250,8 @@ export default function FacultyAttendance() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Could not update attendance.",
+        error.message ||
+        "Could not update attendance.",
       );
       // Immediately refresh list on error/conflict so UI catches up with other PCs
       try {
