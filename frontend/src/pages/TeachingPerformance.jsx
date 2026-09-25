@@ -8,12 +8,10 @@ import {
   RefreshCw,
   Search,
   UserCheck,
-  TrendingDown,
   TrendingUp,
   AlertCircle,
   Eye,
   UserPlus,
-  X,
 } from "lucide-react";
 import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import {
