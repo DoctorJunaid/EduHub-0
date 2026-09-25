@@ -182,12 +182,6 @@ export default function SalaryReviewCenter() {
 
   return (
     <div className="salary-review-page campus-tab-page">
-      <div className="salary-review-heading">
-        <nav className="salary-review-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Salary Review Center</span>
-        </nav>
-      </div>
-
       <div className="salary-review-kpis campus-kpi-track">
         <div className="salary-review-kpi campus-kpi-card">
           <div>
@@ -292,8 +286,6 @@ export default function SalaryReviewCenter() {
           <div className="salary-review-state">
             <RefreshCw className="animate-spin inline-block mr-2" size={16} />
             Loading salary adjustment items...
-          <div className="p-12 text-center text-slate-500 text-xs">
-            <SpinnerCustom text="Loading salary adjustment items..." size="lg" className="flex-col gap-2" />
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="salary-review-state">

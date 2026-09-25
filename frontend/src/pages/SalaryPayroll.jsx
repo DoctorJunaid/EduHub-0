@@ -152,12 +152,6 @@ const SalaryPayroll = () => {
 
   return (
     <div className="salary-payroll-page campus-tab-page">
-      <div className="salary-payroll-heading">
-        <nav className="salary-payroll-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Salary &amp; Payroll</span>
-        </nav>
-      </div>
-
       <div className="campus-kpi-track salary-payroll-kpis">
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><WalletCards size={16} /></div><div className="kpi-info"><span className="kpi-label">Gross payroll</span><span className="kpi-value">{formatPKR(summary.gross)}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><ReceiptText size={16} /></div><div className="kpi-info"><span className="kpi-label">Net payroll</span><span className="kpi-value">{formatPKR(summary.net)}</span></div></div></div>
