@@ -13,10 +13,10 @@ import {
   Pencil,
   Trash2,
   AlertTriangle,
-  Loader2,
   Building2,
   ArrowLeft,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import "./Institutes.css";
 import {
   fetchInstitutes,
@@ -565,7 +565,7 @@ export default function Institutes() {
                   opacity: deleting ? 0.7 : 1,
                 }}
               >
-                {deleting ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />}
+                {deleting ? <Spinner className="size-3.5 text-white" /> : <Trash2 size={14} />}
                 {deleting ? "Deleting..." : "Delete Permanently"}
               </button>
             </div>

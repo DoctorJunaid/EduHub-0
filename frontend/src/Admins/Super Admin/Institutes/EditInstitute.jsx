@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowLeft, Building2, Mail, Image, Save, Loader2, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Image, Save, SlidersHorizontal } from "lucide-react";
+import { PageLoader, Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import {
@@ -177,11 +178,8 @@ export default function EditInstitute() {
 
   if (loading) {
     return (
-      <section className="super-admin-edit-institute" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "350px" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", color: "#71717a" }}>
-          <Loader2 size={36} className="spin" />
-          <p style={{ fontSize: "14px", fontWeight: 600 }}>Loading institute details...</p>
-        </div>
+      <section className="super-admin-edit-institute">
+        <PageLoader text="Loading institute details..." />
       </section>
     );
   }
@@ -497,7 +495,7 @@ export default function EditInstitute() {
             className="super-admin-save-button"
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
+            {saving ? <Spinner className="size-4 text-white" /> : <Save size={16} />}
             {saving ? "Saving Changes..." : "Save Changes"}
           </Button>
         </div>

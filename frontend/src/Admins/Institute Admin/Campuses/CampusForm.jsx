@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { validateCampus, campusStatuses } from "./campusData";
-import { Loader2, User, Send, Copy, Check, UserPlus, Info, Plus } from "lucide-react";
+import { User, Send, Copy, Check, UserPlus, Info, Plus } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 
@@ -382,7 +383,7 @@ export default function CampusForm({ campus, onSave, onCancel, loading }) {
                     cursor: "pointer",
                   }}
                 >
-                  {resendingEmail ? <Loader2 size={12} className="spin" /> : <Send size={12} />}
+                  {resendingEmail ? <Spinner className="size-3 text-white" /> : <Send size={12} />}
                   Resend Setup Email
                 </button>
 
@@ -475,7 +476,7 @@ export default function CampusForm({ campus, onSave, onCancel, loading }) {
                       onClick={handleSaveExistingManager}
                       disabled={savingExistingManager}
                     >
-                      {savingExistingManager && <Loader2 size={12} className="spin mr-1" />}
+                      {savingExistingManager && <Spinner className="size-3 mr-1 text-white" />}
                       Save Manager Profile
                     </Button>
                   </div>
@@ -538,7 +539,7 @@ export default function CampusForm({ campus, onSave, onCancel, loading }) {
         </Button>
 
         <Button type="submit" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {loading && <Spinner className="mr-2 size-4 text-white" />}
           {campus ? "Save Changes" : "Create Campus"}
         </Button>
 

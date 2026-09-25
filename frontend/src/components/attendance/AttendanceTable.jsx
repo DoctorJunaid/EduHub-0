@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -121,34 +121,19 @@ export default function AttendanceTable({
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-4" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Skeleton className="h-8 w-20 ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="h-48 text-center"
+                >
+                  <div className="flex flex-col items-center justify-center gap-2 py-8">
+                    <Spinner className="size-8 text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Loading attendance records...
+                    </span>
+                  </div>
+                </TableCell>
+              </TableRow>
             ) : paginatedRows.length === 0 ? (
               <TableRow>
                 <TableCell
@@ -320,7 +305,8 @@ export default function AttendanceTable({
               onClick={handleConfirmDelete}
               disabled={deleting}
             >
-              {deleting ? "Deleting..." : "Delete Record"}
+              {deleting && <Spinner className="mr-2 size-4" />}
+              Delete Record
             </Button>
           </DialogFooter>
         </DialogContent>

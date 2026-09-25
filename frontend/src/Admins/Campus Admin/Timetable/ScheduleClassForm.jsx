@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Calendar, School, Clock, Settings } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { scheduleStatuses } from "./timetableData.js";
 import { weekdays } from "../../../lib/schedule.js";
@@ -22,6 +23,7 @@ export default function ScheduleClassForm({
   const [sections, setSections] = useState([]);
   const [subjects, setSubjects] = useState([]); // Specifically gradeSubjects
   const [teachers, setTeachers] = useState([]); // Specifically assigned teachers for this grade/section/subject
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [values, setValues] = useState(() => ({
     gradeId: record?.gradeId || defaults?.gradeId || "",
@@ -81,7 +83,7 @@ export default function ScheduleClassForm({
     setError("");
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     if (!values.days.length) return setError("Please select at least one weekday.");
     if (values.endTime <= values.startTime) return setError("End time must be after start time.");
@@ -89,7 +91,14 @@ export default function ScheduleClassForm({
       return setError("Please complete all academic assignments (Grade, Section, Subject, Teacher).");
     }
 
-    onSave({ ...values });
+    try {
+      setIsSubmitting(true);
+      await onSave({ ...values });
+    } catch (err) {
+      setError(typeof err === "string" ? err : "Failed to save scheduled class");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -303,10 +312,20 @@ export default function ScheduleClassForm({
         )}
 
         <div className="activity-form-actions">
-          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+          <button
+            type="button"
+            className="activity-cancel-btn"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
-          <button type="submit" className="activity-submit-btn">
+          <button
+            type="submit"
+            className="activity-submit-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
             {record ? "Save Schedule Changes" : (isSchool ? "Confirm & Schedule Period" : "Confirm & Schedule Class")}
           </button>
         </div>

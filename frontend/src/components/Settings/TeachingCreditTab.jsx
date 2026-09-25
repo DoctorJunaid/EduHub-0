@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Award, Save, RefreshCw, AlertCircle, Coins, ShieldCheck } from "lucide-react";
+import { Award, Save, AlertCircle, Coins, ShieldCheck } from "lucide-react";
 import { getTeachingConfig, updateTeachingConfig } from "@/api/classSession.api";
 import { Button } from "@/components/ui/button";
+import { Spinner, PageLoader } from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 
 export default function TeachingCreditTab() {
@@ -61,12 +62,7 @@ export default function TeachingCreditTab() {
   };
 
   if (loading) {
-    return (
-      <div className="p-8 text-center text-slate-500 text-xs">
-        <RefreshCw className="animate-spin inline-block mr-2" size={16} />
-        Loading configuration...
-      </div>
-    );
+    return <PageLoader text="Loading configuration..." />;
   }
 
   return (
@@ -308,8 +304,12 @@ export default function TeachingCreditTab() {
           disabled={saving}
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold px-6 py-2.5 flex items-center gap-1.5"
         >
-          <Save size={14} />
-          {saving ? "Saving Configuration..." : "Save Business Rules"}
+          {saving ? (
+            <Spinner className="mr-2 size-4 text-white" />
+          ) : (
+            <Save size={14} className="mr-1.5" />
+          )}
+          Save Business Rules
         </Button>
       </div>
     </form>

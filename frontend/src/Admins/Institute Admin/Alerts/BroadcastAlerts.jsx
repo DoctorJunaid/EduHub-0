@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Alert as AlertBox, AlertDescription } from '@/components/ui/alert';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
+import { Spinner } from '@/components/ui/spinner';
 import { fetchCampuses, selectInstituteCampuses } from '@/store/Slices/campusesSlice';
 import axiosInstance from '@/api/axiosInstance';
 import { audienceOptions, severities, validateBroadcast } from './broadcastData';
@@ -156,8 +157,8 @@ export default function BroadcastAlerts() {
 
           <div className="iba-actions">
             <Button type="submit" disabled={isSubmitting}>
-              <Send aria-hidden="true" />
-              {isSubmitting ? 'Publishing...' : 'Broadcast Now'}
+              {isSubmitting ? <Spinner className="w-4 h-4 mr-2" /> : <Send aria-hidden="true" />}
+              Broadcast Now
             </Button>
           </div>
         </form>

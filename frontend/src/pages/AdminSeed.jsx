@@ -6,6 +6,7 @@ import {
   Sparkles,
   AlertTriangle,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import useSeed from "../hooks/useSeed";
 import SeedStatsCard from "../components/seed/SeedStatsCard";
 import SeedActionCard from "../components/seed/SeedActionCard";
@@ -144,7 +145,11 @@ export default function AdminSeed() {
           disabled={statsLoading || loading}
           className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-50 cursor-pointer self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${statsLoading ? "animate-spin text-indigo-600" : ""}`} />
+          {statsLoading ? (
+            <Spinner className="w-3.5 h-3.5 text-indigo-600" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5" />
+          )}
           Refresh Stats
         </button>
       </div>

@@ -20,7 +20,8 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import PageLoader from "@/components/shared/PageLoader";
 import ClassCard from "../ClassCard";
 import AssignClassDialog from "../AssignClassDialog";
 import UnassignClassDialog from "../UnassignClassDialog";
@@ -82,19 +83,7 @@ export default function ClassesTab({
   };
 
   if (loading && !classesData) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-9 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Skeleton className="h-44 rounded-xl" />
-          <Skeleton className="h-44 rounded-xl" />
-          <Skeleton className="h-44 rounded-xl" />
-        </div>
-      </div>
-    );
+    return <PageLoader text="Loading assigned classes..." />;
   }
 
   return (

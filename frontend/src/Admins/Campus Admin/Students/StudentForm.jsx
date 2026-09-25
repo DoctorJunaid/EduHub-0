@@ -3,7 +3,8 @@ import { useSelector } from "react-redux";
 import { selectStudents } from "@/store/Slices/studentsSlice";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
-import { Users, School, GraduationCap, Loader2 } from "lucide-react";
+import { Users, School, GraduationCap } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { studentStatuses } from "./studentData.js";
@@ -329,12 +330,8 @@ export default function StudentForm({
             className="activity-submit-btn"
             disabled={isSubmitting}
           >
-            {isSubmitting && <Loader2 size={15} className="spin" />}
-            {isSubmitting
-              ? editing
-                ? "Updating Record..."
-                : "Saving Student..."
-              : editing
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
+            {editing
               ? "Update Student Record"
               : isSchool ? "Add Student" : "Register Student"}
           </button>

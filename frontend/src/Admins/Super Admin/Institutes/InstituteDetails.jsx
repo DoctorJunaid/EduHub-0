@@ -11,7 +11,6 @@ import {
   MapPin,
   Phone,
   Users,
-  Loader2,
   SlidersHorizontal,
   Pencil,
   User,
@@ -19,6 +18,8 @@ import {
   Copy,
   Check,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import PageLoader from "@/components/shared/PageLoader";
 import { selectInstitutes } from "@/store/Slices/institutesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
@@ -124,11 +125,8 @@ export default function InstituteDetails() {
 
   if (loading) {
     return (
-      <section className="institute-details-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "350px" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", color: "#71717a" }}>
-          <Loader2 size={36} className="spin" />
-          <p style={{ fontSize: "14px", fontWeight: 600 }}>Loading institute records...</p>
-        </div>
+      <section className="institute-details-page">
+        <PageLoader text="Loading institute records..." />
       </section>
     );
   }
@@ -341,7 +339,7 @@ export default function InstituteDetails() {
                     disabled={resendingEmail}
                     style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", height: "32px", padding: "0 10px", background: "#09090b", color: "#fff", borderRadius: "6px", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
                   >
-                    {resendingEmail ? <Loader2 size={12} className="spin" /> : <Send size={12} />}
+                    {resendingEmail ? <Spinner className="size-3 text-white" /> : <Send size={12} />}
                     Resend Email
                   </button>
                   <button

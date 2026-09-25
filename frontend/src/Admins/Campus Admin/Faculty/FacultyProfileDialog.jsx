@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Spinner } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import { formatPKR } from "@/lib/currency";
 import { format } from "date-fns";
@@ -176,7 +177,13 @@ export default function FacultyProfileDialog({ teacher, onClose }) {
           </TabsContent>
 
           <TabsContent value="financial" className="student-profile-tab-content student-profile-financial-content">
-            <div className="student-profile-info-grid">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Spinner className="size-6 text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <div className="student-profile-info-grid">
               <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fff", borderColor: "#bbf7d0" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#16a34a", display: "block", marginBottom: "4px" }}>
                   Basic Pay Scale / Gross Salary
@@ -225,6 +232,8 @@ export default function FacultyProfileDialog({ teacher, onClose }) {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </TabsContent>
         </Tabs>
 

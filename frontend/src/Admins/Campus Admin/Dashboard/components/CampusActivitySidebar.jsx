@@ -17,8 +17,8 @@ import {
   DollarSign,
   BookOpen,
   Users,
-  Loader2,
 } from 'lucide-react';
+import { SpinnerCustom } from '@/components/ui/spinner';
 import { useInstitution } from '@/context/InstitutionContext';
 import {
   fetchActivityLogs,
@@ -301,9 +301,8 @@ export default function CampusActivitySidebar({ onSelectStudent, students = [], 
         })}
 
         {isFetchingMore && (
-          <div style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#71717a', fontSize: '11px', fontWeight: '500' }}>
-            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
-            <span>Streaming older logs...</span>
+          <div style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SpinnerCustom text="Streaming older logs..." size="sm" />
           </div>
         )}
 

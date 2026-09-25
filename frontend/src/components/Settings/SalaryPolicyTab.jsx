@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import { Save } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import PageLoader from "@/components/shared/PageLoader";
 
 const SalaryPolicyTab = () => {
   const [formData, setFormData] = useState({
@@ -64,7 +66,7 @@ const SalaryPolicyTab = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-white">Loading salary policy...</div>;
+  if (loading) return <PageLoader message="Loading salary policy..." />;
 
   return (
     <div className="settings-tab-content space-y-8 animate-fadeIn">
@@ -210,8 +212,8 @@ const SalaryPolicyTab = () => {
             disabled={saving}
             className="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            <Save className="w-5 h-5 mr-2" />
-            {saving ? "Saving..." : "Save Salary Policy"}
+            {saving ? <Spinner className="w-5 h-5 mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+            Save Salary Policy
           </button>
         </div>
       </form>

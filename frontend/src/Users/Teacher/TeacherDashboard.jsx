@@ -20,6 +20,7 @@ import {
 } from "./teacherScope";
 import { getTodayClasses, getMySummary, markSessionStatus } from "@/api/classSession.api";
 import { Button } from "@/components/ui/button";
+import { SpinnerCustom } from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 import "./TeacherDashboard.css";
 
@@ -162,7 +163,9 @@ export default function TeacherDashboard() {
         </header>
         <div className="teacher-table-wrap">
           {loadingSessions ? (
-            <div className="p-8 text-center text-slate-500 text-xs">Loading today's periods...</div>
+            <div className="p-8 flex items-center justify-center">
+              <SpinnerCustom text="Loading today's periods..." size="default" />
+            </div>
           ) : todaySessions.length === 0 ? (
             <EmptyRow text="No teaching classes scheduled for today." />
           ) : (
