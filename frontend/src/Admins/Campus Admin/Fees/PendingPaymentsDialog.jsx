@@ -10,7 +10,7 @@ import axiosInstance from "@/api/axiosInstance";
 import { formatPKR } from "@/lib/currency";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function PendingPaymentsDialog({ onClose, onConfirm }) {
   const id = useId();
@@ -116,10 +116,10 @@ export default function PendingPaymentsDialog({ onClose, onConfirm }) {
         >
           {loading ? (
             <div
-              className="flex justify-center"
+              className="flex justify-center items-center"
               style={{ padding: "40px 20px" }}
             >
-              <Loader2 className="animate-spin text-zinc-400 size-6" />
+              <Spinner className="size-6 text-zinc-500" />
             </div>
           ) : payments.length === 0 ? (
             <div

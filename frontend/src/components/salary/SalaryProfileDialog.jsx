@@ -4,13 +4,13 @@ import {
   AlertTriangle,
   Banknote,
   CheckCircle2,
-  Loader2,
   Plus,
   Save,
   Trash2,
   WalletCards,
   X,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import FullPageFormShell from '../common/FullPageFormShell';
 import { listTeachersWithoutSalaryProfile } from '../../api/salaryProfile.api';
 import api from '../../api/axiosInstance';
@@ -541,11 +541,11 @@ export default function SalaryProfileDialog({
                 disabled={saving}
               >
                 {saving ? (
-                  <Loader2 size={15} className="animate-spin" />
+                  <Spinner className="mr-2 size-4" />
                 ) : (
                   <Save size={15} />
                 )}
-                {saving ? 'Saving…' : 'Save Salary Profile'}
+                Save Salary Profile
               </button>
             </div>
           </div>

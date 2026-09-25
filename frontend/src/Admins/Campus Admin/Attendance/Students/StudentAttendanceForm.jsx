@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Users } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { attendanceStatuses } from '@/lib/attendance';
 import { timeLabel } from '@/lib/schedule';
@@ -19,6 +20,7 @@ const DEFAULT_PERIODS = [
 export default function StudentAttendanceForm({ students = [], classes = [], date, records = [], onSave, onClose }) {
   const [values, setValues] = useState({ studentId: '', classId: '', date, status: '' });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedStudent = useMemo(() => {
     return students.find((s) => (s.id || s._id) === values.studentId);
@@ -53,12 +55,19 @@ export default function StudentAttendanceForm({ students = [], classes = [], dat
     setError('');
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     if (!validStudentAttendance(values)) return setError('Please select a student, lecture session, valid date, and status.');
     if (!students.some((student) => (student.id || student._id) === values.studentId))
       return setError('Select an existing student from the roster.');
-    onSave(values);
+    try {
+      setIsSubmitting(true);
+      await onSave(values);
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to save attendance entry');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -176,10 +185,20 @@ export default function StudentAttendanceForm({ students = [], classes = [], dat
         )}
 
         <div className="activity-form-actions">
-          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+          <button
+            type="button"
+            className="activity-cancel-btn"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
-          <button type="submit" className="activity-submit-btn">
+          <button
+            type="submit"
+            className="activity-submit-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
             {existing ? 'Update Attendance Entry' : 'Save Attendance Entry'}
           </button>
         </div>

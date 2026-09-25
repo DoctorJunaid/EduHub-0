@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { ArrowLeft, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
+import { PageLoader } from "@/components/ui/spinner";
 import {
   selectInstitutes,
   fetchInstitutes,
@@ -132,10 +133,7 @@ export default function ManageInstitutePage() {
       {/* Main Content Area */}
       <div className="manage-page-content-card">
         {loading ? (
-          <div className="manage-page-loader">
-            <Loader2 size={32} className="spin" />
-            <p>Loading institute records...</p>
-          </div>
+          <PageLoader text="Loading institute records..." />
         ) : isNew ? (
           <div className="manage-page-form-wrapper">
             <InstituteForm

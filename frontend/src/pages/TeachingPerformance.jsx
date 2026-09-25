@@ -15,6 +15,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import {
   getCampusPerformance,
   getTeacherTimeline,
@@ -193,7 +194,7 @@ export default function TeachingPerformance() {
             disabled={generating}
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
           >
-            <Clock3 size={14} className={generating ? "animate-spin" : ""} />
+            {generating ? <Spinner className="size-3.5 text-white" /> : <Clock3 size={14} />}
             Generate Today's Sessions
           </Button>
           <Button
@@ -202,7 +203,7 @@ export default function TeachingPerformance() {
             disabled={loading}
             className="rounded-xl text-xs flex items-center gap-1.5"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            {loading ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
             Sync
           </Button>
         </div>
@@ -331,8 +332,7 @@ export default function TeachingPerformance() {
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 text-sm">
-            <RefreshCw className="animate-spin inline-block mr-2" size={16} />
-            Loading teaching records...
+            <SpinnerCustom text="Loading teaching records..." size="lg" className="flex-col gap-2" />
           </div>
         ) : filteredTeachers.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-sm">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Clock } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { attendanceStatuses, validateAttendance } from "./attendanceData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
@@ -21,6 +22,7 @@ export default function AttendanceForm({
     status: record?.status ?? "",
   }));
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const change = (key, value) => {
     setValues((previous) => ({ ...previous, [key]: value }));
@@ -34,7 +36,7 @@ export default function AttendanceForm({
       item.id !== record?.id,
   );
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     const message = validateAttendance(values);
     if (message) return setError(message);
@@ -46,7 +48,14 @@ export default function AttendanceForm({
       return setError(
         "Attendance already exists for this member and date. Open that record to update it.",
       );
-    onSave({ ...values, ...(record ? { id: record.id } : {}) });
+    try {
+      setIsSubmitting(true);
+      await onSave({ ...values, ...(record ? { id: record.id } : {}) });
+    } catch (err) {
+      setError(typeof err === "string" ? err : "Failed to save attendance");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -151,10 +160,16 @@ export default function AttendanceForm({
             type="button"
             className="activity-cancel-btn"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
-          <button type="submit" className="activity-submit-btn">
+          <button
+            type="submit"
+            className="activity-submit-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
             {record ? "Save Changes" : "Record Attendance"}
           </button>
         </div>

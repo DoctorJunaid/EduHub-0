@@ -25,6 +25,7 @@ import {
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   selectStudents,
+  selectStudentsStatus,
   addStudent,
   updateStudent,
   deleteStudent,
@@ -42,11 +43,16 @@ import StudentProfileDialog from "./StudentProfileDialog";
 import { useInstitution } from "@/context/InstitutionContext";
 import DataPagination from "@/components/shared/DataPagination";
 import { usePaginationParams } from "@/hooks/usePaginationParams";
+import TableSkeleton from "@/components/shared/TableSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import "./StudentsDirectory.css";
 
 export default function StudentsDirectory() {
   const dispatch = useDispatch();
   const { isSchool } = useInstitution();
+  const status = useSelector(selectStudentsStatus);
+  const isLoading = status === "loading";
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchStudents());
@@ -288,7 +294,12 @@ export default function StudentsDirectory() {
       </div>
 
       {/* 3. Fixed Table Container with Zero Overflow */}
-      <div className="campus-table-container">
+      <div className="campus-table-container relative">
+        {isLoading && students.length > 0 && (
+          <div className="absolute inset-0 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-lg">
+            <Spinner className="size-6 text-primary" />
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
@@ -301,7 +312,14 @@ export default function StudentsDirectory() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {result.records.map((student) => (
+            {isLoading && students.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="p-0">
+                  <TableSkeleton rows={6} columns={6} />
+                </TableCell>
+              </TableRow>
+            ) : result.records.length > 0 ? (
+              result.records.map((student) => (
               <TableRow key={student.id || student.roll}>
                 <TableCell style={{ width: "24%", overflow: "hidden" }}>
                   <div
@@ -396,14 +414,14 @@ export default function StudentsDirectory() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-            {result.records.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#71717a" }}>
-                  No student records match your search and filters.
-                </TableCell>
-              </TableRow>
-            )}
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#71717a" }}>
+                No student records match your search and filters.
+              </TableCell>
+            </TableRow>
+          )}
           </TableBody>
         </Table>
       </div>
@@ -440,17 +458,23 @@ export default function StudentsDirectory() {
         description={`Are you sure you want to delete ${selected?.name ?? "this student"}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
-        onCancel={close}
+        loading={isDeleting}
+        onCancel={() => {
+          if (!isDeleting) close();
+        }}
         onConfirm={async () => {
           if (selected) {
             try {
+              setIsDeleting(true);
               await dispatch(deleteStudent(selected.id || selected._id)).unwrap();
               toast.success(`${selected.name || "Student"} removed successfully!`);
+              close();
             } catch (err) {
               toast.error(typeof err === "string" ? err : "Failed to delete student");
+            } finally {
+              setIsDeleting(false);
             }
           }
-          close();
         }}
       />
     </section>

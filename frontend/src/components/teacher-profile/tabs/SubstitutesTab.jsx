@@ -10,7 +10,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/Table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/ui/spinner";
 
 const formatPKR = (val) => `PKR ${Number(val || 0).toLocaleString("en-PK")}`;
 
@@ -24,12 +24,7 @@ export default function SubstitutesTab({
   }, [onLoadSubstitutes]);
 
   if (loading && !substitutesData) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-44 w-full rounded-2xl" />
-        <Skeleton className="h-44 w-full rounded-2xl" />
-      </div>
-    );
+    return <PageLoader text="Loading substitute records..." />;
   }
 
   const dutiesCovered = substitutesData?.dutiesCovered || [];

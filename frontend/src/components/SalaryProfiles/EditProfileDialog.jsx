@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Save, User, DollarSign, Sparkles, ChevronDown, ShieldAlert } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
     taxDeduction: 0,
     otherDeduction: 0,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -55,9 +57,14 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    try {
+      setIsSubmitting(true);
+      await onSave(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -228,6 +235,7 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
           <button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer min-w-[85px]"
           >
             <X className="w-3.5 h-3.5 text-slate-400" />
@@ -236,19 +244,17 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
           <button
             type="submit"
             form="salaryProfileForm"
+            disabled={isSubmitting}
             className="px-5 py-2.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 border border-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer min-w-[140px]"
           >
-            {profile ? (
-              <>
-                <Save className="w-3.5 h-3.5 text-white" />
-                <span>Save Profile</span>
-              </>
+            {isSubmitting ? (
+              <Spinner className="mr-2 size-4 text-white" />
+            ) : profile ? (
+              <Save className="w-3.5 h-3.5 text-white" />
             ) : (
-              <>
-                <Plus className="w-3.5 h-3.5 text-white" />
-                <span>Add Salary Profile</span>
-              </>
+              <Plus className="w-3.5 h-3.5 text-white" />
             )}
+            <span>{profile ? "Save Profile" : "Add Salary Profile"}</span>
           </button>
         </div>
 

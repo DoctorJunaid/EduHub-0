@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
+import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import toast from "react-hot-toast";
 import "./GlobalUsers.css";
 
@@ -161,7 +163,7 @@ export default function GlobalUsers() {
           disabled={loading}
           title="Refresh user list"
         >
-          <RefreshCw size={14} className={loading ? "spin" : ""} />
+          {loading ? <Spinner className="size-3.5 mr-1" /> : <RefreshCw size={14} />}
           <span>Refresh</span>
         </button>
       </div>
@@ -264,8 +266,8 @@ export default function GlobalUsers() {
             <tbody>
               {loading && users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="empty-cell">
-                    Loading users directory...
+                  <td colSpan={5} className="p-0">
+                    <TableSkeleton rows={5} columns={5} />
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
@@ -349,15 +351,14 @@ export default function GlobalUsers() {
                               isActive ? "Deactivate user" : "Activate user"
                             }
                           >
-                            {isActive ? (
-                              <>
-                                <XCircle size={14} /> Deactivate
-                              </>
+                            {togglingId === id ? (
+                              <Spinner className="size-3.5 mr-1" />
+                            ) : isActive ? (
+                              <XCircle size={14} />
                             ) : (
-                              <>
-                                <CheckCircle2 size={14} /> Activate
-                              </>
+                              <CheckCircle2 size={14} />
                             )}
+                            {isActive ? "Deactivate" : "Activate"}
                           </button>
                         )}
                       </td>

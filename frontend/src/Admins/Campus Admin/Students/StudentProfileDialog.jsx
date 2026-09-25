@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Spinner } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import { formatPKR } from "@/lib/currency";
 import { format } from "date-fns";
@@ -167,7 +168,9 @@ export default function StudentProfileDialog({ student, onClose }) {
 
           <TabsContent value="financial" className="student-profile-tab-content student-profile-financial-content">
             {loading ? (
-              <p className="text-sm text-zinc-500">Loading financial data...</p>
+              <div className="flex justify-center items-center py-12">
+                <Spinner className="size-6 text-muted-foreground" />
+              </div>
             ) : (
               <>
                 <div className="student-profile-info-grid">

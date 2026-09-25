@@ -21,7 +21,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/Table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/ui/spinner";
 import PayslipDialog from "@/components/Payroll/PayslipDialog";
 import toast from "react-hot-toast";
 
@@ -40,12 +40,7 @@ export default function PayrollTab({
   }, [onLoadPayroll]);
 
   if (loading && !payrollData) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-44 w-full rounded-2xl" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
-      </div>
-    );
+    return <PageLoader text="Loading salary & payroll records..." />;
   }
 
   const salaryProfile = payrollData?.salaryProfile || {};

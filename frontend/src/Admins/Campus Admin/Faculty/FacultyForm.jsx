@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { Users, School, GraduationCap, Loader2 } from "lucide-react";
+import { Users, School, GraduationCap } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { facultyStatuses } from "./facultyData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
@@ -270,12 +271,8 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
             className="activity-submit-btn"
             disabled={isSubmitting}
           >
-            {isSubmitting && <Loader2 size={15} className="spin" />}
-            {isSubmitting
-              ? teacher
-                ? "Updating..."
-                : "Saving..."
-              : teacher
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
+            {teacher
               ? isSchool ? "Update Teacher Record" : "Update Faculty Member"
               : isSchool ? "Appoint Teacher" : "Register Teacher"}
           </button>

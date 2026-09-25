@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import DataPagination from "@/components/shared/DataPagination";
@@ -14,6 +16,9 @@ export default function TeacherAssignments() {
   const [sections, setSections] = useState([]);
   const [gradeSubjects, setGradeSubjects] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
   const { page, pageSize, setPage, setPageSize } = usePaginationParams({
     defaultPage: 1,
     defaultPageSize: 20,
@@ -29,32 +34,37 @@ export default function TeacherAssignments() {
 
   const fetchData = async () => {
     setLoadError("");
-    const [tRes, gRes, gsRes, aRes] = await Promise.allSettled([
-      axiosInstance.get("/campus-admin/faculty", { timeout: 12000 }),
-      axiosInstance.get("/academic/grades", { timeout: 12000 }),
-      axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
-      axiosInstance.get("/academic/teacher-assignments", { timeout: 12000 }),
-    ]);
-    const failures = [];
-    const applyResult = (result, label, setter, normalize = (data) => data) => {
-      if (result.status === "fulfilled") {
-        setter(normalize(result.value.data));
-        return;
+    setLoading(true);
+    try {
+      const [tRes, gRes, gsRes, aRes] = await Promise.allSettled([
+        axiosInstance.get("/campus-admin/faculty", { timeout: 12000 }),
+        axiosInstance.get("/academic/grades", { timeout: 12000 }),
+        axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
+        axiosInstance.get("/academic/teacher-assignments", { timeout: 12000 }),
+      ]);
+      const failures = [];
+      const applyResult = (result, label, setter, normalize = (data) => data) => {
+        if (result.status === "fulfilled") {
+          setter(normalize(result.value.data));
+          return;
+        }
+        const reason = result.reason;
+        const detail = reason.code === "ECONNABORTED"
+          ? "request timed out"
+          : (reason.response?.data?.message || reason.message || "request failed");
+        failures.push(`${label}: ${detail}`);
+      };
+      applyResult(tRes, "Teachers", setTeachers, (data) => Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+      applyResult(gRes, "Grades", setGrades);
+      applyResult(gsRes, "Class subjects", setGradeSubjects);
+      applyResult(aRes, "Assignments", setAssignments);
+      if (failures.length) {
+        const message = `Some assignment data could not be loaded. ${failures.join("; ")}`;
+        setLoadError(message);
+        toast.error(message);
       }
-      const reason = result.reason;
-      const detail = reason.code === "ECONNABORTED"
-        ? "request timed out"
-        : (reason.response?.data?.message || reason.message || "request failed");
-      failures.push(`${label}: ${detail}`);
-    };
-    applyResult(tRes, "Teachers", setTeachers, (data) => Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-    applyResult(gRes, "Grades", setGrades);
-    applyResult(gsRes, "Class subjects", setGradeSubjects);
-    applyResult(aRes, "Assignments", setAssignments);
-    if (failures.length) {
-      const message = `Some assignment data could not be loaded. ${failures.join("; ")}`;
-      setLoadError(message);
-      toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,23 +86,29 @@ export default function TeacherAssignments() {
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const res = await axiosInstance.post("/academic/teacher-assignments", newAssignment);
       setAssignments([...assignments, res.data]);
       setNewAssignment({ teacherId: "", gradeId: "", sectionId: "", subjectId: "" });
       toast.success("Teacher assigned successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create assignment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteAssignment = async (id) => {
     if (!window.confirm("Remove this assignment?")) return;
     try {
+      setIsDeletingId(id);
       await axiosInstance.delete(`/academic/teacher-assignments/${id}`);
       setAssignments(assignments.filter((a) => a._id !== id));
       toast.success("Assignment removed");
     } catch (err) {
       toast.error("Failed to remove assignment");
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
@@ -179,8 +195,8 @@ export default function TeacherAssignments() {
               </select>
             </div>
 
-            <Button type="submit" disabled={!newAssignment.gradeId || !newAssignment.sectionId || !newAssignment.subjectId || !newAssignment.teacherId}>
-              <Plus className="w-4 h-4 mr-2" /> Assign
+            <Button type="submit" disabled={isSubmitting || !newAssignment.gradeId || !newAssignment.sectionId || !newAssignment.subjectId || !newAssignment.teacherId}>
+              {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Assign
             </Button>
           </form>
 
@@ -197,7 +213,13 @@ export default function TeacherAssignments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedAssignments.length === 0 ? (
+                  {loading && assignments.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-0">
+                        <TableSkeleton rows={4} columns={5} />
+                      </td>
+                    </tr>
+                  ) : paginatedAssignments.length === 0 ? (
                     <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No assignments defined yet.</td></tr>
                   ) : paginatedAssignments.map((a) => (
                     <tr key={a._id} className="border-b last:border-0 teacher-assignment-data-row">
@@ -206,8 +228,18 @@ export default function TeacherAssignments() {
                       <td>{a.sectionId?.name || "Unknown"}</td>
                       <td>{a.subjectId?.name || "Unknown"}</td>
                       <td>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteAssignment(a._id)} className="text-destructive teacher-assignment-delete-button">
-                          <Trash2 className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          disabled={isDeletingId === a._id}
+                          onClick={() => handleDeleteAssignment(a._id)} 
+                          className="text-destructive teacher-assignment-delete-button"
+                        >
+                          {isDeletingId === a._id ? (
+                            <Spinner className="size-4 text-destructive" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </Button>
                       </td>
                     </tr>

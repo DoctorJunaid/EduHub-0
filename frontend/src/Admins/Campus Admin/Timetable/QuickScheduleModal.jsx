@@ -16,6 +16,7 @@ import { minutes } from "../../../lib/schedule.js";
 import axiosInstance from "@/api/axiosInstance.js";
 import { useSelector } from "react-redux";
 import { selectFaculty } from "@/store/Slices/facultySlice.js";
+import { Spinner } from "@/components/ui/spinner";
 
 const SCHOOL_PERIOD_PRESETS = [
   { id: "p1", name: "Period 1 (08:00 - 08:50)", start: "08:00", end: "08:50", type: "class" },
@@ -830,6 +831,7 @@ export default function QuickScheduleModal({
               type="button"
               onClick={onClose}
               className="qs-btn-cancel"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
@@ -838,9 +840,8 @@ export default function QuickScheduleModal({
               disabled={isSubmitting}
               className={`qs-btn-submit ${mode === "break" ? "break-submit" : "class-submit"}`}
             >
-              {isSubmitting ? (
-                <span>Saving to routine...</span>
-              ) : editRecord ? (
+              {isSubmitting && <Spinner className="mr-2 size-4" />}
+              {editRecord ? (
                 "Save Routine Changes"
               ) : mode === "break" ? (
                 "Confirm & Add Break Interval"

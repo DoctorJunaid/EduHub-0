@@ -11,11 +11,10 @@ import {
   History,
   AlertTriangle,
   ArrowLeft,
-  Loader2,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader, Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import TeacherHeader from "@/components/teacher-profile/TeacherHeader";
 import TeacherStatsCards from "@/components/teacher-profile/TeacherStatsCards";
 import TeacherQuickSidebar from "@/components/teacher-profile/TeacherQuickSidebar";
@@ -118,18 +117,11 @@ export default function TeacherProfile() {
     );
   }
 
-  // Loading Skeleton State
+  // Loading Spinner State
   if (loading && !teacher) {
     return (
-      <div className="campus-tab-page p-6 space-y-4">
-        <Skeleton className="h-14 w-full rounded-md" />
-        <div className="grid grid-cols-4 gap-0">
-          <Skeleton className="h-14 rounded-none" />
-          <Skeleton className="h-14 rounded-none" />
-          <Skeleton className="h-14 rounded-none" />
-          <Skeleton className="h-14 rounded-none" />
-        </div>
-        <Skeleton className="h-96 w-full rounded-md" />
+      <div className="campus-tab-page">
+        <PageLoader text="Loading teacher profile..." />
       </div>
     );
   }
