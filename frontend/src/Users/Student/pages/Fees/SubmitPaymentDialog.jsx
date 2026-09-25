@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { formatPKR } from "@/lib/currency";
 
 export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
@@ -16,7 +17,7 @@ export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
   const [loading, setLoading] = useState(false);
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && !loading && onClose()}>
       <DialogContent className="tt-dialog" overlayClassName="tt-overlay" aria-describedby={`${id}-desc`}>
         <div className="tt-dialog-heading">
           <DialogTitle>Submit Payment Details</DialogTitle>
@@ -27,14 +28,17 @@ export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
 
         <form onSubmit={async (e) => {
           e.preventDefault();
-          setLoading(true);
-          await onSubmit({
-            amount: Number(amount),
-            paymentMethod,
-            referenceNo,
-            paymentDate
-          });
-          setLoading(false);
+          try {
+            setLoading(true);
+            await onSubmit({
+              amount: Number(amount),
+              paymentMethod,
+              referenceNo,
+              paymentDate
+            });
+          } finally {
+            setLoading(false);
+          }
         }}>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="tt-field">
@@ -99,7 +103,8 @@ export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Submitting..." : "Submit Payment"}
+              {loading && <Spinner className="mr-2 size-4" />}
+              Submit Payment
             </Button>
           </div>
         </form>

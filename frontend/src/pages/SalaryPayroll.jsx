@@ -8,6 +8,8 @@ import { Play, Eye, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clo
 import { selectCurrentRole } from "../store/Slices/authSlice";
 import DataPagination from "../components/shared/DataPagination";
 import usePaginationParams from "../hooks/usePaginationParams";
+import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import "./SalaryPayroll.css";
 
 const SalaryPayroll = () => {
@@ -20,6 +22,7 @@ const SalaryPayroll = () => {
   });
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [actionId, setActionId] = useState(null);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
@@ -87,6 +90,7 @@ const SalaryPayroll = () => {
 
   const updateWorkflow = async (id, action, payload = {}) => {
     try {
+      setActionId(id);
       const endpoint = action === "edit"
         ? `/campus/salary/payroll/${id}`
         : `/campus/salary/payroll/${id}/${action}`;
@@ -99,6 +103,8 @@ const SalaryPayroll = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Payroll update failed");
+    } finally {
+      setActionId(null);
     }
   };
 
@@ -155,7 +161,10 @@ const SalaryPayroll = () => {
 
       <div className="salary-payroll-action-row">
         <button type="button" className="toolbar-btn toolbar-btn-outline" onClick={() => navigate("/payroll-approvals")}><ShieldCheck size={14} className="text-indigo-600" /> Deduction Approvals</button>
-        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}><Play size={13} /> {generating ? "Generating..." : "Generate Payroll"}</button>
+        <button type="button" className="toolbar-btn toolbar-btn-primary" onClick={handleGenerate} disabled={generating}>
+          {generating ? <Spinner className="size-3.5 mr-1" /> : <Play size={13} />}
+          Generate Payroll
+        </button>
       </div>
 
       <div className="campus-toolbar">
@@ -168,9 +177,16 @@ const SalaryPayroll = () => {
         <div className="toolbar-actions"><span className="salary-payroll-result-count">{filteredPayrolls.length} shown / {total} records</span></div>
       </div>
 
-      <div className="campus-table-container salary-payroll-table-wrap">
-        {loading ? (
-          <div className="salary-payroll-state">Loading payroll data...</div>
+      <div className="campus-table-container salary-payroll-table-wrap relative">
+        {loading && payrolls.length > 0 && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center z-10">
+            <Spinner className="size-6 text-primary" />
+          </div>
+        )}
+        {loading && payrolls.length === 0 ? (
+          <div className="p-4">
+            <TableSkeleton rows={5} columns={7} />
+          </div>
         ) : payrolls.length === 0 ? (
           <div className="salary-payroll-state"><ReceiptText size={24} /><strong>No payroll records for {month}</strong><span>Generate payroll to create the monthly draft records.</span></div>
         ) : (
@@ -192,11 +208,19 @@ const SalaryPayroll = () => {
                   <td className="text-right"><div className="payroll-actions">
                       <button onClick={() => viewPayslip(p._id)} className="payroll-action-btn"><Eye size={13} /> View</button>
                       {p.status === "Draft" && canEdit && <>
-                        <button onClick={() => addAdjustment(p, "deduction")} className="payroll-action-btn payroll-action-negative">+ Deduction</button>
-                        <button onClick={() => addAdjustment(p, "bonus")} className="payroll-action-btn payroll-action-positive">+ Bonus</button>
+                        <button disabled={actionId === p._id} onClick={() => addAdjustment(p, "deduction")} className="payroll-action-btn payroll-action-negative">+ Deduction</button>
+                        <button disabled={actionId === p._id} onClick={() => addAdjustment(p, "bonus")} className="payroll-action-btn payroll-action-positive">+ Bonus</button>
                       </>}
-                      {p.status === "Draft" && canApprove && <button onClick={() => updateWorkflow(p._id, "approve")} className="payroll-action-btn payroll-action-primary"><CheckCircle size={13} /> Approve</button>}
-                      {p.status === "Approved" && canPay && <button onClick={() => updateWorkflow(p._id, "mark-paid")} className="payroll-action-btn payroll-action-positive"><Banknote size={13} /> Mark Paid</button>}
+                      {p.status === "Draft" && canApprove && (
+                        <button disabled={actionId === p._id} onClick={() => updateWorkflow(p._id, "approve")} className="payroll-action-btn payroll-action-primary">
+                          {actionId === p._id ? <Spinner className="size-3 mr-1" /> : <CheckCircle size={13} />} Approve
+                        </button>
+                      )}
+                      {p.status === "Approved" && canPay && (
+                        <button disabled={actionId === p._id} onClick={() => updateWorkflow(p._id, "mark-paid")} className="payroll-action-btn payroll-action-positive">
+                          {actionId === p._id ? <Spinner className="size-3 mr-1" /> : <Banknote size={13} />} Mark Paid
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

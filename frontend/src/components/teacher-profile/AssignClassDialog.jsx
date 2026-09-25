@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Plus, Loader2 } from "lucide-react";
+import { BookOpen, Plus } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -83,7 +84,7 @@ export default function AssignClassDialog({
 
         {loadingOptions ? (
           <div className="py-8 flex flex-col items-center justify-center gap-2 text-xs text-zinc-500">
-            <Loader2 className="w-6 h-6 animate-spin text-zinc-600" />
+            <Spinner className="w-6 h-6 text-zinc-600" />
             <span>Loading academic configuration...</span>
           </div>
         ) : (
@@ -161,16 +162,11 @@ export default function AssignClassDialog({
                 className="bg-black text-white hover:bg-neutral-800 text-xs h-9"
               >
                 {submitting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                    Assigning...
-                  </>
+                  <Spinner className="mr-2 size-4" />
                 ) : (
-                  <>
-                    <Plus className="w-3.5 h-3.5 mr-1.5" />
-                    Assign Class
-                  </>
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />
                 )}
+                Assign Class
               </Button>
             </DialogFooter>
           </form>

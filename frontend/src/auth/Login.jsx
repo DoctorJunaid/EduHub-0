@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { loginUser } from '@/store/Slices/authSlice';
 import { roleHome } from './roles';
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 import './Login.css';
 
@@ -14,6 +15,7 @@ export default function Login() {
   const [errors, setErrors]   = useState({});
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const change = (field, value) => {
     setValues(p => ({ ...p, [field]: value }));
@@ -29,6 +31,7 @@ export default function Login() {
     if (Object.keys(next).length) return;
     
     try {
+      setIsSubmitting(true);
       // Dispatch real backend login
       const resultAction = await dispatch(loginUser({ email: values.email, password: values.password })).unwrap();
       
@@ -42,6 +45,8 @@ export default function Login() {
     } catch (err) {
       const msg = typeof err === 'string' ? err : (err?.message || 'Login failed. Please check credentials.');
       toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,7 +126,10 @@ export default function Login() {
               <span className="lp-remember-label">Remember me</span>
             </div>
 
-            <button type="submit" className="lp-submit">Login</button>
+            <button type="submit" className="lp-submit" disabled={isSubmitting}>
+              {isSubmitting && <Spinner className="mr-2 size-4 text-white" />}
+              Login
+            </button>
           </form>
 
           {/* Footer links */}

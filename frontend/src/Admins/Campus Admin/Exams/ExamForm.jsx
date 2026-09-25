@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Calendar, FileClock } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { examFields, examTypes, validateExam } from "./examData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
@@ -14,20 +15,28 @@ export default function ExamForm({ record, options, onSave, onClose }) {
     ),
   );
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     const cleaned = Object.fromEntries(
       Object.entries(values).map(([key, value]) => [key, String(value).trim()]),
     );
     const message = validateExam(cleaned);
     if (message) return setError(message);
-    onSave({
-      ...cleaned,
-      totalMarks: Number(cleaned.totalMarks) > 0 ? Number(cleaned.totalMarks) : 100,
-      className: cleaned.department || cleaned.section || "General",
-      examName: `${cleaned.examType || "Midterm"} Examination - ${cleaned.subject}`,
-    });
+    try {
+      setIsSubmitting(true);
+      await onSave({
+        ...cleaned,
+        totalMarks: Number(cleaned.totalMarks) > 0 ? Number(cleaned.totalMarks) : 100,
+        className: cleaned.department || cleaned.section || "General",
+        examName: `${cleaned.examType || "Midterm"} Examination - ${cleaned.subject}`,
+      });
+    } catch (err) {
+      setError(typeof err === "string" ? err : "Failed to save exam schedule");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -110,10 +119,20 @@ export default function ExamForm({ record, options, onSave, onClose }) {
         )}
 
         <div className="activity-form-actions">
-          <button type="button" className="activity-cancel-btn" onClick={onClose}>
+          <button
+            type="button"
+            className="activity-cancel-btn"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
-          <button type="submit" className="activity-submit-btn">
+          <button
+            type="submit"
+            className="activity-submit-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
             {record ? "Save Exam Changes" : "Confirm & Schedule Exam"}
           </button>
         </div>

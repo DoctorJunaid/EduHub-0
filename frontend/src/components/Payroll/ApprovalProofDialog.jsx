@@ -19,6 +19,7 @@ import {
   Info,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { Spinner } from "@/components/ui/spinner";
 import "./ApprovalProofDialog.css";
 
 const ApprovalProofDialog = ({
@@ -402,9 +403,10 @@ const ApprovalProofDialog = ({
                       type="button"
                       onClick={handleRejectClick}
                       disabled={actionLoading || !rejectReason.trim()}
-                      className="px-3 py-1.5 text-xs font-medium bg-rose-600 hover:bg-rose-700 text-white rounded disabled:opacity-50"
+                      className="px-3 py-1.5 text-xs font-medium bg-rose-600 hover:bg-rose-700 text-white rounded disabled:opacity-50 flex items-center gap-1.5"
                     >
-                      {actionLoading ? "Rejecting..." : "Confirm Rejection"}
+                      {actionLoading && <Spinner className="size-3 text-white" />}
+                      Confirm Rejection
                     </button>
                   </div>
                 </div>
@@ -420,8 +422,9 @@ const ApprovalProofDialog = ({
                   <div className="flex gap-2">
                     <button
                       type="button"
+                      disabled={actionLoading}
                       onClick={() => setIsRejecting(true)}
-                      className="px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-300 dark:border-rose-800 rounded-lg transition-colors flex items-center gap-1.5"
+                      className="px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-300 dark:border-rose-800 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
                     >
                       <XCircle size={15} /> Reject
                     </button>
@@ -431,8 +434,8 @@ const ApprovalProofDialog = ({
                       disabled={actionLoading}
                       className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm flex items-center gap-1.5 disabled:opacity-50"
                     >
-                      <CheckCircle2 size={15} />{" "}
-                      {actionLoading ? "Authorizing..." : "Approve & Apply"}
+                      {actionLoading ? <Spinner className="size-3 text-white" /> : <CheckCircle2 size={15} />}
+                      Approve & Apply
                     </button>
                   </div>
                 </div>

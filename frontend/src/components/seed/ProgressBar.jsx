@@ -1,5 +1,6 @@
 import React from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function ProgressBar({ currentStep, steps = [] }) {
   if (!steps.length) return null;
@@ -11,7 +12,7 @@ export default function ProgressBar({ currentStep, steps = [] }) {
     <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
       <div className="flex items-center justify-between text-sm font-semibold">
         <span className="text-slate-800 dark:text-slate-200 flex items-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+          <Spinner className="w-4 h-4 text-indigo-600" />
           Seeding in progress...
         </span>
         <span className="text-indigo-600 dark:text-indigo-400 font-mono">{percentage}%</span>
@@ -43,7 +44,7 @@ export default function ProgressBar({ currentStep, steps = [] }) {
               {isDone ? (
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
               ) : isCurrent ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600 flex-shrink-0" />
+                <Spinner className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
               ) : (
                 <div className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-700 flex-shrink-0" />
               )}

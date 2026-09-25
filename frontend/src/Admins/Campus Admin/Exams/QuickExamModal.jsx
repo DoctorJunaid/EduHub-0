@@ -18,6 +18,7 @@ import {
 import { selectExams } from "@/store/Slices/examsSlice.js";
 import { minutes, timeLabel } from "../../../lib/schedule.js";
 import { checkCohortDailyExamLimit } from "./examData.js";
+import { Spinner } from "@/components/ui/spinner";
 
 const EXAM_SHIFT_PRESETS = [
   { id: "morning", name: "☀️ Morning (09:00 - 12:00)", start: "09:00", end: "12:00", type: "Midterm" },
@@ -574,9 +575,8 @@ export default function QuickExamModal({
               className={`qs-btn-submit ${dailyCheck.isRareCase ? "rare-submit" : ""}`}
               disabled={isSubmitting || dailyCheck.isBlocked || (dailyCheck.isRareCase && !confirmedDualExam && !editRecord)}
             >
-              {isSubmitting
-                ? "Saving..."
-                : editRecord
+              {isSubmitting && <Spinner className="mr-2 size-4" />}
+              {editRecord
                 ? "Save Changes"
                 : dailyCheck.isRareCase
                 ? "Confirm & Schedule 2nd Exam"

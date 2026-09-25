@@ -17,6 +17,7 @@ import {
   TrendingUp,
   UserCheck,
 } from "lucide-react";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import {
   getMySessions,
   getMySummary,
@@ -230,7 +231,7 @@ export default function TeacherClassCredits() {
             disabled={refreshing}
             className="rounded-xl flex items-center gap-1.5"
           >
-            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
             Sync
           </Button>
         </div>
@@ -395,8 +396,7 @@ export default function TeacherClassCredits() {
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 text-sm">
-            <RefreshCw className="animate-spin inline-block mr-2" size={16} />
-            Loading teaching sessions...
+            <SpinnerCustom text="Loading teaching sessions..." size="lg" className="flex-col gap-2" />
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-sm">

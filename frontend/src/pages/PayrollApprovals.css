@@ -805,6 +805,13 @@
 .approvals-kpi-grid .kpi-label { color: #64748b; }
 .approvals-kpi-grid .kpi-subtext { display: none; }
 .approvals-kpi-grid .kpi-icon-box { width: 34px; height: 34px; border-radius: 8px; }
+.approvals-page-shell.campus-tab-page .approvals-kpi-grid .kpi-icon-box.amber,
+.approvals-page-shell.campus-tab-page .approvals-kpi-grid .kpi-icon-box.emerald,
+.approvals-page-shell.campus-tab-page .approvals-kpi-grid .kpi-icon-box.rose,
+.approvals-page-shell.campus-tab-page .approvals-kpi-grid .kpi-icon-box.indigo {
+  background: #f4f4f5;
+  color: #09090b;
+}
 .approvals-month-row {
   display: flex;
   align-items: center;

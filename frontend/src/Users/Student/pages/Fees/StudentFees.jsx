@@ -19,6 +19,8 @@ import { formatPKR } from "@/lib/currency";
 import StudentChallanDialog from "../../components/StudentChallanDialog";
 import SubmitPaymentDialog from "./SubmitPaymentDialog";
 import PaymentReceiptDialog from "@/Admins/Campus Admin/Fees/PaymentReceiptDialog";
+import TableSkeleton from "@/components/shared/TableSkeleton";
+import { SpinnerCustom } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import "./StudentFees.css";
@@ -257,13 +259,19 @@ export default function StudentFees() {
                   </TableRow>
                 );
               })}
-              {!vouchers.length && (
+              {loading && !vouchers.length ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="sf-empty">
-                    {loading ? "Loading fee vouchers..." : "No fee vouchers issued for your account yet."}
+                  <TableCell colSpan={7} className="p-0">
+                    <TableSkeleton rows={4} columns={7} />
                   </TableCell>
                 </TableRow>
-              )}
+              ) : !vouchers.length ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="sf-empty">
+                    No fee vouchers issued for your account yet.
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </Card>
@@ -357,13 +365,19 @@ export default function StudentFees() {
                   </TableRow>
                 );
               })}
-              {!payments.length && (
+              {loading && !payments.length ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="sf-empty">
-                    {loading ? "Loading payment history..." : "No payment submissions recorded yet."}
+                  <TableCell colSpan={8} className="p-0">
+                    <TableSkeleton rows={4} columns={8} />
                   </TableCell>
                 </TableRow>
-              )}
+              ) : !payments.length ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="sf-empty">
+                    No payment submissions recorded yet.
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </Card>

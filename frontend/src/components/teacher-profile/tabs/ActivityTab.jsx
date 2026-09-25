@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { History, ShieldCheck, UserCheck, BookOpen, Clock, AlertCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/ui/spinner";
 
 export default function ActivityTab({
   activityData,
@@ -14,13 +14,7 @@ export default function ActivityTab({
   }, [onLoadActivity]);
 
   if (loading && !activityData) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-16 w-full rounded-xl" />
-      </div>
-    );
+    return <PageLoader text="Loading audit activity trail..." />;
   }
 
   const logs = activityData || [];

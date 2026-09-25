@@ -15,6 +15,7 @@ import TeachersWithoutProfileAlert from '../components/salary/TeachersWithoutPro
 import SalaryProfilesTable from '../components/salary/SalaryProfilesTable';
 import DataPagination from '../components/shared/DataPagination';
 import usePaginationParams from '../hooks/usePaginationParams';
+import { Spinner } from '@/components/ui/spinner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +57,7 @@ export default function SalaryProfiles() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
 
   // Status toggle confirm dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -136,9 +138,14 @@ export default function SalaryProfiles() {
       setConfirmOpen(false);
       return;
     }
-    await deactivate(tid);
-    setConfirmOpen(false);
-    setTargetToggleProfile(null);
+    setDeactivating(true);
+    try {
+      await deactivate(tid);
+      setConfirmOpen(false);
+      setTargetToggleProfile(null);
+    } finally {
+      setDeactivating(false);
+    }
   };
 
   const departments = Array.from(
@@ -435,16 +442,19 @@ export default function SalaryProfiles() {
 
           <AlertDialogFooter className="mt-5 flex flex-row items-center justify-end gap-2.5">
             <AlertDialogCancel
+              disabled={deactivating}
               onClick={() => setConfirmOpen(false)}
-              className="m-0 h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs border border-slate-300 transition-all cursor-pointer"
+              className="m-0 h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs border border-slate-300 transition-all cursor-pointer disabled:opacity-50"
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
+              disabled={deactivating}
               onClick={handleConfirmDeactivate}
-              className="m-0 h-9 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 hover:shadow-lg transition-all cursor-pointer flex items-center gap-1.5"
+              className="m-0 h-9 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 hover:shadow-lg transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <PowerOff size={13} /> Deactivate Profile
+              {deactivating ? <Spinner className="size-3.5 text-white mr-1" /> : <PowerOff size={13} />}
+              Deactivate Profile
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

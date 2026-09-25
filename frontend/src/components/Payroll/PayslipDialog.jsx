@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import api from "../../api/axiosInstance";
+import { Spinner } from "@/components/ui/spinner";
 import {
   X,
   FileText,
@@ -315,8 +316,12 @@ const PayslipDialog = ({ payslip, onClose }) => {
               disabled={exportingFormat !== null}
               className="ps-btn ps-btn-secondary"
             >
-              <FileSpreadsheet size={15} />
-              <span>{exportingFormat === "csv" ? "Exporting..." : "Export CSV"}</span>
+              {exportingFormat === "csv" ? (
+                <Spinner className="mr-1.5 size-3.5" />
+              ) : (
+                <FileSpreadsheet size={15} />
+              )}
+              <span>Export CSV</span>
             </button>
 
             <button
@@ -325,8 +330,12 @@ const PayslipDialog = ({ payslip, onClose }) => {
               disabled={exportingFormat !== null}
               className="ps-btn ps-btn-primary"
             >
-              <FileDown size={15} />
-              <span>{exportingFormat === "pdf" ? "Downloading..." : "Download PDF"}</span>
+              {exportingFormat === "pdf" ? (
+                <Spinner className="mr-1.5 size-3.5 text-white" />
+              ) : (
+                <FileDown size={15} />
+              )}
+              <span>Download PDF</span>
             </button>
 
             <button

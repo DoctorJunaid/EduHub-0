@@ -202,7 +202,10 @@ export default function TeachingPerformance() {
       <section className="tp-ledger-card">
         <div className="tp-ledger-header"><div className="tp-ledger-heading"><Award size={18} aria-hidden="true" /><h2>Teacher Class Session &amp; Credit Ledger ({selectedMonth})</h2></div><span className="tp-teacher-count">{filteredTeachers.length} teachers</span></div>
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-sm"><RefreshCw className="animate-spin inline-block mr-2" size={16} />Loading teaching records...</div>
+          <div className="p-12 text-center text-slate-500 text-sm">
+            <RefreshCw className="animate-spin inline-block mr-2" size={16} />
+            Loading teaching records...
+          </div>
         ) : filteredTeachers.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-sm">No teacher records found for this period.</div>
         ) : (

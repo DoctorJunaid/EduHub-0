@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Clock, Calendar, BookOpen, MapPin, Filter } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/ui/spinner";
 
 export default function TimetableTab({
   timetableData,
@@ -23,12 +23,7 @@ export default function TimetableTab({
   }, [initialClassFilter]);
 
   if (loading && !timetableData) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full rounded-xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
-      </div>
-    );
+    return <PageLoader text="Loading weekly schedule..." />;
   }
 
   const days = timetableData?.days || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

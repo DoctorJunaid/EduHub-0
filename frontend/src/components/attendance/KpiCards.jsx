@@ -1,7 +1,7 @@
 import React from "react";
 import { Users, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function KpiCards({ stats = {}, loading = false, selectedDateLabel = "Today" }) {
   const cards = [
@@ -47,7 +47,9 @@ export default function KpiCards({ stats = {}, loading = false, selectedDateLabe
                   {item.title}
                 </p>
                 {loading ? (
-                  <Skeleton className="h-8 w-16 my-1" />
+                  <div className="h-8 flex items-center my-1">
+                    <Spinner className="size-5 text-primary" />
+                  </div>
                 ) : (
                   <p className="text-2xl font-bold tracking-tight text-foreground">
                     {item.value}

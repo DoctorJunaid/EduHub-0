@@ -8,6 +8,7 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import {
   getSalaryReviewCenter,
   reviewAdjustment,
@@ -224,7 +225,7 @@ export default function SalaryReviewCenter() {
             disabled={loading}
             className="salary-review-sync-btn"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            {loading ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
             Sync
           </Button>
         </div>
