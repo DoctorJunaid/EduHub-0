@@ -169,35 +169,21 @@ export default function TeachingPerformance() {
 
   return (
     <div className="teaching-performance-page">
-      <header className="tp-page-header">
-        <div className="tp-page-intro">
-          <span className="tp-eyebrow">Campus Manager Overview</span>
-          <h1>Teacher Class Performance &amp; Credits</h1>
-          <p>
-            Period-level fulfillment, teaching credits, substitutions, bonuses,
-            and salary adjustments.
-          </p>
-        </div>
+      <section className="tp-summary-grid" aria-label="Teaching performance summary">
+        <article className="tp-summary-card"><Calendar aria-hidden="true" /><div><span className="tp-summary-label">Scheduled Classes</span><strong className="tp-summary-value">{totals.scheduled || 0}</strong><span className="tp-summary-support">{performanceData?.totalTeachers || 0} Teachers</span></div></article>
+        <article className="tp-summary-card"><CheckCircle2 aria-hidden="true" /><div><span className="tp-summary-label">Completed (Credits)</span><strong className="tp-summary-value">{totals.completed || 0}</strong><span className="tp-summary-support">{totals.credits || 0} Teaching Credits</span></div></article>
+        <article className="tp-summary-card"><AlertCircle aria-hidden="true" /><div><span className="tp-summary-label">Missed &amp; Absent</span><strong className="tp-summary-value">{(totals.missed || 0) + (totals.absent || 0)}</strong><span className="tp-summary-support">{totals.missed || 0} Missed, {totals.absent || 0} Absent</span></div></article>
+        <article className="tp-summary-card"><UserCheck aria-hidden="true" /><div><span className="tp-summary-label">Substitutions</span><strong className="tp-summary-value">{totals.substitutionsTaken || 0}</strong><span className="tp-summary-support">Duties fulfilled</span></div></article>
+        <article className="tp-summary-card"><TrendingUp aria-hidden="true" /><div><span className="tp-summary-label">Bonus Accrued</span><strong className="tp-summary-value tp-summary-value-money">+{formatPKR(totals.bonusesEarned)}</strong><span className="tp-summary-support">Substitute rewards</span></div></article>
+        <article className="tp-summary-card"><Clock3 aria-hidden="true" /><div><span className="tp-summary-label">Pending Reviews</span><strong className="tp-summary-value">{totals.pendingReviews || 0}</strong><span className="tp-summary-support">Requires manager review</span></div></article>
+      </section>
+
+      <section className="tp-action-toolbar" aria-label="Teaching performance actions">
         <div className="tp-header-controls">
           <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} aria-label="Select performance month" className="tp-month-select" />
-          <Button onClick={handleGenerateToday} disabled={generating} className="tp-generate-button">
-            <Clock3 size={14} className={generating ? "animate-spin" : ""} />
-            Generate Today&apos;s Sessions
-          </Button>
-          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button">
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            Sync
-          </Button>
+          <Button onClick={handleGenerateToday} disabled={generating} className="tp-generate-button"><Clock3 size={14} className={generating ? "animate-spin" : ""} />Generate Today&apos;s Sessions</Button>
+          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button"><RefreshCw size={14} className={loading ? "animate-spin" : ""} />Sync</Button>
         </div>
-      </header>
-
-      <section className="tp-summary-grid" aria-label="Teaching performance summary">
-        <article className="tp-summary-card"><span className="tp-summary-label">Scheduled Classes</span><strong className="tp-summary-value">{totals.scheduled || 0}</strong><span className="tp-summary-support">{performanceData?.totalTeachers || 0} Teachers</span></article>
-        <article className="tp-summary-card tp-tone-success"><span className="tp-summary-label">Completed (Credits)</span><strong className="tp-summary-value">{totals.completed || 0}</strong><span className="tp-summary-support">{totals.credits || 0} Teaching Credits</span></article>
-        <article className="tp-summary-card tp-tone-danger"><span className="tp-summary-label">Missed &amp; Absent</span><strong className="tp-summary-value">{(totals.missed || 0) + (totals.absent || 0)}</strong><span className="tp-summary-support">{totals.missed || 0} Missed, {totals.absent || 0} Absent</span></article>
-        <article className="tp-summary-card tp-tone-purple"><span className="tp-summary-label">Substitutions</span><strong className="tp-summary-value">{totals.substitutionsTaken || 0}</strong><span className="tp-summary-support">Duties fulfilled</span></article>
-        <article className="tp-summary-card tp-tone-purple"><span className="tp-summary-label">Bonus Accrued</span><strong className="tp-summary-value tp-summary-value-money">+{formatPKR(totals.bonusesEarned)}</strong><span className="tp-summary-support">Substitute rewards</span></article>
-        <article className="tp-summary-card tp-tone-warning"><span className="tp-summary-label">Pending Reviews</span><strong className="tp-summary-value">{totals.pendingReviews || 0}</strong><span className="tp-summary-support">Requires manager review</span></article>
       </section>
 
       <section className="tp-filter-bar" aria-label="Filter teaching performance">
@@ -222,7 +208,7 @@ export default function TeachingPerformance() {
         ) : (
           <div className="tp-table-scroll">
             <table className="tp-ledger-table">
-              <colgroup><col className="tp-col-faculty" /><col span="5" className="tp-col-number" /><col span="2" className="tp-col-money" /><col className="tp-col-review" /><col className="tp-col-action" /></colgroup>
+              <colgroup><col className="tp-col-faculty" /><col className="tp-col-scheduled" /><col className="tp-col-completed" /><col className="tp-col-missed" /><col className="tp-col-substitutions" /><col className="tp-col-credits" /><col className="tp-col-money" /><col className="tp-col-money" /><col className="tp-col-review" /><col className="tp-col-action" /></colgroup>
               <thead><tr><th>Faculty Member</th><th className="tp-cell-center">Scheduled</th><th className="tp-cell-center">Completed</th><th className="tp-cell-center">Missed / Absent</th><th className="tp-cell-center">Substitutions</th><th className="tp-cell-center">Credits</th><th className="tp-cell-right">Bonuses</th><th className="tp-cell-right">Deductions</th><th className="tp-cell-center">Pending Reviews</th><th className="tp-cell-right">Timeline</th></tr></thead>
               <tbody>
                 {filteredTeachers.map((t) => (
@@ -233,8 +219,8 @@ export default function TeachingPerformance() {
                     <td className="tp-cell-center tp-nowrap">{t.missed > 0 || t.absent > 0 ? <span className="text-rose-600 font-bold">{t.missed} Missed / {t.absent} Absent</span> : <span className="text-slate-400">0</span>}</td>
                     <td className="tp-cell-center tp-nowrap"><span className="tp-substitution-value">+{t.substitutionsTaken} taken</span>{t.substitutedOut > 0 && <span className="tp-substitution-out">({t.substitutedOut} out)</span>}</td>
                     <td className="tp-cell-center tp-credit-value">{t.credits}</td>
-                    <td className="tp-cell-right tp-money-value tp-bonus-value">+{formatPKR(t.bonusesEarned)}</td>
-                    <td className="tp-cell-right tp-money-value tp-deduction-value">-{formatPKR(t.deductionsApproved)}</td>
+                    <td className="tp-cell-right tp-money-value">+{formatPKR(t.bonusesEarned)}</td>
+                    <td className="tp-cell-right tp-money-value">-{formatPKR(t.deductionsApproved)}</td>
                     <td className="tp-cell-center tp-nowrap">{t.pendingReviews > 0 ? <span className="tp-review-badge">{t.pendingReviews} Action(s)</span> : <span className="tp-clear-status">Clear</span>}</td>
                     <td className="tp-cell-right tp-nowrap"><Button size="sm" variant="outline" onClick={() => handleOpenTimeline(t)} className="tp-timeline-button"><Eye size={13} /> Timeline</Button></td>
                   </tr>
