@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import * as salaryApi from '../api/salaryProfile.api';
+import { qk } from '@/lib/queryKeys';
 
 export default function useSalaryProfiles() {
-  const [profiles, setProfiles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
     search: '',
     department: '',
@@ -12,81 +13,69 @@ export default function useSalaryProfiles() {
     page: 1,
     limit: 20,
   });
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    limit: 20,
+
+  // Query for Salary Profiles with automatic caching and deduplication
+  const {
+    data: profilesData,
+    isLoading: loadingProfiles,
+    refetch: refetchProfiles,
+  } = useQuery({
+    queryKey: qk.salaryProfiles(filters),
+    queryFn: async () => {
+      const res = await salaryApi.listSalaryProfiles(filters);
+      return res.data;
+    },
+    staleTime: 5 * 60 * 1000,
   });
-  const [summary, setSummary] = useState({
-    total: 0,
-    active: 0,
-    deactivated: 0,
+
+  // Query for Teachers without Salary Profile
+  const {
+    data: teachersWithoutProfileData,
+    isLoading: loadingTeachers,
+    refetch: refetchTeachers,
+  } = useQuery({
+    queryKey: ['teachers-without-salary-profile'],
+    queryFn: async () => {
+      const res = await salaryApi.listTeachersWithoutSalaryProfile();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
   });
-  const [teachersWithoutProfile, setTeachersWithoutProfile] = useState([]);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [profilesResult, teachersResult] = await Promise.allSettled([
-        salaryApi.listSalaryProfiles(filters),
-        salaryApi.listTeachersWithoutSalaryProfile(),
-      ]);
+  const profiles = profilesData?.data || [];
+  const summary = profilesData?.summary || { total: 0, active: 0, deactivated: 0 };
+  const pagination = {
+    total: profilesData?.count ?? profilesData?.total ?? profiles.length,
+    page: profilesData?.pagination?.page || filters.page,
+    limit: profilesData?.pagination?.limit || filters.limit,
+  };
+  const teachersWithoutProfile = teachersWithoutProfileData || [];
+  const loading = loadingProfiles || loadingTeachers;
 
-      let errorMessage = null;
-
-      if (profilesResult.status === 'fulfilled' && profilesResult.value?.data?.success) {
-        const fetchedProfiles = profilesResult.value.data.data || [];
-        const resSummary = profilesResult.value.data.summary;
-        setProfiles(fetchedProfiles);
-        if (resSummary) {
-          setSummary(resSummary);
-        }
-        setPagination({
-          total:
-            profilesResult.value.data.count ??
-            profilesResult.value.data.total ??
-            fetchedProfiles.length,
-          page: profilesResult.value.data.pagination?.page || filters.page,
-          limit: profilesResult.value.data.pagination?.limit || filters.limit,
-        });
-      } else if (profilesResult.status === 'rejected') {
-        errorMessage = profilesResult.reason?.response?.data?.message || 'Failed to load salary profiles';
-      }
-
-      if (teachersResult.status === 'fulfilled' && teachersResult.value?.data?.success) {
-        setTeachersWithoutProfile(teachersResult.value.data.data || []);
-      }
-
-      if (errorMessage) {
-        toast.error(errorMessage, { id: 'salary-profiles-load-error' });
-      }
-    } catch (error) {
-      const msg = error.response?.data?.message || 'Failed to load salary profiles';
-      toast.error(msg, { id: 'salary-profiles-load-error' });
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
-
-  const upsert = async (teacherId, payload) => {
-    try {
-      const response = await salaryApi.saveSalaryProfile(teacherId, payload);
-      toast.success(response.data?.message || 'Salary profile saved');
-      await reload();
-      return response.data?.data;
-    } catch (error) {
-      const msg = error.response?.data?.message || 'Failed to save profile';
-      toast.error(msg, { id: 'salary-profiles-save-error' });
-      throw error;
-    }
+  const reload = async () => {
+    await Promise.all([refetchProfiles(), refetchTeachers()]);
   };
 
-  const deactivate = async (teacherId) => {
-    try {
+  // Upsert Mutation
+  const upsertMutation = useMutation({
+    mutationFn: async ({ teacherId, payload }) => {
+      const response = await salaryApi.saveSalaryProfile(teacherId, payload);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Salary profile saved');
+      queryClient.invalidateQueries({ queryKey: ['salary-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['teachers-without-salary-profile'] });
+    },
+    onError: (error) => {
+      const msg = error.response?.data?.message || 'Failed to save profile';
+      toast.error(msg, { id: 'salary-profiles-save-error' });
+    },
+  });
+
+  // Deactivate Mutation
+  const deactivateMutation = useMutation({
+    mutationFn: async (teacherId) => {
       let response;
       try {
         response = await salaryApi.deactivateSalaryProfile(teacherId);
@@ -104,18 +93,21 @@ export default function useSalaryProfiles() {
           isActive: false,
         });
       }
-      toast.success(response?.data?.message || 'Profile deactivated successfully');
-      await reload();
-      return response?.data?.data;
-    } catch (error) {
+      return response?.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Profile deactivated successfully');
+      queryClient.invalidateQueries({ queryKey: ['salary-profiles'] });
+    },
+    onError: (error) => {
       const msg = error.response?.data?.message || 'Failed to deactivate profile';
       toast.error(msg, { id: 'salary-profiles-deactivate-error' });
-      throw error;
-    }
-  };
+    },
+  });
 
-  const activate = async (teacherId) => {
-    try {
+  // Activate Mutation
+  const activateMutation = useMutation({
+    mutationFn: async (teacherId) => {
       let response;
       try {
         response = await salaryApi.activateSalaryProfile(teacherId);
@@ -133,15 +125,17 @@ export default function useSalaryProfiles() {
           isActive: true,
         });
       }
-      toast.success(response?.data?.message || 'Profile activated successfully');
-      await reload();
-      return response?.data?.data;
-    } catch (error) {
+      return response?.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Profile activated successfully');
+      queryClient.invalidateQueries({ queryKey: ['salary-profiles'] });
+    },
+    onError: (error) => {
       const msg = error.response?.data?.message || 'Failed to activate profile';
       toast.error(msg, { id: 'salary-profiles-activate-error' });
-      throw error;
-    }
-  };
+    },
+  });
 
   return {
     profiles,
@@ -152,8 +146,8 @@ export default function useSalaryProfiles() {
     summary,
     teachersWithoutProfile,
     reload,
-    upsert,
-    deactivate,
-    activate,
+    upsert: (teacherId, payload) => upsertMutation.mutateAsync({ teacherId, payload }),
+    deactivate: (teacherId) => deactivateMutation.mutateAsync(teacherId),
+    activate: (teacherId) => activateMutation.mutateAsync(teacherId),
   };
 }

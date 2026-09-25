@@ -27,17 +27,17 @@ export default function OverviewTab({ teacher }) {
   const experience = teacher?.experience ? `${teacher.experience} years` : "5+ years";
   const joiningDate = teacher?.hireDate
     ? new Date(teacher.hireDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
     : "Aug 15, 2020";
   const createdAt = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
     : joiningDate;
 
   const isActive = teacher?.isActive !== false && user.isActive !== false;
@@ -132,9 +132,8 @@ export default function OverviewTab({ teacher }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center gap-3">
               <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  isActive ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"
-                }`}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"
+                  }`}
               >
                 {isActive ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
               </div>
@@ -169,3 +168,4 @@ export default function OverviewTab({ teacher }) {
     </div>
   );
 }
+
