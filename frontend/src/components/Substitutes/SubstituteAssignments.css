@@ -262,6 +262,10 @@
 .substitute-assignment-form .substitute-notes {
   grid-column: 1 / -1;
 }
+.substitute-assignment-form .substitute-reason-field,
+.substitute-assignment-form .substitute-dropdown-row {
+  grid-column: span 2;
+}
 @media (max-width: 900px) and (min-width: 641px) {
   .substitute-assignment-form .substitute-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
