@@ -25,6 +25,7 @@ import {
 import {
   facultyStatuses,
   filterFaculty,
+  facultyRecords as defaultFacultyRecords,
 } from "./facultyData";
 import {
   selectFaculty,
@@ -54,7 +55,10 @@ export default function FacultyDirectory() {
   const realUserCampus = currentUser?.campusId?.name || currentUser?.campus || "";
 
   const rawFaculty = useSelector(selectFaculty);
-  const facultyRecords = useMemo(() => rawFaculty || [], [rawFaculty]);
+  const facultyRecords = useMemo(() => {
+    if (rawFaculty && rawFaculty.length > 0) return rawFaculty;
+    return defaultFacultyRecords || [];
+  }, [rawFaculty]);
 
   const [form, setForm] = useState(null);
   const [viewingTeacher, setViewingTeacher] = useState(null);

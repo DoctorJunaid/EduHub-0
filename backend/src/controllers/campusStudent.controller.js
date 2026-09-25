@@ -366,7 +366,7 @@ export const getCampusFaculty = async (req, res) => {
         .json({ success: false, message: "No campus assigned" });
 
     const faculty = await User.find({
-      role: { $in: ["faculty", "teacher"] },
+      role: { $in: ["faculty", "teacher", "class_teacher", "subject_teacher"] },
       campusId,
     })
       .select("-passwordHash")

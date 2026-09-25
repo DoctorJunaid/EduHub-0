@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/Input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AttendanceDateNavigator from "@/components/common/AttendanceDateNavigator";
 import { fetchFaculty, selectFaculty } from "@/store/Slices/facultySlice.js";
+import { facultyRecords as defaultFacultyRecords } from "../Faculty/facultyData.js";
 import {
   selectAttendance,
   selectAttendanceSummary,
@@ -94,7 +95,8 @@ export default function FacultyAttendance() {
   const dispatch = useDispatch();
   const rawFaculty = useSelector(selectFaculty);
   const faculty = useMemo(() => {
-    return (rawFaculty || []).map((person) => ({
+    const list = rawFaculty && rawFaculty.length > 0 ? rawFaculty : defaultFacultyRecords || [];
+    return list.map((person) => ({
       ...person,
       id: String(person.id || person._id || ""),
       name: person.name || `${person.firstName || ""} ${person.lastName || ""}`.trim() || person.email || "Faculty Member",

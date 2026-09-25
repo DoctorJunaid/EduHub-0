@@ -87,7 +87,7 @@ export function getSubjectsForGrade(gradeLevel, sectionName = "Section A") {
   if (level <= 5) return PRIMARY_SUBJECTS;
   if (level <= 8) return MIDDLE_SUBJECTS;
   if (level <= 10) return SECONDARY_SUBJECTS;
-  
+
   const group = HIGHER_SECONDARY_GROUPS[sectionName] || HIGHER_SECONDARY_GROUPS["Section A"];
   return group.subjects;
 }
