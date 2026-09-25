@@ -137,12 +137,6 @@ const SubstituteAssignments = () => {
 
   return (
     <div className="substitutes-container campus-tab-page">
-      <div className="substitutes-heading">
-        <nav className="substitutes-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Substitutes</span>
-        </nav>
-      </div>
-
       <div className="campus-kpi-track substitutes-kpis">
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><CalendarIcon size={16} /></div><div className="kpi-info"><span className="kpi-label">Today's Assignments</span><span className="kpi-value">{counts.total}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><Clock3 size={16} /></div><div className="kpi-info"><span className="kpi-label">Pending Approval</span><span className="kpi-value">{counts.pending}</span></div></div></div>
