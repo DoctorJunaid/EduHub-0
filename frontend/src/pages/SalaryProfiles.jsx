@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useDebounce } from '../hooks/useDebounce';
 import './SalaryProfiles.css';
 
 export default function SalaryProfiles() {
@@ -33,6 +34,9 @@ export default function SalaryProfiles() {
     defaultPage: 1,
     defaultPageSize: 20,
   });
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
   const {
     profiles,
@@ -49,10 +53,10 @@ export default function SalaryProfiles() {
 
   useEffect(() => {
     setFilters((f) => {
-      if (f.page === page && f.limit === pageSize) return f;
-      return { ...f, page, limit: pageSize };
+      if (f.page === page && f.limit === pageSize && f.search === debouncedSearchTerm) return f;
+      return { ...f, page, limit: pageSize, search: debouncedSearchTerm };
     });
-  }, [page, pageSize, setFilters]);
+  }, [page, pageSize, debouncedSearchTerm, setFilters]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -292,10 +296,8 @@ export default function SalaryProfiles() {
             <input
               type="search"
               placeholder="Search teacher..."
-              value={filters.search}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))
-              }
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 

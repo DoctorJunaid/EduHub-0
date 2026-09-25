@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axiosInstance";
 import { toast } from "react-hot-toast";
 import {
@@ -19,20 +20,21 @@ import { selectCurrentRole } from "../store/Slices/authSlice";
 import ApprovalProofDialog from "../components/Payroll/ApprovalProofDialog";
 import DataPagination from "../components/shared/DataPagination";
 import usePaginationParams from "../hooks/usePaginationParams";
+import { useDebounce } from "../hooks/useDebounce";
 import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "@/components/shared/TableSkeleton";
+import { qk } from "@/lib/queryKeys";
 import "./PayrollApprovals.css";
 
 const PayrollApprovals = () => {
-  const [approvals, setApprovals] = useState([]);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const { page, pageSize, setPage, setPageSize } = usePaginationParams({
     defaultPage: 1,
     defaultPageSize: 20,
   });
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("Pending");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [isProofModalOpen, setIsProofModalOpen] = useState(false);
 
@@ -51,67 +53,77 @@ const PayrollApprovals = () => {
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [month, setMonth] = useState(defaultMonth);
 
-  const fetchApprovals = async () => {
-    try {
-      setLoading(true);
+  const queryParams = {
+    month,
+    page,
+    limit: pageSize,
+    status: statusFilter && statusFilter !== "All" ? statusFilter : undefined,
+  };
+
+  const {
+    data: approvalsData,
+    isLoading: loading,
+    refetch: fetchApprovals,
+  } = useQuery({
+    queryKey: qk.payrollApprovals(queryParams),
+    queryFn: async () => {
       const params = new URLSearchParams({ month, page, limit: pageSize });
       if (statusFilter && statusFilter !== "All") {
         params.append("status", statusFilter);
       }
       const res = await api.get(`/campus/salary/approvals?${params.toString()}`);
-      if (res.data.success) {
-        setApprovals(res.data.data.records || []);
-        setTotal(res.data.data.total || 0);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load approval requests");
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data?.data || { records: [], total: 0 };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchApprovals();
-  }, [month, page, pageSize, statusFilter]);
+  const approvals = approvalsData?.records || [];
+  const total = approvalsData?.total || 0;
 
-  const handleApprove = async (id, { notes } = {}) => {
-    try {
-      const res = await api.post(`/campus/salary/approvals/${id}/approve`, {
-        notes,
-      });
-      if (res.data.success) {
-        toast.success("Deduction & bonus approval authorized successfully");
-        fetchApprovals();
-        if (selectedApproval && selectedApproval._id === id) {
-          setSelectedApproval(res.data.data);
-        }
+  const approveMutation = useMutation({
+    mutationFn: async ({ id, notes }) => {
+      const res = await api.post(`/campus/salary/approvals/${id}/approve`, { notes });
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success("Deduction & bonus approval authorized successfully");
+      queryClient.invalidateQueries({ queryKey: ["payroll-approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["payroll"] });
+      if (selectedApproval && selectedApproval._id === variables.id) {
+        setSelectedApproval(data.data);
       }
-    } catch (err) {
+    },
+    onError: (err) => {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to process approval");
-      throw err;
-    }
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ id, reason, notes }) => {
+      const res = await api.post(`/campus/salary/approvals/${id}/reject`, { reason, notes });
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success("Approval request rejected. No deductions applied.");
+      queryClient.invalidateQueries({ queryKey: ["payroll-approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["payroll"] });
+      if (selectedApproval && selectedApproval._id === variables.id) {
+        setSelectedApproval(data.data);
+      }
+    },
+    onError: (err) => {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to reject approval");
+    },
+  });
+
+  const handleApprove = async (id, { notes } = {}) => {
+    return approveMutation.mutateAsync({ id, notes });
   };
 
   const handleReject = async (id, { reason, notes } = {}) => {
-    try {
-      const res = await api.post(`/campus/salary/approvals/${id}/reject`, {
-        reason,
-        notes,
-      });
-      if (res.data.success) {
-        toast.success("Approval request rejected. No deductions applied.");
-        fetchApprovals();
-        if (selectedApproval && selectedApproval._id === id) {
-          setSelectedApproval(res.data.data);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Failed to reject approval");
-      throw err;
-    }
+    return rejectMutation.mutateAsync({ id, reason, notes });
   };
 
   const openProofModal = async (item) => {
@@ -133,8 +145,8 @@ const PayrollApprovals = () => {
 
   // Client search filtering
   const filteredApprovals = approvals.filter((item) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
+    if (!debouncedSearch.trim()) return true;
+    const q = debouncedSearch.toLowerCase();
     const teacherName =
       item.teacherProfileId?.user?.name ||
       item.teacherProfileId?.name ||

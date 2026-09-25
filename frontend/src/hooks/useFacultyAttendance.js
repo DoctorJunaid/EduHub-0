@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import * as api from "../api/teacherAttendance.api.js";
+import { qk } from "@/lib/queryKeys";
 
 // Helper to format Date to YYYY-MM-DD in local time
 export const formatDateKey = (d) => {
@@ -14,24 +16,9 @@ export const formatDateKey = (d) => {
 };
 
 export default function useFacultyAttendance() {
+  const queryClient = useQueryClient();
   const [date, setDate] = useState(() => new Date());
   const [tab, setTab] = useState("daily"); // daily | weekly | history
-  const [stats, setStats] = useState({
-    total: 0,
-    present: 0,
-    late: 0,
-    absent: 0,
-    onLeave: 0,
-  });
-  const [rows, setRows] = useState([]);
-  const [weekly, setWeekly] = useState(null);
-  const [history, setHistory] = useState({
-    items: [],
-    page: 1,
-    limit: 20,
-    total: 0,
-    pages: 1,
-  });
   const [filters, setFilters] = useState({
     search: "",
     department: "All Departments",
@@ -47,130 +34,148 @@ export default function useFacultyAttendance() {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyLimit, setHistoryLimit] = useState(20);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const dateStr = formatDateKey(date);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const dateStr = formatDateKey(date);
+  // Stats query
+  const { data: statsData } = useQuery({
+    queryKey: qk.teacherAttendanceStats({ date: dateStr }),
+    queryFn: async () => {
+      const res = await api.getStats(dateStr);
+      return res.data?.data || { total: 0, present: 0, late: 0, absent: 0, onLeave: 0 };
+    },
+    enabled: tab === "daily",
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (tab === "daily") {
-        const [statsRes, listRes] = await Promise.all([
-          api.getStats(dateStr),
-          api.listAttendance({
-            date: dateStr,
-            search: filters.search.trim() || undefined,
-            department:
-              filters.department !== "All Departments"
-                ? filters.department
-                : undefined,
-            status:
-              filters.status !== "All Status" ? filters.status : undefined,
-          }),
-        ]);
+  // Daily list query
+  const {
+    data: dailyRowsData,
+    isLoading: loadingDaily,
+    refetch: refetchDaily,
+  } = useQuery({
+    queryKey: qk.facultyAttendance({
+      date: dateStr,
+      search: filters.search.trim() || undefined,
+      department: filters.department !== "All Departments" ? filters.department : undefined,
+      status: filters.status !== "All Status" ? filters.status : undefined,
+    }),
+    queryFn: async () => {
+      const res = await api.listAttendance({
+        date: dateStr,
+        search: filters.search.trim() || undefined,
+        department: filters.department !== "All Departments" ? filters.department : undefined,
+        status: filters.status !== "All Status" ? filters.status : undefined,
+      });
+      return res.data?.data || [];
+    },
+    enabled: tab === "daily",
+    staleTime: 5 * 60 * 1000,
+  });
 
-        if (statsRes.data?.success) {
-          setStats(statsRes.data.data);
-        }
-        if (listRes.data?.success) {
-          setRows(listRes.data.data || []);
-        }
-      } else if (tab === "weekly") {
-        const weeklyRes = await api.getWeekly(dateStr);
-        if (weeklyRes.data?.success) {
-          setWeekly(weeklyRes.data.data);
-        }
-      } else if (tab === "history") {
-        const historyRes = await api.getHistory({
-          page: historyPage,
-          limit: historyLimit,
-          startDate: historyFilters.startDate || undefined,
-          endDate: historyFilters.endDate || undefined,
-          status:
-            historyFilters.status !== "All Status"
-              ? historyFilters.status
-              : undefined,
-          search: historyFilters.search.trim() || undefined,
-        });
+  // Weekly query
+  const {
+    data: weeklyData,
+    isLoading: loadingWeekly,
+    refetch: refetchWeekly,
+  } = useQuery({
+    queryKey: ["faculty-attendance-weekly", dateStr],
+    queryFn: async () => {
+      const res = await api.getWeekly(dateStr);
+      return res.data?.data || null;
+    },
+    enabled: tab === "weekly",
+    staleTime: 5 * 60 * 1000,
+  });
 
-        if (historyRes.data?.success) {
-          setHistory({
-            items: historyRes.data.data || [],
-            page: historyRes.data.pagination?.page || 1,
-            limit: historyRes.data.pagination?.limit || historyLimit,
-            total: historyRes.data.pagination?.total || 0,
-            pages: historyRes.data.pagination?.pages || 1,
-          });
-        }
-      }
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || err.message || "Failed to load attendance data";
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    date,
-    tab,
-    filters.search,
-    filters.department,
-    filters.status,
-    historyPage,
-    historyLimit,
-    historyFilters.startDate,
-    historyFilters.endDate,
-    historyFilters.status,
-    historyFilters.search,
-  ]);
+  // History query
+  const {
+    data: historyDataResult,
+    isLoading: loadingHistory,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: [
+      "faculty-attendance-history",
+      {
+        page: historyPage,
+        limit: historyLimit,
+        startDate: historyFilters.startDate,
+        endDate: historyFilters.endDate,
+        status: historyFilters.status,
+        search: historyFilters.search,
+      },
+    ],
+    queryFn: async () => {
+      const res = await api.getHistory({
+        page: historyPage,
+        limit: historyLimit,
+        startDate: historyFilters.startDate || undefined,
+        endDate: historyFilters.endDate || undefined,
+        status: historyFilters.status !== "All Status" ? historyFilters.status : undefined,
+        search: historyFilters.search.trim() || undefined,
+      });
+      return res.data;
+    },
+    enabled: tab === "history",
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const stats = statsData || { total: 0, present: 0, late: 0, absent: 0, onLeave: 0 };
+  const rows = dailyRowsData || [];
+  const weekly = weeklyData || null;
+  const history = {
+    items: historyDataResult?.data || [],
+    page: historyDataResult?.pagination?.page || 1,
+    limit: historyDataResult?.pagination?.limit || historyLimit,
+    total: historyDataResult?.pagination?.total || 0,
+    pages: historyDataResult?.pagination?.pages || 1,
+  };
 
-  const mark = async (payload) => {
-    try {
-      const res = await api.markAttendance(payload);
+  const loading = (tab === "daily" && loadingDaily) || (tab === "weekly" && loadingWeekly) || (tab === "history" && loadingHistory);
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["faculty-attendance"] });
+    queryClient.invalidateQueries({ queryKey: ["teacher-attendance-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["faculty-attendance-weekly"] });
+    queryClient.invalidateQueries({ queryKey: ["faculty-attendance-history"] });
+  };
+
+  const markMutation = useMutation({
+    mutationFn: (payload) => api.markAttendance(payload),
+    onSuccess: (res) => {
       toast.success(res.data?.message || "Attendance recorded successfully");
-      await load();
-      return res.data;
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || err.message || "Error saving attendance";
-      toast.error(msg);
-      throw err;
-    }
-  };
+      invalidateAll();
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || err.message || "Error saving attendance");
+    },
+  });
 
-  const update = async (id, payload) => {
-    try {
-      const res = await api.updateAttendance(id, payload);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }) => api.updateAttendance(id, payload),
+    onSuccess: (res) => {
       toast.success(res.data?.message || "Attendance updated successfully");
-      await load();
-      return res.data;
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || err.message || "Error updating attendance";
-      toast.error(msg);
-      throw err;
-    }
-  };
+      invalidateAll();
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || err.message || "Error updating attendance");
+    },
+  });
 
-  const remove = async (id) => {
-    try {
-      const res = await api.deleteAttendance(id);
+  const removeMutation = useMutation({
+    mutationFn: (id) => api.deleteAttendance(id),
+    onSuccess: (res) => {
       toast.success(res.data?.message || "Attendance record deleted");
-      await load();
-      return res.data;
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || err.message || "Error deleting attendance";
-      toast.error(msg);
-      throw err;
-    }
+      invalidateAll();
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || err.message || "Error deleting attendance");
+    },
+  });
+
+  const reload = async () => {
+    if (tab === "daily") await refetchDaily();
+    else if (tab === "weekly") await refetchWeekly();
+    else if (tab === "history") await refetchHistory();
   };
 
   return {
@@ -191,10 +196,10 @@ export default function useFacultyAttendance() {
     historyLimit,
     setHistoryLimit,
     loading,
-    error,
-    reload: load,
-    mark,
-    update,
-    remove,
+    error: null,
+    reload,
+    mark: (payload) => markMutation.mutateAsync(payload),
+    update: (id, payload) => updateMutation.mutateAsync({ id, payload }),
+    remove: (id) => removeMutation.mutateAsync(id),
   };
 }

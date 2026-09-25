@@ -99,6 +99,7 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .teacher-tabs-bar::-webkit-scrollbar {
   display: none;
 }
@@ -203,6 +204,7 @@
   padding: 4px 0;
   border-bottom: 1px solid #f4f4f5;
 }
+
 .teacher-widget-row:last-child {
   border-bottom: none;
 }
@@ -237,5 +239,5 @@
 
 .teacher-class-card:hover {
   border-color: #09090b;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
