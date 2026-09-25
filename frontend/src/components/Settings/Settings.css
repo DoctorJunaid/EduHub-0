@@ -36,6 +36,9 @@
 
 .settings-tabbar {
   display: flex;
+  flex: 0 0 auto;
+  min-height: 48px;
+  align-items: center;
   gap: 4px;
   padding: 8px 20px;
   background: #fafafa;
@@ -64,14 +67,21 @@
 
 .settings-content {
   width: 100%;
-  padding: 20px;
+  flex: 1 0 auto;
+  min-height: 0;
+  padding: 8px 20px 14px;
+  box-sizing: border-box;
   background: #fff;
 }
 
-.settings-tab-content { max-width: 980px; margin: 0 auto; }
+.settings-tab-content { width: 100%; max-width: none; margin: 0 auto; }
+.settings-tab-content > .flex.justify-end { margin: 0 0 12px !important; }
+.settings-tab-content form.space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 14px; }
+.settings-tab-content.space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 12px; }
+.settings-fields-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 14px 18px !important; }
 .settings-tab-content .settings-card {
   margin: 0;
-  padding: 20px !important;
+  padding: 12px 16px !important;
   background: #fff !important;
   border: 1px solid #e4e4e7 !important;
   border-radius: 8px !important;
@@ -79,9 +89,11 @@
 }
 
 .settings-tab-content .settings-card:hover { transform: none; box-shadow: none !important; }
-.settings-tab-content .settings-card h2 { margin: 0 0 18px; padding-bottom: 12px; color: #18181b !important; border-color: #e4e4e7 !important; font-size: 14px; font-weight: 700; }
+.settings-tab-content .settings-card h2 { margin: 0 0 8px !important; padding-bottom: 6px !important; color: #18181b !important; border-color: #e4e4e7 !important; font-size: 14px; font-weight: 700; }
 .settings-tab-content label { color: #3f3f46 !important; font-size: 11px; font-weight: 650; }
-.settings-tab-content input:not([type='checkbox']) { height: 36px; color: #09090b !important; background: #fff !important; border: 1px solid #d4d4d8 !important; border-radius: 6px !important; font-size: 12px; outline: 0; }
+.settings-tab-content .settings-fields-grid { row-gap: 8px !important; }
+.settings-tab-content .form-group label { margin-bottom: 3px !important; }
+.settings-tab-content input:not([type='checkbox']) { height: 32px; padding-top: 4px !important; padding-bottom: 4px !important; color: #09090b !important; background: #fff !important; border: 1px solid #d4d4d8 !important; border-radius: 6px !important; font-size: 12px; outline: 0; }
 .settings-tab-content input:not([type='checkbox']):focus { border-color: #09090b !important; box-shadow: 0 0 0 2px #f4f4f5; }
 .settings-tab-content .text-white { color: #18181b !important; }
 .settings-tab-content .text-gray-300 { color: #3f3f46 !important; }
@@ -94,9 +106,13 @@
 .settings-tab-content button[type='submit'] { height: 34px; padding: 0 13px; color: #fff !important; background: #09090b !important; border: 1px solid #09090b !important; border-radius: 6px; font-size: 11px; font-weight: 650; box-shadow: none !important; }
 .settings-tab-content button[type='submit']:hover { background: #27272a !important; }
 .settings-tab-content button[type='submit'] svg { width: 14px; height: 14px; }
+.settings-tab-content .settings-card .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 8px; }
+.settings-tab-content .settings-card .space-y-4 > .flex.items-center.justify-between { padding: 8px !important; }
+.settings-tab-content form > .flex.justify-end { padding-top: 0 !important; }
 .settings-tab-content .settings-card .peer:checked ~ div { background: #09090b !important; }
 .settings-tab-content .settings-card .peer ~ div { background: #d4d4d8 !important; }
 .settings-tab-content .settings-card .peer:focus ~ div { outline: 2px solid #e4e4e7; outline-offset: 2px; }
 
 @keyframes settingsFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 680px) { .settings-heading { padding: 18px 14px; } .settings-content { padding: 14px; } .settings-tabbar { padding: 8px 14px; } .settings-tab-content .settings-card { padding: 16px !important; } }
+@media (max-width: 900px) { .settings-fields-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (max-width: 680px) { .settings-heading { padding: 18px 14px; } .settings-content { padding: 8px 14px 12px; } .settings-tabbar { padding: 8px 14px; } .settings-tab-content .settings-card { padding: 12px !important; } .settings-fields-grid { grid-template-columns: 1fr !important; } }
