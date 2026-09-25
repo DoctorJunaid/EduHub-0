@@ -72,7 +72,7 @@ export default function DataPagination({
 
   return (
     <div
-      className={`w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 select-none ${className}`}
+      className={`w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 select-none mt-auto ${className}`}
       aria-label="Table pagination"
     >
       {/* Left: Range & Total text */}
@@ -133,7 +133,7 @@ export default function DataPagination({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 hidden sm:flex border-slate-200 dark:border-slate-800"
+            className="h-8 w-8 hidden sm:flex border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={() => onPageChange && onPageChange(1)}
             disabled={currentPage <= 1 || isLoading}
             aria-label="Go to first page"
@@ -145,7 +145,7 @@ export default function DataPagination({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 border-slate-200 dark:border-slate-800"
+            className="h-8 w-8 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={() => onPageChange && onPageChange(currentPage - 1)}
             disabled={currentPage <= 1 || isLoading}
             aria-label="Go to previous page"
@@ -173,10 +173,10 @@ export default function DataPagination({
                   key={`page-${item}`}
                   variant={isCurrent ? "default" : "outline"}
                   size="sm"
-                  className={`h-8 min-w-[32px] px-2 text-xs font-medium border-slate-200 dark:border-slate-800 ${
+                  className={`h-8 min-w-[32px] px-2 text-xs font-semibold rounded-md border transition-all ${
                     isCurrent
-                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm border-indigo-600"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-black text-white hover:bg-neutral-800 shadow-sm border-black dark:bg-white dark:text-black dark:border-white"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
                   }`}
                   onClick={() => onPageChange && onPageChange(item)}
                   disabled={isLoading}

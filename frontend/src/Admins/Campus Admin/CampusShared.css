@@ -13,6 +13,7 @@
   color: #09090b;
   display: flex;
   flex-direction: column;
+  flex: 1;
   position: relative;
 }
 
@@ -268,7 +269,7 @@
 .campus-table-container {
   width: 100%;
   overflow-x: hidden !important;
-  min-height: 240px;
+  flex: 1;
 }
 
 .campus-table-container [data-slot="table-container"] {

@@ -508,6 +508,8 @@ tbody tr:hover {
   min-height: 0;
   padding: 32px;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .content-area.content-area-flush,
@@ -521,6 +523,9 @@ tbody tr:hover {
 .content-area:has(.exam-results),
 .content-area:has(.fee-management) {
   padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .sidebar-brand-row {
