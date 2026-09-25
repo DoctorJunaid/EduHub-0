@@ -363,7 +363,6 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
                 rows={rows}
                 page={pagination.currentPage}
                 pageSize={pageSize}
-                onMark={mark}
               />
             </div>
           </TabsContent>
