@@ -23,7 +23,7 @@ import { useInstitution } from "@/context/InstitutionContext";
 /* ─── reusable field wrapper ─── */
 function Field({ label, required, children, className = "" }) {
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div className={`flex flex-col ${className}`} style={{ gap: "8px" }}>
       <span className="text-xs font-semibold text-zinc-700 tracking-wide block">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -43,7 +43,8 @@ function NumInput({ id, placeholder = "0", value, onChange }) {
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      className="h-10 text-sm px-3.5 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      className="text-sm rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      style={{ height: "42px", padding: "0 14px" }}
     />
   );
 }
@@ -73,7 +74,8 @@ export default function FeeStructureDialog({ onClose }) {
     dispatch(fetchFeeStructures());
   }, [dispatch]);
 
-  const handleChange = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+  const handleChange = (key, val) =>
+    setForm((prev) => ({ ...prev, [key]: val }));
 
   const handleEdit = (s) => {
     setEditingId(s._id);
@@ -111,7 +113,8 @@ export default function FeeStructureDialog({ onClose }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.gradeOrClass.trim()) return toast.error("Please enter a class or grade name.");
+    if (!form.gradeOrClass.trim())
+      return toast.error("Please enter a class or grade name.");
 
     setIsSaving(true);
     try {
@@ -127,12 +130,14 @@ export default function FeeStructureDialog({ onClose }) {
           examFee: Number(form.examFee) || 0,
           otherFee: Number(form.otherFee) || 0,
           lateFeeFine: Number(form.lateFeeFine) || 0,
-        })
+        }),
       ).unwrap();
       toast.success(`Fee structure for ${form.gradeOrClass} saved!`);
       handleResetForm();
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Failed to save fee structure.");
+      toast.error(
+        typeof err === "string" ? err : "Failed to save fee structure.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -162,14 +167,22 @@ export default function FeeStructureDialog({ onClose }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="max-w-[920px] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-zinc-200 shadow-2xl bg-white gap-0"
+        className="max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col rounded-2xl border border-zinc-200 shadow-2xl bg-white"
+        style={{
+          width: "calc(100vw - 2rem)",
+          maxWidth: "960px",
+          padding: 0,
+          gap: 0,
+        }}
         aria-describedby="fee-struct-desc"
         showCloseButton={false}
       >
-
         {/* ── HEADER ── */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-200 bg-white flex-shrink-0">
-          <div className="flex items-center gap-3.5">
+        <div
+          className="flex items-center justify-between border-b border-zinc-200 bg-white flex-shrink-0"
+          style={{ padding: "24px clamp(20px, 4vw, 32px)", gap: "16px" }}
+        >
+          <div className="flex items-center min-w-0" style={{ gap: "14px" }}>
             <div className="size-11 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
               <LayoutGrid className="size-5 text-white" />
             </div>
@@ -177,23 +190,34 @@ export default function FeeStructureDialog({ onClose }) {
               <DialogTitle className="text-base font-semibold text-zinc-900 leading-tight">
                 School Fee Structure Setup
               </DialogTitle>
-              <DialogDescription id="fee-struct-desc" className="text-xs text-zinc-500 mt-1">
-                Configure standard monthly tuition and auxiliary rate cards per grade or class.
+              <DialogDescription
+                id="fee-struct-desc"
+                className="text-xs text-zinc-500"
+                style={{ marginTop: "4px" }}
+              >
+                Configure standard monthly tuition and auxiliary rate cards per
+                grade or class.
               </DialogDescription>
             </div>
           </div>
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+            aria-label="Close fee structure dialog"
+            variant="ghost"
+            size="icon-sm"
+            className="text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+            style={{ width: "32px", height: "32px", flexShrink: 0 }}
           >
             <span className="text-xl leading-none">&times;</span>
-          </button>
+          </Button>
         </div>
 
         {/* ── SCROLLABLE BODY ── */}
-        <div className="overflow-y-auto flex-1 min-h-0 px-8 py-6 space-y-6">
-
+        <div
+          className="overflow-y-auto flex-1 min-h-0 flex flex-col"
+          style={{ padding: "24px clamp(20px, 4vw, 32px)", gap: "24px" }}
+        >
           {/* Add / Edit form */}
           <form onSubmit={handleSave}>
             {/* Section header row */}
@@ -209,7 +233,10 @@ export default function FeeStructureDialog({ onClose }) {
                 )}
               </div>
               <span className="text-xs text-zinc-500">
-                Total Monthly: <strong className="text-zinc-900 font-bold">{formatPKR(calculatedTotal)}</strong>
+                Total Monthly:{" "}
+                <strong className="text-zinc-900 font-bold">
+                  {formatPKR(calculatedTotal)}
+                </strong>
               </span>
             </div>
 
@@ -226,33 +253,73 @@ export default function FeeStructureDialog({ onClose }) {
                 />
               </Field>
               <Field label="Admission Fee (PKR)">
-                <NumInput id="fs-admission" placeholder="One-time on entry" value={form.admissionFee} onChange={(e) => handleChange("admissionFee", e.target.value)} />
+                <NumInput
+                  id="fs-admission"
+                  placeholder="One-time on entry"
+                  value={form.admissionFee}
+                  onChange={(e) => handleChange("admissionFee", e.target.value)}
+                />
               </Field>
               <Field label="Monthly Tuition Fee (PKR)">
-                <NumInput id="fs-tuition" value={form.tuitionFee} onChange={(e) => handleChange("tuitionFee", e.target.value)} />
+                <NumInput
+                  id="fs-tuition"
+                  value={form.tuitionFee}
+                  onChange={(e) => handleChange("tuitionFee", e.target.value)}
+                />
               </Field>
               <Field label="Science / Lab Fee (PKR)">
-                <NumInput id="fs-lab" value={form.labFee} onChange={(e) => handleChange("labFee", e.target.value)} />
+                <NumInput
+                  id="fs-lab"
+                  value={form.labFee}
+                  onChange={(e) => handleChange("labFee", e.target.value)}
+                />
               </Field>
               <Field label="Computer / IT Fee (PKR)">
-                <NumInput id="fs-comp" value={form.computerFee} onChange={(e) => handleChange("computerFee", e.target.value)} />
+                <NumInput
+                  id="fs-comp"
+                  value={form.computerFee}
+                  onChange={(e) => handleChange("computerFee", e.target.value)}
+                />
               </Field>
               <Field label="Library Fee (PKR)">
-                <NumInput id="fs-library" value={form.libraryFee} onChange={(e) => handleChange("libraryFee", e.target.value)} />
+                <NumInput
+                  id="fs-library"
+                  value={form.libraryFee}
+                  onChange={(e) => handleChange("libraryFee", e.target.value)}
+                />
               </Field>
               <Field label="Sports / Activities (PKR)">
-                <NumInput id="fs-sports" value={form.sportsFee} onChange={(e) => handleChange("sportsFee", e.target.value)} />
+                <NumInput
+                  id="fs-sports"
+                  value={form.sportsFee}
+                  onChange={(e) => handleChange("sportsFee", e.target.value)}
+                />
               </Field>
               <Field label="Exam Fee (PKR)">
-                <NumInput id="fs-exam" value={form.examFee} onChange={(e) => handleChange("examFee", e.target.value)} />
+                <NumInput
+                  id="fs-exam"
+                  value={form.examFee}
+                  onChange={(e) => handleChange("examFee", e.target.value)}
+                />
               </Field>
               <Field label="Late Fine Default (PKR)">
-                <NumInput id="fs-late" value={form.lateFeeFine} onChange={(e) => handleChange("lateFeeFine", e.target.value)} />
+                <NumInput
+                  id="fs-late"
+                  value={form.lateFeeFine}
+                  onChange={(e) => handleChange("lateFeeFine", e.target.value)}
+                />
               </Field>
               <Field label="Other / Utility Fee (PKR)">
-                <NumInput id="fs-other" value={form.otherFee} onChange={(e) => handleChange("otherFee", e.target.value)} />
+                <NumInput
+                  id="fs-other"
+                  value={form.otherFee}
+                  onChange={(e) => handleChange("otherFee", e.target.value)}
+                />
               </Field>
-              <Field label="Description / Particulars" className="sm:col-span-2">
+              <Field
+                label="Description / Particulars"
+                className="sm:col-span-2"
+              >
                 <Input
                   id="fs-desc"
                   placeholder="e.g. Regular monthly tuition & laboratory dues"
@@ -266,17 +333,33 @@ export default function FeeStructureDialog({ onClose }) {
             {/* Form actions */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
               <p className="text-xs text-zinc-500 m-0">
-                {editingId ? "Updating existing rate card" : "New rate card will be added to the list below"}
+                {editingId
+                  ? "Updating existing rate card"
+                  : "New rate card will be added to the list below"}
               </p>
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                 {editingId && (
-                  <Button type="button" variant="outline" onClick={handleResetForm} className="h-10 px-5 text-sm font-semibold">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResetForm}
+                    className="h-10 px-5 text-sm font-semibold"
+                  >
                     Cancel Edit
                   </Button>
                 )}
-                <Button type="submit" disabled={isSaving} className="gap-2 h-10 px-6 text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm cursor-pointer">
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="gap-2 h-10 px-6 text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm cursor-pointer"
+                  style={{ padding: "2px 4px", gap: "6px" }}
+                >
                   <Check className="size-4" />
-                  {isSaving ? "Saving..." : editingId ? "Update Rate Card" : "Save Class Fee"}
+                  {isSaving
+                    ? "Saving..."
+                    : editingId
+                      ? "Update Rate Card"
+                      : "Save Class Fee"}
                 </Button>
               </div>
             </div>
@@ -295,23 +378,45 @@ export default function FeeStructureDialog({ onClose }) {
 
             {structures.length === 0 ? (
               <div className="border border-dashed border-zinc-200 rounded-xl py-12 text-center">
-                <p className="text-sm font-medium text-zinc-500">No fee structures configured yet.</p>
-                <p className="text-xs text-zinc-400 mt-1">Add a class using the form above.</p>
+                <p className="text-sm font-medium text-zinc-500">
+                  No fee structures configured yet.
+                </p>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Add a class using the form above.
+                </p>
               </div>
             ) : (
               <div className="border border-zinc-200 rounded-xl overflow-hidden">
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="bg-zinc-50 border-b border-zinc-200">
-                      <th className="text-left px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Class / Grade</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Admission</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Tuition</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Lab+IT</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Sports+Lib</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Exam+Other</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Late Fine</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Total / Month</th>
-                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Actions</th>
+                      <th className="text-left px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Class / Grade
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Admission
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Tuition
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Lab+IT
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Sports+Lib
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Exam+Other
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Late Fine
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Total / Month
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -330,18 +435,38 @@ export default function FeeStructureDialog({ onClose }) {
                           className={`border-b border-zinc-100 last:border-0 hover:bg-zinc-50/60 transition-colors ${editingId === s._id ? "bg-zinc-50" : ""}`}
                         >
                           <td className="px-4 py-3">
-                            <span className="font-semibold text-zinc-900 text-[13px]">{s.gradeOrClass}</span>
+                            <span className="font-semibold text-zinc-900 text-[13px]">
+                              {s.gradeOrClass}
+                            </span>
                             {s.description && (
-                              <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[160px]">{s.description}</div>
+                              <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[160px]">
+                                {s.description}
+                              </div>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR(s.admissionFee || 0)}</td>
-                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR(s.tuitionFee || 0)}</td>
-                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR((s.labFee || 0) + (s.computerFee || 0))}</td>
-                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR((s.sportsFee || 0) + (s.libraryFee || 0))}</td>
-                          <td className="px-4 py-3 text-right text-zinc-600">{formatPKR((s.examFee || 0) + (s.otherFee || 0))}</td>
-                          <td className="px-4 py-3 text-right text-zinc-500 font-mono text-[11px]">{formatPKR(s.lateFeeFine || 0)}</td>
-                          <td className="px-4 py-3 text-right font-bold text-zinc-900 text-[13px]">{formatPKR(total)}</td>
+                          <td className="px-4 py-3 text-right text-zinc-600">
+                            {formatPKR(s.admissionFee || 0)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-600">
+                            {formatPKR(s.tuitionFee || 0)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-600">
+                            {formatPKR((s.labFee || 0) + (s.computerFee || 0))}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-600">
+                            {formatPKR(
+                              (s.sportsFee || 0) + (s.libraryFee || 0),
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-600">
+                            {formatPKR((s.examFee || 0) + (s.otherFee || 0))}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-500 font-mono text-[11px]">
+                            {formatPKR(s.lateFeeFine || 0)}
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-zinc-900 text-[13px]">
+                            {formatPKR(total)}
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1">
                               <button
@@ -354,7 +479,9 @@ export default function FeeStructureDialog({ onClose }) {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDelete(s._id, s.gradeOrClass)}
+                                onClick={() =>
+                                  handleDelete(s._id, s.gradeOrClass)
+                                }
                                 className="size-8 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                                 aria-label={`Delete ${s.gradeOrClass}`}
                               >
@@ -373,15 +500,24 @@ export default function FeeStructureDialog({ onClose }) {
         </div>
 
         {/* ── STICKY FOOTER ── */}
-        <div className="flex items-center justify-between px-8 py-4 border-t border-zinc-200 bg-white flex-shrink-0">
+        <div
+          className="flex items-center justify-between border-t border-zinc-200 bg-white flex-shrink-0"
+          style={{ padding: "18px clamp(20px, 4vw, 32px)" }}
+        >
           <span className="text-xs text-zinc-500">
-            {structures.length} class rate card{structures.length === 1 ? "" : "s"} configured
+            {structures.length} class rate card
+            {structures.length === 1 ? "" : "s"} configured
           </span>
-          <Button type="button" variant="outline" onClick={onClose} className="h-10 px-6 text-sm font-semibold">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="h-10 px-6 text-sm font-semibold"
+            style={{ padding: "2px 4px" }}
+          >
             Close
           </Button>
         </div>
-
       </DialogContent>
     </Dialog>
   );
