@@ -55,8 +55,8 @@ export const seedFullStructure = async (req, res, next) => {
     if (!campusId) {
       return res.status(400).json({ success: false, message: "Campus ID is required" });
     }
-    const teachers = Number(req.body.teachers) || 60;
-    const studentsPerClass = Number(req.body.studentsPerClass) || 30;
+    const teachers = Number(req.body.teachers) || 10;
+    const studentsPerClass = Number(req.body.studentsPerClass) || 5;
 
     const result = await seedService.seedFullStructure(
       campusId,
@@ -78,7 +78,7 @@ export const seedTeachers = async (req, res, next) => {
     if (!campusId) {
       return res.status(400).json({ success: false, message: "Campus ID is required" });
     }
-    const count = Number(req.body.count) || 60;
+    const count = Number(req.body.count) || 10;
     const clearFirst = req.body.clearFirst === true || req.body.clearFirst === "true";
 
     const result = await seedService.seedTeachers(
@@ -98,7 +98,7 @@ export const seedStudents = async (req, res, next) => {
     if (!campusId) {
       return res.status(400).json({ success: false, message: "Campus ID is required" });
     }
-    const studentsPerClass = Number(req.body.studentsPerClass) || 30;
+    const studentsPerClass = Number(req.body.studentsPerClass) || 5;
     const clearFirst = req.body.clearFirst === true || req.body.clearFirst === "true";
 
     const result = await seedService.seedStudents(

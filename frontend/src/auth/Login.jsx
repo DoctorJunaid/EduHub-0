@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { loginUser } from '@/store/Slices/authSlice';
 import { roleHome } from './roles';
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import './Login.css';
 
@@ -13,6 +13,7 @@ export default function Login() {
   const [values, setValues]   = useState({ email: '', password: '' });
   const [errors, setErrors]   = useState({});
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const change = (field, value) => {
     setValues(p => ({ ...p, [field]: value }));
@@ -82,12 +83,21 @@ export default function Login() {
                 <span className="lp-input-icon"><Lock size={15} /></span>
                 <input
                   id="lp-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={values.password}
                   onChange={e => change('password', e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="lp-toggle-pwd"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
               {errors.password && <p className="lp-error">{errors.password}</p>}
             </div>
