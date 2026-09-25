@@ -34,6 +34,35 @@
   max-width: 340px;
 }
 
+/* Back to Home Link */
+.login-page .lp-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #71717a;
+  text-decoration: none;
+  margin-bottom: 1.25rem;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.login-page .lp-back-link:hover {
+  color: #10b981;
+  transform: translateX(-2px);
+}
+
+.login-page .lp-panel-brand-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  transition: opacity 0.15s ease;
+}
+
+.login-page .lp-panel-brand-link:hover {
+  opacity: 0.85;
+}
+
 /* Heading */
 .login-page h1 {
   font-size: 1.75rem !important;

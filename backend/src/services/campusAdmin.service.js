@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
   TeacherProfile,
   StudentProfile,
@@ -396,10 +397,17 @@ class CampusAdminService {
 
   async getAllClassSchedules(campusIdOrFilter = {}, maybeFilter = {}) {
     let filter = {};
-    if (typeof campusIdOrFilter === "object" && campusIdOrFilter !== null) {
+    const isId =
+      campusIdOrFilter instanceof mongoose.Types.ObjectId ||
+      (typeof campusIdOrFilter === "string" && mongoose.isValidObjectId(campusIdOrFilter)) ||
+      (campusIdOrFilter && (campusIdOrFilter._bsontype === "ObjectID" || campusIdOrFilter._bsontype === "ObjectId"));
+
+    if (isId) {
+      filter = { ...maybeFilter, campusId: campusIdOrFilter };
+    } else if (typeof campusIdOrFilter === "object" && campusIdOrFilter !== null) {
       filter = { ...campusIdOrFilter };
     } else {
-      filter = { ...maybeFilter, campusId: campusIdOrFilter };
+      filter = { ...maybeFilter, campusId: campusIdOrFilter || maybeFilter?.campusId };
     }
 
     const query = {};

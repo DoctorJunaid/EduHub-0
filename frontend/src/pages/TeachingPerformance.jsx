@@ -182,35 +182,17 @@ export default function TeachingPerformance() {
       <section className="tp-action-toolbar" aria-label="Teaching performance actions">
         <div className="tp-header-controls">
           <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} aria-label="Select performance month" className="tp-month-select" />
-          <Button onClick={handleGenerateToday} disabled={generating} className="tp-generate-button"><Clock3 size={14} className={generating ? "animate-spin" : ""} />Generate Today&apos;s Sessions</Button>
-          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button"><RefreshCw size={14} className={loading ? "animate-spin" : ""} />Sync</Button>
-        </div>
-      </section>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-          />
-          <Button
-            onClick={handleGenerateToday}
-            disabled={generating}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
-          >
+          <Button onClick={handleGenerateToday} disabled={generating} className="tp-generate-button">
             {generating ? <Spinner className="size-3.5 text-white" /> : <Clock3 size={14} />}
-            Generate Today's Sessions
+            Generate Today&apos;s Sessions
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => loadPerformance(true)}
-            disabled={loading}
-            className="rounded-xl text-xs flex items-center gap-1.5"
-          >
+          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button">
             {loading ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
             Sync
           </Button>
+        </div>
+      </section>
+
       <section className="tp-filter-bar" aria-label="Filter teaching performance">
         <div className="tp-search-field">
           <Search size={15} aria-hidden="true" />
@@ -230,7 +212,6 @@ export default function TeachingPerformance() {
           <div className="p-12 text-center text-slate-500 text-sm">
             <SpinnerCustom text="Loading teaching records..." size="lg" className="flex-col gap-2" />
           </div>
-          <div className="p-12 text-center text-slate-500 text-sm"><RefreshCw className="animate-spin inline-block mr-2" size={16} />Loading teaching records...</div>
         ) : filteredTeachers.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-sm">No teacher records found for this period.</div>
         ) : (

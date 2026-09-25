@@ -3,19 +3,26 @@ import { motion, AnimatePresence } from 'motion/react'
 import { 
   GraduationCap, 
   ArrowUpRight, 
+  ArrowSquareOut,
+  SignIn,
+  CaretDown,
+  Buildings,
   Sun, 
   Moon, 
   List, 
   X
 } from '@phosphor-icons/react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { getManagementLoginUrl, getManagementDashboardUrl } from '@/config/urls'
 
 export default function Navbar({ isDark, setIsDark, onGetStarted }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [isNavVisible, setIsNavVisible] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [loginMenuOpen, setLoginMenuOpen] = useState(false)
   const lastScrollY = useRef(0)
+  const loginMenuRef = useRef(null)
 
   // Intelligent Hide on Scroll Down, Show on Scroll Up
   useEffect(() => {
@@ -29,6 +36,7 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
       } else if (diff > 6) {
         // Scrolling down -> hide navbar
         setIsNavVisible(false)
+        setLoginMenuOpen(false)
       } else if (diff < -6) {
         // Scrolling up -> show navbar
         setIsNavVisible(true)
@@ -41,8 +49,22 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close login options menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (loginMenuRef.current && !loginMenuRef.current.contains(e.target)) {
+        setLoginMenuOpen(false)
+      }
+    }
+    if (loginMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [loginMenuOpen])
+
   const scrollToSection = (id) => {
     setMobileMenuOpen(false)
+    setLoginMenuOpen(false)
     if (location.pathname !== '/') {
       navigate('/')
       setTimeout(() => {
@@ -53,6 +75,9 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
     }
   }
 
+  const managementLoginUrl = getManagementLoginUrl()
+  const managementDashboardUrl = getManagementDashboardUrl()
+
   return (
     <>
       <header 
@@ -61,7 +86,7 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
         }`}
       >
         <nav 
-          className="pointer-events-auto flex items-center justify-between gap-4 md:gap-8 px-4 md:px-6 py-2.5 rounded-full bg-white/80 dark:bg-[#111114]/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_10px_30px_-5px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_36px_-8px_rgba(0,0,0,0.8)] transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg max-w-4xl w-full"
+          className="pointer-events-auto flex items-center justify-between gap-3 md:gap-6 px-4 md:px-6 py-2.5 rounded-full bg-white/85 dark:bg-[#111114]/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_10px_30px_-5px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_36px_-8px_rgba(0,0,0,0.8)] transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg max-w-4xl w-full"
           aria-label="Main Navigation"
         >
           {/* Brand Logo */}
@@ -129,6 +154,88 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
               )}
             </button>
 
+            {/* Split / Optioned Management Portal Login Button */}
+            <div className="relative hidden sm:block" ref={loginMenuRef}>
+              <div className="inline-flex items-center rounded-full border border-slate-200/90 dark:border-white/10 bg-slate-100/90 dark:bg-slate-800/80 shadow-sm transition-all hover:border-emerald-500/50">
+                <a
+                  href={managementLoginUrl}
+                  className="inline-flex items-center gap-1.5 pl-3.5 pr-2 py-1.5 rounded-l-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                  title="Login to EduHub Management Portal"
+                >
+                  <SignIn size={14} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+                  <span>Login</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setLoginMenuOpen(!loginMenuOpen)}
+                  className="pr-2.5 pl-1 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  aria-label="Login redirection options"
+                  title="Redirect options (Same tab or Next tab)"
+                >
+                  <CaretDown size={11} weight="bold" className={`transition-transform duration-200 ${loginMenuOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                </button>
+              </div>
+
+              {/* Redirection Options Dropdown Menu */}
+              <AnimatePresence>
+                {loginMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.16 }}
+                    className="absolute right-0 top-full mt-2 w-60 p-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl z-50 flex flex-col gap-1 text-xs"
+                  >
+                    <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        Management Portal
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+
+                    {/* Redirection: Same Tab */}
+                    <a
+                      href={managementLoginUrl}
+                      className="flex items-center justify-between px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-colors"
+                      onClick={() => setLoginMenuOpen(false)}
+                    >
+                      <span className="flex items-center gap-2">
+                        <SignIn size={15} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+                        <span>Sign In (Same Tab)</span>
+                      </span>
+                    </a>
+
+                    {/* Redirection: Next / New Tab */}
+                    <a
+                      href={managementLoginUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-colors"
+                      onClick={() => setLoginMenuOpen(false)}
+                    >
+                      <span className="flex items-center gap-2">
+                        <ArrowSquareOut size={15} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+                        <span>Open in New Tab</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">↗</span>
+                    </a>
+
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
+
+                    {/* Direct to Campus Dashboard */}
+                    <a
+                      href={managementDashboardUrl}
+                      className="flex items-center gap-2 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+                      onClick={() => setLoginMenuOpen(false)}
+                    >
+                      <Buildings size={15} weight="bold" className="text-slate-400" />
+                      <span>Direct to Dashboard</span>
+                    </a>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Mobile Menu Toggle */}
             <button
               type="button"
@@ -185,6 +292,15 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
               Alumni
             </button>
             <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+              <a
+                href={managementLoginUrl}
+                className="w-full py-2.5 px-4 rounded-xl text-center text-sm font-bold text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 transition-all shadow-sm"
+              >
+                <SignIn size={17} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+                <span>Portal Login</span>
+                <ArrowSquareOut size={15} className="opacity-70" />
+              </a>
+
               <button 
                 className="w-full py-2.5 rounded-xl text-center text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md"
                 onClick={() => { setMobileMenuOpen(false); onGetStarted(); }}
@@ -198,3 +314,4 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
     </>
   )
 }
+

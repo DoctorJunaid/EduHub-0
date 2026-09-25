@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, 
+  ArrowUpRight,
   Play, 
   ArrowsClockwise, 
   Sparkle, 
   Star, 
   X 
 } from '@phosphor-icons/react';
+import { getManagementLoginUrl } from '@/config/urls';
 import HeroCard from './HeroCard';
 import './heroFanDeck.css';
 
@@ -329,10 +331,10 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <button 
                     className="hero-btn-primary" 
-                    style={{ flex: 1, justifyContent: 'center' }}
+                    style={{ flex: 1, minWidth: '160px', justifyContent: 'center' }}
                     onClick={() => {
                       setSelectedCard(null);
                       if (selectedCard.instituteId && navigate) {
@@ -345,6 +347,18 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
                     <span>{selectedCard.instituteId ? 'View Institute' : 'Get Started'}</span>
                     <ArrowRight size={16} weight="bold" />
                   </button>
+
+                  {selectedCard.id === 'hero_eduhub_platform' && (
+                    <a
+                      href={getManagementLoginUrl()}
+                      className="hero-btn-secondary"
+                      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                      title="Open EduHub Management Portal"
+                    >
+                      <span>Sign In to Portal</span>
+                      <ArrowUpRight size={16} weight="bold" />
+                    </a>
+                  )}
                 </div>
               </div>
             </motion.div>

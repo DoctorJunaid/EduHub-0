@@ -21,6 +21,7 @@ import HeroCommand from '@/components/hero/HeroCommand'
 import HeroFanDeck from '@/components/HeroFanDeck/HeroFanDeck'
 import BentoCard from '@/components/shared/BentoCard'
 import GetStartedModal from '@/components/GetStartedModal'
+import { getManagementLoginUrl, getManagementDashboardUrl } from '@/config/urls'
 
 export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   const navigate = useNavigate()
@@ -747,15 +748,17 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                   <li><a href="#institutes" className="hover:text-white transition-colors">Institutes</a></li>
                   <li><a href="#alumni" className="hover:text-white transition-colors">Alumni Network</a></li>
                   <li><span onClick={handleOpenGetStarted} className="hover:text-white cursor-pointer transition-colors">Register Campus</span></li>
+                  <li><a href={getManagementLoginUrl()} className="text-emerald-300 font-semibold hover:text-white transition-colors flex items-center gap-1">Management Portal ↗</a></li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Resources</h4>
                 <ul className="space-y-3 text-white/80">
+                  <li><a href={getManagementDashboardUrl()} className="hover:text-white transition-colors">Campus Dashboard</a></li>
+                  <li><a href={getManagementLoginUrl()} className="hover:text-white transition-colors">Staff & Student Login</a></li>
                   <li><span className="hover:text-white cursor-pointer transition-colors">Documentation</span></li>
                   <li><span className="hover:text-white cursor-pointer transition-colors">API Reference</span></li>
                   <li><span className="hover:text-white cursor-pointer transition-colors">Support Portal</span></li>
-                  <li><span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span></li>
                 </ul>
               </div>
               <div>
