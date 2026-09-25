@@ -161,12 +161,6 @@ const PayrollApprovals = () => {
 
   return (
     <div className="approvals-page-shell campus-tab-page">
-      <div className="approvals-header">
-        <nav className="approvals-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Payroll Approvals</span>
-        </nav>
-      </div>
-
       <div className="approvals-kpi-grid campus-kpi-track">
         <div className="kpi-card campus-kpi-card">
           <div className="kpi-content">

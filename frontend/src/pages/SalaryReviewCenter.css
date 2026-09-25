@@ -7,16 +7,6 @@
   background: #fff;
   color: #09090b;
 }
-.salary-review-heading {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid #e4e4e7;
-  box-sizing: border-box;
-}
-.salary-review-breadcrumb { display: flex; align-items: center; gap: 9px; color: #71717a; font-size: 13px; }
-.salary-review-breadcrumb [aria-current="page"] { color: #18181b; font-weight: 600; }
 .salary-review-kpis.campus-kpi-track { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 0; border-bottom: 1px solid #e4e4e7; }
 .salary-review-kpi.campus-kpi-card { min-height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border: 0; border-right: 1px solid #e4e4e7; }
 .salary-review-kpi:last-child { border-right: 0; }
@@ -91,7 +81,6 @@
   .salary-review-kpi:last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
-  .salary-review-heading { padding: 14px; }
   .salary-review-kpi.campus-kpi-card { min-height: 62px; padding: 10px 14px; }
   .salary-review-month-row, .salary-review-controls { padding-left: 14px; padding-right: 14px; }
   .salary-review-controls { align-items: stretch; flex-direction: column; }

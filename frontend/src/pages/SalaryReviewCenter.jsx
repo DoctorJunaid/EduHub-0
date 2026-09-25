@@ -181,12 +181,6 @@ export default function SalaryReviewCenter() {
 
   return (
     <div className="salary-review-page campus-tab-page">
-      <div className="salary-review-heading">
-        <nav className="salary-review-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Salary Review Center</span>
-        </nav>
-      </div>
-
       <div className="salary-review-kpis campus-kpi-track">
         <div className="salary-review-kpi campus-kpi-card">
           <div>
