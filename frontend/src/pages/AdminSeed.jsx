@@ -23,7 +23,7 @@ export default function AdminSeed() {
     expectedText: "",
     variant: "danger",
     confirmButtonText: "Confirm",
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   // Get active campus ID from localStorage user object if available
@@ -155,7 +155,7 @@ export default function AdminSeed() {
         <div className="space-y-0.5">
           <p className="font-bold">Strict Scope Isolation Guarantee</p>
           <p className="text-indigo-700 dark:text-indigo-300 leading-relaxed">
-            All seed and clear operations strictly target <strong>Teachers</strong> and <strong>Students</strong>. 
+            All seed and clear operations strictly target <strong>Teachers</strong> and <strong>Students</strong>.
             Campus Administrators, Institute Admins, Super Admins, Accountants, Campus Settings, and System Configurations are <strong>never touched, modified, or deleted</strong>.
           </p>
         </div>

@@ -101,14 +101,14 @@ export const facultyRecords = [
 ];
 
 export function filterFaculty(
-  records,
-  { search, department, designation, status },
+  records = [],
+  { search = "", department = "", designation = "", status = "" } = {},
 ) {
-  const query = search.trim().toLowerCase();
-  return records.filter(
+  const query = (search || "").trim().toLowerCase();
+  return (records || []).filter(
     (teacher) =>
       (!query ||
-        `${teacher.name} ${teacher.department} ${teacher.designation}`
+        `${teacher.name || ""} ${teacher.department || ""} ${teacher.designation || ""} ${teacher.email || ""} ${teacher.qualification || ""} ${teacher.subjects || ""}`
           .toLowerCase()
           .includes(query)) &&
       (!department || teacher.department === department) &&
