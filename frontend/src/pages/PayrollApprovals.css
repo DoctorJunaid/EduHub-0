@@ -772,3 +772,95 @@
 .dark .page-indicator {
   color: #94a3b8;
 }
+
+/* Match the full-width Campus Manager page layout. */
+.approvals-page-shell.campus-tab-page {
+  padding: 0;
+  gap: 0;
+  max-width: none;
+  margin: 0;
+  min-height: 100%;
+  background: #fff;
+  color: #09090b;
+}
+.approvals-header {
+  min-height: 48px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e4e4e7;
+  box-sizing: border-box;
+}
+.approvals-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #71717a;
+  font-size: 13px;
+}
+.approvals-breadcrumb [aria-current="page"] { color: #18181b; font-weight: 600; }
+.approvals-kpi-grid.campus-kpi-track {
+  gap: 0;
+  margin: 0;
+  border-bottom: 1px solid #e4e4e7;
+}
+.approvals-kpi-grid .kpi-card.campus-kpi-card {
+  min-height: 68px;
+  padding: 12px 20px;
+  border: 0;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+}
+.approvals-kpi-grid .kpi-card:last-child { border-right: 0; }
+.approvals-kpi-grid .kpi-value { font-size: 16px; color: #09090b; }
+.approvals-kpi-grid .kpi-label { color: #64748b; }
+.approvals-kpi-grid .kpi-subtext { display: none; }
+.approvals-kpi-grid .kpi-icon-box { width: 34px; height: 34px; border-radius: 8px; }
+.approvals-month-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 54px;
+  padding: 8px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  box-sizing: border-box;
+}
+.approvals-month-label { color: #71717a; font-size: 11px; }
+.approvals-header-right { gap: 8px; }
+.month-picker-wrapper { padding: 0 8px; height: 34px; border-color: #e4e4e7; border-radius: 6px; box-shadow: none; }
+.month-input { font-size: 11px; font-weight: 500; }
+.refresh-btn { width: 34px; height: 34px; border-color: #e4e4e7; border-radius: 6px; }
+.approvals-control-bar {
+  padding: 10px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  gap: 10px;
+}
+.status-tab-group { background: #f4f4f5; border-radius: 6px; padding: 3px; gap: 2px; }
+.status-tab { padding: 6px 10px; border-radius: 4px; font-size: 12px; }
+.status-tab.active { color: #09090b; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.search-box-wrapper { height: 34px; width: min(360px, 100%); padding: 0 10px; border-color: #e4e4e7; border-radius: 6px; box-sizing: border-box; }
+.search-input { font-size: 12px; }
+.approvals-table-container { border: 0; border-radius: 0; box-shadow: none; background: #fff; }
+.approvals-table { color: #09090b; font-size: 12px; }
+.approvals-table th { padding: 12px 16px; color: #71717a; background: #fafafa; border-bottom: 1px solid #e4e4e7; font-size: 10px; }
+.approvals-table td { padding: 13px 16px; border-bottom-color: #f0f0f2; font-size: 12px; }
+.approval-table-row:hover { background: #fafafa; }
+.table-empty-state, .table-loading-state { min-height: 250px; padding: 36px 20px; gap: 8px; }
+.table-empty-state h3 { margin: 0; color: #3f3f46; font-size: 14px; }
+.table-empty-state p { margin: 0; color: #71717a; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .approvals-header { padding: 14px; }
+  .approvals-kpi-grid.campus-kpi-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .approvals-kpi-grid .kpi-card.campus-kpi-card { border-bottom: 1px solid #e4e4e7; padding: 10px 14px; }
+  .approvals-month-row, .approvals-control-bar { padding-left: 14px; padding-right: 14px; }
+  .approvals-month-row { justify-content: space-between; }
+  .approvals-control-bar { align-items: stretch; }
+  .status-tab-group { max-width: 100%; overflow-x: auto; }
+  .status-tab { white-space: nowrap; }
+  .search-box-wrapper { width: 100%; }
+  .approvals-table { min-width: 1000px; }
+}

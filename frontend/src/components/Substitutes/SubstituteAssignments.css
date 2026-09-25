@@ -3,38 +3,29 @@
 }
 
 .substitutes-heading {
-  min-height: 94px;
-  padding: 22px 20px 18px;
+  min-height: 48px;
+  padding: 14px 20px;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
+  align-items: center;
   background: #fff;
   border-bottom: 1px solid #e4e4e7;
 }
 
-.substitutes-eyebrow {
+.substitutes-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   color: #71717a;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  margin-bottom: 5px;
+  font-size: 13px;
 }
+.substitutes-breadcrumb [aria-current="page"] { color: #18181b; font-weight: 600; }
 
-.substitutes-heading h1 {
-  margin: 0;
-  color: #09090b;
-  font-size: 22px;
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -.02em;
-}
-
-.substitutes-heading p {
-  margin: 6px 0 0;
-  color: #71717a;
-  font-size: 12px;
+.substitutes-action-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e7;
 }
 
 .substitutes-kpis .campus-kpi-card { min-height: 68px; }
@@ -216,8 +207,9 @@
 }
 
 @media (max-width: 760px) {
-  .substitutes-heading { align-items: flex-start; flex-direction: column; padding: 18px 14px; }
-  .substitutes-heading .toolbar-btn { align-self: stretch; }
+  .substitutes-heading { padding: 14px; }
+  .substitutes-action-row { padding: 10px 14px; }
+  .substitutes-action-row .toolbar-btn { width: 100%; justify-content: center; }
   .substitutes-table { min-width: 850px; }
   .substitutes-date-filter input { width: 105px; }
 }
@@ -246,6 +238,32 @@
 .substitute-assignment-form .full-page-activity {
   position: static;
   z-index: auto;
+  padding: 8px 18px 16px;
+}
+.substitute-assignment-form .activity-header {
+  margin-bottom: 10px;
+}
+.substitute-assignment-form .activity-content-card {
+  padding: 16px;
+}
+.substitute-assignment-form .substitute-form-grid { gap: 10px 16px; }
+.substitute-assignment-form .activity-section-title { margin: 8px 0 4px; padding-bottom: 5px; }
+.substitute-assignment-form .activity-form-field { gap: 4px; }
+.substitute-assignment-form .activity-form-field input,
+.substitute-assignment-form .activity-form-field select { height: 36px; }
+.substitute-assignment-form .activity-form-field textarea { height: 58px; min-height: 58px; padding: 8px 12px; }
+.substitute-assignment-form .substitute-candidate { padding: 8px 10px; }
+.substitute-assignment-form .activity-form-actions { margin-top: 12px; padding-top: 10px; }
+.substitute-assignment-form .substitute-form-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.substitute-assignment-form .substitute-form-grid > .activity-section-title,
+.substitute-assignment-form .substitute-candidates,
+.substitute-assignment-form .substitute-notes {
+  grid-column: 1 / -1;
+}
+@media (max-width: 900px) and (min-width: 641px) {
+  .substitute-assignment-form .substitute-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .substitute-candidates { grid-column: 1 / -1; }
 .substitute-form-notice, .substitute-form-warning {
@@ -276,6 +294,12 @@
 .activity-form-action-buttons { display: flex; gap: 10px; }
 .activity-submit-btn:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 640px) {
+  .substitute-assignment-form .full-page-activity { padding: 8px; }
+  .substitute-assignment-form .activity-content-card { padding: 12px; }
+  .substitute-assignment-form .substitute-form-grid { grid-template-columns: 1fr; }
+  .substitute-assignment-form .substitute-form-grid > .activity-section-title,
+  .substitute-assignment-form .substitute-candidates,
+  .substitute-assignment-form .substitute-notes { grid-column: 1; }
   .substitute-candidate-grid { grid-template-columns: 1fr; }
   .activity-form-actions { align-items: stretch; flex-direction: column; }
   .activity-form-action-buttons { width: 100%; }

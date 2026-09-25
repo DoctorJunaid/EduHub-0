@@ -179,9 +179,12 @@ const AssignSubstituteDialog = ({
         parentName="Substitute Assignments"
         icon={<UsersRound size={22} />}
         onBack={onClose}
+        maxWidth={1250}
+        hideTitleRow={true}
+        hideBackButton={true}
       >
         <form onSubmit={submit}>
-          <div className="activity-form-grid">
+          <div className="activity-form-grid substitute-form-grid">
             <div className="activity-section-title">Class Schedule</div>
             <div className="activity-form-field">
               <label htmlFor="substitute-date">Date *</label>
@@ -300,7 +303,7 @@ const AssignSubstituteDialog = ({
             <div className="activity-section-title">
               Available Substitute Teachers
             </div>
-            <div className="activity-form-field span-2 substitute-candidates">
+            <div className="activity-form-field substitute-candidates">
               {loadingSuggestions ? (
                 <p className="substitute-form-notice">
                   <Loader2 size={16} className="animate-spin" /> Finding available
@@ -358,7 +361,7 @@ const AssignSubstituteDialog = ({
               )}
             </div>
 
-            <div className="activity-form-field span-2">
+            <div className="activity-form-field substitute-notes">
               <label htmlFor="substitute-notes">
                 Notes <span>(Optional)</span>
               </label>
