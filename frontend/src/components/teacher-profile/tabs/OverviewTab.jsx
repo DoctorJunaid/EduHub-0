@@ -168,13 +168,4 @@ export default function OverviewTab({ teacher }) {
     </div>
   );
 }
-<div className="min-w-0">
-  <p className="text-[10px] text-slate-500 font-medium">Member Since</p>
-  <p className="text-xs font-bold text-slate-900 truncate">{createdAt}</p>
-</div>
-          </div >
-        </div >
-      </div >
-    </div >
-  );
-}
+
