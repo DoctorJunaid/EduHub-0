@@ -317,19 +317,39 @@ export default function ClassTimetable() {
     const activeSectionId = activeSection?._id;
 
     return records.filter((r) => {
-      // Break slots apply across all classes
-      if (r.isBreak) return true;
-
       const rGradeId = r.gradeId?._id || r.gradeId;
+      const rSectionId = r.sectionId?._id || r.sectionId;
       const prog = (r.program || r.gradeOrClass || r.className || "").trim();
+      const sec = (r.section || "").trim();
+
+      if (r.isBreak) {
+        // Only include breaks tied to this grade (or campus-wide breaks with no grade)
+        if (rGradeId) {
+          if (!activeGradeId || String(rGradeId) !== String(activeGradeId)) return false;
+        } else if (prog) {
+          const matchProg =
+            prog.toLowerCase() === selectedClass.trim().toLowerCase() ||
+            normalizeClass(prog) === normalizeClass(selectedClass);
+          if (!matchProg) return false;
+        }
+        // Only include breaks tied to this section (or section-wide breaks)
+        if (rSectionId) {
+          if (!activeSectionId || String(rSectionId) !== String(activeSectionId)) return false;
+        } else if (sec && !["all", "all sections", ""].includes(sec.toLowerCase())) {
+          const matchSec =
+            sec.toLowerCase() === selectedSection.trim().toLowerCase() ||
+            normalizeSec(sec) === normalizeSec(selectedSection);
+          if (!matchSec) return false;
+        }
+        return true;
+      }
+
       const matchProg =
         !selectedClass ||
         (activeGradeId && rGradeId && String(rGradeId) === String(activeGradeId)) ||
         prog.toLowerCase() === selectedClass.trim().toLowerCase() ||
         normalizeClass(prog) === normalizeClass(selectedClass);
 
-      const rSectionId = r.sectionId?._id || r.sectionId;
-      const sec = (r.section || "").trim();
       const matchSec =
         !selectedSection ||
         !sec ||
