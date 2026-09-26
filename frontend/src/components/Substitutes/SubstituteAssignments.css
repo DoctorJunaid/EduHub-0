@@ -2,24 +2,6 @@
   animation: substituteFadeIn 0.25s ease-out;
 }
 
-.substitutes-heading {
-  min-height: 48px;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border-bottom: 1px solid #e4e4e7;
-}
-
-.substitutes-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #71717a;
-  font-size: 13px;
-}
-.substitutes-breadcrumb [aria-current="page"] { color: #18181b; font-weight: 600; }
-
 .substitutes-action-row {
   display: flex;
   justify-content: flex-end;
@@ -207,7 +189,6 @@
 }
 
 @media (max-width: 760px) {
-  .substitutes-heading { padding: 14px; }
   .substitutes-action-row { padding: 10px 14px; }
   .substitutes-action-row .toolbar-btn { width: 100%; justify-content: center; }
   .substitutes-table { min-width: 850px; }

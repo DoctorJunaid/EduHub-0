@@ -33,11 +33,6 @@ export default function Messages() {
 
   return (
     <section className="messages-page" aria-label="Messages">
-      <div className="messages-heading">
-        <nav className="messages-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Messages</span>
-        </nav>
-      </div>
       <div className="messages-workspace">
         <aside className="conversation-panel" aria-label="Conversations">
           <div className="conversation-search">

@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, 
+  ArrowUpRight,
   Play, 
   ArrowsClockwise, 
   Sparkle, 
   Star, 
   X 
 } from '@phosphor-icons/react';
+import { getManagementLoginUrl } from '@/config/urls';
 import HeroCard from './HeroCard';
 import './heroFanDeck.css';
 
@@ -25,70 +27,70 @@ const HERO_CARDS = [
   },
   {
     id: 'feature_ranking',
-    title: 'Fee Transparency',
-    subtitle: 'No Hidden Charges',
-    category: 'Verified Data',
+    title: 'Ranking & Leaderboards',
+    subtitle: 'Transparent Benchmarks',
+    category: 'Leaderboard',
     accent: '#3b82f6',
-    stat: 'Real Semester Fees',
+    stat: 'National Leaderboard',
     image: '/hero/ranking.jpg',
     instituteId: null,
-    description: 'Published prospectuses routinely omit laboratory dues, exam surcharges, and security deposits. EduHub exposes the full per-semester cost breakdown — tuition, laboratory development fees, and available merit or need-based endowments.'
+    description: 'Explore dynamic university and college rankings benchmarked across faculty-to-student ratios, research publications, modern lab infrastructure, and accredited degree completions.'
   },
   {
-    id: 'feature_decoupled',
-    title: 'Decoupled Integration',
-    subtitle: 'Zero Data Surrender',
-    category: 'API Architecture',
+    id: 'feature_database',
+    title: 'Unified Records Ledger',
+    subtitle: 'Tamper-Proof Profiles',
+    category: 'Database',
     accent: '#f59e0b',
-    stat: 'HMAC-SHA256 Webhooks',
+    stat: 'Centralized Registry',
     image: '/hero/records.jpg',
     instituteId: null,
-    description: 'Institutions keep their internal ERP — SAP, Oracle, local SQL — and receive validated student admission payloads via encrypted HMAC-SHA256 webhooks. EduHub holds zero read permissions on internal records. No migration required.'
+    description: 'A shared institutional ledger tracking student transcripts, certified diplomas, and faculty credentials across national institutions with cryptographic validation.'
   },
   {
     id: 'hero_eduhub_platform',
-    title: 'EduHub IMS',
-    subtitle: 'Multi-Tenant Cloud ERP',
-    category: 'Core Platform',
+    title: 'Live Network & Services',
+    subtitle: 'Campus Operating System',
+    category: 'Live Network',
     accent: '#10b981',
-    stat: '120,000+ Active Students',
+    stat: '100% Real-Time Cloud',
     isCrown: true,
     image: '/hero/campus_platform.jpg',
     instituteId: null,
-    description: 'A full-stack, multi-tenant Institute Management System spanning five governance tiers: Super Admin, Institute Admin, Campus Branch Manager, Faculty, and Student. Attendance, GPA, fee vouchers, timetables, and diaries — unified.'
+    description: 'The core operating engine coordinating admissions, semester timetables, secure fee challan generation, online assignment submissions, and student-teacher collaborations.'
   },
   {
-    id: 'feature_fee_lifecycle',
-    title: 'Fee & Billing Engine',
-    subtitle: 'KuickPay & 1Link Ready',
-    category: 'Financial Operations',
+    id: 'feature_student_manage',
+    title: 'Student Lifecycle',
+    subtitle: 'Track & Empower',
+    category: 'Administration',
     accent: '#6366f1',
-    stat: 'Cryptographic Vouchers',
+    stat: 'Holistic Profiles',
     image: '/hero/students.jpg',
     instituteId: null,
-    description: 'Batch-generate semester and monthly fee vouchers with cryptographically unique invoice numbers compatible with KuickPay, 1Link, and local banking switches. Real-time collection dashboard: Total Expected vs. Paid vs. Overdue Arrears.'
+    description: 'Monitor student performance, manage classes, and utilize practical web labs to ensure academic success.'
   },
   {
     id: 'feature_alumni',
-    title: 'Alumni Career Tracking',
-    subtitle: 'Verified Placement Data',
-    category: 'Public Intelligence',
+    title: 'Alumni Network',
+    subtitle: 'Community & Connections',
+    category: 'Community',
     accent: '#8b5cf6',
-    stat: 'Employer-Verified Profiles',
+    stat: 'Global Reach',
     image: '/hero/alumni.jpg',
     instituteId: null,
-    description: 'Institutions advertise placement rates without verifiable data. EduHub catalogs verified alumni profiles: employer names, functional roles, corporate badges, and graduation year — providing transparent career outcome data for prospective students.'
+    description: 'Keep graduates engaged with exclusive networking events, career history tracking, and continuous learning.'
   },
   {
-    id: 'feature_diary',
-    title: 'Digital Academic Diary',
-    subtitle: 'Daily Classroom Log',
-    category: 'Classroom Delivery',
+    id: 'feature_events',
+    title: 'Upcoming Events',
+    subtitle: 'Campus Activities',
+    category: 'Events',
     accent: '#e11d48',
-    stat: 'Parent Broadcast Ready',
+    stat: 'Stay Updated',
     image: '/hero/events.jpg',
     instituteId: null,
-    description: 'Instructors log lecture topics, assign homework tasks, and attach external resources daily. Students receive an aggregated chronological feed. Parents stay informed in real time — eliminating paper diaries and informal messaging groups entirely.'
+    description: 'Stay up to date with the latest seminars, conferences, and student activities across all campus branches.'
   }
 ];
 
@@ -100,6 +102,8 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const stageRef = useRef(null);
   const hoverTimerRef = useRef(null);
+
+  const managementLoginUrl = getManagementLoginUrl();
 
   // Trigger unfurl animation shortly after mount to replicate video entrance
   useEffect(() => {
@@ -169,27 +173,20 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
   };
 
   return (
-    <section className="hero-fan-container" id="features">
+    <section className="hero-fan-container" id="top">
       {/* Ambient Radial Illumination */}
       <div className="hero-ambient-glow" />
 
-      {/* Category Announcement Badge */}
-      <div className="hero-top-badge" onClick={handleReplay} title="Click to replay card unfurl animation">
-        <span className="badge-pulse" />
-        <span>CORE PLATFORM PILLARS · 7 INTEGRATED MODULES</span>
-      </div>
-
-      {/* Contextual Section Headline */}
-      <motion.h2 
+      {/* Main Headline matching video phrasing & rhythm */}
+      <motion.h1 
         className="hero-headline"
         initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
-        whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
       >
-        <span className="headline-light">Everything you need to</span> <br />
-        <span className="headline-bold headline-highlight">run a world-class institution.</span>
-      </motion.h2>
+        <span className="headline-light">A place to empower your</span> <br />
+        <span className="headline-bold text-gradient-emerald">academic future.</span>
+      </motion.h1>
 
       {/* ─── The Grand Fan Deck Stage (0.6s – 1.6s bloom) ─── */}
       <div 
@@ -206,8 +203,6 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
           }}
           transition={{ type: 'spring', stiffness: 200, damping: 25 }}
         >
-
-
           {/* ─── 7-Card Fan Arc Deck ─── */}
           {HERO_CARDS.map((card, index) => (
             <HeroCard
@@ -229,28 +224,36 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
       <motion.p 
         className="hero-subtitle"
         initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
       >
-        Explore the seven core pillars powering admissions, accredited programs, verified student records, dynamic rankings, and global alumni networks. Click any card to inspect its module.
+        Automate and unify your institution's operations—from student enrollment and interactive grading, to seamless fee management and deep analytics, all in one intelligent portal.
       </motion.p>
 
-      {/* Action Buttons */}
+      {/* Dual Pill CTA Buttons matching video styling */}
       <motion.div 
         className="hero-actions"
         initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.85 }}
       >
         <button 
           className="hero-btn-primary"
           onClick={() => onGetStarted && onGetStarted()}
         >
-          <span>Register Campus</span>
+          <span>Get Started</span>
           <ArrowRight size={18} weight="bold" />
         </button>
+
+        <a
+          href={managementLoginUrl}
+          className="hero-btn-secondary"
+          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          title="Sign in to EduHub Management Portal"
+        >
+          <span>Sign In to Portal</span>
+          <ArrowUpRight size={16} weight="bold" />
+        </a>
 
         <button 
           className="hero-btn-secondary"
@@ -329,10 +332,10 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <button 
                     className="hero-btn-primary" 
-                    style={{ flex: 1, justifyContent: 'center' }}
+                    style={{ flex: 1, minWidth: '160px', justifyContent: 'center' }}
                     onClick={() => {
                       setSelectedCard(null);
                       if (selectedCard.instituteId && navigate) {
@@ -345,6 +348,16 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
                     <span>{selectedCard.instituteId ? 'View Institute' : 'Get Started'}</span>
                     <ArrowRight size={16} weight="bold" />
                   </button>
+
+                  <a
+                    href={managementLoginUrl}
+                    className="hero-btn-secondary"
+                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    title="Open EduHub Management Portal"
+                  >
+                    <span>Sign In to Portal</span>
+                    <ArrowUpRight size={16} weight="bold" />
+                  </a>
                 </div>
               </div>
             </motion.div>

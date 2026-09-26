@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
   TeacherProfile,
   StudentProfile,
@@ -13,6 +14,7 @@ import FeeStructure from "../models/feeStructure.model.js";
 import PaymentTransaction from "../models/paymentTransaction.model.js";
 import Timetable from "../models/timetable.model.js";
 import Assignment from "../models/assignment.model.js";
+import { Grade, Section, Subject } from "../models/academic.model.js";
 import {
   parseTimeToMinutes,
   normalizeTimeString,
@@ -396,10 +398,17 @@ class CampusAdminService {
 
   async getAllClassSchedules(campusIdOrFilter = {}, maybeFilter = {}) {
     let filter = {};
-    if (typeof campusIdOrFilter === "object" && campusIdOrFilter !== null) {
+    const isId =
+      campusIdOrFilter instanceof mongoose.Types.ObjectId ||
+      (typeof campusIdOrFilter === "string" && mongoose.isValidObjectId(campusIdOrFilter)) ||
+      (campusIdOrFilter && (campusIdOrFilter._bsontype === "ObjectID" || campusIdOrFilter._bsontype === "ObjectId"));
+
+    if (isId) {
+      filter = { ...maybeFilter, campusId: campusIdOrFilter };
+    } else if (typeof campusIdOrFilter === "object" && campusIdOrFilter !== null) {
       filter = { ...campusIdOrFilter };
     } else {
-      filter = { ...maybeFilter, campusId: campusIdOrFilter };
+      filter = { ...maybeFilter, campusId: campusIdOrFilter || maybeFilter?.campusId };
     }
 
     const query = {};
@@ -455,6 +464,7 @@ class CampusAdminService {
       if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
       if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
       if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+      if (doc.isBreak && !doc.subject) doc.subject = doc.breakTitle || "Break";
       if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
       return doc;
     });

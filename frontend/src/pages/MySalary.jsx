@@ -1,34 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Banknote, CreditCard, FileText, Receipt, ShieldCheck, Wallet } from 'lucide-react';
 import { getMySalaryProfile } from '../api/salaryProfile.api';
 import PageLoader from '@/components/shared/PageLoader';
+import { qk } from '@/lib/queryKeys';
 import './SalaryProfiles.css';
 
 const formatPKR = (amount) => `PKR ${Number(amount || 0).toLocaleString('en-PK')}`;
 
 export default function MySalary() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    async function fetchMySalary() {
-      setLoading(true);
-      try {
-        const response = await getMySalaryProfile();
-        if (response.data?.success) {
-          setProfile(response.data.data);
-        }
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load your salary profile.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchMySalary();
-  }, []);
+  const {
+    data: profile,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
+    queryKey: qk.mySalary(),
+    queryFn: async () => {
+      const response = await getMySalaryProfile();
+      return response.data?.data || null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const error = queryError?.response?.data?.message || (queryError ? 'Failed to load your salary profile.' : '');
 
   if (loading) {
     return <PageLoader message="Loading salary profile..." />;

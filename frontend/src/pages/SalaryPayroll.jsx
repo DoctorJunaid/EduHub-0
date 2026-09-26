@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import { toast } from "react-hot-toast";
@@ -8,24 +9,24 @@ import { Play, Eye, CheckCircle, Banknote, Search, WalletCards, CircleCheck, Clo
 import { selectCurrentRole } from "../store/Slices/authSlice";
 import DataPagination from "../components/shared/DataPagination";
 import usePaginationParams from "../hooks/usePaginationParams";
+import { useDebounce } from "../hooks/useDebounce";
 import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "@/components/shared/TableSkeleton";
+import { qk } from "@/lib/queryKeys";
 import "./SalaryPayroll.css";
 
 const SalaryPayroll = () => {
   const navigate = useNavigate();
-  const [payrolls, setPayrolls] = useState([]);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const { page, pageSize, setPage, setPageSize } = usePaginationParams({
     defaultPage: 1,
     defaultPageSize: 20,
   });
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [actionId, setActionId] = useState(null);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const role = useSelector(selectCurrentRole);
   const canEdit = ["campus_admin", "campus_manager"].includes(role);
   const canApprove = ["campus_admin", "institute_admin", "principal"].includes(role);
@@ -36,45 +37,55 @@ const SalaryPayroll = () => {
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [month, setMonth] = useState(defaultMonth);
 
-  const fetchPayrolls = async () => {
-    try {
-      setLoading(true);
+  // Query Payroll records
+  const queryParams = {
+    month,
+    page,
+    limit: pageSize,
+    status: statusFilter || undefined,
+  };
+
+  const {
+    data: payrollData,
+    isLoading: loading,
+    refetch: fetchPayrolls,
+  } = useQuery({
+    queryKey: qk.payroll(queryParams),
+    queryFn: async () => {
       const params = new URLSearchParams({ month, page, limit: pageSize });
       if (statusFilter) params.append("status", statusFilter);
       const res = await api.get(`/campus/salary/payroll?${params.toString()}`);
-      if (res.data.success) {
-        setPayrolls(res.data.data.records);
-        setTotal(res.data.data.total);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load payroll data", { id: "payroll-load-error" });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data?.data || { records: [], total: 0 };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchPayrolls();
-  }, [month, page, pageSize, statusFilter]);
+  const payrolls = payrollData?.records || [];
+  const total = payrollData?.total || 0;
 
-  const handleGenerate = async () => {
-    try {
-      setGenerating(true);
+  // Generate Payroll Mutation
+  const generateMutation = useMutation({
+    mutationFn: async () => {
       const res = await api.post("/campus/salary/payroll/generate", { month });
-      if (res.data.success) {
-        const { generated, skipped, total: totalTeachers } = res.data.data;
-        toast.success(
-          `Payroll generated: ${generated} created, ${skipped} skipped (non-Draft), ${totalTeachers} total`
-        );
-        fetchPayrolls();
-      }
-    } catch (err) {
+      return res.data;
+    },
+    onSuccess: (res) => {
+      const { generated, skipped, total: totalTeachers } = res.data || {};
+      toast.success(
+        `Payroll generated: ${generated} created, ${skipped} skipped (non-Draft), ${totalTeachers} total`
+      );
+      queryClient.invalidateQueries({ queryKey: ["payroll"] });
+    },
+    onError: (err) => {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to generate payroll", { id: "payroll-generate-error" });
-    } finally {
-      setGenerating(false);
-    }
+    },
+  });
+
+  const generating = generateMutation.isPending;
+
+  const handleGenerate = () => {
+    generateMutation.mutate();
   };
 
   const viewPayslip = async (id) => {
@@ -99,7 +110,7 @@ const SalaryPayroll = () => {
         : await api.post(endpoint);
       if (response.data.success) {
         toast.success(action === "mark-paid" ? "Payroll marked as paid" : `Payroll ${action}d`);
-        fetchPayrolls();
+        queryClient.invalidateQueries({ queryKey: ["payroll"] });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Payroll update failed");
@@ -152,12 +163,6 @@ const SalaryPayroll = () => {
 
   return (
     <div className="salary-payroll-page campus-tab-page">
-      <div className="salary-payroll-heading">
-        <nav className="salary-payroll-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span><span aria-hidden="true">/</span><span aria-current="page">Salary &amp; Payroll</span>
-        </nav>
-      </div>
-
       <div className="campus-kpi-track salary-payroll-kpis">
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><WalletCards size={16} /></div><div className="kpi-info"><span className="kpi-label">Gross payroll</span><span className="kpi-value">{formatPKR(summary.gross)}</span></div></div></div>
         <div className="campus-kpi-card"><div className="kpi-wrap"><div className="kpi-icon"><ReceiptText size={16} /></div><div className="kpi-info"><span className="kpi-label">Net payroll</span><span className="kpi-value">{formatPKR(summary.net)}</span></div></div></div>

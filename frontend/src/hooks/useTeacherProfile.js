@@ -1,166 +1,162 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import * as api from "../api/teacherProfile.api";
+import { qk } from "@/lib/queryKeys";
 
 export function useTeacherProfile(teacherId) {
-  const [profileData, setProfileData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  // Lazy tab data caches
-  const [classesData, setClassesData] = useState(null);
-  const [timetableData, setTimetableData] = useState(null);
-  const [attendanceData, setAttendanceData] = useState(null);
-  const [payrollData, setPayrollData] = useState(null);
-  const [substitutesData, setSubstitutesData] = useState(null);
-  const [activityData, setActivityData] = useState(null);
-
-  // Tab-specific loading states
-  const [loadingTab, setLoadingTab] = useState({
-    classes: false,
-    timetable: false,
-    attendance: false,
-    payroll: false,
-    substitutes: false,
-    activity: false,
+  // Primary profile query
+  const {
+    data: profileData,
+    isLoading: loadingProfile,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useQuery({
+    queryKey: qk.teacherProfile(teacherId),
+    queryFn: async () => {
+      const res = await api.getTeacherProfileApi(teacherId);
+      return res.data;
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
   });
 
-  const fetchProfile = useCallback(async () => {
-    if (!teacherId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.getTeacherProfileApi(teacherId);
-      setProfileData(res.data);
-    } catch (err) {
-      const status = err.response?.status;
-      const msg = err.response?.data?.message || err.message || "Failed to load teacher profile";
-      setError({
-        status: status || 500,
-        message: msg,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [teacherId]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  const loadClasses = useCallback(async (force = false) => {
-    if (!force && classesData) return;
-    setLoadingTab((prev) => ({ ...prev, classes: true }));
-    try {
+  // Assigned classes query
+  const {
+    data: classesData = [],
+    isLoading: loadingClasses,
+    refetch: refetchClasses,
+  } = useQuery({
+    queryKey: qk.teacherClasses(teacherId),
+    queryFn: async () => {
       const res = await api.getTeacherClassesApi(teacherId);
-      setClassesData(res.data || []);
-    } catch {
-      toast.error("Failed to load assigned classes");
-    } finally {
-      setLoadingTab((prev) => ({ ...prev, classes: false }));
-    }
-  }, [teacherId, classesData]);
+      return res.data || [];
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const loadTimetable = useCallback(async (force = false) => {
-    if (!force && timetableData) return;
-    setLoadingTab((prev) => ({ ...prev, timetable: true }));
-    try {
+  // Timetable query
+  const {
+    data: timetableData = null,
+    isLoading: loadingTimetable,
+    refetch: refetchTimetable,
+  } = useQuery({
+    queryKey: qk.teacherTimetable(teacherId),
+    queryFn: async () => {
       const res = await api.getTeacherTimetableApi(teacherId);
-      setTimetableData(res.data);
-    } catch {
-      toast.error("Failed to load weekly schedule");
-    } finally {
-      setLoadingTab((prev) => ({ ...prev, timetable: false }));
-    }
-  }, [teacherId, timetableData]);
+      return res.data || null;
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const loadAttendance = useCallback(async (days = 30, force = false) => {
-    if (!force && attendanceData) return;
-    setLoadingTab((prev) => ({ ...prev, attendance: true }));
-    try {
-      const res = await api.getTeacherAttendanceApi(teacherId, days);
-      setAttendanceData(res.data);
-    } catch {
-      toast.error("Failed to load attendance records");
-    } finally {
-      setLoadingTab((prev) => ({ ...prev, attendance: false }));
-    }
-  }, [teacherId, attendanceData]);
+  // Attendance query (30 days default)
+  const {
+    data: attendanceData = null,
+    isLoading: loadingAttendance,
+    refetch: refetchAttendance,
+  } = useQuery({
+    queryKey: ["teacher-attendance", teacherId, 30],
+    queryFn: async () => {
+      const res = await api.getTeacherAttendanceApi(teacherId, 30);
+      return res.data || null;
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const loadPayroll = useCallback(async (force = false) => {
-    if (!force && payrollData) return;
-    setLoadingTab((prev) => ({ ...prev, payroll: true }));
-    try {
+  // Payroll query
+  const {
+    data: payrollData = null,
+    isLoading: loadingPayroll,
+    refetch: refetchPayroll,
+  } = useQuery({
+    queryKey: ["teacher-payroll-history", teacherId],
+    queryFn: async () => {
       const res = await api.getTeacherPayrollApi(teacherId);
-      setPayrollData(res.data);
-    } catch {
-      toast.error("Failed to load payroll history");
-    } finally {
-      setLoadingTab((prev) => ({ ...prev, payroll: false }));
-    }
-  }, [teacherId, payrollData]);
+      return res.data || null;
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const loadSubstitutes = useCallback(async (force = false) => {
-    if (!force && substitutesData) return;
-    setLoadingTab((prev) => ({ ...prev, substitutes: true }));
-    try {
+  // Substitutes query
+  const {
+    data: substitutesData = null,
+    isLoading: loadingSubstitutes,
+    refetch: refetchSubstitutes,
+  } = useQuery({
+    queryKey: ["teacher-substitutes-history", teacherId],
+    queryFn: async () => {
       const res = await api.getTeacherSubstitutesApi(teacherId);
-      setSubstitutesData(res.data);
-    } catch {
-      toast.error("Failed to load substitute duties");
-    } finally {
-      setLoadingTab((prev) => ({ ...prev, substitutes: false }));
-    }
-  }, [teacherId, substitutesData]);
+      return res.data || null;
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const loadActivity = useCallback(async (force = false) => {
-    if (!force && activityData) return;
-    setLoadingTab((prev) => ({ ...prev, activity: true }));
-    try {
+  // Activity query
+  const {
+    data: activityData = null,
+    isLoading: loadingActivity,
+    refetch: refetchActivity,
+  } = useQuery({
+    queryKey: ["teacher-activity-history", teacherId],
+    queryFn: async () => {
       const res = await api.getTeacherActivityApi(teacherId);
-      setActivityData(res.data);
-    } catch {
-      toast.error("Failed to load activity logs");
-    } finally {
-      setLoadingTab((prev) => ({ ...prev, activity: false }));
-    }
-  }, [teacherId, activityData]);
+      return res.data || null;
+    },
+    enabled: Boolean(teacherId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const assignClass = async (data) => {
-    try {
-      await api.assignTeacherClassApi(teacherId, data);
+  // Mutations
+  const assignClassMutation = useMutation({
+    mutationFn: async (data) => {
+      const res = await api.assignTeacherClassApi(teacherId, data);
+      return res.data;
+    },
+    onSuccess: () => {
       toast.success("Class assigned successfully");
-      await loadClasses(true);
-      fetchProfile();
-      return true;
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: qk.teacherClasses(teacherId) });
+      queryClient.invalidateQueries({ queryKey: qk.teacherProfile(teacherId) });
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || "Failed to assign class";
       toast.error(msg);
-      return false;
-    }
-  };
+    },
+  });
 
-  const unassignClass = async (assignmentId) => {
-    try {
-      await api.unassignTeacherClassApi(teacherId, assignmentId);
+  const unassignClassMutation = useMutation({
+    mutationFn: async (assignmentId) => {
+      const res = await api.unassignTeacherClassApi(teacherId, assignmentId);
+      return res.data;
+    },
+    onSuccess: () => {
       toast.success("Class unassigned successfully");
-      await loadClasses(true);
-      fetchProfile();
-      return true;
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: qk.teacherClasses(teacherId) });
+      queryClient.invalidateQueries({ queryKey: qk.teacherProfile(teacherId) });
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || "Failed to unassign class";
       toast.error(msg);
-      return false;
-    }
-  };
+    },
+  });
 
   return {
     profileData,
     teacher: profileData?.teacher,
     stats: profileData?.stats,
-    loading,
-    error,
-    refetchProfile: fetchProfile,
+    loading: loadingProfile,
+    error: profileError
+      ? {
+          status: profileError.response?.status || 500,
+          message: profileError.response?.data?.message || profileError.message || "Failed to load teacher profile",
+        }
+      : null,
+    refetchProfile,
 
     // Tab data & Loaders
     classesData,
@@ -169,17 +165,38 @@ export function useTeacherProfile(teacherId) {
     payrollData,
     substitutesData,
     activityData,
-    loadingTab,
+    loadingTab: {
+      classes: loadingClasses,
+      timetable: loadingTimetable,
+      attendance: loadingAttendance,
+      payroll: loadingPayroll,
+      substitutes: loadingSubstitutes,
+      activity: loadingActivity,
+    },
 
-    loadClasses,
-    loadTimetable,
-    loadAttendance,
-    loadPayroll,
-    loadSubstitutes,
-    loadActivity,
+    loadClasses: (force) => (force ? refetchClasses() : Promise.resolve()),
+    loadTimetable: (force) => (force ? refetchTimetable() : Promise.resolve()),
+    loadAttendance: (days, force) => (force ? refetchAttendance() : Promise.resolve()),
+    loadPayroll: (force) => (force ? refetchPayroll() : Promise.resolve()),
+    loadSubstitutes: (force) => (force ? refetchSubstitutes() : Promise.resolve()),
+    loadActivity: (force) => (force ? refetchActivity() : Promise.resolve()),
 
     // Mutations
-    assignClass,
-    unassignClass,
+    assignClass: async (data) => {
+      try {
+        await assignClassMutation.mutateAsync(data);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    unassignClass: async (assignmentId) => {
+      try {
+        await unassignClassMutation.mutateAsync(assignmentId);
+        return true;
+      } catch {
+        return false;
+      }
+    },
   };
 }

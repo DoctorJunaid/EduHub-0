@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen, ArrowUpRight } from 'lucide-react';
+import { getLandingPageUrl } from '@/config/urls';
 
 const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
   user = { name: 'Admin User', initials: 'A' } }) => {
@@ -9,9 +10,17 @@ const Sidebar = ({ items = [], collapsed = false, onToggle, onSignOut,
   return (
     <aside className={`sidebar ${collapsed ? 'is-collapsed' : ''}`} aria-label="Sidebar">
       <div className="sidebar-brand-row">
-        <div className="sidebar-brand">
+        <a
+          href={getLandingPageUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sidebar-brand"
+          title="Visit EduHub Public Website (opens in new tab)"
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
           <span className="sidebar-label">EduHub</span>
-        </div>
+          <ArrowUpRight size={13} style={{ opacity: 0.6, marginLeft: 2 }} aria-hidden="true" />
+        </a>
         <button type="button" className="sidebar-toggle" onClick={onToggle}
           aria-expanded={!collapsed} aria-controls="sidebar-navigation"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}

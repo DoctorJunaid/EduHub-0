@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Award,
   Calendar,
@@ -8,14 +9,12 @@ import {
   RefreshCw,
   Search,
   UserCheck,
-  TrendingDown,
   TrendingUp,
   AlertCircle,
   Eye,
   UserPlus,
-  X,
 } from "lucide-react";
-import { SpinnerCustom } from "@/components/ui/spinner";
+
 import {
   getCampusPerformance,
   getTeacherTimeline,
@@ -33,17 +32,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import "./TeachingPerformance.css";
 
 const formatPKR = (amt) => `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
 
 export default function TeachingPerformance() {
+  const queryClient = useQueryClient();
   const currentMonthStr = new Date().toISOString().slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
-  const [performanceData, setPerformanceData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
   const [departmentFilter, setDepartmentFilter] = useState("All");
 
   // Timeline Modal State
@@ -58,47 +59,64 @@ export default function TeachingPerformance() {
   const [subTeacherId, setSubTeacherId] = useState("");
   const [subReason, setSubReason] = useState("Teacher Absent");
   const [subNotes, setSubNotes] = useState("");
-  const [assigningSub, setAssigningSub] = useState(false);
 
-  const loadPerformance = async (showToast = false) => {
-    try {
-      setLoading(true);
+  // React Query for campus teaching performance
+  const {
+    data: performanceData,
+    isLoading: loading,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: qk.campusPerformance(selectedMonth),
+    queryFn: async () => {
       const res = await getCampusPerformance({ month: selectedMonth });
-      if (res.data?.success) {
-        setPerformanceData(res.data.data);
-        if (showToast) toast.success("Teaching performance updated.");
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to load teaching records.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data?.data || null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    loadPerformance();
-  }, [selectedMonth]);
-
-  const handleGenerateToday = async () => {
-    try {
-      setGenerating(true);
+  // Generate sessions mutation
+  const generateMutation = useMutation({
+    mutationFn: async () => {
       const todayStr = new Date().toISOString().split("T")[0];
       const res = await generateSessions({ date: todayStr });
-      if (res.data?.success) {
-        toast.success(
-          `Generated/synced ${res.data.count} class sessions for today.`,
-        );
-        loadPerformance();
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Generated/synced ${data?.count || 0} class sessions for today.`);
+      queryClient.invalidateQueries({ queryKey: ["teaching-performance"] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to generate class sessions.");
+    },
+  });
+
+  // Assign substitute mutation
+  const assignSubMutation = useMutation({
+    mutationFn: async ({ sessionId, payload }) => {
+      const res = await assignSubstituteToSession(sessionId, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Substitute teacher assigned successfully!");
+      setSubstituteOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["teaching-performance"] });
+      if (activeTeacher) {
+        handleOpenTimeline(activeTeacher);
       }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to generate class sessions.",
-      );
-    } finally {
-      setGenerating(false);
-    }
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to assign substitute.");
+    },
+  });
+
+  const loadPerformance = async (showToast = false) => {
+    await refetch();
+    if (showToast) toast.success("Teaching performance updated.");
+  };
+
+  const handleGenerateToday = () => {
+    generateMutation.mutate();
   };
 
   const handleOpenTimeline = async (teacher) => {
@@ -136,29 +154,14 @@ export default function TeachingPerformance() {
       return;
     }
 
-    try {
-      setAssigningSub(true);
-      const res = await assignSubstituteToSession(activeSessionForSub._id, {
+    assignSubMutation.mutate({
+      sessionId: activeSessionForSub._id,
+      payload: {
         substituteTeacherId: subTeacherId,
         reason: subReason,
         notes: subNotes,
-      });
-
-      if (res.data?.success) {
-        toast.success("Substitute teacher assigned successfully!");
-        setSubstituteOpen(false);
-        if (activeTeacher) {
-          handleOpenTimeline(activeTeacher);
-        }
-        loadPerformance();
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to assign substitute.",
-      );
-    } finally {
-      setAssigningSub(false);
-    }
+      },
+    });
   };
 
   const teachers = performanceData?.teachers || [];
@@ -173,7 +176,7 @@ export default function TeachingPerformance() {
     const matchesSearch =
       `${t.name || ""} ${t.email || ""} ${t.designation || ""}`
         .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        .includes(debouncedSearch.toLowerCase());
     const matchesDept =
       departmentFilter === "All" ? true : t.department === departmentFilter;
     return matchesSearch && matchesDept;
@@ -246,28 +249,13 @@ export default function TeachingPerformance() {
         aria-label="Teaching performance actions"
       >
         <div className="tp-header-controls">
-          <Input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            aria-label="Select performance month"
-            className="tp-month-select"
-          />
-          <Button
-            onClick={handleGenerateToday}
-            disabled={generating}
-            className="tp-generate-button"
-          >
-            <Clock3 size={14} className={generating ? "animate-spin" : ""} />
+          <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} aria-label="Select performance month" className="tp-month-select" />
+          <Button onClick={handleGenerateToday} disabled={generateMutation.isPending} className="tp-generate-button">
+            {generateMutation.isPending ? <Spinner className="mr-1.5 size-3.5 text-white" /> : <Clock3 size={14} className="mr-1.5" />}
             Generate Today&apos;s Sessions
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => loadPerformance(true)}
-            disabled={loading}
-            className="tp-sync-button"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button">
+            {loading ? <Spinner className="mr-1.5 size-3.5" /> : <RefreshCw size={14} className="mr-1.5" />}
             Sync
           </Button>
         </div>
@@ -444,7 +432,7 @@ export default function TeachingPerformance() {
           <div className="tp-timeline-body">
             {loadingTimeline ? (
               <div className="p-12 text-center text-slate-500 text-xs">
-                Loading class session timeline...
+                <SpinnerCustom text="Loading class session timeline..." size="sm" className="flex-col gap-2" />
               </div>
             ) : timelineRecords.length === 0 ? (
               <div className="p-12 text-center text-slate-400 text-xs">
@@ -679,16 +667,18 @@ export default function TeachingPerformance() {
                 type="button"
                 variant="outline"
                 onClick={() => setSubstituteOpen(false)}
+                disabled={assignSubMutation.isPending}
                 className="rounded-xl text-xs"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={assigningSub}
+                disabled={assignSubMutation.isPending}
                 className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold"
               >
-                {assigningSub ? "Assigning..." : "Confirm Substitution"}
+                {assignSubMutation.isPending && <Spinner className="mr-2 size-4 text-white" />}
+                Confirm Substitution
               </Button>
             </DialogFooter>
           </form>
