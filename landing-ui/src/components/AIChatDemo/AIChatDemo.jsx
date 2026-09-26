@@ -222,9 +222,11 @@ export default function AIChatDemo() {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages exist or typing
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0 || isTyping) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [messages, isTyping]);
 
   const handleSend = (text) => {
