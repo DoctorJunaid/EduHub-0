@@ -78,26 +78,24 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0;
-  overflow: hidden;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
+  border-bottom: 1px solid #e4e4e7;
   background: #fff;
 }
 .tp-summary-card {
-  min-height: 72px;
-  padding: 12px 16px;
+  min-height: 56px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
   border: 0;
-  border-radius: 0;
+  justify-content: center;
 }
-.tp-summary-card + .tp-summary-card {
-  border-left: 1px solid #e4e4e7;
+.tp-summary-card:not(:last-child) {
+  border-right: 1px solid #e4e4e7;
 }
 .tp-summary-card > svg {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
   flex: 0 0 auto;
   color: #3f3f46;
 }
@@ -107,27 +105,21 @@
 .tp-summary-label {
   color: #71717a;
   font-size: 10px;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: 0.075em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .tp-summary-value {
   display: block;
   color: #18181b;
-  font-size: 25px;
-  font-weight: 750;
-  line-height: 1;
-  letter-spacing: -0.035em;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 .tp-summary-value-money {
-  font-size: 20px;
-}
-.tp-summary-support {
-  display: block;
-  color: #a1a1aa;
-  font-size: 11px;
-  line-height: 1.3;
+  font-size: 18px;
 }
 
 .tp-filter-bar {
@@ -357,6 +349,114 @@
   background: #f4f4f5 !important;
 }
 
+/* Teaching timeline dialog: keep all ledger columns visible on desktop and
+   confine narrower-screen scrolling to the modal body. */
+.tp-timeline-dialog {
+  width: min(94vw, 1240px) !important;
+  max-width: min(94vw, 1240px) !important;
+  height: min(84vh, 760px);
+  max-height: 84vh !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.tp-timeline-header {
+  flex: 0 0 auto;
+  gap: 6px !important;
+  padding: 20px 52px 14px 24px;
+  border-bottom: 1px solid #e4e4e7;
+}
+.tp-timeline-title {
+  line-height: 1.25 !important;
+}
+.tp-timeline-description {
+  line-height: 1.45;
+}
+.tp-timeline-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 16px;
+}
+.tp-timeline-table-scroll {
+  min-width: 0;
+  overflow: visible;
+}
+.tp-timeline-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.tp-timeline-col-date { width: 12%; }
+.tp-timeline-col-class { width: 17%; }
+.tp-timeline-col-original { width: 16%; }
+.tp-timeline-col-actual { width: 16%; }
+.tp-timeline-col-status { width: 10%; }
+.tp-timeline-col-credit { width: 7%; }
+.tp-timeline-col-adjustment { width: 11%; }
+.tp-timeline-col-actions { width: 11%; }
+.tp-timeline-table th {
+  padding: 12px 10px !important;
+  white-space: normal;
+  line-height: 1.3;
+}
+.tp-timeline-table td {
+  padding: 12px 10px !important;
+  vertical-align: middle;
+}
+.tp-timeline-table th:first-child,
+.tp-timeline-table td:first-child {
+  padding-left: 14px !important;
+}
+.tp-timeline-table th:last-child,
+.tp-timeline-table td:last-child {
+  padding-right: 14px !important;
+}
+.tp-timeline-date,
+.tp-timeline-class,
+.tp-timeline-teacher {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.tp-timeline-actions {
+  min-width: 0;
+}
+.tp-timeline-substitute-button {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border-color: #d4d4d8 !important;
+  border-radius: 6px !important;
+  color: #3f3f46 !important;
+  background: #fff !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+.tp-timeline-substitute-button:hover {
+  color: #18181b !important;
+  background: #f4f4f5 !important;
+}
+.tp-timeline-footer {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding: 12px 24px;
+  border-top: 1px solid #e4e4e7;
+}
+.tp-timeline-close-button {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border-color: #d4d4d8 !important;
+  border-radius: 6px !important;
+  color: #3f3f46 !important;
+  background: #fff !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+.tp-timeline-close-button:hover {
+  color: #18181b !important;
+  background: #f4f4f5 !important;
+}
+
 @media (max-width: 1280px) {
   .tp-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -372,6 +472,28 @@
   .tp-header-controls {
     justify-content: flex-start;
     width: 100%;
+  }
+  .tp-timeline-dialog {
+    width: calc(100vw - 28px) !important;
+    max-width: calc(100vw - 28px) !important;
+    height: min(88vh, 760px);
+    max-height: 88vh !important;
+  }
+  .tp-timeline-header {
+    padding: 16px 46px 12px 18px;
+  }
+  .tp-timeline-body {
+    padding: 0 12px;
+  }
+  .tp-timeline-table-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  .tp-timeline-table {
+    min-width: 900px;
+  }
+  .tp-timeline-footer {
+    padding: 12px 18px;
   }
 }
 @media (max-width: 640px) {
@@ -422,5 +544,17 @@
   }
   .tp-ledger-heading h2 {
     font-size: 15px;
+  }
+  .tp-timeline-title {
+    font-size: 16px !important;
+  }
+  .tp-timeline-description {
+    font-size: 11px !important;
+  }
+  .tp-timeline-table {
+    min-width: 840px;
+  }
+  .tp-timeline-footer {
+    padding: 10px 14px;
   }
 }
