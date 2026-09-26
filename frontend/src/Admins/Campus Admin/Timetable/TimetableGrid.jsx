@@ -88,18 +88,47 @@ export default function TimetableGrid({
     return matrixConfig?.timeSlots ?? [];
   }, [matrixConfig]);
 
-  // Use only break records from database for fully dynamic breaks
-  // If a break spans all days (or at least 5 days), render it as a full-width banner
+  // Deduplicate break records by time slot — DB may store one doc per day,
+  // so merge them into a single banner record spanning all their days.
   const breakRecords = useMemo(() => {
-    return records.filter((r) => {
-      if (!r.isBreak && !r.subject?.toLowerCase().includes("break") && !r.subject?.toLowerCase().includes("lunch")) return false;
-      const rDays = r.days || [1];
-      return rDays.length >= 5; // Spans all weekdays
-    });
+    const breakMap = new Map();
+    for (const r of records) {
+      const isBreakRecord =
+        r.isBreak ||
+        r.subject?.toLowerCase().includes("break") ||
+        r.subject?.toLowerCase().includes("lunch");
+      if (!isBreakRecord) continue;
+      const key = `${r.startTime}-${r.endTime}`;
+      if (!breakMap.has(key)) {
+        breakMap.set(key, {
+          ...r,
+          subject: r.breakTitle || r.subject || "Break Interval",
+          daysSet: new Set(Array.isArray(r.days) && r.days.length ? r.days : [1]),
+        });
+      } else {
+        const entry = breakMap.get(key);
+        (Array.isArray(r.days) && r.days.length ? r.days : [1]).forEach((d) =>
+          entry.daysSet.add(d)
+        );
+      }
+    }
+    return Array.from(breakMap.values()).map((b) => ({
+      ...b,
+      days: Array.from(b.daysSet),
+    }));
   }, [records]);
 
-  // Regular classes + breaks that only span a few days (rendered as cards)
-  const classRecords = useMemo(() => records.filter((r) => !breakRecords.includes(r)), [records, breakRecords]);
+  // Regular class cards — everything that isn't a break
+  const classRecords = useMemo(
+    () =>
+      records.filter(
+        (r) =>
+          !r.isBreak &&
+          !r.subject?.toLowerCase().includes("break") &&
+          !r.subject?.toLowerCase().includes("lunch")
+      ),
+    [records]
+  );
 
   // Dynamic grid bounds
   const { start, end } = useMemo(() => {

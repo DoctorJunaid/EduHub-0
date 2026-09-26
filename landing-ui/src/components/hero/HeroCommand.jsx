@@ -1,12 +1,15 @@
 import React from 'react'
 import { motion } from 'motion/react'
-import { ArrowRight, LockKey } from '@phosphor-icons/react'
+import { ArrowRight, ArrowUpRight, SignIn, LockKey } from '@phosphor-icons/react'
+import { getManagementLoginUrl } from '@/config/urls'
 
 export default function HeroCommand({ onGetStarted }) {
   const scrollToSection = (id) => {
     const el = document.getElementById(id)
     if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
+
+  const managementLoginUrl = getManagementLoginUrl()
 
   return (
     <section
@@ -63,7 +66,7 @@ export default function HeroCommand({ onGetStarted }) {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-wrap gap-3 mb-12">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <button
                 type="button"
                 onClick={onGetStarted}
@@ -73,13 +76,35 @@ export default function HeroCommand({ onGetStarted }) {
                 <ArrowRight size={16} weight="bold" />
               </button>
 
+              <a
+                href={managementLoginUrl}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-slate-800 dark:text-zinc-100 bg-white/90 dark:bg-zinc-800/90 border border-slate-200/90 dark:border-zinc-700/80 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-150 cursor-pointer shadow-sm group"
+                title="Sign in to EduHub Management Portal"
+              >
+                <SignIn size={16} weight="bold" className="text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                <span>Portal Login</span>
+                <ArrowUpRight size={13} weight="bold" className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
+              </a>
+
               <button
                 type="button"
                 onClick={() => scrollToSection('institutes')}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-slate-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-600 transition-colors duration-150 cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-150 cursor-pointer"
               >
                 Browse Institutions
               </button>
+            </div>
+
+            {/* Member Quick-Portal Login Link */}
+            <div className="flex items-center gap-2 mb-10 text-xs text-slate-500 dark:text-zinc-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Staff, Teacher, or Student?</span>
+              <a
+                href={managementLoginUrl}
+                className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+              >
+                Sign in to your portal <ArrowUpRight size={12} weight="bold" />
+              </a>
             </div>
 
             {/* Social proof — numbers only, no icons */}

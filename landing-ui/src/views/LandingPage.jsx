@@ -17,10 +17,13 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { top_alumni, institutes, events } from '@/data/mockData'
 import Navbar from '@/components/layout/Navbar'
-import HeroCommand from '@/components/hero/HeroCommand'
 import HeroFanDeck from '@/components/HeroFanDeck/HeroFanDeck'
+import WebGLBackground from '@/components/WebGLBackground'
 import BentoCard from '@/components/shared/BentoCard'
 import GetStartedModal from '@/components/GetStartedModal'
+import DeviceShowcase from '@/components/showcase/DeviceShowcase'
+import AIChatDemo from '@/components/AIChatDemo/AIChatDemo'
+import { getManagementLoginUrl, getManagementDashboardUrl } from '@/config/urls'
 
 export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   const navigate = useNavigate()
@@ -45,7 +48,9 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   }
 
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
+    <div className="relative w-full overflow-x-hidden min-h-screen bg-transparent text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
+      {/* 3D WebGL Particle Background */}
+      <WebGLBackground isDark={isDark} />
 
       {/* Floating Dynamic Navbar (Hides on scroll down, reveals on scroll up) */}
       <Navbar
@@ -54,9 +59,9 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
         onGetStarted={handleOpenGetStarted}
       />
 
-      <div className="relative z-10 pt-4 sm:pt-6">
-        {/* ─── Hero Section: Command Your Entire Campus (PC & Mobile Showcase + CTAs) ─── */}
-        <HeroCommand onGetStarted={handleOpenGetStarted} navigate={navigate} />
+      <div className="relative z-10 pt-6">
+        {/* ─── Hero Section: Animated Fan Deck ─── */}
+        <HeroFanDeck onGetStarted={handleOpenGetStarted} navigate={navigate} />
 
         {/* ─── Top Alumni List (Success Stories) ─── */}
         <section id="alumni" className="py-24 bg-transparent">
@@ -338,7 +343,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 </p>
                 <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
                   Upcoming <br />
-                  <span className="text-emerald-600 dark:text-emerald-400">Events & Hackathons</span>
+                  <span className="text-gradient-emerald">Events & Hackathons</span>
                 </h2>
               </div>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-md">
@@ -356,7 +361,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 return (
                   <div
                     key={ev.id}
-                    className="flex items-center justify-between py-8 px-2 transition-all duration-300 hover:pl-6 cursor-pointer group flex-wrap gap-4"
+                    className="scroll-reveal flex items-center justify-between py-8 px-2 transition-all duration-300 hover:pl-6 cursor-pointer group flex-wrap gap-4"
                     onClick={() => navigate('/institute/' + ev.instituteId)}
                   >
                     <div className="flex items-center gap-6 md:gap-12 flex-wrap">
@@ -388,8 +393,8 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           </div>
         </section>
 
-        {/* ─── Platform Pillars: 7 Core Ecosystem Cards Deck with Proper Context ─── */}
-        <HeroFanDeck onGetStarted={handleOpenGetStarted} navigate={navigate} />
+        {/* ─── Cross-Platform OS: PC & Mobile Device Showcase ("What You Get") ─── */}
+        <DeviceShowcase onGetStarted={handleOpenGetStarted} navigate={navigate} />
 
         {/* ─── Platform Capabilities: Bento Grid ─── */}
         <section id="roles" className="py-24 px-6 max-w-7xl mx-auto">
@@ -412,8 +417,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Bento 1: Students & Learners */}
-            <BentoCard>
+            <BentoCard className="scroll-reveal">
               <div className="relative h-56 w-full overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80"
@@ -433,8 +437,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
             </BentoCard>
 
-            {/* Bento 2: Faculty & Instructors */}
-            <BentoCard>
+            <BentoCard className="scroll-reveal">
               <div className="relative h-56 w-full overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&q=80"
@@ -454,8 +457,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
             </BentoCard>
 
-            {/* Bento 3: Admins & Campus Managers */}
-            <BentoCard>
+            <BentoCard className="scroll-reveal">
               <div className="relative h-56 w-full overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&q=80"
@@ -475,8 +477,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
             </BentoCard>
 
-            {/* Bento 4: Large Unified Telemetry Card (2 Columns) */}
-            <BentoCard isLarge className="p-8 md:p-10">
+            <BentoCard isLarge className="scroll-reveal p-8 md:p-10">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 h-full">
                 <div className="max-w-md space-y-3">
                   <h3 className="text-2xl md:text-3xl font-extrabold font-display text-slate-900 dark:text-white tracking-tight">
@@ -517,8 +518,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
             </BentoCard>
 
-            {/* Bento 5: Super Administrator */}
-            <BentoCard>
+            <BentoCard className="scroll-reveal">
               <div className="relative h-56 w-full overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80"
@@ -557,7 +557,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
               Connect without surrendering <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 bg-clip-text text-transparent">
+              <span className="text-gradient-emerald">
                 your data.
               </span>
             </h2>
@@ -573,7 +573,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
 
             {/* Tool 1: Video Lectures */}
             <motion.div
-              className="relative group cursor-pointer flex flex-col items-center"
+              className="scroll-reveal relative group cursor-pointer flex flex-col items-center"
               animate={{
                 y: [0, -18, 2, -15, 0],
                 x: [0, 4, -3, 2, 0],
@@ -602,7 +602,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
 
             {/* Tool 2: Campus Chat */}
             <motion.div
-              className="relative group cursor-pointer flex flex-col items-center"
+              className="scroll-reveal relative group cursor-pointer flex flex-col items-center"
               animate={{
                 y: [-12, 10, -14, 8, -12],
                 x: [0, -5, 3, -2, 0],
@@ -632,7 +632,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
 
             {/* Tool 3: Cloud Engine (Central Hero) */}
             <motion.div
-              className="relative group cursor-pointer flex flex-col items-center z-10"
+              className="scroll-reveal relative group cursor-pointer flex flex-col items-center z-10"
               animate={{
                 y: [8, -20, 6, -18, 8],
                 x: [0, 4, -4, 2, 0],
@@ -662,7 +662,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
 
             {/* Tool 4: Course Records */}
             <motion.div
-              className="relative group cursor-pointer flex flex-col items-center"
+              className="scroll-reveal relative group cursor-pointer flex flex-col items-center"
               animate={{
                 y: [-10, 12, -8, 14, -10],
                 x: [0, -3, 4, -2, 0],
@@ -692,7 +692,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
 
             {/* Tool 5: Academic Calendar */}
             <motion.div
-              className="relative group cursor-pointer flex flex-col items-center"
+              className="scroll-reveal relative group cursor-pointer flex flex-col items-center"
               animate={{
                 y: [4, -16, 0, -14, 4],
                 x: [0, 4, -2, 3, 0],
@@ -722,7 +722,46 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           </div>
         </section>
 
+        {/* ─── AI-Powered Campus Intelligence ─── */}
+        <section className="border-t border-slate-200/60 dark:border-slate-800/60 bg-transparent">
+          <AIChatDemo />
+        </section>
 
+        {/* ─── Closing CTA ─── */}
+        <section className="py-28 px-6 bg-transparent border-t border-slate-200/60 dark:border-slate-800/60">
+          <motion.div
+            className="max-w-3xl mx-auto text-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-4">
+              Get Started Today
+            </p>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display mb-5">
+              Ready to modernize{' '}
+              <span className="text-gradient-emerald">your institution?</span>
+            </h2>
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl mx-auto mb-10">
+              Join Pakistan's fastest-growing educational technology network. Register your campus and give students, faculty, and administrators the platform they deserve.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <button
+                onClick={handleOpenGetStarted}
+                className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all duration-200 text-sm shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 hover:-translate-y-0.5"
+              >
+                Register Campus
+              </button>
+              <button
+                onClick={() => navigate('/institute')}
+                className="px-8 py-3.5 bg-transparent border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold rounded-xl transition-all duration-200 text-sm hover:-translate-y-0.5"
+              >
+                Explore Institutions
+              </button>
+            </div>
+          </motion.div>
+        </section>
 
         {/* ─── Footer ─── */}
         <footer className="pt-20 bg-emerald-700 dark:bg-[#060608] text-white relative overflow-hidden border-t border-emerald-800 dark:border-zinc-800/80">
@@ -747,15 +786,17 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                   <li><a href="#institutes" className="hover:text-white transition-colors">Institutes</a></li>
                   <li><a href="#alumni" className="hover:text-white transition-colors">Alumni Network</a></li>
                   <li><span onClick={handleOpenGetStarted} className="hover:text-white cursor-pointer transition-colors">Register Campus</span></li>
+                  <li><a href={getManagementLoginUrl()} className="text-emerald-300 font-semibold hover:text-white transition-colors flex items-center gap-1">Management Portal ↗</a></li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Resources</h4>
                 <ul className="space-y-3 text-white/80">
+                  <li><a href={getManagementDashboardUrl()} className="hover:text-white transition-colors">Campus Dashboard</a></li>
+                  <li><a href={getManagementLoginUrl()} className="hover:text-white transition-colors">Staff & Student Login</a></li>
                   <li><span className="hover:text-white cursor-pointer transition-colors">Documentation</span></li>
                   <li><span className="hover:text-white cursor-pointer transition-colors">API Reference</span></li>
                   <li><span className="hover:text-white cursor-pointer transition-colors">Support Portal</span></li>
-                  <li><span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span></li>
                 </ul>
               </div>
               <div>

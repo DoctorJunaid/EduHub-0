@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { loginUser } from '@/store/Slices/authSlice';
 import { roleHome } from './roles';
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import toast from "react-hot-toast";
+import { getLandingPageUrl } from "@/config/urls";
 import './Login.css';
 
 export default function Login() {
@@ -59,6 +60,14 @@ export default function Login() {
       <div className="lp-left">
         <div className="lp-left-inner">
 
+          <a
+            href={getLandingPageUrl()}
+            className="lp-back-link"
+            title="Return to EduHub Public Website"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to EduHub Home</span>
+          </a>
 
           <h1>Login</h1>
 
@@ -163,7 +172,9 @@ export default function Login() {
 
           {/* Text */}
           <div className="lp-panel-text">
-            <p className="lp-panel-brand">EduHub</p>
+            <a href={getLandingPageUrl()} className="lp-panel-brand-link" title="Visit EduHub Website">
+              <p className="lp-panel-brand">EduHub <ArrowUpRight size={14} style={{ display: 'inline', verticalAlign: 'middle', opacity: 0.8 }} /></p>
+            </a>
             <h2>Discover. Learn.<br />Connect.</h2>
             <p>
               EduHub is the centralized management platform for college and school administration. Access dashboards, academic data, and multi-school modules. Streamline your institution today.

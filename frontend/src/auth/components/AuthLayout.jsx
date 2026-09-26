@@ -5,6 +5,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
+import { getLandingPageUrl } from "@/config/urls";
 import "../Signup.css";
 
 const benefits = [
@@ -35,13 +36,18 @@ export default function AuthLayout({ children, title, eyebrow, subtitle, login =
     <main className={`signup-page${login ? ' auth-login' : ''}`}>
       <div className="signup-shell">
         <aside className="signup-promo" aria-label="About EduHub">
-          <div className="signup-brand">
+          <a
+            href={getLandingPageUrl()}
+            className="signup-brand"
+            title="Return to EduHub Homepage"
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
             <img
               src={`${import.meta.env.BASE_URL}brand/eduhub-logo.png`}
               alt=""
             />
             <span>EduHub</span>
-          </div>
+          </a>
           <div className="signup-promo-intro">
             <p className="signup-eyebrow">
               <span />
