@@ -52,7 +52,7 @@ export default function PayrollTab({
 
   const allowancesTotal = allowances.reduce(
     (sum, a) => sum + (Number(a.amount) || 0),
-    0
+    0,
   );
   const baseSalary = Number(salaryProfile.baseSalary) || 65000;
   const grossSalary = baseSalary + allowancesTotal;
@@ -60,23 +60,26 @@ export default function PayrollTab({
   const dailyRate = salaryProfile.dailyRate || Math.round(grossSalary / 26);
 
   return (
-    <div className="space-y-6">
+    <div className="teacher-payroll-tab space-y-6">
       {/* 1. Salary Profile Overview Card */}
-      <Card className="bg-white border-zinc-200/80 shadow-xs">
-        <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
+      <Card className="teacher-payroll-card bg-white border-zinc-200/80 shadow-xs">
+        <CardHeader className="teacher-payroll-card-header pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2">
               <Wallet className="w-4 h-4 text-zinc-600" />
               Contracted Salary Structure & Allowances
             </CardTitle>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Current recurring compensation profile configured in Campus Finance.
+              Current recurring compensation profile configured in Campus
+              Finance.
             </p>
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => toast.success("Redirecting to Salary Profile manager")}
+            onClick={() =>
+              toast.success("Redirecting to Salary Profile manager")
+            }
             className="text-xs h-8 border-zinc-200 hover:bg-zinc-50"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
@@ -84,30 +87,51 @@ export default function PayrollTab({
           </Button>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+          <div className="teacher-payroll-metrics grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
             <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase">Base Salary</span>
-              <p className="text-lg font-bold text-zinc-900 mt-1 font-mono">{formatPKR(baseSalary)}</p>
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase">
+                Base Salary
+              </span>
+              <p className="text-lg font-bold text-zinc-900 mt-1 font-mono">
+                {formatPKR(baseSalary)}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase">Allowances</span>
-              <p className="text-lg font-bold text-emerald-600 mt-1 font-mono">+{formatPKR(allowancesTotal)}</p>
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase">
+                Allowances
+              </span>
+              <p className="text-lg font-bold text-emerald-600 mt-1 font-mono">
+                +{formatPKR(allowancesTotal)}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase">Tax Deduction</span>
-              <p className="text-lg font-bold text-rose-600 mt-1 font-mono">-{formatPKR(taxDeduction)}</p>
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase">
+                Tax Deduction
+              </span>
+              <p className="text-lg font-bold text-rose-600 mt-1 font-mono">
+                -{formatPKR(taxDeduction)}
+              </p>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-900 text-white">
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase">Gross Salary</span>
-              <p className="text-lg font-bold text-white mt-1 font-mono">{formatPKR(grossSalary)}</p>
+            <div className="teacher-payroll-gross-metric p-3 rounded-xl bg-zinc-900 text-white">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase">
+                Gross Salary
+              </span>
+              <p className="text-lg font-bold text-white mt-1 font-mono">
+                {formatPKR(grossSalary)}
+              </p>
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-between text-xs text-zinc-600">
+          <div className="teacher-payroll-daily-rate p-3 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-between text-xs text-zinc-600">
             <span>
-              Calculated Standard Daily Rate: <strong>{formatPKR(dailyRate)}/day</strong> (Based on 26 monthly working days policy)
+              Calculated Standard Daily Rate:{" "}
+              <strong>{formatPKR(dailyRate)}/day</strong> (Based on 26 monthly
+              working days policy)
             </span>
-            <Badge variant="outline" className="bg-white text-zinc-800 border-zinc-200 font-semibold text-[10px]">
+            <Badge
+              variant="outline"
+              className="bg-white text-zinc-800 border-zinc-200 font-semibold text-[10px]"
+            >
               Active Structure
             </Badge>
           </div>
@@ -115,8 +139,8 @@ export default function PayrollTab({
       </Card>
 
       {/* 2. Monthly Payroll Disbursal History */}
-      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+      <div className="teacher-payroll-history bg-white rounded-xl border border-zinc-200/80 shadow-xs overflow-hidden">
+        <div className="teacher-payroll-history-header p-4 border-b border-zinc-100 flex items-center justify-between">
           <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
             <Receipt className="w-4 h-4 text-zinc-600" />
             Monthly Payroll Disbursals
@@ -126,8 +150,8 @@ export default function PayrollTab({
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="teacher-payroll-table overflow-x-auto">
+          <Table className="teacher-payroll-data-table">
             <TableHeader>
               <TableRow className="bg-zinc-50 text-[11px] uppercase tracking-wider text-zinc-500">
                 <TableHead className="font-semibold">Month</TableHead>
@@ -135,14 +159,21 @@ export default function PayrollTab({
                 <TableHead className="font-semibold">Deductions</TableHead>
                 <TableHead className="font-semibold">Bonuses</TableHead>
                 <TableHead className="font-semibold">Net Disbursed</TableHead>
-                <TableHead className="font-semibold text-center">Status</TableHead>
-                <TableHead className="font-semibold text-right">Payslip</TableHead>
+                <TableHead className="font-semibold text-center">
+                  Status
+                </TableHead>
+                <TableHead className="font-semibold text-right">
+                  Payslip
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payrolls.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-zinc-500 text-xs">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-zinc-500 text-xs"
+                  >
                     No historical monthly payroll records generated yet.
                   </TableCell>
                 </TableRow>
@@ -166,11 +197,11 @@ export default function PayrollTab({
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge
-                        className={
+                        className={`teacher-payroll-status ${
                           p.status === "Paid"
                             ? "bg-emerald-100 text-emerald-800 font-semibold"
                             : "bg-blue-100 text-blue-800 font-semibold"
-                        }
+                        }`}
                       >
                         {p.status}
                       </Badge>
@@ -185,7 +216,7 @@ export default function PayrollTab({
                             teacherProfileId: teacher,
                           })
                         }
-                        className="h-7 text-xs font-semibold text-zinc-700 hover:text-black gap-1"
+                        className="teacher-payroll-payslip-action h-7 text-xs font-semibold text-zinc-700 hover:text-black gap-1"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         View

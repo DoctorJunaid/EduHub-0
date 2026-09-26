@@ -31,26 +31,26 @@ export default function SubstitutesTab({
   const dutiesMissed = substitutesData?.dutiesMissed || [];
 
   return (
-    <div className="space-y-6">
+    <div className="teacher-substitutes-tab space-y-6">
       {/* 1. Duties Covered Table (As Substitute) */}
-      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
-          <div>
+      <div className="teacher-substitutes-card bg-white rounded-xl border border-zinc-200/80 shadow-xs overflow-hidden">
+        <div className="teacher-substitutes-header p-4 border-b border-zinc-100 flex items-center justify-between">
+          <div className="min-w-0">
             <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
-              <CalendarCheck className="w-4 h-4 text-emerald-600" />
+              <CalendarCheck className="w-4 h-4 text-zinc-600" />
               Substitute Duties Covered
             </h3>
             <p className="text-xs text-zinc-500 mt-0.5">
               Classes where this teacher covered for an absent colleague (Bonus accrued).
             </p>
           </div>
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold text-xs">
+          <Badge variant="outline" className="teacher-substitutes-count bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold text-xs">
             {dutiesCovered.length} Covered
           </Badge>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="teacher-substitutes-table overflow-x-auto">
+          <Table className="teacher-substitutes-data-table">
             <TableHeader>
               <TableRow className="bg-zinc-50 text-[11px] uppercase tracking-wider text-zinc-500">
                 <TableHead className="font-semibold">Date</TableHead>
@@ -64,7 +64,7 @@ export default function SubstitutesTab({
             <TableBody>
               {dutiesCovered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-zinc-500 text-xs">
+                  <TableCell colSpan={6} className="teacher-substitutes-empty text-center py-8 text-zinc-500 text-xs">
                     No substitute cover duties performed in the current period.
                   </TableCell>
                 </TableRow>
@@ -90,24 +90,24 @@ export default function SubstitutesTab({
       </div>
 
       {/* 2. Duties Missed Table (Covered by Others) */}
-      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
-          <div>
+      <div className="teacher-substitutes-card bg-white rounded-xl border border-zinc-200/80 shadow-xs overflow-hidden">
+        <div className="teacher-substitutes-header p-4 border-b border-zinc-100 flex items-center justify-between">
+          <div className="min-w-0">
             <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-600" />
+              <Clock className="w-4 h-4 text-zinc-600" />
               Absences &amp; Duties Covered by Colleagues
             </h3>
             <p className="text-xs text-zinc-500 mt-0.5">
               Classes where this teacher was absent and an alternate faculty member conducted the lesson.
             </p>
           </div>
-          <Badge variant="outline" className="bg-zinc-100 text-zinc-700 font-semibold text-xs">
+          <Badge variant="outline" className="teacher-substitutes-count bg-zinc-100 text-zinc-700 font-semibold text-xs">
             {dutiesMissed.length} Occurrences
           </Badge>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="teacher-substitutes-table overflow-x-auto">
+          <Table className="teacher-substitutes-data-table">
             <TableHeader>
               <TableRow className="bg-zinc-50 text-[11px] uppercase tracking-wider text-zinc-500">
                 <TableHead className="font-semibold">Date</TableHead>
@@ -121,7 +121,7 @@ export default function SubstitutesTab({
             <TableBody>
               {dutiesMissed.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-zinc-500 text-xs">
+                  <TableCell colSpan={6} className="teacher-substitutes-empty text-center py-8 text-zinc-500 text-xs">
                     No substitute transfers recorded for this teacher.
                   </TableCell>
                 </TableRow>
