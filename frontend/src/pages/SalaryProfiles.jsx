@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   AlertTriangle,
   Plus,
@@ -8,14 +8,14 @@ import {
   UserCheck,
   UserX,
   Users,
-} from 'lucide-react';
-import useSalaryProfiles from '../hooks/useSalaryProfiles';
-import SalarySummaryCard from '../components/salary/SalarySummaryCard';
-import TeachersWithoutProfileAlert from '../components/salary/TeachersWithoutProfileAlert';
-import SalaryProfilesTable from '../components/salary/SalaryProfilesTable';
-import DataPagination from '../components/shared/DataPagination';
-import usePaginationParams from '../hooks/usePaginationParams';
-import { Spinner } from '@/components/ui/spinner';
+} from "lucide-react";
+import useSalaryProfiles from "../hooks/useSalaryProfiles";
+import SalarySummaryCard from "../components/salary/SalarySummaryCard";
+import TeachersWithoutProfileAlert from "../components/salary/TeachersWithoutProfileAlert";
+import SalaryProfilesTable from "../components/salary/SalaryProfilesTable";
+import DataPagination from "../components/shared/DataPagination";
+import usePaginationParams from "../hooks/usePaginationParams";
+import { Spinner } from "@/components/ui/spinner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,9 +25,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useDebounce } from '../hooks/useDebounce';
-import './SalaryProfiles.css';
+} from "@/components/ui/alert-dialog";
+import { useDebounce } from "../hooks/useDebounce";
+import "./SalaryProfiles.css";
 
 export default function SalaryProfiles() {
   const { page, pageSize, setPage, setPageSize } = usePaginationParams({
@@ -35,7 +35,7 @@ export default function SalaryProfiles() {
     defaultPageSize: 20,
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
   const {
@@ -53,7 +53,12 @@ export default function SalaryProfiles() {
 
   useEffect(() => {
     setFilters((f) => {
-      if (f.page === page && f.limit === pageSize && f.search === debouncedSearchTerm) return f;
+      if (
+        f.page === page &&
+        f.limit === pageSize &&
+        f.search === debouncedSearchTerm
+      )
+        return f;
       return { ...f, page, limit: pageSize, search: debouncedSearchTerm };
     });
   }, [page, pageSize, debouncedSearchTerm, setFilters]);
@@ -68,11 +73,11 @@ export default function SalaryProfiles() {
   const [targetToggleProfile, setTargetToggleProfile] = useState(null);
 
   const handleOpenAdd = (teacher = null) => {
-    if (teacher && typeof teacher === 'object') {
+    if (teacher && typeof teacher === "object") {
       setSelectedProfile({
         teacherProfileId: teacher._id || teacher.id,
         teacherProfile: teacher,
-        baseSalary: '',
+        baseSalary: "",
         allowances: [],
         taxDeduction: 0,
         otherDeduction: 0,
@@ -92,7 +97,7 @@ export default function SalaryProfiles() {
     if (!p) return null;
     if (p._id) return p._id;
     if (p.teacherProfileId) {
-      if (typeof p.teacherProfileId === 'object') {
+      if (typeof p.teacherProfileId === "object") {
         return p.teacherProfileId._id || p.teacherProfileId.id;
       }
       return p.teacherProfileId;
@@ -104,7 +109,7 @@ export default function SalaryProfiles() {
     let teacherId = targetIdOrObj;
     let payload = payloadData;
 
-    if (targetIdOrObj && typeof targetIdOrObj === 'object' && !payloadData) {
+    if (targetIdOrObj && typeof targetIdOrObj === "object" && !payloadData) {
       teacherId = targetIdOrObj.teacherId;
       payload = targetIdOrObj.payload;
     }
@@ -124,7 +129,7 @@ export default function SalaryProfiles() {
   const handlePromptToggleStatus = (p) => {
     const tid = getProfileTargetId(p);
     if (!tid) {
-      toast.error('Unable to identify profile ID');
+      toast.error("Unable to identify profile ID");
       return;
     }
     if (p.isActive) {
@@ -154,35 +159,38 @@ export default function SalaryProfiles() {
 
   const departments = Array.from(
     new Set(
-      profiles
-        .map((p) => p.teacherProfileId?.department)
-        .filter(Boolean)
-    )
+      profiles.map((p) => p.teacherProfileId?.department).filter(Boolean),
+    ),
   );
 
   const totalCount = summary?.total ?? pagination.total ?? profiles.length;
-  const activeCount = summary?.active ?? profiles.filter((p) => p.isActive).length;
-  const deactivatedCount = summary?.deactivated ?? profiles.filter((p) => !p.isActive).length;
+  const activeCount =
+    summary?.active ?? profiles.filter((p) => p.isActive).length;
+  const deactivatedCount =
+    summary?.deactivated ?? profiles.filter((p) => !p.isActive).length;
 
   const targetTeacher =
     targetToggleProfile?.teacherProfileId &&
-    typeof targetToggleProfile.teacherProfileId === 'object'
+    typeof targetToggleProfile.teacherProfileId === "object"
       ? targetToggleProfile.teacherProfileId
       : {};
   const targetUser =
-    targetTeacher.user && typeof targetTeacher.user === 'object'
+    targetTeacher.user && typeof targetTeacher.user === "object"
       ? targetTeacher.user
       : {};
   const targetName =
     targetUser.name ||
     targetTeacher.name ||
     targetTeacher.fullName ||
-    (targetTeacher.employeeId ? `Teacher (${targetTeacher.employeeId})` : 'Selected Teacher');
-  const targetEmail = targetUser.email || targetTeacher.email || '—';
-  const targetDept = targetTeacher.department || targetUser.department || 'Academic';
+    (targetTeacher.employeeId
+      ? `Teacher (${targetTeacher.employeeId})`
+      : "Selected Teacher");
+  const targetEmail = targetUser.email || targetTeacher.email || "—";
+  const targetDept =
+    targetTeacher.department || targetUser.department || "Academic";
   const targetSalary = targetToggleProfile?.baseSalary
-    ? `PKR ${Number(targetToggleProfile.baseSalary).toLocaleString('en-PK')}`
-    : '—';
+    ? `PKR ${Number(targetToggleProfile.baseSalary).toLocaleString("en-PK")}`
+    : "—";
 
   // Full-page form view matching Assign Substitute dialog layout
   if (dialogOpen) {
@@ -208,8 +216,8 @@ export default function SalaryProfiles() {
         <div className="salary-status-tabs">
           <button
             type="button"
-            onClick={() => setFilters((f) => ({ ...f, isActive: '', page: 1 }))}
-            className={`salary-status-tab-btn ${filters.isActive === '' ? 'is-active' : ''}`}
+            onClick={() => setFilters((f) => ({ ...f, isActive: "", page: 1 }))}
+            className={`salary-status-tab-btn ${filters.isActive === "" ? "is-active" : ""}`}
           >
             <Users size={14} />
             <span>All Staff</span>
@@ -220,10 +228,19 @@ export default function SalaryProfiles() {
 
           <button
             type="button"
-            onClick={() => setFilters((f) => ({ ...f, isActive: true, page: 1 }))}
-            className={`salary-status-tab-btn ${filters.isActive === true ? 'is-active' : ''}`}
+            onClick={() =>
+              setFilters((f) => ({ ...f, isActive: true, page: 1 }))
+            }
+            className={`salary-status-tab-btn ${filters.isActive === true ? "is-active" : ""}`}
           >
-            <UserCheck size={14} className={filters.isActive === true ? 'text-emerald-600' : 'text-emerald-700'} />
+            <UserCheck
+              size={14}
+              className={
+                filters.isActive === true
+                  ? "text-emerald-600"
+                  : "text-emerald-700"
+              }
+            />
             <span>Active Teachers</span>
             <span className="salary-status-badge salary-status-badge-active">
               {activeCount}
@@ -232,10 +249,17 @@ export default function SalaryProfiles() {
 
           <button
             type="button"
-            onClick={() => setFilters((f) => ({ ...f, isActive: false, page: 1 }))}
-            className={`salary-status-tab-btn ${filters.isActive === false ? 'is-active' : ''}`}
+            onClick={() =>
+              setFilters((f) => ({ ...f, isActive: false, page: 1 }))
+            }
+            className={`salary-status-tab-btn ${filters.isActive === false ? "is-active" : ""}`}
           >
-            <UserX size={14} className={filters.isActive === false ? 'text-rose-600' : 'text-rose-700'} />
+            <UserX
+              size={14}
+              className={
+                filters.isActive === false ? "text-rose-600" : "text-rose-700"
+              }
+            />
             <span>Deactivated Teachers</span>
             <span className="salary-status-badge salary-status-badge-deactivated">
               {deactivatedCount}
@@ -252,7 +276,6 @@ export default function SalaryProfiles() {
         </button>
       </div>
 
-
       {/* Alert for unconfigured teachers */}
       <TeachersWithoutProfileAlert
         count={teachersWithoutProfile.length}
@@ -267,7 +290,9 @@ export default function SalaryProfiles() {
               <UserX className="h-3.5 w-3.5 text-rose-700" />
             </div>
             <div className="min-w-0 flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-rose-950 text-xs whitespace-nowrap">Viewing Deactivated Staff</span>
+              <span className="font-bold text-rose-950 text-xs whitespace-nowrap">
+                Viewing Deactivated Staff
+              </span>
               <span className="hidden lg:inline-block text-[11px] text-rose-800/90 whitespace-nowrap">
                 — deactivated profiles are excluded from monthly payroll runs
               </span>
@@ -278,10 +303,11 @@ export default function SalaryProfiles() {
             type="button"
             className="inline-flex items-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-lg cursor-pointer shrink-0 whitespace-nowrap"
             style={{
-              background: 'linear-gradient(135deg, #be123c 0%, #e11d48 100%)',
-              boxShadow: '0 2px 8px rgba(190,18,60,0.25), inset 0 1px 0 rgba(255,255,255,0.10)',
+              background: "linear-gradient(135deg, #be123c 0%, #e11d48 100%)",
+              boxShadow:
+                "0 2px 8px rgba(190,18,60,0.25), inset 0 1px 0 rgba(255,255,255,0.10)",
             }}
-            onClick={() => setFilters((f) => ({ ...f, isActive: '', page: 1 }))}
+            onClick={() => setFilters((f) => ({ ...f, isActive: "", page: 1 }))}
           >
             <span>Show All Staff</span>
           </button>
@@ -303,7 +329,7 @@ export default function SalaryProfiles() {
 
           <select
             className="toolbar-select"
-            value={filters.department || ''}
+            value={filters.department || ""}
             onChange={(e) =>
               setFilters((f) => ({ ...f, department: e.target.value, page: 1 }))
             }
@@ -318,11 +344,14 @@ export default function SalaryProfiles() {
 
           <select
             className="toolbar-select"
-            value={filters.isActive === '' ? '' : filters.isActive ? 'true' : 'false'}
+            value={
+              filters.isActive === "" ? "" : filters.isActive ? "true" : "false"
+            }
             onChange={(e) =>
               setFilters((f) => ({
                 ...f,
-                isActive: e.target.value === '' ? '' : e.target.value === 'true',
+                isActive:
+                  e.target.value === "" ? "" : e.target.value === "true",
                 page: 1,
               }))
             }
@@ -332,15 +361,17 @@ export default function SalaryProfiles() {
             <option value="false">Inactive / Deactivated</option>
           </select>
 
-          {(filters.search || filters.department || filters.isActive !== '') && (
+          {(filters.search ||
+            filters.department ||
+            filters.isActive !== "") && (
             <button
               type="button"
               className="toolbar-btn toolbar-btn-outline"
               onClick={() =>
                 setFilters({
-                  search: '',
-                  department: '',
-                  isActive: '',
+                  search: "",
+                  department: "",
+                  isActive: "",
                   page: 1,
                   limit: 20,
                 })
@@ -413,17 +444,27 @@ export default function SalaryProfiles() {
                     {targetName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <strong className="block text-slate-900 font-semibold text-xs truncate" title={targetName}>
+                    <strong
+                      className="block text-slate-900 font-semibold text-xs truncate"
+                      title={targetName}
+                    >
                       {targetName}
                     </strong>
-                    <span className="block text-slate-500 text-[11px] truncate" title={targetEmail}>
+                    <span
+                      className="block text-slate-500 text-[11px] truncate"
+                      title={targetEmail}
+                    >
                       {targetDept} · {targetEmail}
                     </span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Base Pay</span>
-                  <span className="text-xs font-bold text-slate-900">{targetSalary}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                    Base Pay
+                  </span>
+                  <span className="text-xs font-bold text-slate-900">
+                    {targetSalary}
+                  </span>
                 </div>
               </div>
 
@@ -434,9 +475,18 @@ export default function SalaryProfiles() {
                   Consequences of Deactivation:
                 </p>
                 <ul className="list-disc list-inside text-[11px] text-rose-800 pl-1 space-y-0.5">
-                  <li>This teacher will be excluded from all upcoming monthly payroll runs.</li>
-                  <li>Existing payslips and payroll archives remain fully preserved.</li>
-                  <li>Profile status can be reactivated anytime with a single click.</li>
+                  <li>
+                    This teacher will be excluded from all upcoming monthly
+                    payroll runs.
+                  </li>
+                  <li>
+                    Existing payslips and payroll archives remain fully
+                    preserved.
+                  </li>
+                  <li>
+                    Profile status can be reactivated anytime with a single
+                    click.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -455,7 +505,11 @@ export default function SalaryProfiles() {
               onClick={handleConfirmDeactivate}
               className="m-0 h-9 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 hover:shadow-lg transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              {deactivating ? <Spinner className="size-3.5 text-white mr-1" /> : <PowerOff size={13} />}
+              {deactivating ? (
+                <Spinner className="size-3.5 text-white mr-1" />
+              ) : (
+                <PowerOff size={13} />
+              )}
               Deactivate Profile
             </AlertDialogAction>
           </AlertDialogFooter>

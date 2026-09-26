@@ -11,10 +11,7 @@ export default function MyPayslips() {
   const [month, setMonth] = useState("");
   const [selectedPayslip, setSelectedPayslip] = useState(null);
 
-  const {
-    data: payslips = [],
-    isLoading: loading,
-  } = useQuery({
+  const { data: payslips = [], isLoading: loading } = useQuery({
     queryKey: qk.myPayslips({ month }),
     queryFn: async () => {
       const response = await api.get("/campus/salary/payroll/my-payslips", {

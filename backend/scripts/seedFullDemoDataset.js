@@ -56,7 +56,9 @@ import {
 
 function getUtcMidnight(dateInput) {
   const d = new Date(dateInput);
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0),
+  );
 }
 
 function formatDateYMD(dateInput) {
@@ -65,10 +67,14 @@ function formatDateYMD(dateInput) {
 }
 
 async function runDemoSeeder() {
-  console.log("==================================================================");
+  console.log(
+    "==================================================================",
+  );
   console.log("  EduHub Complete Professional Demo Dataset Seeder");
   console.log("  Target: junaid.aurangzeb5+test13@gmail.com");
-  console.log("==================================================================");
+  console.log(
+    "==================================================================",
+  );
 
   if (!process.env.MONGO_URI) {
     console.error("❌ MONGO_URI missing from environment!");
@@ -95,7 +101,9 @@ async function runDemoSeeder() {
     process.exit(1);
   }
 
-  let institute = await Institute.findById(managerUser.instituteId || campus.instituteId);
+  let institute = await Institute.findById(
+    managerUser.instituteId || campus.instituteId,
+  );
   if (!institute) {
     console.error(`❌ Institute not found!`);
     process.exit(1);
@@ -104,9 +112,13 @@ async function runDemoSeeder() {
   const campusId = campus._id;
   const instituteId = institute._id;
 
-  console.log(`✓ Located Target User: "${managerUser.name}" (${managerUser.email})`);
+  console.log(
+    `✓ Located Target User: "${managerUser.name}" (${managerUser.email})`,
+  );
   console.log(`✓ Located Target Campus: "${campus.name}" (${campusId})`);
-  console.log(`✓ Located Target Institute: "${institute.name}" (${instituteId})`);
+  console.log(
+    `✓ Located Target Institute: "${institute.name}" (${instituteId})`,
+  );
 
   // Update Institute to professional details
   await Institute.findByIdAndUpdate(instituteId, {
@@ -155,13 +167,15 @@ async function runDemoSeeder() {
   });
   managerUser = await User.findById(managerUser._id);
 
-  console.log("✓ Updated Institute, Campus, and Manager profiles to professional values.");
+  console.log(
+    "✓ Updated Institute, Campus, and Manager profiles to professional values.",
+  );
 
   // -------------------------------------------------------------
   // 2. CLEAN STALE TEST / DEMO DATA FOR THIS SPECIFIC CAMPUS
   // -------------------------------------------------------------
   console.log("\n--- Cleaning previous test/stub data for target campus ---");
-  
+
   // Find non-manager users for this campus
   const oldUsers = await User.find({
     campusId,
@@ -216,7 +230,9 @@ async function runDemoSeeder() {
   await Alert.deleteMany({ campusId });
   await Assignment.deleteMany({ campusId });
 
-  console.log("✓ Target campus cleared for fresh, unified demo data insertion.");
+  console.log(
+    "✓ Target campus cleared for fresh, unified demo data insertion.",
+  );
 
   // -------------------------------------------------------------
   // 3. SEED GRADES (Class 1 to Class 10) & SECTIONS (A and B)
@@ -258,30 +274,109 @@ async function runDemoSeeder() {
     const roomB = `Room ${floor}1${i}`;
 
     classRooms.push(
-      { grade, section: secA, roomName: roomA, gradeLevel: i, sectionName: "Section A" },
-      { grade, section: secB, roomName: roomB, gradeLevel: i, sectionName: "Section B" }
+      {
+        grade,
+        section: secA,
+        roomName: roomA,
+        gradeLevel: i,
+        sectionName: "Section A",
+      },
+      {
+        grade,
+        section: secB,
+        roomName: roomB,
+        gradeLevel: i,
+        sectionName: "Section B",
+      },
     );
   }
-  console.log(`✓ Created 10 Grades (Class 1 to Class 10) and 20 Sections (Section A, Section B).`);
+  console.log(
+    `✓ Created 10 Grades (Class 1 to Class 10) and 20 Sections (Section A, Section B).`,
+  );
 
   // -------------------------------------------------------------
   // 4. SEED SUBJECTS & GRADE-SUBJECT MAPPINGS
   // -------------------------------------------------------------
   console.log("\n--- Seeding Core Curriculum Subjects & Mappings ---");
   const subjectsMaster = [
-    { name: "English Language", code: "ENG", department: "English", desc: "Grammar, Composition, and Literature" },
-    { name: "Urdu Literature", code: "URD", department: "Urdu", desc: "Urdu Grammar, Prose, and Poetry" },
-    { name: "Mathematics", code: "MATH", department: "Mathematics", desc: "Core Arithmetic, Algebra, and Geometry" },
-    { name: "Islamiat & Ethics", code: "ISL", department: "Islamiat", desc: "Islamic Studies, Morals, and Ethics" },
-    { name: "General Science", code: "SCI", department: "Science", desc: "Foundational Life and Physical Sciences" },
-    { name: "Social Studies", code: "SST", department: "Social Studies", desc: "Geography, History, and Civics" },
-    { name: "Computer Science", code: "CS", department: "Computer Science", desc: "IT, Programming, and Digital Literacy" },
-    { name: "Art & Craft", code: "ART", department: "Arts", desc: "Creative Arts and Drawing" },
-    { name: "Physical Education", code: "PE", department: "Sports", desc: "Health, Sports, and Physical Fitness" },
-    { name: "Physics", code: "PHY", department: "Physics", desc: "Mechanics, Thermodynamics, and Electromagnetism" },
-    { name: "Chemistry", code: "CHEM", department: "Chemistry", desc: "Physical, Organic, and Inorganic Chemistry" },
-    { name: "Biology", code: "BIO", department: "Biology", desc: "Cellular Biology, Anatomy, and Genetics" },
-    { name: "Pakistan Studies", code: "PST", department: "Social Studies", desc: "History, Constitution, and Culture of Pakistan" },
+    {
+      name: "English Language",
+      code: "ENG",
+      department: "English",
+      desc: "Grammar, Composition, and Literature",
+    },
+    {
+      name: "Urdu Literature",
+      code: "URD",
+      department: "Urdu",
+      desc: "Urdu Grammar, Prose, and Poetry",
+    },
+    {
+      name: "Mathematics",
+      code: "MATH",
+      department: "Mathematics",
+      desc: "Core Arithmetic, Algebra, and Geometry",
+    },
+    {
+      name: "Islamiat & Ethics",
+      code: "ISL",
+      department: "Islamiat",
+      desc: "Islamic Studies, Morals, and Ethics",
+    },
+    {
+      name: "General Science",
+      code: "SCI",
+      department: "Science",
+      desc: "Foundational Life and Physical Sciences",
+    },
+    {
+      name: "Social Studies",
+      code: "SST",
+      department: "Social Studies",
+      desc: "Geography, History, and Civics",
+    },
+    {
+      name: "Computer Science",
+      code: "CS",
+      department: "Computer Science",
+      desc: "IT, Programming, and Digital Literacy",
+    },
+    {
+      name: "Art & Craft",
+      code: "ART",
+      department: "Arts",
+      desc: "Creative Arts and Drawing",
+    },
+    {
+      name: "Physical Education",
+      code: "PE",
+      department: "Sports",
+      desc: "Health, Sports, and Physical Fitness",
+    },
+    {
+      name: "Physics",
+      code: "PHY",
+      department: "Physics",
+      desc: "Mechanics, Thermodynamics, and Electromagnetism",
+    },
+    {
+      name: "Chemistry",
+      code: "CHEM",
+      department: "Chemistry",
+      desc: "Physical, Organic, and Inorganic Chemistry",
+    },
+    {
+      name: "Biology",
+      code: "BIO",
+      department: "Biology",
+      desc: "Cellular Biology, Anatomy, and Genetics",
+    },
+    {
+      name: "Pakistan Studies",
+      code: "PST",
+      department: "Social Studies",
+      desc: "History, Constitution, and Culture of Pakistan",
+    },
   ];
 
   const subjectMap = new Map();
@@ -299,19 +394,38 @@ async function runDemoSeeder() {
   function getSubjectsForLevel(gradeLevel) {
     if (gradeLevel <= 5) {
       return [
-        "English Language", "Urdu Literature", "Mathematics", "Islamiat & Ethics",
-        "General Science", "Social Studies", "Art & Craft", "Physical Education"
+        "English Language",
+        "Urdu Literature",
+        "Mathematics",
+        "Islamiat & Ethics",
+        "General Science",
+        "Social Studies",
+        "Art & Craft",
+        "Physical Education",
       ];
     }
     if (gradeLevel <= 8) {
       return [
-        "English Language", "Urdu Literature", "Mathematics", "General Science",
-        "Islamiat & Ethics", "Computer Science", "Social Studies", "Physical Education"
+        "English Language",
+        "Urdu Literature",
+        "Mathematics",
+        "General Science",
+        "Islamiat & Ethics",
+        "Computer Science",
+        "Social Studies",
+        "Physical Education",
       ];
     }
     return [
-      "English Language", "Urdu Literature", "Mathematics", "Physics",
-      "Chemistry", "Biology", "Computer Science", "Pakistan Studies", "Islamiat & Ethics"
+      "English Language",
+      "Urdu Literature",
+      "Mathematics",
+      "Physics",
+      "Chemistry",
+      "Biology",
+      "Computer Science",
+      "Pakistan Studies",
+      "Islamiat & Ethics",
     ];
   }
 
@@ -332,7 +446,9 @@ async function runDemoSeeder() {
     }
   }
   await GradeSubject.insertMany(gradeSubjectDocs);
-  console.log(`✓ Created ${subjectMap.size} Subjects and mapped ${gradeSubjectDocs.length} GradeSubjects.`);
+  console.log(
+    `✓ Created ${subjectMap.size} Subjects and mapped ${gradeSubjectDocs.length} GradeSubjects.`,
+  );
 
   // -------------------------------------------------------------
   // 5. SEED 22 DISTINGUISHED TEACHERS (Ensuring full timetable coverage)
@@ -706,12 +822,16 @@ async function runDemoSeeder() {
     teacherUserMap.set(f.employeeId, teacherObj);
     teacherProfileMap.set(String(profile._id), teacherObj);
   }
-  console.log(`✓ Created ${teachers.length} Teachers with User accounts, TeacherProfiles & SalaryProfiles.`);
+  console.log(
+    `✓ Created ${teachers.length} Teachers with User accounts, TeacherProfiles & SalaryProfiles.`,
+  );
 
   // -------------------------------------------------------------
   // 6. SEED 100 STUDENTS (Grade 1 to 10 × 10 students = 100 total)
   // -------------------------------------------------------------
-  console.log("\n--- Seeding 100 Students (10 per grade: 5 in Sec A, 5 in Sec B) ---");
+  console.log(
+    "\n--- Seeding 100 Students (10 per grade: 5 in Sec A, 5 in Sec B) ---",
+  );
   const studentPasswordHash = await bcrypt.hash("student123", 10);
   const students = [];
   const studentUserBatch = [];
@@ -728,7 +848,7 @@ async function runDemoSeeder() {
       const section = isSecA ? secA : secB;
       const rollNo = isSecA ? sIdx : sIdx - 5;
 
-      const isMale = (studentSeq % 2) === 1;
+      const isMale = studentSeq % 2 === 1;
       const firstPool = isMale ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
       const firstName = firstPool[(studentSeq * 7) % firstPool.length];
       const lastName = LAST_NAMES[(studentSeq * 11) % LAST_NAMES.length];
@@ -738,13 +858,24 @@ async function runDemoSeeder() {
       const admissionNo = `STD-2026-${admCode}`;
       const email = `std.${admCode}@peshawarmodel.edu.pk`;
 
-      const fatherFirst = MALE_FIRST_NAMES[(studentSeq * 13) % MALE_FIRST_NAMES.length];
+      const fatherFirst =
+        MALE_FIRST_NAMES[(studentSeq * 13) % MALE_FIRST_NAMES.length];
       const guardianName = `${fatherFirst} ${lastName}`;
       const guardianPhone = `0300-58${String(1000 + studentSeq).slice(1)}`;
       const baseFee = 3500 + gradeLevel * 300;
 
       studentUserBatch.push({
-        meta: { grade, gradeLevel, section, rollNo, studentName, admissionNo, guardianName, guardianPhone, baseFee },
+        meta: {
+          grade,
+          gradeLevel,
+          section,
+          rollNo,
+          studentName,
+          admissionNo,
+          guardianName,
+          guardianPhone,
+          baseFee,
+        },
         doc: {
           name: studentName,
           email,
@@ -762,7 +893,7 @@ async function runDemoSeeder() {
           baseFee,
           status: "Active",
           isActive: true,
-        }
+        },
       });
 
       studentSeq++;
@@ -770,7 +901,9 @@ async function runDemoSeeder() {
   }
 
   // Insert all 100 student users in batch
-  const insertedStudentUsers = await User.insertMany(studentUserBatch.map(s => s.doc));
+  const insertedStudentUsers = await User.insertMany(
+    studentUserBatch.map((s) => s.doc),
+  );
   const studentProfileDocs = [];
 
   for (let i = 0; i < insertedStudentUsers.length; i++) {
@@ -804,17 +937,22 @@ async function runDemoSeeder() {
     });
   }
 
-  const insertedStudentProfiles = await StudentProfile.insertMany(studentProfileDocs);
+  const insertedStudentProfiles =
+    await StudentProfile.insertMany(studentProfileDocs);
   for (let i = 0; i < students.length; i++) {
     students[i].profile = insertedStudentProfiles[i];
   }
 
-  console.log(`✓ Created ${students.length} Students across Class 1 to Class 10 with verified profiles.`);
+  console.log(
+    `✓ Created ${students.length} Students across Class 1 to Class 10 with verified profiles.`,
+  );
 
   // -------------------------------------------------------------
   // 7. SEED TEACHER ASSIGNMENTS
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Teacher Assignments (Teacher -> Subject -> Grade -> Section) ---");
+  console.log(
+    "\n--- Seeding Teacher Assignments (Teacher -> Subject -> Grade -> Section) ---",
+  );
   const teacherAssignmentDocs = [];
 
   for (const room of classRooms) {
@@ -826,10 +964,12 @@ async function runDemoSeeder() {
       if (!subDoc) continue;
 
       let eligibleTeacher = teachers.find(
-        (t) => t.primarySubject === subName || t.department === subDoc.department
+        (t) =>
+          t.primarySubject === subName || t.department === subDoc.department,
       );
       if (!eligibleTeacher) {
-        eligibleTeacher = teachers[teacherAssignmentDocs.length % teachers.length];
+        eligibleTeacher =
+          teachers[teacherAssignmentDocs.length % teachers.length];
       }
 
       teacherAssignmentDocs.push({
@@ -848,7 +988,9 @@ async function runDemoSeeder() {
   // -------------------------------------------------------------
   // 8. SEED CONFLICT-FREE 6-DAY WEEKLY TIMETABLE (Mon - Sat)
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Conflict-Free 6-Day Timetable & ClassSchedules ---");
+  console.log(
+    "\n--- Seeding Conflict-Free 6-Day Timetable & ClassSchedules ---",
+  );
   const DAYS = [
     { index: 1, name: "Monday" },
     { index: 2, name: "Tuesday" },
@@ -859,14 +1001,62 @@ async function runDemoSeeder() {
   ];
 
   const PERIOD_SLOTS = [
-    { periodNum: 1, name: "Period 1", startTime: "08:00", endTime: "08:45", isBreak: false },
-    { periodNum: 2, name: "Period 2", startTime: "08:45", endTime: "09:30", isBreak: false },
-    { periodNum: 0, name: "Short Break", startTime: "09:30", endTime: "09:45", isBreak: true },
-    { periodNum: 3, name: "Period 3", startTime: "09:45", endTime: "10:30", isBreak: false },
-    { periodNum: 4, name: "Period 4", startTime: "10:30", endTime: "11:15", isBreak: false },
-    { periodNum: 0, name: "Lunch Break", startTime: "11:15", endTime: "11:45", isBreak: true },
-    { periodNum: 5, name: "Period 5", startTime: "11:45", endTime: "12:30", isBreak: false },
-    { periodNum: 6, name: "Period 6", startTime: "12:30", endTime: "13:15", isBreak: false },
+    {
+      periodNum: 1,
+      name: "Period 1",
+      startTime: "08:00",
+      endTime: "08:45",
+      isBreak: false,
+    },
+    {
+      periodNum: 2,
+      name: "Period 2",
+      startTime: "08:45",
+      endTime: "09:30",
+      isBreak: false,
+    },
+    {
+      periodNum: 0,
+      name: "Short Break",
+      startTime: "09:30",
+      endTime: "09:45",
+      isBreak: true,
+    },
+    {
+      periodNum: 3,
+      name: "Period 3",
+      startTime: "09:45",
+      endTime: "10:30",
+      isBreak: false,
+    },
+    {
+      periodNum: 4,
+      name: "Period 4",
+      startTime: "10:30",
+      endTime: "11:15",
+      isBreak: false,
+    },
+    {
+      periodNum: 0,
+      name: "Lunch Break",
+      startTime: "11:15",
+      endTime: "11:45",
+      isBreak: true,
+    },
+    {
+      periodNum: 5,
+      name: "Period 5",
+      startTime: "11:45",
+      endTime: "12:30",
+      isBreak: false,
+    },
+    {
+      periodNum: 6,
+      name: "Period 6",
+      startTime: "12:30",
+      endTime: "13:15",
+      isBreak: false,
+    },
   ];
 
   const timetableDocs = [];
@@ -916,7 +1106,8 @@ async function runDemoSeeder() {
 
       // Teaching period:
       // Offset rotates every day and period so teachers cycle fairly across rooms
-      const shiftOffset = (day.index * 5 + slot.periodNum * 3) % teachers.length;
+      const shiftOffset =
+        (day.index * 5 + slot.periodNum * 3) % teachers.length;
 
       for (let r = 0; r < classRooms.length; r++) {
         const room = classRooms[r];
@@ -973,19 +1164,24 @@ async function runDemoSeeder() {
 
   const insertedTimetables = await Timetable.insertMany(timetableDocs);
   await ClassSchedule.insertMany(classScheduleDocs);
-  console.log(`✓ Inserted ${insertedTimetables.length} Timetable slots and ${classScheduleDocs.length} ClassSchedules (0 conflicts, guaranteed valid teachers).`);
+  console.log(
+    `✓ Inserted ${insertedTimetables.length} Timetable slots and ${classScheduleDocs.length} ClassSchedules (0 conflicts, guaranteed valid teachers).`,
+  );
 
   // -------------------------------------------------------------
   // 9. SEED HISTORICAL STUDENT ATTENDANCE (August & September 2026)
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Historical Student Attendance (Aug 1 - Sep 26, 2026) ---");
+  console.log(
+    "\n--- Seeding Historical Student Attendance (Aug 1 - Sep 26, 2026) ---",
+  );
   const studentAttendanceDocs = [];
   const startDay = new Date("2026-08-01T00:00:00Z");
   const endDay = new Date("2026-09-26T00:00:00Z");
 
   const schoolDays = [];
   for (let d = new Date(startDay); d <= endDay; d.setDate(d.getDate() + 1)) {
-    if (d.getDay() !== 0) { // Monday to Saturday (skip Sunday)
+    if (d.getDay() !== 0) {
+      // Monday to Saturday (skip Sunday)
       schoolDays.push(new Date(d));
     }
   }
@@ -1035,7 +1231,9 @@ async function runDemoSeeder() {
     const chunk = studentAttendanceDocs.slice(b, b + BATCH_SIZE);
     await StudentAttendance.insertMany(chunk, { ordered: false });
   }
-  console.log(`✓ Inserted ${studentAttendanceDocs.length} Student Attendance records across ${schoolDays.length} school days.`);
+  console.log(
+    `✓ Inserted ${studentAttendanceDocs.length} Student Attendance records across ${schoolDays.length} school days.`,
+  );
 
   // -------------------------------------------------------------
   // 10. SEED TEACHER ATTENDANCE (August & September 2026)
@@ -1060,13 +1258,19 @@ async function runDemoSeeder() {
         checkIn = "";
         checkOut = "";
         remarks = "Absent without leave notification";
-      } else if (dateStr === "2026-09-22" && teacher.employeeId === "EMP-2026-005") {
+      } else if (
+        dateStr === "2026-09-22" &&
+        teacher.employeeId === "EMP-2026-005"
+      ) {
         // Sir Farhan Ali absent on Sep 22 (Substitute Demo)
         status = "Absent";
         checkIn = "";
         checkOut = "";
         remarks = "Family medical emergency";
-      } else if (dateStr === "2026-09-08" && teacher.employeeId === "EMP-2026-004") {
+      } else if (
+        dateStr === "2026-09-08" &&
+        teacher.employeeId === "EMP-2026-004"
+      ) {
         // Sir Abdul Rehman approved leave
         status = "On Leave";
         checkIn = "";
@@ -1099,7 +1303,9 @@ async function runDemoSeeder() {
   }
 
   await TeacherAttendance.insertMany(teacherAttendanceDocs, { ordered: false });
-  console.log(`✓ Inserted ${teacherAttendanceDocs.length} Teacher Attendance records.`);
+  console.log(
+    `✓ Inserted ${teacherAttendanceDocs.length} Teacher Attendance records.`,
+  );
 
   // -------------------------------------------------------------
   // 11. SEED TEACHING CREDIT CONFIG & SALARY POLICY
@@ -1214,7 +1420,9 @@ async function runDemoSeeder() {
   // -------------------------------------------------------------
   // 13. SEED ATTENDANCE APPROVAL & PAYROLL ADJUSTMENTS
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Attendance Approval Workflow & Payroll Adjustments ---");
+  console.log(
+    "\n--- Seeding Attendance Approval Workflow & Payroll Adjustments ---",
+  );
   const usmanDailySalary = Math.round(usmanTeacher.baseSalary / 26);
   const approvalUsman = await AttendanceApproval.create({
     campusId,
@@ -1334,7 +1542,9 @@ async function runDemoSeeder() {
   // -------------------------------------------------------------
   // 14. SEED TEACHER CLASS SESSIONS & SALARY REVIEW CENTER ITEMS
   // -------------------------------------------------------------
-  console.log("\n--- Seeding TeacherClassSessions (Performance & Salary Review Center) ---");
+  console.log(
+    "\n--- Seeding TeacherClassSessions (Performance & Salary Review Center) ---",
+  );
   const sampleTimetableSlot = insertedTimetables[0];
 
   // 1. Live Session for Today (Completed)
@@ -1389,7 +1599,8 @@ async function runDemoSeeder() {
       status: "Pending Review",
       proposedDeduction: 630,
       proposedBonus: 0,
-      reviewRemark: "Teacher did not report for morning assembly or Period 1 physics session.",
+      reviewRemark:
+        "Teacher did not report for morning assembly or Period 1 physics session.",
     },
     markedBy: managerUser._id,
     markedAt: new Date("2026-09-15T09:00:00Z"),
@@ -1423,7 +1634,8 @@ async function runDemoSeeder() {
       status: "Pending Review",
       proposedDeduction: 0,
       proposedBonus: 500,
-      reviewRemark: "Relief period conducted successfully with signed student log.",
+      reviewRemark:
+        "Relief period conducted successfully with signed student log.",
     },
     markedBy: managerUser._id,
     markedAt: new Date("2026-09-22T10:00:00Z"),
@@ -1453,7 +1665,8 @@ async function runDemoSeeder() {
     deductionValue: 600,
     dispute: {
       isDisputed: true,
-      disputeReason: "Conducted class in Computer Lab due to power outage in main wing; biometric attendance was mistakenly not logged.",
+      disputeReason:
+        "Conducted class in Computer Lab due to power outage in main wing; biometric attendance was mistakenly not logged.",
       disputedAt: new Date("2026-09-19T10:15:00Z"),
       disputeStatus: "Pending",
       resolutionRemark: "",
@@ -1502,12 +1715,16 @@ async function runDemoSeeder() {
     markedAt: new Date("2026-09-04T11:00:00Z"),
   });
 
-  console.log("✓ Seeded TeacherClassSessions with live demo items for Salary Review Center.");
+  console.log(
+    "✓ Seeded TeacherClassSessions with live demo items for Salary Review Center.",
+  );
 
   // -------------------------------------------------------------
   // 15. SEED MONTHLY PAYROLL (August 2026 Paid, September 2026 Active)
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Monthly Payroll (August Paid, September Approved/Draft) ---");
+  console.log(
+    "\n--- Seeding Monthly Payroll (August Paid, September Approved/Draft) ---",
+  );
   const payrollDocs = [];
 
   for (let i = 0; i < teachers.length; i++) {
@@ -1518,8 +1735,20 @@ async function runDemoSeeder() {
 
     // August 2026 (Paid for all 22 teachers)
     const augDeductions = [
-      { reason: "Income Tax Deducted at Source", category: "Tax", days: 0, rate: 0, amount: tax },
-      { reason: "Staff Welfare Fund", category: "Other", days: 0, rate: 0, amount: 500 },
+      {
+        reason: "Income Tax Deducted at Source",
+        category: "Tax",
+        days: 0,
+        rate: 0,
+        amount: tax,
+      },
+      {
+        reason: "Staff Welfare Fund",
+        category: "Other",
+        days: 0,
+        rate: 0,
+        amount: 500,
+      },
     ];
     let augBonuses = [];
     if (t.employeeId === "EMP-2026-014") {
@@ -1574,8 +1803,20 @@ async function runDemoSeeder() {
     // September 2026 (Mix of Approved and Draft)
     const isApproved = i < 14; // First 14 Approved, rest Draft
     const sepDeductions = [
-      { reason: "Income Tax Deducted at Source", category: "Tax", days: 0, rate: 0, amount: tax },
-      { reason: "Staff Welfare Fund", category: "Other", days: 0, rate: 0, amount: 500 },
+      {
+        reason: "Income Tax Deducted at Source",
+        category: "Tax",
+        days: 0,
+        rate: 0,
+        amount: tax,
+      },
+      {
+        reason: "Staff Welfare Fund",
+        category: "Other",
+        days: 0,
+        rate: 0,
+        amount: 500,
+      },
     ];
 
     if (t.employeeId === "EMP-2026-003") {
@@ -1632,12 +1873,16 @@ async function runDemoSeeder() {
   }
 
   await MonthlyPayroll.insertMany(payrollDocs);
-  console.log(`✓ Inserted ${payrollDocs.length} MonthlyPayroll records (August 2026 Paid, September 2026 Approved/Draft).`);
+  console.log(
+    `✓ Inserted ${payrollDocs.length} MonthlyPayroll records (August 2026 Paid, September 2026 Approved/Draft).`,
+  );
 
   // -------------------------------------------------------------
   // 16. SEED FEE STRUCTURES & STUDENT FEE RECORDS (With Transactions)
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Fee Structures, Fee Vouchers & Payment Transactions ---");
+  console.log(
+    "\n--- Seeding Fee Structures, Fee Vouchers & Payment Transactions ---",
+  );
   const feeStructures = [];
 
   for (let i = 1; i <= 10; i++) {
@@ -1697,7 +1942,9 @@ async function runDemoSeeder() {
     if (i < 60) {
       status = "PAID";
       paidAmount = totalAmount - (discount?.amount || 0);
-      paymentDate = new Date(`2026-09-${String(5 + (i % 10)).padStart(2, "0")}T10:00:00Z`);
+      paymentDate = new Date(
+        `2026-09-${String(5 + (i % 10)).padStart(2, "0")}T10:00:00Z`,
+      );
     } else if (i < 75) {
       status = "PARTIALLY_PAID";
       paidAmount = Math.round(totalAmount * 0.5);
@@ -1714,7 +1961,11 @@ async function runDemoSeeder() {
       previousArrears = 1500;
     }
 
-    const netPayable = totalAmount + (lateFine.applied ? lateFine.amount : 0) + previousArrears - (discount?.amount || 0);
+    const netPayable =
+      totalAmount +
+      (lateFine.applied ? lateFine.amount : 0) +
+      previousArrears -
+      (discount?.amount || 0);
 
     const feeRec = await FeeRecord.create({
       studentId: student.user._id,
@@ -1727,7 +1978,10 @@ async function runDemoSeeder() {
       paymentDate,
       status,
       challanNo,
-      receiptNo: status === "PAID" ? `RCP-2026-09-${String(i + 1).padStart(3, "0")}` : "",
+      receiptNo:
+        status === "PAID"
+          ? `RCP-2026-09-${String(i + 1).padStart(3, "0")}`
+          : "",
       month: "2026-09",
       semester: "Fall 2026",
       gradeOrClass: student.grade.name,
@@ -1768,7 +2022,9 @@ async function runDemoSeeder() {
   }
 
   await PaymentTransaction.insertMany(paymentTransactions);
-  console.log(`✓ Inserted ${feeRecords.length} Student FeeRecords & ${paymentTransactions.length} PaymentTransactions.`);
+  console.log(
+    `✓ Inserted ${feeRecords.length} Student FeeRecords & ${paymentTransactions.length} PaymentTransactions.`,
+  );
 
   // -------------------------------------------------------------
   // 17. SEED EXAM SCHEDULES (Midterm 2026 for Class 1 to 10)
@@ -1790,7 +2046,8 @@ async function runDemoSeeder() {
     for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
       const examDate = new Date(`2026-10-0${5 + dayOffset}T00:00:00Z`);
       const dateStr = formatDateYMD(examDate);
-      const subName = level >= 9 && dayOffset === 3 ? "Physics" : examSubjectsCore[dayOffset];
+      const subName =
+        level >= 9 && dayOffset === 3 ? "Physics" : examSubjectsCore[dayOffset];
 
       const invigilatorTeacher = teachers[(gIdx + dayOffset) % teachers.length];
       const roomNum = `Hall ${gIdx <= 4 ? "A" : "B"} - Room ${101 + gIdx}`;
@@ -1848,14 +2105,24 @@ async function runDemoSeeder() {
   }
 
   await ExamSchedule.insertMany(examDocs);
-  console.log(`✓ Inserted ${examDocs.length} ExamSchedules for Midterm Examinations.`);
+  console.log(
+    `✓ Inserted ${examDocs.length} ExamSchedules for Midterm Examinations.`,
+  );
 
   // -------------------------------------------------------------
   // 18. SEED EXAM RESULTS / REPORT CARDS (Performance)
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Student Exam Results / Performance Report Cards ---");
+  console.log(
+    "\n--- Seeding Student Exam Results / Performance Report Cards ---",
+  );
   const performanceDocs = [];
-  const testSubjects = ["English Language", "Mathematics", "Urdu Literature", "General Science", "Islamiat & Ethics"];
+  const testSubjects = [
+    "English Language",
+    "Mathematics",
+    "Urdu Literature",
+    "General Science",
+    "Islamiat & Ethics",
+  ];
 
   for (let i = 0; i < students.length; i++) {
     const student = students[i];
@@ -1863,7 +2130,8 @@ async function runDemoSeeder() {
 
     for (let sIdx = 0; sIdx < testSubjects.length; sIdx++) {
       const subName = level >= 9 && sIdx === 3 ? "Physics" : testSubjects[sIdx];
-      const basePerformance = 45 + ((student.rollNo * 13 + sIdx * 19 + level * 7) % 52);
+      const basePerformance =
+        45 + ((student.rollNo * 13 + sIdx * 19 + level * 7) % 52);
       const marksObtained = Math.min(98, Math.max(38, basePerformance));
       const percentage = marksObtained;
 
@@ -1907,13 +2175,17 @@ async function runDemoSeeder() {
   }
 
   await Performance.insertMany(performanceDocs);
-  console.log(`✓ Inserted ${performanceDocs.length} Student Exam Performance / Report Card records.`);
+  console.log(
+    `✓ Inserted ${performanceDocs.length} Student Exam Performance / Report Card records.`,
+  );
 
   // -------------------------------------------------------------
   // 19. SEED ALERTS, ASSIGNMENTS & INQUIRIES
   // -------------------------------------------------------------
-  console.log("\n--- Seeding Institutional Alerts, Assignments & Inquiries ---");
-  
+  console.log(
+    "\n--- Seeding Institutional Alerts, Assignments & Inquiries ---",
+  );
+
   await Alert.insertMany([
     {
       instituteId,
@@ -1921,7 +2193,8 @@ async function runDemoSeeder() {
       audience: "all",
       severity: "Warning",
       title: "Midterm Examination Date Sheet Published",
-      message: "The official Midterm examination date sheet for Class 1 through Class 10 has been published. Morning shifts commence sharply at 09:00 AM.",
+      message:
+        "The official Midterm examination date sheet for Class 1 through Class 10 has been published. Morning shifts commence sharply at 09:00 AM.",
       createdBy: managerUser._id,
     },
     {
@@ -1930,7 +2203,8 @@ async function runDemoSeeder() {
       audience: "all",
       severity: "Info",
       title: "Parent-Teacher Council Meeting Scheduled",
-      message: "Parent-Teacher consultations for academic progress reviews will be held on Saturday, 3rd October 2026 from 10:00 AM to 01:00 PM.",
+      message:
+        "Parent-Teacher consultations for academic progress reviews will be held on Saturday, 3rd October 2026 from 10:00 AM to 01:00 PM.",
       createdBy: managerUser._id,
     },
     {
@@ -1939,7 +2213,8 @@ async function runDemoSeeder() {
       audience: "students",
       severity: "Info",
       title: "Annual Science & STEM Olympiad Registrations",
-      message: "Students from Classes 6 to 10 interested in robotics, coding, and science exhibits can register with the Science Department by Sep 30.",
+      message:
+        "Students from Classes 6 to 10 interested in robotics, coding, and science exhibits can register with the Science Department by Sep 30.",
       createdBy: managerUser._id,
     },
     {
@@ -1948,7 +2223,8 @@ async function runDemoSeeder() {
       audience: "faculty",
       severity: "Critical",
       title: "Payroll & Teaching Credit Cutoff Protocol",
-      message: "All faculty members are reminded that class session disputes and substitution verification must be submitted before the 28th cutoff date.",
+      message:
+        "All faculty members are reminded that class session disputes and substitution verification must be submitted before the 28th cutoff date.",
       createdBy: managerUser._id,
     },
   ]);
@@ -1958,7 +2234,8 @@ async function runDemoSeeder() {
 
   await Assignment.create({
     title: "Quadratic Equations Problem Set",
-    description: "Complete exercises 4.1 through 4.3 covering quadratic factorization and completing the square.",
+    description:
+      "Complete exercises 4.1 through 4.3 covering quadratic factorization and completing the square.",
     subject: "Mathematics",
     program: "Class 10",
     gradeOrClass: "Class 10",
@@ -1990,7 +2267,8 @@ async function runDemoSeeder() {
 
   await Assignment.create({
     title: "Introduction to HTML5 & Web Layouts",
-    description: "Design a responsive 3-section webpage demonstrating semantic HTML tags, tables, and form controls.",
+    description:
+      "Design a responsive 3-section webpage demonstrating semantic HTML tags, tables, and form controls.",
     subject: "Computer Science",
     program: "Class 9",
     gradeOrClass: "Class 9",
@@ -2020,7 +2298,8 @@ async function runDemoSeeder() {
       instituteType: "School",
       email: "asif.shahzad@health.kp.gov.pk",
       phone: "0300-9876543",
-      message: "Seeking admission criteria and fee concession details for Class 7 and Class 9 for the upcoming academic spring intake.",
+      message:
+        "Seeking admission criteria and fee concession details for Class 7 and Class 9 for the upcoming academic spring intake.",
     },
     {
       fullName: "Engr. Noman Khattak",
@@ -2028,7 +2307,8 @@ async function runDemoSeeder() {
       instituteType: "School",
       email: "noman.khattak@nespak.com.pk",
       phone: "0321-7654321",
-      message: "Inquiring about Cambridge O-Level curriculum transition, science laboratory infrastructure, and school transport routes for Hayatabad Phase 4.",
+      message:
+        "Inquiring about Cambridge O-Level curriculum transition, science laboratory infrastructure, and school transport routes for Hayatabad Phase 4.",
     },
     {
       fullName: "Mrs. Shagufta Parveen",
@@ -2036,7 +2316,8 @@ async function runDemoSeeder() {
       instituteType: "School",
       email: "shagufta.parveen@gmail.com",
       phone: "0345-8765432",
-      message: "Requesting prospectus and details regarding admission test dates for Class 1.",
+      message:
+        "Requesting prospectus and details regarding admission test dates for Class 1.",
     },
   ]);
 
@@ -2045,9 +2326,13 @@ async function runDemoSeeder() {
   // -------------------------------------------------------------
   // 20. COMPREHENSIVE DATA INTEGRITY VALIDATION
   // -------------------------------------------------------------
-  console.log("\n==================================================================");
+  console.log(
+    "\n==================================================================",
+  );
   console.log("  VERIFICATION & DATASET CONSISTENCY REPORT");
-  console.log("==================================================================");
+  console.log(
+    "==================================================================",
+  );
 
   const finalStats = {
     campus: (await Campus.findById(campusId)).name,
@@ -2056,17 +2341,34 @@ async function runDemoSeeder() {
     sectionsCount: await Section.countDocuments({ campusId }),
     subjectsCount: await Subject.countDocuments({ campusId }),
     gradeSubjectsCount: await GradeSubject.countDocuments({ campusId }),
-    teachersCount: await User.countDocuments({ campusId, role: { $in: ["teacher", "faculty"] } }),
-    teacherProfilesCount: await TeacherProfile.countDocuments({ user: { $in: teachers.map(t => t.user._id) } }),
+    teachersCount: await User.countDocuments({
+      campusId,
+      role: { $in: ["teacher", "faculty"] },
+    }),
+    teacherProfilesCount: await TeacherProfile.countDocuments({
+      user: { $in: teachers.map((t) => t.user._id) },
+    }),
     studentsCount: await User.countDocuments({ campusId, role: "student" }),
-    studentProfilesCount: await StudentProfile.countDocuments({ user: { $in: students.map(s => s.user._id) } }),
-    teacherAssignmentsCount: await TeacherAssignment.countDocuments({ campusId }),
+    studentProfilesCount: await StudentProfile.countDocuments({
+      user: { $in: students.map((s) => s.user._id) },
+    }),
+    teacherAssignmentsCount: await TeacherAssignment.countDocuments({
+      campusId,
+    }),
     timetableSlots: await Timetable.countDocuments({ campusId }),
     classScheduleSlots: await ClassSchedule.countDocuments({ campusId }),
-    studentAttendanceRecords: await StudentAttendance.countDocuments({ campusId }),
-    teacherAttendanceRecords: await TeacherAttendance.countDocuments({ campusId }),
-    teacherClassSessions: await TeacherClassSession.countDocuments({ campusId }),
-    substituteAssignments: await SubstituteAssignment.countDocuments({ campusId }),
+    studentAttendanceRecords: await StudentAttendance.countDocuments({
+      campusId,
+    }),
+    teacherAttendanceRecords: await TeacherAttendance.countDocuments({
+      campusId,
+    }),
+    teacherClassSessions: await TeacherClassSession.countDocuments({
+      campusId,
+    }),
+    substituteAssignments: await SubstituteAssignment.countDocuments({
+      campusId,
+    }),
     attendanceApprovals: await AttendanceApproval.countDocuments({ campusId }),
     payrollAdjustments: await PayrollAdjustment.countDocuments({ campusId }),
     monthlyPayrolls: await MonthlyPayroll.countDocuments({ campusId }),
@@ -2083,15 +2385,22 @@ async function runDemoSeeder() {
 
   console.log("\n--- Checking Data Integrity Assertions ---");
   const missingStudentProfiles = await StudentProfile.countDocuments({
-    user: { $in: students.map(s => s.user._id) },
+    user: { $in: students.map((s) => s.user._id) },
     gradeId: { $exists: false },
   });
-  console.log(`✓ Orphan Student Profiles: ${missingStudentProfiles} (Expected: 0)`);
+  console.log(
+    `✓ Orphan Student Profiles: ${missingStudentProfiles} (Expected: 0)`,
+  );
 
   const orphanTimetables = await Timetable.countDocuments({
     campusId,
     isBreak: false,
-    $or: [{ gradeId: null }, { sectionId: null }, { subjectId: null }, { teacherId: null }],
+    $or: [
+      { gradeId: null },
+      { sectionId: null },
+      { subjectId: null },
+      { teacherId: null },
+    ],
   });
   console.log(`✓ Broken Timetable Slots: ${orphanTimetables} (Expected: 0)`);
 
@@ -2105,11 +2414,17 @@ async function runDemoSeeder() {
     campusId,
     studentId: null,
   });
-  console.log(`✓ Orphan Exam Performance Records: ${orphanPerformance} (Expected: 0)`);
+  console.log(
+    `✓ Orphan Exam Performance Records: ${orphanPerformance} (Expected: 0)`,
+  );
 
-  console.log("\n==================================================================");
+  console.log(
+    "\n==================================================================",
+  );
   console.log("  DEMO DATASET SEEDING COMPLETED SUCCESSFULLY!");
-  console.log("==================================================================");
+  console.log(
+    "==================================================================",
+  );
 
   process.exit(0);
 }

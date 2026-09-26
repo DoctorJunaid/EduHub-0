@@ -71,7 +71,9 @@ const PayrollApprovals = () => {
       if (statusFilter && statusFilter !== "All") {
         params.append("status", statusFilter);
       }
-      const res = await api.get(`/campus/salary/approvals?${params.toString()}`);
+      const res = await api.get(
+        `/campus/salary/approvals?${params.toString()}`,
+      );
       return res.data?.data || { records: [], total: 0 };
     },
     staleTime: 5 * 60 * 1000,
@@ -82,7 +84,9 @@ const PayrollApprovals = () => {
 
   const approveMutation = useMutation({
     mutationFn: async ({ id, notes }) => {
-      const res = await api.post(`/campus/salary/approvals/${id}/approve`, { notes });
+      const res = await api.post(`/campus/salary/approvals/${id}/approve`, {
+        notes,
+      });
       return res.data;
     },
     onSuccess: (data, variables) => {
@@ -101,7 +105,10 @@ const PayrollApprovals = () => {
 
   const rejectMutation = useMutation({
     mutationFn: async ({ id, reason, notes }) => {
-      const res = await api.post(`/campus/salary/approvals/${id}/reject`, { reason, notes });
+      const res = await api.post(`/campus/salary/approvals/${id}/reject`, {
+        reason,
+        notes,
+      });
       return res.data;
     },
     onSuccess: (data, variables) => {
@@ -170,7 +177,7 @@ const PayrollApprovals = () => {
   const rejectedCount = approvals.filter((a) => a.status === "Rejected").length;
   const totalDeductionSum = approvals.reduce(
     (sum, a) => sum + (a.deductionProof?.deductionAmount || 0),
-    0
+    0,
   );
 
   return (
@@ -179,34 +186,50 @@ const PayrollApprovals = () => {
         <div className="kpi-card campus-kpi-card">
           <div className="kpi-content">
             <span className="kpi-label">Pending Review</span>
-            <div className="kpi-value text-amber-600 dark:text-amber-400">{pendingCount}</div>
+            <div className="kpi-value text-amber-600 dark:text-amber-400">
+              {pendingCount}
+            </div>
             <span className="kpi-subtext">Requires Admin authorization</span>
           </div>
-          <div className="kpi-icon-box amber"><Clock size={22} /></div>
+          <div className="kpi-icon-box amber">
+            <Clock size={22} />
+          </div>
         </div>
         <div className="kpi-card campus-kpi-card">
           <div className="kpi-content">
             <span className="kpi-label">Approved &amp; Applied</span>
-            <div className="kpi-value text-emerald-600 dark:text-emerald-400">{approvedCount}</div>
+            <div className="kpi-value text-emerald-600 dark:text-emerald-400">
+              {approvedCount}
+            </div>
             <span className="kpi-subtext">Cryptographically linked</span>
           </div>
-          <div className="kpi-icon-box emerald"><ShieldCheck size={22} /></div>
+          <div className="kpi-icon-box emerald">
+            <ShieldCheck size={22} />
+          </div>
         </div>
         <div className="kpi-card campus-kpi-card">
           <div className="kpi-content">
             <span className="kpi-label">Rejected / Cancelled</span>
-            <div className="kpi-value text-rose-600 dark:text-rose-400">{rejectedCount}</div>
+            <div className="kpi-value text-rose-600 dark:text-rose-400">
+              {rejectedCount}
+            </div>
             <span className="kpi-subtext">Zero deduction applied</span>
           </div>
-          <div className="kpi-icon-box rose"><ShieldAlert size={22} /></div>
+          <div className="kpi-icon-box rose">
+            <ShieldAlert size={22} />
+          </div>
         </div>
         <div className="kpi-card campus-kpi-card">
           <div className="kpi-content">
             <span className="kpi-label">Total Deductions in Scope</span>
-            <div className="kpi-value text-slate-800 dark:text-white font-mono">PKR {totalDeductionSum.toLocaleString()}</div>
+            <div className="kpi-value text-slate-800 dark:text-white font-mono">
+              PKR {totalDeductionSum.toLocaleString()}
+            </div>
             <span className="kpi-subtext">For month {month}</span>
           </div>
-          <div className="kpi-icon-box indigo"><DollarSign size={22} /></div>
+          <div className="kpi-icon-box indigo">
+            <DollarSign size={22} />
+          </div>
         </div>
       </div>
 
@@ -237,22 +260,24 @@ const PayrollApprovals = () => {
       {/* Control / Filter Bar */}
       <div className="approvals-control-bar">
         <div className="status-tab-group">
-          {["Pending", "Approved", "Rejected", "Cancelled", "All"].map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => {
-                setStatusFilter(tab);
-                setPage(1);
-              }}
-              className={`status-tab ${statusFilter === tab ? "active" : ""}`}
-            >
-              {tab === "Pending" && pendingCount > 0 && (
-                <span className="pulse-indicator" />
-              )}
-              {tab}
-            </button>
-          ))}
+          {["Pending", "Approved", "Rejected", "Cancelled", "All"].map(
+            (tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(tab);
+                  setPage(1);
+                }}
+                className={`status-tab ${statusFilter === tab ? "active" : ""}`}
+              >
+                {tab === "Pending" && pendingCount > 0 && (
+                  <span className="pulse-indicator" />
+                )}
+                {tab}
+              </button>
+            ),
+          )}
         </div>
 
         <div className="search-box-wrapper">
@@ -285,7 +310,8 @@ const PayrollApprovals = () => {
             </div>
             <h3>No Approval Records Found</h3>
             <p>
-              There are no {statusFilter !== "All" ? statusFilter.toLowerCase() : ""}{" "}
+              There are no{" "}
+              {statusFilter !== "All" ? statusFilter.toLowerCase() : ""}{" "}
               deduction approvals recorded for {month}.
             </p>
           </div>
@@ -334,14 +360,17 @@ const PayrollApprovals = () => {
                     <td>
                       <div className="date-cell">
                         <span className="font-semibold text-slate-800 dark:text-slate-100">
-                          {new Date(item.absenceProof?.date || item.date).toLocaleDateString("en-US", {
+                          {new Date(
+                            item.absenceProof?.date || item.date,
+                          ).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                           })}
                         </span>
                         <span className="marker-info">
-                          Marked by: {item.absenceProof?.markedBy?.name || "System"}
+                          Marked by:{" "}
+                          {item.absenceProof?.markedBy?.name || "System"}
                         </span>
                       </div>
                     </td>
@@ -352,7 +381,8 @@ const PayrollApprovals = () => {
                           - PKR {deduction.toLocaleString()}
                         </span>
                         <span className="rate-info">
-                          Formula: PKR {Math.round(item.deductionProof?.dailyRate || 0)}/day
+                          Formula: PKR{" "}
+                          {Math.round(item.deductionProof?.dailyRate || 0)}/day
                         </span>
                       </div>
                     </td>
@@ -364,17 +394,24 @@ const PayrollApprovals = () => {
                             + PKR {bonus.toLocaleString()}
                           </span>
                           <span className="sub-count">
-                            {item.substituteProof?.assignments?.length || 1} cover class(es)
+                            {item.substituteProof?.assignments?.length || 1}{" "}
+                            cover class(es)
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">None</span>
+                        <span className="text-xs text-slate-400 italic">
+                          None
+                        </span>
                       )}
                     </td>
 
                     <td>
-                      <span className={`status-pill ${item.status.toLowerCase()}`}>
-                        {item.status === "Approved" && <CheckCircle2 size={12} />}
+                      <span
+                        className={`status-pill ${item.status.toLowerCase()}`}
+                      >
+                        {item.status === "Approved" && (
+                          <CheckCircle2 size={12} />
+                        )}
                         {item.status === "Rejected" && <XCircle size={12} />}
                         {item.status === "Pending" && <Clock size={12} />}
                         {item.status}
@@ -385,7 +422,9 @@ const PayrollApprovals = () => {
                       <div className="checksum-cell">
                         <span
                           className="hash-preview font-mono"
-                          title={item.application?.checksumHash || "Pending Hash"}
+                          title={
+                            item.application?.checksumHash || "Pending Hash"
+                          }
                         >
                           {item.application?.checksumHash
                             ? `${item.application.checksumHash.slice(0, 10)}...`

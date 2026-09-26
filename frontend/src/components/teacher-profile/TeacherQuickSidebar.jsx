@@ -26,13 +26,17 @@ export default function TeacherQuickSidebar({
   const user = teacher?.userId || teacher?.user || {};
   const email = user.email || teacher?.email || "teacher@eduhub.edu.pk";
   const phone = user.phone || teacher?.phone || "+92 300 1234567";
-  const employeeId = teacher?.employeeId || (teacher?._id ? `EMP-${String(teacher._id).slice(-4).toUpperCase()}` : "EMP-001");
+  const employeeId =
+    teacher?.employeeId ||
+    (teacher?._id
+      ? `EMP-${String(teacher._id).slice(-4).toUpperCase()}`
+      : "EMP-001");
   const hireDate = teacher?.hireDate
     ? new Date(teacher.hireDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
     : "Aug 15, 2020";
 
   const copyToClipboard = (text) => {
@@ -64,7 +68,9 @@ export default function TeacherQuickSidebar({
         </div>
         <div className="teacher-widget-row">
           <span className="teacher-widget-label">Weekly Load</span>
-          <span className="teacher-widget-val">{stats.weeklyPeriods || 0} periods</span>
+          <span className="teacher-widget-val">
+            {stats.weeklyPeriods || 0} periods
+          </span>
         </div>
         <div className="teacher-widget-row">
           <span className="teacher-widget-label">Attendance Rate</span>
@@ -74,7 +80,9 @@ export default function TeacherQuickSidebar({
         </div>
         <div className="teacher-widget-row">
           <span className="teacher-widget-label">Substitutes (30d)</span>
-          <span className="teacher-widget-val">{stats.substituteDuties30d || 0} covered</span>
+          <span className="teacher-widget-val">
+            {stats.substituteDuties30d || 0} covered
+          </span>
         </div>
       </div>
 
@@ -85,14 +93,28 @@ export default function TeacherQuickSidebar({
           <span>Contact Details</span>
         </div>
         <div className="teacher-widget-row" style={{ alignItems: "center" }}>
-          <span className="teacher-widget-label truncate" style={{ maxWidth: "200px" }}>{email}</span>
+          <span
+            className="teacher-widget-label truncate"
+            style={{ maxWidth: "200px" }}
+          >
+            {email}
+          </span>
           <button
             type="button"
             className="toolbar-btn toolbar-btn-outline"
-            style={{ height: "26px", minHeight: "26px", padding: "0 8px", fontSize: "10px" }}
+            style={{
+              height: "26px",
+              minHeight: "26px",
+              padding: "0 8px",
+              fontSize: "10px",
+            }}
             onClick={() => copyToClipboard(email)}
           >
-            {copiedEmail ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+            {copiedEmail ? (
+              <Check size={11} className="text-emerald-600" />
+            ) : (
+              <Copy size={11} />
+            )}
             <span>{copiedEmail ? "Copied" : "Copy"}</span>
           </button>
         </div>
@@ -101,7 +123,12 @@ export default function TeacherQuickSidebar({
           <a
             href={`tel:${phone}`}
             className="toolbar-btn toolbar-btn-outline"
-            style={{ height: "26px", minHeight: "26px", padding: "0 8px", fontSize: "10px" }}
+            style={{
+              height: "26px",
+              minHeight: "26px",
+              padding: "0 8px",
+              fontSize: "10px",
+            }}
           >
             <ExternalLink size={11} />
             <span>Call</span>
@@ -118,8 +145,15 @@ export default function TeacherQuickSidebar({
         <button
           type="button"
           className="toolbar-btn toolbar-btn-outline"
-          style={{ width: "100%", justifyContent: "flex-start", height: "32px" }}
-          onClick={onMarkAttendance || (() => toast.success("Attendance verified for today"))}
+          style={{
+            width: "100%",
+            justifyContent: "flex-start",
+            height: "32px",
+          }}
+          onClick={
+            onMarkAttendance ||
+            (() => toast.success("Attendance verified for today"))
+          }
         >
           <CheckCircle2 size={13} className="text-emerald-600" />
           <span>Mark Attendance Today</span>
@@ -128,8 +162,15 @@ export default function TeacherQuickSidebar({
         <button
           type="button"
           className="toolbar-btn toolbar-btn-outline"
-          style={{ width: "100%", justifyContent: "flex-start", height: "32px" }}
-          onClick={onAssignSubstitute || (() => toast.success("Opening substitute assign dialog"))}
+          style={{
+            width: "100%",
+            justifyContent: "flex-start",
+            height: "32px",
+          }}
+          onClick={
+            onAssignSubstitute ||
+            (() => toast.success("Opening substitute assign dialog"))
+          }
         >
           <CalendarPlus size={13} className="text-indigo-600" />
           <span>Assign Substitute</span>

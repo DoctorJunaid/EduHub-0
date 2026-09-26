@@ -31,16 +31,22 @@ const features = [
   [Users, "Students", "Keep schedules visible"],
 ];
 
-export default function AuthLayout({ children, title, eyebrow, subtitle, login = false }) {
+export default function AuthLayout({
+  children,
+  title,
+  eyebrow,
+  subtitle,
+  login = false,
+}) {
   return (
-    <main className={`signup-page${login ? ' auth-login' : ''}`}>
+    <main className={`signup-page${login ? " auth-login" : ""}`}>
       <div className="signup-shell">
         <aside className="signup-promo" aria-label="About EduHub">
           <a
             href={getLandingPageUrl()}
             className="signup-brand"
             title="Return to EduHub Homepage"
-            style={{ textDecoration: 'none', color: 'inherit' }}
+            style={{ textDecoration: "none", color: "inherit" }}
           >
             <img
               src={`${import.meta.env.BASE_URL}brand/eduhub-logo.png`}
@@ -59,9 +65,15 @@ export default function AuthLayout({ children, title, eyebrow, subtitle, login =
               better together.
             </h2>
             <p>
-              {login ? 'Sign in to your EduHub workspace and stay connected with your learning ecosystem.' : <>Sign up for your EduHub workspace and be part of
-              <br className="signup-desktop-break" /> a smarter, more connected
-              learning ecosystem.</>}
+              {login ? (
+                "Sign in to your EduHub workspace and stay connected with your learning ecosystem."
+              ) : (
+                <>
+                  Sign up for your EduHub workspace and be part of
+                  <br className="signup-desktop-break" /> a smarter, more
+                  connected learning ecosystem.
+                </>
+              )}
             </p>
           </div>
           <div className="signup-benefits">
