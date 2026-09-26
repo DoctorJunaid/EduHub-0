@@ -45,42 +45,42 @@ export default function OverviewTab({ teacher }) {
   const isActive = teacher?.isActive !== false && user.isActive !== false;
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="teacher-overview-tab space-y-6">
+      <div className="teacher-overview-grid grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 1. Personal Information Card */}
-        <Card className="bg-white border-zinc-200/80 shadow-xs">
+        <Card className="teacher-overview-card bg-white border-zinc-200/80 shadow-xs">
           <CardHeader className="pb-3 border-b border-zinc-100">
             <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2">
               <User className="w-4 h-4 text-zinc-600" />
               Personal Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 divide-y divide-zinc-100 text-xs">
-            <div className="py-2.5 flex items-center justify-between">
+          <CardContent className="teacher-overview-card-content pt-4 divide-y divide-zinc-100 text-xs">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Full Name</span>
               <span className="font-semibold text-zinc-900">{name}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Official Email</span>
               <span className="font-medium text-zinc-800">{email}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Phone Number</span>
               <span className="font-medium text-zinc-800">{phone}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Qualification</span>
               <span className="font-semibold text-zinc-900">
                 {qualification}
               </span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">
                 Teaching Experience
               </span>
               <span className="font-semibold text-zinc-900">{experience}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">
                 National ID / CNIC
               </span>
@@ -90,29 +90,29 @@ export default function OverviewTab({ teacher }) {
         </Card>
 
         {/* 2. Employment Information Card */}
-        <Card className="bg-white border-zinc-200/80 shadow-xs">
+        <Card className="teacher-overview-card bg-white border-zinc-200/80 shadow-xs">
           <CardHeader className="pb-3 border-b border-zinc-100">
             <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-zinc-600" />
               Employment Details
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 divide-y divide-zinc-100 text-xs">
-            <div className="py-2.5 flex items-center justify-between">
+          <CardContent className="teacher-overview-card-content pt-4 divide-y divide-zinc-100 text-xs">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Employee ID</span>
               <span className="font-mono font-bold text-zinc-900">
                 {employeeId}
               </span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Designation</span>
               <span className="font-semibold text-zinc-900">{designation}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Department</span>
               <span className="font-semibold text-zinc-900">{department}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Employment Type</span>
               <Badge
                 variant="outline"
@@ -121,11 +121,11 @@ export default function OverviewTab({ teacher }) {
                 Permanent (Full-time)
               </Badge>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Joining Date</span>
               <span className="font-semibold text-zinc-900">{joiningDate}</span>
             </div>
-            <div className="py-2.5 flex items-center justify-between">
+            <div className="teacher-overview-row py-2.5 flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Reporting To</span>
               <span className="font-semibold text-zinc-900">
                 Head of Department / Campus Principal

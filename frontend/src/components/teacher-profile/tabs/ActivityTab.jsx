@@ -20,22 +20,24 @@ export default function ActivityTab({
   const logs = activityData || [];
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-4 rounded-xl border border-zinc-200/80 shadow-xs">
-        <h2 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+    <div className="teacher-activity-tab space-y-6">
+      <Card className="teacher-activity-card bg-white border-zinc-200/80 shadow-xs overflow-hidden">
+        <CardHeader className="teacher-activity-header border-b border-zinc-100">
+          <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2">
           <History className="w-4 h-4 text-zinc-600" />
           Audit &amp; Account Activity Trail
-        </h2>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          Immutable audit record of institutional actions, profile modifications, and assignment updates.
-        </p>
-      </div>
-
-      <Card className="bg-white border-zinc-200/80 shadow-xs overflow-hidden">
-        <CardContent className="p-0 divide-y divide-zinc-100">
+          </CardTitle>
+          <p className="teacher-activity-subtitle text-xs text-zinc-500 mt-0.5">
+            Immutable audit record of institutional actions, profile modifications, and assignment updates.
+          </p>
+        </CardHeader>
+        <CardContent className="teacher-activity-content p-0 divide-y divide-zinc-100">
           {logs.length === 0 ? (
-            <div className="p-10 text-center text-xs text-zinc-500">
-              No audit logs recorded for this teacher yet.
+            <div className="teacher-activity-empty text-center text-xs text-zinc-500">
+              <div className="teacher-activity-empty-icon">
+                <History className="w-5 h-5" />
+              </div>
+              <p>No audit logs recorded for this teacher yet.</p>
             </div>
           ) : (
             logs.map((log) => {
@@ -52,10 +54,10 @@ export default function ActivityTab({
               return (
                 <div
                   key={log._id || log.timestamp}
-                  className="p-4 flex items-start justify-between gap-4 hover:bg-zinc-50/60 transition-colors text-xs"
+                  className="teacher-activity-record p-4 flex items-start justify-between gap-4 hover:bg-zinc-50/60 transition-colors text-xs"
                 >
                   <div className="flex items-start gap-3.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="teacher-activity-record-icon w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 mt-0.5">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
@@ -79,7 +81,7 @@ export default function ActivityTab({
                     </div>
                   </div>
 
-                  <span className="text-[11px] font-mono text-zinc-400 shrink-0">
+                  <span className="teacher-activity-time text-[11px] font-mono text-zinc-400 shrink-0">
                     {formattedTime}
                   </span>
                 </div>

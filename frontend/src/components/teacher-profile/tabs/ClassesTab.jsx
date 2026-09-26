@@ -87,9 +87,9 @@ export default function ClassesTab({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="teacher-classes-tab flex flex-col gap-4">
       {/* 1. Top Sub-header Toolbar */}
-      <div className="campus-toolbar" style={{ borderRadius: "8px", border: "1px solid #e4e4e7" }}>
+      <div className="teacher-classes-toolbar campus-toolbar" style={{ borderRadius: "8px", border: "1px solid #e4e4e7" }}>
         <div className="toolbar-left">
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "13px", fontWeight: "700", color: "#09090b" }}>
@@ -125,7 +125,7 @@ export default function ClassesTab({
 
       {/* 2. Empty State */}
       {classesList.length === 0 ? (
-        <div className="bg-white border border-dashed border-zinc-200 rounded-lg p-12 text-center flex flex-col items-center justify-center">
+        <div className="teacher-classes-empty-state bg-white border border-dashed border-zinc-200 rounded-lg p-12 text-center flex flex-col items-center justify-center">
           <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-500 flex items-center justify-center mb-3">
             <BookOpen size={22} />
           </div>
@@ -159,12 +159,12 @@ export default function ClassesTab({
           </div>
 
           {/* 4. Allocation Summary Table */}
-          <div className="campus-table-container" style={{ border: "1px solid #e4e4e7", borderRadius: "8px", marginTop: "8px" }}>
-            <div className="campus-toolbar" style={{ borderBottom: "1px solid #e4e4e7", background: "#ffffff" }}>
+          <div className="teacher-classes-summary campus-table-container" style={{ border: "1px solid #e4e4e7", borderRadius: "8px", marginTop: "8px" }}>
+            <div className="teacher-classes-summary-header campus-toolbar" style={{ borderBottom: "1px solid #e4e4e7", background: "#ffffff" }}>
               <span style={{ fontSize: "12px", fontWeight: "700", color: "#09090b" }}>
                 Academic Allocation Summary
               </span>
-              <div className="toolbar-search" style={{ width: "200px" }}>
+              <div className="teacher-classes-filter toolbar-search" style={{ width: "200px" }}>
                 <Search size={13} />
                 <input
                   type="text"
@@ -175,7 +175,7 @@ export default function ClassesTab({
               </div>
             </div>
 
-            <Table className="campus-table">
+            <Table className="teacher-classes-data-table campus-table">
               <TableHeader>
                 <TableRow>
                   <TableHead style={{ width: "22%" }}>Class / Section</TableHead>
@@ -193,9 +193,9 @@ export default function ClassesTab({
                       {row.className}
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium text-zinc-800">{row.subject}</span>
+                      <span className="teacher-classes-subject font-medium text-zinc-800">{row.subject}</span>
                       {row.subjectCode && (
-                        <span className="text-[10px] text-zinc-400 block font-mono">
+                        <span className="teacher-classes-subject-code text-[10px] text-zinc-400 block font-mono">
                           {row.subjectCode}
                         </span>
                       )}
@@ -220,7 +220,7 @@ export default function ClassesTab({
                       <button
                         type="button"
                         onClick={() => setUnassignTarget(row)}
-                        className="table-icon-btn delete"
+                        className="teacher-unassign-button table-icon-btn delete"
                         style={{ height: "26px", width: "auto", padding: "0 6px", fontSize: "11px", gap: "4px" }}
                         title="Unassign Class"
                       >

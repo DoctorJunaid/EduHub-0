@@ -51,7 +51,9 @@ export default function AssignClassDialog({
   }, [open]);
 
   const filteredSections = sections.filter(
-    (s) => !form.gradeId || String(s.gradeId?._id || s.gradeId) === String(form.gradeId)
+    (s) =>
+      !form.gradeId ||
+      String(s.gradeId?._id || s.gradeId) === String(form.gradeId),
   );
 
   const handleSubmit = async (e) => {
@@ -71,8 +73,8 @@ export default function AssignClassDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[460px] bg-white text-zinc-900">
-        <DialogHeader>
+      <DialogContent className="teacher-assign-dialog sm:max-w-[520px] bg-white text-zinc-900">
+        <DialogHeader className="teacher-assign-dialog-header">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold">
             <BookOpen className="w-5 h-5 text-zinc-700" />
             Assign Class & Subject
@@ -88,14 +90,21 @@ export default function AssignClassDialog({
             <span>Loading academic configuration...</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <form
+            onSubmit={handleSubmit}
+            className="teacher-assign-dialog-form space-y-4 py-2"
+          >
             {/* Grade/Class Select */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-zinc-700">Grade / Class *</Label>
+              <Label className="text-xs font-semibold text-zinc-700">
+                Grade / Class *
+              </Label>
               <select
                 className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 value={form.gradeId}
-                onChange={(e) => setForm({ ...form, gradeId: e.target.value, sectionId: "" })}
+                onChange={(e) =>
+                  setForm({ ...form, gradeId: e.target.value, sectionId: "" })
+                }
                 required
               >
                 <option value="">Select Grade / Class</option>
@@ -109,15 +118,21 @@ export default function AssignClassDialog({
 
             {/* Section Select */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-zinc-700">Section *</Label>
+              <Label className="text-xs font-semibold text-zinc-700">
+                Section *
+              </Label>
               <select
                 className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:bg-zinc-50 disabled:opacity-50"
                 value={form.sectionId}
-                onChange={(e) => setForm({ ...form, sectionId: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, sectionId: e.target.value })
+                }
                 required
                 disabled={!form.gradeId}
               >
-                <option value="">{form.gradeId ? "Select Section" : "Select Grade first"}</option>
+                <option value="">
+                  {form.gradeId ? "Select Section" : "Select Grade first"}
+                </option>
                 {filteredSections.map((s) => (
                   <option key={s._id || s.id} value={s._id || s.id}>
                     {s.name}
@@ -128,11 +143,15 @@ export default function AssignClassDialog({
 
             {/* Subject Select */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-zinc-700">Subject *</Label>
+              <Label className="text-xs font-semibold text-zinc-700">
+                Subject *
+              </Label>
               <select
                 className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 value={form.subjectId}
-                onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, subjectId: e.target.value })
+                }
                 required
               >
                 <option value="">Select Subject</option>
@@ -144,7 +163,7 @@ export default function AssignClassDialog({
               </select>
             </div>
 
-            <DialogFooter className="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
+            <DialogFooter className="teacher-assign-dialog-footer pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"

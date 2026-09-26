@@ -243,3 +243,526 @@
   border-color: #09090b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
+
+/* Feature-local spacing overrides for the Faculty Details workspace. */
+.teacher-profile-page .teacher-profile-topbar {
+  min-height: 68px;
+  padding: 12px 20px;
+}
+.teacher-profile-page .teacher-topbar-sub {
+  line-height: 1.45;
+}
+.teacher-profile-page .campus-kpi-card {
+  min-height: 72px;
+  padding: 12px 20px;
+}
+.teacher-profile-page .teacher-tabs-bar {
+  height: 54px;
+  min-height: 54px;
+  padding: 0 20px;
+  gap: 6px;
+}
+.teacher-profile-page .teacher-tab-btn {
+  height: 34px;
+  padding: 0 12px;
+  gap: 7px;
+}
+.teacher-profile-body {
+  grid-template-columns: minmax(0, 1fr) 336px;
+}
+.teacher-main-col,
+.teacher-side-col {
+  padding: 20px;
+  gap: 20px;
+}
+.teacher-main-col > .space-y-6 {
+  --tw-space-y-reverse: 0;
+}
+.teacher-main-col > .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 20px !important;
+}
+.teacher-profile-page [data-slot="card"] {
+  gap: 0;
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+.teacher-profile-page [data-slot="card-header"] {
+  gap: 6px;
+  padding: 18px 20px !important;
+}
+.teacher-profile-page [data-slot="card-content"] {
+  padding: 18px 20px !important;
+}
+.teacher-profile-page [data-slot="table-container"] {
+  overflow-x: auto;
+}
+.teacher-profile-page [data-slot="table"] th,
+.teacher-profile-page [data-slot="table"] td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.teacher-widget-card {
+  padding: 18px;
+  gap: 12px;
+}
+.teacher-widget-row {
+  min-height: 32px;
+  padding: 7px 0;
+  gap: 12px;
+}
+.teacher-widget-label {
+  min-width: 0;
+}
+.teacher-widget-val {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.teacher-profile-page .teacher-payroll-gross-metric {
+  color: #09090b !important;
+  background: #fafafa !important;
+  border: 1px solid #e4e4e7;
+}
+.teacher-profile-page .teacher-payroll-gross-metric span,
+.teacher-profile-page .teacher-payroll-gross-metric p {
+  color: #09090b !important;
+}
+.teacher-classes-toolbar {
+  height: auto;
+  min-height: 56px;
+  padding: 10px 16px;
+}
+.teacher-classes-empty-state {
+  min-height: 220px;
+  padding: 32px !important;
+}
+.teacher-classes-summary {
+  overflow-x: auto;
+}
+.teacher-classes-summary-header {
+  min-height: 56px;
+  height: auto;
+  padding: 10px 16px;
+}
+.teacher-classes-filter {
+  min-height: 36px;
+  padding: 0 10px;
+}
+.teacher-classes-data-table th {
+  height: 42px;
+  padding: 0 16px;
+  vertical-align: middle;
+}
+.teacher-classes-data-table td {
+  min-height: 64px;
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+.teacher-classes-subject {
+  display: block;
+  line-height: 1.35;
+}
+.teacher-classes-subject-code {
+  margin-top: 3px;
+  line-height: 1.3;
+}
+.teacher-unassign-button {
+  min-width: 84px !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 6px;
+  white-space: nowrap;
+  justify-content: center;
+}
+.teacher-unassign-button:hover {
+  background: #fef2f2;
+}
+.teacher-unassign-button:focus-visible {
+  outline: 2px solid #fca5a5;
+  outline-offset: 2px;
+}
+.teacher-payroll-metrics > div {
+  display: flex;
+  min-height: 96px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px !important;
+}
+.teacher-payroll-card,
+.teacher-payroll-history {
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+.teacher-payroll-card-header,
+.teacher-payroll-history-header {
+  min-height: 72px;
+  padding: 16px 20px !important;
+  gap: 16px;
+}
+.teacher-payroll-metrics {
+  margin-bottom: 16px !important;
+}
+.teacher-payroll-daily-rate {
+  min-height: 48px;
+  margin-top: 16px;
+  margin-bottom: 2px;
+  padding: 12px 14px !important;
+  gap: 12px;
+  line-height: 1.45;
+}
+.teacher-payroll-daily-rate .badge {
+  flex: 0 0 auto;
+}
+.teacher-payroll-table {
+  width: 100%;
+}
+.teacher-payroll-data-table th {
+  height: 42px;
+  padding: 0 18px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+}
+.teacher-payroll-data-table td {
+  min-height: 52px;
+  padding: 13px 18px;
+  vertical-align: middle;
+}
+.teacher-payroll-status {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  line-height: 1;
+}
+.teacher-payroll-payslip-action {
+  min-width: 60px;
+  min-height: 32px;
+  padding: 0 8px !important;
+}
+.teacher-overview-card {
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+.teacher-overview-card-content {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+.teacher-overview-row {
+  min-width: 0;
+  gap: 16px;
+  padding: 8px 0 !important;
+  line-height: 1.4;
+}
+.teacher-overview-row > :first-child {
+  flex: 0 1 42%;
+  min-width: 0;
+}
+.teacher-overview-row > :last-child {
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.teacher-documents-tab,
+.teacher-substitutes-tab {
+  --tw-space-y-reverse: 0;
+}
+.teacher-documents-tab > :not([hidden]) ~ :not([hidden]),
+.teacher-substitutes-tab > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 20px !important;
+}
+.teacher-documents-header {
+  min-height: 76px;
+  padding: 16px 18px !important;
+  gap: 16px;
+}
+.teacher-documents-heading h2 {
+  font-size: 15px;
+  line-height: 1.3;
+}
+.teacher-documents-heading p {
+  line-height: 1.45;
+}
+.teacher-documents-upload {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  flex: 0 0 auto;
+}
+.teacher-documents-grid {
+  gap: 16px !important;
+}
+.teacher-document-card {
+  min-height: 112px;
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+.teacher-document-card-content {
+  min-width: 0;
+  padding: 18px !important;
+  gap: 12px;
+}
+.teacher-document-main,
+.teacher-document-copy {
+  min-width: 0;
+}
+.teacher-document-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #52525b;
+  background: #f4f4f5;
+}
+.teacher-document-title {
+  line-height: 1.35;
+}
+.teacher-document-meta {
+  min-width: 0;
+  flex-wrap: wrap;
+  row-gap: 2px;
+  line-height: 1.35;
+}
+.teacher-document-verified {
+  white-space: nowrap;
+}
+.teacher-document-actions {
+  gap: 4px;
+}
+.teacher-document-actions button {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px;
+}
+.teacher-substitutes-card {
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+.teacher-substitutes-header {
+  min-height: 76px;
+  padding: 16px 18px !important;
+  gap: 16px;
+}
+.teacher-substitutes-header h3 {
+  line-height: 1.35;
+}
+.teacher-substitutes-header p {
+  line-height: 1.45;
+}
+.teacher-substitutes-count {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 0 9px;
+}
+.teacher-substitutes-table {
+  width: 100%;
+}
+.teacher-substitutes-data-table th {
+  height: 42px;
+  padding: 0 18px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.teacher-substitutes-data-table td {
+  min-height: 48px;
+  padding: 12px 18px;
+  vertical-align: middle;
+}
+.teacher-substitutes-empty {
+  height: 112px;
+  color: #71717a;
+}
+.teacher-activity-tab {
+  --tw-space-y-reverse: 0;
+}
+.teacher-activity-tab > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 20px !important;
+}
+.teacher-activity-card {
+  border-color: #e4e4e7;
+  box-shadow: none;
+}
+.teacher-activity-header {
+  min-height: 76px;
+  padding: 18px 20px !important;
+  gap: 5px;
+}
+.teacher-activity-header [data-slot="card-title"] {
+  line-height: 1.35;
+}
+.teacher-activity-subtitle {
+  line-height: 1.45;
+}
+.teacher-activity-content {
+  padding: 0 !important;
+}
+.teacher-activity-empty {
+  display: flex;
+  min-height: 188px;
+  padding: 28px 20px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  line-height: 1.45;
+}
+.teacher-activity-empty-icon {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+  color: #71717a;
+  background: #fafafa;
+}
+.teacher-activity-record {
+  min-height: 76px;
+  padding: 16px 20px !important;
+}
+.teacher-activity-record-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+.teacher-activity-time {
+  padding-top: 2px;
+  text-align: right;
+}
+.teacher-assign-dialog {
+  width: min(92vw, 520px) !important;
+  max-height: 85vh !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  overflow: hidden;
+}
+.teacher-assign-dialog-header {
+  padding: 20px 52px 14px 20px;
+  border-bottom: 1px solid #e4e4e7;
+}
+.teacher-assign-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0 !important;
+  padding: 18px 20px 0 !important;
+  overflow-y: auto;
+}
+.teacher-assign-dialog-form > div {
+  margin: 0 !important;
+}
+.teacher-assign-dialog-form label {
+  display: block;
+  margin-bottom: 7px;
+}
+.teacher-assign-dialog-form select {
+  height: 40px !important;
+  min-height: 40px;
+}
+.teacher-assign-dialog-footer {
+  margin: 0 !important;
+  padding: 14px 0;
+  gap: 8px !important;
+}
+.teacher-assign-dialog-footer button {
+  min-height: 36px !important;
+  padding: 0 12px !important;
+}
+
+@media (max-width: 1024px) {
+  .teacher-profile-body {
+    grid-template-columns: 1fr;
+  }
+  .teacher-side-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .teacher-side-col > div {
+    display: contents;
+  }
+}
+@media (max-width: 768px) {
+  .teacher-profile-page .teacher-profile-topbar {
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+  .teacher-profile-page .teacher-topbar-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .teacher-profile-page .campus-kpi-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .teacher-profile-page .campus-kpi-card:nth-child(2) {
+    border-right: none;
+  }
+  .teacher-main-col,
+  .teacher-side-col {
+    padding: 16px;
+  }
+  .teacher-documents-header {
+    align-items: flex-start;
+  }
+  .teacher-payroll-daily-rate {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .teacher-activity-header,
+  .teacher-activity-record {
+    padding-right: 16px !important;
+    padding-left: 16px !important;
+  }
+}
+@media (max-width: 560px) {
+  .teacher-profile-page .teacher-topbar-actions .toolbar-btn {
+    flex: 1 1 calc(50% - 4px);
+  }
+  .teacher-profile-page .teacher-tabs-bar {
+    padding: 0 12px;
+  }
+  .teacher-profile-page .campus-kpi-card {
+    min-height: 68px;
+    padding: 10px 12px;
+    justify-content: flex-start;
+  }
+  .teacher-side-col {
+    grid-template-columns: 1fr;
+  }
+  .teacher-assign-dialog-header,
+  .teacher-assign-dialog-form {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .teacher-documents-header {
+    flex-direction: column;
+  }
+  .teacher-documents-upload {
+    width: 100%;
+  }
+  .teacher-document-card-content {
+    padding: 16px !important;
+  }
+  .teacher-substitutes-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .teacher-substitutes-data-table th,
+  .teacher-substitutes-data-table td {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .teacher-overview-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .teacher-overview-row > :last-child {
+    text-align: left;
+  }
+  .teacher-activity-record {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .teacher-activity-time {
+    padding-top: 0;
+    text-align: left;
+  }
+}
