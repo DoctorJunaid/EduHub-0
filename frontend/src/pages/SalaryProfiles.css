@@ -141,6 +141,43 @@
   font-size: 14px;
 }
 
+.salary-profiles-warning-banner {
+  min-height: 68px;
+  margin: 12px 20px;
+  padding: 12px 14px;
+}
+
+.salary-profiles-warning-message {
+  flex: 1 1 auto;
+}
+
+.salary-profiles-warning-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.salary-profiles-warning-copy {
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.4;
+}
+
+.salary-profiles-warning-copy span {
+  white-space: normal !important;
+}
+
+.salary-profiles-warning-copy span:nth-child(2) {
+  display: block !important;
+}
+
+.salary-profiles-warning-action {
+  min-width: 150px;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+}
+
 .salary-profiles-result-count {
   color: #71717a;
   font-size: 11px;
@@ -352,6 +389,16 @@
 
   .salary-profiles-heading .toolbar-btn {
     align-self: stretch;
+  }
+
+  .salary-profiles-warning-banner {
+    align-items: stretch;
+    flex-direction: column;
+    margin: 12px 14px;
+  }
+
+  .salary-profiles-warning-action {
+    width: 100%;
   }
 
   .salary-profiles-table {
