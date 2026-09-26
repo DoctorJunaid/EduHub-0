@@ -1,13 +1,21 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Banknote, CreditCard, FileText, Receipt, ShieldCheck, Wallet } from 'lucide-react';
-import { getMySalaryProfile } from '../api/salaryProfile.api';
-import PageLoader from '@/components/shared/PageLoader';
-import { qk } from '@/lib/queryKeys';
-import './SalaryProfiles.css';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Banknote,
+  CreditCard,
+  FileText,
+  Receipt,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
+import { getMySalaryProfile } from "../api/salaryProfile.api";
+import PageLoader from "@/components/shared/PageLoader";
+import { qk } from "@/lib/queryKeys";
+import "./SalaryProfiles.css";
 
-const formatPKR = (amount) => `PKR ${Number(amount || 0).toLocaleString('en-PK')}`;
+const formatPKR = (amount) =>
+  `PKR ${Number(amount || 0).toLocaleString("en-PK")}`;
 
 export default function MySalary() {
   const navigate = useNavigate();
@@ -25,7 +33,9 @@ export default function MySalary() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const error = queryError?.response?.data?.message || (queryError ? 'Failed to load your salary profile.' : '');
+  const error =
+    queryError?.response?.data?.message ||
+    (queryError ? "Failed to load your salary profile." : "");
 
   if (loading) {
     return <PageLoader message="Loading salary profile..." />;
@@ -42,7 +52,7 @@ export default function MySalary() {
           </div>
           <button
             type="button"
-            onClick={() => navigate('/my-payslips')}
+            onClick={() => navigate("/my-payslips")}
             className="salary-edit-btn"
           >
             <FileText size={13} /> View My Payslips
@@ -51,9 +61,12 @@ export default function MySalary() {
 
         <div className="salary-profiles-state text-center p-8">
           <Receipt size={32} className="text-slate-400 mb-2" />
-          <strong className="block text-slate-800 text-sm">No Salary Profile Found</strong>
+          <strong className="block text-slate-800 text-sm">
+            No Salary Profile Found
+          </strong>
           <span className="text-xs text-slate-500 mt-1 max-w-sm">
-            {error || 'Your salary profile has not been configured by campus management yet.'}
+            {error ||
+              "Your salary profile has not been configured by campus management yet."}
           </span>
         </div>
       </div>
@@ -63,10 +76,12 @@ export default function MySalary() {
   const teacher = profile.teacherProfileId || {};
   const totalAllowances = (profile.allowances || []).reduce(
     (sum, a) => sum + Number(a.amount || 0),
-    0
+    0,
   );
-  const gross = profile.grossSalary ?? Number(profile.baseSalary || 0) + totalAllowances;
-  const totalDeductions = Number(profile.taxDeduction || 0) + Number(profile.otherDeduction || 0);
+  const gross =
+    profile.grossSalary ?? Number(profile.baseSalary || 0) + totalAllowances;
+  const totalDeductions =
+    Number(profile.taxDeduction || 0) + Number(profile.otherDeduction || 0);
   const estimatedNet = gross - totalDeductions;
   const dailySalary = gross / 26;
 
@@ -81,7 +96,7 @@ export default function MySalary() {
         </div>
         <button
           type="button"
-          onClick={() => navigate('/my-payslips')}
+          onClick={() => navigate("/my-payslips")}
           className="toolbar-btn toolbar-btn-primary"
         >
           <FileText size={14} /> Go to My Payslips
@@ -94,23 +109,26 @@ export default function MySalary() {
           <div className="bg-slate-50 border-b border-slate-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-base">
-                {(teacher.user?.name || 'T').charAt(0).toUpperCase()}
+                {(teacher.user?.name || "T").charAt(0).toUpperCase()}
               </div>
               <div>
                 <strong className="block text-slate-900 text-sm font-semibold">
-                  {teacher.user?.name || 'Faculty Member'}
+                  {teacher.user?.name || "Faculty Member"}
                 </strong>
                 <span className="text-xs text-slate-500">
-                  {teacher.designation || 'Teacher'} • {teacher.department || 'Academic Department'}
+                  {teacher.designation || "Teacher"} •{" "}
+                  {teacher.department || "Academic Department"}
                 </span>
               </div>
             </div>
             <span
               className={`payroll-status ${
-                profile.isActive ? 'payroll-status-paid' : 'payroll-status-default'
+                profile.isActive
+                  ? "payroll-status-paid"
+                  : "payroll-status-default"
               }`}
             >
-              {profile.isActive ? 'Active Contract' : 'Inactive Contract'}
+              {profile.isActive ? "Active Contract" : "Inactive Contract"}
             </span>
           </div>
 
@@ -124,7 +142,9 @@ export default function MySalary() {
                 <p className="text-lg font-bold text-slate-900 mt-2">
                   {formatPKR(profile.baseSalary)}
                 </p>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">Fixed monthly base pay</span>
+                <span className="text-[11px] text-slate-500 mt-0.5 block">
+                  Fixed monthly base pay
+                </span>
               </div>
 
               <div className="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200">
@@ -141,9 +161,12 @@ export default function MySalary() {
 
               <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-200">
                 <span className="text-[11px] font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck size={14} className="text-blue-600" /> Gross Monthly Pay
+                  <ShieldCheck size={14} className="text-blue-600" /> Gross
+                  Monthly Pay
                 </span>
-                <p className="text-lg font-bold text-blue-700 mt-2">{formatPKR(gross)}</p>
+                <p className="text-lg font-bold text-blue-700 mt-2">
+                  {formatPKR(gross)}
+                </p>
                 <span className="text-[11px] text-slate-500 mt-0.5 block">
                   ~{formatPKR(dailySalary)}/day rate
                 </span>
@@ -156,7 +179,9 @@ export default function MySalary() {
                 Contract Allowances Breakdown
               </span>
               {!profile.allowances || profile.allowances.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">No extra allowances configured.</p>
+                <p className="text-xs text-slate-400 italic">
+                  No extra allowances configured.
+                </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {profile.allowances.map((item, i) => (
@@ -164,8 +189,12 @@ export default function MySalary() {
                       key={i}
                       className="flex justify-between items-center p-3 rounded-lg border border-slate-200 bg-slate-50 text-xs"
                     >
-                      <span className="font-semibold text-slate-700">{item.name}</span>
-                      <strong className="text-emerald-700">+{formatPKR(item.amount)}</strong>
+                      <span className="font-semibold text-slate-700">
+                        {item.name}
+                      </span>
+                      <strong className="text-emerald-700">
+                        +{formatPKR(item.amount)}
+                      </strong>
                     </div>
                   ))}
                 </div>
@@ -179,42 +208,69 @@ export default function MySalary() {
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <span className="text-slate-500 block text-[11px]">Income Tax Deduction</span>
-                  <strong className="text-rose-600 font-bold">-{formatPKR(profile.taxDeduction)}</strong>
+                  <span className="text-slate-500 block text-[11px]">
+                    Income Tax Deduction
+                  </span>
+                  <strong className="text-rose-600 font-bold">
+                    -{formatPKR(profile.taxDeduction)}
+                  </strong>
                 </div>
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <span className="text-slate-500 block text-[11px]">Other Deductions</span>
-                  <strong className="text-rose-600 font-bold">-{formatPKR(profile.otherDeduction)}</strong>
+                  <span className="text-slate-500 block text-[11px]">
+                    Other Deductions
+                  </span>
+                  <strong className="text-rose-600 font-bold">
+                    -{formatPKR(profile.otherDeduction)}
+                  </strong>
                 </div>
                 <div className="p-3 rounded-lg bg-slate-100 border border-slate-300">
-                  <span className="text-slate-600 block text-[11px]">Est. Net Contract</span>
-                  <strong className="text-slate-900 font-bold text-sm">{formatPKR(estimatedNet)}</strong>
+                  <span className="text-slate-600 block text-[11px]">
+                    Est. Net Contract
+                  </span>
+                  <strong className="text-slate-900 font-bold text-sm">
+                    {formatPKR(estimatedNet)}
+                  </strong>
                 </div>
               </div>
             </div>
 
             {/* Bank details */}
-            {profile.bankAccount && (profile.bankAccount.bankName || profile.bankAccount.accountNumber) && (
-              <div className="pt-2 border-t border-slate-100">
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                  <CreditCard size={14} className="text-blue-600" /> Recorded Bank Account
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Bank Name</span>
-                    <strong className="text-slate-800">{profile.bankAccount.bankName || '—'}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Account Number</span>
-                    <strong className="text-slate-800">{profile.bankAccount.accountNumber || '—'}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">IBAN</span>
-                    <strong className="text-slate-800">{profile.bankAccount.iban || '—'}</strong>
+            {profile.bankAccount &&
+              (profile.bankAccount.bankName ||
+                profile.bankAccount.accountNumber) && (
+                <div className="pt-2 border-t border-slate-100">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                    <CreditCard size={14} className="text-blue-600" /> Recorded
+                    Bank Account
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div>
+                      <span className="text-slate-500 block text-[11px]">
+                        Bank Name
+                      </span>
+                      <strong className="text-slate-800">
+                        {profile.bankAccount.bankName || "—"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[11px]">
+                        Account Number
+                      </span>
+                      <strong className="text-slate-800">
+                        {profile.bankAccount.accountNumber || "—"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[11px]">
+                        IBAN
+                      </span>
+                      <strong className="text-slate-800">
+                        {profile.bankAccount.iban || "—"}
+                      </strong>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>

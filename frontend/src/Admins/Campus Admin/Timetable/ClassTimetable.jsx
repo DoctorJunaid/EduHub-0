@@ -97,7 +97,9 @@ export default function ClassTimetable() {
     defaultPage: 1,
     defaultPageSize: 20,
   });
-  const [educationType, setEducationType] = useState(() => (isSchool ? "School" : "College"));
+  const [educationType, setEducationType] = useState(() =>
+    isSchool ? "School" : "College",
+  );
   const [includeSaturday, setIncludeSaturday] = useState(true);
 
   useEffect(() => {
@@ -142,24 +144,46 @@ export default function ClassTimetable() {
         .filter(Boolean);
       return [...new Set([...fromGrades, ...customClasses, ...fromRecords])];
     }
-    const fromStudents = students.map((s) => s.gradeOrClass || s.program).filter(Boolean);
-    const fromRecords = records.map((r) => r.program || r.className || r.gradeOrClass).filter(Boolean);
+    const fromStudents = students
+      .map((s) => s.gradeOrClass || s.program)
+      .filter(Boolean);
+    const fromRecords = records
+      .map((r) => r.program || r.className || r.gradeOrClass)
+      .filter(Boolean);
     const defaults = isSchool
       ? ["Grade 10", "Grade 9", "Grade 8", "Grade 7", "Grade 6"]
-      : ["BS Computer Science", "BS Software Engineering", "BBA", "BS Data Science"];
-    return [...new Set([...customClasses, ...fromStudents, ...fromRecords, ...defaults])];
+      : [
+          "BS Computer Science",
+          "BS Software Engineering",
+          "BBA",
+          "BS Data Science",
+        ];
+    return [
+      ...new Set([
+        ...customClasses,
+        ...fromStudents,
+        ...fromRecords,
+        ...defaults,
+      ]),
+    ];
   }, [dbGrades, students, records, customClasses, isSchool]);
 
   // Active Selected Class
-  const [selectedClass, setSelectedClass] = useState(() => (isSchool ? "10" : "BS Computer Science"));
+  const [selectedClass, setSelectedClass] = useState(() =>
+    isSchool ? "10" : "BS Computer Science",
+  );
 
   // Fetch pre-defined sections whenever selectedClass changes
   useEffect(() => {
-    const normalize = (str) => (str || "").trim().toLowerCase().replace(/^(grade|class)\s+/i, "");
+    const normalize = (str) =>
+      (str || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^(grade|class)\s+/i, "");
     const matchedGrade = dbGrades.find(
       (g) =>
         g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase() ||
-        normalize(g.name) === normalize(selectedClass)
+        normalize(g.name) === normalize(selectedClass),
     );
     if (matchedGrade?._id) {
       axiosInstance
@@ -170,16 +194,25 @@ export default function ClassTimetable() {
           if (secs.length > 0) {
             const hasCurrent = secs.some(
               (s) =>
-                s.name?.trim().toLowerCase() === selectedSection?.trim().toLowerCase() ||
-                s.name?.trim().toLowerCase().replace(/^section\s+/i, "") ===
-                  selectedSection?.trim().toLowerCase().replace(/^section\s+/i, "")
+                s.name?.trim().toLowerCase() ===
+                  selectedSection?.trim().toLowerCase() ||
+                s.name
+                  ?.trim()
+                  .toLowerCase()
+                  .replace(/^section\s+/i, "") ===
+                  selectedSection
+                    ?.trim()
+                    .toLowerCase()
+                    .replace(/^section\s+/i, ""),
             );
             if (!hasCurrent) {
               setSelectedSection(secs[0].name);
             }
           }
         })
-        .catch((err) => console.error("Error fetching sections in timetable:", err));
+        .catch((err) =>
+          console.error("Error fetching sections in timetable:", err),
+        );
     } else {
       setDbSections([]);
     }
@@ -194,7 +227,14 @@ export default function ClassTimetable() {
     const fromStudents = students.map((s) => s.section).filter(Boolean);
     const fromRecords = records.map((r) => r.section).filter(Boolean);
     const defaults = ["A", "B", "C", "D"];
-    return [...new Set([...customSections, ...fromStudents, ...fromRecords, ...defaults])];
+    return [
+      ...new Set([
+        ...customSections,
+        ...fromStudents,
+        ...fromRecords,
+        ...defaults,
+      ]),
+    ];
   }, [dbSections, students, records, customSections]);
 
   const [selectedSection, setSelectedSection] = useState("A");
@@ -220,7 +260,10 @@ export default function ClassTimetable() {
       setIsAddingCustomClass(false);
       toast.success(`Class "${name}" created and saved!`);
     } catch (err) {
-      console.warn("Could not persist to /academic/grades, updating locally:", err);
+      console.warn(
+        "Could not persist to /academic/grades, updating locally:",
+        err,
+      );
       setCustomClasses((prev) => [...new Set([...prev, name])]);
       setSelectedClass(name);
       setCustomClassInput("");
@@ -235,11 +278,15 @@ export default function ClassTimetable() {
     const secName = customSectionInput.trim();
     if (!secName) return;
 
-    const normalize = (str) => (str || "").trim().toLowerCase().replace(/^(grade|class)\s+/i, "");
+    const normalize = (str) =>
+      (str || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^(grade|class)\s+/i, "");
     const matchedGrade = dbGrades.find(
       (g) =>
         g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase() ||
-        normalize(g.name) === normalize(selectedClass)
+        normalize(g.name) === normalize(selectedClass),
     );
 
     if (matchedGrade?._id) {
@@ -256,7 +303,10 @@ export default function ClassTimetable() {
         toast.success(`Section "${secName}" created and saved!`);
         return;
       } catch (err) {
-        console.warn("Could not persist section to DB, using local state:", err);
+        console.warn(
+          "Could not persist section to DB, using local state:",
+          err,
+        );
       }
     }
     setCustomSections((prev) => [...new Set([...prev, secName])]);
@@ -273,15 +323,25 @@ export default function ClassTimetable() {
         faculty
           .map((f) => f.name)
           .concat(records.map((r) => r.instructor || r.teacherName))
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
     const roomNames = [
       ...new Set(
         records
           .map((r) => r.room || r.roomNumber)
-          .concat(isSchool ? ["Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"] : ["Hall A", "Hall B", "Lab 3", "Auditorium"])
-          .filter(Boolean)
+          .concat(
+            isSchool
+              ? [
+                  "Room 101",
+                  "Room 102",
+                  "Room 103",
+                  "Science Lab",
+                  "Computer Lab",
+                ]
+              : ["Hall A", "Hall B", "Lab 3", "Auditorium"],
+          )
+          .filter(Boolean),
       ),
     ];
 
@@ -298,21 +358,28 @@ export default function ClassTimetable() {
   // Filter real records specifically for the active Class and Section (matches relational IDs and fuzzy names)
   const classRoutineRecords = useMemo(() => {
     const normalizeClass = (str) =>
-      (str || "").trim().toLowerCase().replace(/^(grade|class)\s+/i, "");
+      (str || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^(grade|class)\s+/i, "");
     const normalizeSec = (str) =>
-      (str || "").trim().toLowerCase().replace(/^section\s+/i, "");
+      (str || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^section\s+/i, "");
 
     const activeGrade = dbGrades.find(
       (g) =>
         g.name?.trim().toLowerCase() === selectedClass?.trim().toLowerCase() ||
-        normalizeClass(g.name) === normalizeClass(selectedClass)
+        normalizeClass(g.name) === normalizeClass(selectedClass),
     );
     const activeGradeId = activeGrade?._id;
 
     const activeSection = dbSections.find(
       (s) =>
-        s.name?.trim().toLowerCase() === selectedSection?.trim().toLowerCase() ||
-        normalizeSec(s.name) === normalizeSec(selectedSection)
+        s.name?.trim().toLowerCase() ===
+          selectedSection?.trim().toLowerCase() ||
+        normalizeSec(s.name) === normalizeSec(selectedSection),
     );
     const activeSectionId = activeSection?._id;
 
@@ -325,7 +392,8 @@ export default function ClassTimetable() {
       if (r.isBreak) {
         // Only include breaks tied to this grade (or campus-wide breaks with no grade)
         if (rGradeId) {
-          if (!activeGradeId || String(rGradeId) !== String(activeGradeId)) return false;
+          if (!activeGradeId || String(rGradeId) !== String(activeGradeId))
+            return false;
         } else if (prog) {
           const matchProg =
             prog.toLowerCase() === selectedClass.trim().toLowerCase() ||
@@ -334,8 +402,15 @@ export default function ClassTimetable() {
         }
         // Only include breaks tied to this section (or section-wide breaks)
         if (rSectionId) {
-          if (!activeSectionId || String(rSectionId) !== String(activeSectionId)) return false;
-        } else if (sec && !["all", "all sections", ""].includes(sec.toLowerCase())) {
+          if (
+            !activeSectionId ||
+            String(rSectionId) !== String(activeSectionId)
+          )
+            return false;
+        } else if (
+          sec &&
+          !["all", "all sections", ""].includes(sec.toLowerCase())
+        ) {
           const matchSec =
             sec.toLowerCase() === selectedSection.trim().toLowerCase() ||
             normalizeSec(sec) === normalizeSec(selectedSection);
@@ -346,14 +421,18 @@ export default function ClassTimetable() {
 
       const matchProg =
         !selectedClass ||
-        (activeGradeId && rGradeId && String(rGradeId) === String(activeGradeId)) ||
+        (activeGradeId &&
+          rGradeId &&
+          String(rGradeId) === String(activeGradeId)) ||
         prog.toLowerCase() === selectedClass.trim().toLowerCase() ||
         normalizeClass(prog) === normalizeClass(selectedClass);
 
       const matchSec =
         !selectedSection ||
         !sec ||
-        (activeSectionId && rSectionId && String(rSectionId) === String(activeSectionId)) ||
+        (activeSectionId &&
+          rSectionId &&
+          String(rSectionId) === String(activeSectionId)) ||
         sec.toLowerCase() === selectedSection.trim().toLowerCase() ||
         normalizeSec(sec) === normalizeSec(selectedSection) ||
         normalizeSec(sec) === "all" ||
@@ -365,7 +444,7 @@ export default function ClassTimetable() {
 
   const matrixConfig = useMemo(
     () => getMatrixConfig(educationType, includeSaturday),
-    [educationType, includeSaturday]
+    [educationType, includeSaturday],
   );
 
   // Modal Dialogs & Actions
@@ -433,9 +512,13 @@ export default function ClassTimetable() {
         updateSchedule({
           ...values,
           id: editingRecord._id || editingRecord.id,
-        })
+        }),
       ).unwrap();
-      toast.success(values.isBreak ? "Break interval updated!" : "Schedule routine updated successfully!");
+      toast.success(
+        values.isBreak
+          ? "Break interval updated!"
+          : "Schedule routine updated successfully!",
+      );
     } else {
       await dispatch(
         addSchedule({
@@ -443,26 +526,32 @@ export default function ClassTimetable() {
           program: values.program || selectedClass,
           section: values.section || selectedSection,
           institutionType: educationType,
-        })
+        }),
       ).unwrap();
       toast.success(
         values.isBreak
           ? "Break interval added to campus routine!"
           : isSchool
-          ? "Class period scheduled successfully!"
-          : "Class routine scheduled successfully!"
+            ? "Class period scheduled successfully!"
+            : "Class routine scheduled successfully!",
       );
     }
     dispatch(fetchSchedules(true));
   };
 
   // Interactive Drag & Drop Handler with Duration Preservation & Optimistic UI
-  const handleMoveClass = async (recordId, targetDay, targetStartTime, sourceDay) => {
+  const handleMoveClass = async (
+    recordId,
+    targetDay,
+    targetStartTime,
+    sourceDay,
+  ) => {
     const record = records.find((r) => (r.id || r._id) === recordId);
     if (!record) return;
 
     // 1. Snapshot previous state for rollback if network fails
-    const previousDays = Array.isArray(record.days) && record.days.length ? [...record.days] : [1];
+    const previousDays =
+      Array.isArray(record.days) && record.days.length ? [...record.days] : [1];
     const previousDayOfWeek = record.dayOfWeek;
     const previousStartTime = record.startTime;
     const previousEndTime = record.endTime;
@@ -470,7 +559,8 @@ export default function ClassTimetable() {
     // 2. Compute exact duration of the dragged class to PRESERVE 1-hr, 50-min, 90-min, etc.
     const origStart = minutes(record.startTime);
     const origEnd = minutes(record.endTime);
-    const originalDurationMinutes = origEnd > origStart ? origEnd - origStart : 50;
+    const originalDurationMinutes =
+      origEnd > origStart ? origEnd - origStart : 50;
 
     // Preserve the original class duration exactly!
     const targetStartMin = minutes(targetStartTime);
@@ -492,10 +582,12 @@ export default function ClassTimetable() {
             dayOfWeek: WEEKDAY_NAMES[remainingDays[0] - 1] || "Monday",
             startTime: record.startTime,
             endTime: record.endTime,
-            program: record.program || (record.gradeId?.name) || selectedClass,
-            section: record.section || (record.sectionId?.name) || selectedSection,
-            subject: record.subject || (record.subjectId?.name),
-            instructor: record.instructor || record.teacherName || (record.teacherId?.name),
+            program: record.program || record.gradeId?.name || selectedClass,
+            section:
+              record.section || record.sectionId?.name || selectedSection,
+            subject: record.subject || record.subjectId?.name,
+            instructor:
+              record.instructor || record.teacherName || record.teacherId?.name,
             room: record.room || record.roomNumber,
             isBreak: Boolean(record.isBreak),
             status: record.status || "Active",
@@ -504,7 +596,7 @@ export default function ClassTimetable() {
             subjectId: record.subjectId?._id || record.subjectId,
             teacherId: record.teacherId?._id || record.teacherId,
             campusId: record.campusId?._id || record.campusId,
-          })
+          }),
         ).unwrap();
 
         // Create new single-day slot at the new time
@@ -522,14 +614,21 @@ export default function ClassTimetable() {
             isBreak: Boolean(record.isBreak),
             institutionType: educationType,
             status: record.status || "Active",
-          })
+          }),
         ).unwrap();
 
         dispatch(fetchSchedules());
-        toast.success(`Moved ${record.subject} on ${resolvedDayName} to ${targetStartTime} – ${resolvedEndTime}`);
+        toast.success(
+          `Moved ${record.subject} on ${resolvedDayName} to ${targetStartTime} – ${resolvedEndTime}`,
+        );
       } catch (err) {
         dispatch(fetchSchedules());
-        toast.error(typeof err === "string" ? err : err?.message || "Failed to move period. Reverted to original slot.");
+        toast.error(
+          typeof err === "string"
+            ? err
+            : err?.message ||
+                "Failed to move period. Reverted to original slot.",
+        );
       }
       return;
     }
@@ -552,7 +651,7 @@ export default function ClassTimetable() {
         dayOfWeek: primaryDayName,
         startTime: targetStartTime,
         endTime: resolvedEndTime,
-      })
+      }),
     );
 
     // 5. Fire API call asynchronously in background
@@ -566,10 +665,11 @@ export default function ClassTimetable() {
           dayOfWeek: primaryDayName,
           startTime: targetStartTime,
           endTime: resolvedEndTime,
-          program: record.program || (record.gradeId?.name) || selectedClass,
-          section: record.section || (record.sectionId?.name) || selectedSection,
-          subject: record.subject || (record.subjectId?.name),
-          instructor: record.instructor || record.teacherName || (record.teacherId?.name),
+          program: record.program || record.gradeId?.name || selectedClass,
+          section: record.section || record.sectionId?.name || selectedSection,
+          subject: record.subject || record.subjectId?.name,
+          instructor:
+            record.instructor || record.teacherName || record.teacherId?.name,
           room: record.room || record.roomNumber,
           isBreak: Boolean(record.isBreak),
           institutionType: educationType,
@@ -579,10 +679,12 @@ export default function ClassTimetable() {
           subjectId: record.subjectId?._id || record.subjectId,
           teacherId: record.teacherId?._id || record.teacherId,
           campusId: record.campusId?._id || record.campusId,
-        })
+        }),
       ).unwrap();
 
-      toast.success(`Rescheduled ${record.subject} to ${resolvedDayName} (${targetStartTime} – ${resolvedEndTime})`);
+      toast.success(
+        `Rescheduled ${record.subject} to ${resolvedDayName} (${targetStartTime} – ${resolvedEndTime})`,
+      );
     } catch (err) {
       // IF FAILED: Immediately revert card back to original position!
       dispatch(
@@ -593,23 +695,32 @@ export default function ClassTimetable() {
           dayOfWeek: previousDayOfWeek,
           startTime: previousStartTime,
           endTime: previousEndTime,
-        })
+        }),
       );
-      toast.error(typeof err === "string" ? err : err?.message || "Failed to move period. Reverted to original slot.");
+      toast.error(
+        typeof err === "string"
+          ? err
+          : err?.message || "Failed to move period. Reverted to original slot.",
+      );
     }
   };
 
   // Overall dynamic stats calculated from real filtered routine records
-  const totalPeriodsForClass = classRoutineRecords.filter((r) => !r.isBreak).length;
+  const totalPeriodsForClass = classRoutineRecords.filter(
+    (r) => !r.isBreak,
+  ).length;
   const activeInstructorsForClass = new Set(
-    classRoutineRecords.map((r) => r.instructor || r.teacherName).filter(Boolean)
+    classRoutineRecords
+      .map((r) => r.instructor || r.teacherName)
+      .filter(Boolean),
   ).size;
   const activeRoomsForClass = new Set(
-    classRoutineRecords.map((r) => r.room || r.roomNumber).filter(Boolean)
+    classRoutineRecords.map((r) => r.room || r.roomNumber).filter(Boolean),
   ).size;
   const totalWeeklySlots = useMemo(() => {
     return classRoutineRecords.reduce((acc, r) => {
-      const dayCount = Array.isArray(r.days) && r.days.length ? r.days.length : 1;
+      const dayCount =
+        Array.isArray(r.days) && r.days.length ? r.days.length : 1;
       return acc + dayCount;
     }, 0);
   }, [classRoutineRecords]);
@@ -699,7 +810,9 @@ export default function ClassTimetable() {
               <BookOpen size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Active Class Periods" : "Class Schedule Count"}</span>
+              <span className="kpi-label">
+                {isSchool ? "Active Class Periods" : "Class Schedule Count"}
+              </span>
               <span className="kpi-value">{totalPeriodsForClass}</span>
             </div>
           </div>
@@ -711,7 +824,9 @@ export default function ClassTimetable() {
               <Users size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Class Teachers" : "Instructors"}</span>
+              <span className="kpi-label">
+                {isSchool ? "Class Teachers" : "Instructors"}
+              </span>
               <span className="kpi-value">{activeInstructorsForClass}</span>
             </div>
           </div>
@@ -723,7 +838,9 @@ export default function ClassTimetable() {
               <Building size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Allocated Rooms" : "Rooms Used"}</span>
+              <span className="kpi-label">
+                {isSchool ? "Allocated Rooms" : "Rooms Used"}
+              </span>
               <span className="kpi-value">{activeRoomsForClass}</span>
             </div>
           </div>
@@ -735,7 +852,9 @@ export default function ClassTimetable() {
               <Clock size={14} />
             </div>
             <div className="kpi-info">
-              <span className="kpi-label">{isSchool ? "Weekly Periods" : "Campus Total"}</span>
+              <span className="kpi-label">
+                {isSchool ? "Weekly Periods" : "Campus Total"}
+              </span>
               <span className="kpi-value">{totalWeeklySlots} slots</span>
             </div>
           </div>
@@ -747,13 +866,21 @@ export default function ClassTimetable() {
         <div className="class-banner-info">
           <span className="class-banner-badge">
             {isSchool ? <School size={13} /> : <GraduationCap size={13} />}
-            {isSchool ? "Class Routine & Timetable" : "Academic Schedule Matrix"}
+            {isSchool
+              ? "Class Routine & Timetable"
+              : "Academic Schedule Matrix"}
           </span>
           <h2 className="class-banner-title">
-            {selectedClass} • {selectedSection.toLowerCase().startsWith("section ") ? selectedSection : `Section ${selectedSection}`}
+            {selectedClass} •{" "}
+            {selectedSection.toLowerCase().startsWith("section ")
+              ? selectedSection
+              : `Section ${selectedSection}`}
           </h2>
           <p className="class-banner-sub">
-            {totalPeriodsForClass} {totalPeriodsForClass === 1 ? "period" : "periods"} configured • {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} • Drag cards to reschedule
+            {totalPeriodsForClass}{" "}
+            {totalPeriodsForClass === 1 ? "period" : "periods"} configured •{" "}
+            {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} •
+            Drag cards to reschedule
           </p>
         </div>
 
@@ -762,7 +889,10 @@ export default function ClassTimetable() {
           <div className="class-selector-group">
             <span className="class-selector-label">Grade / Class</span>
             {isAddingCustomClass ? (
-              <form onSubmit={handleSaveCustomClass} className="flex items-center gap-1">
+              <form
+                onSubmit={handleSaveCustomClass}
+                className="flex items-center gap-1"
+              >
                 <input
                   type="text"
                   autoFocus
@@ -772,7 +902,10 @@ export default function ClassTimetable() {
                   onChange={(e) => setCustomClassInput(e.target.value)}
                   className="custom-input-pill"
                 />
-                <button type="submit" className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold">
+                <button
+                  type="submit"
+                  className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold"
+                >
                   <Check size={13} />
                 </button>
                 <button
@@ -812,7 +945,10 @@ export default function ClassTimetable() {
           <div className="class-selector-group">
             <span className="class-selector-label">Section</span>
             {isAddingCustomSection ? (
-              <form onSubmit={handleSaveCustomSection} className="flex items-center gap-1">
+              <form
+                onSubmit={handleSaveCustomSection}
+                className="flex items-center gap-1"
+              >
                 <input
                   type="text"
                   autoFocus
@@ -822,7 +958,10 @@ export default function ClassTimetable() {
                   onChange={(e) => setCustomSectionInput(e.target.value)}
                   className="custom-input-pill"
                 />
-                <button type="submit" className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold">
+                <button
+                  type="submit"
+                  className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold"
+                >
                   <Check size={13} />
                 </button>
                 <button
@@ -880,8 +1019,7 @@ export default function ClassTimetable() {
             onClick={() => handleOpenQuickAdd(undefined, true)}
             title="Add Lunch, Recess, or Prayer Break"
           >
-            <Coffee size={14} />
-            + Add Lunch / Break
+            <Coffee size={14} />+ Add Lunch / Break
           </button>
 
           {/* Direct Shortcut to Pre-defined Academic Setup */}
@@ -969,7 +1107,9 @@ export default function ClassTimetable() {
                   fontWeight: !includeSaturday ? 700 : 500,
                   color: !includeSaturday ? "#09090b" : "#71717a",
                   background: !includeSaturday ? "#ffffff" : "transparent",
-                  boxShadow: !includeSaturday ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  boxShadow: !includeSaturday
+                    ? "0 1px 2px rgba(0,0,0,0.08)"
+                    : "none",
                   border: "none",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
@@ -988,7 +1128,9 @@ export default function ClassTimetable() {
                   fontWeight: includeSaturday ? 700 : 500,
                   color: includeSaturday ? "#09090b" : "#71717a",
                   background: includeSaturday ? "#ffffff" : "transparent",
-                  boxShadow: includeSaturday ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  boxShadow: includeSaturday
+                    ? "0 1px 2px rgba(0,0,0,0.08)"
+                    : "none",
                   border: "none",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
@@ -1015,11 +1157,14 @@ export default function ClassTimetable() {
                   day: "numeric",
                 })}{" "}
                 –{" "}
-                {shiftDays(week, includeSaturday ? 5 : 4).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                {shiftDays(week, includeSaturday ? 5 : 4).toLocaleDateString(
+                  "en-US",
+                  {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  },
+                )}
               </span>
               <button
                 type="button"
@@ -1061,7 +1206,8 @@ export default function ClassTimetable() {
                     {selectedClass} — Section {selectedSection} Routine
                   </span>
                   <small>
-                    Big, flexible cells with interactive drag-and-drop. Drag any period to move it to a different day or slot.
+                    Big, flexible cells with interactive drag-and-drop. Drag any
+                    period to move it to a different day or slot.
                   </small>
                 </div>
                 <div className="tt-legend tt-legend-inline">
@@ -1140,13 +1286,17 @@ export default function ClassTimetable() {
                 addSchedule({
                   ...values,
                   institutionType: educationType,
-                })
+                }),
               ).unwrap();
               toast.success("Schedule routine created successfully!");
               setFullFormOpen(false);
               dispatch(fetchSchedules());
             } catch (err) {
-              toast.error(typeof err === "string" ? err : err?.message || "Failed to schedule routine");
+              toast.error(
+                typeof err === "string"
+                  ? err
+                  : err?.message || "Failed to schedule routine",
+              );
             }
           }}
           onClose={() => setFullFormOpen(false)}
@@ -1173,7 +1323,7 @@ export default function ClassTimetable() {
           if (deleteTarget) {
             try {
               await dispatch(
-                deleteSchedule(deleteTarget._id || deleteTarget.id)
+                deleteSchedule(deleteTarget._id || deleteTarget.id),
               ).unwrap();
               toast.success("Routine removed successfully");
               dispatch(fetchSchedules());

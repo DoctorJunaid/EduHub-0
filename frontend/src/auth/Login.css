@@ -11,7 +11,7 @@
   align-items: stretch;
   overflow: hidden;
   background: #f4f4f5 !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
 /* ─────────────────────────────────────────
@@ -44,7 +44,9 @@
   color: #71717a;
   text-decoration: none;
   margin-bottom: 1.25rem;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .login-page .lp-back-link:hover {
@@ -131,7 +133,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  transition: color 0.15s, background-color 0.15s;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
   z-index: 2;
 }
 
@@ -155,7 +159,9 @@
   color: #09090b !important;
   outline: none !important;
   box-shadow: none !important;
-  transition: border-color 0.14s, box-shadow 0.14s !important;
+  transition:
+    border-color 0.14s,
+    box-shadow 0.14s !important;
 }
 
 .login-page input[type="email"]::placeholder,
@@ -166,7 +172,7 @@
 .login-page input[type="email"]:focus,
 .login-page input[type="password"]:focus {
   border-color: #09090b !important;
-  box-shadow: 0 0 0 3px rgba(9,9,11,0.06) !important;
+  box-shadow: 0 0 0 3px rgba(9, 9, 11, 0.06) !important;
   background: #ffffff !important;
 }
 
@@ -312,7 +318,6 @@
   text-decoration: underline;
 }
 
-
 /* ═══════════════════════════════════════════════════════════════
    RIGHT PANEL — dark, narrower, with padding all around
    ═══════════════════════════════════════════════════════════════ */
@@ -342,27 +347,29 @@
 
   /* Layered designer border */
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.08),
-    0 4px 6px rgba(0,0,0,0.2),
-    0 24px 48px rgba(0,0,0,0.3),
-    inset 0 1px 0 rgba(255,255,255,0.06);
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    0 24px 48px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Gradient border ring via pseudo */
 .login-page .lp-right-inner::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
   background: linear-gradient(
     140deg,
-    rgba(255,255,255,0.14) 0%,
-    rgba(255,255,255,0.04) 40%,
-    rgba(255,255,255,0.01) 70%,
-    rgba(16,185,129,0.06) 100%
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.01) 70%,
+    rgba(16, 185, 129, 0.06) 100%
   );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
@@ -371,12 +378,14 @@
 
 /* Corner diagonal lines */
 .login-page .lp-right-inner::after {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0; right: 0;
-  width: 60%; height: 50%;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  border-right: 1px solid rgba(255,255,255,0.05);
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 50%;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   border-top-right-radius: 20px;
   pointer-events: none;
   z-index: 0;
@@ -410,7 +419,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   user-select: none;
-  filter: drop-shadow(0 8px 40px rgba(0,0,0,0.95));
+  filter: drop-shadow(0 8px 40px rgba(0, 0, 0, 0.95));
 }
 
 /* Panel text */
@@ -461,14 +470,14 @@
   gap: 16px;
   position: relative;
   z-index: 2;
-  background: rgba(20,20,22,0.9) !important;
+  background: rgba(20, 20, 22, 0.9) !important;
   backdrop-filter: blur(20px);
   border-radius: 14px;
   border-top-right-radius: 40px;
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.06),
-    0 8px 24px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.05);
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .login-page .lp-card h3 {
@@ -506,7 +515,9 @@
   background: #27272a;
 }
 
-.login-page .lp-avatar:first-child { margin-left: 0; }
+.login-page .lp-avatar:first-child {
+  margin-left: 0;
+}
 
 .login-page .lp-avatar img {
   width: 100%;

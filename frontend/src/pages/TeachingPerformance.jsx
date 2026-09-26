@@ -83,11 +83,15 @@ export default function TeachingPerformance() {
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(`Generated/synced ${data?.count || 0} class sessions for today.`);
+      toast.success(
+        `Generated/synced ${data?.count || 0} class sessions for today.`,
+      );
       queryClient.invalidateQueries({ queryKey: ["teaching-performance"] });
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to generate class sessions.");
+      toast.error(
+        err.response?.data?.message || "Failed to generate class sessions.",
+      );
     },
   });
 
@@ -106,7 +110,9 @@ export default function TeachingPerformance() {
       }
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to assign substitute.");
+      toast.error(
+        err.response?.data?.message || "Failed to assign substitute.",
+      );
     },
   });
 
@@ -249,13 +255,36 @@ export default function TeachingPerformance() {
         aria-label="Teaching performance actions"
       >
         <div className="tp-header-controls">
-          <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} aria-label="Select performance month" className="tp-month-select" />
-          <Button onClick={handleGenerateToday} disabled={generateMutation.isPending} className="tp-generate-button">
-            {generateMutation.isPending ? <Spinner className="mr-1.5 size-3.5 text-white" /> : <Clock3 size={14} className="mr-1.5" />}
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            aria-label="Select performance month"
+            className="tp-month-select"
+          />
+          <Button
+            onClick={handleGenerateToday}
+            disabled={generateMutation.isPending}
+            className="tp-generate-button"
+          >
+            {generateMutation.isPending ? (
+              <Spinner className="mr-1.5 size-3.5 text-white" />
+            ) : (
+              <Clock3 size={14} className="mr-1.5" />
+            )}
             Generate Today&apos;s Sessions
           </Button>
-          <Button variant="outline" onClick={() => loadPerformance(true)} disabled={loading} className="tp-sync-button">
-            {loading ? <Spinner className="mr-1.5 size-3.5" /> : <RefreshCw size={14} className="mr-1.5" />}
+          <Button
+            variant="outline"
+            onClick={() => loadPerformance(true)}
+            disabled={loading}
+            className="tp-sync-button"
+          >
+            {loading ? (
+              <Spinner className="mr-1.5 size-3.5" />
+            ) : (
+              <RefreshCw size={14} className="mr-1.5" />
+            )}
             Sync
           </Button>
         </div>
@@ -432,7 +461,11 @@ export default function TeachingPerformance() {
           <div className="tp-timeline-body">
             {loadingTimeline ? (
               <div className="p-12 text-center text-slate-500 text-xs">
-                <SpinnerCustom text="Loading class session timeline..." size="sm" className="flex-col gap-2" />
+                <SpinnerCustom
+                  text="Loading class session timeline..."
+                  size="sm"
+                  className="flex-col gap-2"
+                />
               </div>
             ) : timelineRecords.length === 0 ? (
               <div className="p-12 text-center text-slate-400 text-xs">
@@ -451,109 +484,111 @@ export default function TeachingPerformance() {
                     <col className="tp-timeline-col-adjustment" />
                     <col className="tp-timeline-col-actions" />
                   </colgroup>
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                    <th className="py-2.5 px-3">Date &amp; Period</th>
-                    <th className="py-2.5 px-3">Class &amp; Subject</th>
-                    <th className="py-2.5 px-3">Original Teacher</th>
-                    <th className="py-2.5 px-3">Actual Teacher</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3">Credit</th>
-                    <th className="py-2.5 px-3">Adjustment</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {timelineRecords.map((sess) => (
-                    <tr key={sess._id} className="hover:bg-slate-50/50">
-                      <td className="tp-timeline-date py-2.5 px-3 font-semibold">
-                        <div>
-                          <span>
-                            {new Date(sess.date).toLocaleDateString()}
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                      <th className="py-2.5 px-3">Date &amp; Period</th>
+                      <th className="py-2.5 px-3">Class &amp; Subject</th>
+                      <th className="py-2.5 px-3">Original Teacher</th>
+                      <th className="py-2.5 px-3">Actual Teacher</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Credit</th>
+                      <th className="py-2.5 px-3">Adjustment</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {timelineRecords.map((sess) => (
+                      <tr key={sess._id} className="hover:bg-slate-50/50">
+                        <td className="tp-timeline-date py-2.5 px-3 font-semibold">
+                          <div>
+                            <span>
+                              {new Date(sess.date).toLocaleDateString()}
+                            </span>
+                            <span className="text-slate-400 block text-[10px]">
+                              Period {sess.period} ({sess.startTime}–
+                              {sess.endTime})
+                            </span>
+                          </div>
+                        </td>
+                        <td className="tp-timeline-class py-2.5 px-3 font-medium">
+                          <strong>{sess.subject}</strong>
+                          <span className="block text-[11px] text-slate-500">
+                            {sess.className}{" "}
+                            {sess.section ? `(${sess.section})` : ""}
                           </span>
-                          <span className="text-slate-400 block text-[10px]">
-                            Period {sess.period} ({sess.startTime}–
-                            {sess.endTime})
-                          </span>
-                        </div>
-                      </td>
-                      <td className="tp-timeline-class py-2.5 px-3 font-medium">
-                        <strong>{sess.subject}</strong>
-                        <span className="block text-[11px] text-slate-500">
-                          {sess.className}{" "}
-                          {sess.section ? `(${sess.section})` : ""}
-                        </span>
-                      </td>
-                      <td className="tp-timeline-teacher py-2.5 px-3 text-slate-600">
-                        {sess.originalTeacherId?.name || "Teacher"}
-                      </td>
-                      <td className="tp-timeline-teacher py-2.5 px-3 text-slate-800 font-medium">
-                        {sess.actualTeacherId?.name || "Teacher"}
-                        {sess.isSubstituted && (
-                          <span className="text-purple-700 block text-[10px] font-bold">
-                            Substitute Duty
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                            sess.status === "Completed"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : sess.status === "Missed" ||
-                                  sess.status === "Absent"
-                                ? "bg-rose-100 text-rose-800"
-                                : sess.status === "Substituted"
-                                  ? "bg-purple-100 text-purple-800"
-                                  : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {sess.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center font-bold">
-                        {sess.status === "Completed" ? (
-                          <span className="text-emerald-700">
-                            +{sess.creditValue || 1} Cr
-                          </span>
-                        ) : (
-                          <span className="text-slate-300">0</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        {sess.bonusValue > 0 ? (
-                          <span className="text-purple-700 font-bold block">
-                            +{formatPKR(sess.bonusValue)}
-                          </span>
-                        ) : sess.deductionValue > 0 ? (
-                          <span className="text-rose-600 font-bold block">
-                            -{formatPKR(sess.deductionValue)}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-                        {sess.adjustmentReview?.status &&
-                          sess.adjustmentReview.status !== "None" && (
-                            <span className="text-[10px] text-amber-700 block font-semibold">
-                              {sess.adjustmentReview.status}
+                        </td>
+                        <td className="tp-timeline-teacher py-2.5 px-3 text-slate-600">
+                          {sess.originalTeacherId?.name || "Teacher"}
+                        </td>
+                        <td className="tp-timeline-teacher py-2.5 px-3 text-slate-800 font-medium">
+                          {sess.actualTeacherId?.name || "Teacher"}
+                          {sess.isSubstituted && (
+                            <span className="text-purple-700 block text-[10px] font-bold">
+                              Substitute Duty
                             </span>
                           )}
-                      </td>
-                      <td className="tp-timeline-actions py-2.5 px-3 text-right whitespace-nowrap">
-                        {sess.status === "Scheduled" && !sess.isSubstituted && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleOpenAssignSubstitute(sess)}
-                            className="tp-timeline-substitute-button"
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              sess.status === "Completed"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : sess.status === "Missed" ||
+                                    sess.status === "Absent"
+                                  ? "bg-rose-100 text-rose-800"
+                                  : sess.status === "Substituted"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : "bg-blue-100 text-blue-800"
+                            }`}
                           >
-                            <UserPlus size={11} className="mr-1" /> Substitute
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                            {sess.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-bold">
+                          {sess.status === "Completed" ? (
+                            <span className="text-emerald-700">
+                              +{sess.creditValue || 1} Cr
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">0</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          {sess.bonusValue > 0 ? (
+                            <span className="text-purple-700 font-bold block">
+                              +{formatPKR(sess.bonusValue)}
+                            </span>
+                          ) : sess.deductionValue > 0 ? (
+                            <span className="text-rose-600 font-bold block">
+                              -{formatPKR(sess.deductionValue)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                          {sess.adjustmentReview?.status &&
+                            sess.adjustmentReview.status !== "None" && (
+                              <span className="text-[10px] text-amber-700 block font-semibold">
+                                {sess.adjustmentReview.status}
+                              </span>
+                            )}
+                        </td>
+                        <td className="tp-timeline-actions py-2.5 px-3 text-right whitespace-nowrap">
+                          {sess.status === "Scheduled" &&
+                            !sess.isSubstituted && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenAssignSubstitute(sess)}
+                                className="tp-timeline-substitute-button"
+                              >
+                                <UserPlus size={11} className="mr-1" />{" "}
+                                Substitute
+                              </Button>
+                            )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
             )}
@@ -677,7 +712,9 @@ export default function TeachingPerformance() {
                 disabled={assignSubMutation.isPending}
                 className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold"
               >
-                {assignSubMutation.isPending && <Spinner className="mr-2 size-4 text-white" />}
+                {assignSubMutation.isPending && (
+                  <Spinner className="mr-2 size-4 text-white" />
+                )}
                 Confirm Substitution
               </Button>
             </DialogFooter>

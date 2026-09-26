@@ -29,8 +29,7 @@ import { qk } from "@/lib/queryKeys";
 import { useDebounce } from "@/hooks/useDebounce";
 import "./SalaryReviewCenter.css";
 
-const formatPKR = (amt) =>
-  `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
+const formatPKR = (amt) => `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
 
 export default function SalaryReviewCenter() {
   const queryClient = useQueryClient();
@@ -90,13 +89,15 @@ export default function SalaryReviewCenter() {
       toast.success(
         variables.payload.action === "Adjust"
           ? "Adjustment amount updated successfully."
-          : `Adjustment ${variables.payload.action.toLowerCase()}d successfully.`
+          : `Adjustment ${variables.payload.action.toLowerCase()}d successfully.`,
       );
       queryClient.invalidateQueries({ queryKey: ["payroll-review"] });
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to update adjustment.");
+      toast.error(
+        err.response?.data?.message || "Failed to update adjustment.",
+      );
     },
   });
 
@@ -172,9 +173,12 @@ export default function SalaryReviewCenter() {
         id: activeItemForDispute._id,
         payload: {
           decision: disputeDecision,
-          resolutionRemark: disputeRemark || `Dispute ${disputeDecision.toLowerCase()}d`,
-          adjustedStatus: disputeDecision === "Approve" ? "Approved Adjustment" : "Missed",
-          adjustedDeduction: disputeDecision === "Approve" ? 0 : activeItemForDispute.amount,
+          resolutionRemark:
+            disputeRemark || `Dispute ${disputeDecision.toLowerCase()}d`,
+          adjustedStatus:
+            disputeDecision === "Approve" ? "Approved Adjustment" : "Missed",
+          adjustedDeduction:
+            disputeDecision === "Approve" ? 0 : activeItemForDispute.amount,
         },
       });
       setDisputeOpen(false);
@@ -184,7 +188,9 @@ export default function SalaryReviewCenter() {
   };
 
   const pendingDeductionsTotal = items
-    .filter((i) => i.type === "Deduction" && i.reviewStatus === "Pending Review")
+    .filter(
+      (i) => i.type === "Deduction" && i.reviewStatus === "Pending Review",
+    )
     .reduce((sum, i) => sum + (i.amount || 0), 0);
 
   const pendingBonusesTotal = items
@@ -192,7 +198,7 @@ export default function SalaryReviewCenter() {
     .reduce((sum, i) => sum + (i.amount || 0), 0);
 
   const pendingDisputesCount = items.filter(
-    (i) => i.disputeStatus === "Pending"
+    (i) => i.disputeStatus === "Pending",
   ).length;
 
   const filteredItems = items.filter((item) => {
@@ -200,8 +206,7 @@ export default function SalaryReviewCenter() {
       `${item.teacher?.name || ""} ${item.subject || ""} ${item.className || ""} ${item.disputeReason || ""}`
         .toLowerCase()
         .includes(debouncedSearch.toLowerCase());
-    const matchesType =
-      typeFilter === "All" ? true : item.type === typeFilter;
+    const matchesType = typeFilter === "All" ? true : item.type === typeFilter;
     return matchesSearch && matchesType;
   });
 
@@ -214,23 +219,33 @@ export default function SalaryReviewCenter() {
             <strong>{formatPKR(pendingDeductionsTotal)}</strong>
             <small>From missed or unconducted periods</small>
           </div>
-          <span className="salary-review-kpi-icon"><TrendingDown size={17} /></span>
+          <span className="salary-review-kpi-icon">
+            <TrendingDown size={17} />
+          </span>
         </div>
         <div className="salary-review-kpi campus-kpi-card">
           <div>
-            <span className="salary-review-kpi-label">Pending Substitute Bonuses</span>
+            <span className="salary-review-kpi-label">
+              Pending Substitute Bonuses
+            </span>
             <strong>+{formatPKR(pendingBonusesTotal)}</strong>
             <small>From completed substitution duties</small>
           </div>
-          <span className="salary-review-kpi-icon"><Coins size={17} /></span>
+          <span className="salary-review-kpi-icon">
+            <Coins size={17} />
+          </span>
         </div>
         <div className="salary-review-kpi campus-kpi-card">
           <div>
-            <span className="salary-review-kpi-label">Pending Teacher Disputes</span>
+            <span className="salary-review-kpi-label">
+              Pending Teacher Disputes
+            </span>
             <strong>{pendingDisputesCount} Appeals</strong>
             <small>Requiring manager resolution</small>
           </div>
-          <span className="salary-review-kpi-icon"><AlertCircle size={17} /></span>
+          <span className="salary-review-kpi-icon">
+            <AlertCircle size={17} />
+          </span>
         </div>
       </div>
 
@@ -250,7 +265,11 @@ export default function SalaryReviewCenter() {
             disabled={loading}
             className="salary-review-sync-btn"
           >
-            {loading ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
+            {loading ? (
+              <Spinner className="size-3.5" />
+            ) : (
+              <RefreshCw size={14} />
+            )}
             Sync
           </Button>
         </div>
@@ -302,9 +321,7 @@ export default function SalaryReviewCenter() {
       {/* Adjustments Table */}
       <div className="salary-review-table-wrap">
         <div className="salary-review-table-summary">
-          <span>
-            {filteredItems.length} adjustment records found
-          </span>
+          <span>{filteredItems.length} adjustment records found</span>
         </div>
 
         {loading ? (
@@ -343,7 +360,8 @@ export default function SalaryReviewCenter() {
                           {item.teacher?.name || "Teacher"}
                         </strong>
                         <span className="text-[11px] text-slate-500">
-                          {item.teacher?.department || "Faculty"} • {item.teacher?.email}
+                          {item.teacher?.department || "Faculty"} •{" "}
+                          {item.teacher?.email}
                         </span>
                       </div>
                     </td>
@@ -353,7 +371,8 @@ export default function SalaryReviewCenter() {
                           {item.subject} ({item.className})
                         </strong>
                         <span className="text-[11px] text-slate-500">
-                          {new Date(item.date).toLocaleDateString()} • Period {item.period} ({item.startTime})
+                          {new Date(item.date).toLocaleDateString()} • Period{" "}
+                          {item.period} ({item.startTime})
                         </span>
                       </div>
                     </td>
@@ -367,14 +386,14 @@ export default function SalaryReviewCenter() {
                     <td className="py-3 px-4 max-w-xs">
                       {item.disputeReason ? (
                         <div className="salary-review-appeal">
-                          <strong>
-                            Teacher Appeal:
-                          </strong>
+                          <strong>Teacher Appeal:</strong>
                           <span className="italic">"{item.disputeReason}"</span>
                         </div>
                       ) : (
                         <span className="text-slate-500">
-                          {item.remarks || item.reviewRemark || "Standard system adjustment calculation"}
+                          {item.remarks ||
+                            item.reviewRemark ||
+                            "Standard system adjustment calculation"}
                         </span>
                       )}
                     </td>
@@ -392,9 +411,7 @@ export default function SalaryReviewCenter() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
-                      <span
-                        className="salary-review-status"
-                      >
+                      <span className="salary-review-status">
                         {item.reviewStatus}
                       </span>
                     </td>
@@ -415,7 +432,9 @@ export default function SalaryReviewCenter() {
                                 <Button
                                   size="sm"
                                   className="salary-review-btn salary-review-btn-primary"
-                                  onClick={() => handleSimpleReview(item, "Approve")}
+                                  onClick={() =>
+                                    handleSimpleReview(item, "Approve")
+                                  }
                                 >
                                   Approve
                                 </Button>
@@ -431,7 +450,9 @@ export default function SalaryReviewCenter() {
                                   size="sm"
                                   variant="outline"
                                   className="salary-review-btn salary-review-btn-danger"
-                                  onClick={() => handleSimpleReview(item, "Reject")}
+                                  onClick={() =>
+                                    handleSimpleReview(item, "Reject")
+                                  }
                                 >
                                   Reject
                                 </Button>
@@ -468,7 +489,8 @@ export default function SalaryReviewCenter() {
               Adjust Adjustment Amount
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Override the proposed penalty or bonus amount for this lecture period.
+              Override the proposed penalty or bonus amount for this lecture
+              period.
             </DialogDescription>
           </DialogHeader>
 
@@ -555,7 +577,8 @@ export default function SalaryReviewCenter() {
               Resolve Teacher Dispute
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Evaluate the teacher's appeal. Approving it removes the deduction and awards teaching credit.
+              Evaluate the teacher's appeal. Approving it removes the deduction
+              and awards teaching credit.
             </DialogDescription>
           </DialogHeader>
 
@@ -567,13 +590,14 @@ export default function SalaryReviewCenter() {
               </div>
               <div>
                 <strong className="text-slate-800">Class: </strong>
-                {activeItemForDispute.subject} ({activeItemForDispute.className})
+                {activeItemForDispute.subject} ({activeItemForDispute.className}
+                )
               </div>
               <div className="salary-review-appeal">
-                <strong>
-                  Teacher's Stated Reason:
-                </strong>
-                <span className="italic">"{activeItemForDispute.disputeReason}"</span>
+                <strong>Teacher's Stated Reason:</strong>
+                <span className="italic">
+                  "{activeItemForDispute.disputeReason}"
+                </span>
               </div>
             </div>
           )}
@@ -592,8 +616,12 @@ export default function SalaryReviewCenter() {
                 onChange={(e) => setDisputeDecision(e.target.value)}
                 className="salary-review-dialog-input"
               >
-                <option value="Approve">Approve Appeal (Clear Deduction &amp; Award Credit)</option>
-                <option value="Reject">Reject Appeal (Confirm Salary Deduction)</option>
+                <option value="Approve">
+                  Approve Appeal (Clear Deduction &amp; Award Credit)
+                </option>
+                <option value="Reject">
+                  Reject Appeal (Confirm Salary Deduction)
+                </option>
               </select>
             </div>
 
