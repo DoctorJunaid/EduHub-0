@@ -110,7 +110,7 @@ export const getCampusAdminNav = (isSchool = false) => [
     group: "Finance",
     icon: <ClipboardList size={20} />,
   },
-  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "Support System", path: "/messages", icon: <MessageSquare size={20} /> },
   { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
   {
     label: "Salary Profiles",

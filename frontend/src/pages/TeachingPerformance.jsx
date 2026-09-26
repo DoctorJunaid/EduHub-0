@@ -117,7 +117,6 @@ export default function TeachingPerformance() {
 
   const handleGenerateToday = () => {
     generateMutation.mutate();
->>>>>>> dev
   };
 
   const handleOpenTimeline = async (teacher) => {
