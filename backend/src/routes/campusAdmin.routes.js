@@ -25,6 +25,7 @@ import {
   getClassSchedules,
   getClassScheduleById,
   updateClassSchedule,
+  moveClassScheduleDay,
   deleteClassSchedule,
   createExamSchedule,
   getExamSchedules,
@@ -114,6 +115,7 @@ router
 
 // Class Schedules & Routines (School Periods)
 router.route("/schedules").get(getClassSchedules).post(createClassSchedule);
+router.post("/schedules/:id/move-day", moveClassScheduleDay);
 router
   .route("/schedules/:id")
   .get(getClassScheduleById)
@@ -122,6 +124,7 @@ router
 
 // Timetables alias (for timetable matrix & schedules - supports plural and singular)
 router.route("/timetables").get(getClassSchedules).post(createClassSchedule);
+router.post("/timetables/:id/move-day", moveClassScheduleDay);
 router
   .route("/timetables/:id")
   .get(getClassScheduleById)
@@ -129,6 +132,7 @@ router
   .delete(deleteClassSchedule);
 
 router.route("/timetable").get(getClassSchedules).post(createClassSchedule);
+router.post("/timetable/:id/move-day", moveClassScheduleDay);
 router
   .route("/timetable/:id")
   .get(getClassScheduleById)
