@@ -135,9 +135,17 @@ export default function Login() {
               <span className="lp-remember-label">Remember me</span>
             </div>
 
-            <button type="submit" className="lp-submit" disabled={isSubmitting}>
-              {isSubmitting && <Spinner className="mr-2 size-4 text-white" />}
-              Login
+            <button
+              type="submit"
+              className="lp-submit"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+            >
+              {isSubmitting ? (
+                <Spinner className="size-4 text-white" />
+              ) : (
+                "Login"
+              )}
             </button>
           </form>
 
