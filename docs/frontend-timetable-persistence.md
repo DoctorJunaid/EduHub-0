@@ -99,3 +99,29 @@ The supplied screenshot's conflicting grid was reconciled using the user's appro
 
 ## Final Scope Check
 Backend modified: NO. Landing UI modified: NO. Sidebar/header modified: NO. New APIs or backend persistence: NO. Theme redesign: NO. Unnecessary dependencies: NO. Duplicate Redux store or confirmation dialog: NO. Additional approval required: NO.
+
+## Campus Manager Timetable Drag, Contract, and Input Corrections (2026-09-28)
+
+This later correction supersedes the earlier frontend-only scope statement above for the Campus Manager timetable. A recurring schedule moved to a different time previously used two independent requests: update the original recurrence, then create the moved day. The create request omitted the canonical academic IDs required by the `Timetable` model, and failure of the second request could leave the original recurrence missing that day.
+
+The move now uses an authenticated `POST /api/v1/campus-admin/timetables/:id/move-day` operation (also available through the existing `/schedules` and `/timetable` aliases). The backend updates the original record and creates the moved record within a MongoDB transaction, validates the moved slot against the remaining recurrence and other active schedules, and returns both records. The Redux thunk applies both records only after a successful response; failures trigger a fresh schedule fetch. The operation supports both current `Timetable` records and the existing legacy `ClassSchedule` shape. Existing room, teacher, class/section, and break-overlap rules remain in effect for current `Timetable` records.
+
+The canonical weekday values are Monday `1` through Sunday `7`. Frontend normalization maps legacy string weekdays and stored Sunday `0` to `7`; backend timetable validation now accepts only `1–7`. In the quick scheduling modal, labels for grade, section, subject, teacher, room, break title, and start/end time now target their corresponding native controls so clicking a label focuses the right field. The detailed schedule form is also imported where it is rendered, correcting the previously undefined component reference.
+
+Files changed for this correction:
+- `frontend/src/Admins/Campus Admin/Timetable/ClassTimetable.jsx`
+- `frontend/src/Admins/Campus Admin/Timetable/QuickScheduleModal.jsx`
+- `frontend/src/store/Slices/timetableSlice.js`
+- `backend/src/controllers/campusAdmin.controller.js`
+- `backend/src/models/timetable.model.js`
+- `backend/src/routes/campusAdmin.routes.js`
+- `backend/src/services/campusAdmin.service.js`
+
+No schema fields or unrelated payroll/business logic were changed. The move operation relies on MongoDB transaction support (a replica set or sharded cluster).
+
+Verification for this correction:
+- `npm run build`: passed. Vite reported its existing large-chunk advisory.
+- `npm run lint`: passed with warnings; existing hook/effect and other repository warnings remain.
+- Backend JavaScript syntax checks (`node --check` on the changed backend files): passed.
+- `git diff --check`: passed; Git printed Windows line-ending notices for changed frontend files.
+- Backend `npm test` could not run because Vitest is not installed in the backend workspace. No browser automation or authenticated live schedule mutation was available, so physical drag/drop, focus hitboxes, server transaction support, and runtime network responses remain unverified.

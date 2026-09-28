@@ -209,7 +209,7 @@ class CampusAdminService {
   }
 
   // --- Class Schedule Operations ---
-  async validateScheduleConflicts(campusId, payload, excludeId = null) {
+  async validateScheduleConflicts(campusId, payload, excludeId = null, session = null) {
     if (!campusId || !payload || !payload.days || !payload.days.length) return;
     const newStart = parseTimeToMinutes(payload.startTime);
     const newEnd = parseTimeToMinutes(payload.endTime);
@@ -224,7 +224,9 @@ class CampusAdminService {
       query._id = { $ne: excludeId };
     }
 
-    const existingRecords = await Timetable.find(query);
+    let existingRecordsQuery = Timetable.find(query);
+    if (session) existingRecordsQuery = existingRecordsQuery.session(session);
+    const existingRecords = await existingRecordsQuery;
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
     for (const record of existingRecords) {
@@ -559,6 +561,112 @@ class CampusAdminService {
     });
     if (!record) throw new Error("Class schedule not found.");
     return record;
+  }
+
+  async moveClassScheduleDay(id, campusId, { sourceDay, targetDay, startTime, endTime }) {
+    const fromDay = Number(sourceDay);
+    const toDay = Number(targetDay);
+    const normalizedStart = normalizeTimeString(startTime);
+    const normalizedEnd = normalizeTimeString(endTime);
+    if (
+      !Number.isInteger(fromDay) || fromDay < 1 || fromDay > 7 ||
+      !Number.isInteger(toDay) || toDay < 1 || toDay > 7 ||
+      !normalizedStart || !normalizedEnd ||
+      parseTimeToMinutes(normalizedEnd) <= parseTimeToMinutes(normalizedStart)
+    ) {
+      throw new Error("A valid source day, target day, and time range are required.");
+    }
+
+    const session = await mongoose.startSession();
+    let movedIds;
+    try {
+      await session.withTransaction(async () => {
+        let original = await Timetable.findOne({ _id: id, campusId }).session(session);
+        const model = original ? Timetable : ClassSchedule;
+        if (!original) {
+          original = await ClassSchedule.findOne({ _id: id, campusId }).session(session);
+        }
+        if (!original) throw new Error("Class schedule not found.");
+
+        const originalDays = Array.isArray(original.days) && original.days.length
+          ? original.days.map((day) => Number(day) === 0 ? 7 : Number(day))
+          : [original.dayOfWeek ? WEEKDAYS.indexOf(original.dayOfWeek) + 1 : 1];
+        if (originalDays.length < 2 || !originalDays.includes(fromDay)) {
+          throw new Error("The selected day is not part of a recurring schedule.");
+        }
+        const remainingDays = originalDays.filter((day) => day !== fromDay);
+        const movedDocument = original.toObject();
+        delete movedDocument._id;
+        delete movedDocument.__v;
+        delete movedDocument.createdAt;
+        delete movedDocument.updatedAt;
+
+        // Persist the remaining recurrence inside the transaction first so conflict
+        // validation sees it as a separate schedule at its unchanged time.
+        original.days = remainingDays;
+        if (model === ClassSchedule) {
+          original.dayOfWeek = WEEKDAYS[remainingDays[0] - 1] || "Monday";
+        }
+        await original.save({ session });
+
+        let moved;
+        if (model === Timetable) {
+          const candidate = {
+            ...movedDocument,
+            days: [toDay],
+            startTime: normalizedStart,
+            endTime: normalizedEnd,
+          };
+          await this.validateScheduleConflicts(campusId, candidate, null, session);
+          moved = new Timetable(candidate);
+          await moved.save({ session });
+        } else {
+          moved = new ClassSchedule({
+            ...movedDocument,
+            days: [toDay],
+            dayOfWeek: WEEKDAYS[toDay - 1] || "Monday",
+            startTime: normalizedStart,
+            endTime: normalizedEnd,
+          });
+          await moved.save({ session });
+        }
+
+        movedIds = { originalId: original._id, movedId: moved._id, model };
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    const { originalId, movedId, model } = movedIds;
+    const populateSchedule = async (query) => {
+      if (model === Timetable) {
+        return Timetable.findById(query)
+          .populate("gradeId", "name")
+          .populate("sectionId", "name")
+          .populate("subjectId", "name code")
+          .populate("teacherId", "name email");
+      }
+      return ClassSchedule.findById(query).populate(
+        "teacherId",
+        "name email phone department designation",
+      );
+    };
+    const [originalRecord, movedRecord] = await Promise.all([
+      populateSchedule(originalId),
+      populateSchedule(movedId),
+    ]);
+    const withDisplayNames = (record) => {
+      const doc = record.toObject();
+      if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
+      if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
+      if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+      if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      return doc;
+    };
+    return {
+      original: withDisplayNames(originalRecord),
+      moved: withDisplayNames(movedRecord),
+    };
   }
 
   async deleteClassSchedule(id, campusId) {

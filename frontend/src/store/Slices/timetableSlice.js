@@ -22,7 +22,7 @@ const normalizeSchedule = (item) => {
   const program = item.className || item.gradeOrClass || item.program || "";
   const title = item.periodName || item.title || "Period 1";
   const dayNumbers = {
-    Sunday: 0,
+    Sunday: 7,
     Monday: 1,
     Tuesday: 2,
     Wednesday: 3,
@@ -30,10 +30,15 @@ const normalizeSchedule = (item) => {
     Friday: 5,
     Saturday: 6,
   };
-  const rawDays = item.days || (item.dayOfWeek ? [item.dayOfWeek] : []);
-  const days = rawDays.map((day) =>
-    typeof day === "string" ? (dayNumbers[day] ?? day) : day
-  );
+  const rawDays = Array.isArray(item.days) && item.days.length
+    ? item.days
+    : item.dayOfWeek
+      ? [item.dayOfWeek]
+      : [];
+  const days = rawDays.map((day) => {
+    if (typeof day === "string") return dayNumbers[day] ?? day;
+    return day === 0 ? 7 : day;
+  });
   const dayOfWeek =
     item.dayOfWeek ||
     (days.length > 0 && typeof days[0] === "number"
@@ -156,6 +161,36 @@ export const updateSchedule = createAsyncThunk(
 
 export const updateScheduledClass = updateSchedule;
 
+export const moveScheduleDay = createAsyncThunk(
+  "timetable/moveScheduleDay",
+  async ({ id, _id, ...moveData }, { rejectWithValue }) => {
+    const scheduleId = _id || id;
+    try {
+      let response;
+      try {
+        response = await axiosInstance.post(
+          `/campus-admin/timetables/${scheduleId}/move-day`,
+          moveData,
+        );
+      } catch (err) {
+        if (err.response?.status === 404) {
+          response = await axiosInstance.post(
+            `/campus-admin/schedules/${scheduleId}/move-day`,
+            moveData,
+          );
+        } else {
+          throw err;
+        }
+      }
+      return response.data.data || response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to move schedule day",
+      );
+    }
+  },
+);
+
 export const deleteSchedule = createAsyncThunk(
   "timetable/deleteSchedule",
   async (scheduleId, { rejectWithValue }) => {
@@ -248,6 +283,18 @@ const slice = createSlice({
             ...state.records[index],
             ...payload,
           });
+        }
+      })
+      .addCase(moveScheduleDay.fulfilled, (state, { payload }) => {
+        for (const schedule of [payload.original, payload.moved]) {
+          if (!schedule) continue;
+          const normalized = normalizeSchedule(schedule);
+          const id = normalized._id || normalized.id;
+          const index = state.records.findIndex(
+            (item) => item.id === id || item._id === id,
+          );
+          if (index === -1) state.records.push(normalized);
+          else state.records[index] = normalized;
         }
       })
       // Delete

@@ -46,9 +46,9 @@ const timetableSchema = new mongoose.Schema(
       required: [true, "Days are required"],
       validate: {
         validator: function (v) {
-          return v && v.length > 0 && v.every(day => day >= 0 && day <= 7);
+          return v && v.length > 0 && v.every(day => day >= 1 && day <= 7);
         },
-        message: "A class must have at least one valid day selected (0-7)"
+        message: "A class must have at least one valid day selected (1-7)"
       }
     },
     startTime: {

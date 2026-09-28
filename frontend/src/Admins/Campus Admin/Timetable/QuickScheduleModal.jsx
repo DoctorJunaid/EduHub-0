@@ -542,10 +542,11 @@ export default function QuickScheduleModal({
 
                   <div className="qs-row-2col">
                     <div>
-                      <label className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
+                      <label htmlFor="qs-grade" className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
                         Grade / Class *
                       </label>
                       <select
+                        id="qs-grade"
                         required
                         value={selectedGradeId}
                         onChange={(e) => handleGradeChange(e.target.value)}
@@ -561,10 +562,11 @@ export default function QuickScheduleModal({
                     </div>
 
                     <div>
-                      <label className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
+                      <label htmlFor="qs-section" className="qs-label" style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}>
                         Section *
                       </label>
                       <select
+                        id="qs-section"
                         required
                         value={selectedSectionId}
                         onChange={(e) => handleSectionChange(e.target.value)}
@@ -586,12 +588,13 @@ export default function QuickScheduleModal({
 
                 {/* Predefined Dynamic Dropdown: Subject */}
                 <div>
-                  <label className="qs-label">
+                  <label htmlFor="qs-subject" className="qs-label">
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
                       <BookOpen size={13} style={{ color: "#64748b" }} /> Subject / Course (Configured for Class) *
                     </span>
                   </label>
                   <select
+                    id="qs-subject"
                     required
                     value={selectedSubjectId}
                     onChange={(e) => handleSubjectChange(e.target.value)}
@@ -617,12 +620,13 @@ export default function QuickScheduleModal({
                 {/* Predefined Dynamic Dropdown: Teacher & Classroom */}
                 <div className="qs-row-2col">
                   <div>
-                    <label className="qs-label">
+                    <label htmlFor="qs-teacher" className="qs-label">
                       <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
                         <User size={13} style={{ color: "#64748b" }} /> Subject Teacher *
                       </span>
                     </label>
                     <select
+                      id="qs-teacher"
                       required
                       value={selectedTeacherId}
                       onChange={(e) => setSelectedTeacherId(e.target.value)}
@@ -672,12 +676,13 @@ export default function QuickScheduleModal({
                   </div>
 
                   <div>
-                    <label className="qs-label">
+                    <label htmlFor="qs-room" className="qs-label">
                       <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
                         <Building size={13} style={{ color: "#64748b" }} /> Classroom / Lab *
                       </span>
                     </label>
                     <input
+                      id="qs-room"
                       list="qs-room-suggestions"
                       type="text"
                       required
@@ -697,7 +702,7 @@ export default function QuickScheduleModal({
             ) : (
               /* Break Interval Mode */
               <div>
-                <label className="qs-label">
+                <label htmlFor="qs-break-title" className="qs-label">
                   <span>Break / Recess Interval Name *</span>
                   <span
                     style={{
@@ -714,6 +719,7 @@ export default function QuickScheduleModal({
                   </span>
                 </label>
                 <input
+                  id="qs-break-title"
                   type="text"
                   required
                   placeholder="e.g. Lunch & Prayer Break, Morning Recess"
@@ -741,8 +747,9 @@ export default function QuickScheduleModal({
 
               <div className="qs-time-grid">
                 <div className="qs-time-field">
-                  <label>Start Time</label>
+                  <label htmlFor="qs-start-time">Start Time</label>
                   <input
+                    id="qs-start-time"
                     type="time"
                     required
                     value={startTime}
@@ -752,8 +759,9 @@ export default function QuickScheduleModal({
                 </div>
 
                 <div className="qs-time-field">
-                  <label>End Time</label>
+                  <label htmlFor="qs-end-time">End Time</label>
                   <input
+                    id="qs-end-time"
                     type="time"
                     required
                     value={endTime}

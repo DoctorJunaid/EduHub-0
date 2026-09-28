@@ -386,6 +386,20 @@ export const updateClassSchedule = async (req, res) => {
   }
 };
 
+export const moveClassScheduleDay = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const result = await campusAdminService.moveClassScheduleDay(
+      req.params.id,
+      campusId,
+      req.body,
+    );
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
 export const deleteClassSchedule = async (req, res) => {
   try {
     const { campusId } = getContext(req);

@@ -26,6 +26,7 @@ import {
   fetchSchedules,
   addSchedule,
   updateSchedule,
+  moveScheduleDay,
   deleteSchedule,
   classUpdated,
 } from "@/store/Slices/timetableSlice.js";
@@ -38,6 +39,7 @@ import toast from "react-hot-toast";
 import TimetableGrid from "./TimetableGrid";
 import ScheduledClasses from "./ScheduledClasses";
 import QuickScheduleModal from "./QuickScheduleModal";
+import ScheduleClassForm from "./ScheduleClassForm";
 import ClassDetailsDialog from "./ClassDetailsDialog";
 import usePaginationParams from "@/hooks/usePaginationParams";
 import "./ClassTimetable.css";
@@ -572,57 +574,22 @@ export default function ClassTimetable() {
     // Split: remove the dragged day from the original schedule and create a separate slot for that day
     if (previousDays.length > 1 && targetStartTime !== previousStartTime) {
       const dayToRemove = sourceDay || targetDay;
-      const remainingDays = previousDays.filter((d) => d !== dayToRemove);
       try {
-        // Update parent routine to remove this day
         await dispatch(
-          updateSchedule({
+          moveScheduleDay({
             id: record._id || record.id,
-            days: remainingDays,
-            dayOfWeek: WEEKDAY_NAMES[remainingDays[0] - 1] || "Monday",
-            startTime: record.startTime,
-            endTime: record.endTime,
-            program: record.program || record.gradeId?.name || selectedClass,
-            section:
-              record.section || record.sectionId?.name || selectedSection,
-            subject: record.subject || record.subjectId?.name,
-            instructor:
-              record.instructor || record.teacherName || record.teacherId?.name,
-            room: record.room || record.roomNumber,
-            isBreak: Boolean(record.isBreak),
-            status: record.status || "Active",
-            gradeId: record.gradeId?._id || record.gradeId,
-            sectionId: record.sectionId?._id || record.sectionId,
-            subjectId: record.subjectId?._id || record.subjectId,
-            teacherId: record.teacherId?._id || record.teacherId,
-            campusId: record.campusId?._id || record.campusId,
-          }),
-        ).unwrap();
-
-        // Create new single-day slot at the new time
-        await dispatch(
-          addSchedule({
-            program: record.program || selectedClass,
-            section: record.section || selectedSection,
-            subject: record.subject,
-            instructor: record.instructor || record.teacherName,
-            room: record.room || record.roomNumber,
+            sourceDay: dayToRemove,
+            targetDay,
             startTime: targetStartTime,
             endTime: resolvedEndTime,
-            days: [targetDay],
-            dayOfWeek: resolvedDayName,
-            isBreak: Boolean(record.isBreak),
-            institutionType: educationType,
-            status: record.status || "Active",
           }),
         ).unwrap();
 
-        dispatch(fetchSchedules());
         toast.success(
           `Moved ${record.subject} on ${resolvedDayName} to ${targetStartTime} – ${resolvedEndTime}`,
         );
       } catch (err) {
-        dispatch(fetchSchedules());
+        dispatch(fetchSchedules(true));
         toast.error(
           typeof err === "string"
             ? err
