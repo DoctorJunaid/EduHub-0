@@ -64,6 +64,11 @@ router.use("/teacher/class-sessions", classSessionRoutes);
 router.use("/campus/teachers", teacherProfileRoutes);
 router.use("/campus-admin/teachers", teacherProfileRoutes);
 
+import supportRoutes from "./support.routes.js";
+
+router.use("/support", supportRoutes);
+router.use("/messages", supportRoutes);
+
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);
 

@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { getLandingPageUrl } from "@/config/urls";
+import { useSupportStats } from "@/hooks/useSupportStats";
 
 const Sidebar = ({
   items = [],
@@ -16,6 +17,8 @@ const Sidebar = ({
   user = { name: "Admin User", initials: "A" },
 }) => {
   const { pathname } = useLocation();
+  const { stats } = useSupportStats();
+  const badgeCount = stats?.badgeCount || 0;
 
   return (
     <aside
@@ -104,7 +107,14 @@ const Sidebar = ({
                       {item.icon}
                     </span>
                   )}
-                  <span className="sidebar-label">{item.label}</span>
+                  <span className="sidebar-label flex items-center justify-between flex-1">
+                    <span>{item.label}</span>
+                    {item.path?.startsWith("/support") && badgeCount > 0 && (
+                      <span className="ml-auto bg-emerald-500 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                        {badgeCount}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               )}
             </Fragment>

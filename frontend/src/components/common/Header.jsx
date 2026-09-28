@@ -189,6 +189,10 @@ const Header = ({
             .replace(/-/g, " ")
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
+          if (segment.toLowerCase() === "messages") {
+            label = "Help & Support";
+          }
+
           const isHexOrId =
             /^[0-9a-fA-F]{24}$/.test(segment) ||
             /^fac-\d+$/i.test(segment) ||

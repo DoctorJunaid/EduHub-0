@@ -1,10 +1,12 @@
 .teacher-messages {
-  padding: 26px 24px;
-  max-width: 1600px;
-  margin: auto;
-  height: calc(100vh - 150px);
+  padding: 0;
+  margin: 7px;
+  width: calc(100% - 14px);
+  max-width: none;
+  height: calc(100vh - 74px);
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 .teacher-messages-workspace {
   display: grid;
@@ -206,8 +208,10 @@
 @media (max-width: 800px) {
   .teacher-messages {
     height: auto;
-    min-height: calc(100vh - 100px);
-    padding: 18px 14px;
+    min-height: calc(100vh - 80px);
+    margin: 7px;
+    width: calc(100% - 14px);
+    padding: 0;
   }
   .teacher-messages-workspace { grid-template-columns: 1fr; height: auto; min-height: 0; }
   .teacher-conversation-panel { border-right: 0; display: flex; min-height: 55vh; }
