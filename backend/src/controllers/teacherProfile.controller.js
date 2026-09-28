@@ -6,13 +6,14 @@
 import * as teacherProfileService from "../services/teacherProfile.service.js";
 
 const getCampusId = (req) => {
-  const campusId = req.user?.campusId || req.query.campusId || req.headers["x-campus-id"];
-  if (!campusId) {
-    const error = new Error("Campus ID is required");
-    error.statusCode = 400;
-    throw error;
-  }
-  return campusId;
+  return (
+    req.user?.campusId?._id ||
+    req.user?.campusId ||
+    req.user?.campus ||
+    req.query?.campusId ||
+    req.headers?.["x-campus-id"] ||
+    null
+  );
 };
 
 export const getTeacherProfile = async (req, res, next) => {

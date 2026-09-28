@@ -74,6 +74,15 @@ export default function TeacherProfile() {
     unassignClass,
   } = useTeacherProfile(teacherId);
 
+  useEffect(() => {
+    if (teacher?.userId?.name) {
+      document.title = `${teacher.userId.name} | Faculty Profile | EduHub`;
+      if (typeof sessionStorage !== "undefined" && teacherId) {
+        sessionStorage.setItem(`teacherName_${teacherId}`, teacher.userId.name);
+      }
+    }
+  }, [teacher, teacherId]);
+
   const handleTabChange = (val) => {
     setSearchParams({ tab: val });
   };
