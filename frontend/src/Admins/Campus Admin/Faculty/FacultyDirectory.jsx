@@ -299,7 +299,9 @@ export default function FacultyDirectory() {
                     className="cursor-pointer hover:bg-zinc-50 transition-colors"
                     onClick={() => {
                       if (targetTeacherId) {
-                        navigate(`/faculty/${targetTeacherId}`);
+                        navigate(`/faculty/${targetTeacherId}`, {
+                          state: { teacherName: teacher.name, teacher },
+                        });
                       }
                     }}
                   >
@@ -372,7 +374,9 @@ export default function FacultyDirectory() {
                           onClick={(e) => {
                             e.stopPropagation();
                             if (targetTeacherId) {
-                              navigate(`/faculty/${targetTeacherId}`);
+                              navigate(`/faculty/${targetTeacherId}`, {
+                                state: { teacherName: teacher.name, teacher },
+                              });
                             }
                           }}
                         >

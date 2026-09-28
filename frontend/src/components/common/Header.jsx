@@ -22,6 +22,8 @@ import {
 import axiosInstance from "@/api/axiosInstance";
 import { useInstitution, INSTITUTION_TYPES } from "@/context/InstitutionContext";
 
+import { useSelector } from "react-redux";
+
 const Header = ({
   user,
   homePath,
@@ -34,6 +36,7 @@ const Header = ({
   searchPlaceholder,
   handleSearch = () => {},
 }) => {
+  const facultyRecords = useSelector((state) => state.faculty?.records || []);
   const {
     institutionType,
     setInstitutionType,
@@ -181,14 +184,82 @@ const Header = ({
           segments.filter(
             (segment) => !institute || segment !== "institute-admin",
           )
-        ).map((segment) => (
-          <span key={segment} className="breadcrumb-current">
-            /{" "}
-            {segment
-              .replace(/-/g, " ")
-              .replace(/\b\w/g, (letter) => letter.toUpperCase())}
-          </span>
-        ))}
+        ).map((segment, index, arr) => {
+          let label = segment
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+          const isHexOrId =
+            /^[0-9a-fA-F]{24}$/.test(segment) ||
+            /^fac-\d+$/i.test(segment) ||
+            /^stu-\d+$/i.test(segment) ||
+            /^[0-9a-fA-F-]{36}$/.test(segment);
+
+          if (isHexOrId) {
+            if (location.state?.teacherName) {
+              label = location.state.teacherName;
+            } else if (location.state?.name) {
+              label = location.state.name;
+            } else {
+              const matched = facultyRecords.find(
+                (f) =>
+                  f.id === segment ||
+                  f._id === segment ||
+                  f.userId === segment ||
+                  f.user?._id === segment ||
+                  f.user === segment
+              );
+              if (matched?.name) {
+                label = matched.name;
+              } else {
+                const cachedName = typeof sessionStorage !== "undefined"
+                  ? sessionStorage.getItem(`teacherName_${segment}`)
+                  : null;
+                if (cachedName) {
+                  label = cachedName;
+                } else {
+                  const prevSegment = arr[index - 1]?.toLowerCase();
+                  if (
+                    prevSegment === "faculty" ||
+                    prevSegment === "teachers" ||
+                    prevSegment === "teacher" ||
+                    prevSegment === "faculty-profile"
+                  ) {
+                    label = "Teacher Profile";
+                  } else if (prevSegment === "students" || prevSegment === "student") {
+                    label = "Student Profile";
+                  } else if (prevSegment === "campuses") {
+                    label = "Campus Details";
+                  } else if (prevSegment === "institutes") {
+                    label = "Institute Details";
+                  } else {
+                    label = "Profile Details";
+                  }
+                }
+              }
+            }
+          }
+
+          const isLast = index === arr.length - 1;
+          const pathToSegment = `/${segments.slice(0, segments.indexOf(segment) + 1).join("/")}`;
+
+          return (
+            <span key={segment} className="breadcrumb-current">
+              /{" "}
+              {!isLast ? (
+                <Link
+                  to={pathToSegment}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                  className="hover:underline"
+                >
+                  {label}
+                </Link>
+              ) : (
+                <span>{label}</span>
+              )}
+            </span>
+          );
+        })}
       </nav>
 
       <div className="search-box header-search">
