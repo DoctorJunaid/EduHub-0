@@ -86,7 +86,7 @@ export default function TeacherMessages() {
 
   return (
     <main className="teacher-messages" aria-labelledby="teacher-messages-title">
-      <h1 id="teacher-messages-title" className="sr-only">Messages</h1>
+      <h1 id="teacher-messages-title" className="sr-only">Help & Support</h1>
       <section className={`teacher-messages-workspace ${mobileDetailOpen ? "mobile-detail-open" : ""}`}>
         <aside className="teacher-conversation-panel" aria-label="Conversations">
           <label className="teacher-message-search">

@@ -64,6 +64,10 @@ import TeacherClassCredits from "./Users/Teacher/TeacherClassCredits";
 import TeachingPerformance from "./pages/TeachingPerformance";
 import SalaryReviewCenter from "./pages/SalaryReviewCenter";
 import AdminSeed from "./pages/AdminSeed";
+import SupportList from "./pages/SupportList";
+import SupportTicketDetail from "./pages/SupportTicketDetail";
+import SupportManage from "./pages/SupportManage";
+import FloatingHelpWidget from "./components/support/FloatingHelpWidget";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -78,6 +82,7 @@ const App = () => {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+      <FloatingHelpWidget />
       <Routes>
         <Route path="/" element={<AuthEntry />} />
         <Route
@@ -123,7 +128,9 @@ const App = () => {
             />
             <Route path="student/grades" element={<StudentGrades />} />
             <Route path="student/fees" element={<StudentFees />} />
-            <Route path="student/messages" element={<StudentMessages />} />
+            <Route path="student/support" element={<SupportList />} />
+            <Route path="student/support/:id" element={<SupportTicketDetail />} />
+            <Route path="student/messages" element={<SupportList />} />
           </Route>
         </Route>
 
@@ -159,6 +166,9 @@ const App = () => {
             />
             <Route path="institute-admin/staff" element={<InstituteStaff />} />
             <Route path="institute-admin/settings" element={<Settings />} />
+            <Route path="institute-admin/support" element={<SupportManage />} />
+            <Route path="institute-admin/support/:id" element={<SupportTicketDetail />} />
+            <Route path="institute-admin/messages" element={<SupportManage />} />
           </Route>
         </Route>
 
@@ -189,7 +199,10 @@ const App = () => {
             <Route path="student-attendance" element={<StudentAttendance />} />
             <Route path="results" element={<ExamResults />} />
             <Route path="fees" element={<FeeManagement />} />
-            <Route path="messages" element={<Messages />} />
+            <Route path="support" element={<SupportList />} />
+            <Route path="support/manage" element={<SupportManage />} />
+            <Route path="support/:id" element={<SupportTicketDetail />} />
+            <Route path="messages" element={<SupportList />} />
             <Route path="settings" element={<Settings />} />
             <Route path="teaching-performance" element={<TeachingPerformance />} />
             <Route path="substitutes" element={<SubstituteAssignments />} />
@@ -232,7 +245,9 @@ const App = () => {
             <Route path="teacher/attendance" element={<TeacherPage />} />
             <Route path="teacher/diary" element={<TeacherPage />} />
             <Route path="teacher/gradebook" element={<TeacherPage />} />
-            <Route path="teacher/messages" element={<TeacherPage />} />
+            <Route path="teacher/support" element={<SupportList />} />
+            <Route path="teacher/support/:id" element={<SupportTicketDetail />} />
+            <Route path="teacher/messages" element={<SupportList />} />
             <Route path="my-payslips" element={<MyPayslips />} />
             <Route path="my-salary" element={<MySalary />} />
           </Route>
@@ -257,6 +272,9 @@ const App = () => {
               path="super-admin/broadcasts"
               element={<SuperAdminBroadcasts />}
             />
+            <Route path="super-admin/support" element={<SupportManage />} />
+            <Route path="super-admin/support/:id" element={<SupportTicketDetail />} />
+            <Route path="super-admin/messages" element={<SupportManage />} />
           </Route>
         </Route>
 

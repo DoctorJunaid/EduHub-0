@@ -12,6 +12,7 @@ import {
   Radio,
   Wallet,
   ShieldCheck,
+  LifeBuoy,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -35,6 +36,11 @@ export const ADMIN_NAV = [
     label: "Broadcast Alerts",
     path: "/super-admin/broadcasts",
     icon: <Radio size={20} />,
+  },
+  {
+    label: "Help & Support",
+    path: "/support/manage",
+    icon: <LifeBuoy size={20} />,
   },
 ];
 
@@ -110,7 +116,7 @@ export const getCampusAdminNav = (isSchool = false) => [
     group: "Finance",
     icon: <ClipboardList size={20} />,
   },
-  { label: "Support System", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
   { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
   {
     label: "Salary Profiles",
@@ -183,9 +189,9 @@ export const TEACHER_NAV = [
     icon: <Trophy size={20} />,
   },
   {
-    label: "Messages",
-    path: "/teacher/messages",
-    icon: <MessageSquare size={20} />,
+    label: "Help & Support",
+    path: "/support",
+    icon: <LifeBuoy size={20} />,
   },
 ];
 
@@ -205,7 +211,7 @@ export const STUDENT_NAV = [
   { label: "Results", path: "/results", icon: <Trophy size={20} /> },
   { label: "Achievements", path: "/achievements", icon: <Award size={20} /> },
   { label: "Competitions", path: "/competitions", icon: <Trophy size={20} /> },
-  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
 ];
 
 export const PARENT_NAV = [
@@ -217,7 +223,7 @@ export const PARENT_NAV = [
   { label: "Children", path: "/students", icon: <Users size={20} /> },
   { label: "Attendance", path: "/attendance", icon: <Calendar size={20} /> },
   { label: "Results", path: "/results", icon: <Trophy size={20} /> },
-  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
 ];
 
 export const ALUMNI_NAV = [
@@ -228,5 +234,5 @@ export const ALUMNI_NAV = [
   },
   { label: "Events", path: "/events", icon: <Calendar size={20} /> },
   { label: "Network", path: "/alumni", icon: <Users size={20} /> },
-  { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
 ];

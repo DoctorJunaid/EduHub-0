@@ -28,8 +28,8 @@ const copy = {
     "Manage marks for students in your assigned classes.",
   ],
   "/teacher/messages": [
-    "Messages",
-    "View conversations available to your teacher account.",
+    "Help & Support",
+    "View conversations and get help for your teacher account.",
   ],
 };
 
