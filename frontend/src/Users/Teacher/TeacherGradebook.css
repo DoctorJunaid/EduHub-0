@@ -1,17 +1,25 @@
 .teacher-gradebook {
-  padding: 32px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0;
   max-width: 1600px;
-  margin: auto;
+  margin: 0 auto;
 }
 
 .teacher-gradebook-card {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--card);
   overflow: hidden;
 }
 .teacher-gradebook-filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(210px, 320px) minmax(
+      180px,
+      280px
+    );
   gap: 12px;
   padding: 16px;
   align-items: center;
@@ -24,7 +32,7 @@
   border-radius: 7px;
   padding: 0 11px;
   color: var(--muted-foreground);
-  flex: 1;
+  min-width: 0;
 }
 .teacher-gradebook-filters input,
 .teacher-gradebook-filters select {
@@ -34,7 +42,7 @@
   color: var(--foreground);
   padding: 10px;
   outline: 0;
-  min-width: 220px;
+  min-width: 0;
 }
 .teacher-gradebook-filters input {
   border: 0;
@@ -44,26 +52,26 @@
 .teacher-gradebook-table-wrap {
   overflow-x: auto;
 }
-.teacher-gradebook-table {
+.teacher-gradebook-table-wrap table {
   width: 100%;
-  min-width: 1000px;
+  min-width: 1120px;
   border-collapse: collapse;
 }
-.teacher-gradebook-table th,
-.teacher-gradebook-table td {
+.teacher-gradebook-table-wrap th,
+.teacher-gradebook-table-wrap td {
   padding: 16px 22px;
   border-top: 1px solid var(--border);
   text-align: left;
   font-size: 0.84rem;
 }
-.teacher-gradebook-table th {
+.teacher-gradebook-table-wrap th {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.68rem;
   color: var(--muted-foreground);
   background: color-mix(in srgb, var(--muted) 22%, transparent);
 }
-.teacher-gradebook-table td small {
+.teacher-gradebook-table-wrap td small {
   display: block;
   color: var(--muted-foreground);
   margin-top: 5px;
@@ -96,11 +104,12 @@
 .teacher-gradebook-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 5px;
 }
 .teacher-gradebook-empty {
   text-align: center;
-  padding: 45px;
+  padding: 36px 24px;
   color: var(--muted-foreground);
 }
 .teacher-gradebook-footer {
@@ -133,24 +142,17 @@
   justify-self: end;
 }
 @media (max-width: 800px) {
-  .teacher-gradebook {
-    padding: 20px;
-  }
   .teacher-gradebook-filters {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .teacher-gradebook-filters label {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
   }
   .teacher-gradebook-filters select {
-    flex: 1;
     min-width: 0;
   }
 }
 @media (max-width: 560px) {
-  .teacher-gradebook {
-    padding: 16px;
-  }
   .teacher-gradebook-toolbar {
     align-items: stretch;
     flex-direction: column;
@@ -160,11 +162,12 @@
     width: 100%;
   }
   .teacher-gradebook-filters {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
   }
   .teacher-gradebook-filters label,
   .teacher-gradebook-filters select {
+    grid-column: auto;
     width: 100%;
   }
 }
@@ -177,9 +180,13 @@
   justify-content: space-between;
   gap: 12px;
 }
-.teacher-assignments-card-pages { margin: 0 0 12px auto; }
+.teacher-assignments-card-pages {
+  margin: 0 0 12px auto;
+}
 @media (max-width: 560px) {
   .teacher-assignments-footer,
   .teacher-attendance-footer,
-  .teacher-gradebook-footer { flex-wrap: wrap; }
+  .teacher-gradebook-footer {
+    flex-wrap: wrap;
+  }
 }

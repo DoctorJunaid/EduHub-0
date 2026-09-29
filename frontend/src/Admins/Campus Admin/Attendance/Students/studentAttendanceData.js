@@ -9,10 +9,51 @@ export function validStudentAttendance(record) {
     record &&
     typeof record.studentId === 'string' &&
     record.studentId.trim() &&
+    typeof record.classId === 'string' &&
+    record.classId.trim() &&
     validDate(record.date) &&
     attendanceStatuses.includes(record.status)
   );
 }
+
+const recordId = (value) => String(value?._id || value?.id || value || '');
+const classFor = (classes, classId) =>
+  (classes || []).find((item) => recordId(item) === String(classId || ''));
+const studentFor = (students, studentId) =>
+  (students || []).find((item) => recordId(item) === String(studentId || ''));
+const dateFor = (record) =>
+  String(record?.dateStr || record?.date || '').slice(0, 10);
+const sessionFor = (item) => ({
+  ...item,
+  id: recordId(item),
+  subject: item.subject || item.title || item.periodName || 'General Academic',
+  room: item.room || item.roomNumber || 'Classroom',
+  startTime: item.startTime || '08:00',
+  endTime: item.endTime || '14:00',
+});
+const studentMatchesSession = (student, session) => {
+  const program = session.className || session.gradeOrClass || session.program || '';
+  const section = session.section || '';
+  return (
+    (!program || (student.gradeOrClass || student.program) === program) &&
+    (!section || student.section === section)
+  );
+};
+const rowFor = (student, session, record, date) => ({
+  student: {
+    ...student,
+    id: recordId(student),
+    _id: recordId(student),
+    name: student.name || 'Unknown Student',
+    roll: student.roll || student.rollNumber || student.admissionNo || 'STD-001',
+    program: student.gradeOrClass || student.program || 'Grade 10',
+    section: student.section || 'A',
+  },
+  session: sessionFor(session),
+  record: record ? { ...record, status: record.status || 'Present' } : null,
+  status: record?.status || 'Not Marked',
+  date,
+});
 
 export function filterStudentAttendance(rows, filters) {
   const query = (filters.search ?? '').trim().toLowerCase();
@@ -60,140 +101,77 @@ export function filterStudentAttendance(rows, filters) {
 }
 
 export function recordedStudentRows(records, students, classes) {
-  const recordMap = new Map();
-  for (const r of records || []) {
-    const sId = String(r.studentId?._id || r.studentId || '');
-    if (sId) {
-      recordMap.set(sId, r);
-    }
-  }
-
-  const people = (students && students.length > 0)
-    ? students
-    : (records || []).map(r => r.studentId).filter(s => s && typeof s === 'object');
-
-  const rows = [];
-  const processedStudentIds = new Set();
-
-  for (const student of people) {
-    const sId = String(student._id || student.id || '');
-    if (!sId || processedStudentIds.has(sId)) continue;
-    processedStudentIds.add(sId);
-
-    const record = recordMap.get(sId) || null;
-    const recDate = record?.dateStr || (record?.date ? new Date(record.date).toISOString().split('T')[0] : '');
-
-    const session = {
-      id: record?.classId || 'default',
-      subject: student.gradeOrClass || student.program || 'General Academic',
-      room: 'Classroom',
-      startTime: '08:00',
-      endTime: '14:00',
-    };
-
-    rows.push({
-      student: {
-        ...student,
-        id: sId,
-        _id: sId,
-        name: student.name || 'Unknown Student',
-        roll: student.roll || student.rollNumber || student.admissionNo || 'STD-001',
-        program: student.gradeOrClass || student.program || 'Grade 10',
-        section: student.section || 'A',
-      },
-      session,
-      record: record ? { ...record, status: record.status || 'Present' } : null,
-      status: record?.status || 'Not Marked',
-      date: recDate,
-    });
-  }
-
-  return rows;
+  return (records || [])
+    .map((record) => {
+      const student = studentFor(students, recordId(record.studentId));
+      const session = classFor(classes, recordId(record.classId));
+      if (!student || !session) return null;
+      return rowFor(student, session, record, dateFor(record));
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export function dailyStudentRows(records, students, classes, date, matchTimetable) {
   const normalizedDate = String(date || '').slice(0, 10);
+  const recordsForDate = (records || []).filter(
+    (record) => dateFor(record) === normalizedDate,
+  );
+  if (!matchTimetable)
+    return recordedStudentRows(recordsForDate, students, classes).sort((a, b) =>
+      a.student.name.localeCompare(b.student.name),
+    );
 
-  // Map existing records for target date
-  const recordMap = new Map();
-  for (const r of records || []) {
-    const recDateStr = r.dateStr || (r.date ? new Date(r.date).toISOString().split('T')[0] : '');
-    const sId = String(r.studentId?._id || r.studentId || '');
-    if (sId) {
-      recordMap.set(sId, r);
-    }
-  }
-
-  // All student profiles
-  const people = (students && students.length > 0)
-    ? students
-    : (records || []).map(r => r.studentId).filter(s => s && typeof s === 'object');
-
+  const day = new Date(`${normalizedDate}T12:00:00`).getDay() || 7;
+  const recordMap = new Map(
+    recordsForDate.map((record) => [
+      studentAttendanceKey({
+        studentId: recordId(record.studentId),
+        classId: recordId(record.classId),
+        date: normalizedDate,
+      }),
+      record,
+    ]),
+  );
   const rows = [];
-  const processedStudentIds = new Set();
-
-  for (const student of people) {
-    const sId = String(student._id || student.id || '');
-    if (!sId || processedStudentIds.has(sId)) continue;
-    processedStudentIds.add(sId);
-
-    const record = recordMap.get(sId) || null;
-    const session = {
-      id: record?.classId || 'default',
-      subject: student.gradeOrClass || student.program || 'General Academic',
-      room: 'Classroom',
-      startTime: '08:00',
-      endTime: '14:00',
-    };
-
-    rows.push({
-      student: {
-        ...student,
-        id: sId,
-        _id: sId,
-        name: student.name || 'Unknown Student',
-        roll: student.roll || student.rollNumber || student.admissionNo || 'STD-001',
-        program: student.gradeOrClass || student.program || 'Grade 10',
-        section: student.section || 'A',
-      },
-      session,
-      record: record ? { ...record, status: record.status || 'Present' } : null,
-      status: record?.status || 'Not Marked',
+  const included = new Set();
+  for (const record of recordsForDate) {
+    const student = studentFor(students, recordId(record.studentId));
+    const session = classFor(classes, recordId(record.classId));
+    if (!student || !session) continue;
+    const key = studentAttendanceKey({
+      studentId: recordId(student),
+      classId: recordId(session),
       date: normalizedDate,
     });
+    included.add(key);
+    rows.push(rowFor(student, session, record, normalizedDate));
   }
-
-  // Fallback if records had students not found in students list
-  for (const r of records || []) {
-    const sId = String(r.studentId?._id || r.studentId || '');
-    if (sId && !processedStudentIds.has(sId)) {
-      processedStudentIds.add(sId);
-      const studentObj = typeof r.studentId === 'object' ? r.studentId : { name: 'Student', _id: sId, id: sId };
-      rows.push({
-        student: {
-          ...studentObj,
-          id: sId,
-          _id: sId,
-          name: studentObj.name || 'Student',
-          roll: studentObj.roll || r.roll || 'STD',
-          program: studentObj.gradeOrClass || r.gradeOrClass || r.className || 'Grade 10',
-          section: studentObj.section || r.section || 'A',
-        },
-        session: {
-          id: r.classId || 'default',
-          subject: r.gradeOrClass || r.className || 'General Academic',
-          room: 'Classroom',
-          startTime: '08:00',
-          endTime: '14:00',
-        },
-        record: r,
-        status: r.status || 'Present',
-        date: normalizedDate,
-      });
+  for (const session of classes || []) {
+    if (!Array.isArray(session.days) || !session.days.includes(day)) continue;
+    for (const student of students || []) {
+      if (!studentMatchesSession(student, session)) continue;
+      const record = recordMap.get(
+        studentAttendanceKey({
+          studentId: recordId(student),
+          classId: recordId(session),
+          date: normalizedDate,
+        }),
+      );
+      if (
+        included.has(
+          studentAttendanceKey({
+            studentId: recordId(student),
+            classId: recordId(session),
+            date: normalizedDate,
+          }),
+        )
+      )
+        continue;
+      rows.push(rowFor(student, session, record, normalizedDate));
     }
   }
-
-  return rows.sort((a, b) => (a.student.name || '').localeCompare(b.student.name || ''));
+  return rows.sort((a, b) => a.student.name.localeCompare(b.student.name));
 }
 
 export function studentAttendanceSummary(rows, rateMode) {

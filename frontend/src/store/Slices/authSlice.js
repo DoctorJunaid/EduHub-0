@@ -55,6 +55,12 @@ const getCachedUser = () => {
   }
 };
 
+const clearCachedSession = () => {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem('eduHubToken');
+  localStorage.removeItem('eduHubUser');
+};
+
 const initialCachedUser = getCachedUser();
 
 const slice = createSlice({
@@ -77,8 +83,7 @@ const slice = createSlice({
       } catch {}
     },
     loggedOut: () => {
-      localStorage.removeItem('eduHubToken');
-      localStorage.removeItem('eduHubUser');
+      clearCachedSession();
       return { ...loggedOutState };
     },
   },
@@ -115,8 +120,7 @@ const slice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.selectedRole = null;
-        localStorage.removeItem('eduHubToken');
-        localStorage.removeItem('eduHubUser');
+        clearCachedSession();
       });
   },
 });

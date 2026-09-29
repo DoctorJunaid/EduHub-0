@@ -17,10 +17,11 @@ export default function StudentProfileDialog({ student, onClose }) {
 
   useEffect(() => {
     if (student) {
+      const studentId = student._id || student.id;
       setLoading(true);
       Promise.all([
-        axiosInstance.get(`/api/campus-admin/fees?studentId=${student._id}`),
-        axiosInstance.get(`/api/campus-admin/students/${student._id}/payments`)
+        axiosInstance.get(`/campus-admin/fees?studentId=${studentId}`),
+        axiosInstance.get(`/campus-admin/students/${studentId}/payments`)
       ])
         .then(([feesRes, paymentsRes]) => {
           setFees(feesRes.data.data || []);

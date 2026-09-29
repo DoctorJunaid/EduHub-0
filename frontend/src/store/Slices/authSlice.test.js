@@ -8,7 +8,7 @@ test('demo session refresh, credential exclusion and logout preserve other data'
   const storage = { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: (key) => data.delete(key) };
   const create = () => { const preloaded = loadDemoState(storage); const store = configureStore({ reducer: { auth }, preloadedState: preloaded.auth ? { auth: preloaded.auth } : undefined }); persistDemoState(store, storage); return store; };
   let store = create();
-  store.dispatch(demoLoggedIn({ email: ' demo@example.com ', role: 'campus-admin', password: 'never-store-this' }));
+  store.dispatch(demoLoggedIn({ email: ' demo@example.com ', role: 'campus_admin', password: 'never-store-this' }));
   assert.equal(store.getState().auth.isAuthenticated, true);
   assert.ok(!data.get(authStorageKey).includes('password'));
   assert.ok(!data.get(authStorageKey).includes('never-store-this'));
@@ -26,5 +26,5 @@ test('demo session refresh, credential exclusion and logout preserve other data'
 test('missing destinations and malformed users cannot create an active session', () => {
   for (const role of ['super-admin', 'bad']) assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role }).isAuthenticated, false);
   assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role: 'student' }).isAuthenticated, true);
-  assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role: 'institute-admin' }).isAuthenticated, true);
+  assert.equal(sessionState({ id: '1', name: 'X', email: 'x@y.z', role: 'institute_admin' }).isAuthenticated, true);
 });

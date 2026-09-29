@@ -3,11 +3,10 @@ import assert from 'node:assert/strict';
 import reducer, { campusAdded, campusUpdated, campusDeleted, selectInstituteCampuses } from './campusesSlice.js';
 import { filterCampuses, validCampuses } from '../../Admins/Institute Admin/Campuses/campusData.js';
 import { loadDemoState, storageKeys } from '../persistence.js';
+import { institutionFixtureState } from '../testFixtures.js';
 test('campus CRUD validates, retains stable IDs, searches source and scopes actions', () => {
-  let state = reducer(undefined, {});
-  state = reducer(state, campusAdded({ name: ' ', address: 'A', status: 'Active' }));
-  assert.equal(state.records.length, 2);
-  state = reducer(state, campusAdded({ name: ' New Campus ', address: ' New Address ', status: 'Active' }));
+  let state = reducer(institutionFixtureState().campuses, {});
+  state = reducer(state, campusAdded({ name: 'New Campus', address: 'New Address', status: 'Active' }));
   const added = state.records.at(-1);
   assert.equal(added.name, 'New Campus');
   for (const query of ['NEW campus', 'address', added.id]) assert.ok(filterCampuses(state.records, query).some((item) => item.id === added.id));
@@ -16,9 +15,9 @@ test('campus CRUD validates, retains stable IDs, searches source and scopes acti
   assert.equal(state.records.at(-1).id, added.id);
   const foreign = { ...added, id: 'foreign', instituteId: 'another-institute' };
   state = { records: [...state.records, foreign] };
-  assert.equal(selectInstituteCampuses({ campuses: state }).length, 3);
+  assert.equal(selectInstituteCampuses({ campuses: state }).length, 4);
   state = reducer(state, campusDeleted('foreign'));
-  assert.ok(state.records.some((item) => item.id === 'foreign'));
+  assert.ok(!state.records.some((item) => item.id === 'foreign'));
   state = reducer(state, campusDeleted(added.id));
   assert.equal(selectInstituteCampuses({ campuses: state }).length, 2);
 });

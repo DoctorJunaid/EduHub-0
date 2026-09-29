@@ -38,8 +38,7 @@ import {
 import toast from "react-hot-toast";
 import "./TeacherClassCredits.css";
 
-const formatPKR = (amt) =>
-  `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
+const formatPKR = (amt) => `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
 
 export default function TeacherClassCredits() {
   const currentUser = useSelector(selectCurrentUser);
@@ -72,7 +71,7 @@ export default function TeacherClassCredits() {
         getMySessions(
           activeTab === "today"
             ? { date: new Date().toISOString().split("T")[0] }
-            : { month: selectedMonth }
+            : { month: selectedMonth },
         ),
         getMySummary({ month: selectedMonth }),
       ]);
@@ -82,7 +81,9 @@ export default function TeacherClassCredits() {
 
       if (showToast) toast.success("Teaching sessions synchronized.");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load teaching records.");
+      toast.error(
+        err.response?.data?.message || "Failed to load teaching records.",
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -101,7 +102,9 @@ export default function TeacherClassCredits() {
         loadData();
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update class status.");
+      toast.error(
+        err.response?.data?.message || "Failed to update class status.",
+      );
     }
   };
 
@@ -185,7 +188,7 @@ export default function TeacherClassCredits() {
         );
       default:
         return (
-        <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
+          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
             Scheduled
           </span>
         );
@@ -201,6 +204,7 @@ export default function TeacherClassCredits() {
       statusFilter === "All" ? true : s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+  const hasApprovedDeductions = Number(summary?.approvedDeductionsTotal || 0) > 0;
 
   return (
     <div className="teacher-credits-page">
@@ -214,7 +218,8 @@ export default function TeacherClassCredits() {
             My Teaching Credits &amp; Sessions
           </h1>
           <p className="teacher-credits-description text-sm text-slate-500 mt-1">
-            Track daily completed periods, substitution duties, teaching credits, and salary adjustments.
+            Track daily completed periods, substitution duties, teaching
+            credits, and salary adjustments.
           </p>
         </div>
 
@@ -232,7 +237,11 @@ export default function TeacherClassCredits() {
             disabled={refreshing}
             className="teacher-credits-sync rounded-xl flex items-center gap-1.5"
           >
-            {refreshing ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
+            {refreshing ? (
+              <Spinner className="size-3.5" />
+            ) : (
+              <RefreshCw size={14} />
+            )}
             Sync
           </Button>
         </div>
@@ -254,7 +263,8 @@ export default function TeacherClassCredits() {
               {summary?.totalCredits ?? "—"}
             </span>
             <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
-              {summary?.regularCredits || 0} Regular + {summary?.substituteCredits || 0} Substitute
+              {summary?.regularCredits || 0} Regular +{" "}
+              {summary?.substituteCredits || 0} Substitute
             </span>
           </div>
         </div>
@@ -283,12 +293,12 @@ export default function TeacherClassCredits() {
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Substitution Bonus
             </span>
-            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
               <Coins size={18} />
             </div>
           </div>
           <div className="teacher-credits-kpi-body mt-3">
-            <span className="teacher-credits-kpi-value text-2xl font-black text-purple-700">
+            <span className="teacher-credits-kpi-value text-2xl font-black text-slate-900">
               +{formatPKR(summary?.totalBonusEarned)}
             </span>
             <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
@@ -302,16 +312,27 @@ export default function TeacherClassCredits() {
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Approved Deductions
             </span>
-            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <div
+              className={`teacher-credits-kpi-icon w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
+                hasApprovedDeductions
+                  ? "bg-rose-50 text-rose-600"
+                  : "bg-slate-100 text-slate-600"
+              }`}
+            >
               <TrendingDown size={18} />
             </div>
           </div>
           <div className="teacher-credits-kpi-body mt-3">
-            <span className="teacher-credits-kpi-value text-2xl font-black text-rose-600">
+            <span
+              className={`teacher-credits-kpi-value text-2xl font-black ${
+                hasApprovedDeductions ? "text-rose-600" : "text-slate-900"
+              }`}
+            >
               -{formatPKR(summary?.approvedDeductionsTotal)}
             </span>
             <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
-              {summary?.missedCount || 0} missed, {summary?.pendingReviewsCount || 0} pending review
+              {summary?.missedCount || 0} missed,{" "}
+              {summary?.pendingReviewsCount || 0} pending review
             </span>
           </div>
         </div>
@@ -397,12 +418,18 @@ export default function TeacherClassCredits() {
 
         {loading ? (
           <div className="teacher-credits-state text-center text-slate-500 text-sm">
-            <SpinnerCustom text="Loading teaching sessions..." size="lg" className="flex-col gap-2" />
+            <SpinnerCustom
+              text="Loading teaching sessions..."
+              size="lg"
+              className="flex-col gap-2"
+            />
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className="teacher-credits-state text-center text-slate-400 text-sm">
             <Calendar className="inline-block mb-2 text-slate-300" size={32} />
-            <p className="font-semibold text-slate-600">No class sessions found</p>
+            <p className="font-semibold text-slate-600">
+              No class sessions found
+            </p>
             <span className="text-xs text-slate-400 mt-1 block">
               {activeTab === "today"
                 ? "No classes scheduled for today or none assigned."
@@ -453,10 +480,13 @@ export default function TeacherClassCredits() {
                         </span>
                       ) : sess.isSubstitutedOut ? (
                         <span className="text-amber-700 font-semibold">
-                          Substituted by {sess.actualTeacherId?.name || "Colleague"}
+                          Substituted by{" "}
+                          {sess.actualTeacherId?.name || "Colleague"}
                         </span>
                       ) : (
-                        <span className="text-slate-600 font-medium">Regular Class</span>
+                        <span className="text-slate-600 font-medium">
+                          Regular Class
+                        </span>
                       )}
                     </td>
                     <td className="teacher-credits-room text-slate-500 whitespace-nowrap">
@@ -474,25 +504,31 @@ export default function TeacherClassCredits() {
                     </td>
                     <td className="teacher-credits-actions-cell text-right whitespace-nowrap">
                       <div className="teacher-credits-actions flex items-center justify-end gap-2">
-                        {sess.status === "Scheduled" && !sess.isSubstitutedOut && (
-                          <>
-                            <Button
-                              size="sm"
-                              className="teacher-credits-action-button bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-2.5 text-xs font-semibold"
-                              onClick={() => handleMarkStatus(sess._id, "Completed")}
-                            >
-                              <CheckCircle2 size={13} className="mr-1" /> Complete
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="teacher-credits-action-button text-rose-600 border-rose-200 hover:bg-rose-50 rounded-lg h-7 px-2 text-xs"
-                              onClick={() => handleMarkStatus(sess._id, "Missed")}
-                            >
-                              Missed
-                            </Button>
-                          </>
-                        )}
+                        {sess.status === "Scheduled" &&
+                          !sess.isSubstitutedOut && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="teacher-credits-action-button bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-2.5 text-xs font-semibold"
+                                onClick={() =>
+                                  handleMarkStatus(sess._id, "Completed")
+                                }
+                              >
+                                <CheckCircle2 size={13} className="mr-1" />{" "}
+                                Complete
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="teacher-credits-action-button text-rose-600 border-rose-200 hover:bg-rose-50 rounded-lg h-7 px-2 text-xs"
+                                onClick={() =>
+                                  handleMarkStatus(sess._id, "Missed")
+                                }
+                              >
+                                Missed
+                              </Button>
+                            </>
+                          )}
 
                         {sess.status === "Completed" && (
                           <span className="text-emerald-600 text-xs font-bold flex items-center gap-1">
@@ -500,7 +536,8 @@ export default function TeacherClassCredits() {
                           </span>
                         )}
 
-                        {(sess.status === "Missed" || sess.status === "Absent") && (
+                        {(sess.status === "Missed" ||
+                          sess.status === "Absent") && (
                           <>
                             {!sess.dispute?.isDisputed ? (
                               <Button
@@ -537,7 +574,8 @@ export default function TeacherClassCredits() {
               Request Class Record Review
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500 mt-1">
-              Submit a formal dispute to the Campus Manager if this class was conducted or marked in error.
+              Submit a formal dispute to the Campus Manager if this class was
+              conducted or marked in error.
             </DialogDescription>
           </DialogHeader>
 
@@ -545,19 +583,26 @@ export default function TeacherClassCredits() {
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1 mb-3">
               <div>
                 <strong className="text-slate-800">Class: </strong>
-                {activeDisputeSession.subject} ({activeDisputeSession.className})
+                {activeDisputeSession.subject} ({activeDisputeSession.className}
+                )
               </div>
               <div>
                 <strong className="text-slate-800">Scheduled Time: </strong>
-                Period {activeDisputeSession.period} ({activeDisputeSession.startTime} – {activeDisputeSession.endTime})
+                Period {activeDisputeSession.period} (
+                {activeDisputeSession.startTime} –{" "}
+                {activeDisputeSession.endTime})
               </div>
               <div>
                 <strong className="text-slate-800">Current Status: </strong>
-                <span className="text-rose-600 font-semibold">{activeDisputeSession.status}</span>
+                <span className="text-rose-600 font-semibold">
+                  {activeDisputeSession.status}
+                </span>
               </div>
               <div>
                 <strong className="text-slate-800">Proposed Deduction: </strong>
-                <span className="text-rose-600 font-semibold">{formatPKR(activeDisputeSession.deductionValue)}</span>
+                <span className="text-rose-600 font-semibold">
+                  {formatPKR(activeDisputeSession.deductionValue)}
+                </span>
               </div>
             </div>
           )}

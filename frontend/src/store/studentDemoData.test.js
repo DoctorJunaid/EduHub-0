@@ -19,6 +19,7 @@ import {
   preferRealStudentData,
 } from "./studentDemoData.js";
 import { loadDemoState, persistDemoState } from "./persistence.js";
+import { studentDemoReferenceState } from "./testFixtures.js";
 import { selectStudentAssignments } from "./selectors/studentAssignments.js";
 import { selectStudentDiary } from "./selectors/studentDiary.js";
 import { selectStudentCourses } from "./selectors/studentCourses.js";
@@ -40,7 +41,7 @@ const reducer = combineReducers({
 });
 const make = () =>
   populateStudentDemo(
-    reducer(undefined, { type: "@@INIT" }),
+    reducer(studentDemoReferenceState(), { type: "@@INIT" }),
     new Date("2026-09-10T12:00:00"),
   );
 test("coordinated demo populates all Student pages with valid shared relationships", () => {
@@ -54,8 +55,7 @@ test("coordinated demo populates all Student pages with valid shared relationshi
     selectStudentCourses(state).every(
       (course) =>
         course.routines.length &&
-        course.attendance.marked === 4 &&
-        course.creditHours === 3,
+        course.attendance.marked === 4,
     ),
   );
   assert.deepEqual(

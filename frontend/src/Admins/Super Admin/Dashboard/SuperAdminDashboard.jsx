@@ -5,6 +5,7 @@ import {
   MapPin,
   ArrowLeft,
   Filter,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";

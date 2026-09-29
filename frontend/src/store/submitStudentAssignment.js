@@ -27,7 +27,10 @@ export const submitStudentAssignment =
       score: null,
       feedback: "",
     };
-    if (!localStorage.getItem("eduHubToken")) {
+    if (
+      typeof localStorage === "undefined" ||
+      !localStorage.getItem("eduHubToken")
+    ) {
       dispatch(submissionSaved(payload));
       return null;
     }

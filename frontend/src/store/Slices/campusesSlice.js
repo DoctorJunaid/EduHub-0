@@ -1,9 +1,11 @@
 import { createSlice, createAsyncThunk, createSelector, nanoid } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance.js';
+import { demoInstitute } from '../../Admins/Institute Admin/instituteData.js';
 
 const normalizeCampus = (c) => ({
   ...c,
   id: c._id || c.id,
+  instituteId: c.instituteId || demoInstitute.id,
   name: c.name || '',
   address: c.address || '',
   status: c.status || 'Active',

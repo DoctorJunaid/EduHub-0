@@ -5,7 +5,7 @@
   max-width: 1600px;
   min-width: 0;
   margin: 0 auto;
-  padding: 32px;
+  padding: 0;
   box-sizing: border-box;
 }
 .page-eyebrow {
@@ -321,9 +321,6 @@
   }
 }
 @media (max-width: 900px) {
-  .teacher-dashboard {
-    padding: 22px;
-  }
   .teacher-metrics {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -394,7 +391,6 @@
   }
   .teacher-dashboard {
     gap: 16px;
-    padding: 16px 14px 24px;
   }
   .teacher-table-card > header {
     padding: 16px;

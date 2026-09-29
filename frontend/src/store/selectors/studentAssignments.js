@@ -2,7 +2,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { selectStudentDashboard } from "./studentDashboard.js";
 import { validAssignment, validSubmission } from "../assignmentData.js";
 const empty = [];
-const normalize = (value) => value.trim().toLowerCase();
+const normalize = (value) => String(value || "").trim().toLowerCase();
 const referenceId = (value) => {
   if (value && typeof value === "object") return value._id || value.id || "";
   return value || "";
@@ -30,14 +30,15 @@ export const selectStudentAssignments = createSelector(
         );
         const fallbackSession =
           session ||
-          timetable.find(
+          (!assignmentClassId &&
+            timetable.find(
             (record) =>
               courses.some(
                 (course) => normalize(course) === normalize(record.subject),
               ) &&
               (normalize(record.subject) === normalize(assignment.subject) ||
                 normalize(record.title) === normalize(assignment.subject)),
-          );
+            ));
         if (!fallbackSession) return [];
         const submission = submissions.find(
           (record) =>

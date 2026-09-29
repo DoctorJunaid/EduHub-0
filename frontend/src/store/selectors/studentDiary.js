@@ -17,6 +17,7 @@ export const selectStudentDiary = createSelector(
         const routine = course?.routines.find(
           (item) => String(item.id) === String(entry.classId),
         );
+        if (!course || !routine) return [];
         const assignment = assignments.find(
           (item) =>
             String(item.id) === String(entry.assignmentId) &&
@@ -25,10 +26,9 @@ export const selectStudentDiary = createSelector(
         return [
           {
             ...entry,
-            subject: course?.title || entry.subject || "Class Diary",
-            section: course?.section || entry.section || "",
-            instructor:
-              routine?.instructor || entry.instructor || "Assigned Teacher",
+            subject: course.title,
+            section: course.section,
+            instructor: routine.instructor,
             assignment,
           },
         ];

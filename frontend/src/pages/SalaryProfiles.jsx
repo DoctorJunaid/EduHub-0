@@ -13,6 +13,7 @@ import useSalaryProfiles from "../hooks/useSalaryProfiles";
 import SalarySummaryCard from "../components/salary/SalarySummaryCard";
 import TeachersWithoutProfileAlert from "../components/salary/TeachersWithoutProfileAlert";
 import SalaryProfilesTable from "../components/salary/SalaryProfilesTable";
+import SalaryProfileDialog from "../components/salary/SalaryProfileDialog";
 import DataPagination from "../components/shared/DataPagination";
 import usePaginationParams from "../hooks/usePaginationParams";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useDebounce } from "../hooks/useDebounce";
+import toast from "react-hot-toast";
 import "./SalaryProfiles.css";
 
 export default function SalaryProfiles() {
