@@ -131,7 +131,7 @@ export default function TeacherDashboard() {
         ))}
       </section>
       <nav className="teacher-quick-actions" aria-label="Teacher quick actions">
-        <Link to="/teacher/credits" className="font-bold text-blue-700 bg-blue-50/80 border border-blue-200">
+        <Link to="/teacher/credits">
           <Award size={17} /> My Teaching Credits &amp; Sessions
         </Link>
         <Link to="/teacher/assignments">
@@ -149,7 +149,7 @@ export default function TeacherDashboard() {
       </nav>
 
       {/* Today's Teaching Credits Table */}
-      <section className="teacher-table-card">
+      <section className="teacher-table-card teacher-credits-card">
         <header>
           <div>
             <h2>Today's Teaching Credits &amp; Periods</h2>
@@ -169,7 +169,7 @@ export default function TeacherDashboard() {
           ) : todaySessions.length === 0 ? (
             <EmptyRow text="No teaching classes scheduled for today." />
           ) : (
-            <table>
+            <table className="teacher-credits-table">
               <thead>
                 <tr>
                   <th>Period &amp; Time</th>
@@ -199,7 +199,7 @@ export default function TeacherDashboard() {
                       )}
                     </td>
                     <td>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      <span className={`teacher-credit-status px-2 py-0.5 rounded-full text-xs font-semibold ${
                         sess.status === "Completed"
                           ? "bg-emerald-100 text-emerald-800"
                           : sess.status === "Missed" || sess.status === "Absent"
@@ -220,11 +220,11 @@ export default function TeacherDashboard() {
                         <span className="text-slate-400">1 Cr pending</span>
                       )}
                     </td>
-                    <td>
+                    <td className="teacher-credit-action">
                       {sess.status === "Scheduled" && !sess.isSubstitutedOut && (
                         <Button
                           size="sm"
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-3 text-xs"
+                          className="teacher-credit-complete bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-3 text-xs"
                           onClick={() => handleQuickComplete(sess._id)}
                         >
                           <CheckCircle2 size={13} className="mr-1" /> Mark Done

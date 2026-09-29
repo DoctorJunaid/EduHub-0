@@ -36,6 +36,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
+import "./TeacherClassCredits.css";
 
 const formatPKR = (amt) =>
   `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
@@ -138,14 +139,14 @@ export default function TeacherClassCredits() {
     const status = session.status;
     if (session.isSubstituted && session.isSubstituteDuty) {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+        <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
           Substitution Duty
         </span>
       );
     }
     if (session.isSubstituted && session.isSubstitutedOut) {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+        <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
           Substituted Out
         </span>
       );
@@ -154,37 +155,37 @@ export default function TeacherClassCredits() {
     switch (status) {
       case "Completed":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
             Completed (+{session.creditValue || 1} Cr)
           </span>
         );
       case "Missed":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
             Missed (-{formatPKR(session.deductionValue)})
           </span>
         );
       case "Absent":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
             Absent
           </span>
         );
       case "Approved Adjustment":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
             Approved Adjustment
           </span>
         );
       case "Cancelled":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
             Cancelled
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
+        <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
             Scheduled
           </span>
         );
@@ -202,34 +203,34 @@ export default function TeacherClassCredits() {
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
+    <div className="teacher-credits-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-        <div>
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest block mb-1">
+      <div className="teacher-credits-header">
+        <div className="teacher-credits-heading">
+          <span className="teacher-credits-eyebrow text-xs font-bold text-blue-600 uppercase tracking-widest block mb-1">
             Faculty Teaching Credit Portal
           </span>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h1 className="teacher-credits-title text-2xl font-black text-slate-900 tracking-tight">
             My Teaching Credits &amp; Sessions
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="teacher-credits-description text-sm text-slate-500 mt-1">
             Track daily completed periods, substitution duties, teaching credits, and salary adjustments.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="teacher-credits-controls">
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="teacher-credits-month border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           <Button
             variant="outline"
             size="sm"
             onClick={() => loadData(true)}
             disabled={refreshing}
-            className="rounded-xl flex items-center gap-1.5"
+            className="teacher-credits-sync rounded-xl flex items-center gap-1.5"
           >
             {refreshing ? <Spinner className="size-3.5" /> : <RefreshCw size={14} />}
             Sync
@@ -238,78 +239,78 @@ export default function TeacherClassCredits() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="flex items-center justify-between">
+      <div className="teacher-credits-kpis">
+        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="teacher-credits-kpi-top flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Total Credits
             </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
               <Award size={18} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-3xl font-black text-slate-900">
+          <div className="teacher-credits-kpi-body mt-3">
+            <span className="teacher-credits-kpi-value text-3xl font-black text-slate-900">
               {summary?.totalCredits ?? "—"}
             </span>
-            <span className="text-xs text-slate-500 block mt-0.5">
+            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
               {summary?.regularCredits || 0} Regular + {summary?.substituteCredits || 0} Substitute
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="teacher-credits-kpi-top flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Classes Completed
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <CheckCircle2 size={18} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-3xl font-black text-emerald-600">
+          <div className="teacher-credits-kpi-body mt-3">
+            <span className="teacher-credits-kpi-value text-3xl font-black text-emerald-600">
               {summary?.completedCount ?? "—"}
             </span>
-            <span className="text-xs text-slate-500 block mt-0.5">
+            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
               of {summary?.scheduledCount || 0} scheduled classes
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="teacher-credits-kpi-top flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Substitution Bonus
             </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
               <Coins size={18} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-purple-700">
+          <div className="teacher-credits-kpi-body mt-3">
+            <span className="teacher-credits-kpi-value text-2xl font-black text-purple-700">
               +{formatPKR(summary?.totalBonusEarned)}
             </span>
-            <span className="text-xs text-slate-500 block mt-0.5">
+            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
               {summary?.substituteDutiesTaken || 0} classes covered
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="teacher-credits-kpi-top flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Approved Deductions
             </span>
-            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
               <TrendingDown size={18} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-rose-600">
+          <div className="teacher-credits-kpi-body mt-3">
+            <span className="teacher-credits-kpi-value text-2xl font-black text-rose-600">
               -{formatPKR(summary?.approvedDeductionsTotal)}
             </span>
-            <span className="text-xs text-slate-500 block mt-0.5">
+            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
               {summary?.missedCount || 0} missed, {summary?.pendingReviewsCount || 0} pending review
             </span>
           </div>
@@ -317,11 +318,11 @@ export default function TeacherClassCredits() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      <div className="teacher-credits-tabs">
         <button
           type="button"
           onClick={() => setActiveTab("today")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`teacher-credits-tab px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "today"
               ? "bg-blue-600 text-white shadow-xs"
               : "text-slate-600 hover:bg-slate-100"
@@ -332,7 +333,7 @@ export default function TeacherClassCredits() {
         <button
           type="button"
           onClick={() => setActiveTab("history")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`teacher-credits-tab px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "history"
               ? "bg-blue-600 text-white shadow-xs"
               : "text-slate-600 hover:bg-slate-100"
@@ -344,7 +345,7 @@ export default function TeacherClassCredits() {
 
       {/* Filter and Search Bar for History Tab */}
       {activeTab === "history" && (
-        <div className="flex flex-col sm:flex-row items-center gap-3 bg-white p-4 rounded-xl border border-slate-200">
+        <div className="teacher-credits-filters">
           <div className="relative flex-1 w-full">
             <Search
               size={15}
@@ -355,7 +356,7 @@ export default function TeacherClassCredits() {
               placeholder="Filter by subject, class, or section..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="teacher-credits-search w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -364,7 +365,7 @@ export default function TeacherClassCredits() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white font-medium text-slate-700"
+              className="teacher-credits-status-filter text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white font-medium text-slate-700"
             >
               <option value="All">All Statuses</option>
               <option value="Scheduled">Scheduled</option>
@@ -379,27 +380,27 @@ export default function TeacherClassCredits() {
       )}
 
       {/* Main Table Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="teacher-credits-card">
+        <div className="teacher-credits-card-header">
+          <div className="teacher-credits-card-heading">
             <Clock3 size={18} className="text-blue-600" />
-            <h2 className="text-base font-bold text-slate-800">
+            <h2 className="teacher-credits-card-title text-base font-bold text-slate-800">
               {activeTab === "today"
                 ? "Today's Teaching Schedule & Verification"
                 : `Teaching Sessions for ${selectedMonth}`}
             </h2>
           </div>
-          <span className="text-xs font-semibold text-slate-500">
+          <span className="teacher-credits-session-count text-xs font-semibold text-slate-500">
             {filteredSessions.length} sessions listed
           </span>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-sm">
+          <div className="teacher-credits-state text-center text-slate-500 text-sm">
             <SpinnerCustom text="Loading teaching sessions..." size="lg" className="flex-col gap-2" />
           </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-sm">
+          <div className="teacher-credits-state text-center text-slate-400 text-sm">
             <Calendar className="inline-block mb-2 text-slate-300" size={32} />
             <p className="font-semibold text-slate-600">No class sessions found</p>
             <span className="text-xs text-slate-400 mt-1 block">
@@ -409,17 +410,17 @@ export default function TeacherClassCredits() {
             </span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="teacher-credits-table-wrap">
+            <table className="teacher-credits-table">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Period &amp; Time</th>
-                  <th className="py-3.5 px-4">Class &amp; Section</th>
-                  <th className="py-3.5 px-4">Subject</th>
-                  <th className="py-3.5 px-4">Role / Assignment</th>
-                  <th className="py-3.5 px-4">Room</th>
-                  <th className="py-3.5 px-4">Status &amp; Credit</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th>Period &amp; Time</th>
+                  <th>Class &amp; Section</th>
+                  <th>Subject</th>
+                  <th>Role / Assignment</th>
+                  <th>Room</th>
+                  <th>Status &amp; Credit</th>
+                  <th className="teacher-credits-actions-heading">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -428,8 +429,8 @@ export default function TeacherClassCredits() {
                     key={sess._id}
                     className="hover:bg-slate-50/50 transition-colors"
                   >
-                    <td className="py-3.5 px-4 font-semibold text-slate-900 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
+                    <td className="teacher-credits-period font-semibold text-slate-900 whitespace-nowrap">
+                      <div className="teacher-credits-period-content flex items-center gap-1.5">
                         <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-black flex items-center justify-center">
                           P{sess.period}
                         </span>
@@ -438,13 +439,13 @@ export default function TeacherClassCredits() {
                         </span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap font-medium text-slate-800">
+                    <td className="teacher-credits-class whitespace-nowrap font-medium text-slate-800">
                       {sess.className} {sess.section ? `• ${sess.section}` : ""}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">
+                    <td className="teacher-credits-subject font-bold text-slate-900">
                       {sess.subject}
                     </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className="teacher-credits-role whitespace-nowrap">
                       {sess.isSubstituteDuty ? (
                         <span className="text-purple-700 font-semibold flex items-center gap-1">
                           <UserCheck size={13} /> Substitute for{" "}
@@ -458,11 +459,11 @@ export default function TeacherClassCredits() {
                         <span className="text-slate-600 font-medium">Regular Class</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                    <td className="teacher-credits-room text-slate-500 whitespace-nowrap">
                       {sess.room || "Room 101"}
                     </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1 items-start">
+                    <td className="teacher-credits-status whitespace-nowrap">
+                      <div className="teacher-credits-status-content flex flex-col gap-1 items-start">
                         {getStatusBadge(sess)}
                         {sess.dispute?.isDisputed && (
                           <span className="text-[10px] text-amber-700 font-semibold">
@@ -471,13 +472,13 @@ export default function TeacherClassCredits() {
                         )}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="teacher-credits-actions-cell text-right whitespace-nowrap">
+                      <div className="teacher-credits-actions flex items-center justify-end gap-2">
                         {sess.status === "Scheduled" && !sess.isSubstitutedOut && (
                           <>
                             <Button
                               size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-2.5 text-xs font-semibold"
+                              className="teacher-credits-action-button bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-2.5 text-xs font-semibold"
                               onClick={() => handleMarkStatus(sess._id, "Completed")}
                             >
                               <CheckCircle2 size={13} className="mr-1" /> Complete
@@ -485,7 +486,7 @@ export default function TeacherClassCredits() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-rose-600 border-rose-200 hover:bg-rose-50 rounded-lg h-7 px-2 text-xs"
+                              className="teacher-credits-action-button text-rose-600 border-rose-200 hover:bg-rose-50 rounded-lg h-7 px-2 text-xs"
                               onClick={() => handleMarkStatus(sess._id, "Missed")}
                             >
                               Missed
@@ -505,7 +506,7 @@ export default function TeacherClassCredits() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg h-7 px-2.5 text-xs font-semibold"
+                                className="teacher-credits-action-button text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg h-7 px-2.5 text-xs font-semibold"
                                 onClick={() => handleOpenDispute(sess)}
                               >
                                 Request Review
