@@ -1,4 +1,20 @@
 /* Teacher-only presentation helpers. Shared primitives keep their defaults. */
+.teacher-shell .content-area {
+  padding: 32px;
+}
+
+@media (max-width: 1024px) {
+  .teacher-shell .content-area {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .teacher-shell .content-area {
+    padding: 16px;
+  }
+}
+
 .teacher-primary-action[data-slot="button"] {
   display: inline-flex;
   width: max-content;

@@ -1,9 +1,10 @@
 .teacher-messages {
   padding: 0;
-  margin: 7px;
-  width: calc(100% - 14px);
-  max-width: none;
-  height: calc(100vh - 74px);
+  margin: 0;
+  width: 100%;
+  max-width: 1600px;
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -207,17 +208,16 @@
 .teacher-message-back { display: none; }
 @media (max-width: 800px) {
   .teacher-messages {
-    height: auto;
-    min-height: calc(100vh - 80px);
-    margin: 7px;
-    width: calc(100% - 14px);
+    min-height: 0;
+    margin: 0;
+    width: 100%;
     padding: 0;
   }
   .teacher-messages-workspace { grid-template-columns: 1fr; height: auto; min-height: 0; }
-  .teacher-conversation-panel { border-right: 0; display: flex; min-height: 55vh; }
+  .teacher-conversation-panel { border-right: 0; display: flex; min-height: 0; }
   .teacher-chat-panel { display: none; }
   .teacher-messages-workspace.mobile-detail-open .teacher-conversation-panel { display: none; }
-  .teacher-messages-workspace.mobile-detail-open .teacher-chat-panel { display: flex; min-height: 70vh; }
+  .teacher-messages-workspace.mobile-detail-open .teacher-chat-panel { display: flex; min-height: 0; }
   .teacher-message-back { display: inline-flex; }
-  .teacher-message-history { min-height: 40vh; }
+  .teacher-message-history { min-height: 0; }
 }

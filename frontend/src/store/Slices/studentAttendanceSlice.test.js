@@ -48,7 +48,7 @@ test('optional timetable matching adds only unmarked program/section/weekday row
   const matched = dailyStudentRows([], people, classes, '2026-09-07', true);
   assert.equal(matched.length, 1);
   assert.equal(matched[0].student.id, 'student-demo-1');
-  assert.equal(matched[0].record, undefined);
+  assert.equal(matched[0].record, null);
   assert.equal(dailyStudentRows([], people, classes, '2026-09-08', true).length, 0);
   assert.equal(dailyStudentRows([], people, classes, '2026-09-07', false).length, 0);
   const saved = dailyStudentRows([{ ...record, id: 'a' }], people, classes, '2026-09-07', true);

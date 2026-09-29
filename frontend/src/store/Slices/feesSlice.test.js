@@ -38,8 +38,8 @@ test('mark paid requires an explicit valid date and never changes overdue automa
   assert.equal(store.getState().fees.records[0].paymentDate, '2026-09-09');
 });
 test('collection totals separate Pending and Overdue and guard zero totals', () => {
-  const rows = [{ amount: 100000, paymentStatus: 'Paid' }, { amount: 85000, paymentStatus: 'Pending' }, { amount: 15000, paymentStatus: 'Overdue' }];
-  assert.deepEqual(collectionSummary(rows), { Paid: 100000, Pending: 85000, Overdue: 15000, total: 200000, rate: 50 });
+  const rows = [{ amount: 100000, paidAmount: 100000, paymentStatus: 'Paid' }, { amount: 85000, paymentStatus: 'Pending' }, { amount: 15000, paymentStatus: 'Overdue' }];
+  assert.deepEqual(collectionSummary(rows), { Paid: 100000, Pending: 85000, Overdue: 15000, Waived: 0, total: 200000, rate: 50 });
   assert.equal(collectionSummary([]).rate, 0);
   assert.match(formatPKR(85000), /85,000/);
   assert.match(formatPKR(100.5), /100\.5/);
@@ -67,7 +67,7 @@ test('combined applied filters determine export and pagination results', () => {
   const filtered = filterVouchers(rows, { search: ' VCH ', feeCategory: 'Tuition', semester: 'Fall 2026', dueDate: '2026-09-15', paymentStatus: 'Pending' });
   assert.equal(filtered.length, 1);
   for (const key of ['feeCategory', 'semester', 'paymentStatus', 'dueDate']) assert.equal(filterVouchers(rows, { [key]: 'missing' }).length, 0);
-  assert.deepEqual(feeExport(filtered).rows[0].slice(-2), ['Pending', '']);
+  assert.deepEqual(feeExport(filtered).rows[0].slice(-2), ['Pending', '—']);
   assert.equal(paginateStudents(filtered, 8, 10).currentPage, 1);
   assert.equal(filterVouchers(rows, {}).length, rows.length);
 });

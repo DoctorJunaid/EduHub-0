@@ -13,6 +13,7 @@ import { selectStudentAttendancePage } from "./studentAttendance.js";
 import { selectStudentDashboard } from "./studentDashboard.js";
 import { selectStudentCourses } from "./studentCourses.js";
 import { loadDemoState, persistDemoState } from "../persistence.js";
+import { studentFixtureState } from "../testFixtures.js";
 
 const reducer = {
   auth,
@@ -23,7 +24,10 @@ const reducer = {
   studentAttendance,
 };
 const create = () => {
-  const store = configureStore({ reducer });
+  const store = configureStore({
+    reducer,
+    preloadedState: studentFixtureState(),
+  });
   store.dispatch(
     demoLoggedIn({ role: "student", email: "ali.raza@nust.edu.pk" }),
   );

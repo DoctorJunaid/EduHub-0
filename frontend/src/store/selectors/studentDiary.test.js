@@ -17,6 +17,7 @@ import {
   diaryEntriesForDate,
 } from "./studentDiary.js";
 import { loadDemoState, persistDemoState } from "../persistence.js";
+import { studentFixtureState } from "../testFixtures.js";
 
 const reducer = {
   auth,
@@ -41,7 +42,11 @@ const entry = {
 const create = (records = [entry], tasks = []) => {
   const store = configureStore({
     reducer,
-    preloadedState: { diary: { records }, assignments: { records: tasks } },
+    preloadedState: {
+      ...studentFixtureState(),
+      diary: { records },
+      assignments: { records: tasks },
+    },
   });
   store.dispatch(
     demoLoggedIn({ role: "student", email: "ali.raza@nust.edu.pk" }),

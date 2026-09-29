@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,

@@ -12,6 +12,7 @@ import results from "../Slices/resultsSlice.js";
 import { loadDemoState, persistDemoState } from "../persistence.js";
 import { selectStudentCourses, courseScheduleLabel } from "./studentCourses.js";
 import { selectStudentDashboard } from "./studentDashboard.js";
+import { studentFixtureState } from "../testFixtures.js";
 
 const reducer = {
   auth,
@@ -22,7 +23,10 @@ const reducer = {
   results,
 };
 const create = () => {
-  const store = configureStore({ reducer });
+  const store = configureStore({
+    reducer,
+    preloadedState: studentFixtureState(),
+  });
   store.dispatch(
     demoLoggedIn({ role: "student", email: "ali.raza@nust.edu.pk" }),
   );

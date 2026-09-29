@@ -63,7 +63,10 @@ export const replyToStudentConversation =
       senderId: conversation.self,
       body,
     };
-    if (!localStorage.getItem("eduHubToken")) {
+    if (
+      typeof localStorage === "undefined" ||
+      !localStorage.getItem("eduHubToken")
+    ) {
       dispatch(participantMessageSent(message));
       return null;
     }

@@ -20,8 +20,8 @@ export default function FacultyProfileDialog({ teacher, onClose }) {
       const teacherId = teacher._id || teacher.id;
       setLoading(true);
       Promise.allSettled([
-        axiosInstance.get(`/api/campus/salary-profiles?teacherProfileId=${teacherId}`),
-        axiosInstance.get(`/api/campus/attendance/teachers?teacherProfileId=${teacherId}`)
+        axiosInstance.get(`/campus/salary/profiles/${teacherId}`),
+        axiosInstance.get(`/campus/teachers/${teacherId}/attendance`)
       ])
         .then(([salaryRes, attRes]) => {
           if (salaryRes.status === "fulfilled" && salaryRes.value?.data?.data) {

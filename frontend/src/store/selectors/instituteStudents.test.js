@@ -15,6 +15,7 @@ import { selectInstituteStudents } from "./instituteStudents.js";
 import { searchInstituteStudents } from "../../Admins/Institute Admin/Students/studentDirectoryData.js";
 import { loadDemoState, persistDemoState } from "../persistence.js";
 import { demoInstitute } from "../../Admins/Institute Admin/instituteData.js";
+import { institutionFixtureState } from "../testFixtures.js";
 
 test("shared student CRUD, campus renames/deletion, institute scoping and refresh stay consistent", () => {
   const data = new Map();
@@ -26,7 +27,7 @@ test("shared student CRUD, campus renames/deletion, institute scoping and refres
     const loaded = loadDemoState(storage);
     const store = configureStore({
       reducer: { students, campuses },
-      preloadedState: loaded,
+      preloadedState: { ...institutionFixtureState(), ...loaded },
     });
     persistDemoState(store, storage);
     return store;
@@ -51,6 +52,7 @@ test("shared student CRUD, campus renames/deletion, institute scoping and refres
   store.dispatch(
     studentAdded({
       ...seed,
+      id: undefined,
       name: "New Student",
       email: "new@example.com",
       campusId: branch.id,

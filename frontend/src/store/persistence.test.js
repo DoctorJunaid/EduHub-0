@@ -23,13 +23,14 @@ import timetable, {
   classUpdated,
   classDeleted,
 } from "./Slices/timetableSlice.js";
-import exams, { addExam, updateExam, deleteExam } from "./Slices/examsSlice.js";
+import exams, { examAdded, examUpdated, examDeleted } from "./Slices/examsSlice.js";
 import attendance from "./Slices/attendanceSlice.js";
 import studentAttendance from "./Slices/studentAttendanceSlice.js";
 import results from "./Slices/resultsSlice.js";
 import fees from "./Slices/feesSlice.js";
 import messages from "./Slices/messagesSlice.js";
 import { loadDemoState, persistDemoState, storageKeys } from "./persistence.js";
+import { institutionFixtureState } from "./testFixtures.js";
 
 const memory = () => {
   const data = new Map();
@@ -40,6 +41,7 @@ const memory = () => {
   };
 };
 const create = (storage) => {
+  const loaded = loadDemoState(storage);
   const store = configureStore({
     reducer: {
       broadcasts,
@@ -55,7 +57,7 @@ const create = (storage) => {
       fees,
       messages,
     },
-    preloadedState: loadDemoState(storage),
+    preloadedState: { ...institutionFixtureState(), ...loaded },
   });
   persistDemoState(store, storage);
   return store;
@@ -71,9 +73,9 @@ for (const [key, add, update, remove, edit] of [
   ],
   [
     "exams",
-    addExam,
-    updateExam,
-    deleteExam,
+    examAdded,
+    examUpdated,
+    examDeleted,
     {
       subject: "Changed Exam",
       examType: "Final",
@@ -112,7 +114,10 @@ for (const [key, add, update, remove, edit] of [
     const storage = memory();
     let store = create(storage);
     const original = store.getState()[key].records[0];
-    store.dispatch(add({ ...original }));
+    const newRecord = { ...original };
+    delete newRecord.id;
+    delete newRecord._id;
+    store.dispatch(add(newRecord));
     const created = store.getState()[key].records.at(-1);
     store = create(storage);
     assert.deepEqual(store.getState()[key].records.at(-1), created);
@@ -146,7 +151,7 @@ test("empty collections stay empty after refresh; seed records are not resurrect
     ["faculty", facultyDeleted],
     ["students", studentDeleted],
     ["timetable", classDeleted],
-    ["exams", deleteExam],
+    ["exams", examDeleted],
   ]) {
     for (const record of store.getState()[key].records)
       store.dispatch(action(record.id));

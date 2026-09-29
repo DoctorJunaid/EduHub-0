@@ -6,18 +6,23 @@ import campuses, { campusAdded, campusUpdated, campusDeleted } from '../../../st
 import { loadDemoState, persistDemoState } from '../../../store/persistence.js';
 import { demoInstitute } from '../instituteData.js';
 import { selectInstituteFaculty } from './staffData.js';
+import { institutionFixtureState } from '../../../store/testFixtures.js';
 
 test('Institute faculty follows campus CRUD, scoped edits, counts and refresh', () => {
   const data = new Map();
   const storage = { getItem: (key) => data.get(key), setItem: (key, value) => data.set(key, value) };
-  const store = configureStore({ reducer: { faculty, campuses } });
+  const fixtures = institutionFixtureState();
+  const store = configureStore({ reducer: { faculty, campuses }, preloadedState: { faculty: fixtures.faculty, campuses: fixtures.campuses } });
   const unsubscribe = persistDemoState(store, storage);
   const original = selectInstituteFaculty(store.getState())[0];
   store.dispatch(campusUpdated({ id: 'camp_1', name: 'Renamed Main Campus', address: 'Islamabad', status: 'Active' }));
   assert.equal(selectInstituteFaculty(store.getState())[0].campus, 'Renamed Main Campus');
   const branch = store.dispatch(campusAdded({ name: 'New Branch', address: 'Lahore', status: 'Active' })).payload;
-  const teacher = store.dispatch(facultyAdded({ ...original, name: 'New Teacher', campusId: branch.id, campus: branch.name, instituteId: demoInstitute.id })).payload;
-  store.dispatch(facultyAdded({ ...original, name: 'Other Institute', instituteId: 'other' }));
+  const teacherValues = { ...original };
+  delete teacherValues.id;
+  store.dispatch(facultyAdded({ ...teacherValues, name: 'New Teacher', campusId: branch.id, campus: branch.name, instituteId: demoInstitute.id }));
+  const teacher = store.getState().faculty.records.at(-1);
+  store.dispatch(facultyAdded({ ...original, id: 'foreign-teacher', name: 'Other Institute', instituteId: 'other' }));
   assert.equal(selectInstituteFaculty(store.getState()).length, 2);
   store.dispatch(facultyUpdated({ ...teacher, status: 'Inactive' }));
   assert.equal(selectInstituteFaculty(store.getState()).filter((record) => record.status === 'Active').length, 1);

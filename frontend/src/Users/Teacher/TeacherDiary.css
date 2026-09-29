@@ -1,14 +1,20 @@
 .teacher-diary {
-  padding: 32px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0;
   max-width: 1600px;
-  margin: auto;
+  margin: 0 auto;
 }
 
 .teacher-diary-list {
   display: grid;
-  gap: 22px;
+  width: 100%;
+  min-width: 0;
+  gap: 18px;
 }
 .teacher-diary-card {
+  min-width: 0;
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: 10px;
@@ -92,8 +98,10 @@
   color: var(--foreground);
 }
 .teacher-diary-empty {
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
-  padding: 54px;
+  padding: 40px 24px;
   color: var(--muted-foreground);
   border: 1px dashed var(--border);
   border-radius: 10px;
@@ -126,9 +134,6 @@
   justify-self: end;
 }
 @media (max-width: 700px) {
-  .teacher-diary {
-    padding: 18px;
-  }
   .teacher-diary-toolbar {
     align-items: stretch;
     flex-direction: column;

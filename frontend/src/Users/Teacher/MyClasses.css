@@ -1,10 +1,14 @@
 .teacher-classes {
-  padding: 32px;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
   max-width: 1600px;
-  margin: auto;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .teacher-classes-card {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--card);
@@ -142,9 +146,6 @@
   color: var(--background);
 }
 @media (max-width: 850px) {
-  .teacher-classes {
-    padding: 22px;
-  }
   .teacher-class-filters {
     grid-template-columns: 1fr 1fr;
   }
@@ -153,9 +154,6 @@
   }
 }
 @media (max-width: 560px) {
-  .teacher-classes {
-    padding: 16px;
-  }
   .teacher-class-filters {
     grid-template-columns: 1fr;
     padding: 16px;

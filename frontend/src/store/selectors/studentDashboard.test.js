@@ -9,6 +9,7 @@ import studentAttendance, {
 } from "../Slices/studentAttendanceSlice.js";
 import results from "../Slices/resultsSlice.js";
 import { loadDemoState, persistDemoState } from "../persistence.js";
+import { studentFixtureState } from "../testFixtures.js";
 import {
   matchCurrentStudent,
   selectCurrentStudent,
@@ -17,7 +18,8 @@ import {
 } from "./studentDashboard.js";
 
 const reducers = { auth, students, timetable, studentAttendance, results };
-const create = () => configureStore({ reducer: reducers });
+const create = () =>
+  configureStore({ reducer: reducers, preloadedState: studentFixtureState() });
 const login = (store, email = "ali.raza@nust.edu.pk") =>
   store.dispatch(demoLoggedIn({ role: "student", email }));
 
@@ -77,6 +79,7 @@ test("dashboard tracks shared student and timetable edits without other sections
       section: "CS-3B",
     }),
   );
+  store.dispatch(classUpdated({ id: "schedule-2", subject: "Mathematics" }));
   view = selectStudentDashboard(store.getState());
   assert.deepEqual(view.courses, ["Mathematics", "Physics"]);
   assert.deepEqual(

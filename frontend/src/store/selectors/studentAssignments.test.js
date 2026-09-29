@@ -13,6 +13,7 @@ import { selectStudentAssignments } from "./studentAssignments.js";
 import { submitStudentAssignment } from "../submitStudentAssignment.js";
 import { loadDemoState, persistDemoState } from "../persistence.js";
 import { validAssignmentRecords } from "../assignmentData.js";
+import { studentFixtureState } from "../testFixtures.js";
 
 const reducer = {
   auth,
@@ -34,6 +35,7 @@ const create = (records = [assignment], saved = []) => {
   const store = configureStore({
     reducer,
     preloadedState: {
+      ...studentFixtureState(),
       assignments: { records },
       submissions: { records: saved },
     },
