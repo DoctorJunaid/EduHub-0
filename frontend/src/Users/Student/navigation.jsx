@@ -5,7 +5,7 @@ import {
   CircleCheck,
   Award,
   WalletCards,
-  MessageCircle,
+  LifeBuoy,
 } from "lucide-react";
 
 export const getStudentNav = (isSchool) => [
@@ -41,9 +41,9 @@ export const getStudentNav = (isSchool) => [
     icon: <WalletCards size={20} />,
   },
   {
-    label: "Messages",
-    path: "/student/messages",
-    icon: <MessageCircle size={20} />,
+    label: "Help & Support",
+    path: "/student/support",
+    icon: <LifeBuoy size={20} />,
   },
 ];
 

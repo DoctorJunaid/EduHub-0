@@ -9,7 +9,7 @@ export const createTicket = async (req, res, next) => {
     const ticket = await supportService.createTicket(req.user, req.body);
     res.status(201).json({
       success: true,
-      message: `Support ticket ${ticket.ticketNumber} created successfully`,
+      message: "Conversation started successfully",
       data: ticket,
     });
   } catch (error) {
@@ -80,7 +80,7 @@ export const changeStatus = async (req, res, next) => {
     const ticket = await supportService.changeStatus(req.user, id, status);
     res.status(200).json({
       success: true,
-      message: `Ticket status updated to "${status}"`,
+      message: `Status updated to "${status}"`,
       data: ticket,
     });
   } catch (error) {
@@ -109,22 +109,8 @@ export const replyToTicket = async (req, res, next) => {
     const message = await supportService.replyToTicket(req.user, id, req.body);
     res.status(201).json({
       success: true,
-      message: "Reply posted successfully",
+      message: "Reply sent successfully",
       data: message,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getTicketMessages = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const result = await supportService.getTicket(req.user, id);
-    res.status(200).json({
-      success: true,
-      data: result.messages,
-      count: result.messages.length,
     });
   } catch (error) {
     next(error);
@@ -137,7 +123,7 @@ export const closeTicket = async (req, res, next) => {
     const ticket = await supportService.closeTicket(req.user, id);
     res.status(200).json({
       success: true,
-      message: "Ticket marked as closed",
+      message: "Conversation marked as solved and closed",
       data: ticket,
     });
   } catch (error) {
@@ -152,7 +138,7 @@ export const rateTicket = async (req, res, next) => {
     const ticket = await supportService.rateTicket(req.user, id, rating, comment);
     res.status(200).json({
       success: true,
-      message: "Thank you for your feedback!",
+      message: "Thank you for your rating!",
       data: ticket,
     });
   } catch (error) {
@@ -178,7 +164,6 @@ export const getCategories = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: categories,
-      count: categories.length,
     });
   } catch (error) {
     next(error);
@@ -191,7 +176,33 @@ export const getContacts = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: contacts,
-      count: contacts.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTicketMessages = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await supportService.getTicket(req.user, id);
+    res.status(200).json({
+      success: true,
+      data: result.messages,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markMessageRead = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await supportService.markMessageRead(req.user, id);
+    res.status(200).json({
+      success: true,
+      message: "Message marked as read",
+      data: result,
     });
   } catch (error) {
     next(error);
@@ -206,10 +217,11 @@ export default {
   changeStatus,
   escalateTicket,
   replyToTicket,
-  getTicketMessages,
   closeTicket,
   rateTicket,
   getStats,
   getCategories,
   getContacts,
+  getTicketMessages,
+  markMessageRead,
 };

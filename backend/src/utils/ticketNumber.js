@@ -1,34 +1,22 @@
 /**
  * Ticket Number Generator
- * Generates unique sequential ticket numbers in format TKT-YYYY-NNNN (e.g. TKT-2026-0001).
+ * Generates unique sequential ticket numbers in format TKT-YYYY-NNNN (e.g. TKT-2026-0001)
+ * Uses atomic counter increments per year.
  */
-import SupportTicket from "../models/supportTicket.model.js";
+import TicketCounter from "../models/ticketCounter.model.js";
 
 export const generateTicketNumber = async () => {
   const currentYear = new Date().getFullYear();
   const yearPrefix = `TKT-${currentYear}-`;
 
-  // Find the highest ticket number for the current year
-  const lastTicket = await SupportTicket.findOne({
-    ticketNumber: new RegExp(`^${yearPrefix}`),
-  })
-    .sort({ ticketNumber: -1 })
-    .select("ticketNumber")
-    .lean();
+  const counter = await TicketCounter.findOneAndUpdate(
+    { year: currentYear },
+    { $inc: { lastNumber: 1 } },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
 
-  let nextSequence = 1;
-
-  if (lastTicket && lastTicket.ticketNumber) {
-    const parts = lastTicket.ticketNumber.split("-");
-    if (parts.length === 3) {
-      const parsedNum = parseInt(parts[2], 10);
-      if (!isNaN(parsedNum)) {
-        nextSequence = parsedNum + 1;
-      }
-    }
-  }
-
-  const paddedNumber = String(nextSequence).padStart(4, "0");
+  const sequence = counter.lastNumber || 1;
+  const paddedNumber = String(sequence).padStart(4, "0");
   return `${yearPrefix}${paddedNumber}`;
 };
 

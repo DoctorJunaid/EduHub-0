@@ -1,130 +1,106 @@
 import React from "react";
 import { Search, Filter, X } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function TicketFilters({
+export const TicketFilters = ({
   filters = {},
   onChange,
   onReset,
   categories = [],
-  showAssigneeFilter = false,
-  assignees = [],
-}) {
-  const hasActiveFilters =
-    Boolean(filters.search) ||
-    (filters.status && filters.status !== "All") ||
-    (filters.category && filters.category !== "All") ||
-    (filters.priority && filters.priority !== "All") ||
-    (filters.assignedTo && filters.assignedTo !== "All");
+  isAdmin = false,
+}) => {
+  const hasActiveFilters = Boolean(
+    filters.search ||
+      (filters.status && filters.status !== "all") ||
+      (filters.category && filters.category !== "all") ||
+      (filters.priority && filters.priority !== "all") ||
+      filters.assignedTo ||
+      filters.startDate ||
+      filters.endDate
+  );
 
   return (
-    <div className="campus-toolbar bg-white border border-zinc-200/80 rounded-xl p-3 mb-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
-      <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-        {/* Search input */}
-        <div className="relative min-w-[200px] max-w-[260px] flex-1">
-          <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
+    <div className="p-4 bg-card border border-border/80 rounded-2xl space-y-3 shadow-xs">
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        {/* Search Bar */}
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
-            placeholder="Search tickets, subjects, staff..."
+            placeholder={
+              isAdmin
+                ? "Search by ticket #, subject, creator or keyword..."
+                : "Search your conversations..."
+            }
             value={filters.search || ""}
             onChange={(e) => onChange("search", e.target.value)}
-            className="w-full h-8 pl-8 pr-3 text-xs bg-zinc-50 border border-zinc-200 rounded-lg outline-none focus:border-zinc-900 transition-colors"
+            className="pl-9 bg-background/50 h-10 rounded-xl"
           />
         </div>
 
-        {/* Status selector */}
-        <Select
-          value={filters.status || "All"}
-          onValueChange={(val) => onChange("status", val)}
-        >
-          <SelectTrigger className="h-8 w-[125px] text-xs bg-zinc-50 border-zinc-200">
-            <SelectValue placeholder="Status: All" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectItem value="All">All Statuses</SelectItem>
-            <SelectItem value="Open">Open</SelectItem>
-            <SelectItem value="In Progress">In Progress</SelectItem>
-            <SelectItem value="Resolved">Resolved</SelectItem>
-            <SelectItem value="Closed">Closed</SelectItem>
-            <SelectItem value="Escalated">Escalated</SelectItem>
-            <SelectItem value="Cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Category selector */}
-        <Select
-          value={filters.category || "All"}
-          onValueChange={(val) => onChange("category", val)}
-        >
-          <SelectTrigger className="h-8 w-[145px] text-xs bg-zinc-50 border-zinc-200">
-            <SelectValue placeholder="Category: All" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectItem value="All">All Categories</SelectItem>
+        {/* Filters and Reset */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Category Dropdown */}
+          <select
+            value={filters.category || "all"}
+            onChange={(e) => onChange("category", e.target.value)}
+            className="h-10 px-3 py-1.5 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="all">All Categories</option>
             {categories.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
+              <option key={c.id || c} value={c.id || c}>
+                {c.icon ? `${c.icon} ` : ""}{c.label || c}
+              </option>
             ))}
-          </SelectContent>
-        </Select>
+          </select>
 
-        {/* Priority selector */}
-        <Select
-          value={filters.priority || "All"}
-          onValueChange={(val) => onChange("priority", val)}
-        >
-          <SelectTrigger className="h-8 w-[125px] text-xs bg-zinc-50 border-zinc-200">
-            <SelectValue placeholder="Priority: All" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectItem value="All">All Priorities</SelectItem>
-            <SelectItem value="Urgent">Urgent</SelectItem>
-            <SelectItem value="High">High</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="Low">Low</SelectItem>
-          </SelectContent>
-        </Select>
+          {/* Admin-only Filters: Priority, Status, Date */}
+          {isAdmin && (
+            <>
+              <select
+                value={filters.status || "all"}
+                onChange={(e) => onChange("status", e.target.value)}
+                className="h-10 px-3 py-1.5 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="all">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+                <option value="Escalated">Escalated</option>
+                <option value="Overdue">Overdue SLA</option>
+              </select>
 
-        {/* Assignee selector for Manage mode */}
-        {showAssigneeFilter && assignees.length > 0 && (
-          <Select
-            value={filters.assignedTo || "All"}
-            onValueChange={(val) => onChange("assignedTo", val === "All" ? "" : val)}
-          >
-            <SelectTrigger className="h-8 w-[145px] text-xs bg-zinc-50 border-zinc-200">
-              <SelectValue placeholder="Assignee: All" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="All">All Assignees</SelectItem>
-              {assignees.map((a) => (
-                <SelectItem key={a._id} value={a._id}>
-                  {a.name} ({a.role})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+              <select
+                value={filters.priority || "all"}
+                onChange={(e) => onChange("priority", e.target.value)}
+                className="h-10 px-3 py-1.5 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="all">All Priorities</option>
+                <option value="Urgent">Urgent</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </>
+          )}
 
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onReset}
-            className="h-8 text-xs text-zinc-500 hover:text-zinc-900 px-2 flex items-center gap-1"
-          >
-            <X className="w-3 h-3" />
-            <span>Reset</span>
-          </Button>
-        )}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-10 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-xl"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Reset</span>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default TicketFilters;

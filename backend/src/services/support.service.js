@@ -1,6 +1,6 @@
 /**
  * Support Service Layer
- * Encapsulates all Mongoose data queries and business rules for Support Tickets and Messages.
+ * Encapsulates all Mongoose queries and business rules for Support Tickets and Messages.
  */
 import mongoose from "mongoose";
 import SupportTicket from "../models/supportTicket.model.js";
@@ -8,13 +8,14 @@ import SupportMessage from "../models/supportMessage.model.js";
 import User from "../models/user.model.js";
 import generateTicketNumber from "../utils/ticketNumber.js";
 import {
+  normalizeRole,
+  isAdminRole,
   canViewTicket,
   canReplyToTicket,
   canAssignTicket,
   canEscalateTicket,
   canCloseTicket,
   canMessageUser,
-  isAdminRole,
 } from "../middleware/supportAccess.middleware.js";
 
 // SLA Thresholds in Hours
@@ -25,10 +26,24 @@ const SLA_HOURS = {
   Low: 72,
 };
 
+const CATEGORY_MAP = [
+  { id: "Academic", label: "Homework or subject", icon: "📚", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Attendance", label: "Attendance", icon: "📅", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Fees & Payments", label: "Fees or payment", icon: "💰", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Library", label: "Library", icon: "📖", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Transport", label: "Transport", icon: "🚌", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Technical Issue", label: "My account", icon: "👤", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Discipline", label: "Discipline", icon: "⚠️", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Payroll", label: "Salary", icon: "💵", roles: ["teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Other", label: "Something else", icon: "❓", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Platform Bug", label: "Platform Bug", icon: "🐛", roles: ["campus_admin", "institute_admin", "super_admin"] },
+  { id: "Feature Request", label: "Feature Request", icon: "💡", roles: ["campus_admin", "institute_admin", "super_admin"] },
+];
+
 /**
- * Helper: Run auto-close on tickets that have been "Resolved" for > 7 days
+ * Auto-close: Find tickets where status = "Resolved" AND lastActivityAt < now - 7 days -> bulk update to "Closed"
  */
-const runAutoClose = async (scopeFilter = {}) => {
+export const runAutoClose = async (scopeFilter = {}) => {
   try {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     await SupportTicket.updateMany(
@@ -51,10 +66,78 @@ const runAutoClose = async (scopeFilter = {}) => {
 };
 
 /**
+ * Auto-assign helper
+ */
+export const autoAssign = async (ticketData, user) => {
+  const role = normalizeRole(user.role);
+  const { category } = ticketData;
+  const campusId = user.campusId || null;
+  const instituteId = user.instituteId || null;
+
+  if (category === "Payroll" && role === "teacher") {
+    const campusAdmin = await User.findOne({
+      campusId,
+      role: { $in: ["campus_admin", "campus_manager", "principal"] },
+      isActive: true,
+    }).lean();
+    return campusAdmin;
+  }
+
+  if (category === "Platform Bug" || category === "Feature Request") {
+    const superAdmin = await User.findOne({
+      role: "super_admin",
+      isActive: true,
+    }).lean();
+    return superAdmin;
+  }
+
+  if (category === "Academic" && role === "student") {
+    // Assign to student's teacher in same campus
+    const teacher = await User.findOne({
+      campusId,
+      role: { $in: ["teacher", "faculty"] },
+      isActive: true,
+    }).lean();
+    if (teacher) return teacher;
+  }
+
+  // Fallback: Campus admin or Institute admin
+  if (campusId) {
+    const campusAdmin = await User.findOne({
+      campusId,
+      role: { $in: ["campus_admin", "campus_manager", "principal"] },
+      isActive: true,
+    }).lean();
+    if (campusAdmin) return campusAdmin;
+  }
+
+  if (instituteId) {
+    const instAdmin = await User.findOne({
+      instituteId,
+      role: "institute_admin",
+      isActive: true,
+    }).lean();
+    if (instAdmin) return instAdmin;
+  }
+
+  const superAdmin = await User.findOne({
+    role: "super_admin",
+    isActive: true,
+  }).lean();
+  return superAdmin;
+};
+
+/**
  * 1. Create Ticket
  */
 export const createTicket = async (user, payload) => {
-  const { category, priority = "Medium", subject, description, attachments = [] } = payload;
+  const {
+    category,
+    priority: requestedPriority,
+    subject,
+    description,
+    attachments = [],
+  } = payload;
 
   if (!subject || subject.trim().length < 5) {
     const error = new Error("Subject must be at least 5 characters long");
@@ -62,72 +145,43 @@ export const createTicket = async (user, payload) => {
     throw error;
   }
 
-  if (!description || description.trim().length < 20) {
-    const error = new Error("Description must be at least 20 characters long");
+  if (!description || description.trim().length < 10) {
+    const error = new Error("Description must be at least 10 characters long");
     error.statusCode = 400;
     throw error;
   }
 
-  // Validate Category for non-admins
+  const role = normalizeRole(user.role);
+
+  // Validate admin-only categories
   if (category === "Platform Bug" || category === "Feature Request") {
-    if (!isAdminRole(user.role)) {
-      const error = new Error(`Only administrators can create tickets in category "${category}"`);
+    if (!isAdminRole(role)) {
+      const error = new Error(`Only administrators can create tickets for "${category}"`);
       error.statusCode = 400;
       throw error;
     }
   }
 
-  // Auto-Assignee resolution
-  let assignedUser = null;
-  const campusId = user.campusId || null;
-  const instituteId = user.instituteId || null;
-
-  if (category === "Platform Bug" || category === "Feature Request") {
-    assignedUser = await User.findOne({ role: "super_admin", isActive: true });
-  } else if (category === "Payroll" && (user.role === "teacher" || user.role === "faculty")) {
-    assignedUser = await User.findOne({
-      campusId,
-      role: { $in: ["campus_admin", "campus_manager", "principal"] },
-      isActive: true,
-    });
-  } else if (category === "Academic" && user.role === "student") {
-    // Attempt to assign to a teacher in the same campus
-    assignedUser = await User.findOne({
-      campusId,
-      role: { $in: ["teacher", "faculty"] },
-      isActive: true,
-    });
+  // Validate Payroll category for teacher only or admin
+  if (category === "Payroll" && role !== "teacher" && !isAdminRole(role)) {
+    const error = new Error("Salary inquiries are only available for staff members");
+    error.statusCode = 400;
+    throw error;
   }
 
-  // Default fallback assignment: Campus Admin or Institute Admin
-  if (!assignedUser && campusId) {
-    assignedUser = await User.findOne({
-      campusId,
-      role: { $in: ["campus_admin", "campus_manager", "principal"] },
-      isActive: true,
-    });
-  }
+  // Priority enforcement: Regular users are auto-Medium; admins can set
+  const priority = isAdminRole(role) && requestedPriority ? requestedPriority : "Medium";
 
-  if (!assignedUser && instituteId) {
-    assignedUser = await User.findOne({
-      instituteId,
-      role: "institute_admin",
-      isActive: true,
-    });
-  }
+  // Auto assign
+  const assignedUser = await autoAssign({ category }, user);
 
-  // Auto urgent for login/technical issues
-  let finalPriority = priority;
-  if (category === "Technical Issue" && /login|access|password|lock/i.test(`${subject} ${description}`)) {
-    finalPriority = "Urgent";
-  }
-
+  // Generate ticket number
   const ticketNumber = await generateTicketNumber();
 
   const ticket = await SupportTicket.create({
     ticketNumber,
-    campusId,
-    instituteId,
+    campusId: user.campusId || null,
+    instituteId: user.instituteId || null,
     createdBy: user._id,
     createdBySnapshot: {
       name: user.name || "User",
@@ -137,126 +191,167 @@ export const createTicket = async (user, payload) => {
     assignedTo: assignedUser ? assignedUser._id : null,
     assignedToSnapshot: assignedUser
       ? {
-          name: assignedUser.name || "Admin",
+          name: assignedUser.name || "Support Team",
           email: assignedUser.email || "",
           role: assignedUser.role || "campus_admin",
         }
-      : { name: "Unassigned", email: "", role: "" },
+      : { name: "Support Team", email: "", role: "campus_admin" },
     category,
-    priority: finalPriority,
+    priority,
     status: "Open",
     subject: subject.trim(),
     description: description.trim(),
     attachments: Array.isArray(attachments) ? attachments.slice(0, 3) : [],
     escalationLevel: 1,
+    escalationHistory: [],
     lastActivityAt: new Date(),
+  });
+
+  // Initial message thread entry
+  await SupportMessage.create({
+    ticketId: ticket._id,
+    senderId: user._id,
+    senderSnapshot: {
+      name: user.name || "User",
+      email: user.email || "",
+      role: user.role || "student",
+    },
+    message: description.trim(),
+    attachments: Array.isArray(attachments) ? attachments.slice(0, 3) : [],
+    isInternal: false,
+    readBy: [{ userId: user._id, readAt: new Date() }],
   });
 
   return ticket;
 };
 
 /**
- * 2. List Tickets (Paginated & Role-Scoped)
+ * 2. List Tickets (Role-Scoped & Paginated)
  */
 export const listTickets = async (user, filters = {}) => {
-  const {
-    page = 1,
-    limit = 20,
-    status,
-    category,
-    priority,
-    search,
-    scope = "my", // "my" | "all" (all for admins)
-    assignedTo,
-  } = filters;
+  const role = normalizeRole(user.role);
+  const page = Math.max(1, parseInt(filters.page, 10) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(filters.limit, 10) || 10));
+  const skip = (page - 1) * limit;
+
+  // Run periodic auto-close
+  const baseScope = {};
+  if (role === "campus_admin" && user.campusId) baseScope.campusId = user.campusId;
+  if (role === "institute_admin" && user.instituteId) baseScope.instituteId = user.instituteId;
+  await runAutoClose(baseScope);
 
   const query = {};
 
-  // Build role-based scope filter
-  if (user.role === "super_admin") {
-    if (scope === "my") {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-    }
-  } else if (user.role === "institute_admin") {
-    if (scope === "all" && user.instituteId) {
-      query.instituteId = user.instituteId;
-    } else {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }, { instituteId: user.instituteId }];
-    }
-  } else if (user.role === "campus_admin" || user.role === "campus_manager" || user.role === "principal") {
-    if (scope === "all" && user.campusId) {
-      query.campusId = user.campusId;
-    } else {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }, { campusId: user.campusId }];
-    }
+  // Tenant / Role Scoping
+  if (role === "super_admin") {
+    if (filters.campusId) query.campusId = filters.campusId;
+    if (filters.instituteId) query.instituteId = filters.instituteId;
+  } else if (role === "institute_admin") {
+    query.instituteId = user.instituteId;
+    if (filters.campusId) query.campusId = filters.campusId;
+  } else if (role === "campus_admin") {
+    query.campusId = user.campusId;
+  } else if (role === "teacher") {
+    query.$or = [
+      { createdBy: user._id },
+      { assignedTo: user._id },
+      { campusId: user.campusId, category: "Academic" },
+    ];
   } else {
-    // Teacher, student, parent
-    query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
+    // Student, Parent
+    query.createdBy = user._id;
   }
 
-  // Trigger auto-close check on read
-  await runAutoClose(query.campusId ? { campusId: query.campusId } : {});
-
-  // Apply filters
-  if (status && status !== "All") query.status = status;
-  if (category && category !== "All") query.category = category;
-  if (priority && priority !== "All") query.priority = priority;
-  if (assignedTo) query.assignedTo = assignedTo;
-
-  if (search && search.trim()) {
-    const term = search.trim();
-    query.$and = query.$and || [];
-    query.$and.push({
-      $or: [
-        { ticketNumber: { $regex: term, $options: "i" } },
-        { subject: { $regex: term, $options: "i" } },
-        { "createdBySnapshot.name": { $regex: term, $options: "i" } },
-        { "assignedToSnapshot.name": { $regex: term, $options: "i" } },
-      ],
-    });
+  // Filter application
+  if (filters.status && filters.status !== "all") {
+    if (filters.status === "Overdue") {
+      query.status = { $in: ["Open", "In Progress", "Escalated"] };
+    } else {
+      query.status = filters.status;
+    }
   }
 
-  const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
-  const skip = (pageNum - 1) * limitNum;
+  if (filters.category && filters.category !== "all") {
+    query.category = filters.category;
+  }
 
-  const [total, tickets] = await Promise.all([
-    SupportTicket.countDocuments(query),
+  if (filters.priority && filters.priority !== "all") {
+    query.priority = filters.priority;
+  }
+
+  if (filters.assignedTo) {
+    if (filters.assignedTo === "unassigned") {
+      query.assignedTo = null;
+    } else {
+      query.assignedTo = filters.assignedTo;
+    }
+  }
+
+  if (filters.search) {
+    const s = filters.search.trim();
+    query.$or = [
+      { ticketNumber: { $regex: s, $options: "i" } },
+      { subject: { $regex: s, $options: "i" } },
+      { description: { $regex: s, $options: "i" } },
+      { "createdBySnapshot.name": { $regex: s, $options: "i" } },
+    ];
+  }
+
+  if (filters.startDate || filters.endDate) {
+    query.createdAt = {};
+    if (filters.startDate) query.createdAt.$gte = new Date(filters.startDate);
+    if (filters.endDate) {
+      const end = new Date(filters.endDate);
+      end.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = end;
+    }
+  }
+
+  const [tickets, total] = await Promise.all([
     SupportTicket.find(query)
-      .sort({ lastActivityAt: -1 })
+      .sort({ lastActivityAt: -1, createdAt: -1 })
       .skip(skip)
-      .limit(limitNum)
-      .populate("createdBy", "name email role avatar")
-      .populate("assignedTo", "name email role avatar")
+      .limit(limit)
       .lean(),
+    SupportTicket.countDocuments(query),
   ]);
 
+  // Calculate Overdue status for each ticket
+  const now = Date.now();
+  const enrichedTickets = tickets.map((t) => {
+    const slaLimit = SLA_HOURS[t.priority] || 24;
+    const elapsedHours = (now - new Date(t.createdAt).getTime()) / (1000 * 60 * 60);
+    const isOverdue =
+      ["Open", "In Progress", "Escalated"].includes(t.status) &&
+      elapsedHours > slaLimit;
+
+    return {
+      ...t,
+      isOverdue,
+      slaRemainingHours: Math.max(0, slaLimit - elapsedHours),
+    };
+  });
+
   return {
-    tickets,
+    tickets: enrichedTickets,
     total,
-    page: pageNum,
-    limit: limitNum,
-    pageCount: Math.max(1, Math.ceil(total / limitNum)),
+    page,
+    limit,
+    pageCount: Math.ceil(total / limit) || 1,
   };
 };
 
 /**
- * 3. Get One Ticket + All Threaded Messages
+ * 3. Get Single Ticket + Messages + Mark Read
  */
 export const getTicket = async (user, ticketId) => {
   if (!mongoose.Types.ObjectId.isValid(ticketId)) {
-    const error = new Error("Invalid ticket ID");
+    const error = new Error("Invalid ticket ID format");
     error.statusCode = 400;
     throw error;
   }
 
-  const ticket = await SupportTicket.findById(ticketId)
-    .populate("createdBy", "name email role avatar")
-    .populate("assignedTo", "name email role avatar")
-    .populate("escalationHistory.from", "name email role")
-    .populate("escalationHistory.to", "name email role")
-    .populate("escalationHistory.actor", "name email role");
-
+  const ticket = await SupportTicket.findById(ticketId).lean();
   if (!ticket) {
     const error = new Error("Support ticket not found");
     error.statusCode = 404;
@@ -264,23 +359,25 @@ export const getTicket = async (user, ticketId) => {
   }
 
   if (!canViewTicket(user, ticket)) {
-    const error = new Error("Access denied. You do not have permission to view this support ticket.");
+    const error = new Error("You do not have permission to view this ticket");
     error.statusCode = 403;
     throw error;
   }
 
-  // Filter messages (internal notes hidden from non-admin creators)
+  const role = normalizeRole(user.role);
+  const isStaff = isAdminRole(role) || role === "teacher";
+
+  // Message query (hide internal notes from regular creators/users)
   const messageQuery = { ticketId: ticket._id };
-  if (!isAdminRole(user.role)) {
+  if (!isStaff) {
     messageQuery.isInternal = false;
   }
 
   const messages = await SupportMessage.find(messageQuery)
     .sort({ createdAt: 1 })
-    .populate("senderId", "name email role avatar")
     .lean();
 
-  // Mark unread messages as read by current user
+  // Mark unread messages as read for this user
   await SupportMessage.updateMany(
     {
       ticketId: ticket._id,
@@ -291,8 +388,18 @@ export const getTicket = async (user, ticketId) => {
     }
   );
 
+  const slaLimit = SLA_HOURS[ticket.priority] || 24;
+  const elapsedHours = (Date.now() - new Date(ticket.createdAt).getTime()) / (1000 * 60 * 60);
+  const isOverdue =
+    ["Open", "In Progress", "Escalated"].includes(ticket.status) &&
+    elapsedHours > slaLimit;
+
   return {
-    ticket,
+    ticket: {
+      ...ticket,
+      isOverdue,
+      slaRemainingHours: Math.max(0, slaLimit - elapsedHours),
+    },
     messages,
   };
 };
@@ -303,29 +410,32 @@ export const getTicket = async (user, ticketId) => {
 export const assignTicket = async (user, ticketId, assigneeId) => {
   const ticket = await SupportTicket.findById(ticketId);
   if (!ticket) {
-    const error = new Error("Ticket not found");
+    const error = new Error("Support ticket not found");
     error.statusCode = 404;
     throw error;
   }
 
   if (!canAssignTicket(user, ticket)) {
-    const error = new Error("Access denied. Only administrators can assign tickets.");
+    const error = new Error("You do not have permission to assign this ticket");
     error.statusCode = 403;
     throw error;
   }
 
-  const assignee = await User.findById(assigneeId);
+  const assignee = await User.findById(assigneeId).lean();
   if (!assignee) {
     const error = new Error("Assignee user not found");
     error.statusCode = 404;
     throw error;
   }
 
-  // Multi-tenant boundary check
-  if (user.role === "campus_admin" && assignee.campusId && String(assignee.campusId) !== String(user.campusId)) {
-    const error = new Error("Cannot assign ticket to a staff member outside your campus");
-    error.statusCode = 403;
-    throw error;
+  // Cross-campus check for campus admins
+  const userRole = normalizeRole(user.role);
+  if (userRole === "campus_admin" && user.campusId) {
+    if (assignee.campusId && String(assignee.campusId) !== String(user.campusId)) {
+      const error = new Error("Cannot assign ticket to a staff member of a different campus");
+      error.statusCode = 403;
+      throw error;
+    }
   }
 
   ticket.assignedTo = assignee._id;
@@ -334,98 +444,130 @@ export const assignTicket = async (user, ticketId, assigneeId) => {
     email: assignee.email,
     role: assignee.role,
   };
-  ticket.lastActivityAt = new Date();
   if (ticket.status === "Open") {
     ticket.status = "In Progress";
   }
-
+  ticket.lastActivityAt = new Date();
   await ticket.save();
+
+  // Internal log message
+  await SupportMessage.create({
+    ticketId: ticket._id,
+    senderId: user._id,
+    senderSnapshot: {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    message: `Assigned ticket to ${assignee.name} (${assignee.role})`,
+    isInternal: true,
+  });
+
   return ticket;
 };
 
 /**
- * 5. Change Ticket Status (Admin only)
+ * 5. Change Status (Admin only)
  */
-export const changeStatus = async (user, ticketId, status) => {
-  const validStatuses = ["Open", "In Progress", "Resolved", "Closed", "Escalated", "Cancelled"];
-  if (!validStatuses.includes(status)) {
-    const error = new Error(`Invalid status "${status}"`);
-    error.statusCode = 400;
-    throw error;
-  }
-
+export const changeStatus = async (user, ticketId, newStatus) => {
   const ticket = await SupportTicket.findById(ticketId);
   if (!ticket) {
-    const error = new Error("Ticket not found");
+    const error = new Error("Support ticket not found");
     error.statusCode = 404;
     throw error;
   }
 
   if (!canAssignTicket(user, ticket)) {
-    const error = new Error("Access denied. Only administrators can change ticket status.");
+    const error = new Error("You do not have permission to modify this ticket status");
     error.statusCode = 403;
     throw error;
   }
 
-  ticket.status = status;
+  const validStatuses = ["Open", "In Progress", "Resolved", "Closed", "Escalated", "Cancelled"];
+  if (!validStatuses.includes(newStatus)) {
+    const error = new Error(`Invalid status: ${newStatus}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const oldStatus = ticket.status;
+  ticket.status = newStatus;
   ticket.lastActivityAt = new Date();
 
-  if (status === "Resolved" && !ticket.resolvedAt) {
+  if (newStatus === "Resolved" && !ticket.resolvedAt) {
     ticket.resolvedAt = new Date();
   }
-  if (status === "Closed" && !ticket.closedAt) {
+  if (newStatus === "Closed" && !ticket.closedAt) {
     ticket.closedAt = new Date();
   }
 
   await ticket.save();
+
+  // Internal audit entry
+  await SupportMessage.create({
+    ticketId: ticket._id,
+    senderId: user._id,
+    senderSnapshot: {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    message: `Status updated from "${oldStatus}" to "${newStatus}"`,
+    isInternal: true,
+  });
+
   return ticket;
 };
 
 /**
- * 6. Escalate Ticket (Admin only, moves up one level)
+ * 6. Escalate Ticket (Admin only)
+ * Escalation ladder: Level 1 (Campus) -> Level 2 (Institute) -> Level 3 (Super Admin)
  */
 export const escalateTicket = async (user, ticketId, reason = "") => {
   const ticket = await SupportTicket.findById(ticketId);
   if (!ticket) {
-    const error = new Error("Ticket not found");
+    const error = new Error("Support ticket not found");
     error.statusCode = 404;
     throw error;
   }
 
   if (!canEscalateTicket(user, ticket)) {
-    const error = new Error(
-      (ticket.escalationLevel || 1) >= 3
-        ? "Ticket is already at the highest escalation level (Level 3 - Super Admin)"
-        : "Access denied. You cannot escalate this ticket."
-    );
-    error.statusCode = 400;
+    if ((ticket.escalationLevel || 1) >= 3) {
+      const error = new Error("Already at highest level (Level 3)");
+      error.statusCode = 400;
+      throw error;
+    }
+    const error = new Error("You do not have permission to escalate this ticket");
+    error.statusCode = 403;
     throw error;
   }
 
-  const previousLevel = ticket.escalationLevel || 1;
-  const nextLevel = previousLevel + 1;
-  const previousAssignee = ticket.assignedTo;
+  const currentLevel = ticket.escalationLevel || 1;
+  const nextLevel = currentLevel + 1;
 
   let newAssignee = null;
-
   if (nextLevel === 2) {
-    // Level 2 -> Institute Admin
     newAssignee = await User.findOne({
-      instituteId: ticket.instituteId || user.instituteId,
+      instituteId: ticket.instituteId,
       role: "institute_admin",
       isActive: true,
-    });
+    }).lean();
   } else if (nextLevel === 3) {
-    // Level 3 -> Super Admin
     newAssignee = await User.findOne({
       role: "super_admin",
       isActive: true,
-    });
+    }).lean();
   }
 
   ticket.escalationLevel = nextLevel;
   ticket.status = "Escalated";
-  ticket.lastActivityAt = new Date();
+  ticket.escalationHistory.push({
+    from: ticket.assignedTo,
+    to: newAssignee ? newAssignee._id : null,
+    reason: reason.trim() || `Escalated to Level ${nextLevel}`,
+    timestamp: new Date(),
+    actor: user._id,
+  });
 
   if (newAssignee) {
     ticket.assignedTo = newAssignee._id;
@@ -436,15 +578,21 @@ export const escalateTicket = async (user, ticketId, reason = "") => {
     };
   }
 
-  ticket.escalationHistory.push({
-    from: previousAssignee,
-    to: newAssignee ? newAssignee._id : null,
-    reason: reason.trim() || `Escalated to Level ${nextLevel}`,
-    timestamp: new Date(),
-    actor: user._id,
+  ticket.lastActivityAt = new Date();
+  await ticket.save();
+
+  await SupportMessage.create({
+    ticketId: ticket._id,
+    senderId: user._id,
+    senderSnapshot: {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    message: `🚨 Escalated to Level ${nextLevel}. Reason: ${reason || "Not specified"}`,
+    isInternal: true,
   });
 
-  await ticket.save();
   return ticket;
 };
 
@@ -454,34 +602,38 @@ export const escalateTicket = async (user, ticketId, reason = "") => {
 export const replyToTicket = async (user, ticketId, payload) => {
   const { message, attachments = [], isInternal = false } = payload;
 
-  if (!message || !message.trim()) {
-    const error = new Error("Message content cannot be empty");
+  if ((!message || !message.trim()) && (!attachments || attachments.length === 0)) {
+    const error = new Error("Message content or attachment is required");
     error.statusCode = 400;
     throw error;
   }
 
   const ticket = await SupportTicket.findById(ticketId);
   if (!ticket) {
-    const error = new Error("Ticket not found");
+    const error = new Error("Support ticket not found");
     error.statusCode = 404;
     throw error;
   }
 
   if (ticket.status === "Closed" || ticket.status === "Cancelled") {
-    const error = new Error("Cannot reply to a closed or cancelled support ticket");
+    const error = new Error("This conversation is closed and cannot receive replies");
     error.statusCode = 400;
     throw error;
   }
 
   if (!canReplyToTicket(user, ticket)) {
-    const error = new Error("Access denied. You do not have permission to reply to this ticket.");
+    const error = new Error("You do not have permission to reply to this ticket");
     error.statusCode = 403;
     throw error;
   }
 
-  const internalNote = Boolean(isInternal) && isAdminRole(user.role);
+  const role = normalizeRole(user.role);
+  const isStaff = isAdminRole(role) || role === "teacher";
 
-  const reply = await SupportMessage.create({
+  // Only staff can mark messages as internal notes
+  const effectiveInternal = isStaff && Boolean(isInternal);
+
+  const newMessage = await SupportMessage.create({
     ticketId: ticket._id,
     senderId: user._id,
     senderSnapshot: {
@@ -489,28 +641,34 @@ export const replyToTicket = async (user, ticketId, payload) => {
       email: user.email || "",
       role: user.role || "student",
     },
-    message: message.trim(),
+    message: message ? message.trim() : "(Attachment)",
     attachments: Array.isArray(attachments) ? attachments.slice(0, 3) : [],
-    isInternal: internalNote,
+    isInternal: effectiveInternal,
     readBy: [{ userId: user._id, readAt: new Date() }],
   });
 
+  // Update firstResponseAt if staff replies to non-staff creator
+  if (!effectiveInternal && isStaff && !ticket.firstResponseAt) {
+    const isCreator = String(ticket.createdBy) === String(user._id);
+    if (!isCreator) {
+      ticket.firstResponseAt = new Date();
+    }
+  }
+
+  // Update status transitions on external replies
+  if (!effectiveInternal) {
+    const isCreator = String(ticket.createdBy) === String(user._id);
+    if (isCreator && ticket.status === "Resolved") {
+      ticket.status = "In Progress";
+    } else if (!isCreator && (ticket.status === "Open" || ticket.status === "In Progress")) {
+      ticket.status = "Resolved";
+    }
+  }
+
   ticket.lastActivityAt = new Date();
-
-  // First response tracking (if admin replies and firstResponseAt is null)
-  if (isAdminRole(user.role) && !ticket.firstResponseAt && !internalNote) {
-    ticket.firstResponseAt = new Date();
-  }
-
-  // If ticket was "Resolved" and creator replies, reopen to "In Progress"
-  if (ticket.status === "Resolved" && String(ticket.createdBy) === String(user._id)) {
-    ticket.status = "In Progress";
-  } else if (ticket.status === "Open" && isAdminRole(user.role)) {
-    ticket.status = "In Progress";
-  }
-
   await ticket.save();
-  return reply;
+
+  return newMessage;
 };
 
 /**
@@ -519,13 +677,13 @@ export const replyToTicket = async (user, ticketId, payload) => {
 export const closeTicket = async (user, ticketId) => {
   const ticket = await SupportTicket.findById(ticketId);
   if (!ticket) {
-    const error = new Error("Ticket not found");
+    const error = new Error("Support ticket not found");
     error.statusCode = 404;
     throw error;
   }
 
   if (!canCloseTicket(user, ticket)) {
-    const error = new Error("Access denied. You do not have permission to close this ticket.");
+    const error = new Error("You do not have permission to close this conversation");
     error.statusCode = 403;
     throw error;
   }
@@ -533,189 +691,219 @@ export const closeTicket = async (user, ticketId) => {
   ticket.status = "Closed";
   ticket.closedAt = new Date();
   ticket.lastActivityAt = new Date();
-
   await ticket.save();
+
+  await SupportMessage.create({
+    ticketId: ticket._id,
+    senderId: user._id,
+    senderSnapshot: {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    message: "✓ Conversation marked as resolved and closed.",
+    isInternal: false,
+  });
+
   return ticket;
 };
 
 /**
- * 9. Rate Ticket Satisfaction (Creator only, once)
+ * 9. Rate Ticket (Creator only, once)
  */
 export const rateTicket = async (user, ticketId, rating, comment = "") => {
-  const score = parseInt(rating, 10);
-  if (isNaN(score) || score < 1 || score > 5) {
-    const error = new Error("Satisfaction rating must be a number between 1 and 5");
-    error.statusCode = 400;
-    throw error;
-  }
-
   const ticket = await SupportTicket.findById(ticketId);
   if (!ticket) {
-    const error = new Error("Ticket not found");
+    const error = new Error("Support ticket not found");
     error.statusCode = 404;
     throw error;
   }
 
-  if (String(ticket.createdBy) !== String(user._id)) {
-    const error = new Error("Only the ticket creator can submit a satisfaction rating");
+  const isCreator = String(ticket.createdBy) === String(user._id);
+  if (!isCreator) {
+    const error = new Error("Only the creator of this conversation can provide a rating");
     error.statusCode = 403;
     throw error;
   }
 
-  if (ticket.satisfactionRating) {
-    const error = new Error("Satisfaction rating has already been submitted for this ticket");
+  if (ticket.satisfactionRating !== null && ticket.satisfactionRating !== undefined) {
+    const error = new Error("Already rated: You have already submitted a rating for this conversation");
     error.statusCode = 400;
     throw error;
   }
 
-  ticket.satisfactionRating = score;
-  ticket.satisfactionComment = comment ? comment.trim() : "";
-  ticket.lastActivityAt = new Date();
+  const numRating = parseInt(rating, 10);
+  if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+    const error = new Error("Rating must be an integer between 1 and 5");
+    error.statusCode = 400;
+    throw error;
+  }
 
+  ticket.satisfactionRating = numRating;
+  ticket.satisfactionComment = comment ? comment.trim().slice(0, 500) : "";
+  ticket.lastActivityAt = new Date();
   await ticket.save();
+
   return ticket;
 };
 
 /**
- * 10. Get Scoped Dashboard Stats & SLAs
+ * 10. Get KPI Stats (Role Scoped)
  */
 export const getStats = async (user) => {
+  const role = normalizeRole(user.role);
   const query = {};
 
-  if (user.role === "super_admin") {
-    // Platform-wide
-  } else if (user.role === "institute_admin" && user.instituteId) {
+  if (role === "super_admin") {
+    // all
+  } else if (role === "institute_admin") {
     query.instituteId = user.instituteId;
-  } else if (
-    (user.role === "campus_admin" || user.role === "campus_manager" || user.role === "principal") &&
-    user.campusId
-  ) {
+  } else if (role === "campus_admin") {
     query.campusId = user.campusId;
+  } else if (role === "teacher") {
+    query.$or = [
+      { createdBy: user._id },
+      { assignedTo: user._id },
+      { campusId: user.campusId, category: "Academic" },
+    ];
   } else {
-    query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
+    query.createdBy = user._id;
   }
 
-  const tickets = await SupportTicket.find(query).lean();
+  const [
+    openCount,
+    inProgressCount,
+    resolvedCount,
+    closedCount,
+    escalatedCount,
+    allTickets,
+  ] = await Promise.all([
+    SupportTicket.countDocuments({ ...query, status: "Open" }),
+    SupportTicket.countDocuments({ ...query, status: "In Progress" }),
+    SupportTicket.countDocuments({ ...query, status: "Resolved" }),
+    SupportTicket.countDocuments({ ...query, status: "Closed" }),
+    SupportTicket.countDocuments({ ...query, status: "Escalated" }),
+    SupportTicket.find({
+      ...query,
+      status: { $in: ["Open", "In Progress", "Escalated"] },
+    })
+      .select("createdAt priority status")
+      .lean(),
+  ]);
 
-  const openCount = tickets.filter((t) => t.status === "Open").length;
-  const inProgressCount = tickets.filter((t) => t.status === "In Progress" || t.status === "Escalated").length;
-  const resolvedCount = tickets.filter((t) => t.status === "Resolved").length;
-  const closedCount = tickets.filter((t) => t.status === "Closed").length;
-  const totalCount = tickets.length;
-
-  // Unread / assigned to me count for sidebar badge
-  const myAssignedOpenCount = tickets.filter(
-    (t) =>
-      String(t.assignedTo) === String(user._id) &&
-      (t.status === "Open" || t.status === "In Progress" || t.status === "Escalated")
-  ).length;
-
-  const myOpenTicketsCount = tickets.filter(
-    (t) => String(t.createdBy) === String(user._id) && t.status !== "Closed" && t.status !== "Cancelled"
-  ).length;
-
-  // SLA Computations (no cron, on read)
   const now = Date.now();
-  let ticketsWithinSLA = 0;
-  let ticketsOverdue = 0;
-  let totalResponseTimeMs = 0;
-  let responseCount = 0;
-  let totalResolutionTimeMs = 0;
-  let resolutionCount = 0;
+  let overdueCount = 0;
+  allTickets.forEach((t) => {
+    const slaLimit = SLA_HOURS[t.priority] || 24;
+    const elapsedHours = (now - new Date(t.createdAt).getTime()) / (1000 * 60 * 60);
+    if (elapsedHours > slaLimit) overdueCount += 1;
+  });
 
-  for (const t of tickets) {
-    const slaHours = SLA_HOURS[t.priority] || 24;
-    const slaMs = slaHours * 60 * 60 * 1000;
-    const createdMs = new Date(t.createdAt).getTime();
+  // Calculate resolution averages for admins
+  let avgResolutionHours = 0;
+  let avgFirstResponseHours = 0;
+  if (isAdminRole(role)) {
+    const closedSample = await SupportTicket.find({
+      ...query,
+      status: "Closed",
+      resolvedAt: { $exists: true, $ne: null },
+    })
+      .select("createdAt resolvedAt firstResponseAt")
+      .limit(100)
+      .lean();
 
-    // Check first response SLA
-    if (t.firstResponseAt) {
-      const responseMs = new Date(t.firstResponseAt).getTime();
-      const elapsed = responseMs - createdMs;
-      totalResponseTimeMs += elapsed;
-      responseCount++;
-      if (elapsed <= slaMs) ticketsWithinSLA++;
-      else ticketsOverdue++;
-    } else if (t.status === "Open" || t.status === "In Progress") {
-      const elapsed = now - createdMs;
-      if (elapsed > slaMs) ticketsOverdue++;
-    }
+    if (closedSample.length > 0) {
+      let totalResTime = 0;
+      let totalFirstResp = 0;
+      let firstRespCount = 0;
 
-    // Check resolution time
-    if (t.resolvedAt) {
-      const resolvedMs = new Date(t.resolvedAt).getTime();
-      totalResolutionTimeMs += resolvedMs - createdMs;
-      resolutionCount++;
+      closedSample.forEach((s) => {
+        totalResTime += (new Date(s.resolvedAt) - new Date(s.createdAt)) / (1000 * 60 * 60);
+        if (s.firstResponseAt) {
+          totalFirstResp += (new Date(s.firstResponseAt) - new Date(s.createdAt)) / (1000 * 60 * 60);
+          firstRespCount += 1;
+        }
+      });
+
+      avgResolutionHours = Math.round((totalResTime / closedSample.length) * 10) / 10;
+      avgFirstResponseHours = firstRespCount > 0 ? Math.round((totalFirstResp / firstRespCount) * 10) / 10 : 0;
     }
   }
-
-  const avgFirstResponseHours =
-    responseCount > 0 ? Number((totalResponseTimeMs / responseCount / (1000 * 60 * 60)).toFixed(1)) : 0;
-  const avgResolutionHours =
-    resolutionCount > 0 ? Number((totalResolutionTimeMs / resolutionCount / (1000 * 60 * 60)).toFixed(1)) : 0;
 
   return {
-    open: openCount,
-    inProgress: inProgressCount,
-    resolved: resolvedCount,
-    closed: closedCount,
-    total: totalCount,
-    badgeCount: isAdminRole(user.role) ? myAssignedOpenCount : myOpenTicketsCount,
-    sla: {
-      ticketsWithinSLA,
-      ticketsOverdue,
-      avgFirstResponseHours,
-      avgResolutionHours,
-    },
+    badgeCount: openCount + inProgressCount,
+    waiting: openCount,
+    lookingAt: inProgressCount,
+    answered: resolvedCount,
+    done: closedCount,
+    escalated: escalatedCount,
+    overdue: overdueCount,
+    avgResolutionHours,
+    avgFirstResponseHours,
   };
 };
 
 /**
- * 11. Get Categories For Role
+ * 11. Get Categories for Role
  */
-export const getCategoriesForRole = (role = "student") => {
-  const common = [
-    "Technical Issue",
-    "Academic",
-    "Attendance",
-    "Fees & Payments",
-    "Library",
-    "Transport",
-    "Discipline",
-    "Other",
-  ];
-
-  if (role === "teacher" || role === "faculty") {
-    return ["Payroll", ...common];
-  }
-
-  if (isAdminRole(role)) {
-    return ["Platform Bug", "Feature Request", "Payroll", ...common];
-  }
-
-  return common;
+export const getCategoriesForRole = (role) => {
+  const normRole = normalizeRole(role);
+  return CATEGORY_MAP.filter((cat) => cat.roles.includes(normRole));
 };
 
 /**
- * 12. Get Authorized Contacts (Who this user can message/tag)
+ * 12. Get Contacts (Who can this user message)
  */
 export const getContacts = async (user) => {
+  const role = normalizeRole(user.role);
   const query = { isActive: true, _id: { $ne: user._id } };
 
-  if (user.role === "campus_admin" || user.role === "campus_manager" || user.role === "principal") {
-    if (user.campusId) query.campusId = user.campusId;
-  } else if (user.role === "institute_admin") {
-    if (user.instituteId) query.instituteId = user.instituteId;
-  } else if (user.campusId) {
-    query.campusId = user.campusId;
+  if (role === "super_admin") {
+    // all
+  } else if (role === "institute_admin") {
+    query.$or = [{ role: "super_admin" }, { instituteId: user.instituteId }];
+  } else if (role === "campus_admin") {
+    query.$or = [
+      { role: "super_admin" },
+      { role: "institute_admin", instituteId: user.instituteId },
+      { campusId: user.campusId },
+    ];
+  } else if (role === "teacher") {
+    query.$or = [
+      { campusId: user.campusId, role: { $in: ["campus_admin", "campus_manager", "principal", "teacher"] } },
+      { campusId: user.campusId, role: { $in: ["student", "parent"] } },
+    ];
+  } else {
+    // student, parent
+    query.$or = [
+      { campusId: user.campusId, role: { $in: ["campus_admin", "campus_manager", "principal", "teacher"] } },
+    ];
   }
 
-  const candidates = await User.find(query)
-    .select("name email role avatar department designation")
+  const contacts = await User.find(query)
+    .select("name email role avatar department designation campusId")
     .limit(50)
     .lean();
 
-  return candidates.filter((recipient) => canMessageUser(user, recipient));
+  return contacts.filter((c) => canMessageUser(user, c));
+};
+
+/**
+ * 13. Mark Message as Read
+ */
+export const markMessageRead = async (user, messageId) => {
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    const error = new Error("Invalid message ID");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await SupportMessage.updateOne(
+    { _id: messageId, "readBy.userId": { $ne: user._id } },
+    { $push: { readBy: { userId: user._id, readAt: new Date() } } }
+  );
+
+  return { success: true };
 };
 
 export default {
@@ -731,4 +919,7 @@ export default {
   getStats,
   getCategoriesForRole,
   getContacts,
+  autoAssign,
+  runAutoClose,
+  markMessageRead,
 };

@@ -3,11 +3,18 @@
  * Enforces role hierarchy, escalation ladder, and multi-tenant scoping for tickets.
  */
 
-const normalizeRole = (role = "") => {
+export const normalizeRole = (role = "") => {
   const r = String(role).toLowerCase().trim();
   if (r === "superadmin" || r === "super_admin") return "super_admin";
   if (r === "instituteadmin" || r === "institute_admin") return "institute_admin";
-  if (r === "campusadmin" || r === "campus_admin" || r === "campus_manager" || r === "principal" || r === "accountant") return "campus_admin";
+  if (
+    r === "campusadmin" ||
+    r === "campus_admin" ||
+    r === "campus_manager" ||
+    r === "principal" ||
+    r === "accountant"
+  )
+    return "campus_admin";
   if (r === "teacher" || r === "faculty") return "teacher";
   if (r === "student") return "student";
   if (r === "parent") return "parent";
@@ -43,14 +50,14 @@ export const canViewTicket = (user, ticket) => {
 
   // Teachers see tickets they created OR assigned to them
   if (role === "teacher") {
-    const isCreator = String(ticket.createdBy) === String(user._id);
-    const isAssignee = ticket.assignedTo && String(ticket.assignedTo) === String(user._id);
+    const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(user._id);
+    const isAssignee = ticket.assignedTo && String(ticket.assignedTo?._id || ticket.assignedTo) === String(user._id);
     return isCreator || isAssignee;
   }
 
   // Students and parents see only tickets they created
   if (role === "student" || role === "parent") {
-    return String(ticket.createdBy) === String(user._id);
+    return String(ticket.createdBy?._id || ticket.createdBy) === String(user._id);
   }
 
   return false;
@@ -75,16 +82,24 @@ export const canAssignTicket = (user, ticket) => {
 
   if (role === "super_admin") return true;
   if (role === "institute_admin") {
-    return !ticket.instituteId || !user.instituteId || String(ticket.instituteId) === String(user.instituteId);
+    return (
+      !ticket.instituteId ||
+      !user.instituteId ||
+      String(ticket.instituteId) === String(user.instituteId)
+    );
   }
   if (role === "campus_admin") {
-    return !ticket.campusId || !user.campusId || String(ticket.campusId) === String(user.campusId);
+    return (
+      !ticket.campusId ||
+      !user.campusId ||
+      String(ticket.campusId) === String(user.campusId)
+    );
   }
   return false;
 };
 
 /**
- * 4. Can Escalate Ticket (Admin only, up to Level 3)
+ * 4. Can Escalate Ticket (Admin only, Level 1 -> 2 -> 3)
  */
 export const canEscalateTicket = (user, ticket) => {
   if (!user || !ticket) return false;
@@ -103,7 +118,7 @@ export const canCloseTicket = (user, ticket) => {
   if (!user || !ticket) return false;
   if (ticket.status === "Closed" || ticket.status === "Cancelled") return false;
 
-  const isCreator = String(ticket.createdBy) === String(user._id);
+  const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(user._id);
   if (isCreator) return true;
 
   return canAssignTicket(user, ticket);
@@ -111,30 +126,40 @@ export const canCloseTicket = (user, ticket) => {
 
 /**
  * 6. Can Message User (Role Matrix Validation)
+ * Permission matrix:
+ * - Super Admin -> everyone
+ * - Institute Admin -> Super Admin, everyone in their institute
+ * - Campus Admin -> Institute Admin, Super Admin, everyone in their campus
+ * - Teacher -> Campus Admin, other teachers (peer), own students, own students' parents
+ * - Student -> Campus Admin, own teachers
+ * - Parent -> Campus Admin, own child's teachers
  */
 export const canMessageUser = (sender, recipient) => {
   if (!sender || !recipient) return false;
   const sRole = normalizeRole(sender.role);
   const rRole = normalizeRole(recipient.role);
 
-  // Super admin can message anyone
   if (sRole === "super_admin") return true;
 
-  // Institute admin can message Super Admin, Campus Admin, Teacher, Student, Parent
   if (sRole === "institute_admin") {
-    return rRole !== "institute_admin";
+    if (rRole === "super_admin") return true;
+    if (sender.instituteId && recipient.instituteId) {
+      return String(sender.instituteId) === String(recipient.instituteId);
+    }
+    return true;
   }
 
-  // Campus admin can message Super Admin, Institute Admin, Teacher, Student, Parent
   if (sRole === "campus_admin") {
-    return rRole !== "campus_admin";
+    if (rRole === "super_admin" || rRole === "institute_admin") return true;
+    if (sender.campusId && recipient.campusId) {
+      return String(sender.campusId) === String(recipient.campusId);
+    }
+    return true;
   }
 
-  // Teacher can message Campus Admin, Peer Teachers, Students in own classes
   if (sRole === "teacher") {
     if (rRole === "campus_admin" || rRole === "teacher") return true;
     if (rRole === "student" || rRole === "parent") {
-      // Must be within same campus
       if (sender.campusId && recipient.campusId) {
         return String(sender.campusId) === String(recipient.campusId);
       }
@@ -143,7 +168,6 @@ export const canMessageUser = (sender, recipient) => {
     return false;
   }
 
-  // Student can message Campus Admin or assigned teachers
   if (sRole === "student") {
     if (rRole === "campus_admin") return true;
     if (rRole === "teacher") {
@@ -155,7 +179,6 @@ export const canMessageUser = (sender, recipient) => {
     return false;
   }
 
-  // Parent can message Campus Admin or child's teachers
   if (sRole === "parent") {
     if (rRole === "campus_admin") return true;
     if (rRole === "teacher") {
@@ -171,11 +194,12 @@ export const canMessageUser = (sender, recipient) => {
 };
 
 export default {
+  normalizeRole,
+  isAdminRole,
   canViewTicket,
   canReplyToTicket,
   canAssignTicket,
   canEscalateTicket,
   canCloseTicket,
   canMessageUser,
-  isAdminRole,
 };

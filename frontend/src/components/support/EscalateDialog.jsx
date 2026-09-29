@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { ArrowUpCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,69 +8,89 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowUpCircle, AlertTriangle } from "lucide-react";
+import Spinner from "@/components/ui/spinner";
 
-export default function EscalateDialog({
-  open,
-  onClose,
-  onEscalate,
-  ticket,
-  isEscalating = false,
-}) {
+export const EscalateDialog = ({
+  open = false,
+  onOpenChange,
+  ticket = {},
+  onConfirm,
+  isPending = false,
+}) => {
   const [reason, setReason] = useState("");
-  const nextLevel = (ticket?.escalationLevel || 1) + 1;
-  const targetRole = nextLevel === 2 ? "Institute Admin" : "Super Admin";
+  const currentLevel = ticket.escalationLevel || 1;
+  const nextLevel = currentLevel + 1;
 
-  const handleConfirm = async () => {
-    await onEscalate(reason.trim());
+  const targetRole =
+    nextLevel === 2 ? "Institute Admin" : nextLevel === 3 ? "Super Admin" : "Higher Authority";
+
+  const handleEscalate = async () => {
+    await onConfirm({ ticketId: ticket._id, reason: reason.trim() });
     setReason("");
-    onClose();
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[420px] p-5">
-        <DialogHeader className="pb-3 border-b border-zinc-100">
-          <DialogTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-            <ArrowUpCircle className="w-4 h-4 text-purple-600" />
-            Escalate Support Ticket
-          </DialogTitle>
-          <DialogDescription className="text-xs text-zinc-500">
-            Escalating <strong className="font-mono text-zinc-800">{ticket?.ticketNumber}</strong> to <strong>Level {nextLevel} ({targetRole})</strong>.
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogHeader>
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-2">
+            <ArrowUpCircle className="w-5 h-5" />
+          </div>
+          <DialogTitle className="text-lg">Escalate Ticket</DialogTitle>
+          <DialogDescription className="text-xs">
+            This will elevate the ticket from <strong>Level {currentLevel}</strong> to{" "}
+            <strong>Level {nextLevel} ({targetRole})</strong>.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-2 text-xs">
-          <label className="font-semibold text-zinc-700 block">
-            Escalation Reason & Notes
+        <div className="space-y-3 py-2">
+          <label className="text-xs font-medium text-foreground">
+            Reason for Escalation (Optional)
           </label>
-          <textarea
-            rows={3}
+          <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Explain why this ticket requires higher-level administrative intervention..."
-            className="w-full text-xs p-3 bg-zinc-50 border border-zinc-200 rounded-lg outline-none focus:border-purple-600 resize-none transition-colors"
+            placeholder="Explain why this ticket requires higher authority intervention..."
+            rows={3}
+            className="rounded-xl text-xs"
           />
         </div>
 
-        <DialogFooter className="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="rounded-xl"
+          >
             Cancel
           </Button>
           <Button
-            size="sm"
-            onClick={handleConfirm}
-            disabled={isEscalating}
-            className="h-8 text-xs font-semibold bg-purple-700 text-white hover:bg-purple-800 gap-1.5"
+            type="button"
+            onClick={handleEscalate}
+            disabled={isPending}
+            className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white gap-1.5"
           >
-            {isEscalating ? (
-              <Spinner className="size-3.5 text-white" />
+            {isPending ? (
+              <>
+                <Spinner className="w-4 h-4" />
+                <span>Escalating...</span>
+              </>
             ) : (
-              <span>Confirm Escalation</span>
+              <>
+                <ArrowUpCircle className="w-4 h-4" />
+                <span>Confirm Escalation</span>
+              </>
             )}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default EscalateDialog;

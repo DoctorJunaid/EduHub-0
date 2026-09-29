@@ -1,175 +1,188 @@
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
-import { Plus, LifeBuoy, ShieldCheck, RefreshCw } from "lucide-react";
+import { selectAuth } from "@/store/Slices/authSlice";
+import { Plus, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SupportKpiCards from "@/components/support/SupportKpiCards";
-import TicketFilters from "@/components/support/TicketFilters";
-import TicketListTable from "@/components/support/TicketListTable";
-import EmptyTicketsState from "@/components/support/EmptyTicketsState";
-import NewTicketDialog from "./NewTicketDialog";
+import Spinner from "@/components/ui/spinner";
 import DataPagination from "@/components/shared/DataPagination";
-import { useSupportTickets } from "@/hooks/useSupportTickets";
+
+import { useSupportTickets, useCreateTicket } from "@/hooks/useSupportTickets";
 import { useSupportStats } from "@/hooks/useSupportStats";
 import { useSupportCategories } from "@/hooks/useSupportCategories";
-import { Spinner } from "@/components/ui/spinner";
 
-export default function SupportList() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentUser = useSelector(selectCurrentUser);
-  const isAdmin =
-    currentUser?.role === "campus_admin" ||
-    currentUser?.role === "campus_manager" ||
-    currentUser?.role === "institute_admin" ||
-    currentUser?.role === "super_admin" ||
-    currentUser?.role === "principal";
+import SupportKpiCards from "@/components/support/SupportKpiCards";
+import SupportStatPills from "@/components/support/SupportStatPills";
+import ConversationList from "@/components/support/ConversationList";
+import TicketListTable from "@/components/support/TicketListTable";
+import TicketFilters from "@/components/support/TicketFilters";
+import NewTicketDialog from "@/components/support/NewTicketDialog";
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+export const SupportList = () => {
+  const navigate = useNavigate();
+  const auth = useSelector(selectAuth);
+  const currentUser = auth?.user;
+  const role = currentUser?.role || "student";
+  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(role);
 
-  // Auto-open modal if ?new=true
-  useEffect(() => {
-    if (searchParams.get("new") === "true") {
-      setDialogOpen(true);
-      searchParams.delete("new");
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
+  // Filter and pagination states
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [filters, setFilters] = useState({
-    page: 1,
-    limit: 20,
-    status: "All",
-    category: "All",
-    priority: "All",
+    status: "all",
+    category: "all",
+    priority: "all",
     search: "",
-    scope: "my",
   });
+  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
 
-  const { stats, isLoading: isStatsLoading } = useSupportStats();
+  // Queries
+  const { stats = {} } = useSupportStats();
   const { categories = [] } = useSupportCategories();
 
-  const {
-    tickets,
-    total,
-    pageCount,
-    isLoading: isTicketsLoading,
-    isFetching,
-    refetch,
-    createTicket,
-    isCreating,
-  } = useSupportTickets(filters);
+  const queryParams = {
+    page,
+    limit,
+    ...(filters.status !== "all" ? { status: filters.status } : {}),
+    ...(filters.category !== "all" ? { category: filters.category } : {}),
+    ...(filters.priority !== "all" ? { priority: filters.priority } : {}),
+    ...(filters.search ? { search: filters.search } : {}),
+  };
+
+  const { data, isLoading, isFetching } = useSupportTickets(queryParams);
+  const createTicketMutation = useCreateTicket();
 
   const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      page: 1,
-    }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
   };
 
   const handleResetFilters = () => {
     setFilters({
-      page: 1,
-      limit: 20,
-      status: "All",
-      category: "All",
-      priority: "All",
+      status: "all",
+      category: "all",
+      priority: "all",
       search: "",
-      scope: "my",
     });
+    setPage(1);
   };
 
+  const handleCreateTicket = async (payload) => {
+    await createTicketMutation.mutateAsync(payload);
+  };
+
+  const tickets = data?.tickets || [];
+  const total = data?.total || 0;
+  const pageCount = data?.pageCount || 1;
+
   return (
-    <div className="campus-tab-page p-6 max-w-7xl mx-auto">
-      {/* 1. Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Top Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xl font-extrabold text-zinc-900 tracking-tight">
-              Help & Support
-            </h1>
-            <span className="text-[11px] font-bold bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-200">
-              Ticket Desk
-            </span>
-          </div>
-          <p className="text-xs text-zinc-500">
-            Submit inquiry tickets, track issues, and collaborate with administration.
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            {isAdmin ? "🆘 Support Tickets" : "💬 Help & Support"}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            {isAdmin
+              ? "Manage, triage, and resolve student, staff, and campus support requests."
+              : "Ask questions, get help with your studies, fees, or account, and view replies."}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="h-9 px-3 text-xs font-semibold border-zinc-200 gap-1.5"
-            title="Refresh tickets"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/support/manage")}
+              className="gap-1.5 rounded-xl text-xs h-10 border-border"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span>Manage All →</span>
+            </Button>
+          )}
 
           <Button
-            onClick={() => setDialogOpen(true)}
-            className="h-9 px-4 text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 gap-1.5 shadow-xs"
+            onClick={() => setIsNewDialogOpen(true)}
+            className="gap-2 rounded-xl text-xs sm:text-sm font-semibold h-10 shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>New Support Ticket</span>
+            <span>{isAdmin ? "New Ticket" : "Ask for Help"}</span>
           </Button>
         </div>
       </div>
 
-      {/* 2. KPI Cards */}
-      <SupportKpiCards stats={stats} isAdmin={isAdmin} />
+      {/* KPI Cards (Admins) vs Friendly Stat Pills (Regular Users) */}
+      {isAdmin ? (
+        <SupportKpiCards
+          stats={stats}
+          activeStatus={filters.status}
+          onSelectFilter={(status) => handleFilterChange("status", status)}
+        />
+      ) : (
+        <SupportStatPills
+          stats={stats}
+          activeFilter={filters.status}
+          onSelectFilter={(status) => handleFilterChange("status", status)}
+        />
+      )}
 
-      {/* 3. Filters Toolbar */}
+      {/* Search and Filters */}
       <TicketFilters
         filters={filters}
         onChange={handleFilterChange}
         onReset={handleResetFilters}
         categories={categories}
+        isAdmin={isAdmin}
       />
 
-      {/* 4. Tickets Table or Empty State */}
-      {!isTicketsLoading && tickets.length === 0 ? (
-        <EmptyTicketsState
-          onNewTicket={() => setDialogOpen(true)}
-          isFiltered={
-            Boolean(filters.search) ||
-            filters.status !== "All" ||
-            filters.category !== "All" ||
-            filters.priority !== "All"
-          }
-        />
-      ) : (
-        <>
+      {/* Main List Section */}
+      <div className="space-y-4">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Spinner className="w-8 h-8 text-primary" />
+            <p className="text-xs text-muted-foreground mt-3">Loading help conversations...</p>
+          </div>
+        ) : isAdmin ? (
           <TicketListTable
             tickets={tickets}
-            isLoading={isTicketsLoading}
-            showCreator={isAdmin}
+            onNewTicket={() => setIsNewDialogOpen(true)}
           />
-
-          <DataPagination
-            page={filters.page}
-            pageSize={filters.limit}
-            total={total}
-            pageCount={pageCount}
-            onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-            onPageSizeChange={(size) => setFilters((prev) => ({ ...prev, limit: size, page: 1 }))}
-            itemLabel="support tickets"
+        ) : (
+          <ConversationList
+            conversations={tickets}
+            onNewConversation={() => setIsNewDialogOpen(true)}
           />
-        </>
-      )}
+        )}
 
-      {/* 5. Create Ticket Dialog */}
+        {/* Pagination */}
+        {!isLoading && total > 0 && (
+          <div className="pt-2">
+            <DataPagination
+              currentPage={page}
+              totalPages={pageCount}
+              totalItems={total}
+              pageSize={limit}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setLimit(newSize);
+                setPage(1);
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* New Ticket / Ask for Help Dialog */}
       <NewTicketDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onCreateTicket={createTicket}
-        isCreating={isCreating}
+        open={isNewDialogOpen}
+        onOpenChange={setIsNewDialogOpen}
+        onCreate={handleCreateTicket}
+        isPending={createTicketMutation.isPending}
+        isAdmin={isAdmin}
       />
     </div>
   );
-}
+};
+
+export default SupportList;

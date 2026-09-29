@@ -1,49 +1,39 @@
 /**
- * React Query Hook for Support Dashboard KPIs & Badge Count
+ * React Query Hook for Support Stats & KPIs
  */
 import { useQuery } from "@tanstack/react-query";
-import * as api from "../api/support.api";
+import { getSupportStatsApi } from "../api/support.api";
 import { qk } from "./useSupportTickets";
 
-export function useSupportStats() {
+export function useSupportStats(options = {}) {
   const query = useQuery({
     queryKey: qk.supportStats(),
     queryFn: async () => {
-      const res = await api.getSupportStatsApi();
-      return res.data || {
-        open: 0,
-        inProgress: 0,
-        resolved: 0,
-        closed: 0,
-        total: 0,
-        badgeCount: 0,
-        sla: {
-          ticketsWithinSLA: 0,
-          ticketsOverdue: 0,
-          avgFirstResponseHours: 0,
+      const res = await getSupportStatsApi();
+      return (
+        res.data || {
+          badgeCount: 0,
+          waiting: 0,
+          lookingAt: 0,
+          answered: 0,
+          done: 0,
+          escalated: 0,
+          overdue: 0,
           avgResolutionHours: 0,
-        },
-      };
+          avgFirstResponseHours: 0,
+        }
+      );
     },
     staleTime: 5 * 60 * 1000,
+    ...options,
   });
 
   return {
-    ...query,
-    stats: query.data || {
-      open: 0,
-      inProgress: 0,
-      resolved: 0,
-      closed: 0,
-      total: 0,
-      badgeCount: 0,
-      sla: {
-        ticketsWithinSLA: 0,
-        ticketsOverdue: 0,
-        avgFirstResponseHours: 0,
-        avgResolutionHours: 0,
-      },
-    },
+    stats: query.data,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 

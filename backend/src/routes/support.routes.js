@@ -7,7 +7,7 @@ import { protect } from "../middleware/auth.middleware.js";
 import {
   rateLimitTicketCreate,
   rateLimitTicketReply,
-} from "../middleware/rateLimit.middleware.js";
+} from "../middleware/supportRateLimit.middleware.js";
 import * as controller from "../controllers/support.controller.js";
 
 const router = express.Router();
@@ -33,5 +33,6 @@ router.post("/tickets/:id/rate", controller.rateTicket);
 // 3. Threaded Messages & Replies
 router.post("/tickets/:id/messages", rateLimitTicketReply, controller.replyToTicket);
 router.get("/tickets/:id/messages", controller.getTicketMessages);
+router.put("/messages/:id/read", controller.markMessageRead);
 
 export default router;
