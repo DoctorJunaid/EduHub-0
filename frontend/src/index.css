@@ -491,7 +491,8 @@ tbody tr:hover {
 
 .dashboard-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -500,7 +501,8 @@ tbody tr:hover {
   flex: 1;
   flex-direction: column;
   min-width: 0;
-  height: 100vh;
+  min-height: 0;
+  height: 100%;
 }
 
 .content-area {
