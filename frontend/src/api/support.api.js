@@ -1,6 +1,6 @@
 /**
  * Help & Support API Client
- * Wraps all 14 endpoints for tickets, messaging, SLAs, and assignment.
+ * Wraps all endpoints for tickets, messaging, SLAs, and assignment.
  */
 import axiosInstance from "./axiosInstance";
 
@@ -64,19 +64,25 @@ export const getTicketMessagesApi = async (ticketId) => {
   return res.data;
 };
 
-// 11. Get scoped dashboard KPIs & SLA stats
+// 11. Mark message as read
+export const markMessageReadApi = async (messageId) => {
+  const res = await axiosInstance.put(`/support/messages/${messageId}/read`);
+  return res.data;
+};
+
+// 12. Get scoped dashboard KPIs & SLA stats
 export const getSupportStatsApi = async () => {
   const res = await axiosInstance.get("/support/stats");
   return res.data;
 };
 
-// 12. Get category list for current user's role
+// 13. Get category list for current user's role
 export const getSupportCategoriesApi = async () => {
   const res = await axiosInstance.get("/support/categories");
   return res.data;
 };
 
-// 13. Get contacts list (who this user can message/tag)
+// 14. Get contacts list (who this user can message/tag)
 export const getSupportContactsApi = async () => {
   const res = await axiosInstance.get("/support/contacts");
   return res.data;
@@ -93,6 +99,7 @@ export default {
   rateTicketApi,
   replyTicketApi,
   getTicketMessagesApi,
+  markMessageReadApi,
   getSupportStatsApi,
   getSupportCategoriesApi,
   getSupportContactsApi,

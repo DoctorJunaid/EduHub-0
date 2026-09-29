@@ -16,7 +16,6 @@ const supportTicketSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campus",
       default: null,
-      index: true,
     },
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,7 +27,6 @@ const supportTicketSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     createdBySnapshot: {
       name: { type: String, default: "" },
@@ -39,7 +37,6 @@ const supportTicketSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
-      index: true,
     },
     assignedToSnapshot: {
       name: { type: String, default: "" },
@@ -49,7 +46,6 @@ const supportTicketSchema = new mongoose.Schema(
     category: {
       type: String,
       enum: [
-        "Technical Issue",
         "Academic",
         "Attendance",
         "Fees & Payments",
@@ -57,6 +53,7 @@ const supportTicketSchema = new mongoose.Schema(
         "Transport",
         "Discipline",
         "Payroll",
+        "Technical Issue",
         "Platform Bug",
         "Feature Request",
         "Other",
@@ -79,7 +76,6 @@ const supportTicketSchema = new mongoose.Schema(
         "Cancelled",
       ],
       default: "Open",
-      index: true,
     },
     subject: {
       type: String,
@@ -91,17 +87,24 @@ const supportTicketSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, "Description is required"],
-      minlength: [20, "Description must be at least 20 characters"],
+      minlength: [10, "Description must be at least 10 characters"],
       maxlength: [2000, "Description cannot exceed 2000 characters"],
       trim: true,
     },
-    attachments: [
-      {
-        url: { type: String, required: true },
-        name: { type: String, default: "" },
-        size: { type: Number, default: 0 },
-      },
-    ],
+    attachments: {
+      type: [
+        {
+          url: { type: String, required: true },
+          name: { type: String, default: "" },
+          size: { type: Number, default: 0 },
+        },
+      ],
+      validate: [
+        (val) => val.length <= 3,
+        "Maximum of 3 attachments allowed per ticket",
+      ],
+      default: [],
+    },
     escalationLevel: {
       type: Number,
       enum: [1, 2, 3],
@@ -143,7 +146,6 @@ const supportTicketSchema = new mongoose.Schema(
     lastActivityAt: {
       type: Date,
       default: Date.now,
-      index: true,
     },
   },
   {
@@ -151,11 +153,10 @@ const supportTicketSchema = new mongoose.Schema(
   }
 );
 
-// Compound indexes for high-throughput scoped filtering
+// Indexes declared strictly once without duplication
 supportTicketSchema.index({ campusId: 1, status: 1 });
 supportTicketSchema.index({ campusId: 1, createdBy: 1 });
 supportTicketSchema.index({ campusId: 1, assignedTo: 1 });
-supportTicketSchema.index({ instituteId: 1, status: 1 });
 supportTicketSchema.index({ lastActivityAt: -1 });
 
 const SupportTicket =

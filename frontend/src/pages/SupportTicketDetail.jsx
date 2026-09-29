@@ -1,163 +1,194 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
-import { useSupportTicketDetail, useSupportTickets } from "@/hooks/useSupportTickets";
+import { selectAuth } from "@/store/Slices/authSlice";
+import Spinner from "@/components/ui/spinner";
+import {
+  useSupportTicket,
+  useReplyToTicket,
+  useAssignTicket,
+  useChangeTicketStatus,
+  useEscalateTicket,
+  useCloseTicket,
+  useRateTicket,
+} from "@/hooks/useSupportTickets";
+
 import TicketDetailHeader from "@/components/support/TicketDetailHeader";
-import TicketMessageThread from "@/components/support/TicketMessageThread";
-import TicketReplyBox from "@/components/support/TicketReplyBox";
+import MessageThread from "@/components/support/MessageThread";
+import ReplyBox from "@/components/support/ReplyBox";
 import TicketSidebar from "@/components/support/TicketSidebar";
-import AssignDialog from "@/components/support/AssignDialog";
 import EscalateDialog from "@/components/support/EscalateDialog";
+import AssignDialog from "@/components/support/AssignDialog";
 import CloseTicketDialog from "@/components/support/CloseTicketDialog";
 import RatingDialog from "@/components/support/RatingDialog";
-import { PageLoader } from "@/components/ui/spinner";
-import { ArrowLeft, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
-export default function SupportTicketDetail() {
+export const SupportTicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentUser = useSelector(selectCurrentUser);
+  const auth = useSelector(selectAuth);
+  const currentUser = auth?.user;
+  const currentUserId = currentUser?._id;
+  const role = currentUser?.role || "student";
+  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(role);
 
-  const isAdmin =
-    currentUser?.role === "campus_admin" ||
-    currentUser?.role === "campus_manager" ||
-    currentUser?.role === "institute_admin" ||
-    currentUser?.role === "super_admin" ||
-    currentUser?.role === "principal";
+  // Modals state
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [isEscalateOpen, setIsEscalateOpen] = useState(false);
+  const [isCloseOpen, setIsCloseOpen] = useState(false);
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
 
-  const {
-    ticket,
-    messages,
-    isLoading,
-    isError,
-    error,
-    replyTicket,
-    isReplying,
-  } = useSupportTicketDetail(id);
-
-  const {
-    assignTicket,
-    isAssigning,
-    changeStatus,
-    escalateTicket,
-    isEscalating,
-    closeTicket,
-    isClosing,
-    rateTicket,
-    isRating,
-  } = useSupportTickets();
-
-  // Modal dialog states
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [escalateOpen, setEscalateOpen] = useState(false);
-  const [closeOpen, setCloseOpen] = useState(false);
-  const [ratingOpen, setRatingOpen] = useState(false);
+  // Queries and mutations
+  const { data, isLoading, error } = useSupportTicket(id);
+  const replyMutation = useReplyToTicket();
+  const assignMutation = useAssignTicket();
+  const changeStatusMutation = useChangeTicketStatus();
+  const escalateMutation = useEscalateTicket();
+  const closeMutation = useCloseTicket();
+  const rateMutation = useRateTicket();
 
   if (isLoading) {
     return (
-      <div className="campus-tab-page p-8">
-        <PageLoader text="Loading support ticket thread..." />
+      <div className="max-w-7xl mx-auto p-8 flex flex-col items-center justify-center min-h-[60vh]">
+        <Spinner className="w-8 h-8 text-primary" />
+        <p className="text-xs text-muted-foreground mt-3">Loading conversation...</p>
       </div>
     );
   }
 
-  if (isError || !ticket) {
+  if (error || !data?.ticket) {
     return (
-      <div className="campus-tab-page flex flex-col items-center justify-center p-12 text-center bg-white min-h-[400px]">
-        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
-          <AlertCircle className="w-6 h-6" />
-        </div>
-        <h2 className="text-base font-bold text-zinc-900 mb-1">
-          Support Ticket Not Found
-        </h2>
-        <p className="text-xs text-zinc-500 max-w-sm mb-4">
-          {error?.response?.data?.message || "This ticket could not be found or you do not have permission to access it."}
+      <div className="max-w-xl mx-auto p-12 text-center space-y-4">
+        <h2 className="text-xl font-bold text-foreground">Conversation Not Found</h2>
+        <p className="text-sm text-muted-foreground">
+          {error?.response?.data?.message || "This conversation may have been removed or you lack permission to view it."}
         </p>
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={() => navigate("/support")}
-          className="text-xs gap-1.5"
+          className="text-xs text-primary font-semibold hover:underline"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Return to Tickets</span>
-        </Button>
+          ← Back to Help & Support
+        </button>
       </div>
     );
   }
 
-  const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(currentUser?._id);
+  const { ticket, messages = [] } = data;
+  const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(currentUserId);
   const isClosed = ticket.status === "Closed" || ticket.status === "Cancelled";
+  const canSolve = isCreator && !isClosed && (ticket.status === "Resolved" || ticket.status === "In Progress");
+  const canRate = isCreator && isClosed && (ticket.satisfactionRating === null || ticket.satisfactionRating === undefined);
+
+  const handleSendReply = async (payload) => {
+    await replyMutation.mutateAsync({ ticketId: ticket._id, payload });
+  };
+
+  const handleCloseTicket = async () => {
+    await closeMutation.mutateAsync(ticket._id);
+    if (isCreator) {
+      setIsRatingOpen(true);
+    }
+  };
 
   return (
-    <div className="campus-tab-page p-6 max-w-7xl mx-auto">
-      {/* 1. Header with Breadcrumb & Badges */}
-      <TicketDetailHeader ticket={ticket} />
+    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4">
+      {/* Header */}
+      <TicketDetailHeader ticket={ticket} isAdmin={isAdmin} />
 
-      {/* 2. Split 2-Column Body */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Messages Thread & Reply Box */}
-        <div className="lg:col-span-8 space-y-4">
-          <TicketMessageThread ticket={ticket} messages={messages} />
-
-          <TicketReplyBox
-            onSend={replyTicket}
-            isSubmitting={isReplying}
+      {/* Main Content Layout (1 column for regular users, 2 columns for admins) */}
+      <div className={`grid grid-cols-1 ${isAdmin ? "lg:grid-cols-3 gap-6" : "gap-4"}`}>
+        {/* Left / Main Chat Box */}
+        <div className={`${isAdmin ? "lg:col-span-2" : "w-full"} flex flex-col h-[74vh] sm:h-[78vh] rounded-2xl bg-card border border-border/80 shadow-xs overflow-hidden`}>
+          {/* Thread */}
+          <MessageThread
+            messages={messages}
+            currentUserId={currentUserId}
             isAdmin={isAdmin}
+          />
+
+          {/* Rating Banner for closed tickets that haven't been rated */}
+          {canRate && (
+            <div className="p-3 bg-amber-500/10 border-t border-b border-amber-500/20 flex items-center justify-between text-xs">
+              <span className="font-medium text-amber-800 dark:text-amber-200">
+                ⭐ How was your support experience?
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsRatingOpen(true)}
+                className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-colors"
+              >
+                Rate Conversation
+              </button>
+            </div>
+          )}
+
+          {/* Reply Box */}
+          <ReplyBox
+            onSend={handleSendReply}
+            isSending={replyMutation.isPending}
             isClosed={isClosed}
+            isAdmin={isAdmin}
+            canSolve={canSolve}
+            onSolve={() => setIsCloseOpen(true)}
+            isSolving={closeMutation.isPending}
           />
         </div>
 
-        {/* Right Column: Ticket Details & Metadata Sidebar */}
-        <div className="lg:col-span-4">
-          <TicketSidebar
-            ticket={ticket}
-            currentUser={currentUser}
-            isAdmin={isAdmin}
-            isCreator={isCreator}
-            onStatusChange={(newStatus) => changeStatus({ ticketId: ticket._id, status: newStatus })}
-            onOpenAssign={() => setAssignOpen(true)}
-            onOpenEscalate={() => setEscalateOpen(true)}
-            onOpenClose={() => setCloseOpen(true)}
-            onOpenRating={() => setRatingOpen(true)}
-          />
-        </div>
+        {/* Right Sidebar (Admin Only) */}
+        {isAdmin && (
+          <div className="lg:col-span-1">
+            <TicketSidebar
+              ticket={ticket}
+              onOpenAssign={() => setIsAssignOpen(true)}
+              onOpenEscalate={() => setIsEscalateOpen(true)}
+              onOpenClose={() => setIsCloseOpen(true)}
+              onChangeStatus={(status) =>
+                changeStatusMutation.mutateAsync({ ticketId: ticket._id, status })
+              }
+              isUpdatingStatus={changeStatusMutation.isPending}
+            />
+          </div>
+        )}
       </div>
 
-      {/* 3. Interactive Modals */}
-      <AssignDialog
-        open={assignOpen}
-        onClose={() => setAssignOpen(false)}
-        onAssign={(assigneeId) => assignTicket({ ticketId: ticket._id, assigneeId })}
-        ticket={ticket}
-        isAssigning={isAssigning}
-      />
+      {/* Dialogs */}
+      {isAdmin && (
+        <>
+          <AssignDialog
+            open={isAssignOpen}
+            onOpenChange={setIsAssignOpen}
+            ticket={ticket}
+            onConfirm={(params) => assignMutation.mutateAsync(params)}
+            isPending={assignMutation.isPending}
+          />
 
-      <EscalateDialog
-        open={escalateOpen}
-        onClose={() => setEscalateOpen(false)}
-        onEscalate={(reason) => escalateTicket({ ticketId: ticket._id, reason })}
-        ticket={ticket}
-        isEscalating={isEscalating}
-      />
+          <EscalateDialog
+            open={isEscalateOpen}
+            onOpenChange={setIsEscalateOpen}
+            ticket={ticket}
+            onConfirm={(params) => escalateMutation.mutateAsync(params)}
+            isPending={escalateMutation.isPending}
+          />
+        </>
+      )}
 
       <CloseTicketDialog
-        open={closeOpen}
-        onClose={() => setCloseOpen(false)}
-        onConfirmClose={() => closeTicket(ticket._id)}
+        open={isCloseOpen}
+        onOpenChange={setIsCloseOpen}
         ticket={ticket}
-        isClosing={isClosing}
+        onConfirm={handleCloseTicket}
+        isPending={closeMutation.isPending}
+        isAdmin={isAdmin}
       />
 
       <RatingDialog
-        open={ratingOpen}
-        onClose={() => setRatingOpen(false)}
-        onSubmitRating={(rating, comment) => rateTicket({ ticketId: ticket._id, rating, comment })}
+        open={isRatingOpen}
+        onOpenChange={setIsRatingOpen}
         ticket={ticket}
-        isRating={isRating}
+        onConfirm={(params) => rateMutation.mutateAsync(params)}
+        isPending={rateMutation.isPending}
       />
     </div>
   );
-}
+};
+
+export default SupportTicketDetail;

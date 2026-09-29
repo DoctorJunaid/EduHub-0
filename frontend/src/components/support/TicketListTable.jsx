@@ -1,134 +1,140 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Clock, User, ArrowUpRight } from "lucide-react";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/Table";
-import TicketStatusBadge from "./TicketStatusBadge";
-import TicketPriorityBadge from "./TicketPriorityBadge";
-import TicketCategoryBadge from "./TicketCategoryBadge";
-import { Spinner } from "@/components/ui/spinner";
-import TableSkeleton from "@/components/shared/TableSkeleton";
+import { formatDistanceToNow } from "date-fns";
+import { TicketStatusBadge } from "./TicketStatusBadge";
+import { TicketPriorityBadge } from "./TicketPriorityBadge";
+import { TicketCategoryBadge } from "./TicketCategoryBadge";
+import { EmptyConversationsState } from "./EmptyConversationsState";
+import { User, AlertCircle } from "lucide-react";
 
-const formatRelativeTime = (dateStr) => {
-  if (!dateStr) return "—";
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffSec = Math.floor((now - date) / 1000);
-
-  if (diffSec < 60) return "Just now";
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-  if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-};
-
-export default function TicketListTable({
+export const TicketListTable = ({
   tickets = [],
-  isLoading = false,
-  showCreator = false,
-}) {
+  selectedIds = [],
+  onToggleSelect,
+  onSelectAll,
+  onNewTicket,
+}) => {
   const navigate = useNavigate();
 
-  if (isLoading && tickets.length === 0) {
-    return <TableSkeleton rows={6} columns={showCreator ? 7 : 6} />;
+  if (!tickets || tickets.length === 0) {
+    return <EmptyConversationsState onNewConversation={onNewTicket} isAdmin={true} />;
   }
 
-  return (
-    <div className="campus-table-container relative bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs">
-      {isLoading && tickets.length > 0 && (
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10">
-          <Spinner className="size-6 text-zinc-900" />
-        </div>
-      )}
+  const allSelected = tickets.length > 0 && selectedIds.length === tickets.length;
 
-      <Table className="campus-table">
-        <TableHeader>
-          <TableRow>
-            <TableHead style={{ width: "14%" }}>Ticket #</TableHead>
-            <TableHead style={{ width: showCreator ? "28%" : "34%" }}>Subject</TableHead>
-            {showCreator && <TableHead style={{ width: "16%" }}>Created By</TableHead>}
-            <TableHead style={{ width: "15%" }}>Category</TableHead>
-            <TableHead style={{ width: "12%" }}>Priority</TableHead>
-            <TableHead style={{ width: "12%" }}>Status</TableHead>
-            <TableHead style={{ width: "9%", textAlign: "right" }}>Activity</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+  return (
+    <div className="w-full overflow-x-auto rounded-xl border border-border/80 bg-card">
+      <table className="w-full text-left text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {onToggleSelect && (
+              <th className="p-3.5 w-10 text-center">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={(e) => onSelectAll && onSelectAll(e.target.checked)}
+                  className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                />
+              </th>
+            )}
+            <th className="p-3.5">Ticket #</th>
+            <th className="p-3.5">Subject</th>
+            <th className="p-3.5">Creator</th>
+            <th className="p-3.5">Category</th>
+            <th className="p-3.5">Priority</th>
+            <th className="p-3.5">Status</th>
+            <th className="p-3.5">Assigned To</th>
+            <th className="p-3.5 text-right">Last Activity</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/60">
           {tickets.map((ticket) => {
-            const creatorName =
-              ticket.createdBySnapshot?.name || ticket.createdBy?.name || "User";
-            const creatorRole =
-              ticket.createdBySnapshot?.role || ticket.createdBy?.role || "";
+            const isSelected = selectedIds.includes(ticket._id);
+            const timeAgo = ticket.lastActivityAt
+              ? formatDistanceToNow(new Date(ticket.lastActivityAt), { addSuffix: true })
+              : "Just now";
 
             return (
-              <TableRow
-                key={ticket._id || ticket.ticketNumber}
-                className="cursor-pointer hover:bg-zinc-50/80 transition-colors"
+              <tr
+                key={ticket._id}
                 onClick={() => navigate(`/support/${ticket._id}`)}
+                className={`group cursor-pointer transition-colors hover:bg-muted/50 ${
+                  isSelected ? "bg-primary/5" : ""
+                }`}
               >
-                <TableCell className="font-mono text-xs font-bold text-zinc-900">
+                {onToggleSelect && (
+                  <td
+                    className="p-3.5 text-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSelect(ticket._id);
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onToggleSelect(ticket._id)}
+                      className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                    />
+                  </td>
+                )}
+                <td className="p-3.5 font-mono text-xs font-semibold text-foreground whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
                     <span>{ticket.ticketNumber}</span>
+                    {ticket.isOverdue && (
+                      <span title="Overdue SLA">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      </span>
+                    )}
                   </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex flex-col min-w-0">
-                    <strong className="text-xs font-semibold text-zinc-900 truncate block">
-                      {ticket.subject}
-                    </strong>
-                    <span className="text-[11px] text-zinc-500 truncate block max-w-md">
-                      {ticket.description}
-                    </span>
-                  </div>
-                </TableCell>
-
-                {showCreator && (
-                  <TableCell>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-[10px] font-bold text-zinc-700 shrink-0">
-                        {creatorName.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-medium text-zinc-800 truncate">
-                          {creatorName}
-                        </span>
-                        <span className="text-[10px] text-zinc-400 capitalize">
-                          {creatorRole.replace(/_/g, " ")}
-                        </span>
-                      </div>
+                </td>
+                <td className="p-3.5 font-medium text-foreground max-w-xs truncate group-hover:text-primary transition-colors">
+                  {ticket.subject}
+                </td>
+                <td className="p-3.5 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                      {ticket.createdBySnapshot?.name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
-                  </TableCell>
-                )}
-
-                <TableCell>
+                    <div>
+                      <p className="text-xs font-medium leading-none text-foreground">
+                        {ticket.createdBySnapshot?.name || "User"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground capitalize">
+                        {ticket.createdBySnapshot?.role || "student"}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-3.5 whitespace-nowrap">
                   <TicketCategoryBadge category={ticket.category} />
-                </TableCell>
-
-                <TableCell>
+                </td>
+                <td className="p-3.5 whitespace-nowrap">
                   <TicketPriorityBadge priority={ticket.priority} />
-                </TableCell>
-
-                <TableCell>
-                  <TicketStatusBadge status={ticket.status} />
-                </TableCell>
-
-                <TableCell style={{ textAlign: "right" }}>
-                  <span className="text-xs text-zinc-500 font-medium">
-                    {formatRelativeTime(ticket.lastActivityAt || ticket.updatedAt)}
-                  </span>
-                </TableCell>
-              </TableRow>
+                </td>
+                <td className="p-3.5 whitespace-nowrap">
+                  <TicketStatusBadge status={ticket.status} isAdmin={true} />
+                </td>
+                <td className="p-3.5 whitespace-nowrap">
+                  {ticket.assignedToSnapshot?.name ? (
+                    <div className="flex items-center gap-1.5 text-xs text-foreground">
+                      <User className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>{ticket.assignedToSnapshot.name}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                  )}
+                </td>
+                <td className="p-3.5 text-right text-xs text-muted-foreground whitespace-nowrap">
+                  {timeAgo}
+                </td>
+              </tr>
             );
           })}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
-}
+};
+
+export default TicketListTable;

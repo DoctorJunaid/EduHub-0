@@ -1,41 +1,40 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Wrench,
-  GraduationCap,
-  CalendarCheck,
-  CreditCard,
-  BookOpen,
-  Bus,
-  ShieldAlert,
-  Wallet,
-  Bug,
-  Sparkles,
-  HelpCircle,
-} from "lucide-react";
 
-export default function TicketCategoryBadge({ category = "Other" }) {
-  const iconMap = {
-    "Technical Issue": <Wrench className="w-3 h-3 text-slate-500 mr-1" />,
-    Academic: <GraduationCap className="w-3 h-3 text-indigo-500 mr-1" />,
-    Attendance: <CalendarCheck className="w-3 h-3 text-emerald-500 mr-1" />,
-    "Fees & Payments": <CreditCard className="w-3 h-3 text-teal-500 mr-1" />,
-    Library: <BookOpen className="w-3 h-3 text-amber-500 mr-1" />,
-    Transport: <Bus className="w-3 h-3 text-orange-500 mr-1" />,
-    Discipline: <ShieldAlert className="w-3 h-3 text-rose-500 mr-1" />,
-    Payroll: <Wallet className="w-3 h-3 text-blue-500 mr-1" />,
-    "Platform Bug": <Bug className="w-3 h-3 text-red-500 mr-1" />,
-    "Feature Request": <Sparkles className="w-3 h-3 text-purple-500 mr-1" />,
-    Other: <HelpCircle className="w-3 h-3 text-zinc-500 mr-1" />,
-  };
+export const CATEGORY_ICONS = {
+  Academic: { icon: "📚", label: "Homework or subject" },
+  Attendance: { icon: "📅", label: "Attendance" },
+  "Fees & Payments": { icon: "💰", label: "Fees or payment" },
+  Library: { icon: "📖", label: "Library" },
+  Transport: { icon: "🚌", label: "Transport" },
+  "Technical Issue": { icon: "👤", label: "My account" },
+  Discipline: { icon: "⚠️", label: "Discipline" },
+  Payroll: { icon: "💵", label: "Salary" },
+  Other: { icon: "❓", label: "Something else" },
+  "Platform Bug": { icon: "🐛", label: "Platform Bug" },
+  "Feature Request": { icon: "💡", label: "Feature Request" },
+};
+
+export const TicketCategoryBadge = ({ category = "Other", showIconOnly = false, className = "" }) => {
+  const info = CATEGORY_ICONS[category] || { icon: "❓", label: category };
+
+  if (showIconOnly) {
+    return (
+      <span className={`inline-flex items-center justify-center text-base select-none ${className}`} title={info.label}>
+        {info.icon}
+      </span>
+    );
+  }
 
   return (
     <Badge
-      variant="outline"
-      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md bg-zinc-50 border-zinc-200 text-zinc-700"
+      variant="secondary"
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-normal bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 ${className}`}
     >
-      {iconMap[category] || iconMap.Other}
-      {category}
+      <span className="text-xs leading-none">{info.icon}</span>
+      <span>{info.label}</span>
     </Badge>
   );
-}
+};
+
+export default TicketCategoryBadge;

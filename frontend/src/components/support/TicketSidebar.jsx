@@ -1,243 +1,225 @@
 import React from "react";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   User,
-  Shield,
   Clock,
+  AlertTriangle,
   ArrowUpCircle,
   CheckCircle2,
-  Lock,
-  Star,
+  Calendar,
+  Building2,
+  Tag,
+  ShieldAlert,
   UserCheck,
-  Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import TicketStatusBadge from "./TicketStatusBadge";
-import TicketPriorityBadge from "./TicketPriorityBadge";
-import TicketCategoryBadge from "./TicketCategoryBadge";
+import { Card, CardContent } from "@/components/ui/card";
+import { TicketPriorityBadge } from "./TicketPriorityBadge";
+import { TicketCategoryBadge } from "./TicketCategoryBadge";
+import Spinner from "@/components/ui/spinner";
 
-export default function TicketSidebar({
-  ticket,
-  currentUser,
-  isAdmin = false,
-  isCreator = false,
-  onStatusChange,
+export const TicketSidebar = ({
+  ticket = {},
   onOpenAssign,
   onOpenEscalate,
   onOpenClose,
-  onOpenRating,
-}) {
-  if (!ticket) return null;
-
-  const creatorName = ticket.createdBySnapshot?.name || ticket.createdBy?.name || "User";
-  const creatorEmail = ticket.createdBySnapshot?.email || ticket.createdBy?.email || "";
-  const creatorRole = ticket.createdBySnapshot?.role || ticket.createdBy?.role || "Student";
-
-  const assigneeName = ticket.assignedToSnapshot?.name || ticket.assignedTo?.name || "Unassigned";
-  const assigneeRole = ticket.assignedToSnapshot?.role || ticket.assignedTo?.role || "";
-
+  onChangeStatus,
+  isUpdatingStatus = false,
+}) => {
   const isClosed = ticket.status === "Closed" || ticket.status === "Cancelled";
-  const canEscalate = isAdmin && (ticket.escalationLevel || 1) < 3 && !isClosed;
-  const canClose = (isCreator || isAdmin) && !isClosed;
-  const canRate = isCreator && isClosed && !ticket.satisfactionRating;
+  const escalationLevel = ticket.escalationLevel || 1;
 
   return (
-    <div className="space-y-4">
-      {/* 1. Quick Actions Panel (If Admin / Creator) */}
-      <div className="bg-white border border-zinc-200/80 rounded-xl p-4 shadow-2xs space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-          Ticket Management
-        </h3>
-
-        {/* Status Dropdown (Admin) */}
-        {isAdmin ? (
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-600 block mb-1">
-              Change Status
-            </label>
-            <Select value={ticket.status} onValueChange={onStatusChange}>
-              <SelectTrigger className="h-8 text-xs bg-zinc-50 border-zinc-200">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="Open">Open</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Resolved">Resolved</SelectItem>
-                <SelectItem value="Closed">Closed</SelectItem>
-                <SelectItem value="Escalated">Escalated</SelectItem>
-                <SelectItem value="Cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="space-y-4 text-sm">
+      {/* SLA Timer Card */}
+      <Card className="border-border/80 shadow-xs">
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              <span>SLA Target</span>
+            </span>
+            <TicketPriorityBadge priority={ticket.priority} showSla={true} />
           </div>
-        ) : (
-          <div className="flex items-center justify-between py-1">
-            <span className="text-xs text-zinc-500">Current Status:</span>
-            <TicketStatusBadge status={ticket.status} />
+
+          <div className="pt-1">
+            {ticket.isOverdue ? (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>Overdue SLA Target</span>
+              </div>
+            ) : isClosed ? (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Resolved & Closed</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs">
+                <span>Time Remaining:</span>
+                <span className="font-bold">
+                  {ticket.slaRemainingHours ? `${Math.round(ticket.slaRemainingHours)} hours` : "Within SLA"}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        {/* Admin Action Buttons */}
-        <div className="pt-2 flex flex-col gap-2">
-          {isAdmin && !isClosed && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenAssign}
-              className="w-full h-8 text-xs font-semibold border-zinc-200 hover:bg-zinc-50 justify-start gap-2"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-zinc-600" />
-              <span>Assign to Staff Member</span>
-            </Button>
-          )}
+      {/* Ticket Controls & Metadata Card */}
+      <Card className="border-border/80 shadow-xs">
+        <CardContent className="p-4 space-y-4">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Ticket Controls
+          </h4>
 
-          {canEscalate && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenEscalate}
-              className="w-full h-8 text-xs font-semibold text-purple-700 bg-purple-50/50 border-purple-200 hover:bg-purple-100 justify-start gap-2"
-            >
-              <ArrowUpCircle className="w-3.5 h-3.5" />
-              <span>Escalate Ticket (Level {(ticket.escalationLevel || 1) + 1})</span>
-            </Button>
-          )}
-
-          {canClose && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenClose}
-              className="w-full h-8 text-xs font-semibold text-zinc-700 border-zinc-200 hover:bg-zinc-100 justify-start gap-2"
-            >
-              <Lock className="w-3.5 h-3.5 text-zinc-500" />
-              <span>Mark as Closed</span>
-            </Button>
-          )}
-
-          {canRate && (
-            <Button
-              size="sm"
-              onClick={onOpenRating}
-              className="w-full h-8 text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 justify-start gap-2"
-            >
-              <Star className="w-3.5 h-3.5" />
-              <span>Rate Satisfaction & Feedback</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* 2. Key Attributes Card */}
-      <div className="bg-white border border-zinc-200/80 rounded-xl p-4 shadow-2xs divide-y divide-zinc-100 text-xs">
-        {/* Creator */}
-        <div className="pb-3">
-          <span className="text-[11px] font-semibold text-zinc-400 block mb-1">Created By</span>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center font-bold text-[10px] text-zinc-700">
-              {creatorName.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <p className="font-semibold text-zinc-900 leading-tight">{creatorName}</p>
-              <p className="text-[10px] text-zinc-400 capitalize">{creatorRole.replace(/_/g, " ")}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Assignee */}
-        <div className="py-3">
-          <span className="text-[11px] font-semibold text-zinc-400 block mb-1">Assigned To</span>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-[10px]">
-              {assigneeName.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <p className="font-semibold text-zinc-900 leading-tight">{assigneeName}</p>
-              {assigneeRole && (
-                <p className="text-[10px] text-zinc-400 capitalize">{assigneeRole.replace(/_/g, " ")}</p>
+          {/* Status Changer */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Status</label>
+            <div className="relative">
+              <select
+                value={ticket.status || "Open"}
+                disabled={isUpdatingStatus || isClosed}
+                onChange={(e) => onChangeStatus && onChangeStatus(e.target.value)}
+                className="w-full h-9 px-3 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+              >
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+                <option value="Escalated">Escalated</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              {isUpdatingStatus && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Spinner className="w-3.5 h-3.5" />
+                </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Category & Priority */}
-        <div className="py-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-500">Category</span>
-            <TicketCategoryBadge category={ticket.category} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-500">Priority</span>
-            <TicketPriorityBadge priority={ticket.priority} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-500">Escalation Level</span>
-            <span className="font-semibold text-zinc-900">Level {ticket.escalationLevel || 1}</span>
-          </div>
-        </div>
-
-        {/* Satisfaction Rating (if submitted) */}
-        {ticket.satisfactionRating && (
-          <div className="py-3 bg-amber-50/50 -mx-4 px-4 rounded-lg my-1">
-            <span className="text-[11px] font-semibold text-amber-800 block mb-1">User Satisfaction</span>
-            <div className="flex items-center gap-1 text-amber-500 font-bold">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-3.5 h-3.5 ${
-                    i < ticket.satisfactionRating ? "fill-amber-400 text-amber-400" : "text-zinc-300"
-                  }`}
-                />
-              ))}
-              <span className="text-xs text-zinc-700 ml-1">({ticket.satisfactionRating}/5)</span>
+          {/* Assignee Box & Button */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-foreground">Assigned Staff</label>
+              {!isClosed && onOpenAssign && (
+                <button
+                  type="button"
+                  onClick={onOpenAssign}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Change
+                </button>
+              )}
             </div>
-            {ticket.satisfactionComment && (
-              <p className="text-[11px] text-zinc-600 mt-1 italic">
-                "{ticket.satisfactionComment}"
+            <div className="p-2.5 rounded-xl bg-muted/50 border border-border flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-foreground truncate">
+                  {ticket.assignedToSnapshot?.name || "Unassigned"}
+                </p>
+                <p className="text-[10px] text-muted-foreground capitalize">
+                  {ticket.assignedToSnapshot?.role || "Support Staff"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons: Escalate and Close */}
+          {!isClosed && (
+            <div className="pt-2 flex flex-col gap-2">
+              {escalationLevel < 3 && onOpenEscalate && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenEscalate}
+                  className="w-full justify-center gap-1.5 h-9 rounded-xl text-xs font-medium border-amber-500/30 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
+                >
+                  <ArrowUpCircle className="w-4 h-4" />
+                  <span>Escalate (Level {escalationLevel} → {escalationLevel + 1})</span>
+                </Button>
+              )}
+
+              {onOpenClose && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenClose}
+                  className="w-full justify-center gap-1.5 h-9 rounded-xl text-xs font-medium border-rose-500/30 text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Close Ticket</span>
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Creator Info Card */}
+      <Card className="border-border/80 shadow-xs">
+        <CardContent className="p-4 space-y-3">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Requester Details
+          </h4>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+              {ticket.createdBySnapshot?.name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-foreground truncate">
+                {ticket.createdBySnapshot?.name || "User"}
               </p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {ticket.createdBySnapshot?.email || "No email"}
+              </p>
+              <p className="text-[10px] text-muted-foreground capitalize mt-0.5">
+                Role: {ticket.createdBySnapshot?.role || "student"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Timeline Card */}
+      <Card className="border-border/80 shadow-xs">
+        <CardContent className="p-4 space-y-3">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Timeline
+          </h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Created:</span>
+              <span className="font-medium text-foreground">
+                {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy h:mm a") : "—"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>First Response:</span>
+              <span className="font-medium text-foreground">
+                {ticket.firstResponseAt ? format(new Date(ticket.firstResponseAt), "MMM d, h:mm a") : "Pending"}
+              </span>
+            </div>
+            {ticket.resolvedAt && (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Resolved:</span>
+                <span className="font-medium text-foreground">
+                  {format(new Date(ticket.resolvedAt), "MMM d, h:mm a")}
+                </span>
+              </div>
+            )}
+            {ticket.closedAt && (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Closed:</span>
+                <span className="font-medium text-foreground">
+                  {format(new Date(ticket.closedAt), "MMM d, h:mm a")}
+                </span>
+              </div>
             )}
           </div>
-        )}
-
-        {/* Timeline */}
-        <div className="pt-3 space-y-1.5 text-[11px] text-zinc-500">
-          <div className="flex items-center justify-between">
-            <span>Opened:</span>
-            <span className="font-medium text-zinc-800">
-              {new Date(ticket.createdAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
-          {ticket.firstResponseAt && (
-            <div className="flex items-center justify-between">
-              <span>First Response:</span>
-              <span className="font-medium text-zinc-800">
-                {new Date(ticket.firstResponseAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-          )}
-          {ticket.resolvedAt && (
-            <div className="flex items-center justify-between">
-              <span>Resolved:</span>
-              <span className="font-medium text-zinc-800">
-                {new Date(ticket.resolvedAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-          )}
-          {ticket.closedAt && (
-            <div className="flex items-center justify-between">
-              <span>Closed:</span>
-              <span className="font-medium text-zinc-800">
-                {new Date(ticket.closedAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default TicketSidebar;

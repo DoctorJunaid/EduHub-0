@@ -10,7 +10,6 @@ const supportMessageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "SupportTicket",
       required: true,
-      index: true,
     },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -30,13 +29,20 @@ const supportMessageSchema = new mongoose.Schema(
       maxlength: [5000, "Message cannot exceed 5000 characters"],
       trim: true,
     },
-    attachments: [
-      {
-        url: { type: String, required: true },
-        name: { type: String, default: "" },
-        size: { type: Number, default: 0 },
-      },
-    ],
+    attachments: {
+      type: [
+        {
+          url: { type: String, required: true },
+          name: { type: String, default: "" },
+          size: { type: Number, default: 0 },
+        },
+      ],
+      validate: [
+        (val) => val.length <= 3,
+        "Maximum of 3 attachments allowed per message",
+      ],
+      default: [],
+    },
     isInternal: {
       type: Boolean,
       default: false,
@@ -53,6 +59,7 @@ const supportMessageSchema = new mongoose.Schema(
   }
 );
 
+// Indexes declared strictly once
 supportMessageSchema.index({ ticketId: 1, createdAt: 1 });
 
 const SupportMessage =

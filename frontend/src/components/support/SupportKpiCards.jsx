@@ -1,98 +1,86 @@
 import React from "react";
-import {
-  Inbox,
-  Clock,
-  CheckCircle2,
-  Archive,
-  AlertTriangle,
-  Zap,
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Inbox, Clock, CheckCircle2, Archive, AlertTriangle, AlertCircle } from "lucide-react";
 
-export default function SupportKpiCards({ stats = {}, isAdmin = false }) {
-  const openCount = stats.open || 0;
-  const inProgressCount = stats.inProgress || 0;
-  const resolvedCount = stats.resolved || 0;
-  const closedCount = stats.closed || 0;
-  const overdueCount = stats.sla?.ticketsOverdue || 0;
-  const avgResponse = stats.sla?.avgFirstResponseHours || 0;
+export const SupportKpiCards = ({ stats = {}, onSelectFilter, activeStatus = "all" }) => {
+  const kpiData = [
+    {
+      id: "Open",
+      label: "Open Tickets",
+      value: stats.waiting ?? 0,
+      icon: Inbox,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
+    },
+    {
+      id: "In Progress",
+      label: "In Progress",
+      value: stats.lookingAt ?? 0,
+      icon: Clock,
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/20",
+    },
+    {
+      id: "Resolved",
+      label: "Resolved",
+      value: stats.answered ?? 0,
+      icon: CheckCircle2,
+      color: "text-indigo-600 dark:text-indigo-400",
+      bg: "bg-indigo-500/10",
+      border: "border-indigo-500/20",
+    },
+    {
+      id: "Closed",
+      label: "Closed",
+      value: stats.done ?? 0,
+      icon: Archive,
+      color: "text-slate-600 dark:text-slate-400",
+      bg: "bg-slate-500/10",
+      border: "border-slate-500/20",
+    },
+    {
+      id: "Overdue",
+      label: "Overdue SLA",
+      value: stats.overdue ?? 0,
+      icon: AlertCircle,
+      color: "text-rose-600 dark:text-rose-400",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/20",
+      highlight: (stats.overdue || 0) > 0,
+    },
+  ];
 
   return (
-    <div className="campus-kpi-track grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-4">
-      {/* 1. Open Tickets */}
-      <div className="campus-kpi-card bg-white border border-zinc-200/80 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
-        <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-          <Inbox className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block">
-            Open Tickets
-          </span>
-          <span className="text-xl font-extrabold text-zinc-900 leading-tight">
-            {openCount}
-          </span>
-        </div>
-      </div>
-
-      {/* 2. In Progress */}
-      <div className="campus-kpi-card bg-white border border-zinc-200/80 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
-        <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-          <Clock className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block">
-            In Progress
-          </span>
-          <span className="text-xl font-extrabold text-zinc-900 leading-tight">
-            {inProgressCount}
-          </span>
-        </div>
-      </div>
-
-      {/* 3. Resolved */}
-      <div className="campus-kpi-card bg-white border border-zinc-200/80 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
-        <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block">
-            Resolved
-          </span>
-          <span className="text-xl font-extrabold text-zinc-900 leading-tight">
-            {resolvedCount}
-          </span>
-        </div>
-      </div>
-
-      {/* 4. Closed or SLA (if Admin) */}
-      {isAdmin && overdueCount > 0 ? (
-        <div className="campus-kpi-card bg-white border border-rose-200 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs bg-rose-50/30">
-          <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-600 block">
-              SLA Overdue
-            </span>
-            <span className="text-xl font-extrabold text-rose-700 leading-tight">
-              {overdueCount}
-            </span>
-          </div>
-        </div>
-      ) : (
-        <div className="campus-kpi-card bg-white border border-zinc-200/80 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
-          <div className="w-10 h-10 rounded-lg bg-zinc-100 text-zinc-600 flex items-center justify-center shrink-0">
-            <Archive className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block">
-              Closed
-            </span>
-            <span className="text-xl font-extrabold text-zinc-900 leading-tight">
-              {closedCount}
-            </span>
-          </div>
-        </div>
-      )}
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      {kpiData.map((kpi) => {
+        const Icon = kpi.icon;
+        const isSelected = activeStatus === kpi.id;
+        return (
+          <Card
+            key={kpi.id}
+            onClick={() => onSelectFilter && onSelectFilter(isSelected ? "all" : kpi.id)}
+            className={`cursor-pointer transition-all hover:shadow-md border ${
+              isSelected
+                ? "ring-2 ring-primary border-primary bg-primary/5"
+                : "border-border/60 hover:border-border"
+            }`}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">{kpi.label}</p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">{kpi.value}</p>
+              </div>
+              <div className={`p-2.5 rounded-xl ${kpi.bg} ${kpi.color}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
-}
+};
+
+export default SupportKpiCards;

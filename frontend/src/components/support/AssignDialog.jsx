@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { UserCheck, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,87 +7,145 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { UserCheck, Search, User } from "lucide-react";
+import Spinner from "@/components/ui/spinner";
 import { useSupportContacts } from "@/hooks/useSupportContacts";
 
-export default function AssignDialog({
-  open,
-  onClose,
-  onAssign,
-  ticket,
-  isAssigning = false,
-}) {
-  const { contacts = [] } = useSupportContacts();
-  const [selectedAssignee, setSelectedAssignee] = useState("");
+export const AssignDialog = ({
+  open = false,
+  onOpenChange,
+  ticket = {},
+  onConfirm,
+  isPending = false,
+}) => {
+  const { contacts, isLoading } = useSupportContacts();
+  const [selectedUserId, setSelectedUserId] = useState(ticket.assignedTo || "");
+  const [search, setSearch] = useState("");
 
-  const handleConfirm = async () => {
-    if (!selectedAssignee) return;
-    await onAssign(selectedAssignee);
-    onClose();
+  const filteredContacts = contacts.filter((c) => {
+    const s = search.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(s) ||
+      c.email?.toLowerCase().includes(s) ||
+      c.role?.toLowerCase().includes(s)
+    );
+  });
+
+  const handleAssign = async () => {
+    if (!selectedUserId) return;
+    await onConfirm({ ticketId: ticket._id, assigneeId: selectedUserId });
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[420px] p-5">
-        <DialogHeader className="pb-3 border-b border-zinc-100">
-          <DialogTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-            <UserCheck className="w-4 h-4 text-zinc-700" />
-            Assign Support Ticket
-          </DialogTitle>
-          <DialogDescription className="text-xs text-zinc-500">
-            Assign ticket <strong className="font-mono text-zinc-800">{ticket?.ticketNumber}</strong> to an authorized staff member.
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogHeader>
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+            <UserCheck className="w-5 h-5" />
+          </div>
+          <DialogTitle className="text-lg">Assign Ticket</DialogTitle>
+          <DialogDescription className="text-xs">
+            Select a staff member or administrator to take ownership of this ticket.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-3 text-xs">
-          <label className="font-semibold text-zinc-700 block">
-            Select Staff Member
-          </label>
-          <Select value={selectedAssignee} onValueChange={setSelectedAssignee}>
-            <SelectTrigger className="h-9 text-xs bg-zinc-50 border-zinc-200">
-              <SelectValue placeholder="Choose a staff member..." />
-            </SelectTrigger>
-            <SelectContent position="popper" className="max-h-[220px]">
-              {contacts.map((person) => (
-                <SelectItem key={person._id} value={person._id} className="text-xs py-2">
-                  <div className="flex flex-col text-left">
-                    <span className="font-semibold text-zinc-900">{person.name}</span>
-                    <span className="text-[10px] text-zinc-400 capitalize">
-                      {person.role?.replace(/_/g, " ")} &bull; {person.department || "Academic"}
-                    </span>
+        <div className="space-y-3 py-2">
+          {/* Search Contacts */}
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search staff members..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          {/* Contact Selection List */}
+          <div className="max-h-56 overflow-y-auto space-y-1.5 border border-border/80 rounded-xl p-2 bg-muted/20">
+            {isLoading ? (
+              <div className="flex justify-center p-6">
+                <Spinner className="w-5 h-5 text-primary" />
+              </div>
+            ) : filteredContacts.length === 0 ? (
+              <div className="p-4 text-center text-xs text-muted-foreground">
+                No staff members found
+              </div>
+            ) : (
+              filteredContacts.map((contact) => {
+                const isSelected = selectedUserId === contact._id;
+                return (
+                  <div
+                    key={contact._id}
+                    onClick={() => setSelectedUserId(contact._id)}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isSelected
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      {contact.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium truncate">{contact.name}</p>
+                      <p
+                        className={`text-[10px] capitalize truncate ${
+                          isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                        }`}
+                      >
+                        {contact.role?.replace("_", " ")}
+                      </p>
+                    </div>
+                    {isSelected && <UserCheck className="w-4 h-4 shrink-0" />}
                   </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        <DialogFooter className="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="rounded-xl"
+          >
             Cancel
           </Button>
           <Button
-            size="sm"
-            onClick={handleConfirm}
-            disabled={!selectedAssignee || isAssigning}
-            className="h-8 text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 gap-1.5"
+            type="button"
+            onClick={handleAssign}
+            disabled={!selectedUserId || isPending}
+            className="rounded-xl gap-1.5"
           >
-            {isAssigning ? (
-              <Spinner className="size-3.5 text-white" />
+            {isPending ? (
+              <>
+                <Spinner className="w-4 h-4" />
+                <span>Assigning...</span>
+              </>
             ) : (
-              <span>Confirm Assignment</span>
+              <>
+                <UserCheck className="w-4 h-4" />
+                <span>Assign Ticket</span>
+              </>
             )}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default AssignDialog;
