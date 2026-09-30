@@ -80,18 +80,7 @@ export default function CampusBranches() {
   const paginatedCampuses = visible.slice(startIndex, endIndex);
 
   return (
-    <section className="campus-branches" aria-labelledby="campuses-title">
-      <header className="campuses-heading">
-        <div>
-          <h1 id="campuses-title">Campus Branches</h1>
-          <p>Manage your physical locations, facilities, and campus manager credentials.</p>
-        </div>
-        <Button onClick={() => navigate("/institute-admin/campuses/new")}>
-          <Plus size={18} />
-          Add Campus
-        </Button>
-      </header>
-
+    <section className="campus-branches" aria-label="Campus branches">
       <Card className="campuses-card">
         <div className="campuses-search-bar">
           <div className="campuses-search-input-wrapper">
@@ -104,6 +93,13 @@ export default function CampusBranches() {
               onChange={handleSearchChange}
             />
           </div>
+          <Button
+            onClick={() => navigate("/institute-admin/campuses/new")}
+            className="campuses-add-btn"
+          >
+            <Plus size={18} />
+            Add Campus
+          </Button>
         </div>
 
         <div className="campuses-table-container">

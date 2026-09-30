@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,6 +14,7 @@ export const TicketFilters = ({
   onReset,
   categories = [],
   isAdmin = false,
+  onNewTicket,
 }) => {
   const hasActiveFilters = Boolean(
     filters.search ||
@@ -100,18 +101,31 @@ export const TicketFilters = ({
         )}
       </div>
 
-      {/* Right side: Reset filter button */}
-      {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="isu-reset-btn"
-          title="Reset active filters"
-        >
-          <X className="w-3.5 h-3.5" />
-          <span>Reset Filters</span>
-        </button>
-      )}
+      {/* Right side: Reset filter button and New Ticket action */}
+      <div className="isu-toolbar-actions">
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="isu-reset-btn"
+            title="Reset active filters"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Reset Filters</span>
+          </button>
+        )}
+        {onNewTicket && (
+          <button
+            type="button"
+            onClick={onNewTicket}
+            className="isu-new-btn"
+            title="Create a new support ticket"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Ticket</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };

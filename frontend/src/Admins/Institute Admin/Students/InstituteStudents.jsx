@@ -164,50 +164,41 @@ export default function InstituteStudents() {
   return (
     <section
       className="institute-student-directory"
-      aria-labelledby="institute-students-title"
+      aria-label="Students Directory & Records"
     >
-      <header className="isd-heading">
-        <div>
-          <h1 id="institute-students-title">
-            Students Directory &amp; Records
-          </h1>
-          <p>
-            Complete management of enrolled students, sections, subjects, and
-            guardians.
-          </p>
-        </div>
-        <Button
-          disabled={!campuses.length}
-          title={
-            !campuses.length
-              ? "Add a campus before enrolling a student"
-              : undefined
-          }
-          onClick={() => {
-            setModal({ type: "add" });
-          }}
-        >
-          <Plus size={18} />
-          Add New Student
-        </Button>
-      </header>
-
       <Card className="isd-card">
         <div className="isd-toolbar">
-          <div className="isd-search-input-wrapper">
-            <Search size={16} className="isd-search-icon" aria-hidden="true" />
-            <Input
-              type="search"
-              aria-label="Search students"
-              placeholder="Search by name, roll no, program..."
-              value={search}
-              onChange={handleSearchChange}
-            />
+          <div className="isd-toolbar-left">
+            <div className="isd-search-input-wrapper">
+              <Search size={16} className="isd-search-icon" aria-hidden="true" />
+              <Input
+                type="search"
+                aria-label="Search students"
+                placeholder="Search by name, roll no, program..."
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <span className="isd-count">
+              {studentsList.length}{" "}
+              {studentsList.length === 1 ? "student" : "students"} enrolled
+            </span>
           </div>
-          <span className="isd-count">
-            {studentsList.length}{" "}
-            {studentsList.length === 1 ? "student" : "students"} enrolled
-          </span>
+          <Button
+            disabled={!campuses.length}
+            title={
+              !campuses.length
+                ? "Add a campus before enrolling a student"
+                : undefined
+            }
+            onClick={() => {
+              setModal({ type: "add" });
+            }}
+            className="isd-add-btn"
+          >
+            <Plus size={18} />
+            Add New Student
+          </Button>
         </div>
 
         <div className="isd-table-container">
