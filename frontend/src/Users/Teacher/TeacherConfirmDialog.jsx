@@ -34,7 +34,12 @@ export default function TeacherConfirmDialog({
               {cancelText}
             </Button>
           </DialogClose>
-          <Button type="button" variant="destructive" onClick={onConfirm}>
+          <Button
+            type="button"
+            variant="destructive"
+            className="teacher-dialog-destructive-action"
+            onClick={onConfirm}
+          >
             {confirmText}
           </Button>
         </DialogFooter>

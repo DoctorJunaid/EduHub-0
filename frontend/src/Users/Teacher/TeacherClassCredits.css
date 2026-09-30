@@ -1,504 +1,409 @@
+/* Teacher Class Credits page styles - Campus Manager visual alignment */
+
 .teacher-credits-page {
-  display: grid;
-  align-content: start;
-  gap: 24px;
-  width: min(100%, 1600px);
-  min-width: 0;
-  margin: 0 auto;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.teacher-credits-header {
   display: flex;
+  flex-direction: column;
+  width: 100%;
   min-width: 0;
-  align-items: center;
-  justify-content: space-between;
+  min-height: 100%;
+  background: #ffffff;
   gap: 24px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
-  box-sizing: border-box;
+  padding-bottom: 36px;
 }
 
-.teacher-credits-heading {
-  min-width: 0;
-}
-
-.teacher-credits-eyebrow {
-  display: block;
-  margin: 0 0 6px;
-  line-height: 1.35;
-}
-
-.teacher-credits-title {
-  margin: 0;
-  font-size: clamp(1.4rem, 2vw, 1.8rem);
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-
-.teacher-credits-description {
-  margin: 7px 0 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
+/* 1. Page Header Toolbar (Compact Controls) */
+.teacher-credits-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 24px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  min-height: 56px;
 }
 
 .teacher-credits-controls {
   display: flex;
-  flex: 0 0 auto;
   align-items: center;
   gap: 10px;
+  flex-wrap: nowrap;
 }
 
 .teacher-credits-month {
-  width: 184px;
-  min-width: 0;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--input);
-  border-radius: 8px;
-  background: var(--background);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 14px;
-  box-sizing: border-box;
+  height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #09090b !important;
+  outline: none !important;
+  transition: border-color 0.15s ease;
 }
 
-.teacher-credits-sync[data-slot="button"] {
-  display: inline-flex;
-  min-width: 88px;
-  min-height: 42px;
-  height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 14px;
-  border-radius: 8px;
-  line-height: 1.2;
-  box-sizing: border-box;
+.teacher-credits-month:focus {
+  border-color: #2563eb !important;
 }
 
-.teacher-credits-sync[data-slot="button"] svg {
-  flex: 0 0 auto;
+.teacher-credits-sync {
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  white-space: nowrap !important;
 }
 
+/* 2. KPI Strip (4 Columns Grid, ~90px Visual Height) */
 .teacher-credits-kpis {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  min-width: 0;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
 }
 
 .teacher-credits-kpi {
-  display: flex;
-  min-width: 0;
-  min-height: 126px;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
+  background: #ffffff;
+  border-right: 1px solid #e4e4e7;
   padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
-  box-sizing: border-box;
-}
-
-.teacher-credits-kpi-top {
+  min-height: 84px;
   display: flex;
-  min-width: 0;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.teacher-credits-kpi-top > span {
+  box-sizing: border-box;
   min-width: 0;
-  font-size: 0.72rem;
-  line-height: 1.4;
+  transition: background 0.15s ease;
 }
 
-.teacher-credits-kpi-icon {
+.teacher-credits-kpi:last-child {
+  border-right: none;
+}
+
+.teacher-credits-kpi:hover {
+  background: #fafafa;
+}
+
+.teacher-credits-kpi .kpi-wrap {
   display: flex;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.teacher-credits-kpi .kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  flex-shrink: 0;
 }
 
-.teacher-credits-kpi-icon svg {
-  width: 18px;
-  height: 18px;
+.teacher-credits-kpi .kpi-icon.blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-.teacher-credits-kpi-body {
+.teacher-credits-kpi .kpi-icon.emerald {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.teacher-credits-kpi .kpi-icon.amber {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.teacher-credits-kpi .kpi-icon.rose {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.teacher-credits-kpi .kpi-icon.neutral {
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+.teacher-credits-kpi .kpi-info {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  margin: 0;
+  flex: 1;
+  overflow: hidden;
+  gap: 2px;
 }
 
-.teacher-credits-kpi-value {
-  display: block;
-  margin: 0;
-  font-size: clamp(1.45rem, 2vw, 1.8rem);
+.teacher-credits-kpi .kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
   line-height: 1.2;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.teacher-credits-kpi-detail {
-  display: block;
-  margin: 4px 0 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
+.teacher-credits-kpi .kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #09090b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teacher-credits-kpi .kpi-subtext {
+  font-size: 11px;
+  font-weight: 500;
+  color: #71717a;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3. Tabs Navigation */
+.teacher-credits-tabs-container {
+  padding: 0 24px;
 }
 
 .teacher-credits-tabs {
   display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 0 0 8px;
-  border-bottom: 1px solid var(--border);
+  gap: 4px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 0 16px;
+  min-height: 46px;
 }
 
 .teacher-credits-tab {
-  min-height: 42px;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
   background: transparent;
-  font-size: 13px;
-  line-height: 1.35;
-  text-align: center;
-  box-sizing: border-box;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  outline: none;
+}
+
+.teacher-credits-tab:hover {
+  color: #09090b;
+}
+
+.teacher-credits-tab.is-active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  font-weight: 700;
+}
+
+/* 4. Filters Bar (History Tab) */
+.teacher-credits-filters-container {
+  padding: 0 24px;
 }
 
 .teacher-credits-filters {
   display: flex;
-  min-width: 0;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--card);
-  box-sizing: border-box;
+  padding: 12px 18px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .teacher-credits-search {
-  width: 100%;
-  min-width: 0;
-  min-height: 40px;
-  padding: 9px 12px 9px 36px;
-  border: 1px solid var(--input);
-  border-radius: 8px;
-  background: var(--background);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 13px;
-  box-sizing: border-box;
+  height: 34px !important;
+  font-size: 12px !important;
 }
 
 .teacher-credits-status-filter {
-  min-width: 160px;
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--input);
-  border-radius: 8px;
-  background: var(--background);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 13px;
-  box-sizing: border-box;
+  height: 34px !important;
+  font-size: 12px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+}
+
+/* 5. Table Section & Card */
+.teacher-credits-section-container {
+  padding: 0 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .teacher-credits-card {
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
 }
 
 .teacher-credits-card-header {
   display: flex;
-  min-width: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--border);
-  box-sizing: border-box;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  min-height: 56px;
 }
 
 .teacher-credits-card-heading {
   display: flex;
-  min-width: 0;
   align-items: center;
   gap: 10px;
 }
 
-.teacher-credits-card-heading svg {
-  flex: 0 0 auto;
-}
-
 .teacher-credits-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #09090b;
   margin: 0;
-  font-size: clamp(1rem, 1.4vw, 1.2rem);
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .teacher-credits-session-count {
-  flex: 0 0 auto;
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.4;
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
 }
 
-.teacher-credits-state {
-  padding: 40px 24px;
-  text-align: center;
-  line-height: 1.5;
-  box-sizing: border-box;
-}
-
-.teacher-credits-state p {
-  margin: 0;
-}
-
-.teacher-credits-state > span {
-  display: block;
-  margin: 5px 0 0;
-}
-
-.teacher-credits-state svg {
-  margin: 0 0 8px;
-}
-
-.teacher-credits-table-wrap {
+.teacher-table-scroll {
   width: 100%;
-  min-width: 0;
   overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-gutter: stable;
+  flex: 1;
 }
 
 .teacher-credits-table {
   width: 100%;
-  min-width: 1070px;
   border-collapse: collapse;
-  table-layout: fixed;
-  text-align: left;
-  font-size: 13px;
-}
-
-.teacher-credits-table th,
-.teacher-credits-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-  line-height: 1.4;
+  font-size: 12px;
+  table-layout: auto;
 }
 
 .teacher-credits-table th {
-  padding-top: 13px;
-  padding-bottom: 13px;
-  color: var(--muted-foreground);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.teacher-credits-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.teacher-credits-period {
-  width: 145px;
-}
-.teacher-credits-class {
-  width: 155px;
-}
-.teacher-credits-subject {
-  width: 110px;
-}
-.teacher-credits-role {
-  width: 180px;
-}
-.teacher-credits-room {
-  width: 105px;
-}
-.teacher-credits-status {
-  width: 175px;
-}
-.teacher-credits-actions-cell {
-  width: 200px;
-}
-
-.teacher-credits-actions-heading,
-.teacher-credits-actions-cell {
-  text-align: right;
-}
-
-.teacher-credits-period-content,
-.teacher-credits-status-content {
-  display: flex;
-  min-width: 0;
-}
-
-.teacher-credits-period-content {
-  align-items: center;
-  gap: 7px;
-}
-
-.teacher-credits-period-content > span:first-child {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
   font-size: 10px;
-  line-height: 1;
-}
-
-.teacher-credits-status-content {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-}
-
-.teacher-credits-status-badge {
-  display: inline-flex;
-  max-width: 100%;
-  align-items: center;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: 11px;
-  line-height: 1.3;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  padding: 12px 18px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  text-align: left;
   white-space: nowrap;
-  box-sizing: border-box;
 }
 
-.teacher-credits-actions {
+.teacher-credits-table th:first-child,
+.teacher-credits-table td:first-child {
+  padding-left: 20px;
+}
+
+.teacher-credits-table th:last-child,
+.teacher-credits-table td:last-child {
+  padding-right: 20px;
+}
+
+.teacher-credits-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  color: #09090b;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.teacher-credits-table tr:hover td {
+  background: #fafafa;
+}
+
+.teacher-credits-state {
+  padding: 48px 24px;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.teacher-credits-action-button[data-slot="button"] {
-  display: inline-flex;
-  min-width: 0;
-  min-height: 36px;
-  height: 36px;
-  flex: 0 0 auto;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 11px;
-  border-radius: 7px;
-  font-size: 12px;
-  line-height: 1.2;
-  box-sizing: border-box;
 }
 
-.teacher-credits-action-button[data-slot="button"] svg {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-}
-
-@media (max-width: 1100px) {
-  .teacher-credits-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .teacher-credits-controls {
-    flex-wrap: wrap;
-  }
-
+/* 6. Responsive Breakpoints */
+@media (max-width: 1024px) {
   .teacher-credits-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
 
-@media (max-width: 560px) {
-  .teacher-credits-page {
-    gap: 16px;
+  .teacher-credits-kpi:nth-child(2) {
+    border-right: none;
   }
 
-  .teacher-credits-header {
-    gap: 16px;
-    padding: 18px 16px;
+  .teacher-credits-kpi:nth-child(-n + 2) {
+    border-bottom: 1px solid #e4e4e7;
+  }
+}
+
+@media (max-width: 600px) {
+  .teacher-credits-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-credits-kpi {
+    border-right: none !important;
+    border-bottom: 1px solid #e4e4e7;
+  }
+
+  .teacher-credits-kpi:last-child {
+    border-bottom: none;
+  }
+
+  .teacher-credits-toolbar {
+    padding: 12px 16px;
+    justify-content: stretch;
   }
 
   .teacher-credits-controls {
     width: 100%;
-    align-items: stretch;
+    justify-content: space-between;
   }
 
-  .teacher-credits-month {
-    width: auto;
-    flex: 1 1 160px;
-  }
-
-  .teacher-credits-sync[data-slot="button"] {
-    flex: 1 1 88px;
-  }
-
-  .teacher-credits-kpis {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
-
-  .teacher-credits-kpi {
-    min-height: 112px;
-    padding: 16px 18px;
+  .teacher-credits-tabs-container,
+  .teacher-credits-filters-container,
+  .teacher-credits-section-container {
+    padding: 0 16px;
   }
 
   .teacher-credits-tabs {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .teacher-credits-tab {
-    width: 100%;
-  }
-
-  .teacher-credits-filters {
-    align-items: stretch;
-    flex-direction: column;
-    padding: 12px;
-  }
-
-  .teacher-credits-status-filter {
-    width: 100%;
+    padding: 0 12px;
+    overflow-x: auto;
   }
 
   .teacher-credits-card-header {
-    align-items: flex-start;
-    padding: 16px;
+    padding: 14px 16px;
   }
 
-  .teacher-credits-session-count {
-    max-width: 100px;
-    text-align: right;
-    white-space: normal;
+  .teacher-credits-table th:first-child,
+  .teacher-credits-table td:first-child {
+    padding-left: 16px;
   }
 
-  .teacher-credits-state {
-    padding: 32px 18px;
+  .teacher-credits-table th:last-child,
+  .teacher-credits-table td:last-child {
+    padding-right: 16px;
   }
 }

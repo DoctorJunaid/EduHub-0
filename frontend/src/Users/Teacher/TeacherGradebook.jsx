@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { MoreVertical, Plus, Search } from "lucide-react";
+import { MoreVertical, Pencil, Plus, Search } from "lucide-react";
 import { selectStudents } from "@/store/Slices/studentsSlice";
 import { selectExams } from "@/store/Slices/examsSlice";
 import { resultSaved, selectResults } from "@/store/Slices/resultsSlice";
@@ -28,10 +28,29 @@ import {
 import "./TeacherGradebook.css";
 import TeacherPagination from "./TeacherPagination";
 
-const get = (row, ...keys) =>
-  keys
-    .map((key) => row?.[key])
-    .find((item) => item !== undefined && item !== null && item !== "") || "";
+const get = (row, ...keys) => {
+  for (const key of keys) {
+    const item = row?.[key];
+    if (item !== undefined && item !== null && item !== "") {
+      if (typeof item === "object") {
+        const text = item.name || item.title || item.className || item.code || item.label || "";
+        if (text) return String(text);
+      } else {
+        return String(item);
+      }
+    }
+  }
+  return "";
+};
+const formatSec = (val) => {
+  if (!val) return "";
+  if (typeof val === "object") return val.name || val.className || val.title || val.code || val.label || val._id || "";
+  return String(val);
+};
+
+
+
+
 const initials = (name = "") =>
   name
     .split(/\s+/)
@@ -237,27 +256,28 @@ export default function TeacherGradebook() {
 
   return (
     <main
-      className="teacher-gradebook"
+      className="campus-tab-page teacher-gradebook"
       aria-labelledby="teacher-gradebook-title"
     >
       <h1 id="teacher-gradebook-title" className="sr-only">
         Gradebook &amp; Marks
       </h1>
-      <header className="teacher-gradebook-toolbar">
+      <section className="teacher-gradebook-card">
+        <div className="teacher-gradebook-toolbar">
         <Button
-          className="teacher-primary-action"
+          className="toolbar-btn toolbar-btn-primary"
           onClick={openNew}
           disabled={!canAdd}
         >
-          <Plus size={17} /> Add Marks
+          <Plus size={14} /> Add Marks
         </Button>
-      </header>
-      <section className="teacher-gradebook-card">
+        </div>
+
         <div className="teacher-gradebook-filters">
-          <label>
-            <Search size={16} />
-            <span className="sr-only">Search students</span>
-            <input
+          <label className="teacher-gradebook-search">
+                <Search size={14} />
+                <span className="sr-only">Search students</span>
+                <input
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
@@ -297,7 +317,7 @@ export default function TeacherGradebook() {
           </select>
         </div>
         <div className="teacher-gradebook-table-wrap">
-          <table>
+          <table className="campus-data-table teacher-gradebook-table" style={{ width: "100%", tableLayout: "fixed" }}>
             <thead>
               <tr>
                 <th>Student Name &amp; Roll No</th>
@@ -373,15 +393,23 @@ export default function TeacherGradebook() {
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
+                                className="teacher-action-trigger"
                                 aria-label="Result actions"
                               >
-                                <MoreVertical size={17} />
+                                <MoreVertical size={17} aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent
+                              align="end"
+                              sideOffset={6}
+                              collisionPadding={12}
+                              className="teacher-action-menu"
+                            >
                               <DropdownMenuItem
+                                className="teacher-action-item"
                                 onSelect={() => setEditing(row)}
                               >
+                                <Pencil size={16} aria-hidden="true" />
                                 Edit Marks
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -398,6 +426,19 @@ export default function TeacherGradebook() {
           </table>
           {!visible.length && (
             <div className="teacher-gradebook-empty">
+              <span className="teacher-gradebook-empty-icon">
+                <Search size={22} />
+              </span>
+              <strong>
+                {!selectedClass
+                  ? "No assigned class selected"
+                  : !classExams.length
+                    ? "No Admin-created exam scheduled"
+                    : scoped.length
+                      ? "No matching records"
+                      : "No marks recorded yet"}
+              </strong>
+              <p>
               {!selectedClass
                 ? "Select an assigned class to view its results."
                 : !classExams.length
@@ -405,6 +446,7 @@ export default function TeacherGradebook() {
                   : scoped.length
                     ? "No results match the selected filters."
                     : "No marks are recorded for this class and its scheduled exams."}
+              </p>
             </div>
           )}
         </div>
@@ -426,7 +468,7 @@ export default function TeacherGradebook() {
         open={Boolean(editing)}
         onOpenChange={(open) => !open && setEditing(null)}
       >
-        <DialogContent className="teacher-dialog">
+        <DialogContent className="teacher-dialog teacher-dialog-medium">
           <DialogHeader>
             <DialogTitle>
               {editing?.id ? "Edit Marks" : "Add Marks"}
@@ -438,8 +480,8 @@ export default function TeacherGradebook() {
           </DialogHeader>
           {editing && (
             <form className="teacher-grade-form" onSubmit={save}>
-              <div className="teacher-dialog-body">
-                <label>
+              <div className="teacher-dialog-body teacher-dialog-grid">
+                <label className="teacher-dialog-field-full">
                   Student
                   <select
                     name="studentId"
@@ -457,7 +499,7 @@ export default function TeacherGradebook() {
                     ))}
                   </select>
                 </label>
-                <label>
+                <label className="teacher-dialog-field-full">
                   Scheduled exam
                   <select
                     name="examId"
@@ -503,7 +545,7 @@ export default function TeacherGradebook() {
                     required
                   />
                 </label>
-                <label>
+                <label className="teacher-dialog-field-full">
                   Teacher Remarks
                   <textarea
                     name="remarks"
@@ -520,7 +562,7 @@ export default function TeacherGradebook() {
                 >
                   Cancel
                 </Button>
-                <Button className="teacher-primary-action" type="submit">
+                <Button className="toolbar-btn toolbar-btn-primary" type="submit">
                   Save Marks
                 </Button>
               </DialogFooter>

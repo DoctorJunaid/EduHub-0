@@ -1,7 +1,7 @@
 import MainLayout from "@/layouts/MainLayout";
 import { TEACHER_NAV } from "@/constants/navigation";
+import "@/Admins/Campus Admin/CampusShared.css";
 import "./TeacherUI.css";
-
 export default function TeacherLayout() {
   return (
     <MainLayout

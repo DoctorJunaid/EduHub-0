@@ -50,8 +50,8 @@ export default function TeacherPage() {
       className="teacher-page-placeholder"
       aria-labelledby="teacher-page-title"
     >
-      <p className="page-eyebrow">Teacher portal</p>
-      <h1 id="teacher-page-title">{title}</h1>
+
+      <h1 id="teacher-page-title" className="sr-only">{title}</h1>
       <p>{description}</p>
       <Link className="teacher-primary-link" to="/teacher">
         Back to Overview

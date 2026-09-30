@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FileText, MoreVertical, Plus } from "lucide-react";
+import { FileText, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { dateKey, validDate } from "@/lib/dates";
 import { useSearchParams } from "react-router-dom";
 import { selectAssignedTeacherClasses, selectTeacherIdentity } from "./teacherScope";
@@ -28,10 +28,29 @@ import toast from "react-hot-toast";
 import TeacherConfirmDialog from "./TeacherConfirmDialog";
 import "./TeacherDiary.css";
 
-const get = (row, ...keys) =>
-  keys
-    .map((key) => row?.[key])
-    .find((item) => item !== undefined && item !== null && item !== "") || "";
+const get = (row, ...keys) => {
+  for (const key of keys) {
+    const item = row?.[key];
+    if (item !== undefined && item !== null && item !== "") {
+      if (typeof item === "object") {
+        const text = item.name || item.title || item.className || item.code || item.label || "";
+        if (text) return String(text);
+      } else {
+        return String(item);
+      }
+    }
+  }
+  return "";
+};
+const formatSec = (sec) => {
+  if (!sec) return "";
+  if (typeof sec === "object") return sec.name || sec.className || sec.title || sec._id || "";
+  return String(sec);
+};
+
+
+
+
 const today = () => dateKey(new Date());
 
 export default function TeacherDiary() {
@@ -94,11 +113,12 @@ export default function TeacherDiary() {
   };
 
   return (
-    <main className="teacher-diary" aria-labelledby="teacher-diary-title">
-      <header className="teacher-diary-toolbar">
+    <main
+      className="campus-tab-page teacher-diary" aria-labelledby="teacher-diary-title">
+      <header className="campus-toolbar teacher-diary-toolbar">
         <h1 id="teacher-diary-title" className="sr-only">Daily Lecture Diary</h1>
-        <Button className="teacher-primary-action" onClick={openNew} disabled={!classes.length}>
-          <Plus size={17} /> New Diary Entry
+        <Button className="toolbar-btn toolbar-btn-primary" onClick={openNew} disabled={!classes.length}>
+          <Plus size={14} /> New Diary Entry
         </Button>
       </header>
       <div className="teacher-diary-list">
@@ -117,7 +137,7 @@ export default function TeacherDiary() {
                     <h2>{entry.title}</h2>
                     <span>
                       Sec{" "}
-                      {entry.sectionId ||
+                      {formatSec(entry.sectionId) ||
                         get(cls, "section", "className") ||
                         "—"}
                     </span>
@@ -133,19 +153,31 @@ export default function TeacherDiary() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Actions for ${entry.title}`}
+                      className="teacher-action-trigger"
+                      aria-label="Diary entry actions"
                     >
-                      <MoreVertical size={18} />
+                      <MoreVertical size={18} aria-hidden="true" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => edit(entry)}>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={6}
+                    collisionPadding={12}
+                    className="teacher-action-menu"
+                  >
+                    <DropdownMenuItem
+                      className="teacher-action-item"
+                      onSelect={() => edit(entry)}
+                    >
+                      <Pencil size={16} aria-hidden="true" />
                       Edit Entry
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
+                      className="teacher-action-item teacher-action-item-destructive"
                       onSelect={() => setDeleteId(entry.id)}
                     >
+                      <Trash2 size={16} aria-hidden="true" />
                       Delete Entry
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -169,10 +201,21 @@ export default function TeacherDiary() {
           );
         })}
         {!entries.length && (
-          <div className="teacher-diary-empty">
-            <FileText size={28} />
-            <strong>No diary entries yet.</strong>
-            <span>Create an entry for one of your assigned classes.</span>
+          <div className="teacher-diary-section-container">
+            <section className="teacher-diary-empty" aria-live="polite">
+              <span className="teacher-diary-empty-icon">
+                <FileText size={24} />
+              </span>
+              <h2>No diary entries yet</h2>
+              <p>Create an entry for one of your assigned classes.</p>
+              <Button
+                className="toolbar-btn toolbar-btn-primary"
+                onClick={openNew}
+                disabled={!classes.length}
+              >
+                <Plus size={14} /> New Diary Entry
+              </Button>
+            </section>
           </div>
         )}
       </div>
@@ -180,7 +223,7 @@ export default function TeacherDiary() {
         open={Boolean(form)}
         onOpenChange={(open) => !open && setForm(null)}
       >
-        <DialogContent className="teacher-dialog">
+        <DialogContent className="teacher-dialog teacher-assignment-dialog">
           <DialogHeader>
             <DialogTitle>
               {form?.id ? "Edit Diary Entry" : "New Diary Entry"}
@@ -191,17 +234,17 @@ export default function TeacherDiary() {
           </DialogHeader>
           {form && (
             <form className="teacher-diary-form" onSubmit={save}>
-              <div className="teacher-dialog-body">
+              <div className="teacher-dialog-body teacher-dialog-grid">
                 <label>Class / Section<select name="classId" defaultValue={form.classId} required>{classes.map((row) => <option key={row.id || row._id} value={row.id || row._id}>{get(row, "subject", "title", "periodName")} · {get(row, "section", "className")}</option>)}</select></label>
                 <label>Date<input type="date" name="date" defaultValue={form.date} required /></label>
-                <label>Lecture / Topic Title<input name="title" defaultValue={form.title} required /></label>
-                <label>Class Lecture Summary<textarea name="recap" defaultValue={form.recap} rows="3" required /></label>
-                <label>Homework / Practice Task<textarea name="homework" defaultValue={form.homework} rows="3" /></label>
-                <label>Recommended Study Material<textarea name="resources" defaultValue={form.resources} rows="2" /></label>
+                <label className="teacher-dialog-field-full">Lecture / Topic Title<input name="title" defaultValue={form.title} required /></label>
+                <label className="teacher-dialog-field-full">Class Lecture Summary<textarea name="recap" defaultValue={form.recap} rows="3" required /></label>
+                <label className="teacher-dialog-field-full">Homework / Practice Task<textarea name="homework" defaultValue={form.homework} rows="3" /></label>
+                <label className="teacher-dialog-field-full">Recommended Study Material<textarea name="resources" defaultValue={form.resources} rows="2" /></label>
               </div>
               <DialogFooter className="teacher-dialog-footer">
                 <Button type="button" variant="outline" onClick={() => setForm(null)}>Cancel</Button>
-                <Button className="teacher-primary-action" type="submit">Save Diary Entry</Button>
+                <Button className="toolbar-btn toolbar-btn-primary" type="submit">Save Diary Entry</Button>
               </DialogFooter>
             </form>
           )}
@@ -210,7 +253,7 @@ export default function TeacherDiary() {
       <TeacherConfirmDialog
         open={Boolean(deleteId)}
         title="Delete diary entry?"
-        description="This removes your diary entry from the shared frontend record."
+        description="Are you sure you want to delete this diary entry? This action cannot be undone."
         confirmText="Delete Entry"
         onConfirm={remove}
         onCancel={() => setDeleteId(null)}
