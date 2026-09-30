@@ -5,6 +5,7 @@ import TeacherAttendance from "./TeacherAttendance";
 import TeacherDiary from "./TeacherDiary";
 import TeacherGradebook from "./TeacherGradebook";
 import TeacherMessages from "./TeacherMessages";
+import SupportList from "@/pages/SupportList";
 
 const copy = {
   "/teacher/classes": [
@@ -27,6 +28,10 @@ const copy = {
     "Gradebook & Marks",
     "Manage marks for students in your assigned classes.",
   ],
+  "/teacher/support": [
+    "Help & Support",
+    "View conversations and get help for your teacher account.",
+  ],
   "/teacher/messages": [
     "Help & Support",
     "View conversations and get help for your teacher account.",
@@ -40,7 +45,7 @@ export default function TeacherPage() {
   if (pathname === "/teacher/attendance") return <TeacherAttendance />;
   if (pathname === "/teacher/diary") return <TeacherDiary />;
   if (pathname === "/teacher/gradebook") return <TeacherGradebook />;
-  if (pathname === "/teacher/messages") return <TeacherMessages />;
+  if (pathname === "/teacher/support" || pathname === "/teacher/messages") return <SupportList />;
   const [title, description] = copy[pathname] || [
     "Teacher Portal",
     "Choose an item from the Teacher navigation.",

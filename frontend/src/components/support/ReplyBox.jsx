@@ -28,14 +28,12 @@ export const ReplyBox = ({
       return;
     }
 
-    // Process files (limit 5MB each)
     const newAttachments = [...attachments];
     for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
         toast.error(`File "${file.name}" exceeds 5MB limit`);
         continue;
       }
-      // Create a local object URL for preview/sending
       newAttachments.push({
         name: file.name,
         size: file.size,
@@ -79,20 +77,57 @@ export const ReplyBox = ({
 
   if (isClosed) {
     return (
-      <div className="p-4 bg-muted/40 border-t border-border/80 text-center rounded-b-2xl">
+      <div className="border-t bg-muted/40 px-6 py-4 text-center">
         <p className="text-xs font-medium text-muted-foreground flex items-center justify-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          <span>This conversation is closed and resolved.</span>
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>This conversation is resolved and closed.</span>
         </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 bg-card border-t border-border/80 rounded-b-2xl space-y-3">
-      {/* Attachments preview row */}
+    <div className="border-t bg-background px-6 py-4 space-y-3">
+      {/* Top row: solve button or internal note indicator if applicable */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Internal note checkbox for staff */}
+        {isAdmin ? (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isInternal}
+              onChange={(e) => setIsInternal(e.target.checked)}
+              className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
+            />
+            <span className={isInternal ? "font-semibold text-amber-600 dark:text-amber-400" : ""}>
+              Internal Note (staff only)
+            </span>
+          </label>
+        ) : <div />}
+
+        {/* Solve button for creators */}
+        {canSolve && onSolve && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSolve}
+            disabled={isSolving}
+            className="h-8 px-3 rounded-lg text-xs font-medium border-emerald-500/40 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 transition-colors"
+          >
+            {isSolving ? (
+              <Spinner className="w-3.5 h-3.5 mr-1" />
+            ) : (
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+            )}
+            <span>✓ This is solved</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Attachments preview list */}
       {attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-1">
           {attachments.map((att, idx) => (
             <div
               key={idx}
@@ -104,6 +139,7 @@ export const ReplyBox = ({
                 type="button"
                 onClick={() => removeAttachment(idx)}
                 className="text-muted-foreground hover:text-destructive ml-1"
+                title="Remove attachment"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -112,16 +148,30 @@ export const ReplyBox = ({
         </div>
       )}
 
-      {/* Internal note banner toggle if active */}
-      {isAdmin && isInternal && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-medium">
-          <ShieldAlert className="w-3.5 h-3.5" />
-          <span>Internal Note: Visible only to staff members</span>
-        </div>
-      )}
+      {/* Main input flex row */}
+      <form onSubmit={handleSubmit} className="flex flex-col">
+        <div className="flex items-end gap-3">
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            multiple
+            className="hidden"
+            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+          />
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-        <div className="relative">
+          {/* Attach Button (Circular 40x40 icon button) */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="h-10 w-10 rounded-full border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+            title="Attach files (max 3 files, 5MB each)"
+          >
+            <Paperclip className="w-4 h-4" />
+          </button>
+
+          {/* Textarea (Flex-1, min 44px, max 160px) */}
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -129,95 +179,39 @@ export const ReplyBox = ({
             placeholder={
               isInternal
                 ? "Write an internal note for staff members..."
-                : "Type your reply... (Press Enter to send, Shift+Enter for newline)"
+                : "Type your reply..."
             }
-            rows={2}
-            className={`resize-none pr-10 rounded-xl text-sm transition-colors ${
+            rows={1}
+            className={`flex-1 min-h-[44px] max-h-40 rounded-xl border border-input bg-background px-4 py-3 resize-none text-sm leading-relaxed transition-colors ${
               isInternal
                 ? "border-amber-500/50 bg-amber-500/5 focus-visible:ring-amber-500/30"
                 : ""
             }`}
           />
+
+          {/* Send Button (Circular 40x40 primary button) */}
+          <button
+            type="submit"
+            disabled={(!message.trim() && attachments.length === 0) || isSending}
+            className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+              isInternal
+                ? "bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50"
+                : "bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+            }`}
+            title="Send message"
+          >
+            {isSending ? (
+              <Spinner className="w-4 h-4 text-current" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              multiple
-              className="hidden"
-              accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-8 px-2.5 rounded-lg text-xs gap-1.5 hover:bg-muted"
-              title="Attach files (max 3 files, 5MB each)"
-            >
-              <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="hidden sm:inline">Attach</span>
-            </Button>
-
-            {isAdmin && (
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground">
-                <input
-                  type="checkbox"
-                  checked={isInternal}
-                  onChange={(e) => setIsInternal(e.target.checked)}
-                  className="rounded border-border text-amber-600 focus:ring-amber-500 h-3.5 w-3.5"
-                />
-                <span>Internal Note</span>
-              </label>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {canSolve && onSolve && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onSolve}
-                disabled={isSolving}
-                className="h-8 px-3 rounded-lg text-xs font-medium border-emerald-500/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-              >
-                {isSolving ? (
-                  <Spinner className="w-3.5 h-3.5 mr-1" />
-                ) : (
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                )}
-                <span>✓ This is solved</span>
-              </Button>
-            )}
-
-            <Button
-              type="submit"
-              size="sm"
-              disabled={(!message.trim() && attachments.length === 0) || isSending}
-              className={`h-8 px-4 rounded-lg text-xs font-semibold gap-1.5 shadow-xs ${
-                isInternal
-                  ? "bg-amber-600 hover:bg-amber-700 text-white"
-                  : ""
-              }`}
-            >
-              {isSending ? (
-                <>
-                  <Spinner className="w-3.5 h-3.5" />
-                  <span>Sending...</span>
-                </>
-              ) : (
-                <>
-                  <span>Send</span>
-                  <Send className="w-3.5 h-3.5" />
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Hint text below input */}
+        <p className="text-xs text-muted-foreground mt-2 pl-1">
+          Press Enter to send, Shift+Enter for newline
+        </p>
       </form>
     </div>
   );

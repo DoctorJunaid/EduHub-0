@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { formatDistanceToNow, format } from "date-fns";
-import { Paperclip, ShieldAlert, Check, CheckCheck, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { Paperclip, ShieldAlert, CheckCheck } from "lucide-react";
 
 export const MessageThread = ({ messages = [], currentUserId, isAdmin = false }) => {
   const scrollRef = useRef(null);
@@ -20,7 +20,10 @@ export const MessageThread = ({ messages = [], currentUserId, isAdmin = false })
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+    <div
+      ref={scrollRef}
+      className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-background"
+    >
       {messages.map((msg) => {
         const isOwn = String(msg.senderId?._id || msg.senderId) === String(currentUserId);
         const senderName = msg.senderSnapshot?.name || "Support Team";
@@ -34,14 +37,16 @@ export const MessageThread = ({ messages = [], currentUserId, isAdmin = false })
         // Internal note bubble (admin only)
         if (isInternal) {
           return (
-            <div key={msg._id} className="flex justify-center my-3">
-              <div className="max-w-xl w-full bg-amber-500/10 border border-dashed border-amber-500/30 text-amber-900 dark:text-amber-200 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-xs">
+            <div key={msg._id} className="flex justify-center my-2">
+              <div className="max-w-lg w-full bg-amber-500/10 border border-dashed border-amber-500/30 text-amber-900 dark:text-amber-200 p-3.5 rounded-xl text-xs space-y-1.5 shadow-xs">
                 <div className="flex items-center justify-between font-semibold">
                   <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
                     <ShieldAlert className="w-3.5 h-3.5" />
                     <span>Internal Staff Note ({senderName})</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-normal">{formattedTime}</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">
+                    {formattedTime}
+                  </span>
                 </div>
                 <p className="whitespace-pre-wrap leading-relaxed">{msg.message}</p>
               </div>
@@ -49,75 +54,96 @@ export const MessageThread = ({ messages = [], currentUserId, isAdmin = false })
           );
         }
 
-        return (
-          <div
-            key={msg._id}
-            className={`flex items-end gap-2.5 ${isOwn ? "justify-end" : "justify-start"}`}
-          >
-            {/* Other User Avatar */}
-            {!isOwn && (
-              <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0 mb-1">
-                {senderInitial}
-              </div>
-            )}
+        // Own Message (Right Side)
+        if (isOwn) {
+          return (
+            <div key={msg._id} className="flex flex-col items-end w-full">
+              {/* Bubble */}
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[75%] sm:max-w-md break-words shadow-xs">
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {msg.message}
+                </p>
 
-            {/* Bubble */}
-            <div
-              className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3.5 space-y-1.5 shadow-xs ${
-                isOwn
-                  ? "bg-primary text-primary-foreground rounded-br-xs"
-                  : "bg-muted/70 text-foreground border border-border/60 rounded-bl-xs"
-              }`}
-            >
-              {/* Sender Name for other users */}
-              {!isOwn && (
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
-                  <span>{isAdmin ? senderName : (senderRole === "student" ? senderName : "Support Team")}</span>
-                  {isAdmin && senderRole && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-background/60 text-muted-foreground capitalize">
-                      {senderRole}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Message Text */}
-              <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
-                {msg.message}
-              </p>
-
-              {/* Attachments if any */}
-              {msg.attachments && msg.attachments.length > 0 && (
-                <div className="pt-1.5 space-y-1">
-                  {msg.attachments.map((att, i) => (
-                    <a
-                      key={i}
-                      href={att.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                        isOwn
-                          ? "bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground"
-                          : "bg-background hover:bg-background/80 text-foreground border border-border/60"
-                      }`}
-                    >
-                      <Paperclip className="w-3 h-3" />
-                      <span className="truncate max-w-[160px]">{att.name || "Attachment"}</span>
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {/* Time + Delivery Indicator */}
-              <div
-                className={`flex items-center justify-end gap-1 text-[10px] ${
-                  isOwn ? "text-primary-foreground/75" : "text-muted-foreground"
-                }`}
-              >
-                <span>{formattedTime}</span>
-                {isOwn && (
-                  <CheckCheck className="w-3 h-3 ml-0.5 text-primary-foreground/90" />
+                {/* Attachments if any */}
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="pt-2 space-y-1">
+                    {msg.attachments.map((att, i) => (
+                      <a
+                        key={i}
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground transition-colors"
+                      >
+                        <Paperclip className="w-3.5 h-3.5" />
+                        <span className="truncate max-w-[160px]">
+                          {att.name || "Attachment"}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
                 )}
+              </div>
+
+              {/* Timestamp & Delivery indicator below the bubble */}
+              <div className="text-xs text-muted-foreground mt-1 flex items-center justify-end gap-1 select-none pr-1">
+                <span>{formattedTime}</span>
+                <CheckCheck className="w-3.5 h-3.5 text-primary ml-0.5" />
+              </div>
+            </div>
+          );
+        }
+
+        // Support / Other Message (Left Side)
+        return (
+          <div key={msg._id} className="flex items-start gap-2.5 max-w-full">
+            {/* Avatar 32x32 */}
+            <div className="w-8 h-8 rounded-full bg-muted border border-border/80 flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 mt-0.5 select-none">
+              {senderInitial}
+            </div>
+
+            {/* Content Column */}
+            <div className="flex flex-col items-start min-w-0">
+              {/* Sender Name */}
+              <div className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                <span>{isAdmin ? senderName : (senderRole === "student" ? senderName : "Support Team")}</span>
+                {isAdmin && senderRole && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground capitalize">
+                    {senderRole}
+                  </span>
+                )}
+              </div>
+
+              {/* Bubble */}
+              <div className="bg-muted text-foreground border border-border/60 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[75%] sm:max-w-md break-words shadow-xs">
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {msg.message}
+                </p>
+
+                {/* Attachments if any */}
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="pt-2 space-y-1">
+                    {msg.attachments.map((att, i) => (
+                      <a
+                        key={i}
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-background hover:bg-background/80 text-foreground border border-border transition-colors"
+                      >
+                        <Paperclip className="w-3.5 h-3.5" />
+                        <span className="truncate max-w-[160px]">
+                          {att.name || "Attachment"}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Timestamp below the bubble */}
+              <div className="text-xs text-muted-foreground mt-1 pl-1 select-none">
+                <span>{formattedTime}</span>
               </div>
             </div>
           </div>

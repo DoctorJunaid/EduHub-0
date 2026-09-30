@@ -1,11 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectAuth } from "@/store/Slices/authSlice";
 import { formatDistanceToNow } from "date-fns";
 import { TicketStatusBadge } from "./TicketStatusBadge";
 import { TicketPriorityBadge } from "./TicketPriorityBadge";
 import { TicketCategoryBadge } from "./TicketCategoryBadge";
 import { EmptyConversationsState } from "./EmptyConversationsState";
 import { User, AlertCircle } from "lucide-react";
+import { getSupportTicketPath } from "@/utils/supportRouting";
 
 export const TicketListTable = ({
   tickets = [],
@@ -15,6 +18,8 @@ export const TicketListTable = ({
   onNewTicket,
 }) => {
   const navigate = useNavigate();
+  const auth = useSelector(selectAuth);
+  const role = auth?.user?.role;
 
   if (!tickets || tickets.length === 0) {
     return <EmptyConversationsState onNewConversation={onNewTicket} isAdmin={true} />;
@@ -23,17 +28,17 @@ export const TicketListTable = ({
   const allSelected = tickets.length > 0 && selectedIds.length === tickets.length;
 
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border/80 bg-card">
+    <div className="w-full overflow-x-auto rounded-xl border border-zinc-200 bg-white">
       <table className="w-full text-left text-sm border-collapse">
-        <thead>
-          <tr className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <thead className="bg-zinc-50 border-b border-zinc-200">
+          <tr className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
             {onToggleSelect && (
               <th className="p-3.5 w-10 text-center">
                 <input
                   type="checkbox"
                   checked={allSelected}
                   onChange={(e) => onSelectAll && onSelectAll(e.target.checked)}
-                  className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                  className="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400 h-4 w-4"
                 />
               </th>
             )}
@@ -47,7 +52,7 @@ export const TicketListTable = ({
             <th className="p-3.5 text-right">Last Activity</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border/60">
+        <tbody className="divide-y divide-zinc-100">
           {tickets.map((ticket) => {
             const isSelected = selectedIds.includes(ticket._id);
             const timeAgo = ticket.lastActivityAt
@@ -57,9 +62,9 @@ export const TicketListTable = ({
             return (
               <tr
                 key={ticket._id}
-                onClick={() => navigate(`/support/${ticket._id}`)}
-                className={`group cursor-pointer transition-colors hover:bg-muted/50 ${
-                  isSelected ? "bg-primary/5" : ""
+                onClick={() => navigate(getSupportTicketPath(role, ticket._id))}
+                className={`group cursor-pointer transition-colors hover:bg-zinc-50/70 ${
+                  isSelected ? "bg-zinc-100/60" : ""
                 }`}
               >
                 {onToggleSelect && (
