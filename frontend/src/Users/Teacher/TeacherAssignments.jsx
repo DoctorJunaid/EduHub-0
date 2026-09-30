@@ -41,10 +41,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import "./TeacherAssignments.css";
 
-const get = (row, ...keys) =>
-  keys
-    .map((key) => row?.[key])
-    .find((item) => item !== undefined && item !== null && item !== "") || "";
+const get = (row, ...keys) => {
+  for (const key of keys) {
+    const item = row?.[key];
+    if (item !== undefined && item !== null && item !== "") {
+      if (typeof item === "object") {
+        const text = item.name || item.title || item.className || item.code || item.label || "";
+        if (text) return String(text);
+      } else {
+        return String(item);
+      }
+    }
+  }
+  return "";
+};
 const initials = (name = "") =>
   name
     .split(/\s+/)
@@ -252,21 +262,24 @@ export default function TeacherAssignments() {
   };
   return (
     <main
-      className="teacher-assignments"
+      className="campus-tab-page teacher-assignments"
       aria-labelledby="teacher-assignments-title"
     >
       <h1 id="teacher-assignments-title" className="sr-only">
         Assignments &amp; Grading
       </h1>
       {scopedAssignments.length > 0 && (
-        <header className="teacher-assignments-toolbar">
-          <Button
-            className="teacher-primary-action"
-            onClick={openCreateAssignment}
-            disabled={!teacher || !classes.length}
-          >
-            <Plus size={17} /> Create Assignment
-          </Button>
+        <header className="campus-toolbar teacher-assignments-toolbar">
+          <div className="toolbar-left"></div>
+          <div className="toolbar-right">
+            <Button
+              className="toolbar-btn toolbar-btn-primary"
+              onClick={openCreateAssignment}
+              disabled={!teacher || !classes.length}
+            >
+              <Plus size={14} /> Create Assignment
+            </Button>
+          </div>
         </header>
       )}
       {scopedAssignments.length > 0 && (
@@ -346,28 +359,30 @@ export default function TeacherAssignments() {
         </section>
       )}
       {!scopedAssignments.length && (
-        <section className="teacher-assignment-empty-state" aria-live="polite">
-          <span className="teacher-assignment-empty-icon">
-            <FileText size={24} />
-          </span>
-          <h2>
-            {classes.length
-              ? "No assignments yet"
-              : "No assigned classes available"}
-          </h2>
-          <p>
-            {classes.length
-              ? "Create an assignment for one of your assigned classes to start collecting student submissions."
-              : "Assignments can be created after a class is assigned to your teacher account."}
-          </p>
-          <Button
-            className="teacher-primary-action"
-            onClick={openCreateAssignment}
-            disabled={!teacher || !classes.length}
-          >
-            <Plus size={17} /> Create Assignment
-          </Button>
-        </section>
+        <div className="teacher-assignments-section-container">
+          <section className="teacher-assignment-empty-state" aria-live="polite">
+            <span className="teacher-assignment-empty-icon">
+              <FileText size={24} />
+            </span>
+            <h2>
+              {classes.length
+                ? "No assignments yet"
+                : "No assigned classes available"}
+            </h2>
+            <p>
+              {classes.length
+                ? "Create an assignment for one of your assigned classes to start collecting student submissions."
+                : "Assignments can be created after a class is assigned to your teacher account."}
+            </p>
+            <Button
+              className="toolbar-btn toolbar-btn-primary"
+              onClick={openCreateAssignment}
+              disabled={!teacher || !classes.length}
+            >
+              <Plus size={14} /> Create Assignment
+            </Button>
+          </section>
+        </div>
       )}
       {scopedAssignments.length > 0 && (
         <TeacherPagination
@@ -378,18 +393,18 @@ export default function TeacherAssignments() {
         />
       )}
       {selected && (
-        <section className="teacher-submissions-card">
-          <header>
-            <div>
-              <h2>Submissions for “{selected.title}”</h2>
-              <p>
+        <section className="campus-table-container teacher-submissions-card">
+          <header className="campus-toolbar">
+            <div className="toolbar-left">
+              <strong style={{ fontSize: "14px" }}>Submissions for “{selected.title}”</strong>
+              <span className="text-muted" style={{ fontSize: "12px", marginLeft: "8px" }}>
                 Max Marks: {selected?.totalMarks ?? "—"} <span>•</span> Due
                 Date: {date(selected?.dueDate)}
-              </p>
+              </span>
             </div>
-            <div className="teacher-submission-tools">
-              <label>
-                <Search size={16} />
+            <div className="toolbar-right teacher-submission-tools">
+              <label className="toolbar-search">
+                <Search size={14} />
                 <span className="sr-only">Search students or submissions</span>
                 <input
                   value={query}
@@ -401,6 +416,7 @@ export default function TeacherAssignments() {
                 />
               </label>
               <select
+                className="toolbar-select"
                 value={status}
                 onChange={(event) => {
                   setStatus(event.target.value);
@@ -413,8 +429,8 @@ export default function TeacherAssignments() {
               </select>
             </div>
           </header>
-          <div className="teacher-submissions-wrap">
-            <table>
+          <div className="teacher-submissions-wrap" style={{ flex: 1, overflowY: "auto" }}>
+            <table className="campus-data-table teacher-table" style={{ width: "100%", tableLayout: "fixed" }}>
               <thead>
                 <tr>
                   <th>Student &amp; Roll No</th>
@@ -463,7 +479,7 @@ export default function TeacherAssignments() {
                       </td>
                       <td>
                         <span
-                          className={`teacher-assignment-status ${row.status.toLowerCase()}`}
+                          className={`campus-status-pill ${row.status === "Graded" ? "is-active" : "is-pending"}`}
                         >
                           {row.status}
                         </span>
@@ -488,13 +504,20 @@ export default function TeacherAssignments() {
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
+                                className="teacher-action-trigger"
                                 aria-label="Submission actions"
                               >
-                                <MoreVertical size={17} />
+                                <MoreVertical size={17} aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent
+                              align="end"
+                              sideOffset={6}
+                              collisionPadding={12}
+                              className="teacher-action-menu"
+                            >
                               <DropdownMenuItem
+                                className="teacher-action-item"
                                 onSelect={() =>
                                   setGrading({
                                     submission: row,
@@ -502,6 +525,7 @@ export default function TeacherAssignments() {
                                   })
                                 }
                               >
+                                <Pencil size={16} aria-hidden="true" />
                                 {row.status === "Graded"
                                   ? "Edit Grade"
                                   : "Grade Now"}
@@ -555,7 +579,7 @@ export default function TeacherAssignments() {
         open={Boolean(grading)}
         onOpenChange={(open) => !open && setGrading(null)}
       >
-        <DialogContent className="teacher-dialog">
+        <DialogContent className="teacher-dialog teacher-dialog-compact">
           <DialogHeader>
             <DialogTitle>Grade submission</DialogTitle>
             <DialogDescription>
@@ -612,7 +636,7 @@ export default function TeacherAssignments() {
                 >
                   Cancel
                 </Button>
-                <Button className="teacher-primary-action" type="submit">
+                <Button className="toolbar-btn toolbar-btn-primary" type="submit">
                   Save Grade
                 </Button>
               </DialogFooter>
@@ -629,7 +653,7 @@ export default function TeacherAssignments() {
           }
         }}
       >
-        <DialogContent className="teacher-dialog">
+        <DialogContent className="teacher-dialog teacher-assignment-dialog">
           <DialogHeader>
             <DialogTitle>
               {editing?.id ? "Edit assignment" : "Create assignment"}
@@ -641,8 +665,8 @@ export default function TeacherAssignments() {
           </DialogHeader>
           {editing !== null && (
             <form className="teacher-grade-form" onSubmit={saveAssignment}>
-              <div className="teacher-dialog-body">
-                <label>
+              <div className="teacher-dialog-body teacher-dialog-grid">
+                <label className="teacher-dialog-field-full">
                   Assigned class
                   <select
                     name="classId"
@@ -662,7 +686,7 @@ export default function TeacherAssignments() {
                     ))}
                   </select>
                 </label>
-                <label>
+                <label className="teacher-dialog-field-full">
                   Title
                   <input
                     name="title"
@@ -690,7 +714,7 @@ export default function TeacherAssignments() {
                     defaultValue={editing.totalMarks || 50}
                   />
                 </label>
-                <label>
+                <label className="teacher-dialog-field-full">
                   Description
                   <textarea
                     name="description"
@@ -710,7 +734,7 @@ export default function TeacherAssignments() {
                 >
                   Cancel
                 </Button>
-                <Button className="teacher-primary-action" type="submit">
+                <Button className="toolbar-btn toolbar-btn-primary" type="submit">
                   Save Assignment
                 </Button>
               </DialogFooter>

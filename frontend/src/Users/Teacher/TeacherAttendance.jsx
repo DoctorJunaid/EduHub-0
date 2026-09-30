@@ -31,10 +31,24 @@ import "./TeacherAttendance.css";
 import TeacherPagination from "./TeacherPagination";
 
 const dateKey = () => localDateKey(new Date());
-const get = (row, ...keys) =>
-  keys
-    .map((key) => row?.[key])
-    .find((item) => item !== undefined && item !== null && item !== "") || "";
+const get = (row, ...keys) => {
+  for (const key of keys) {
+    const item = row?.[key];
+    if (item !== undefined && item !== null && item !== "") {
+      if (typeof item === "object") {
+        const text = item.name || item.title || item.className || item.code || item.label || "";
+        if (text) return String(text);
+      } else {
+        return String(item);
+      }
+    }
+  }
+  return "";
+};
+
+
+
+
 const initials = (name = "") =>
   name
     .split(/\s+/)
@@ -118,20 +132,20 @@ export default function TeacherAttendance() {
 
   return (
     <main
-      className="teacher-attendance"
+      className="campus-tab-page teacher-attendance"
       aria-labelledby="teacher-attendance-title"
     >
-      <header className="teacher-attendance-toolbar">
+      <header className="campus-toolbar teacher-attendance-toolbar">
         <h1 id="teacher-attendance-title" className="sr-only">Take Student Attendance</h1>
-        <Button className="teacher-primary-action" onClick={save} disabled={!selectedId || !enrolled.length || date > dateKey()}>
-          <Save size={17} /> Save Attendance
+        <Button className="toolbar-btn toolbar-btn-primary" onClick={save} disabled={!selectedId || !enrolled.length || date > dateKey()}>
+          <Save size={14} /> Save Attendance
         </Button>
       </header>
       <section className="teacher-attendance-metrics">
-        <Metric icon={Users} label="Total Students" value={filteredStudents.length} />
-        <Metric icon={CircleCheck} label="Present" value={counts.Present} />
-        <Metric icon={CircleX} label="Absent" value={counts.Absent} />
-        <Metric
+        <Metric icon={Users} label="Total Students" value={filteredStudents.length} variant="total" />
+        <Metric icon={CircleCheck} label="Present" value={counts.Present} variant="present" />
+        <Metric icon={CircleX} label="Absent" value={counts.Absent} variant="absent" />
+        <Metric variant="late"
           icon={Clock3}
           label="Late / Leave"
           value={counts.Late + counts["On Leave"]}
@@ -185,7 +199,7 @@ export default function TeacherAttendance() {
           </div>
         </div>
         <div className="teacher-attendance-table-wrap">
-          <table>
+          <table className="campus-data-table teacher-attendance-table" style={{ width: "100%", tableLayout: "fixed" }}>
             <thead>
               <tr>
                 <th>Student Name &amp; Roll No</th>
@@ -250,18 +264,30 @@ export default function TeacherAttendance() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
+                            className="teacher-action-trigger"
                             aria-label={`Actions for ${student.name}`}
                           >
-                            <CircleAlert size={16} />
+                            <CircleAlert size={16} aria-hidden="true" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent
+                          align="end"
+                          sideOffset={6}
+                          collisionPadding={12}
+                          className="teacher-action-menu"
+                        >
                           <DropdownMenuItem
+                            className="teacher-action-item"
                             onSelect={() => mark(id, "Present")}
                           >
+                            <CircleCheck size={16} aria-hidden="true" />
                             Mark Present
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => mark(id, "Absent")}>
+                          <DropdownMenuItem
+                            className="teacher-action-item teacher-action-item-destructive"
+                            onSelect={() => mark(id, "Absent")}
+                          >
+                            <CircleX size={16} aria-hidden="true" />
                             Mark Absent
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -290,10 +316,12 @@ export default function TeacherAttendance() {
     </main>
   );
 }
-function Metric({ icon: Icon, label, value }) {
+function Metric({ icon: Icon, label, value, variant = "total" }) {
   return (
     <article>
-      <Icon size={22} />
+      <span className={`teacher-attendance-metric-icon ${variant}`}>
+        <Icon size={20} />
+      </span>
       <div>
         <span>{label}</span>
         <strong>{value}</strong>

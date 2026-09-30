@@ -10,44 +10,41 @@ export default function TeacherPagination({ page, pageCount, onPageChange, label
       : [...new Set([1, page - 1, page, page + 1, pageCount].filter((number) => number >= 1 && number <= pageCount))].sort((a, b) => a - b);
 
   return (
-    <nav className="teacher-pagination" aria-label={label}>
-      <Button
+    <nav className="campus-pagination" aria-label={label}>
+      <button
         type="button"
-        variant="outline"
-        size="icon-sm"
+        className="campus-page-btn"
         aria-label="Previous page"
         disabled={page <= 1}
         onClick={() => onPageChange(Math.max(1, page - 1))}
       >
         <ChevronLeft size={16} />
-      </Button>
-      <div className="teacher-pagination-pages" aria-live="polite">
+      </button>
+      <div className="campus-pagination" aria-live="polite">
         {pages.map((number, index) => (
-          <span className="teacher-pagination-page" key={number}>
-            {index > 0 && number - pages[index - 1] > 1 && <span aria-hidden="true">…</span>}
-            <Button
+          <span className="flex items-center gap-1" key={number}>
+            {index > 0 && number - pages[index - 1] > 1 && <span aria-hidden="true" className="text-slate-400">…</span>}
+            <button
               type="button"
-              size="icon-sm"
-              variant={number === page ? "default" : "outline"}
+              className={`campus-page-btn ${number === page ? "is-active" : ""}`}
               aria-label={`Page ${number}`}
               aria-current={number === page ? "page" : undefined}
               onClick={() => onPageChange(number)}
             >
               {number}
-            </Button>
+            </button>
           </span>
         ))}
       </div>
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="icon-sm"
+        className="campus-page-btn"
         aria-label="Next page"
         disabled={page >= pageCount}
         onClick={() => onPageChange(Math.min(pageCount, page + 1))}
       >
         <ChevronRight size={16} />
-      </Button>
+      </button>
     </nav>
   );
 }

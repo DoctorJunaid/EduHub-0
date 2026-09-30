@@ -9,12 +9,8 @@ import {
   Filter,
   RefreshCw,
   Search,
-  MessageSquare,
-  HelpCircle,
   Coins,
-  ChevronRight,
   TrendingDown,
-  TrendingUp,
   UserCheck,
 } from "lucide-react";
 import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
@@ -26,7 +22,6 @@ import {
 } from "@/api/classSession.api";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
 import {
   Dialog,
   DialogContent,
@@ -142,14 +137,14 @@ export default function TeacherClassCredits() {
     const status = session.status;
     if (session.isSubstituted && session.isSubstituteDuty) {
       return (
-        <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+        <span className="campus-status-pill is-pending">
           Substitution Duty
         </span>
       );
     }
     if (session.isSubstituted && session.isSubstitutedOut) {
       return (
-        <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+        <span className="campus-status-pill is-pending">
           Substituted Out
         </span>
       );
@@ -158,37 +153,37 @@ export default function TeacherClassCredits() {
     switch (status) {
       case "Completed":
         return (
-          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <span className="campus-status-pill is-active">
             Completed (+{session.creditValue || 1} Cr)
           </span>
         );
       case "Missed":
         return (
-          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+          <span className="campus-status-pill is-danger">
             Missed (-{formatPKR(session.deductionValue)})
           </span>
         );
       case "Absent":
         return (
-          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+          <span className="campus-status-pill is-danger">
             Absent
           </span>
         );
       case "Approved Adjustment":
         return (
-          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+          <span className="campus-status-pill is-pending">
             Approved Adjustment
           </span>
         );
       case "Cancelled":
         return (
-          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="campus-status-pill">
             Cancelled
           </span>
         );
       default:
         return (
-          <span className="teacher-credits-status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
+          <span className="campus-status-pill is-active">
             Scheduled
           </span>
         );
@@ -207,35 +202,23 @@ export default function TeacherClassCredits() {
   const hasApprovedDeductions = Number(summary?.approvedDeductionsTotal || 0) > 0;
 
   return (
-    <div className="teacher-credits-page">
-      {/* Header */}
-      <div className="teacher-credits-header">
-        <div className="teacher-credits-heading">
-          <span className="teacher-credits-eyebrow text-xs font-bold text-blue-600 uppercase tracking-widest block mb-1">
-            Faculty Teaching Credit Portal
-          </span>
-          <h1 className="teacher-credits-title text-2xl font-black text-slate-900 tracking-tight">
-            My Teaching Credits &amp; Sessions
-          </h1>
-          <p className="teacher-credits-description text-sm text-slate-500 mt-1">
-            Track daily completed periods, substitution duties, teaching
-            credits, and salary adjustments.
-          </p>
-        </div>
-
+    <div className="campus-tab-page teacher-credits-page">
+      {/* 1. Toolbar Controls (Date/Month & Sync) */}
+      <div className="teacher-credits-toolbar">
         <div className="teacher-credits-controls">
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="teacher-credits-month border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="teacher-credits-month"
+            aria-label="Select month"
           />
           <Button
             variant="outline"
             size="sm"
             onClick={() => loadData(true)}
             disabled={refreshing}
-            className="teacher-credits-sync rounded-xl flex items-center gap-1.5"
+            className="teacher-credits-sync toolbar-btn-outline flex items-center gap-1.5"
           >
             {refreshing ? (
               <Spinner className="size-3.5" />
@@ -247,340 +230,325 @@ export default function TeacherClassCredits() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="teacher-credits-kpis">
-        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="teacher-credits-kpi-top flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Credits
-            </span>
-            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+      {/* 2. KPI Cards Strip */}
+      <div className="campus-kpi-track teacher-credits-kpis">
+        {/* Total Credits */}
+        <div className="campus-kpi-card teacher-credits-kpi">
+          <div className="kpi-wrap">
+            <div className="kpi-icon blue">
               <Award size={18} />
             </div>
-          </div>
-          <div className="teacher-credits-kpi-body mt-3">
-            <span className="teacher-credits-kpi-value text-3xl font-black text-slate-900">
-              {summary?.totalCredits ?? "—"}
-            </span>
-            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
-              {summary?.regularCredits || 0} Regular +{" "}
-              {summary?.substituteCredits || 0} Substitute
-            </span>
+            <div className="kpi-info">
+              <span className="kpi-label">TOTAL CREDITS</span>
+              <div className="kpi-value">{summary?.totalCredits ?? "—"}</div>
+              <span className="kpi-subtext">
+                {summary?.regularCredits || 0} Regular +{" "}
+                {summary?.substituteCredits || 0} Substitute
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="teacher-credits-kpi-top flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Classes Completed
-            </span>
-            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+        {/* Classes Completed */}
+        <div className="campus-kpi-card teacher-credits-kpi">
+          <div className="kpi-wrap">
+            <div className="kpi-icon emerald">
               <CheckCircle2 size={18} />
             </div>
-          </div>
-          <div className="teacher-credits-kpi-body mt-3">
-            <span className="teacher-credits-kpi-value text-3xl font-black text-emerald-600">
-              {summary?.completedCount ?? "—"}
-            </span>
-            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
-              of {summary?.scheduledCount || 0} scheduled classes
-            </span>
+            <div className="kpi-info">
+              <span className="kpi-label">CLASSES COMPLETED</span>
+              <div className="kpi-value">{summary?.completedCount ?? "—"}</div>
+              <span className="kpi-subtext">
+                of {summary?.scheduledCount || 0} scheduled classes
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="teacher-credits-kpi-top flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Substitution Bonus
-            </span>
-            <div className="teacher-credits-kpi-icon w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+        {/* Substitution Bonus */}
+        <div className="campus-kpi-card teacher-credits-kpi">
+          <div className="kpi-wrap">
+            <div className="kpi-icon amber">
               <Coins size={18} />
             </div>
-          </div>
-          <div className="teacher-credits-kpi-body mt-3">
-            <span className="teacher-credits-kpi-value text-2xl font-black text-slate-900">
-              +{formatPKR(summary?.totalBonusEarned)}
-            </span>
-            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
-              {summary?.substituteDutiesTaken || 0} classes covered
-            </span>
-          </div>
-        </div>
-
-        <div className="teacher-credits-kpi bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-          <div className="teacher-credits-kpi-top flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Approved Deductions
-            </span>
-            <div
-              className={`teacher-credits-kpi-icon w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
-                hasApprovedDeductions
-                  ? "bg-rose-50 text-rose-600"
-                  : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              <TrendingDown size={18} />
+            <div className="kpi-info">
+              <span className="kpi-label">SUBSTITUTION BONUS</span>
+              <div className="kpi-value text-amber-600">
+                +{formatPKR(summary?.totalBonusEarned)}
+              </div>
+              <span className="kpi-subtext">
+                {summary?.substituteDutiesTaken || 0} classes covered
+              </span>
             </div>
           </div>
-          <div className="teacher-credits-kpi-body mt-3">
-            <span
-              className={`teacher-credits-kpi-value text-2xl font-black ${
-                hasApprovedDeductions ? "text-rose-600" : "text-slate-900"
-              }`}
-            >
-              -{formatPKR(summary?.approvedDeductionsTotal)}
-            </span>
-            <span className="teacher-credits-kpi-detail text-xs text-slate-500 block mt-0.5">
-              {summary?.missedCount || 0} missed,{" "}
-              {summary?.pendingReviewsCount || 0} pending review
-            </span>
+        </div>
+
+        {/* Approved Deductions */}
+        <div className="campus-kpi-card teacher-credits-kpi">
+          <div className="kpi-wrap">
+            <div className={`kpi-icon ${hasApprovedDeductions ? "rose" : "neutral"}`}>
+              <TrendingDown size={18} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">APPROVED DEDUCTIONS</span>
+              <div
+                className={`kpi-value ${
+                  hasApprovedDeductions ? "text-rose-600" : ""
+                }`}
+              >
+                -{formatPKR(summary?.approvedDeductionsTotal)}
+              </div>
+              <span className="kpi-subtext">
+                {summary?.missedCount || 0} missed,{" "}
+                {summary?.pendingReviewsCount || 0} pending review
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="teacher-credits-tabs">
-        <button
-          type="button"
-          onClick={() => setActiveTab("today")}
-          className={`teacher-credits-tab px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === "today"
-              ? "bg-blue-600 text-white shadow-xs"
-              : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          Today's Scheduled Classes
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("history")}
-          className={`teacher-credits-tab px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === "history"
-              ? "bg-blue-600 text-white shadow-xs"
-              : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          Monthly Class History &amp; Credits
-        </button>
+      {/* 3. Tabs Navigation */}
+      <div className="teacher-credits-tabs-container">
+        <div className="teacher-credits-tabs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("today")}
+            className={`teacher-credits-tab ${
+              activeTab === "today" ? "is-active" : ""
+            }`}
+          >
+            Today's Scheduled Classes
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("history")}
+            className={`teacher-credits-tab ${
+              activeTab === "history" ? "is-active" : ""
+            }`}
+          >
+            Monthly Class History &amp; Credits
+          </button>
+        </div>
       </div>
 
-      {/* Filter and Search Bar for History Tab */}
+      {/* 4. Filter and Search Bar for History Tab */}
       {activeTab === "history" && (
-        <div className="teacher-credits-filters">
-          <div className="relative flex-1 w-full">
-            <Search
-              size={15}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              placeholder="Filter by subject, class, or section..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="teacher-credits-search w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="teacher-credits-filters-container">
+          <div className="teacher-credits-filters">
+            <div className="relative flex-1 w-full max-w-sm">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
+              <input
+                type="text"
+                placeholder="Filter by subject, class, or section..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="teacher-credits-search w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter size={14} className="text-slate-500" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="teacher-credits-status-filter text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white font-medium text-slate-700"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="Completed">Completed</option>
-              <option value="Missed">Missed</option>
-              <option value="Absent">Absent</option>
-              <option value="Substituted">Substituted</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <Filter size={14} className="text-slate-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="teacher-credits-status-filter text-xs border border-slate-200 rounded-lg px-3 py-1.5 bg-white font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                <option value="Missed">Missed</option>
+                <option value="Absent">Absent</option>
+                <option value="Substituted">Substituted</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Main Table Card */}
-      <div className="teacher-credits-card">
-        <div className="teacher-credits-card-header">
-          <div className="teacher-credits-card-heading">
-            <Clock3 size={18} className="text-blue-600" />
-            <h2 className="teacher-credits-card-title text-base font-bold text-slate-800">
-              {activeTab === "today"
-                ? "Today's Teaching Schedule & Verification"
-                : `Teaching Sessions for ${selectedMonth}`}
-            </h2>
-          </div>
-          <span className="teacher-credits-session-count text-xs font-semibold text-slate-500">
-            {filteredSessions.length} sessions listed
-          </span>
-        </div>
-
-        {loading ? (
-          <div className="teacher-credits-state text-center text-slate-500 text-sm">
-            <SpinnerCustom
-              text="Loading teaching sessions..."
-              size="lg"
-              className="flex-col gap-2"
-            />
-          </div>
-        ) : filteredSessions.length === 0 ? (
-          <div className="teacher-credits-state text-center text-slate-400 text-sm">
-            <Calendar className="inline-block mb-2 text-slate-300" size={32} />
-            <p className="font-semibold text-slate-600">
-              No class sessions found
-            </p>
-            <span className="text-xs text-slate-400 mt-1 block">
-              {activeTab === "today"
-                ? "No classes scheduled for today or none assigned."
-                : "Try selecting a different month or search term."}
+      {/* 5. Main Table Card */}
+      <div className="teacher-credits-section-container">
+        <div className="campus-table-container teacher-credits-card">
+          <div className="teacher-credits-card-header">
+            <div className="teacher-credits-card-heading">
+              <Clock3 size={16} className="text-blue-600" />
+              <h2 className="teacher-credits-card-title">
+                {activeTab === "today"
+                  ? "Today's Teaching Schedule & Verification"
+                  : `Teaching Sessions for ${selectedMonth}`}
+              </h2>
+            </div>
+            <span className="teacher-credits-session-count">
+              {filteredSessions.length} sessions listed
             </span>
           </div>
-        ) : (
-          <div className="teacher-credits-table-wrap">
-            <table className="teacher-credits-table">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                  <th>Period &amp; Time</th>
-                  <th>Class &amp; Section</th>
-                  <th>Subject</th>
-                  <th>Role / Assignment</th>
-                  <th>Room</th>
-                  <th>Status &amp; Credit</th>
-                  <th className="teacher-credits-actions-heading">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredSessions.map((sess) => (
-                  <tr
-                    key={sess._id}
-                    className="hover:bg-slate-50/50 transition-colors"
-                  >
-                    <td className="teacher-credits-period font-semibold text-slate-900 whitespace-nowrap">
-                      <div className="teacher-credits-period-content flex items-center gap-1.5">
-                        <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-black flex items-center justify-center">
-                          P{sess.period}
-                        </span>
-                        <span>
-                          {sess.startTime} – {sess.endTime}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="teacher-credits-class whitespace-nowrap font-medium text-slate-800">
-                      {sess.className} {sess.section ? `• ${sess.section}` : ""}
-                    </td>
-                    <td className="teacher-credits-subject font-bold text-slate-900">
-                      {sess.subject}
-                    </td>
-                    <td className="teacher-credits-role whitespace-nowrap">
-                      {sess.isSubstituteDuty ? (
-                        <span className="text-purple-700 font-semibold flex items-center gap-1">
-                          <UserCheck size={13} /> Substitute for{" "}
-                          {sess.originalTeacherId?.name || "Teacher"}
-                        </span>
-                      ) : sess.isSubstitutedOut ? (
-                        <span className="text-amber-700 font-semibold">
-                          Substituted by{" "}
-                          {sess.actualTeacherId?.name || "Colleague"}
-                        </span>
-                      ) : (
-                        <span className="text-slate-600 font-medium">
-                          Regular Class
-                        </span>
-                      )}
-                    </td>
-                    <td className="teacher-credits-room text-slate-500 whitespace-nowrap">
-                      {sess.room || "Room 101"}
-                    </td>
-                    <td className="teacher-credits-status whitespace-nowrap">
-                      <div className="teacher-credits-status-content flex flex-col gap-1 items-start">
-                        {getStatusBadge(sess)}
-                        {sess.dispute?.isDisputed && (
-                          <span className="text-[10px] text-amber-700 font-semibold">
-                            Dispute: {sess.dispute.disputeStatus}
+
+          {loading ? (
+            <div className="teacher-credits-state text-center text-slate-500 text-sm">
+              <SpinnerCustom
+                text="Loading teaching sessions..."
+                size="lg"
+                className="flex-col gap-2"
+              />
+            </div>
+          ) : filteredSessions.length === 0 ? (
+            <div className="teacher-credits-state text-center text-slate-400 text-sm">
+              <Calendar className="inline-block mb-2 text-slate-300" size={32} />
+              <p className="font-semibold text-slate-600">
+                No class sessions found
+              </p>
+              <span className="text-xs text-slate-400 mt-1 block">
+                {activeTab === "today"
+                  ? "No classes scheduled for today or none assigned."
+                  : "Try selecting a different month or search term."}
+              </span>
+            </div>
+          ) : (
+            <div className="teacher-table-scroll">
+              <table className="teacher-credits-table">
+                <thead>
+                  <tr>
+                    <th>Period &amp; Time</th>
+                    <th>Class &amp; Section</th>
+                    <th>Subject</th>
+                    <th>Role / Assignment</th>
+                    <th>Room</th>
+                    <th>Status &amp; Credit</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSessions.map((sess) => (
+                    <tr key={sess._id}>
+                      <td className="font-semibold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-black flex items-center justify-center flex-shrink-0">
+                            P{sess.period}
+                          </span>
+                          <span>
+                            {sess.startTime} – {sess.endTime}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="font-medium text-slate-800">
+                        {sess.className} {sess.section ? `• ${sess.section}` : ""}
+                      </td>
+                      <td className="font-bold text-slate-900">
+                        {sess.subject}
+                      </td>
+                      <td>
+                        {sess.isSubstituteDuty ? (
+                          <span className="text-purple-700 font-semibold flex items-center gap-1">
+                            <UserCheck size={13} /> Substitute for{" "}
+                            {sess.originalTeacherId?.name || "Teacher"}
+                          </span>
+                        ) : sess.isSubstitutedOut ? (
+                          <span className="text-amber-700 font-semibold">
+                            Substituted by{" "}
+                            {sess.actualTeacherId?.name || "Colleague"}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 font-medium">
+                            Regular Class
                           </span>
                         )}
-                      </div>
-                    </td>
-                    <td className="teacher-credits-actions-cell text-right whitespace-nowrap">
-                      <div className="teacher-credits-actions flex items-center justify-end gap-2">
-                        {sess.status === "Scheduled" &&
-                          !sess.isSubstitutedOut && (
-                            <>
-                              <Button
-                                size="sm"
-                                className="teacher-credits-action-button bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-2.5 text-xs font-semibold"
-                                onClick={() =>
-                                  handleMarkStatus(sess._id, "Completed")
-                                }
-                              >
-                                <CheckCircle2 size={13} className="mr-1" />{" "}
-                                Complete
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="teacher-credits-action-button text-rose-600 border-rose-200 hover:bg-rose-50 rounded-lg h-7 px-2 text-xs"
-                                onClick={() =>
-                                  handleMarkStatus(sess._id, "Missed")
-                                }
-                              >
-                                Missed
-                              </Button>
-                            </>
+                      </td>
+                      <td className="text-slate-500">
+                        {sess.room || "Room 101"}
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-1 items-start">
+                          {getStatusBadge(sess)}
+                          {sess.dispute?.isDisputed && (
+                            <span className="text-[10px] text-amber-700 font-semibold">
+                              Dispute: {sess.dispute.disputeStatus}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {sess.status === "Scheduled" &&
+                            !sess.isSubstitutedOut && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-2.5 text-xs font-semibold"
+                                  onClick={() =>
+                                    handleMarkStatus(sess._id, "Completed")
+                                  }
+                                >
+                                  <CheckCircle2 size={13} className="mr-1" />{" "}
+                                  Complete
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-rose-600 border-rose-200 hover:bg-rose-50 rounded-lg h-7 px-2 text-xs"
+                                  onClick={() =>
+                                    handleMarkStatus(sess._id, "Missed")
+                                  }
+                                >
+                                  Missed
+                                </Button>
+                              </>
+                            )}
+
+                          {sess.status === "Completed" && (
+                            <span className="text-emerald-600 text-xs font-bold flex items-center gap-1">
+                              <CheckCircle2 size={14} /> Completed
+                            </span>
                           )}
 
-                        {sess.status === "Completed" && (
-                          <span className="text-emerald-600 text-xs font-bold flex items-center gap-1">
-                            <CheckCircle2 size={14} /> Completed
-                          </span>
-                        )}
-
-                        {(sess.status === "Missed" ||
-                          sess.status === "Absent") && (
-                          <>
-                            {!sess.dispute?.isDisputed ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="teacher-credits-action-button text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg h-7 px-2.5 text-xs font-semibold"
-                                onClick={() => handleOpenDispute(sess)}
-                              >
-                                Request Review
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-slate-500 italic">
-                                Review Submitted
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                          {(sess.status === "Missed" ||
+                            sess.status === "Absent") && (
+                            <>
+                              {!sess.dispute?.isDisputed ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg h-7 px-2.5 text-xs font-semibold"
+                                  onClick={() => handleOpenDispute(sess)}
+                                >
+                                  Request Review
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-slate-500 italic">
+                                  Review Submitted
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Review / Dispute Modal */}
       <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
-        <DialogContent className="sm:max-w-md bg-white rounded-2xl p-6">
+        <DialogContent className="teacher-dialog teacher-dialog-compact">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <DialogTitle className="teacher-dialog-title-with-icon">
               <AlertCircle size={20} className="text-blue-600" />
               Request Class Record Review
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500 mt-1">
+            <DialogDescription>
               Submit a formal dispute to the Campus Manager if this class was
               conducted or marked in error.
             </DialogDescription>
           </DialogHeader>
 
           {activeDisputeSession && (
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1 mb-3">
+            <div className="teacher-dialog-summary">
               <div>
                 <strong className="text-slate-800">Class: </strong>
                 {activeDisputeSession.subject} ({activeDisputeSession.className}
@@ -607,11 +575,10 @@ export default function TeacherClassCredits() {
             </div>
           )}
 
-          <form onSubmit={handleSubmitDispute} className="space-y-4">
-            <div>
+          <form onSubmit={handleSubmitDispute}>
+            <div className="teacher-dialog-body">
               <label
                 htmlFor={disputeTextareaId}
-                className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1"
               >
                 Detailed Justification / Remark
               </label>
@@ -621,24 +588,22 @@ export default function TeacherClassCredits() {
                 value={disputeReason}
                 onChange={(e) => setDisputeReason(e.target.value)}
                 placeholder="Explain why this class should not be counted as missed (e.g. attendance recorded late, conducted in lab 2, emergency approved by HOD)..."
-                className="w-full text-xs p-3 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
 
-            <DialogFooter className="flex gap-2 justify-end">
+            <DialogFooter className="teacher-dialog-footer">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setDisputeOpen(false)}
-                className="rounded-xl text-xs"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={submittingDispute}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold"
+                className="toolbar-btn toolbar-btn-primary"
               >
                 {submittingDispute ? "Submitting..." : "Submit Review Request"}
               </Button>

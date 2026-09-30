@@ -172,3 +172,32 @@ The existing marks dialog, validation, duplicate-result guard, and locked-result
 ## Teacher Teaching Credits color consistency (2026-09-29)
 
 Only `frontend/src/Users/Teacher/TeacherClassCredits.jsx` was changed. The Substitution Bonus KPI now uses the existing Teacher substitution amber accent (`bg-amber-50`, `text-amber-600`, and `text-amber-700`) instead of purple. Card structure, data, calculations, and all other KPI styling remain unchanged.
+
+## Teacher Module UI Alignment with Campus Manager (2026-09-29)
+
+The Teacher module UI has been aligned to visually match the Campus Manager module's 'Brutalist Minimal Black & White' design language. The goal was to use Campus Manager as the primary visual reference without altering any Teacher content, data, Redux state, permissions, or API integration.
+
+### Implementation Details
+- **Layout**: Adopted .campus-tab-page for correct page flex behavior and scroll ownership.
+- **KPIs**: Replaced custom metric cards with the .campus-kpi-track and .campus-kpi-card border-to-border layout structure.
+- **Toolbars**: Adopted .campus-toolbar with .toolbar-search and .toolbar-select. Action buttons utilize .toolbar-btn-primary.
+- **Tables**: Standardized tables using the .campus-table-container and .hub-table-wrapper styling.
+- **Pagination**: Aligned standard pagination to .campus-page-btn structure.
+- **Status Pills**: Replaced custom teacher status badges with .campus-status-pill.
+
+### Files Modified
+- rontend/src/Users/Teacher/TeacherLayout.jsx (Imported CampusShared.css)
+- rontend/src/Users/Teacher/TeacherDashboard.jsx`n- rontend/src/Users/Teacher/MyClasses.jsx`n- rontend/src/Users/Teacher/TeacherAssignments.jsx`n- rontend/src/Users/Teacher/TeacherAttendance.jsx`n- rontend/src/Users/Teacher/TeacherDiary.jsx`n- rontend/src/Users/Teacher/TeacherGradebook.jsx`n- rontend/src/Users/Teacher/TeacherClassCredits.jsx`n- rontend/src/Users/Teacher/TeacherMessages.jsx`n- rontend/src/Users/Teacher/TeacherPagination.jsx`n
+### Verification
+- Frontend production build: passed; 2,707 modules transformed.
+- git diff --check: passed (only expected CRLF warnings).
+- Teacher content, components, functional workflows, and routes remained untouched.
+
+## Teacher Module Dead Code Pruning & Salary UI Alignment (2026-09-29)
+
+Following the Campus Manager UI alignment, the following dead CSS was completely pruned:
+- All local CSS module files in rontend/src/Users/Teacher were cleared of unused code (content migrated to CampusShared.css).
+- Global toolbar and button rules (.teacher-primary-action, .teacher-*-toolbar, .teacher-pagination) were stripped from TeacherUI.css.
+
+Additionally, the Teacher 'My Salary' page (rontend/src/pages/MySalary.jsx) was successfully aligned to the Campus Manager design grid by adopting .campus-kpi-track and .campus-kpi-card primitives for its metrics display.
+
