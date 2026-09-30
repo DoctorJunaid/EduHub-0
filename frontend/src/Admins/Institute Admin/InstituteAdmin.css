@@ -3,6 +3,7 @@
 .institute-admin-shell .header { height: 54px; padding: 0 20px; }
 .institute-admin-shell .content-area { padding: 14px 20px; }
 .institute-admin-shell .content-area > section { display: flex; flex-direction: column; min-width: 0; gap: 12px; }
+.institute-admin-shell .settings-heading { display: none !important; }
 .institute-admin-shell :is(.institute-heading, .campuses-heading, .ist-heading, .isd-heading, .iba-heading) { gap: 4px; margin: 0; }
 .institute-admin-shell :is(.institute-heading, .campuses-heading, .ist-heading, .isd-heading, .iba-heading) h1 { font-size: 22px; line-height: 1.2; margin: 0; flex-basis: auto; overflow-wrap: anywhere; }
 .institute-admin-shell :is(.institute-heading, .campuses-heading, .ist-heading, .isd-heading, .iba-heading) p { font-size: 13px; line-height: 1.4; margin: 0; }

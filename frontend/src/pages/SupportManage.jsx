@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/store/Slices/authSlice";
 import {
-  ArrowLeft,
-  Plus,
   CheckCircle2,
   UserCheck,
   AlertTriangle,
@@ -149,39 +147,7 @@ export const SupportManage = () => {
   if (!isAdmin) return null;
 
   return (
-    <section className="institute-support" aria-labelledby="isu-title">
-      {/* Top Header */}
-      <header className="isu-heading">
-        <div className="isu-heading-left">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() =>
-              navigate(role === "institute_admin" ? "/institute-admin" : "/dashboard")
-            }
-            className="isu-back-btn"
-            title="Back to Dashboard"
-            aria-label="Back to Dashboard"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="isu-heading-titles">
-            <h1 id="isu-title">Support Management Console</h1>
-            <p>
-              Comprehensive SLA analytics, triage, bulk actions, and ticket assignment.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          onClick={() => setIsNewDialogOpen(true)}
-          className="isu-new-btn"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Ticket</span>
-        </Button>
-      </header>
-
+    <section className="institute-support" aria-label="Support Management Console">
       {/* SLA Metric Cards */}
       <div className="isu-stats">
         <div className="isu-stat-card">
@@ -261,6 +227,7 @@ export const SupportManage = () => {
           onReset={handleResetFilters}
           categories={categories}
           isAdmin={true}
+          onNewTicket={() => setIsNewDialogOpen(true)}
         />
 
         {/* Table Content */}

@@ -168,15 +168,7 @@ export default function BroadcastAlerts() {
   }
 
   return (
-    <section className="institute-broadcast" aria-labelledby="iba-title">
-      <header className="iba-heading">
-        <h1 id="iba-title">Broadcast Alerts</h1>
-        <p>
-          Publish announcements and emergency notices for staff and students
-          across your campuses.
-        </p>
-      </header>
-
+    <section className="institute-broadcast" aria-label="Broadcast Alerts">
       <Card className="iba-card">
         <form onSubmit={submit} noValidate>
           <div className="iba-field">

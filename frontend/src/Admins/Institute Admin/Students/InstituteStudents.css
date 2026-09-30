@@ -69,6 +69,40 @@
   border-bottom: 1px solid #f4f4f5;
 }
 
+.isd-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.isd-add-btn {
+  height: 38px !important;
+  padding: 0 16px !important;
+  background: #09090b !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.isd-add-btn:hover:not(:disabled) {
+  background: #27272a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.isd-add-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
 .isd-search-input-wrapper {
   position: relative;
   width: min(100%, 340px);
@@ -304,13 +338,22 @@
     justify-content: center;
   }
   .isd-toolbar {
-    align-items: flex-start;
     flex-direction: column;
-    gap: 10px;
+    align-items: stretch;
+    gap: 12px;
     padding: 12px 16px;
+  }
+  .isd-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
   .isd-search-input-wrapper {
     width: 100%;
+  }
+  .isd-add-btn {
+    width: 100% !important;
+    justify-content: center !important;
   }
   .isd-card th,
   .isd-card td {

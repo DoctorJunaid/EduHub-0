@@ -170,45 +170,39 @@ export default function InstituteStaff() {
   return (
     <section
       className="institute-staff-directory"
-      aria-labelledby="institute-staff-title"
+      aria-label="Faculty and staff directory"
     >
-      <header className="ist-heading">
-        <div>
-          <h1 id="institute-staff-title">Faculty &amp; Staff Directory</h1>
-          <p>
-            Manage professors, lecturers, departments, and course assignments.
-          </p>
-        </div>
-        <Button
-          disabled={!campuses.length}
-          title={
-            !campuses.length
-              ? "Add a campus before adding a teacher"
-              : undefined
-          }
-          onClick={() => setModal({ type: "add" })}
-        >
-          <Plus size={18} aria-hidden="true" />
-          Add New Teacher
-        </Button>
-      </header>
-
       <Card className="ist-card">
         <div className="ist-toolbar">
-          <div className="ist-search-input-wrapper">
-            <Search size={16} className="ist-search-icon" aria-hidden="true" />
-            <Input
-              type="search"
-              aria-label="Search faculty by name, email, department, or designation"
-              placeholder="Search by name, department, designation..."
-              value={search}
-              onChange={handleSearchChange}
-            />
+          <div className="ist-toolbar-left">
+            <div className="ist-search-input-wrapper">
+              <Search size={16} className="ist-search-icon" aria-hidden="true" />
+              <Input
+                type="search"
+                aria-label="Search faculty by name, email, department, or designation"
+                placeholder="Search by name, department, designation..."
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <span className="ist-count">
+              {staffList.length} faculty{" "}
+              {staffList.length === 1 ? "member" : "members"} registered
+            </span>
           </div>
-          <span className="ist-count">
-            {staffList.length} faculty{" "}
-            {staffList.length === 1 ? "member" : "members"} registered
-          </span>
+          <Button
+            disabled={!campuses.length}
+            title={
+              !campuses.length
+                ? "Add a campus before adding a teacher"
+                : undefined
+            }
+            onClick={() => setModal({ type: "add" })}
+            className="ist-add-btn"
+          >
+            <Plus size={18} aria-hidden="true" />
+            Add New Teacher
+          </Button>
         </div>
 
         <div className="ist-table-container">
