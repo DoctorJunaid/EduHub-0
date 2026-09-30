@@ -14,6 +14,7 @@ import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStuden
 import InstituteStaff from "./Admins/Institute Admin/Staff/InstituteStaff";
 import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
+import SalaryPolicies from "./Admins/Institute Admin/Payroll/SalaryPolicies";
 import Settings from "./components/Settings/Settings";
 import SalaryProfiles from "./pages/SalaryProfiles";
 import MySalary from "./pages/MySalary";
@@ -165,6 +166,7 @@ const App = () => {
               element={<InstituteStudents />}
             />
             <Route path="institute-admin/staff" element={<InstituteStaff />} />
+            <Route path="institute-admin/salary-policies" element={<SalaryPolicies />} />
             <Route path="institute-admin/settings" element={<Settings />} />
             <Route path="institute-admin/support" element={<SupportManage />} />
             <Route path="institute-admin/support/:id" element={<SupportTicketDetail />} />

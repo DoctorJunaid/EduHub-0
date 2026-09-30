@@ -35,12 +35,37 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       lateCountForHalfDay: 3,
       lateHalfDayPenalty: 0.5,
       earlyLeaveMultiplier: 0.5,
-      substituteBonusPerClass: 500,
       perfectAttendanceBonus: 2000,
       extraClassBonus: 400,
       examDutyBonus: 300,
+      missedClassDeductionRules: [],
+      absentDayDeductionRules: [],
+      substituteBonusRules: []
     };
   }
+
+  // Find the applicable version for this month (effectiveDate <= end of month)
+  let activePolicy = policy;
+  if (policy.versions && policy.versions.length > 0) {
+    const applicableVersions = policy.versions.filter(v => new Date(v.effectiveDate) <= endDate);
+    if (applicableVersions.length > 0) {
+      applicableVersions.sort((a,b) => new Date(b.effectiveDate) - new Date(a.effectiveDate));
+      activePolicy = applicableVersions[0];
+    }
+  }
+
+  // Helper to evaluate dynamic rules
+  const evaluateRule = (rules, count, salary, dailySalary, distinctDays = count) => {
+    if (!rules || rules.length === 0) return 0;
+    const rule = rules.find(r => count >= r.min && (r.max === null || r.max === undefined || count <= r.max));
+    if (!rule) return 0;
+    
+    if (rule.type === 'Fixed Amount') return rule.amount;
+    if (rule.type === 'Percentage') return (salary * rule.amount) / 100;
+    if (rule.type === 'Per Class') return count * rule.amount;
+    if (rule.type === 'Per Day') return distinctDays * rule.amount;
+    return 0;
+  };
 
   // 2. Load all salary profiles for this campus
   const salaryProfiles = await TeacherSalaryProfile.find({ campusId, isActive: true }).lean();
@@ -62,7 +87,7 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     }
 
     // 3. PAY-04: dailySalary
-    const dailySalary = profile.baseSalary / policy.workingDaysPerMonth;
+    const dailySalary = profile.baseSalary / (activePolicy.workingDaysPerMonth || 26);
 
     // 4. Fetch attendance for this teacher for the month
     // NOTE: TeacherAttendance.teacherProfileId refs "User" (not TeacherProfile),
@@ -110,39 +135,47 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     const deductions = [];
 
     // Absent deduction
-    if (absentDays > 0) {
-      const amount = absentDays * dailySalary * policy.unpaidAbsentMultiplier;
+    let absentDeduction = 0;
+    if (activePolicy.absentDayDeductionRules && activePolicy.absentDayDeductionRules.length > 0) {
+      absentDeduction = evaluateRule(activePolicy.absentDayDeductionRules, absentDays, profile.baseSalary, dailySalary);
+    } else if (absentDays > 0) {
+      absentDeduction = absentDays * dailySalary * (activePolicy.unpaidAbsentMultiplier || 1.0);
+    }
+    
+    if (absentDeduction > 0) {
       deductions.push({
         reason: `${absentDays} absent day(s)`,
         category: "Absent",
         days: absentDays,
-        rate: dailySalary * policy.unpaidAbsentMultiplier,
-        amount: Math.round(amount),
+        rate: absentDeduction / absentDays,
+        amount: Math.round(absentDeduction),
       });
     }
 
     // Leave deduction
     if (leaveDays > 0) {
-      const amount = leaveDays * dailySalary * policy.unpaidLeaveMultiplier;
+      const amount = leaveDays * dailySalary * (activePolicy.unpaidLeaveMultiplier || 1.0);
       deductions.push({
         reason: `${leaveDays} leave day(s)`,
         category: "Leave",
         days: leaveDays,
-        rate: dailySalary * policy.unpaidLeaveMultiplier,
+        rate: dailySalary * (activePolicy.unpaidLeaveMultiplier || 1.0),
         amount: Math.round(amount),
       });
     }
 
     // Late → half-day penalty
-    if (lateCount > 0 && policy.lateCountForHalfDay > 0) {
-      const halfDaysFromLate = Math.floor(lateCount / policy.lateCountForHalfDay);
+    const lateCountForHalfDay = activePolicy.lateCountForHalfDay || 3;
+    const lateHalfDayPenalty = activePolicy.lateHalfDayPenalty || 0.5;
+    if (lateCount > 0 && lateCountForHalfDay > 0) {
+      const halfDaysFromLate = Math.floor(lateCount / lateCountForHalfDay);
       if (halfDaysFromLate > 0) {
-        const amount = halfDaysFromLate * dailySalary * policy.lateHalfDayPenalty;
+        const amount = halfDaysFromLate * dailySalary * lateHalfDayPenalty;
         deductions.push({
           reason: `${lateCount} late(s) → ${halfDaysFromLate} half-day penalty`,
           category: "Late",
           days: halfDaysFromLate,
-          rate: dailySalary * policy.lateHalfDayPenalty,
+          rate: dailySalary * lateHalfDayPenalty,
           amount: Math.round(amount),
         });
       }
@@ -170,15 +203,25 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     const bonuses = [];
 
     // Substitute bonus
+    let substituteBonus = 0;
     if (substituteDuties > 0) {
-      const amount = substituteDuties * policy.substituteBonusPerClass;
-      bonuses.push({
-        reason: `${substituteDuties} substitute class(es)`,
-        category: "Substitute",
-        count: substituteDuties,
-        rate: policy.substituteBonusPerClass,
-        amount,
-      });
+      if (activePolicy.substituteBonusRules && activePolicy.substituteBonusRules.length > 0) {
+        const substituteDistinctDays = new Set(subDuties.map(s => moment(s.date).format("YYYY-MM-DD"))).size;
+        substituteBonus = evaluateRule(activePolicy.substituteBonusRules, substituteDuties, profile.baseSalary, dailySalary, substituteDistinctDays);
+      } else if (activePolicy.substituteBonusPerClass) {
+        substituteBonus = substituteDuties * activePolicy.substituteBonusPerClass;
+      }
+      
+      if (substituteBonus > 0) {
+        bonuses.push({
+          reason: `${substituteDuties} substitute class(es)`,
+          category: "Substitute",
+          count: substituteDuties,
+          rate: substituteBonus / substituteDuties,
+          amount: Math.round(substituteBonus),
+          note: `SubAssignments: ${subDuties.map((s) => s._id).join(",")}`,
+        });
+      }
     }
 
     // Perfect attendance bonus (no absent, no leave, no late)
@@ -186,7 +229,7 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       bonuses.push({
         reason: "Perfect attendance",
         category: "Perfect Attendance",
-        amount: policy.perfectAttendanceBonus,
+        amount: activePolicy.perfectAttendanceBonus || 2000,
       });
     }
 
@@ -214,8 +257,39 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       }
     }
 
-    // 8c. Incorporate approved missed class deductions and substitute bonuses from TeacherClassSession
+    // 8c. Dynamic Missed Classes Deductions (Unsubstituted)
     const teacherUserIds = attendanceTeacherIds;
+    
+    // Find completely missed classes (no substitute provided)
+    const trulyMissedClasses = await TeacherClassSession.find({
+      campusId,
+      date: { $gte: startDate, $lte: endDate },
+      originalTeacherId: { $in: teacherUserIds },
+      status: { $in: ["Missed", "Absent"] },
+      isSubstituted: false,
+      substituteAssignmentId: null
+    }).lean();
+    
+    const missedClassCount = trulyMissedClasses.length;
+    let missedClassDeductionAmount = 0;
+    
+    if (missedClassCount > 0 && activePolicy.missedClassDeductionRules && activePolicy.missedClassDeductionRules.length > 0) {
+      const missedDistinctDays = new Set(trulyMissedClasses.map(s => moment(s.date).format("YYYY-MM-DD"))).size;
+      missedClassDeductionAmount = evaluateRule(activePolicy.missedClassDeductionRules, missedClassCount, profile.baseSalary, dailySalary, missedDistinctDays);
+      
+      if (missedClassDeductionAmount > 0) {
+        deductions.push({
+          reason: `${missedClassCount} genuinely missed class(es) (no substitute)`,
+          category: "Absent",
+          days: missedClassCount, // using days field for count
+          rate: missedClassDeductionAmount / missedClassCount,
+          amount: Math.round(missedClassDeductionAmount),
+          note: `MissedSessions: ${trulyMissedClasses.map((s) => s._id).join(",")}`,
+        });
+      }
+    }
+
+    // 8d. Fallback: manual approved deductions / bonuses on specific sessions (if any were created manually)
     const sessionDeductions = await TeacherClassSession.find({
       campusId,
       date: { $gte: startDate, $lte: endDate },
@@ -226,6 +300,12 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     }).lean();
 
     for (const sess of sessionDeductions) {
+      // prevent duplicate deduction if dynamic rule handled it
+      if (activePolicy.missedClassDeductionRules && activePolicy.missedClassDeductionRules.length > 0) {
+        // dynamic rule applied, skip manual ones or apply as well?
+        // best to skip manual ones to avoid double deduction
+        continue;
+      }
       deductions.push({
         reason: `Approved Missed Period ${sess.period}: ${sess.subject} (${sess.className}) on ${moment.utc(sess.date).format("YYYY-MM-DD")}`,
         category: "Absent",
@@ -245,6 +325,9 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     }).lean();
 
     for (const sess of sessionBonuses) {
+      if (activePolicy.substituteBonusRules && activePolicy.substituteBonusRules.length > 0) {
+        continue; // skip manual if dynamic applied
+      }
       bonuses.push({
         reason: `Approved Substitute Period ${sess.period}: ${sess.subject} (${sess.className}) on ${moment.utc(sess.date).format("YYYY-MM-DD")}`,
         category: "Substitute",
