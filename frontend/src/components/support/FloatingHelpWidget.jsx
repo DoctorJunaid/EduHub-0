@@ -191,31 +191,23 @@ export const FloatingHelpWidget = () => {
           </div>
         )}
 
-        {/* Floating Trigger Circle Button */}
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className={`relative w-13 h-13 rounded-full shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/20 ${
-            isOpen
-              ? "bg-muted text-foreground border border-border"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
-          aria-label={isOpen ? "Close Help Assistant" : "Open Help & Support Assistant"}
-          title="Need Help?"
-        >
-          {isOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <>
-              <LifeBuoy className="w-6 h-6" />
-              {openCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-background">
-                  {openCount}
-                </span>
-              )}
-            </>
-          )}
-        </button>
+        {/* Floating Trigger Circle Button (Shown when popover is closed) */}
+        {!isOpen && (
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="relative w-12 h-12 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/20"
+            aria-label="Open Help & Support Assistant"
+            title="Need Help?"
+          >
+            <LifeBuoy className="w-6 h-6" />
+            {openCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-background">
+                {openCount}
+              </span>
+            )}
+          </button>
+        )}
       </aside>
 
       {/* New Ticket / Ask for Help Dialog */}
