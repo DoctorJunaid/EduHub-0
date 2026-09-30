@@ -1,7 +1,5 @@
 import React from "react";
-import { Search, Filter, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Search, X } from "lucide-react";
 
 export const TicketFilters = ({
   filters = {},
@@ -12,93 +10,88 @@ export const TicketFilters = ({
 }) => {
   const hasActiveFilters = Boolean(
     filters.search ||
-      (filters.status && filters.status !== "all") ||
       (filters.category && filters.category !== "all") ||
-      (filters.priority && filters.priority !== "all") ||
-      filters.assignedTo ||
-      filters.startDate ||
-      filters.endDate
+      (filters.status && filters.status !== "all") ||
+      (filters.priority && filters.priority !== "all")
   );
 
   return (
-    <div className="p-4 bg-card border border-border/80 rounded-2xl space-y-3 shadow-xs">
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-        {/* Search Bar */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
+    <div className="flex items-center justify-between gap-3 px-6 py-2.5 bg-[#fafafa] border-b border-[#e4e4e7] min-h-[48px] box-border w-full flex-wrap sm:flex-nowrap">
+      {/* Left side: Search input + Selects */}
+      <div className="flex items-center gap-2.5 flex-1 min-w-0 flex-wrap sm:flex-nowrap">
+        {/* Search input with search icon */}
+        <div className="relative flex items-center w-full sm:max-w-[260px] shrink-0">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#71717a] pointer-events-none" />
+          <input
             type="text"
             placeholder={
               isAdmin
-                ? "Search by ticket #, subject, creator or keyword..."
-                : "Search your conversations..."
+                ? "Search tickets by #, subject, or creator..."
+                : "Search conversations..."
             }
             value={filters.search || ""}
             onChange={(e) => onChange("search", e.target.value)}
-            className="pl-9 bg-background/50 h-10 rounded-xl"
+            className="w-full !h-[34px] pl-8 pr-3 text-xs bg-white border border-[#e4e4e7] rounded-md text-[#09090b] placeholder:text-[#71717a] outline-none focus:border-[#09090b] transition-colors"
           />
         </div>
 
-        {/* Filters and Reset */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Category Dropdown */}
-          <select
-            value={filters.category || "all"}
-            onChange={(e) => onChange("category", e.target.value)}
-            className="h-10 px-3 py-1.5 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id || c} value={c.id || c}>
-                {c.icon ? `${c.icon} ` : ""}{c.label || c}
-              </option>
-            ))}
-          </select>
+        {/* Category dropdown */}
+        <select
+          value={filters.category || "all"}
+          onChange={(e) => onChange("category", e.target.value)}
+          className="!w-auto min-w-[130px] max-w-[200px] !h-[34px] !py-0 px-2.5 text-xs font-medium bg-white border border-[#e4e4e7] rounded-md text-[#09090b] outline-none focus:border-[#09090b] transition-colors cursor-pointer shrink-0"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id || c} value={c.id || c}>
+              {c.icon ? `${c.icon} ` : ""}{c.label || c}
+            </option>
+          ))}
+        </select>
 
-          {/* Admin-only Filters: Priority, Status, Date */}
-          {isAdmin && (
-            <>
-              <select
-                value={filters.status || "all"}
-                onChange={(e) => onChange("status", e.target.value)}
-                className="h-10 px-3 py-1.5 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="all">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Closed">Closed</option>
-                <option value="Escalated">Escalated</option>
-                <option value="Overdue">Overdue SLA</option>
-              </select>
-
-              <select
-                value={filters.priority || "all"}
-                onChange={(e) => onChange("priority", e.target.value)}
-                className="h-10 px-3 py-1.5 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="all">All Priorities</option>
-                <option value="Urgent">Urgent</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
-            </>
-          )}
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onReset}
-              className="h-10 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-xl"
+        {/* Admin-only Filters: Status, Priority */}
+        {isAdmin && (
+          <>
+            <select
+              value={filters.status || "all"}
+              onChange={(e) => onChange("status", e.target.value)}
+              className="!w-auto min-w-[120px] max-w-[160px] !h-[34px] !py-0 px-2.5 text-xs font-medium bg-white border border-[#e4e4e7] rounded-md text-[#09090b] outline-none focus:border-[#09090b] transition-colors cursor-pointer shrink-0"
             >
-              <X className="w-3.5 h-3.5" />
-              <span>Reset</span>
-            </Button>
-          )}
-        </div>
+              <option value="all">All Statuses</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+              <option value="Escalated">Escalated</option>
+              <option value="Overdue">Overdue SLA</option>
+            </select>
+
+            <select
+              value={filters.priority || "all"}
+              onChange={(e) => onChange("priority", e.target.value)}
+              className="!w-auto min-w-[120px] max-w-[160px] !h-[34px] !py-0 px-2.5 text-xs font-medium bg-white border border-[#e4e4e7] rounded-md text-[#09090b] outline-none focus:border-[#09090b] transition-colors cursor-pointer shrink-0"
+            >
+              <option value="all">All Priorities</option>
+              <option value="Urgent">Urgent</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </>
+        )}
       </div>
+
+      {/* Right side: Reset filter button */}
+      {hasActiveFilters && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="h-8 px-2.5 text-xs font-medium text-[#71717a] hover:text-[#09090b] hover:bg-white border border-transparent hover:border-[#e4e4e7] rounded-md inline-flex items-center gap-1 transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+          <span>Reset Filters</span>
+        </button>
+      )}
     </div>
   );
 };

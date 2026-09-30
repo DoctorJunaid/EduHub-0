@@ -109,7 +109,7 @@ const Sidebar = ({
                   )}
                   <span className="sidebar-label flex items-center justify-between flex-1">
                     <span>{item.label}</span>
-                    {item.path?.startsWith("/support") && badgeCount > 0 && (
+                    {item.path?.includes("support") && badgeCount > 0 && (
                       <span className="ml-auto bg-emerald-500 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
                         {badgeCount}
                       </span>

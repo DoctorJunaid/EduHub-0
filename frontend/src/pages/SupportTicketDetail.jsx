@@ -21,6 +21,7 @@ import EscalateDialog from "@/components/support/EscalateDialog";
 import AssignDialog from "@/components/support/AssignDialog";
 import CloseTicketDialog from "@/components/support/CloseTicketDialog";
 import RatingDialog from "@/components/support/RatingDialog";
+import { getSupportBasePath } from "@/utils/supportRouting";
 
 export const SupportTicketDetail = () => {
   const { id } = useParams();
@@ -48,7 +49,7 @@ export const SupportTicketDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto p-8 flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
         <Spinner className="w-8 h-8 text-primary" />
         <p className="text-xs text-muted-foreground mt-3">Loading conversation...</p>
       </div>
@@ -63,7 +64,7 @@ export const SupportTicketDetail = () => {
           {error?.response?.data?.message || "This conversation may have been removed or you lack permission to view it."}
         </p>
         <button
-          onClick={() => navigate("/support")}
+          onClick={() => navigate(getSupportBasePath(role))}
           className="text-xs text-primary font-semibold hover:underline"
         >
           ← Back to Help & Support
@@ -90,24 +91,24 @@ export const SupportTicketDetail = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4">
-      {/* Header */}
+    <div
+      style={{
+        margin: "7px",
+        width: "calc(100% - 14px)",
+        height: "calc(100vh - 74px)",
+      }}
+      className="flex flex-col bg-white border border-[#e4e4e7] rounded-[10px] overflow-hidden shadow-xs box-border"
+    >
+      {/* 1. Header (Sticky at top, px-6 py-4, with status badge) */}
       <TicketDetailHeader ticket={ticket} isAdmin={isAdmin} />
 
-      {/* Main Content Layout (1 column for regular users, 2 columns for admins) */}
-      <div className={`grid grid-cols-1 ${isAdmin ? "lg:grid-cols-3 gap-6" : "gap-4"}`}>
-        {/* Left / Main Chat Box */}
-        <div className={`${isAdmin ? "lg:col-span-2" : "w-full"} flex flex-col h-[74vh] sm:h-[78vh] rounded-2xl bg-card border border-border/80 shadow-xs overflow-hidden`}>
-          {/* Thread */}
-          <MessageThread
-            messages={messages}
-            currentUserId={currentUserId}
-            isAdmin={isAdmin}
-          />
-
-          {/* Rating Banner for closed tickets that haven't been rated */}
+      {/* 2. Main Content Body */}
+      <div className="flex-1 flex overflow-hidden w-full">
+        {/* Chat thread + Reply box column */}
+        <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-background">
+          {/* Rating prompt banner for closed tickets */}
           {canRate && (
-            <div className="p-3 bg-amber-500/10 border-t border-b border-amber-500/20 flex items-center justify-between text-xs">
+            <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between text-xs shrink-0">
               <span className="font-medium text-amber-800 dark:text-amber-200">
                 ⭐ How was your support experience?
               </span>
@@ -121,7 +122,14 @@ export const SupportTicketDetail = () => {
             </div>
           )}
 
-          {/* Reply Box */}
+          {/* Message Thread (Fills space, scrollable, px-6 py-6) */}
+          <MessageThread
+            messages={messages}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
+          />
+
+          {/* Reply Box (Pinned to bottom, px-6 py-4, border-t) */}
           <ReplyBox
             onSend={handleSendReply}
             isSending={replyMutation.isPending}
@@ -133,9 +141,9 @@ export const SupportTicketDetail = () => {
           />
         </div>
 
-        {/* Right Sidebar (Admin Only) */}
+        {/* Right Sidebar for Admins only */}
         {isAdmin && (
-          <div className="lg:col-span-1">
+          <aside className="w-80 lg:w-96 border-l border-border bg-card/40 overflow-y-auto p-5 shrink-0 hidden md:block">
             <TicketSidebar
               ticket={ticket}
               onOpenAssign={() => setIsAssignOpen(true)}
@@ -146,7 +154,7 @@ export const SupportTicketDetail = () => {
               }
               isUpdatingStatus={changeStatusMutation.isPending}
             />
-          </div>
+          </aside>
         )}
       </div>
 

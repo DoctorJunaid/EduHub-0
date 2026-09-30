@@ -190,7 +190,7 @@ export const TEACHER_NAV = [
   },
   {
     label: "Help & Support",
-    path: "/support",
+    path: "/teacher/support",
     icon: <LifeBuoy size={20} />,
   },
 ];
@@ -198,20 +198,20 @@ export const TEACHER_NAV = [
 export const STUDENT_NAV = [
   {
     label: "Dashboard",
-    path: "/dashboard",
+    path: "/student/dashboard",
     icon: <LayoutDashboard size={20} />,
   },
-  { label: "My Courses", path: "/courses", icon: <BookOpen size={20} /> },
+  { label: "My Courses", path: "/student/courses", icon: <BookOpen size={20} /> },
   {
     label: "Assignments",
-    path: "/assignments",
+    path: "/student/assignments",
     icon: <ClipboardList size={20} />,
   },
   { label: "Exams", path: "/exams", icon: <Award size={20} /> },
   { label: "Results", path: "/results", icon: <Trophy size={20} /> },
   { label: "Achievements", path: "/achievements", icon: <Award size={20} /> },
   { label: "Competitions", path: "/competitions", icon: <Trophy size={20} /> },
-  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
+  { label: "Help & Support", path: "/student/support", icon: <LifeBuoy size={20} /> },
 ];
 
 export const PARENT_NAV = [

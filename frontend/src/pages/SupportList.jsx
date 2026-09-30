@@ -2,20 +2,18 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/store/Slices/authSlice";
-import { Plus, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, SlidersHorizontal, Search, X } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import DataPagination from "@/components/shared/DataPagination";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
 
 import { useSupportTickets, useCreateTicket } from "@/hooks/useSupportTickets";
 import { useSupportStats } from "@/hooks/useSupportStats";
 import { useSupportCategories } from "@/hooks/useSupportCategories";
 
-import SupportKpiCards from "@/components/support/SupportKpiCards";
-import SupportStatPills from "@/components/support/SupportStatPills";
 import ConversationList from "@/components/support/ConversationList";
 import TicketListTable from "@/components/support/TicketListTable";
-import TicketFilters from "@/components/support/TicketFilters";
 import NewTicketDialog from "@/components/support/NewTicketDialog";
 
 export const SupportList = () => {
@@ -49,7 +47,7 @@ export const SupportList = () => {
     ...(filters.search ? { search: filters.search } : {}),
   };
 
-  const { data, isLoading, isFetching } = useSupportTickets(queryParams);
+  const { data, isLoading } = useSupportTickets(queryParams);
   const createTicketMutation = useCreateTicket();
 
   const handleFilterChange = (key, value) => {
@@ -75,103 +73,205 @@ export const SupportList = () => {
   const total = data?.total || 0;
   const pageCount = data?.pageCount || 1;
 
-  return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Top Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {isAdmin ? "🆘 Support Tickets" : "💬 Help & Support"}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {isAdmin
-              ? "Manage, triage, and resolve student, staff, and campus support requests."
-              : "Ask questions, get help with your studies, fees, or account, and view replies."}
-          </p>
-        </div>
+  const totalCount =
+    (stats.waiting || 0) +
+    (stats.lookingAt || 0) +
+    (stats.answered || 0) +
+    (stats.done || 0);
 
-        <div className="flex items-center gap-2.5">
-          {isAdmin && (
-            <Button
-              variant="outline"
-              onClick={() => navigate("/support/manage")}
-              className="gap-1.5 rounded-xl text-xs h-10 border-border"
+  const tabs = isAdmin
+    ? [
+        { id: "all", label: "All Tickets", count: stats.total || totalCount },
+        { id: "Open", label: "Open", count: stats.open || stats.waiting || 0 },
+        { id: "In Progress", label: "In Progress", count: stats.inProgress || stats.lookingAt || 0 },
+        { id: "Resolved", label: "Resolved", count: stats.resolved || stats.answered || 0 },
+        { id: "Closed", label: "Closed", count: stats.closed || stats.done || 0 },
+      ]
+    : [
+        { id: "all", label: "All Conversations", count: totalCount },
+        { id: "Open", label: "Waiting for reply", count: stats.waiting || 0 },
+        { id: "In Progress", label: "Being looked at", count: stats.lookingAt || 0 },
+        { id: "Resolved", label: "Answered", count: stats.answered || 0 },
+        { id: "Closed", label: "Done", count: stats.done || 0 },
+      ];
+
+  const hasActiveFilters = Boolean(
+    filters.search ||
+      (filters.category && filters.category !== "all") ||
+      (filters.status && filters.status !== "all") ||
+      (filters.priority && filters.priority !== "all")
+  );
+
+  return (
+    <div className="academics-config-page mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6">
+      {/* 1. Floating Pill Tabs Bar (matches AcademicsConfig tab list) */}
+      <div className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit">
+        {tabs.map((tab) => {
+          const isActive = filters.status === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleFilterChange("status", tab.id)}
+              className={`h-9 flex-none rounded-lg px-3 sm:px-4 text-xs sm:text-sm font-medium transition-all inline-flex items-center gap-2 cursor-pointer ${
+                isActive
+                  ? "bg-zinc-900 text-white shadow-sm"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+              }`}
             >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>Manage All →</span>
-            </Button>
+              <span>{tab.label}</span>
+              {typeof tab.count === "number" && (
+                <span
+                  className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                    isActive
+                      ? "bg-zinc-800 text-zinc-100"
+                      : "bg-zinc-100 text-zinc-600"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 2. Main Card Container (matches AcademicsConfig card) */}
+      <Card className="academics-config-card gap-0 overflow-hidden rounded-xl border border-zinc-200 bg-white py-0 shadow-sm">
+        <CardHeader className="academics-config-card-header border-b border-zinc-100 px-5 py-5 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-xl font-bold tracking-tight text-zinc-900">
+                {isAdmin ? "Manage Support Tickets" : "Manage Conversations"}
+              </CardTitle>
+              <CardDescription className="text-sm text-zinc-500 mt-1">
+                {isAdmin
+                  ? "Triage, assign, escalate, and resolve institutional support requests."
+                  : "Ask questions, get help with your studies, fees, or account, and track replies."}
+              </CardDescription>
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/support/manage")}
+                  className="h-10 rounded-lg border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs sm:text-sm font-medium"
+                >
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  Manage All
+                </Button>
+              )}
+
+              <Button
+                type="button"
+                onClick={() => setIsNewDialogOpen(true)}
+                className="h-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs sm:text-sm font-medium shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {isAdmin ? "New Ticket" : "Ask for Help"}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="academics-config-card-content px-5 pb-5 sm:px-6 sm:pb-6 pt-5 space-y-4">
+          {/* Search & Filter Row */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0 flex-wrap">
+              {/* Search input */}
+              <div className="relative flex-1 min-w-[220px] max-w-sm">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder={isAdmin ? "Search tickets by #, subject, or creator..." : "Search conversations..."}
+                  value={filters.search || ""}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  className="w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
+                />
+              </div>
+
+              {/* Category dropdown */}
+              <select
+                value={filters.category || "all"}
+                onChange={(e) => handleFilterChange("category", e.target.value)}
+                className="!w-auto h-10 px-3 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-900 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all cursor-pointer shrink-0"
+              >
+                <option value="all">All Categories</option>
+                {categories.map((c) => (
+                  <option key={c.id || c} value={c.id || c}>
+                    {c.icon ? `${c.icon} ` : ""}{c.label || c}
+                  </option>
+                ))}
+              </select>
+
+              {isAdmin && (
+                <>
+                  <select
+                    value={filters.priority || "all"}
+                    onChange={(e) => handleFilterChange("priority", e.target.value)}
+                    className="!w-auto h-10 px-3 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-900 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all cursor-pointer shrink-0"
+                  >
+                    <option value="all">All Priorities</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </>
+              )}
+            </div>
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="text-zinc-500 hover:text-zinc-900 text-xs h-9 self-start sm:self-auto"
+              >
+                <X className="w-3.5 h-3.5 mr-1" />
+                Reset Filters
+              </Button>
+            )}
+          </div>
+
+          {/* Table View */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 rounded-xl border border-zinc-200 bg-zinc-50/50">
+              <Spinner className="w-8 h-8 text-zinc-900" />
+              <p className="text-xs text-zinc-500 mt-3 font-medium">Loading conversations...</p>
+            </div>
+          ) : isAdmin ? (
+            <TicketListTable
+              tickets={tickets}
+              onNewTicket={() => setIsNewDialogOpen(true)}
+            />
+          ) : (
+            <ConversationList
+              conversations={tickets}
+              onNewConversation={() => setIsNewDialogOpen(true)}
+            />
           )}
 
-          <Button
-            onClick={() => setIsNewDialogOpen(true)}
-            className="gap-2 rounded-xl text-xs sm:text-sm font-semibold h-10 shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{isAdmin ? "New Ticket" : "Ask for Help"}</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* KPI Cards (Admins) vs Friendly Stat Pills (Regular Users) */}
-      {isAdmin ? (
-        <SupportKpiCards
-          stats={stats}
-          activeStatus={filters.status}
-          onSelectFilter={(status) => handleFilterChange("status", status)}
-        />
-      ) : (
-        <SupportStatPills
-          stats={stats}
-          activeFilter={filters.status}
-          onSelectFilter={(status) => handleFilterChange("status", status)}
-        />
-      )}
-
-      {/* Search and Filters */}
-      <TicketFilters
-        filters={filters}
-        onChange={handleFilterChange}
-        onReset={handleResetFilters}
-        categories={categories}
-        isAdmin={isAdmin}
-      />
-
-      {/* Main List Section */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Spinner className="w-8 h-8 text-primary" />
-            <p className="text-xs text-muted-foreground mt-3">Loading help conversations...</p>
-          </div>
-        ) : isAdmin ? (
-          <TicketListTable
-            tickets={tickets}
-            onNewTicket={() => setIsNewDialogOpen(true)}
-          />
-        ) : (
-          <ConversationList
-            conversations={tickets}
-            onNewConversation={() => setIsNewDialogOpen(true)}
-          />
-        )}
-
-        {/* Pagination */}
-        {!isLoading && total > 0 && (
-          <div className="pt-2">
-            <DataPagination
-              currentPage={page}
-              totalPages={pageCount}
-              totalItems={total}
-              pageSize={limit}
-              onPageChange={setPage}
-              onPageSizeChange={(newSize) => {
-                setLimit(newSize);
-                setPage(1);
-              }}
-            />
-          </div>
-        )}
-      </div>
+          {/* Pagination */}
+          {!isLoading && total > 0 && (
+            <div className="pt-2">
+              <DataPagination
+                currentPage={page}
+                totalPages={pageCount}
+                totalItems={total}
+                pageSize={limit}
+                onPageChange={setPage}
+                onPageSizeChange={(newSize) => {
+                  setLimit(newSize);
+                  setPage(1);
+                }}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* New Ticket / Ask for Help Dialog */}
       <NewTicketDialog
