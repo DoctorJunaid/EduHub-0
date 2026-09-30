@@ -11,7 +11,7 @@ const editorRoles = ["campus_admin", "institute_admin", "super_admin", "campus_m
 const readerRoles = [...editorRoles, "accountant"];
 
 // GET /campus/salary/policy
-router.get("/policy", authorize(...readerRoles), async (req, res) => {
+router.get("/", authorize(...readerRoles), async (req, res) => {
   try {
     const campusId = req.user.campusId || req.query.campusId;
     if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
@@ -24,7 +24,7 @@ router.get("/policy", authorize(...readerRoles), async (req, res) => {
 });
 
 // PUT /campus/salary/policy
-router.put("/policy", authorize(...editorRoles), async (req, res) => {
+router.put("/", authorize(...editorRoles), async (req, res) => {
   try {
     const campusId = req.user.campusId || req.body.campusId;
     if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
