@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosInstance";
 import PayslipDialog from "../components/Payroll/PayslipDialog";
 import TableSkeleton from "@/components/shared/TableSkeleton";
-import { toast } from "react-hot-toast";
 import { qk } from "@/lib/queryKeys";
 import "./MyPayslips.css";
 
@@ -11,7 +10,11 @@ export default function MyPayslips() {
   const [month, setMonth] = useState("");
   const [selectedPayslip, setSelectedPayslip] = useState(null);
 
-  const { data: payslips = [], isLoading: loading } = useQuery({
+  const {
+    data: payslips = [],
+    isLoading: loading,
+    error: payslipsError,
+  } = useQuery({
     queryKey: qk.myPayslips({ month }),
     queryFn: async () => {
       const response = await api.get("/campus/salary/payroll/my-payslips", {
@@ -36,6 +39,13 @@ export default function MyPayslips() {
       <div className="overflow-x-auto glass-panel p-4 rounded-xl">
         {loading ? (
           <TableSkeleton rows={5} columns={5} />
+        ) : payslipsError ? (
+          <div className="teacher-payslips-muted text-center py-8">
+            <p className="font-semibold text-slate-700">Unable to load payslips.</p>
+            <p className="mt-1 text-sm">
+              {payslipsError.response?.data?.message || "Refresh the page or try again later."}
+            </p>
+          </div>
         ) : (
           <table className="teacher-payslips-table min-w-full text-left">
             <thead className="teacher-payslips-thead">
@@ -71,7 +81,7 @@ export default function MyPayslips() {
             </tbody>
           </table>
         )}
-        {!loading && payslips.length === 0 && (
+        {!loading && !payslipsError && payslips.length === 0 && (
           <div className="teacher-payslips-muted text-center py-8">
             No payslips found.
           </div>

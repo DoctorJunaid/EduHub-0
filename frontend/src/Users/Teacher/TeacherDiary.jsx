@@ -3,7 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { FileText, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { dateKey, validDate } from "@/lib/dates";
 import { useSearchParams } from "react-router-dom";
-import { selectAssignedTeacherClasses, selectTeacherIdentity } from "./teacherScope";
+import {
+  selectAssignedTeacherClasses,
+  selectTeacherIdentity,
+  teacherOwnsRecord,
+} from "./teacherScope";
 import {
   diaryDeleted,
   diarySaved,
@@ -63,7 +67,10 @@ export default function TeacherDiary() {
   const [deleteId, setDeleteId] = useState(null);
   const classIds = new Set(classes.map((row) => row.id || row._id));
   const entries = diary
-    .filter((entry) => classIds.has(entry.classId))
+    .filter(
+      (entry) =>
+        classIds.has(entry.classId) && teacherOwnsRecord(entry, teacher),
+    )
     .sort((a, b) => b.date.localeCompare(a.date));
   const openNew = () =>
     setForm({
@@ -84,7 +91,13 @@ export default function TeacherDiary() {
       return toast.error(
         "Select a class and complete the topic and lecture summary.",
       );
-    if (form.id && !entries.some((entry) => entry.id === form.id && entry.teacherId === teacher?.id)) return toast.error("This diary entry is no longer available for editing.");
+    if (
+      form.id &&
+      !entries.some(
+        (entry) => entry.id === form.id && teacherOwnsRecord(entry, teacher),
+      )
+    )
+      return toast.error("This diary entry is no longer available for editing.");
     dispatch(
       diarySaved({
         ...data,
@@ -101,12 +114,12 @@ export default function TeacherDiary() {
     toast.success("Diary entry saved.");
   };
   const edit = (entry) => {
-    if (entry.teacherId !== teacher?.id) return;
+    if (!teacherOwnsRecord(entry, teacher)) return;
     setForm(entry);
   };
   const remove = () => {
     const entry = entries.find((item) => item.id === deleteId);
-    if (entry?.teacherId !== teacher?.id) return setDeleteId(null);
+    if (!teacherOwnsRecord(entry, teacher)) return setDeleteId(null);
     dispatch(diaryDeleted(deleteId));
     setDeleteId(null);
     toast.success("Diary entry deleted.");
@@ -148,7 +161,7 @@ export default function TeacherDiary() {
                     · Date: <time dateTime={entry.date}>{entry.date}</time>
                   </p>
                 </div>
-                {entry.teacherId === teacher?.id && <DropdownMenu>
+                {teacherOwnsRecord(entry, teacher) && <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"

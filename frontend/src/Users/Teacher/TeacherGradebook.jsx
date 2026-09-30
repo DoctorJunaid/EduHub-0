@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MoreVertical, Pencil, Plus, Search } from "lucide-react";
 import { selectStudents } from "@/store/Slices/studentsSlice";
@@ -8,6 +8,7 @@ import {
   selectAssignedTeacherClasses,
   selectTeacherIdentity,
   studentsForClass,
+  teacherOwnsRecord,
 } from "./teacherScope";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
@@ -42,15 +43,6 @@ const get = (row, ...keys) => {
   }
   return "";
 };
-const formatSec = (val) => {
-  if (!val) return "";
-  if (typeof val === "object") return val.name || val.className || val.title || val.code || val.label || val._id || "";
-  return String(val);
-};
-
-
-
-
 const initials = (name = "") =>
   name
     .split(/\s+/)
@@ -87,9 +79,6 @@ export default function TeacherGradebook() {
   const selectedClass =
     classes.find((row) => String(idOf(row)) === String(classId)) || classes[0];
   const selectedClassId = selectedClass?.id || selectedClass?._id || "";
-  useEffect(() => {
-    if (!classId && selectedClassId) setClassId(selectedClassId);
-  }, [classId, selectedClassId]);
   const classStudents = selectedClass
     ? studentsForClass(students, selectedClass)
     : [];
@@ -145,16 +134,13 @@ export default function TeacherGradebook() {
   });
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
-  const pageRows = visible.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(
-    () => setPage((current) => Math.min(current, pageCount)),
-    [pageCount],
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = visible.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   );
   const mayEdit = (row) =>
-    !isLocked(row) &&
-    (!row.teacherId ||
-      row.teacherId === teacher?.id ||
-      row.teacherId === teacher?.accountId);
+    !isLocked(row) && teacherOwnsRecord(row, teacher);
   const save = (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget));
@@ -287,7 +273,7 @@ export default function TeacherGradebook() {
             />
           </label>
           <select
-            value={classId}
+            value={selectedClassId}
             onChange={(event) => {
               setClassId(event.target.value);
               setPage(1);
@@ -452,12 +438,12 @@ export default function TeacherGradebook() {
         </div>
         <footer className="teacher-gradebook-footer">
           <span>
-            Showing {pageRows.length ? (page - 1) * pageSize + 1 : 0}–
-            {Math.min(page * pageSize, visible.length)} of {visible.length}{" "}
+            Showing {pageRows.length ? (currentPage - 1) * pageSize + 1 : 0}–
+            {Math.min(currentPage * pageSize, visible.length)} of {visible.length}{" "}
             matching records
           </span>
           <TeacherPagination
-            page={page}
+            page={currentPage}
             pageCount={pageCount}
             onPageChange={setPage}
             label="Gradebook pages"

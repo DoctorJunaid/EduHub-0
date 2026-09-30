@@ -4,7 +4,6 @@ import TeacherAssignments from "./TeacherAssignments";
 import TeacherAttendance from "./TeacherAttendance";
 import TeacherDiary from "./TeacherDiary";
 import TeacherGradebook from "./TeacherGradebook";
-import TeacherMessages from "./TeacherMessages";
 import SupportList from "@/pages/SupportList";
 
 const copy = {

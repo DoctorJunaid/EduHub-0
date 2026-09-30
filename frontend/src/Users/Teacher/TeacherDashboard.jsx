@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -6,6 +6,7 @@ import {
   BookOpen,
   CalendarCheck,
   CheckCircle2,
+  CircleAlert,
   ClipboardList,
   Clock3,
   Coins,
@@ -17,8 +18,10 @@ import {
   selectAssignedTeacherClasses,
   selectStudentsForAssignedClasses,
   selectTeacherIdentity,
+  teacherOwnsRecord,
 } from "./teacherScope";
 import { getTodayClasses, getMySummary, markSessionStatus } from "@/api/classSession.api";
+import { dateKey } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { SpinnerCustom } from "@/components/ui/spinner";
 import toast from "react-hot-toast";
@@ -39,32 +42,37 @@ export default function TeacherDashboard() {
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
   const assignments = useSelector((state) => state.assignments?.records || []);
   const submissions = useSelector((state) => state.submissions?.records || []);
-  const diary = useSelector((state) => state.diary?.records || []);
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
   const [todaySessions, setTodaySessions] = useState([]);
   const [creditSummary, setCreditSummary] = useState(null);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [creditsError, setCreditsError] = useState("");
 
-  const fetchLiveCredits = async () => {
+  const fetchLiveCredits = useCallback(async () => {
     try {
       setLoadingSessions(true);
+      setCreditsError("");
       const [todayRes, sumRes] = await Promise.all([
         getTodayClasses(),
-        getMySummary({ month: new Date().toISOString().slice(0, 7) }),
+        getMySummary({ month: dateKey(new Date()).slice(0, 7) }),
       ]);
       if (todayRes.data?.success) setTodaySessions(todayRes.data.data || []);
       if (sumRes.data?.success) setCreditSummary(sumRes.data.data || null);
-    } catch {
-      // Fallback gracefully
+    } catch (error) {
+      setTodaySessions([]);
+      setCreditSummary(null);
+      setCreditsError(
+        error.response?.data?.message || "Unable to load today's teaching records."
+      );
     } finally {
       setLoadingSessions(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchLiveCredits();
-  }, []);
+    void fetchLiveCredits();
+  }, [fetchLiveCredits]);
 
   const handleQuickComplete = async (sessionId) => {
     try {
@@ -78,7 +86,6 @@ export default function TeacherDashboard() {
     }
   };
 
-  const teacherId = teacher?.id;
   const classIds = new Set(classes.map((item) => item.id || item._id));
   const filteredClasses = classes.filter((item) =>
     `${item.title || ""} ${item.subject || ""} ${item.className || ""} ${item.section || ""} ${item.room || ""} ${item.teacherName || item.instructor || ""} ${(item.days || []).join(" ")} ${item.dayOfWeek || ""} ${item.startTime || ""} ${item.endTime || ""}`
@@ -90,7 +97,11 @@ export default function TeacherDashboard() {
       .map((item) => item.courseId || item.subjectId || item.title || item.subject)
       .filter(Boolean),
   ).size;
-  const assignedAssignments = assignments.filter((assignment) => classIds.has(assignment.classId));
+  const assignedAssignments = assignments.filter(
+    (assignment) =>
+      classIds.has(assignment.classId) &&
+      teacherOwnsRecord(assignment, teacher),
+  );
   const assignedAssignmentIds = new Set(assignedAssignments.map((assignment) => assignment.id));
   const pending = submissions.filter(
     (item) => item.status === "Submitted" && assignedAssignmentIds.has(item.assignmentId),
@@ -177,6 +188,12 @@ export default function TeacherDashboard() {
               <div className="p-8 flex items-center justify-center">
                 <SpinnerCustom text="Loading today's periods..." size="default" />
               </div>
+            ) : creditsError ? (
+              <EmptyRow
+                icon={CircleAlert}
+                text={creditsError}
+                detail="Refresh the page or try again later."
+              />
             ) : todaySessions.length === 0 ? (
               <EmptyRow text="No teaching classes scheduled for today." />
             ) : (
@@ -204,7 +221,7 @@ export default function TeacherDashboard() {
                       <td className="font-bold text-slate-900">{sess.subject}</td>
                       <td>
                         {sess.isSubstituteDuty ? (
-                          <span className="text-purple-700 font-semibold">Substitution Duty</span>
+                          <span className="text-amber-700 font-semibold">Substitution Duty</span>
                         ) : sess.isSubstitutedOut ? (
                           <span className="text-amber-700 font-semibold">Substituted Out</span>
                         ) : (
@@ -428,12 +445,16 @@ function TeacherTable({
   );
 }
 
-function EmptyRow({ text }) {
+function EmptyRow({
+  text,
+  icon: Icon = FileText,
+  detail = "All current items for this section have been processed.",
+}) {
   return (
     <div className="teacher-empty-state">
-      <FileText className="text-slate-300 mb-1" size={28} />
+      <Icon className="text-slate-300 mb-1" size={28} />
       <p className="font-semibold text-slate-600 text-sm mb-0.5">{text}</p>
-      <span className="text-xs text-slate-400">All current items for this section have been processed.</span>
+      <span className="text-xs text-slate-400">{detail}</span>
     </div>
   );
 }

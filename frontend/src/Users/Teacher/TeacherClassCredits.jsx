@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useId } from "react";
-import { useSelector } from "react-redux";
+import React, { useCallback, useEffect, useState, useId } from "react";
 import {
   Award,
   CheckCircle2,
@@ -20,7 +19,7 @@ import {
   markSessionStatus,
   requestDispute,
 } from "@/api/classSession.api";
-import { selectCurrentUser } from "@/store/Slices/authSlice";
+import { dateKey } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,15 +35,15 @@ import "./TeacherClassCredits.css";
 const formatPKR = (amt) => `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
 
 export default function TeacherClassCredits() {
-  const currentUser = useSelector(selectCurrentUser);
   const [activeTab, setActiveTab] = useState("today");
   const [sessions, setSessions] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   // Filters
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const currentMonthStr = dateKey(new Date()).slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -57,15 +56,16 @@ export default function TeacherClassCredits() {
 
   const disputeTextareaId = useId();
 
-  const loadData = async (showToast = false) => {
+  const loadData = useCallback(async (showToast = false) => {
     try {
       if (showToast) setRefreshing(true);
       else setLoading(true);
+      setLoadError("");
 
       const [sessRes, sumRes] = await Promise.all([
         getMySessions(
           activeTab === "today"
-            ? { date: new Date().toISOString().split("T")[0] }
+            ? { date: dateKey(new Date()) }
             : { month: selectedMonth },
         ),
         getMySummary({ month: selectedMonth }),
@@ -76,18 +76,18 @@ export default function TeacherClassCredits() {
 
       if (showToast) toast.success("Teaching sessions synchronized.");
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to load teaching records.",
-      );
+      const message = err.response?.data?.message || "Failed to load teaching records.";
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [activeTab, selectedMonth]);
 
   useEffect(() => {
-    loadData();
-  }, [selectedMonth, activeTab]);
+    void loadData();
+  }, [loadData]);
 
   const handleMarkStatus = async (sessionId, status) => {
     try {
@@ -394,6 +394,14 @@ export default function TeacherClassCredits() {
                 className="flex-col gap-2"
               />
             </div>
+          ) : loadError ? (
+            <div className="teacher-credits-state text-center text-slate-500 text-sm">
+              <AlertCircle className="inline-block mb-2 text-rose-500" size={32} />
+              <p className="font-semibold text-slate-700">{loadError}</p>
+              <span className="text-xs text-slate-400 mt-1 block">
+                Use Sync to try again.
+              </span>
+            </div>
           ) : filteredSessions.length === 0 ? (
             <div className="teacher-credits-state text-center text-slate-400 text-sm">
               <Calendar className="inline-block mb-2 text-slate-300" size={32} />
@@ -441,7 +449,7 @@ export default function TeacherClassCredits() {
                       </td>
                       <td>
                         {sess.isSubstituteDuty ? (
-                          <span className="text-purple-700 font-semibold flex items-center gap-1">
+                          <span className="text-amber-700 font-semibold flex items-center gap-1">
                             <UserCheck size={13} /> Substitute for{" "}
                             {sess.originalTeacherId?.name || "Teacher"}
                           </span>
@@ -457,7 +465,7 @@ export default function TeacherClassCredits() {
                         )}
                       </td>
                       <td className="text-slate-500">
-                        {sess.room || "Room 101"}
+                        {sess.room || "Room not set"}
                       </td>
                       <td>
                         <div className="flex flex-col gap-1 items-start">

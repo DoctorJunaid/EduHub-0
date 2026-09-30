@@ -93,6 +93,18 @@ export function classBelongsToTeacher(record, teacher) {
   return Boolean(teacher.name && names.includes(normalized(teacher.name)));
 }
 
+export function teacherOwnsRecord(record, teacher) {
+  if (!record || !teacher?.id) return false;
+  const ownerId = firstId(
+    record.teacherId,
+    record.facultyId,
+    record.instructorId,
+  );
+  return Boolean(
+    ownerId && [teacher.id, teacher.accountId].filter(Boolean).includes(ownerId),
+  );
+}
+
 export const selectTeacherIdentity = createSelector(
   [selectCurrentUser, selectFaculty],
   resolveTeacherIdentity,
