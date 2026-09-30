@@ -89,8 +89,9 @@
 .institute-admin-shell .institute-filters select { width: auto; min-width: 150px; }
 .institute-admin-shell .sidebar-item { font-size: 14px; }
 .institute-admin-shell .header-search { max-width: 400px; }
-.institute-admin-shell .profile-avatar { background: var(--muted); color: var(--foreground); }
-.institute-admin-shell .sidebar-profile-role { overflow-wrap: anywhere; }
+.institute-admin-shell .sidebar-profile-copy { min-width: 0; overflow: hidden; }
+.institute-admin-shell .sidebar-profile-name,
+.institute-admin-shell .sidebar-profile-role { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 
 /* Radix portals are outside MainLayout. Scope them to the mounted Institute shell. */
 body:has(.institute-admin-shell) :is(.campus-form-dialog, .faculty-form-dialog, .student-form-dialog, .student-profile-dialog, .confirmation-dialog) { padding: 24px; max-height: calc(100dvh - 32px); overflow-y: auto; border-radius: var(--radius-lg); background: var(--card); color: var(--foreground); }
