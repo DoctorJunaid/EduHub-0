@@ -189,7 +189,7 @@ const Header = ({
             .replace(/-/g, " ")
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-          if (segment.toLowerCase() === "messages") {
+          if (segment.toLowerCase() === "messages" || segment.toLowerCase() === "support") {
             label = "Help & Support";
           }
 

@@ -6,7 +6,7 @@
 .institute-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   color: #09090b;
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -14,7 +14,7 @@
 .institute-heading h1 {
   font-size: 22px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
   margin: 0;
   color: #09090b;
@@ -24,22 +24,21 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(160px, 1fr));
   gap: 12px;
-  margin-bottom: 4px;
 }
 
 .institute-dashboard .institute-stat {
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid #e4e4e7;
   border-radius: 12px;
   padding: 16px 18px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
   text-align: left;
   min-height: 98px;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   opacity: 0;
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -50,9 +49,9 @@
 .institute-stat:nth-child(4) { animation-delay: 0.2s; }
 
 .institute-dashboard .institute-stat:hover {
-  transform: translateY(-4px) scale(1.01);
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  border-color: #d4d4d8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .institute-dashboard .institute-stat .edu-stat-head {
@@ -102,19 +101,23 @@
 .institute-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .institute-actions button {
-  height: 38px;
-  border: 1px dashed #e4e4e7;
+  height: 40px;
+  border: 1px dashed #d4d4d8;
   border-radius: 8px;
   background: #ffffff;
   color: #09090b;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .institute-actions button:hover {
@@ -129,32 +132,35 @@
 }
 
 .institute-students {
-  padding: 12px 14px;
-  gap: 10px;
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+  padding: 0;
+  gap: 0;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   background: #ffffff;
+  overflow: hidden;
   opacity: 0;
-  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
 }
 
 .institute-table-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f4f4f5;
 }
 
 .institute-table-heading h2 {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 16px;
   font-weight: 700;
   color: #09090b;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .institute-table-heading h2 > span {
@@ -163,39 +169,90 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #f4f4f5;
   color: #09090b;
   border: 1px solid #e4e4e7;
 }
 
 .institute-table-heading > button {
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
   border: 1px solid #e4e4e7;
   background: #ffffff;
   color: #09090b;
 }
 
+.institute-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 20px 16px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  align-items: center;
+}
+
+.institute-filters input {
+  flex: 1;
+  min-width: 220px;
+  height: 36px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #09090b;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.institute-filters select {
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 0 12px;
+  height: 36px;
+  background: #ffffff;
+  color: #09090b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.institute-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.institute-students table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 .institute-students th {
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #71717a;
-  height: 38px;
+  height: 40px;
   background: #fafafa;
-  padding: 10px 14px;
+  padding: 10px 20px;
   border-bottom: 1px solid #e4e4e7;
+  text-align: left;
+  white-space: nowrap;
 }
 
 .institute-students td {
-  height: 46px;
-  font-size: 12px;
+  height: 52px;
+  font-size: 13px;
   color: #09090b;
-  padding: 6px 12px;
+  padding: 10px 20px;
   border-bottom: 1px solid #f4f4f5;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.institute-students tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .institute-students tbody tr:hover td {
@@ -213,9 +270,10 @@
 .institute-student-name [data-slot="avatar"] {
   width: 34px;
   height: 34px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #e4e4e7;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .institute-student-name [data-slot="avatar-fallback"] {
@@ -230,14 +288,26 @@
   height: 100%;
 }
 
+.institute-student-email {
+  color: #71717a;
+  font-size: 13px;
+}
+
+.institute-student-campus {
+  color: #09090b;
+  font-weight: 500;
+  font-size: 13px;
+}
+
 .institute-students td button {
   border: 1px solid #e4e4e7;
   border-radius: 6px;
   padding: 6px 14px;
+  height: 32px;
   background: #ffffff;
   color: #09090b;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -255,40 +325,11 @@
   font-weight: 600;
 }
 
-.institute-filters {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.institute-filters input {
-  flex: 1;
-  min-width: 180px;
-  height: 34px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
-  background: #fafafa;
-  color: #09090b;
-  padding: 0 10px;
-  font-size: 12px;
-}
-
-.institute-filters select {
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
-  padding: 0 10px;
-  height: 34px;
-  background: #fafafa;
-  color: #09090b;
-  font-size: 11px;
-  font-weight: 600;
-}
-
 .institute-empty {
   text-align: center;
-  padding: 18px 12px;
+  padding: 32px 16px !important;
   color: #71717a;
+  font-size: 13px;
 }
 
 @media (max-width: 1200px) {
@@ -303,9 +344,16 @@
     grid-template-columns: 1fr;
   }
   .institute-heading h1 {
-    font-size: 22px;
+    font-size: 20px;
   }
-  .institute-students {
-    padding: 14px;
+  .institute-table-heading {
+    padding: 14px 16px;
+  }
+  .institute-filters {
+    padding: 10px 16px 14px 16px;
+  }
+  .institute-students th,
+  .institute-students td {
+    padding: 10px 14px;
   }
 }

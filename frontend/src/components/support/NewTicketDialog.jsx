@@ -10,7 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Paperclip, X, Check, Send } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MessageCircle, Paperclip, X, Send } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 import { useSupportCategories } from "@/hooks/useSupportCategories";
@@ -70,7 +77,6 @@ export const NewTicketDialog = ({
       return;
     }
 
-    // Auto-generate subject if not explicitly filled by regular users
     const finalSubject = subject.trim() || `${category} Inquiry`;
     if (finalSubject.length < 5) {
       toast.error("Subject must be at least 5 characters");
@@ -92,7 +98,6 @@ export const NewTicketDialog = ({
 
     try {
       await onCreate(payload);
-      // Reset form
       setSubject("");
       setDescription("");
       setAttachments([]);
@@ -106,22 +111,28 @@ export const NewTicketDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-1">
-            <MessageCircle className="w-5 h-5" />
+      <DialogContent className="sm:max-w-[720px] w-[calc(100vw-2rem)] sm:w-[42vw] rounded-2xl max-h-[88vh] flex flex-col p-0 gap-0 overflow-hidden shadow-2xl">
+        {/* Modal Header */}
+        <DialogHeader className="p-6 pb-4 border-b border-border bg-muted/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg font-bold text-foreground">
+                {isAdmin ? "Create New Support Ticket" : "💬 Ask for Help"}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                {isAdmin
+                  ? "Submit and route an internal or external support ticket."
+                  : "What do you need help with? Pick a topic and tell us the details."}
+              </DialogDescription>
+            </div>
           </div>
-          <DialogTitle className="text-lg">
-            {isAdmin ? "Create New Support Ticket" : "💬 Ask for Help"}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {isAdmin
-              ? "Submit and route an internal or external support ticket."
-              : "What do you need help with? Pick a topic and tell us the details."}
-          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        {/* Modal Body / Form */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Category Selector Grid */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-foreground">
@@ -149,7 +160,7 @@ export const NewTicketDialog = ({
             </div>
           </div>
 
-          {/* Subject (Optional for user, mandatory for admin) */}
+          {/* Subject */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">
               Subject {isAdmin ? "" : "(Optional title)"}
@@ -172,32 +183,37 @@ export const NewTicketDialog = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground">Priority</label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="Urgent">Urgent (2h SLA)</option>
-                  <option value="High">High (8h SLA)</option>
-                  <option value="Medium">Medium (24h SLA)</option>
-                  <option value="Low">Low (72h SLA)</option>
-                </select>
+                <Select value={priority} onValueChange={(val) => setPriority(val)}>
+                  <SelectTrigger className="h-9 w-full rounded-xl bg-background text-xs border-input">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="Urgent">Urgent (2h SLA)</SelectItem>
+                    <SelectItem value="High">High (8h SLA)</SelectItem>
+                    <SelectItem value="Medium">Medium (24h SLA)</SelectItem>
+                    <SelectItem value="Low">Low (72h SLA)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground">Initial Assignee</label>
-                <select
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                <Select
+                  value={assignedTo || "none"}
+                  onValueChange={(val) => setAssignedTo(val === "none" ? "" : val)}
                 >
-                  <option value="">Auto-Assign (Recommended)</option>
-                  {contacts.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} ({c.role?.replace("_", " ")})
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-9 w-full rounded-xl bg-background text-xs border-input">
+                    <SelectValue placeholder="Auto-Assign (Recommended)" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="none">Auto-Assign (Recommended)</SelectItem>
+                    {contacts.map((c) => (
+                      <SelectItem key={c._id} value={c._id}>
+                        {c.name} ({c.role?.replace("_", " ")})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
@@ -218,7 +234,7 @@ export const NewTicketDialog = ({
           </div>
 
           {/* Attachments Section */}
-          <div className="space-y-2">
+          <div className="space-y-2 pb-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <Paperclip className="w-3.5 h-3.5" />
@@ -228,7 +244,7 @@ export const NewTicketDialog = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs text-primary hover:underline font-medium"
+                  className="text-xs text-primary hover:underline font-semibold"
                 >
                   + Add File
                 </button>
@@ -265,36 +281,38 @@ export const NewTicketDialog = ({
               </div>
             )}
           </div>
-
-          <DialogFooter className="gap-2 sm:gap-0 pt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-              className="rounded-xl"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPending || !description.trim()}
-              className="rounded-xl gap-1.5"
-            >
-              {isPending ? (
-                <>
-                  <Spinner className="w-4 h-4" />
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>{isAdmin ? "Create Ticket" : "Send Message"}</span>
-                </>
-              )}
-            </Button>
-          </DialogFooter>
         </form>
+
+        {/* Modal Footer */}
+        <DialogFooter className="p-4 px-6 border-t border-border bg-muted/10 flex items-center justify-end gap-3 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="rounded-xl px-5 h-9"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending || !description.trim()}
+            className="rounded-xl px-5 h-9 gap-2 font-medium"
+          >
+            {isPending ? (
+              <>
+                <Spinner className="w-4 h-4" />
+                <span>Submitting...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                <span>{isAdmin ? "Create Ticket" : "Send Message"}</span>
+              </>
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

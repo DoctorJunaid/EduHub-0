@@ -1,5 +1,12 @@
 import React from "react";
 import { Search, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const TicketFilters = ({
   filters = {},
@@ -16,12 +23,12 @@ export const TicketFilters = ({
   );
 
   return (
-    <div className="flex items-center justify-between gap-3 px-6 py-2.5 bg-[#fafafa] border-b border-[#e4e4e7] min-h-[48px] box-border w-full flex-wrap sm:flex-nowrap">
-      {/* Left side: Search input + Selects */}
-      <div className="flex items-center gap-2.5 flex-1 min-w-0 flex-wrap sm:flex-nowrap">
+    <div className="isu-toolbar">
+      {/* Grid of controls: Search + Dropdowns */}
+      <div className={`isu-toolbar-grid ${!isAdmin ? "user-grid" : ""}`}>
         {/* Search input with search icon */}
-        <div className="relative flex items-center w-full sm:max-w-[260px] shrink-0">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#71717a] pointer-events-none" />
+        <div className="isu-search-wrapper">
+          <Search className="isu-search-icon" aria-hidden="true" />
           <input
             type="text"
             placeholder={
@@ -31,52 +38,64 @@ export const TicketFilters = ({
             }
             value={filters.search || ""}
             onChange={(e) => onChange("search", e.target.value)}
-            className="w-full !h-[34px] pl-8 pr-3 text-xs bg-white border border-[#e4e4e7] rounded-md text-[#09090b] placeholder:text-[#71717a] outline-none focus:border-[#09090b] transition-colors"
+            className="isu-search-input"
           />
         </div>
 
         {/* Category dropdown */}
-        <select
+        <Select
           value={filters.category || "all"}
-          onChange={(e) => onChange("category", e.target.value)}
-          className="!w-auto min-w-[130px] max-w-[200px] !h-[34px] !py-0 px-2.5 text-xs font-medium bg-white border border-[#e4e4e7] rounded-md text-[#09090b] outline-none focus:border-[#09090b] transition-colors cursor-pointer shrink-0"
+          onValueChange={(val) => onChange("category", val)}
         >
-          <option value="all">All Categories</option>
-          {categories.map((c) => (
-            <option key={c.id || c} value={c.id || c}>
-              {c.icon ? `${c.icon} ` : ""}{c.label || c}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="isu-select-trigger">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id || c} value={c.id || c}>
+                {c.icon ? `${c.icon} ` : ""}{c.label || c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {/* Admin-only Filters: Status, Priority */}
         {isAdmin && (
           <>
-            <select
+            <Select
               value={filters.status || "all"}
-              onChange={(e) => onChange("status", e.target.value)}
-              className="!w-auto min-w-[120px] max-w-[160px] !h-[34px] !py-0 px-2.5 text-xs font-medium bg-white border border-[#e4e4e7] rounded-md text-[#09090b] outline-none focus:border-[#09090b] transition-colors cursor-pointer shrink-0"
+              onValueChange={(val) => onChange("status", val)}
             >
-              <option value="all">All Statuses</option>
-              <option value="Open">Open</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Closed">Closed</option>
-              <option value="Escalated">Escalated</option>
-              <option value="Overdue">Overdue SLA</option>
-            </select>
+              <SelectTrigger className="isu-select-trigger">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Open">Open</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Resolved">Resolved</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
+                <SelectItem value="Escalated">Escalated</SelectItem>
+                <SelectItem value="Overdue">Overdue SLA</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <select
+            <Select
               value={filters.priority || "all"}
-              onChange={(e) => onChange("priority", e.target.value)}
-              className="!w-auto min-w-[120px] max-w-[160px] !h-[34px] !py-0 px-2.5 text-xs font-medium bg-white border border-[#e4e4e7] rounded-md text-[#09090b] outline-none focus:border-[#09090b] transition-colors cursor-pointer shrink-0"
+              onValueChange={(val) => onChange("priority", val)}
             >
-              <option value="all">All Priorities</option>
-              <option value="Urgent">Urgent</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
+              <SelectTrigger className="isu-select-trigger">
+                <SelectValue placeholder="All Priorities" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="Urgent">Urgent</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+              </SelectContent>
+            </Select>
           </>
         )}
       </div>
@@ -86,7 +105,8 @@ export const TicketFilters = ({
         <button
           type="button"
           onClick={onReset}
-          className="h-8 px-2.5 text-xs font-medium text-[#71717a] hover:text-[#09090b] hover:bg-white border border-transparent hover:border-[#e4e4e7] rounded-md inline-flex items-center gap-1 transition-colors"
+          className="isu-reset-btn"
+          title="Reset active filters"
         >
           <X className="w-3.5 h-3.5" />
           <span>Reset Filters</span>

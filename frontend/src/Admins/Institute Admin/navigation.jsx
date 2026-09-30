@@ -5,7 +5,7 @@ export const instituteNavigation = [
   { label: "Staff Directory", path: '/institute-admin/staff', icon: <Users size={20} /> },
   { label: "Students", path: '/institute-admin/students', icon: <GraduationCap size={20} /> },
   { label: "Broadcast Alerts", path: "/institute-admin/alerts", icon: <Megaphone size={20} /> },
-  { label: "Help & Support", path: "/support/manage", icon: <LifeBuoy size={20} /> },
+  { label: "Help & Support", path: "/institute-admin/support", icon: <LifeBuoy size={20} /> },
   { label: "Settings", path: "/institute-admin/settings", icon: <Settings size={20} /> },
   { label: "Salary Policies", path: "/institute-admin/salary-policies", icon: <Wallet size={20} /> },
 ];

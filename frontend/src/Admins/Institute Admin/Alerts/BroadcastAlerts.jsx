@@ -1,51 +1,103 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Users, Info, TriangleAlert, CircleAlert, FileText, Send, CheckCircle, Clock } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/Badge';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Alert as AlertBox, AlertDescription } from '@/components/ui/alert';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
-import { Spinner } from '@/components/ui/spinner';
-import { fetchCampuses, selectInstituteCampuses } from '@/store/Slices/campusesSlice';
-import axiosInstance from '@/api/axiosInstance';
-import { audienceOptions, severities, validateBroadcast } from './broadcastData';
-import './BroadcastAlerts.css';
+import { useEffect, useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Users,
+  Info,
+  TriangleAlert,
+  CircleAlert,
+  FileText,
+  Send,
+  CheckCircle,
+  Clock,
+  Megaphone,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/Badge";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Alert as AlertBox, AlertDescription } from "@/components/ui/alert";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/Table";
+import DataPagination from "@/components/shared/DataPagination";
+import PageLoader from "@/components/shared/PageLoader";
+import {
+  fetchCampuses,
+  selectInstituteCampuses,
+} from "@/store/Slices/campusesSlice";
+import axiosInstance from "@/api/axiosInstance";
+import {
+  audienceOptions,
+  severities,
+  validateBroadcast,
+} from "./broadcastData";
+import "./BroadcastAlerts.css";
 
-const icons = { Info, Warning: TriangleAlert, Critical: CircleAlert };
+const PAGE_SIZE = 10;
+const severityIcons = { Info, Warning: TriangleAlert, Critical: CircleAlert };
 
 export default function BroadcastAlerts() {
   const dispatch = useDispatch();
   const campuses = useSelector(selectInstituteCampuses);
   const [alertsList, setAlertsList] = useState([]);
-  const [audience, setAudience] = useState('all');
-  const [severity, setSeverity] = useState('Info');
-  const [message, setMessage] = useState('');
+  const [audience, setAudience] = useState("all");
+  const [severity, setSeverity] = useState("Info");
+  const [message, setMessage] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   const options = audienceOptions(campuses, [], []);
 
   const loadAlerts = useCallback(async () => {
     try {
-      const res = await axiosInstance.get('/institute-admin/alerts');
+      const res = await axiosInstance.get("/institute-admin/alerts");
       setAlertsList(res.data?.data || []);
     } catch (err) {
-      console.error('Failed to fetch broadcast alerts:', err);
+      console.error("Failed to fetch broadcast alerts:", err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let active = true;
     dispatch(fetchCampuses());
-    loadAlerts();
-  }, [dispatch, loadAlerts]);
+    axiosInstance
+      .get("/institute-admin/alerts")
+      .then((res) => {
+        if (!active) return;
+        setAlertsList(res.data?.data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error("Failed to fetch broadcast alerts:", err);
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     if (!feedback || feedback.error) return;
-    const timer = setTimeout(() => setFeedback(null), 6000);
+    const timer = setTimeout(() => setFeedback(null), 5000);
     return () => clearTimeout(timer);
   }, [feedback]);
 
@@ -54,42 +106,94 @@ export default function BroadcastAlerts() {
     const error = validateBroadcast({ audience, severity, message }, options);
     if (error) {
       setFeedback({ error: true, text: error });
+      toast.error(error);
       return;
     }
     setIsSubmitting(true);
     try {
-      await axiosInstance.post('/institute-admin/alerts', {
+      await axiosInstance.post("/institute-admin/alerts", {
         audience,
         severity,
         message: message.trim(),
-        campusId: audience.startsWith('campus:') ? audience.replace('campus:', '') : null,
+        campusId: audience.startsWith("campus:")
+          ? audience.replace("campus:", "")
+          : null,
       });
-      setMessage('');
-      setAudience('all');
-      setSeverity('Info');
-      setFeedback({ error: false, text: 'Broadcast notice published and delivered to all channels.' });
+      setMessage("");
+      setAudience("all");
+      setSeverity("Info");
+      setFeedback({
+        error: false,
+        text: "Broadcast notice published and delivered successfully.",
+      });
+      toast.success("Broadcast notice published successfully.");
+      setLoading(true);
       await loadAlerts();
     } catch (err) {
-      setFeedback({ error: true, text: err.response?.data?.message || 'Failed to dispatch broadcast alert.' });
+      const msg =
+        err.response?.data?.message || "Failed to dispatch broadcast alert.";
+      setFeedback({ error: true, text: msg });
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  const totalRecords = alertsList.length;
+  const pageCount = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
+  const activePage = Math.min(Math.max(1, page), pageCount);
+
+  const startIndex = (activePage - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const paginatedAlerts = alertsList.slice(startIndex, endIndex);
+
+  function getAudienceLabel(alert) {
+    if (alert.campusId?.name)
+      return `${alert.campusId.name} (Staff & Students)`;
+    if (alert.audience === "all") return "All Campuses (Staff & Students)";
+    if (alert.audience === "staff") return "All Staff";
+    if (alert.audience === "students") return "All Students";
+    return alert.audience || "All Campuses";
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return "Just now";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "Just now";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
   return (
-    <section className="institute-broadcast">
-      <div className="iba-heading">
-        <h1>Broadcast Alerts</h1>
-        <p>Publish announcements and emergency notices for staff and students across your campuses.</p>
-      </div>
+    <section className="institute-broadcast" aria-labelledby="iba-title">
+      <header className="iba-heading">
+        <h1 id="iba-title">Broadcast Alerts</h1>
+        <p>
+          Publish announcements and emergency notices for staff and students
+          across your campuses.
+        </p>
+      </header>
 
       <Card className="iba-card">
         <form onSubmit={submit} noValidate>
           <div className="iba-field">
             <Label htmlFor="broadcast-audience">Target Audience</Label>
-            <Select value={audience} onValueChange={(value) => { setAudience(value); setFeedback(null); }}>
-              <SelectTrigger id="broadcast-audience" className="iba-select" aria-required="true">
-                <Users aria-hidden="true" />
+            <Select
+              value={audience}
+              onValueChange={(value) => {
+                setAudience(value);
+                setFeedback(null);
+              }}
+            >
+              <SelectTrigger
+                id="broadcast-audience"
+                className="iba-select"
+                aria-required="true"
+              >
+                <Users className="size-4 mr-2 text-slate-500" aria-hidden="true" />
                 <SelectValue placeholder="Select audience" />
               </SelectTrigger>
               <SelectContent>
@@ -106,20 +210,26 @@ export default function BroadcastAlerts() {
             <legend>Alert Severity</legend>
             <div className="iba-severities">
               {severities.map((value) => {
-                const Icon = icons[value];
+                const Icon = severityIcons[value];
+                const isSelected = severity === value;
                 return (
                   <label
                     key={value}
-                    className={`iba-severity iba-${value.toLowerCase()} ${severity === value ? 'is-selected' : ''}`}
+                    className={`iba-severity iba-${value.toLowerCase()} ${
+                      isSelected ? "is-selected" : ""
+                    }`}
                   >
-                    <Icon aria-hidden="true" />
-                    <span>{value}</span>
+                    <Icon className="severity-icon" aria-hidden="true" />
+                    <span className="severity-label">{value}</span>
                     <input
                       type="radio"
                       name="severity"
                       value={value}
-                      checked={severity === value}
-                      onChange={() => { setSeverity(value); setFeedback(null); }}
+                      checked={isSelected}
+                      onChange={() => {
+                        setSeverity(value);
+                        setFeedback(null);
+                      }}
                     />
                   </label>
                 );
@@ -129,16 +239,19 @@ export default function BroadcastAlerts() {
 
           <div className="iba-field">
             <Label htmlFor="broadcast-message">Message Content</Label>
-            <div className="iba-message">
-              <FileText aria-hidden="true" />
+            <div className="iba-message-wrapper">
+              <FileText className="iba-message-icon" aria-hidden="true" />
               <Textarea
                 id="broadcast-message"
                 placeholder="Type your alert announcement here..."
                 value={message}
-                onChange={(event) => { setMessage(event.target.value); setFeedback(null); }}
+                onChange={(event) => {
+                  setMessage(event.target.value);
+                  setFeedback(null);
+                }}
                 aria-required="true"
                 aria-invalid={feedback?.error || undefined}
-                aria-describedby={feedback ? 'broadcast-feedback' : undefined}
+                aria-describedby={feedback ? "broadcast-feedback" : undefined}
               />
             </div>
           </div>
@@ -146,64 +259,107 @@ export default function BroadcastAlerts() {
           {feedback && (
             <AlertBox
               id="broadcast-feedback"
-              className={feedback.error ? '' : 'iba-success-toast'}
-              role={feedback.error ? 'alert' : 'status'}
-              variant={feedback.error ? 'destructive' : 'default'}
+              className={feedback.error ? "border-red-200" : "iba-success-box"}
+              role={feedback.error ? "alert" : "status"}
+              variant={feedback.error ? "destructive" : "default"}
             >
-              {feedback.error ? <CircleAlert aria-hidden="true" /> : <CheckCircle aria-hidden="true" />}
+              {feedback.error ? (
+                <CircleAlert className="size-4 mr-2 text-red-600" aria-hidden="true" />
+              ) : (
+                <CheckCircle className="size-4 mr-2 text-emerald-600" aria-hidden="true" />
+              )}
               <AlertDescription>{feedback.text}</AlertDescription>
             </AlertBox>
           )}
 
           <div className="iba-actions">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Spinner className="w-4 h-4 mr-2" /> : <Send aria-hidden="true" />}
-              Broadcast Now
+              <Send className="size-4 mr-2" aria-hidden="true" />
+              {isSubmitting ? "Broadcasting..." : "Broadcast Now"}
             </Button>
           </div>
         </form>
       </Card>
 
-      {alertsList.length > 0 && (
-        <Card className="iba-card" style={{ marginTop: '24px' }}>
-          <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Clock size={18} />
-            <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Recent Broadcasts</h2>
-          </div>
+      <Card className="iba-recent-card">
+        <div className="iba-recent-header">
+          <Clock size={18} className="text-slate-700" />
+          <h2>Recent Broadcasts</h2>
+        </div>
+
+        <div className="iba-table-container">
           <Table aria-label="Recent broadcast notices">
             <TableHeader>
               <TableRow>
-                <TableHead>Severity</TableHead>
-                <TableHead>Message</TableHead>
-                <TableHead>Audience</TableHead>
-                <TableHead>Published</TableHead>
+                <TableHead className="w-[110px]">Severity</TableHead>
+                <TableHead className="min-w-[280px]">Message</TableHead>
+                <TableHead className="w-[200px]">Audience</TableHead>
+                <TableHead className="w-[130px] text-right">Published</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {alertsList.map((alert) => (
-                <TableRow key={alert._id || alert.id}>
-                  <TableCell>
-                    <Badge variant="outline" className={`iba-${alert.severity?.toLowerCase()}`}>
-                      {alert.severity}
-                    </Badge>
-                  </TableCell>
-                  <TableCell style={{ maxWidth: '360px', overflowWrap: 'break-word' }}>
-                    {alert.message}
-                  </TableCell>
-                  <TableCell>
-                    <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>
-                      {alert.campusId?.name ? alert.campusId.name : alert.audience}
-                    </span>
-                  </TableCell>
-                  <TableCell style={{ fontSize: '12px', color: '#71717a' }}>
-                    {alert.createdAt ? new Date(alert.createdAt).toLocaleDateString() : 'Just now'}
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-6">
+                    <PageLoader
+                      message="Loading recent broadcasts..."
+                      className="min-h-[120px] py-4"
+                    />
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : paginatedAlerts.length > 0 ? (
+                paginatedAlerts.map((alert) => (
+                  <TableRow key={alert._id || alert.id}>
+                    <TableCell className="align-top py-3">
+                      <Badge
+                        variant="secondary"
+                        className={`iba-severity-badge iba-badge-${alert.severity?.toLowerCase()}`}
+                      >
+                        <span aria-hidden="true" />
+                        {alert.severity}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="iba-message-cell align-top py-3">
+                      {alert.message}
+                    </TableCell>
+                    <TableCell className="iba-audience-cell align-top py-3">
+                      {getAudienceLabel(alert)}
+                    </TableCell>
+                    <TableCell className="iba-published-cell align-top py-3 text-right">
+                      {formatDate(alert.createdAt)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="iba-empty-cell">
+                    <div className="iba-empty-state">
+                      <div className="iba-empty-icon">
+                        <Megaphone size={24} />
+                      </div>
+                      <h3>No broadcasts yet</h3>
+                      <p>
+                        Announcements sent from this page will appear here.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-        </Card>
-      )}
+        </div>
+
+        {!loading && totalRecords > PAGE_SIZE && (
+          <DataPagination
+            page={activePage}
+            pageSize={PAGE_SIZE}
+            total={totalRecords}
+            onPageChange={setPage}
+            showPageSize={false}
+            itemLabel="broadcasts"
+          />
+        )}
+      </Card>
     </section>
   );
 }
