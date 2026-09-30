@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function TeacherPagination({ page, pageCount, onPageChange, label }) {
   if (pageCount <= 1) return null;

@@ -5,6 +5,7 @@ import {
   resolveTeacherIdentity,
   studentBelongsToClass,
   teacherMayContactFaculty,
+  teacherOwnsRecord,
 } from "./teacherScope.js";
 
 const faculty = [
@@ -64,4 +65,16 @@ test("class roster and co-teacher relationships constrain students and faculty c
   );
   assert.equal(teacherMayContactFaculty(teacher, [course], "faculty-2"), true);
   assert.equal(teacherMayContactFaculty(teacher, [course], "faculty-3"), false);
+});
+
+test("Teacher-owned records accept linked faculty or account IDs and reject unowned records", () => {
+  const teacher = resolveTeacherIdentity(
+    { id: "account-1", role: "teacher", email: "teacher@example.test" },
+    faculty,
+  );
+
+  assert.equal(teacherOwnsRecord({ teacherId: "faculty-1" }, teacher), true);
+  assert.equal(teacherOwnsRecord({ instructorId: "account-1" }, teacher), true);
+  assert.equal(teacherOwnsRecord({ teacherId: "faculty-2" }, teacher), false);
+  assert.equal(teacherOwnsRecord({ classId: "class-1" }, teacher), false);
 });

@@ -14,6 +14,7 @@ import {
   selectAssignedTeacherClasses,
   selectTeacherIdentity,
   studentsForClass,
+  teacherOwnsRecord,
 } from "./teacherScope";
 import TeacherConfirmDialog from "./TeacherConfirmDialog";
 import TeacherPagination from "./TeacherPagination";
@@ -86,8 +87,8 @@ export default function TeacherAssignments() {
   const teacherId = teacher?.id || "";
   const teacherName = teacher?.name || "";
   const classIds = new Set(classes.map((row) => row.id || row._id));
-  const scopedAssignments = assignments.filter((row) =>
-    classIds.has(row.classId),
+  const scopedAssignments = assignments.filter(
+    (row) => classIds.has(row.classId) && teacherOwnsRecord(row, teacher),
   );
   const requestedSubmissionId = params.get("submissionId");
   const requestedSubmission = requestedSubmissionId
@@ -111,14 +112,15 @@ export default function TeacherAssignments() {
       row.assignmentId === selected?.id &&
       authorizedStudentIds.has(row.studentId),
   );
-  useEffect(() => {
-    if (
-      requestedSubmission &&
+  const requestedSubmissionAuthorized = Boolean(
+    requestedSubmission &&
       selected?.id === requestedSubmission.assignmentId &&
-      authorizedStudentIds.has(requestedSubmission.studentId)
-    )
+      authorizedStudentIds.has(requestedSubmission.studentId),
+  );
+  useEffect(() => {
+    if (requestedSubmissionAuthorized)
       setGrading({ submission: requestedSubmission, assignment: selected });
-  }, [requestedSubmission?.id, selected?.id]);
+  }, [requestedSubmissionAuthorized, requestedSubmission, selected]);
   const visible = selectedSubmissions.filter((row) => {
     const student = students.find(
       (item) => (item.id || item._id) === row.studentId,
@@ -139,25 +141,20 @@ export default function TeacherAssignments() {
   const selectedAssignmentIndex = scopedAssignments.findIndex(
     (row) => row.id === selected?.id,
   );
+  const requestedAssignmentPage =
+    requestedAssignmentId && selectedAssignmentIndex >= 0
+      ? Math.floor(selectedAssignmentIndex / pageSize) + 1
+      : null;
+  const currentAssignmentPage =
+    requestedAssignmentPage || Math.min(assignmentPage, assignmentPageCount);
+  const currentSubmissionPage = Math.min(submissionPage, submissionPageCount);
   const visibleAssignments = scopedAssignments.slice(
-    (assignmentPage - 1) * pageSize,
-    assignmentPage * pageSize,
+    (currentAssignmentPage - 1) * pageSize,
+    currentAssignmentPage * pageSize,
   );
   const visibleSubmissions = visible.slice(
-    (submissionPage - 1) * pageSize,
-    submissionPage * pageSize,
-  );
-  useEffect(
-    () => setAssignmentPage((page) => Math.min(page, assignmentPageCount)),
-    [assignmentPageCount],
-  );
-  useEffect(() => {
-    if (selectedAssignmentIndex >= 0)
-      setAssignmentPage(Math.floor(selectedAssignmentIndex / pageSize) + 1);
-  }, [selectedAssignmentIndex]);
-  useEffect(
-    () => setSubmissionPage((page) => Math.min(page, submissionPageCount)),
-    [submissionPageCount],
+    (currentSubmissionPage - 1) * pageSize,
+    currentSubmissionPage * pageSize,
   );
   const assignmentFor = (row) => {
     const cls = classes.find((item) => (item.id || item._id) === row.classId);
@@ -233,7 +230,7 @@ export default function TeacherAssignments() {
     if (
       editing?.id &&
       !scopedAssignments.some(
-        (row) => row.id === editing.id && row.teacherId === teacherId,
+        (row) => row.id === editing.id && teacherOwnsRecord(row, teacher),
       )
     )
       return toast.error("This assignment is no longer available for editing.");
@@ -321,7 +318,7 @@ export default function TeacherAssignments() {
                   {gradedCount(assignment)} Graded)
                 </em>
               </footer>
-              {assignment.teacherId === teacherId && (
+              {teacherOwnsRecord(assignment, teacher) && (
                 <span className="teacher-assignment-card-actions">
                   <Button
                     type="button"
@@ -386,7 +383,7 @@ export default function TeacherAssignments() {
       )}
       {scopedAssignments.length > 0 && (
         <TeacherPagination
-          page={assignmentPage}
+          page={currentAssignmentPage}
           pageCount={assignmentPageCount}
           onPageChange={setAssignmentPage}
           label="Assignment pages"
@@ -550,12 +547,12 @@ export default function TeacherAssignments() {
           <footer className="teacher-assignments-footer">
             Showing{" "}
             {visibleSubmissions.length
-              ? (submissionPage - 1) * pageSize + 1
+              ? (currentSubmissionPage - 1) * pageSize + 1
               : 0}
-            –{Math.min(submissionPage * pageSize, visible.length)} of{" "}
+            –{Math.min(currentSubmissionPage * pageSize, visible.length)} of{" "}
             {visible.length} matching records
             <TeacherPagination
-              page={submissionPage}
+              page={currentSubmissionPage}
               pageCount={submissionPageCount}
               onPageChange={setSubmissionPage}
               label="Submission pages"
@@ -753,7 +750,8 @@ export default function TeacherAssignments() {
         confirmText="Delete Assignment"
         onConfirm={() => {
           const current = scopedAssignments.find(
-            (row) => row.id === deleteTarget?.id && row.teacherId === teacherId,
+            (row) =>
+              row.id === deleteTarget?.id && teacherOwnsRecord(row, teacher),
           );
           if (current) dispatch(assignmentDeleted(current.id));
           else

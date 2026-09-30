@@ -90,8 +90,11 @@ export default function TeacherAttendance() {
   );
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
-  const rows = filteredStudents.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => setPage((current) => Math.min(current, pageCount)), [pageCount]);
+  const currentPage = Math.min(page, pageCount);
+  const rows = filteredStudents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
   const counts = filteredStudents.reduce(
     (acc, student) => {
       const status = statusFor(student);
@@ -309,8 +312,8 @@ export default function TeacherAttendance() {
           )}
         </div>
         <footer className="teacher-attendance-footer">
-          <span>Showing {filteredStudents.length ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filteredStudents.length)} of {filteredStudents.length} matching records</span>
-          <TeacherPagination page={page} pageCount={pageCount} onPageChange={setPage} label="Attendance pages" />
+          <span>Showing {filteredStudents.length ? (currentPage - 1) * pageSize + 1 : 0}–{Math.min(currentPage * pageSize, filteredStudents.length)} of {filteredStudents.length} matching records</span>
+          <TeacherPagination page={currentPage} pageCount={pageCount} onPageChange={setPage} label="Attendance pages" />
         </footer>
       </section>
     </main>

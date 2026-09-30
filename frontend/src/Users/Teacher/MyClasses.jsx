@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { ClipboardCheck, Clock3, FileText, MoreVertical, Search } from "lucide-react";
@@ -83,10 +83,11 @@ export default function MyClasses() {
     );
   });
   const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
-  const rows = visible.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => {
-    setPage((current) => Math.min(current, pageCount));
-  }, [pageCount]);
+  const currentPage = Math.min(page, pageCount);
+  const rows = visible.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
   const resetPage = (setter) => (event) => {
     setter(event.target.value);
     setPage(1);
@@ -268,12 +269,12 @@ export default function MyClasses() {
           {/* 3. Footer Pagination */}
           <footer className="teacher-classes-footer">
             <span>
-              Showing <strong>{visible.length ? (page - 1) * pageSize + 1 : 0}–
-              {Math.min(page * pageSize, visible.length)}</strong> of <strong>{visible.length}</strong>{" "}
+              Showing <strong>{visible.length ? (currentPage - 1) * pageSize + 1 : 0}–
+              {Math.min(currentPage * pageSize, visible.length)}</strong> of <strong>{visible.length}</strong>{" "}
               records
             </span>
             <div className="campus-pagination">
-              <TeacherPagination page={page} pageCount={pageCount} onPageChange={setPage} label="Class pages" />
+              <TeacherPagination page={currentPage} pageCount={pageCount} onPageChange={setPage} label="Class pages" />
             </div>
           </footer>
         </section>
