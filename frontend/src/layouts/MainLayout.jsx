@@ -5,16 +5,16 @@ import { loggedOut, selectCurrentUser } from '../store/Slices/authSlice';
 import { ROLE_LABELS } from '../auth/roles';
 import Sidebar from "../components/common/Sidebar";
 import Header from "../components/common/Header";
-import { CAMPUS_ADMIN_NAV, getCampusAdminNav } from "../constants/navigation";
+import { ADMIN_NAV, CAMPUS_ADMIN_NAV, getCampusAdminNav } from "../constants/navigation";
 import { useInstitution } from "@/context/InstitutionContext";
 
 const MainLayout = ({ navigation, className = '', profile: suppliedProfile, headerProps = {} }) => {
   const { isSchool } = useInstitution();
-  const effectiveNavigation = navigation || getCampusAdminNav(isSchool);
-
   const dispatch = useDispatch(), navigate = useNavigate();
   const location = useLocation();
   const user = useSelector(selectCurrentUser);
+  const isSuperAdmin = user?.role === 'super_admin';
+  const effectiveNavigation = navigation || (isSuperAdmin ? ADMIN_NAV : getCampusAdminNav(isSchool));
   const userName = user?.name || "Campus Admin";
   const userInitials = userName.trim().slice(0, 2).toUpperCase() || "CA";
   const userRole = user?.role ? (ROLE_LABELS[user.role] || user.role) : "Admin";
@@ -29,7 +29,6 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
     window.matchMedia('(max-width: 768px)').matches
   );
 
-  const isSuperAdmin = user?.role === 'super_admin';
   const isFlushPage = true; // Unified edge-to-edge flush layout for all campus admin tabs
 
   useEffect(() => {

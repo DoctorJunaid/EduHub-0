@@ -39,7 +39,7 @@ export const ADMIN_NAV = [
   },
   {
     label: "Help & Support",
-    path: "/support/manage",
+    path: "/super-admin/support",
     icon: <LifeBuoy size={20} />,
   },
 ];

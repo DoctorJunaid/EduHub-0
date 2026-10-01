@@ -156,7 +156,15 @@ export const SupportList = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/support/manage")}
+                  onClick={() =>
+                    navigate(
+                      role === "super_admin"
+                        ? "/super-admin/support"
+                        : role === "institute_admin"
+                        ? "/institute-admin/support"
+                        : "/support/manage"
+                    )
+                  }
                   className="h-10 rounded-lg border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs sm:text-sm font-medium"
                 >
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
