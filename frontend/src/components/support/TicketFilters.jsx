@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, X, Plus } from "lucide-react";
+import { Search, X, Plus, Layers } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -7,6 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  CANONICAL_SUPPORT_CATEGORIES,
+  getCategoryIcon,
+} from "./supportCategories";
 
 export const TicketFilters = ({
   filters = {},
@@ -22,6 +26,11 @@ export const TicketFilters = ({
       (filters.status && filters.status !== "all") ||
       (filters.priority && filters.priority !== "all")
   );
+
+  const categoryList =
+    categories && categories.length > 0
+      ? categories
+      : CANONICAL_SUPPORT_CATEGORIES;
 
   return (
     <div className="isu-toolbar">
@@ -51,13 +60,31 @@ export const TicketFilters = ({
           <SelectTrigger className="isu-select-trigger">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl">
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id || c} value={c.id || c}>
-                {c.icon ? `${c.icon} ` : ""}{c.label || c}
-              </SelectItem>
-            ))}
+          <SelectContent
+            position="popper"
+            sideOffset={6}
+            align="start"
+            className="isu-select-content category-content"
+          >
+            <SelectItem value="all" className="isu-select-item">
+              <Layers className="w-4 h-4 text-zinc-500 shrink-0" />
+              <span>All Categories</span>
+            </SelectItem>
+            {categoryList.map((c) => {
+              const catId = c.id || c;
+              const catLabel = c.label || c;
+              const CatIcon = getCategoryIcon(catId);
+              return (
+                <SelectItem
+                  key={catId}
+                  value={catId}
+                  className="isu-select-item"
+                >
+                  <CatIcon className="w-4 h-4 text-zinc-500 shrink-0" />
+                  <span className="truncate">{catLabel}</span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
 
@@ -71,14 +98,40 @@ export const TicketFilters = ({
               <SelectTrigger className="isu-select-trigger">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Open">Open</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Resolved">Resolved</SelectItem>
-                <SelectItem value="Closed">Closed</SelectItem>
-                <SelectItem value="Escalated">Escalated</SelectItem>
-                <SelectItem value="Overdue">Overdue SLA</SelectItem>
+              <SelectContent
+                position="popper"
+                sideOffset={6}
+                align="start"
+                className="isu-select-content status-content"
+              >
+                <SelectItem value="all" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-zinc-300 shrink-0" />
+                  <span>All Statuses</span>
+                </SelectItem>
+                <SelectItem value="Open" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  <span>Open</span>
+                </SelectItem>
+                <SelectItem value="In Progress" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <span>In Progress</span>
+                </SelectItem>
+                <SelectItem value="Resolved" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>Resolved</span>
+                </SelectItem>
+                <SelectItem value="Closed" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-zinc-400 shrink-0" />
+                  <span>Closed</span>
+                </SelectItem>
+                <SelectItem value="Escalated" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                  <span>Escalated</span>
+                </SelectItem>
+                <SelectItem value="Overdue" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                  <span>Overdue SLA</span>
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -89,12 +142,32 @@ export const TicketFilters = ({
               <SelectTrigger className="isu-select-trigger">
                 <SelectValue placeholder="All Priorities" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="Urgent">Urgent</SelectItem>
-                <SelectItem value="High">High</SelectItem>
-                <SelectItem value="Medium">Medium</SelectItem>
-                <SelectItem value="Low">Low</SelectItem>
+              <SelectContent
+                position="popper"
+                sideOffset={6}
+                align="start"
+                className="isu-select-content priority-content"
+              >
+                <SelectItem value="all" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-zinc-300 shrink-0" />
+                  <span>All Priorities</span>
+                </SelectItem>
+                <SelectItem value="Urgent" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                  <span>Urgent</span>
+                </SelectItem>
+                <SelectItem value="High" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                  <span>High</span>
+                </SelectItem>
+                <SelectItem value="Medium" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <span>Medium</span>
+                </SelectItem>
+                <SelectItem value="Low" className="isu-select-item">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  <span>Low</span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </>

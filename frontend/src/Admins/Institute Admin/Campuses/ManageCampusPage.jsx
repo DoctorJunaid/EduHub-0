@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/Card";
 import {
   selectInstituteCampuses,
   fetchCampuses,
@@ -60,57 +62,67 @@ export default function ManageCampusPage() {
     navigate("/institute-admin/campuses");
   };
 
-  return (
-    <div className="manage-campus-page">
-      <div className="manage-page-header">
-        <button
-          className="manage-page-back-btn"
-          onClick={handleCancel}
-          title="Back to Campuses"
-        >
-          <ArrowLeft size={18} />
-          <span>Back to Campuses</span>
-        </button>
+  const newCampusBackAction = (
+    <Button
+      className="manage-page-back-btn"
+      onClick={handleCancel}
+      type="button"
+      variant="ghost"
+      size="sm"
+      title="Back to Campuses"
+    >
+      <ArrowLeft aria-hidden="true" />
+      <span>Back to Campuses</span>
+    </Button>
+  );
 
-        <div className="manage-page-breadcrumbs">
-          <span
-            className="breadcrumb-link"
-            onClick={() => navigate("/institute-admin")}
-          >
-            Dashboard
-          </span>
-          <span className="breadcrumb-sep">&gt;</span>
-          <span
-            className="breadcrumb-link"
+  const pageContent = (
+    <div className="manage-page-main">
+      {!isNew && !existingCampus && campuses.length > 0 ? (
+        <div className="campus-not-found">
+          <p>Campus not found.</p>
+          <button
+            type="button"
+            className="manage-page-back-btn"
             onClick={handleCancel}
           >
-            Campuses
-          </span>
-          <span className="breadcrumb-sep">&gt;</span>
-          <span className="breadcrumb-current">
-            {isNew ? "Add Campus" : "Edit Campus"}
-          </span>
+            Return to Campuses
+          </button>
         </div>
-      </div>
+      ) : (
+        <CampusForm
+          key={isNew ? `new-${formKey}` : id}
+          campus={existingCampus}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          loading={loading}
+          headerAction={isNew ? newCampusBackAction : null}
+        />
+      )}
+    </div>
+  );
 
-      <div className="manage-page-content">
-        <div className="manage-page-main">
-          {!isNew && !existingCampus && campuses.length > 0 ? (
-            <div style={{ textAlign: "center", padding: "40px" }}>
-              <p>Campus not found.</p>
-              <button onClick={handleCancel} style={{ marginTop: "16px", padding: "8px 16px", borderRadius: "6px", border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>Return to Campuses</button>
-            </div>
-          ) : (
-            <CampusForm 
-              key={isNew ? `new-${formKey}` : id}
-              campus={existingCampus} 
-              onSave={handleSave} 
-              onCancel={handleCancel} 
-              loading={loading}
-            />
-          )}
+  return (
+    <div className="manage-campus-page">
+      {!isNew && (
+        <div className="manage-page-topbar">
+          <button
+            className="manage-page-back-btn"
+            onClick={handleCancel}
+            type="button"
+            title="Back to Campuses"
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Campuses</span>
+          </button>
         </div>
-      </div>
+      )}
+
+      {isNew ? (
+        <Card className="manage-page-content manage-page-content--new">{pageContent}</Card>
+      ) : (
+        <div className="manage-page-content">{pageContent}</div>
+      )}
     </div>
   );
 }
