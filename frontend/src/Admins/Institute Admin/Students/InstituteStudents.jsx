@@ -18,7 +18,7 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import DataPagination from "@/components/shared/DataPagination";
 import PageLoader from "@/components/shared/PageLoader";
 import StudentForm from "../../Campus Admin/Students/StudentForm";
-import StudentProfileDialog from "../../Campus Admin/Students/StudentProfileDialog";
+import InstituteStudentProfile from "./InstituteStudentProfile";
 import StudentStatusBadge from "../../Campus Admin/Students/StudentStatusBadge";
 import { studentPrograms } from "../../Campus Admin/Students/studentData";
 import {
@@ -393,7 +393,7 @@ export default function InstituteStudents() {
       )}
 
       {modal?.type === "view" && selected && (
-        <StudentProfileDialog
+        <InstituteStudentProfile
           student={selected}
           onClose={() => setModal(null)}
         />
