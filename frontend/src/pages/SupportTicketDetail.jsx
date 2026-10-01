@@ -22,15 +22,18 @@ import AssignDialog from "@/components/support/AssignDialog";
 import CloseTicketDialog from "@/components/support/CloseTicketDialog";
 import RatingDialog from "@/components/support/RatingDialog";
 import { getSupportBasePath } from "@/utils/supportRouting";
+import "./SupportTicketDetail.css";
 
 export const SupportTicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const auth = useSelector(selectAuth);
   const currentUser = auth?.user;
-  const currentUserId = currentUser?._id;
+  const currentUserId = currentUser?._id || currentUser?.id;
   const role = currentUser?.role || "student";
-  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(role);
+  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(
+    role,
+  );
 
   // Modals state
   const [isAssignOpen, setIsAssignOpen] = useState(false);
@@ -51,7 +54,9 @@ export const SupportTicketDetail = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
         <Spinner className="w-8 h-8 text-primary" />
-        <p className="text-xs text-muted-foreground mt-3">Loading conversation...</p>
+        <p className="text-xs text-muted-foreground mt-3">
+          Loading conversation...
+        </p>
       </div>
     );
   }
@@ -59,9 +64,12 @@ export const SupportTicketDetail = () => {
   if (error || !data?.ticket) {
     return (
       <div className="max-w-xl mx-auto p-12 text-center space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Conversation Not Found</h2>
+        <h2 className="text-xl font-bold text-foreground">
+          Conversation Not Found
+        </h2>
         <p className="text-sm text-muted-foreground">
-          {error?.response?.data?.message || "This conversation may have been removed or you lack permission to view it."}
+          {error?.response?.data?.message ||
+            "This conversation may have been removed or you lack permission to view it."}
         </p>
         <button
           onClick={() => navigate(getSupportBasePath(role))}
@@ -74,10 +82,18 @@ export const SupportTicketDetail = () => {
   }
 
   const { ticket, messages = [] } = data;
-  const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(currentUserId);
+  const isCreator =
+    String(ticket.createdBy?._id || ticket.createdBy) === String(currentUserId);
   const isClosed = ticket.status === "Closed" || ticket.status === "Cancelled";
-  const canSolve = isCreator && !isClosed && (ticket.status === "Resolved" || ticket.status === "In Progress");
-  const canRate = isCreator && isClosed && (ticket.satisfactionRating === null || ticket.satisfactionRating === undefined);
+  const canSolve =
+    isCreator &&
+    !isClosed &&
+    (ticket.status === "Resolved" || ticket.status === "In Progress");
+  const canRate =
+    isCreator &&
+    isClosed &&
+    (ticket.satisfactionRating === null ||
+      ticket.satisfactionRating === undefined);
 
   const handleSendReply = async (payload) => {
     await replyMutation.mutateAsync({ ticketId: ticket._id, payload });
@@ -91,24 +107,19 @@ export const SupportTicketDetail = () => {
   };
 
   return (
-    <div
-      style={{
-        margin: "7px",
-        width: "calc(100% - 14px)",
-        height: "calc(100vh - 74px)",
-      }}
-      className="flex flex-col bg-white border border-[#e4e4e7] rounded-[10px] overflow-hidden shadow-xs box-border"
-    >
+    <section className={`support-ticket-detail support-ticket-detail--${role}`}>
       {/* 1. Header (Sticky at top, px-6 py-4, with status badge) */}
       <TicketDetailHeader ticket={ticket} isAdmin={isAdmin} />
 
       {/* 2. Main Content Body */}
-      <div className="flex-1 flex overflow-hidden w-full">
+      <div
+        className={`support-ticket-workspace${isAdmin ? " support-ticket-workspace--admin" : ""}`}
+      >
         {/* Chat thread + Reply box column */}
-        <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-background">
+        <main className="support-ticket-conversation">
           {/* Rating prompt banner for closed tickets */}
           {canRate && (
-            <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between text-xs shrink-0">
+            <div className="support-ticket-rating-prompt">
               <span className="font-medium text-amber-800 dark:text-amber-200">
                 ⭐ How was your support experience?
               </span>
@@ -139,18 +150,24 @@ export const SupportTicketDetail = () => {
             onSolve={() => setIsCloseOpen(true)}
             isSolving={closeMutation.isPending}
           />
-        </div>
+        </main>
 
         {/* Right Sidebar for Admins only */}
         {isAdmin && (
-          <aside className="w-80 lg:w-96 border-l border-border bg-card/40 overflow-y-auto p-5 shrink-0 hidden md:block">
+          <aside
+            className="support-ticket-sidebar"
+            aria-label="Ticket details and controls"
+          >
             <TicketSidebar
               ticket={ticket}
               onOpenAssign={() => setIsAssignOpen(true)}
               onOpenEscalate={() => setIsEscalateOpen(true)}
               onOpenClose={() => setIsCloseOpen(true)}
               onChangeStatus={(status) =>
-                changeStatusMutation.mutateAsync({ ticketId: ticket._id, status })
+                changeStatusMutation.mutateAsync({
+                  ticketId: ticket._id,
+                  status,
+                })
               }
               isUpdatingStatus={changeStatusMutation.isPending}
             />
@@ -195,7 +212,7 @@ export const SupportTicketDetail = () => {
         onConfirm={(params) => rateMutation.mutateAsync(params)}
         isPending={rateMutation.isPending}
       />
-    </div>
+    </section>
   );
 };
 

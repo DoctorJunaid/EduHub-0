@@ -18,10 +18,12 @@ export default function ManageCampusPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   const isNew = !id || id === "new";
   const campuses = useSelector(selectInstituteCampuses) || [];
-  const existingCampus = campuses.find((campus) => String(campus.id) === String(id));
+  const existingCampus = campuses.find(
+    (campus) => String(campus.id) === String(id),
+  );
   const [loading, setLoading] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
@@ -62,7 +64,7 @@ export default function ManageCampusPage() {
     navigate("/institute-admin/campuses");
   };
 
-  const newCampusBackAction = (
+  const campusBackAction = (
     <Button
       className="manage-page-back-btn"
       onClick={handleCancel}
@@ -91,12 +93,18 @@ export default function ManageCampusPage() {
         </div>
       ) : (
         <CampusForm
-          key={isNew ? `new-${formKey}` : id}
+          key={
+            isNew
+              ? `new-${formKey}`
+              : existingCampus
+                ? `edit-${id}`
+                : `loading-${id}`
+          }
           campus={existingCampus}
           onSave={handleSave}
           onCancel={handleCancel}
           loading={loading}
-          headerAction={isNew ? newCampusBackAction : null}
+          headerAction={campusBackAction}
         />
       )}
     </div>
@@ -104,24 +112,14 @@ export default function ManageCampusPage() {
 
   return (
     <div className="manage-campus-page">
-      {!isNew && (
-        <div className="manage-page-topbar">
-          <button
-            className="manage-page-back-btn"
-            onClick={handleCancel}
-            type="button"
-            title="Back to Campuses"
-          >
-            <ArrowLeft size={16} />
-            <span>Back to Campuses</span>
-          </button>
-        </div>
-      )}
-
       {isNew ? (
-        <Card className="manage-page-content manage-page-content--new">{pageContent}</Card>
+        <Card className="manage-page-content manage-page-content--new">
+          {pageContent}
+        </Card>
       ) : (
-        <div className="manage-page-content">{pageContent}</div>
+        <div className="manage-page-content manage-page-content--edit">
+          {pageContent}
+        </div>
       )}
     </div>
   );

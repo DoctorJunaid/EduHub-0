@@ -124,12 +124,14 @@ export default function InstituteStudents() {
       [
         ...studentPrograms,
         ...studentsList.map((student) => student.program),
-      ].filter(Boolean)
+      ].filter(Boolean),
     ),
   ];
 
   const save = async (values) => {
-    const campus = campuses.find((record) => record.id === values.campus);
+    const campus = campuses.find(
+      (record) => record.id === values.campus || record.name === values.campus,
+    );
     if (!campus) {
       toast.error("Select an available campus before saving.");
       return;
@@ -144,11 +146,13 @@ export default function InstituteStudents() {
         toast.success("Student updated successfully.");
       } else {
         await axiosInstance.post("/institute-admin/students", {
+          ...values,
           name: values.name,
           email: values.email,
           password: values.password || "Student@123",
+          campus: undefined,
           campusId: campus.id,
-          phone: values.phone || "",
+          phone: values.studentPhone || values.phone || "",
         });
         toast.success("Student enrolled successfully.");
       }
@@ -170,7 +174,11 @@ export default function InstituteStudents() {
         <div className="isd-toolbar">
           <div className="isd-toolbar-left">
             <div className="isd-search-input-wrapper">
-              <Search size={16} className="isd-search-icon" aria-hidden="true" />
+              <Search
+                size={16}
+                className="isd-search-icon"
+                aria-hidden="true"
+              />
               <Input
                 type="search"
                 aria-label="Search students"
@@ -403,14 +411,14 @@ export default function InstituteStudents() {
           if (selected) {
             try {
               await axiosInstance.delete(
-                `/institute-admin/students/${selected.id}`
+                `/institute-admin/students/${selected.id}`,
               );
               setLoading(true);
               await loadStudents();
               toast.success("Student deleted successfully.");
             } catch (err) {
               toast.error(
-                err.response?.data?.message || "Failed to delete student."
+                err.response?.data?.message || "Failed to delete student.",
               );
             }
           }

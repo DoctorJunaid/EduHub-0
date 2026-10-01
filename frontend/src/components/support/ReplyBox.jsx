@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Send, Paperclip, X, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Send, Paperclip, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Spinner from "@/components/ui/spinner";
@@ -50,7 +50,11 @@ export const ReplyBox = ({
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    if ((!message.trim() && attachments.length === 0) || isSending || isClosed) {
+    if (
+      (!message.trim() && attachments.length === 0) ||
+      isSending ||
+      isClosed
+    ) {
       return;
     }
 
@@ -77,7 +81,7 @@ export const ReplyBox = ({
 
   if (isClosed) {
     return (
-      <div className="border-t bg-muted/40 px-6 py-4 text-center">
+      <div className="ticket-reply-box ticket-reply-box--closed">
         <p className="text-xs font-medium text-muted-foreground flex items-center justify-center gap-1.5">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span>This conversation is resolved and closed.</span>
@@ -87,23 +91,28 @@ export const ReplyBox = ({
   }
 
   return (
-    <div className="border-t bg-background px-6 py-4 space-y-3">
+    <div
+      className={`ticket-reply-box${isInternal ? " ticket-reply-box--internal" : ""}`}
+    >
       {/* Top row: solve button or internal note indicator if applicable */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="ticket-reply-box__options">
         {/* Internal note checkbox for staff */}
         {isAdmin ? (
-          <label className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none">
+          <label className="ticket-reply-box__internal-note">
             <input
               type="checkbox"
               checked={isInternal}
               onChange={(e) => setIsInternal(e.target.checked)}
               className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
             />
-            <span className={isInternal ? "font-semibold text-amber-600 dark:text-amber-400" : ""}>
-              Internal Note (staff only)
+            <span>
+              <strong>Internal note</strong>
+              <small>Visible to staff only</small>
             </span>
           </label>
-        ) : <div />}
+        ) : (
+          <div />
+        )}
 
         {/* Solve button for creators */}
         {canSolve && onSolve && (
@@ -149,8 +158,8 @@ export const ReplyBox = ({
       )}
 
       {/* Main input flex row */}
-      <form onSubmit={handleSubmit} className="flex flex-col">
-        <div className="flex items-end gap-3">
+      <form onSubmit={handleSubmit} className="ticket-reply-box__form">
+        <div className="ticket-reply-box__compose">
           {/* Hidden File Input */}
           <input
             type="file"
@@ -167,6 +176,7 @@ export const ReplyBox = ({
             onClick={() => fileInputRef.current?.click()}
             className="h-10 w-10 rounded-full border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
             title="Attach files (max 3 files, 5MB each)"
+            aria-label="Attach files"
           >
             <Paperclip className="w-4 h-4" />
           </button>
@@ -192,13 +202,16 @@ export const ReplyBox = ({
           {/* Send Button (Circular 40x40 primary button) */}
           <button
             type="submit"
-            disabled={(!message.trim() && attachments.length === 0) || isSending}
+            disabled={
+              (!message.trim() && attachments.length === 0) || isSending
+            }
             className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${
               isInternal
                 ? "bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50"
                 : "bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
             }`}
             title="Send message"
+            aria-label="Send message"
           >
             {isSending ? (
               <Spinner className="w-4 h-4 text-current" />

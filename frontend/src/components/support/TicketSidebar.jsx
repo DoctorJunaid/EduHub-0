@@ -1,21 +1,22 @@
 import React from "react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import {
-  User,
   Clock,
   AlertTriangle,
   ArrowUpCircle,
   CheckCircle2,
-  Calendar,
-  Building2,
-  Tag,
-  ShieldAlert,
   UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TicketPriorityBadge } from "./TicketPriorityBadge";
-import { TicketCategoryBadge } from "./TicketCategoryBadge";
 import Spinner from "@/components/ui/spinner";
 
 export const TicketSidebar = ({
@@ -30,13 +31,13 @@ export const TicketSidebar = ({
   const escalationLevel = ticket.escalationLevel || 1;
 
   return (
-    <div className="space-y-4 text-sm">
+    <div className="ticket-sidebar-content">
       {/* SLA Timer Card */}
-      <Card className="border-border/80 shadow-xs">
+      <Card className="ticket-sidebar-card ticket-sidebar-card--sla">
         <CardContent className="p-4 space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-4 h-4" />
               <span>SLA Target</span>
             </span>
             <TicketPriorityBadge priority={ticket.priority} showSla={true} />
@@ -57,7 +58,9 @@ export const TicketSidebar = ({
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs">
                 <span>Time Remaining:</span>
                 <span className="font-bold">
-                  {ticket.slaRemainingHours ? `${Math.round(ticket.slaRemainingHours)} hours` : "Within SLA"}
+                  {ticket.slaRemainingHours
+                    ? `${Math.round(ticket.slaRemainingHours)} hours`
+                    : "Within SLA"}
                 </span>
               </div>
             )}
@@ -66,7 +69,7 @@ export const TicketSidebar = ({
       </Card>
 
       {/* Ticket Controls & Metadata Card */}
-      <Card className="border-border/80 shadow-xs">
+      <Card className="ticket-sidebar-card ticket-sidebar-card--controls">
         <CardContent className="p-4 space-y-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Ticket Controls
@@ -74,23 +77,29 @@ export const TicketSidebar = ({
 
           {/* Status Changer */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Status</label>
-            <div className="relative">
-              <select
+            <label htmlFor="ticket-status" className="text-xs font-medium text-foreground">
+              Status
+            </label>
+            <div className="ticket-sidebar-status-control">
+              <Select
                 value={ticket.status || "Open"}
                 disabled={isUpdatingStatus || isClosed}
-                onChange={(e) => onChangeStatus && onChangeStatus(e.target.value)}
-                className="w-full h-9 px-3 rounded-xl border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+                onValueChange={(status) => onChangeStatus && onChangeStatus(status)}
               >
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Closed">Closed</option>
-                <option value="Escalated">Escalated</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
+                <SelectTrigger id="ticket-status" className="ticket-sidebar-status-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" align="start" className="ticket-sidebar-status-options">
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                  <SelectItem value="Closed">Closed</SelectItem>
+                  <SelectItem value="Escalated">Escalated</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
               {isUpdatingStatus && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="ticket-sidebar-status-spinner" aria-label="Updating status">
                   <Spinner className="w-3.5 h-3.5" />
                 </div>
               )}
@@ -100,25 +109,29 @@ export const TicketSidebar = ({
           {/* Assignee Box & Button */}
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-foreground">Assigned Staff</label>
+              <label className="text-xs font-medium text-foreground">
+                Assigned Staff
+              </label>
               {!isClosed && onOpenAssign && (
                 <button
                   type="button"
                   onClick={onOpenAssign}
-                  className="text-xs text-primary hover:underline font-medium"
+                  className="ticket-sidebar-change"
                 >
                   Change
                 </button>
               )}
             </div>
             <div className="p-2.5 rounded-xl bg-muted/50 border border-border flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="ticket-sidebar-assignee-avatar" aria-hidden="true">
+                <UserCheck className="w-4 h-4" />
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-foreground truncate">
                   {ticket.assignedToSnapshot?.name || "Unassigned"}
                 </p>
                 <p className="text-[10px] text-muted-foreground capitalize">
-                  {ticket.assignedToSnapshot?.role || "Support Staff"}
+                  {(ticket.assignedToSnapshot?.role || "Support Staff").replaceAll("_", " ")}
                 </p>
               </div>
             </div>
@@ -135,7 +148,9 @@ export const TicketSidebar = ({
                   className="w-full justify-center gap-1.5 h-9 rounded-xl text-xs font-medium border-amber-500/30 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
                 >
                   <ArrowUpCircle className="w-4 h-4" />
-                  <span>Escalate (Level {escalationLevel} → {escalationLevel + 1})</span>
+                  <span>
+                    Escalate (Level {escalationLevel} → {escalationLevel + 1})
+                  </span>
                 </Button>
               )}
 
@@ -156,7 +171,7 @@ export const TicketSidebar = ({
       </Card>
 
       {/* Creator Info Card */}
-      <Card className="border-border/80 shadow-xs">
+      <Card className="ticket-sidebar-card ticket-sidebar-card--requester">
         <CardContent className="p-4 space-y-3">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Requester Details
@@ -181,7 +196,7 @@ export const TicketSidebar = ({
       </Card>
 
       {/* Timeline Card */}
-      <Card className="border-border/80 shadow-xs">
+      <Card className="ticket-sidebar-card ticket-sidebar-card--timeline">
         <CardContent className="p-4 space-y-3">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Timeline
@@ -190,13 +205,17 @@ export const TicketSidebar = ({
             <div className="flex items-center justify-between text-muted-foreground">
               <span>Created:</span>
               <span className="font-medium text-foreground">
-                {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy h:mm a") : "—"}
+                {ticket.createdAt
+                  ? format(new Date(ticket.createdAt), "MMM d, yyyy h:mm a")
+                  : "—"}
               </span>
             </div>
             <div className="flex items-center justify-between text-muted-foreground">
               <span>First Response:</span>
               <span className="font-medium text-foreground">
-                {ticket.firstResponseAt ? format(new Date(ticket.firstResponseAt), "MMM d, h:mm a") : "Pending"}
+                {ticket.firstResponseAt
+                  ? format(new Date(ticket.firstResponseAt), "MMM d, h:mm a")
+                  : "Pending"}
               </span>
             </div>
             {ticket.resolvedAt && (
