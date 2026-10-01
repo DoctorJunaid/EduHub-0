@@ -399,3 +399,228 @@
     padding: 10px 14px;
   }
 }
+
+/* Institute Admin appointment form composition. The add-state class keeps these
+   overrides local to this page and leaves the shared Campus Admin form untouched. */
+.institute-staff-directory.is-appointing-teacher
+  .full-page-activity.faculty-form-page {
+  overflow-x: hidden;
+  padding: 32px 32px 64px;
+  background: #fafafa;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-container {
+  width: 100%;
+  max-width: 1160px !important;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-header {
+  display: block;
+  margin: 0;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-breadcrumbs {
+  display: none;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-back-btn {
+  display: inline-flex;
+  width: auto;
+  height: 36px;
+  margin: 0 0 16px;
+  padding: 0 10px 0 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #3f3f46;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-back-btn:hover {
+  border-color: #e4e4e7;
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-back-btn:focus-visible {
+  outline: 2px solid #18181b;
+  outline-offset: 2px;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-icon-box {
+  display: none;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-title {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-desc {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-content-card {
+  padding: 28px 32px 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-form-grid {
+  column-gap: 24px;
+  row-gap: 18px;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-section-title {
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .faculty-section-divider {
+  margin: 10px 0 6px;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-form-actions {
+  margin: 30px -32px 0;
+  padding: 22px 32px;
+  border-top: 1px solid #e4e4e7;
+  background: #fafafa;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-form-actions
+  > button {
+  min-width: 120px;
+  padding-inline: 24px;
+}
+
+.institute-staff-directory.is-appointing-teacher
+  .faculty-form-page
+  .activity-form-actions
+  > button:last-child {
+  min-width: 160px;
+}
+
+@media (max-width: 900px) {
+  .institute-staff-directory.is-appointing-teacher
+    .full-page-activity.faculty-form-page {
+    padding: 24px 24px 48px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-header {
+    padding: 22px 24px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-content-card {
+    padding: 24px 24px 0;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-form-actions {
+    margin-inline: -24px;
+    padding: 20px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .institute-staff-directory.is-appointing-teacher
+    .full-page-activity.faculty-form-page {
+    padding: 16px 16px 32px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-container {
+    border-radius: 12px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-header {
+    padding: 20px 16px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-title {
+    font-size: 21px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-content-card {
+    padding: 22px 16px 0;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    margin: 26px -16px 0;
+    padding: 18px 16px;
+  }
+
+  .institute-staff-directory.is-appointing-teacher
+    .faculty-form-page
+    .activity-form-actions
+    > button {
+    width: 100%;
+  }
+}

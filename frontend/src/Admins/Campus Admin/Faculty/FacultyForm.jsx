@@ -1,8 +1,17 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { Users, School, GraduationCap } from "lucide-react";
+import { School, GraduationCap } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { facultyStatuses } from "./facultyData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -55,6 +64,7 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
   const currentUser = useSelector(selectCurrentUser);
   const realUserCampus = currentUser?.campusId?.name || currentUser?.campus;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const designations = isSchool
     ? DEFAULT_SCHOOL_DESIGNATIONS
@@ -86,10 +96,46 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
 
   const handleChange = (key, val) => {
     setValues((prev) => ({ ...prev, [key]: val }));
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: null }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!values.name?.trim()) {
+      newErrors.name = "Full teacher name is required.";
+    }
+    if (!values.email?.trim()) {
+      newErrors.email = "Email address is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    if (!values.qualification?.trim()) {
+      newErrors.qualification = "Highest qualification is required.";
+    }
+    if (!values.designation?.trim()) {
+      newErrors.designation = "Teaching role / designation is required.";
+    }
+    if (!values.department?.trim()) {
+      newErrors.department = "School wing / department is required.";
+    }
+    if (!values.campus?.trim()) {
+      newErrors.campus = "Assigned campus branch is required.";
+    }
+    if (!values.status?.trim()) {
+      newErrors.status = "Duty / employment status is required.";
+    }
+    if (!values.subjects?.trim()) {
+      newErrors.subjects = "Assigned subjects & classes are required.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const submit = async (event) => {
     event.preventDefault();
+    if (!validate()) return;
     setIsSubmitting(true);
     try {
       await onSave(
@@ -121,161 +167,234 @@ export default function FacultyForm({ teacher, options = {}, onSave, onClose }) 
       parentName={isSchool ? "Teaching Staff" : "Faculty Directory"}
       icon={isSchool ? <School size={22} /> : <GraduationCap size={22} />}
       onBack={onClose}
-      maxWidth={1600}
+      maxWidth={1040}
       className="faculty-form-page"
     >
-      <form onSubmit={submit}>
+      <form onSubmit={submit} noValidate>
         <div className="activity-form-grid">
+          {/* Section 1: Identification & Contact */}
           <div className="activity-section-title">
             {isSchool ? "Teacher Identification & Contact" : "Personal & Professional Information"}
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="faculty-name">{isSchool ? "Full Teacher Name *" : "Full Faculty Name *"}</Label>
-            <input
+            <Label htmlFor="faculty-name">
+              {isSchool ? "Full Teacher Name *" : "Full Faculty Name *"}
+            </Label>
+            <Input
               id="faculty-name"
-              required
               placeholder={isSchool ? "e.g. Ms. Ayesha Siddiqa" : "e.g. Dr. Usman Khan"}
               value={values.name}
               onChange={(e) => handleChange("name", e.target.value)}
+              aria-invalid={!!errors.name}
+              className="h-10 text-sm bg-white"
             />
+            {errors.name && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.name}
+              </p>
+            )}
           </div>
 
           <div className="activity-form-field">
             <Label htmlFor="faculty-email">Email Address *</Label>
-            <input
+            <Input
               id="faculty-email"
               type="email"
-              required
               placeholder={isSchool ? "ayesha.siddiqa@school.edu.pk" : "usman.khan@campus.edu.pk"}
               value={values.email}
               onChange={(e) => handleChange("email", e.target.value)}
+              aria-invalid={!!errors.email}
+              className="h-10 text-sm bg-white"
             />
+            {errors.email && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div className="activity-form-field">
             <Label htmlFor="faculty-phone">Contact Phone Number</Label>
-            <input
+            <Input
               id="faculty-phone"
               type="tel"
               placeholder="+92 300 1234567"
               value={values.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
+              className="h-10 text-sm bg-white"
             />
           </div>
 
           <div className="activity-form-field">
             <Label htmlFor="faculty-qualification">Highest Qualification *</Label>
-            <input
+            <Input
               id="faculty-qualification"
-              required
-              placeholder={isSchool ? "e.g. M.Sc Mathematics, B.Ed" : "e.g. Ph.D. in Computer Science"}
+              placeholder={isSchool ? "B.Ed / M.Sc Mathematics" : "M.S / Ph.D"}
               value={values.qualification}
               onChange={(e) => handleChange("qualification", e.target.value)}
+              aria-invalid={!!errors.qualification}
+              className="h-10 text-sm bg-white"
             />
+            {errors.qualification && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.qualification}
+              </p>
+            )}
           </div>
 
+          {/* Section Divider */}
+          <div className="faculty-section-divider" />
+
+          {/* Section 2: Designation & Wing Assignment */}
           <div className="activity-section-title">
             {isSchool ? "Designation & Wing Assignment" : "Department & Academic Assignment"}
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="faculty-designation">{isSchool ? "Teaching Role / Designation *" : "Designation / Title *"}</Label>
-            <select
-              id="faculty-designation"
+            <Label htmlFor="faculty-designation">
+              {isSchool ? "Teaching Role / Designation *" : "Designation / Title *"}
+            </Label>
+            <Select
               value={values.designation}
-              onChange={(e) => handleChange("designation", e.target.value)}
+              onValueChange={(val) => handleChange("designation", val)}
             >
-              {designations.map((desig) => (
-                <option key={desig} value={desig}>
-                  {desig}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="faculty-designation" className="h-10 text-sm bg-white w-full">
+                <SelectValue placeholder="Select designation" />
+              </SelectTrigger>
+              <SelectContent>
+                {designations.map((desig) => (
+                  <SelectItem key={desig} value={desig}>
+                    {desig}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.designation && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.designation}
+              </p>
+            )}
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="faculty-dept">{isSchool ? "School Wing / Department *" : "Academic Department *"}</Label>
-            <select
-              id="faculty-dept"
+            <Label htmlFor="faculty-dept">
+              {isSchool ? "School Wing / Department *" : "Academic Department *"}
+            </Label>
+            <Select
               value={values.department}
-              onChange={(e) => handleChange("department", e.target.value)}
+              onValueChange={(val) => handleChange("department", val)}
             >
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="faculty-dept" className="h-10 text-sm bg-white w-full">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.department && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.department}
+              </p>
+            )}
           </div>
 
           <div className="activity-form-field">
             <Label htmlFor="faculty-campus">Assigned Campus Branch *</Label>
-            <select
-              id="faculty-campus"
+            <Select
               value={values.campus}
-              onChange={(e) => handleChange("campus", e.target.value)}
+              onValueChange={(val) => handleChange("campus", val)}
             >
-              {campuses.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="faculty-campus" className="h-10 text-sm bg-white w-full">
+                <SelectValue placeholder="Select campus branch" />
+              </SelectTrigger>
+              <SelectContent>
+                {campuses.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.campus && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.campus}
+              </p>
+            )}
           </div>
 
           <div className="activity-form-field">
             <Label htmlFor="faculty-status">Duty / Employment Status *</Label>
-            <select
-              id="faculty-status"
+            <Select
               value={values.status}
-              onChange={(e) => handleChange("status", e.target.value)}
+              onValueChange={(val) => handleChange("status", val)}
             >
-              {facultyStatuses.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="faculty-status" className="h-10 text-sm bg-white w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                {facultyStatuses.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.status && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.status}
+              </p>
+            )}
           </div>
 
           <div className="activity-form-field span-2">
             <Label htmlFor="faculty-subjects">
               {isSchool ? "Assigned Subjects & Classes *" : "Assigned Subjects / Teaching Load *"}
             </Label>
-            <input
+            <Input
               id="faculty-subjects"
-              required
               placeholder={
                 isSchool
-                  ? "e.g. Mathematics (Grade 9-A, 10-A), General Science (Grade 8-B)"
+                  ? "e.g. Mathematics, General Science (Grade 9 & 10)"
                   : "e.g. Advanced Web Design, Operating Systems, Artificial Intelligence"
               }
               value={values.subjects}
               onChange={(e) => handleChange("subjects", e.target.value)}
+              aria-invalid={!!errors.subjects}
+              className="h-10 text-sm bg-white"
             />
+            {errors.subjects && (
+              <p className="text-xs text-rose-500 font-medium mt-0.5" role="alert">
+                {errors.subjects}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="activity-form-actions">
-          <button
+          <Button
             type="button"
-            className="activity-cancel-btn"
+            variant="outline"
             onClick={onClose}
             disabled={isSubmitting}
+            className="h-10 px-6 text-sm font-medium"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="activity-submit-btn"
             disabled={isSubmitting}
+            className="h-10 px-6 text-sm font-semibold shadow-xs"
           >
-            {isSubmitting && <Spinner className="mr-2 size-4" />}
+            {isSubmitting && <Spinner className="mr-2 size-4 text-white" />}
             {teacher
               ? isSchool ? "Update Teacher Record" : "Update Faculty Member"
               : isSchool ? "Appoint Teacher" : "Register Teacher"}
-          </button>
+          </Button>
         </div>
       </form>
     </FullPageFormShell>

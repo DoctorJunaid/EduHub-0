@@ -169,7 +169,9 @@ export default function InstituteStaff() {
 
   return (
     <section
-      className="institute-staff-directory"
+      className={`institute-staff-directory${
+        modal?.type === "add" ? " is-appointing-teacher" : ""
+      }`}
       aria-label="Faculty and staff directory"
     >
       <Card className="ist-card">

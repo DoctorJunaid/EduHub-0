@@ -2,14 +2,9 @@ import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,11 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MessageCircle, Paperclip, X, Send } from "lucide-react";
+import { LifeBuoy, Paperclip, X, Plus } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 import { useSupportCategories } from "@/hooks/useSupportCategories";
 import { useSupportContacts } from "@/hooks/useSupportContacts";
+import {
+  CANONICAL_SUPPORT_CATEGORIES,
+} from "./supportCategories";
+import "./NewTicketDialog.css";
 
 export const NewTicketDialog = ({
   open = false,
@@ -30,8 +29,8 @@ export const NewTicketDialog = ({
   isPending = false,
   isAdmin = false,
 }) => {
-  const { categories } = useSupportCategories();
-  const { contacts } = useSupportContacts();
+  const { categories = [] } = useSupportCategories();
+  const { contacts = [] } = useSupportContacts();
 
   const [category, setCategory] = useState("Academic");
   const [subject, setSubject] = useState("");
@@ -40,6 +39,12 @@ export const NewTicketDialog = ({
   const [assignedTo, setAssignedTo] = useState("");
   const [attachments, setAttachments] = useState([]);
   const fileInputRef = useRef(null);
+
+  // Use canonical categories list (or API list if loaded)
+  const categoryList =
+    categories && categories.length > 0
+      ? categories
+      : CANONICAL_SUPPORT_CATEGORIES;
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
@@ -73,7 +78,7 @@ export const NewTicketDialog = ({
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!category) {
-      toast.error("Please select a topic/category");
+      toast.error("Please select a category");
       return;
     }
 
@@ -84,7 +89,9 @@ export const NewTicketDialog = ({
     }
 
     if (!description.trim() || description.trim().length < 10) {
-      toast.error("Please provide at least 10 characters explaining what you need help with");
+      toast.error(
+        "Please provide at least 10 characters explaining what you need help with"
+      );
       return;
     }
 
@@ -105,55 +112,57 @@ export const NewTicketDialog = ({
       setAssignedTo("");
       onOpenChange(false);
     } catch (err) {
-      console.error(err);
+      console.error("Create ticket error:", err);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[720px] w-[calc(100vw-2rem)] sm:w-[42vw] rounded-2xl max-h-[88vh] flex flex-col p-0 gap-0 overflow-hidden shadow-2xl">
+      <DialogContent className="ntd-dialog-content">
         {/* Modal Header */}
-        <DialogHeader className="p-6 pb-4 border-b border-border bg-muted/20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" />
+        <div className="ntd-header">
+          <div className="ntd-header-left">
+            <div className="ntd-header-icon" aria-hidden="true">
+              <LifeBuoy className="w-5 h-5" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-bold text-foreground">
-                {isAdmin ? "Create New Support Ticket" : "💬 Ask for Help"}
+              <DialogTitle className="ntd-title">
+                {isAdmin ? "Create New Support Ticket" : "Ask for Help"}
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              <DialogDescription className="ntd-subtitle">
                 {isAdmin
                   ? "Submit and route an internal or external support ticket."
                   : "What do you need help with? Pick a topic and tell us the details."}
               </DialogDescription>
             </div>
           </div>
-        </DialogHeader>
+        </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="ntd-form">
           {/* Category Selector Grid */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-foreground">
+          <div className="ntd-field-group">
+            <label className="ntd-label">
               {isAdmin ? "Category" : "What do you need help with?"}
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {categories.map((cat) => {
-                const isSelected = category === (cat.id || cat);
+            <div className="ntd-category-grid">
+              {categoryList.map((cat) => {
+                const catId = cat.id || cat;
+                const catLabel = cat.label || cat;
+                const isSelected = category === catId;
+                const IconComp =
+                  cat.Icon ||
+                  CANONICAL_SUPPORT_CATEGORIES.find((c) => c.id === catId)?.Icon ||
+                  LifeBuoy;
                 return (
                   <button
-                    key={cat.id || cat}
+                    key={catId}
                     type="button"
-                    onClick={() => setCategory(cat.id || cat)}
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs transition-all ${
-                      isSelected
-                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
-                        : "border-border/80 bg-card hover:bg-muted/50 text-foreground"
-                    }`}
+                    onClick={() => setCategory(catId)}
+                    className={`ntd-category-btn ${isSelected ? "is-selected" : ""}`}
                   >
-                    <span className="text-base shrink-0">{cat.icon || "💬"}</span>
-                    <span className="truncate leading-tight">{cat.label || cat}</span>
+                    <IconComp className="ntd-category-icon" />
+                    <span className="ntd-category-label">{catLabel}</span>
                   </button>
                 );
               })}
@@ -161,11 +170,12 @@ export const NewTicketDialog = ({
           </div>
 
           {/* Subject */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">
+          <div className="ntd-field-group">
+            <label className="ntd-label" htmlFor="ticket-subject">
               Subject {isAdmin ? "" : "(Optional title)"}
             </label>
-            <Input
+            <input
+              id="ticket-subject"
               type="text"
               placeholder={
                 isAdmin
@@ -174,42 +184,75 @@ export const NewTicketDialog = ({
               }
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="rounded-xl text-xs h-9"
+              className="ntd-input"
             />
           </div>
 
           {/* Admin Priority & Assignee Controls */}
           {isAdmin && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Priority</label>
+            <div className="ntd-admin-row">
+              <div className="ntd-field-group">
+                <label className="ntd-label">Priority</label>
                 <Select value={priority} onValueChange={(val) => setPriority(val)}>
-                  <SelectTrigger className="h-9 w-full rounded-xl bg-background text-xs border-input">
+                  <SelectTrigger className="ntd-select-trigger">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="Urgent">Urgent (2h SLA)</SelectItem>
-                    <SelectItem value="High">High (8h SLA)</SelectItem>
-                    <SelectItem value="Medium">Medium (24h SLA)</SelectItem>
-                    <SelectItem value="Low">Low (72h SLA)</SelectItem>
+                  <SelectContent
+                    position="popper"
+                    sideOffset={6}
+                    align="start"
+                    className="isu-select-content priority-content"
+                  >
+                    <SelectItem value="Urgent" className="isu-select-item">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                      <span>Urgent (2h SLA)</span>
+                    </SelectItem>
+                    <SelectItem value="High" className="isu-select-item">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                      <span>High (8h SLA)</span>
+                    </SelectItem>
+                    <SelectItem value="Medium" className="isu-select-item">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                      <span>Medium (24h SLA)</span>
+                    </SelectItem>
+                    <SelectItem value="Low" className="isu-select-item">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                      <span>Low (72h SLA)</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Initial Assignee</label>
+              <div className="ntd-field-group">
+                <label className="ntd-label">Initial Assignee</label>
                 <Select
                   value={assignedTo || "none"}
-                  onValueChange={(val) => setAssignedTo(val === "none" ? "" : val)}
+                  onValueChange={(val) =>
+                    setAssignedTo(val === "none" ? "" : val)
+                  }
                 >
-                  <SelectTrigger className="h-9 w-full rounded-xl bg-background text-xs border-input">
+                  <SelectTrigger className="ntd-select-trigger">
                     <SelectValue placeholder="Auto-Assign (Recommended)" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="none">Auto-Assign (Recommended)</SelectItem>
+                  <SelectContent
+                    position="popper"
+                    sideOffset={6}
+                    align="start"
+                    className="isu-select-content"
+                    style={{ minWidth: "220px", maxHeight: "280px" }}
+                  >
+                    <SelectItem value="none" className="isu-select-item">
+                      <span>Auto-Assign (Recommended)</span>
+                    </SelectItem>
                     {contacts.map((c) => (
-                      <SelectItem key={c._id} value={c._id}>
-                        {c.name} ({c.role?.replace("_", " ")})
+                      <SelectItem
+                        key={c._id}
+                        value={c._id}
+                        className="isu-select-item"
+                      >
+                        <span className="truncate">
+                          {c.name} ({c.role?.replace("_", " ")})
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -218,35 +261,37 @@ export const NewTicketDialog = ({
             </div>
           )}
 
-          {/* Message Description */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">
+          {/* Description */}
+          <div className="ntd-field-group">
+            <label className="ntd-label" htmlFor="ticket-description">
               {isAdmin ? "Description" : "Tell us more"}
             </label>
-            <Textarea
+            <textarea
+              id="ticket-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what's going on with as much detail as possible..."
               rows={4}
-              className="rounded-xl text-xs resize-none"
+              className="ntd-textarea"
               required
             />
           </div>
 
           {/* Attachments Section */}
-          <div className="space-y-2 pb-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <Paperclip className="w-3.5 h-3.5" />
-                <span>Attach a file (optional - max 3 files · 5 MB each)</span>
-              </label>
+          <div className="ntd-attachment-box">
+            <div className="ntd-attachment-header">
+              <span className="ntd-attachment-desc">
+                <Paperclip className="w-3.5 h-3.5 text-zinc-500" />
+                <span>Attach a file (optional — max 3 files · 5 MB each)</span>
+              </span>
               {attachments.length < 3 && (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs text-primary hover:underline font-semibold"
+                  className="ntd-add-file-btn"
                 >
-                  + Add File
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add File</span>
                 </button>
               )}
             </div>
@@ -263,16 +308,16 @@ export const NewTicketDialog = ({
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {attachments.map((att, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-xs text-foreground border border-border"
-                  >
-                    <Paperclip className="w-3 h-3 text-muted-foreground" />
-                    <span className="truncate max-w-[140px]">{att.name}</span>
+                  <div key={i} className="ntd-attachment-chip">
+                    <Paperclip className="w-3 h-3 text-zinc-400" />
+                    <span className="truncate max-w-[160px] font-medium">
+                      {att.name}
+                    </span>
                     <button
                       type="button"
                       onClick={() => removeAttachment(i)}
-                      className="text-muted-foreground hover:text-destructive ml-1"
+                      className="ntd-attachment-remove"
+                      title="Remove attachment"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -284,35 +329,31 @@ export const NewTicketDialog = ({
         </form>
 
         {/* Modal Footer */}
-        <DialogFooter className="p-4 px-6 border-t border-border bg-muted/10 flex items-center justify-end gap-3 shrink-0">
-          <Button
+        <div className="ntd-footer">
+          <button
             type="button"
-            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
-            className="rounded-xl px-5 h-9"
+            className="ntd-cancel-btn"
           >
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
             onClick={handleSubmit}
             disabled={isPending || !description.trim()}
-            className="rounded-xl px-5 h-9 gap-2 font-medium"
+            className="ntd-submit-btn"
           >
             {isPending ? (
               <>
-                <Spinner className="w-4 h-4" />
-                <span>Submitting...</span>
+                <Spinner className="w-4 h-4 text-white" />
+                <span>Creating...</span>
               </>
             ) : (
-              <>
-                <Send className="w-4 h-4" />
-                <span>{isAdmin ? "Create Ticket" : "Send Message"}</span>
-              </>
+              <span>{isAdmin ? "Create Ticket" : "Send Message"}</span>
             )}
-          </Button>
-        </DialogFooter>
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   );

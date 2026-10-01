@@ -9,15 +9,15 @@ import {
   ArrowRight,
   HelpCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useSupportTickets, useCreateTicket } from "@/hooks/useSupportTickets";
 import { useSupportStats } from "@/hooks/useSupportStats";
-import { CATEGORY_ICONS } from "./TicketCategoryBadge";
+import { getCategoryIcon } from "./supportCategories";
 import { TicketStatusBadge } from "./TicketStatusBadge";
 import { NewTicketDialog } from "./NewTicketDialog";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/store/Slices/authSlice";
 import { getSupportBasePath, getSupportTicketPath } from "@/utils/supportRouting";
+import "./FloatingHelpWidget.css";
 
 export const FloatingHelpWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,119 +70,113 @@ export const FloatingHelpWidget = () => {
     <>
       <aside
         aria-label="Help and Support Assistant"
-        className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-auto"
+        className="fhw-container"
       >
         {/* Expanded Floating Popover Card */}
         {isOpen && (
-          <div className="mb-4 w-[360px] sm:w-[400px] rounded-2xl border border-border bg-card text-card-foreground shadow-2xl overflow-hidden transition-all animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="fhw-panel">
             {/* Header with generous padding */}
-            <div className="px-6 py-4 border-b border-border/80 bg-muted/40 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
+            <div className="fhw-header">
+              <div className="fhw-header-left">
+                <div className="fhw-header-icon" aria-hidden="true">
                   <LifeBuoy className="w-5 h-5" />
                 </div>
-                <div className="min-w-0">
-                  <h4 className="font-bold text-sm text-foreground leading-tight truncate">
-                    Help & Support
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                <div className="fhw-header-titles">
+                  <h4 className="fhw-header-title">Help & Support</h4>
+                  <p className="fhw-header-subtitle">
                     We're here to help with any question
                   </p>
                 </div>
               </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                className="fhw-close-btn"
                 aria-label="Close help panel"
               >
                 <X className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
 
-            {/* Content Body with generous inner padding */}
-            <div className="p-6 space-y-5 max-h-[400px] overflow-y-auto">
+            {/* Content Body with clean vertical rhythm */}
+            <div className="fhw-body">
               {/* Primary Call to Action Button */}
-              <Button
+              <button
+                type="button"
                 onClick={() => setIsNewDialogOpen(true)}
-                className="w-full justify-center gap-2 rounded-xl h-11 text-sm font-semibold shadow-sm transition-all"
+                className="fhw-cta-btn"
               >
                 <Plus className="w-4 h-4" />
                 <span>{isAdmin ? "Create New Ticket" : "Ask for Help"}</span>
-              </Button>
+              </button>
 
               {/* Recent Conversations Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    {isAdmin ? "Recent Tickets" : "Recent Conversations"}
-                  </span>
-                  {recentConversations.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleViewAll}
-                      className="text-xs text-primary hover:underline font-semibold flex items-center gap-1 transition-colors"
-                    >
-                      <span>View all</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {recentConversations.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-muted/30 border border-dashed border-border text-center space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-1">
-                      <MessageCircle className="w-5 h-5" />
-                    </div>
-                    <p className="text-xs font-semibold text-foreground">No active conversations</p>
-                    <p className="text-xs text-muted-foreground max-w-[220px] leading-relaxed mx-auto">
-                      Have a question about homework, fees, or your account? Tap above to ask!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {recentConversations.map((c) => {
-                      const catInfo = CATEGORY_ICONS[c.category] || { icon: "💬" };
-                      return (
-                        <div
-                          key={c._id}
-                          onClick={() => handleOpenConversation(c._id)}
-                          className="group flex items-center justify-between p-3.5 rounded-xl bg-card hover:bg-muted/50 border border-border hover:border-primary/50 cursor-pointer transition-all shadow-xs gap-3"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <span className="text-lg shrink-0 select-none">{catInfo.icon}</span>
-                            <div className="min-w-0 space-y-0.5 flex-1">
-                              <p className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                                {c.subject}
-                              </p>
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {c.description}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="shrink-0">
-                            <TicketStatusBadge status={c.status} isAdmin={isAdmin} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div className="fhw-section-header">
+                <span className="fhw-section-title">
+                  {isAdmin ? "Recent Tickets" : "Recent Conversations"}
+                </span>
+                {recentConversations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleViewAll}
+                    className="fhw-view-all-btn"
+                  >
+                    <span>View all</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
                 )}
               </div>
+
+              {recentConversations.length === 0 ? (
+                <div className="fhw-empty-card">
+                  <div className="fhw-empty-icon-wrap" aria-hidden="true">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <p className="fhw-empty-title">No active conversations</p>
+                  <p className="fhw-empty-desc">
+                    Have a question about homework, fees, or your account? Tap above to ask!
+                  </p>
+                </div>
+              ) : (
+                <div className="fhw-ticket-list">
+                  {recentConversations.map((c) => {
+                    const CatIcon = getCategoryIcon(c.category);
+                    return (
+                      <div
+                        key={c._id}
+                        onClick={() => handleOpenConversation(c._id)}
+                        className="fhw-ticket-item"
+                      >
+                        <div className="fhw-ticket-info">
+                          <div className="fhw-ticket-cat-icon">
+                            <CatIcon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="fhw-ticket-texts">
+                            <p className="fhw-ticket-subject">{c.subject}</p>
+                            <p className="fhw-ticket-desc">{c.description}</p>
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          <TicketStatusBadge status={c.status} isAdmin={isAdmin} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Footer with clean spacing */}
-            <div className="px-6 py-3.5 bg-muted/30 border-t border-border flex items-center justify-between text-xs">
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                <HelpCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="fhw-footer">
+              <span className="fhw-footer-left">
+                <HelpCircle className="w-4 h-4 text-zinc-500 shrink-0" />
                 <span>EduHub Support Desk</span>
               </span>
               <button
                 type="button"
                 onClick={handleViewAll}
-                className="font-semibold text-primary hover:underline flex items-center gap-1 text-xs"
+                className="fhw-footer-link"
               >
                 <span>Open Full Help Center</span>
                 <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -196,13 +190,13 @@ export const FloatingHelpWidget = () => {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="relative w-12 h-12 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/20"
+            className="fhw-trigger-btn"
             aria-label="Open Help & Support Assistant"
             title="Need Help?"
           >
             <LifeBuoy className="w-6 h-6" />
             {openCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-background">
+              <span className="fhw-badge">
                 {openCount}
               </span>
             )}
