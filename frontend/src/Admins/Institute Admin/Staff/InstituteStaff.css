@@ -579,6 +579,10 @@
 }
 
 @media (max-width: 640px) {
+  body:has(.institute-staff-directory.is-appointing-teacher) .fhw-container {
+    display: none;
+  }
+
   .institute-staff-directory.is-appointing-teacher
     .full-page-activity.faculty-form-page {
     padding: 16px 16px 32px;

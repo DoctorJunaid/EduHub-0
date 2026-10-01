@@ -11,14 +11,6 @@
   box-sizing: border-box;
 }
 
-/* Edit-page topbar; the new-campus route places this action in the card header. */
-.manage-page-topbar {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
 .manage-page-back-btn {
   align-self: flex-start;
   color: #52525b;
@@ -31,7 +23,6 @@
   color: #09090b;
 }
 
-.manage-page-topbar .manage-page-back-btn,
 .campus-not-found .manage-page-back-btn {
   display: inline-flex;
   align-items: center;
@@ -60,6 +51,10 @@
 }
 
 .manage-page-content--new .manage-page-main {
+  padding: 0;
+}
+
+.manage-page-content--edit .manage-page-main {
   padding: 0;
 }
 
@@ -343,6 +338,21 @@
   flex-wrap: wrap;
 }
 
+.campus-manager-actions > button {
+  height: 36px;
+  padding-inline: 16px;
+  border-radius: 8px;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.campus-manager-actions > button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 /* Edit Existing Manager Inline Card */
 .campus-manager-edit-panel {
   margin-top: 6px;
@@ -432,6 +442,10 @@
 }
 
 @media (max-width: 640px) {
+  body:has(.manage-campus-page) .fhw-container {
+    display: none;
+  }
+
   .manage-campus-page {
     padding: 16px;
   }
