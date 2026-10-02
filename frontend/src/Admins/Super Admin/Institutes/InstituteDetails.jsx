@@ -79,12 +79,31 @@ export default function InstituteDetails() {
     }
     if (link) {
       try {
-        await navigator.clipboard.writeText(link);
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(link);
+        } else {
+          throw new Error("Clipboard API unavailable");
+        }
         setCopiedLink(true);
         toast.success("Setup link copied to clipboard!");
         setTimeout(() => setCopiedLink(false), 3000);
       } catch {
-        toast.error("Failed to copy link");
+        try {
+          const textarea = document.createElement("textarea");
+          textarea.value = link;
+          textarea.style.position = "fixed";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          setCopiedLink(true);
+          toast.success("Setup link copied to clipboard!");
+          setTimeout(() => setCopiedLink(false), 3000);
+        } catch {
+          toast.error("Failed to copy link");
+        }
       }
     }
   };

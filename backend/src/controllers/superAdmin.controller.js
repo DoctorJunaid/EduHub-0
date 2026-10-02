@@ -69,7 +69,8 @@ export const deleteInstitute = asyncHandler(async (req, res) => {
 });
 
 export const assignInstituteAdmin = asyncHandler(async (req, res) => {
-  const result = await superAdminService.assignInstituteAdmin(req.params.id, req.body);
+  const clientOrigin = req.headers.origin || req.headers.referer;
+  const result = await superAdminService.assignInstituteAdmin(req.params.id, req.body, clientOrigin);
   res.status(200).json({
     success: true,
     message: "Institute Admin assigned successfully.",

@@ -159,14 +159,38 @@ export default function ManageInstitute({ institute, onClose }) {
     }
     if (link) {
       try {
-        await navigator.clipboard.writeText(link);
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(link);
+        } else {
+          throw new Error("Clipboard API unavailable");
+        }
         setCopiedAdminLink(true);
         toast.success("Setup link copied to clipboard!");
         setTimeout(() => setCopiedAdminLink(false), 3000);
       } catch {
-        toast.error("Failed to copy link");
+        try {
+          const textarea = document.createElement("textarea");
+          textarea.value = link;
+          textarea.style.position = "fixed";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          setCopiedAdminLink(true);
+          toast.success("Setup link copied to clipboard!");
+          setTimeout(() => setCopiedAdminLink(false), 3000);
+        } catch {
+          toast.error("Failed to copy link automatically. Please copy the link from the banner below.");
+        }
       }
     }
+  };
+
+  const handleRefreshAdmin = async () => {
+    await loadAdmin();
+    toast.success("Admin details refreshed");
   };
 
   const saveAdminDetails = async (e) => {
@@ -177,6 +201,7 @@ export default function ManageInstitute({ institute, onClose }) {
       toast.success("Admin details updated successfully!");
       setAdminInfo(res.data?.data || { ...adminInfo, ...editAdminForm });
       setIsEditingAdmin(false);
+      loadAdmin();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update admin");
     } finally {
@@ -408,10 +433,11 @@ export default function ManageInstitute({ institute, onClose }) {
                 </button>
 
                 <button
-                  onClick={loadAdmin}
-                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#52525b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                  onClick={handleRefreshAdmin}
+                  disabled={adminLoading}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#52525b", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: adminLoading ? 0.7 : 1 }}
                 >
-                  <RefreshCw size={13} /> Refresh
+                  <RefreshCw size={13} className={adminLoading ? "animate-spin" : ""} /> Refresh
                 </button>
               </div>
 

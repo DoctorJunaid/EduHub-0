@@ -248,9 +248,26 @@ export const deleteInstitute = async (id) => {
 };
 
 /**
+ * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
+ */
+const resolveFrontendUrl = (clientOrigin) => {
+  if (clientOrigin) {
+    try {
+      const url = new URL(clientOrigin);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return `${url.protocol}//${url.host}`;
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }
+  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+};
+
+/**
  * Assign or reassign Institute Admin
  */
-export const assignInstituteAdmin = async (instituteId, { userId, email, newAdminData }) => {
+export const assignInstituteAdmin = async (instituteId, { userId, email, newAdminData }, clientOrigin = null) => {
   const institute = await Institute.findById(instituteId);
   if (!institute) {
     const error = new Error("Institute not found");
@@ -305,7 +322,7 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
     pv: adminUser.passwordVersion || 0,
     reset: true,
   });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
 
   try {
@@ -323,23 +340,6 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
   delete userObj.passwordHash;
 
   return { institute, admin: userObj, resetLink };
-};
-
-/**
- * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
- */
-const resolveFrontendUrl = (clientOrigin) => {
-  if (clientOrigin) {
-    try {
-      const url = new URL(clientOrigin);
-      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-        return `${url.protocol}//${url.host}`;
-      }
-    } catch {
-      // Ignore URL parse error
-    }
-  }
-  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
 };
 
 /**
@@ -1180,6 +1180,8 @@ export default {
   updateInstitute,
   deleteInstitute,
   assignInstituteAdmin,
+  resendInstituteAdminInvite,
+  updateInstituteAdmin,
   getAllInstituteAdmins,
   createInstituteAdmin,
   getAllCampuses,
