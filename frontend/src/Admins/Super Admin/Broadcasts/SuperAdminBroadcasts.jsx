@@ -60,31 +60,35 @@ const DEFAULT_BROADCASTS = [
   },
 ];
 
-const getStoredBroadcasts = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : DEFAULT_BROADCASTS;
-  } catch {
-    return DEFAULT_BROADCASTS;
-  }
-};
+import axiosInstance from "@/api/axiosInstance";
 
 export default function SuperAdminBroadcasts() {
   const institutes = useSelector(selectInstitutes) || [];
-  const [broadcasts, setBroadcasts] = useState(getStoredBroadcasts);
+  const [broadcasts, setBroadcasts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [severity, setSeverity] = useState("Info");
   const [audience, setAudience] = useState("All Institutes & Campuses");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
+  const fetchBroadcasts = async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(broadcasts));
-    } catch {}
-  }, [broadcasts]);
+      setLoading(true);
+      const res = await axiosInstance.get("/super-admin/broadcasts");
+      setBroadcasts(res.data?.data || []);
+    } catch (err) {
+      toast.error("Failed to load platform broadcasts");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handlePublish = (e) => {
+  useEffect(() => {
+    fetchBroadcasts();
+  }, []);
+
+  const handlePublish = async (e) => {
     e.preventDefault();
     if (!title.trim() || !message.trim()) {
       toast.error("Please provide both title and message.");
@@ -92,29 +96,34 @@ export default function SuperAdminBroadcasts() {
     }
 
     setSending(true);
-
-    setTimeout(() => {
-      const newBroadcast = {
-        id: `b-${Date.now()}`,
+    try {
+      await axiosInstance.post("/super-admin/broadcasts", {
         title: title.trim(),
+        message: message.trim(),
         severity,
         audience,
-        message: message.trim(),
-        createdAt: new Date().toISOString(),
-      };
+      });
 
-      setBroadcasts((prev) => [newBroadcast, ...prev]);
       setTitle("");
       setMessage("");
       setSeverity("Info");
+      toast.success("Broadcast dispatched across all platform networks!");
+      fetchBroadcasts();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to publish broadcast");
+    } finally {
       setSending(false);
-      toast.success("Broadcast dispatched across target networks!");
-    }, 300);
+    }
   };
 
-  const handleDelete = (id) => {
-    setBroadcasts((prev) => prev.filter((b) => b.id !== id));
-    toast.success("Broadcast removed.");
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`/super-admin/broadcasts/${id}`);
+      toast.success("Broadcast removed.");
+      setBroadcasts((prev) => prev.filter((b) => (b._id || b.id) !== id));
+    } catch (err) {
+      toast.error("Failed to delete broadcast");
+    }
   };
 
   return (
@@ -232,7 +241,7 @@ export default function SuperAdminBroadcasts() {
 
                 return (
                   <div
-                    key={b.id}
+                    key={b._id || b.id}
                     className="broadcast-card"
                     style={{ borderLeft: `4px solid ${config.color}` }}
                   >
@@ -243,7 +252,7 @@ export default function SuperAdminBroadcasts() {
                       </div>
                       <button
                         className="delete-broadcast-btn"
-                        onClick={() => handleDelete(b.id)}
+                        onClick={() => handleDelete(b._id || b.id)}
                         title="Dismiss broadcast"
                       >
                         <Trash2 size={14} />

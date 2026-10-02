@@ -21,6 +21,7 @@ import {
 
 import axiosInstance from "@/api/axiosInstance";
 import { useInstitution, INSTITUTION_TYPES } from "@/context/InstitutionContext";
+import CampusSwitcher from "./CampusSwitcher";
 
 import { useSelector } from "react-redux";
 
@@ -67,7 +68,8 @@ const Header = ({
         const token = localStorage.getItem("eduHubToken");
         if (!token) return;
 
-        if (!["institute_admin", "super_admin"].includes(currentRole)) {
+        // Restrict institute alerts loading to institute_admin only (prevents redundant calls for super_admin)
+        if (currentRole !== "institute_admin") {
           return;
         }
 
@@ -284,6 +286,7 @@ const Header = ({
       </div>
 
       <div className="header-actions">
+        <CampusSwitcher />
 
         {showNotifications && (
           <div className="header-notifications-wrap" ref={notificationRef}>

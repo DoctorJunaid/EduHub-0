@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import "./user.model.js";
+import "./academic.model.js";
+import "./campus.model.js";
+import "./institute.model.js";
 import {
   normalizeTimeString,
   parseTimeToMinutes,

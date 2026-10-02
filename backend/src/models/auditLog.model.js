@@ -5,13 +5,24 @@ const auditLogSchema = new mongoose.Schema(
     campusId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campus",
-      required: true,
+      default: null,
+      index: true,
+    },
+    instituteId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institute",
+      default: null,
       index: true,
     },
     entityType: {
       type: String,
       required: true,
       enum: [
+        "Institute",
+        "Campus",
+        "User",
+        "GlobalBroadcast",
+        "PlatformSetting",
         "AttendanceApproval",
         "PayrollAdjustment",
         "MonthlyPayroll",
@@ -89,8 +100,11 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
+import tenantDerivationPlugin from "../plugins/tenantDerivation.plugin.js";
+
 // Compound index for querying entity-specific audit logs
 auditLogSchema.index({ campusId: 1, entityType: 1, entityId: 1, timestamp: -1 });
+auditLogSchema.plugin(tenantDerivationPlugin);
 
 export const AuditLog = mongoose.models.AuditLog || mongoose.model("AuditLog", auditLogSchema);
 export default AuditLog;

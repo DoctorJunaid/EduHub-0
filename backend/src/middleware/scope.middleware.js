@@ -53,7 +53,12 @@ export const campusAdminScope = async (req, res, next) => {
     });
   }
 
-  const targetCampusId = req.params.campusId || req.params.id || req.body.campusId;
+  const targetCampusId =
+    req.headers["x-campus-id"] ||
+    req.params.campusId ||
+    req.params.id ||
+    req.body.campusId ||
+    req.query.campusId;
 
   // 1. Super Admin bypass
   if (req.user.role === "super_admin") {
@@ -85,10 +90,16 @@ export const campusAdminScope = async (req, res, next) => {
           message: "Access denied. This campus belongs to a different institute.",
         });
       }
+
+      req.campusId = targetCampusId;
+    } else {
+      // Graceful fallback to first campus under the institute
+      const defaultCampus = await Campus.findOne({ instituteId: req.user.instituteId, status: "Active" })
+        || await Campus.findOne({ instituteId: req.user.instituteId });
+      req.campusId = defaultCampus ? defaultCampus._id : null;
     }
 
     req.instituteId = req.user.instituteId;
-    req.campusId = targetCampusId;
     return next();
   }
 

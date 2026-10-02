@@ -78,7 +78,8 @@ export const assignInstituteAdmin = asyncHandler(async (req, res) => {
 });
 
 export const resendInstituteAdminInvite = asyncHandler(async (req, res) => {
-  const result = await superAdminService.resendInstituteAdminInvite(req.params.id);
+  const clientOrigin = req.headers.origin || req.headers.referer;
+  const result = await superAdminService.resendInstituteAdminInvite(req.params.id, clientOrigin);
   res.status(200).json({
     success: true,
     message: result.message,
@@ -157,12 +158,23 @@ export const deleteCampus = asyncHandler(async (req, res) => {
 
 // --- Global User Management ---
 export const getUsers = asyncHandler(async (req, res) => {
-  const users = await superAdminService.getAllUsers(req.query);
+  const result = await superAdminService.getAllUsers(req.query);
+  if (result && result.users) {
+    return res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully.",
+      data: result.users,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    });
+  }
   res.status(200).json({
     success: true,
     message: "Users retrieved successfully.",
-    count: users.length,
-    data: users,
+    count: result.length,
+    data: result,
   });
 });
 
@@ -172,6 +184,75 @@ export const toggleUserStatus = asyncHandler(async (req, res) => {
     success: true,
     message: `User status changed to ${user.isActive ? "active" : "inactive"}.`,
     data: user,
+  });
+});
+
+// --- Platform Broadcasts ---
+export const getBroadcasts = asyncHandler(async (req, res) => {
+  const broadcasts = await superAdminService.getAllBroadcasts();
+  res.status(200).json({
+    success: true,
+    message: "Broadcast alerts retrieved successfully.",
+    data: broadcasts,
+  });
+});
+
+export const createBroadcast = asyncHandler(async (req, res) => {
+  const broadcast = await superAdminService.createBroadcast(req.body, req.user._id);
+  res.status(201).json({
+    success: true,
+    message: "Broadcast published successfully.",
+    data: broadcast,
+  });
+});
+
+export const deleteBroadcast = asyncHandler(async (req, res) => {
+  const result = await superAdminService.deleteBroadcast(req.params.id);
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+});
+
+// --- Inquiries & Leads ---
+export const getInquiries = asyncHandler(async (req, res) => {
+  const inquiries = await superAdminService.getAllInquiries(req.query);
+  res.status(200).json({
+    success: true,
+    message: "Inquiries retrieved successfully.",
+    count: inquiries.length,
+    data: inquiries,
+  });
+});
+
+export const updateInquiryStatus = asyncHandler(async (req, res) => {
+  const inquiry = await superAdminService.updateInquiryStatus(req.params.id, req.body.status);
+  res.status(200).json({
+    success: true,
+    message: "Inquiry status updated successfully.",
+    data: inquiry,
+  });
+});
+
+export const convertInquiry = asyncHandler(async (req, res) => {
+  const result = await superAdminService.convertInquiryToInstitute(req.params.id);
+  res.status(201).json({
+    success: true,
+    message: "Inquiry converted to registered institute successfully!",
+    data: result,
+  });
+});
+
+// --- Platform Audit Logs ---
+export const getAuditLogs = asyncHandler(async (req, res) => {
+  const result = await superAdminService.getPlatformAuditLogs(req.query);
+  res.status(200).json({
+    success: true,
+    message: "Platform audit logs retrieved successfully.",
+    data: result.logs,
+    total: result.total,
+    page: result.page,
+    totalPages: result.totalPages,
   });
 });
 
@@ -191,4 +272,11 @@ export default {
   deleteCampus,
   getUsers,
   toggleUserStatus,
+  getBroadcasts,
+  createBroadcast,
+  deleteBroadcast,
+  getInquiries,
+  updateInquiryStatus,
+  convertInquiry,
+  getAuditLogs,
 };

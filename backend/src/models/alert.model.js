@@ -5,7 +5,7 @@ const alertSchema = new mongoose.Schema(
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Institute",
-      required: [true, "Institute ID is required"],
+      default: null, // null denotes platform-wide global broadcast across all institutes
     },
     campusId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +19,7 @@ const alertSchema = new mongoose.Schema(
     },
     severity: {
       type: String,
-      enum: ["Info", "Warning", "Critical"],
+      enum: ["Info", "Warning", "Critical", "Announcement"],
       default: "Info",
     },
     title: {

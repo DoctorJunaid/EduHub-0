@@ -82,8 +82,11 @@ teacherAttendanceSchema.index(
   { unique: true }
 );
 
+import tenantDerivationPlugin from "../plugins/tenantDerivation.plugin.js";
+
 // Compound index for querying campus attendance by date
 teacherAttendanceSchema.index({ campusId: 1, date: 1 });
+teacherAttendanceSchema.plugin(tenantDerivationPlugin);
 
 const TeacherAttendance =
   mongoose.models.TeacherAttendance ||

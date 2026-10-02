@@ -7,7 +7,15 @@ import generateToken from "../../utils/generateToken.js";
 // ─────────────────────────────────────────────
 export const registerSuperAdmin = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, superAdminSecret } = req.body;
+
+    const secretKey = process.env.SUPER_ADMIN_SECRET;
+    if (!secretKey || superAdminSecret !== secretKey) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden. A valid provisioning secret is required to register a Super Admin.",
+      });
+    }
 
     if (!email || !password) {
       return res.status(400).json({

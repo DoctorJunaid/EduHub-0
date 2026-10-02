@@ -31,6 +31,7 @@ import {
 
 import { protect } from "../middleware/auth.middleware.js";
 import { instituteAdminScope } from "../middleware/scope.middleware.js";
+import { checkCampusQuota, checkStudentQuota } from "../middleware/quota.middleware.js";
 
 const router = express.Router();
 
@@ -42,11 +43,11 @@ router.use(instituteAdminScope);
 router.get("/stats", getStats);
 router.get("/profile", getProfile);
 
-// Campus Branch Management
+// Campus Branch Management (Enforces plan quota)
 router
   .route("/campuses")
   .get(getCampuses)
-  .post(createCampus);
+  .post(checkCampusQuota, createCampus);
 
 router
   .route("/campuses/:id")
@@ -75,11 +76,11 @@ router
   .route("/staff/:id")
   .delete(deleteStaff);
 
-// Students Directory
+// Students Directory (Enforces plan quota)
 router
   .route("/students")
   .get(getStudents)
-  .post(createStudent);
+  .post(checkStudentQuota, createStudent);
 
 router
   .route("/students/:id")

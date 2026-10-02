@@ -6,6 +6,9 @@
 import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import Campus from "../models/campus.model.js";
+import Alert from "../models/alert.model.js";
+import Inquiry from "../models/inqueries.model.js";
+import AuditLog from "../models/auditLog.model.js";
 import { sendMail } from "../utils/emailService.js";
 import generateToken from "../utils/generateToken.js";
 import crypto from "crypto";
@@ -136,6 +139,7 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
     const token = generateToken({
       id: createdAdmin._id,
       role: createdAdmin.role,
+      pv: createdAdmin.passwordVersion || 0,
       reset: true,
     });
     
@@ -209,6 +213,17 @@ export const updateInstitute = async (id, updateData, file = null) => {
     throw error;
   }
 
+  // Centralized Cascade: Automatically synchronize child campuses and users
+  if (sanitizedData.status) {
+    if (sanitizedData.status === "Suspended" || sanitizedData.status === "Inactive") {
+      await Campus.updateMany({ instituteId: id }, { status: "Inactive" });
+      await User.updateMany({ instituteId: id, role: { $ne: "super_admin" } }, { isActive: false });
+    } else if (sanitizedData.status === "Active") {
+      await Campus.updateMany({ instituteId: id }, { status: "Active" });
+      await User.updateMany({ instituteId: id, role: { $ne: "super_admin" } }, { isActive: true });
+    }
+  }
+
   return institute;
 };
 
@@ -224,10 +239,11 @@ export const deleteInstitute = async (id) => {
     throw error;
   }
 
-  // Cascade cleanup: remove campuses under this institute
+  // Centralized Cascade cleanup: remove campuses and users under this institute
   await Campus.deleteMany({ instituteId: id });
+  await User.deleteMany({ instituteId: id, role: { $ne: "super_admin" } });
 
-  return { message: "Institute and associated campuses deleted successfully" };
+  return { message: "Institute, campuses, and associated users deleted successfully" };
 };
 
 /**
@@ -285,6 +301,7 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
   const token = generateToken({
     id: adminUser._id,
     role: adminUser.role,
+    pv: adminUser.passwordVersion || 0,
     reset: true,
   });
   const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
@@ -308,12 +325,29 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
 };
 
 /**
- * Resend setup invite email to Institute Admin
+ * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
  */
-export const resendInstituteAdminInvite = async (instituteId) => {
+const resolveFrontendUrl = (clientOrigin) => {
+  if (clientOrigin) {
+    try {
+      const url = new URL(clientOrigin);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return `${url.protocol}//${url.host}`;
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }
+  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+};
+
+/**
+ * Resend setup invite email to Institute Admin with fail-safe SMTP handling
+ */
+export const resendInstituteAdminInvite = async (instituteId, clientOrigin = null) => {
   const institute = await Institute.findById(instituteId).populate(
     "adminId",
-    "name email phone role status"
+    "name email phone role status passwordVersion"
   );
   if (!institute) {
     const error = new Error("Institute not found");
@@ -327,20 +361,32 @@ export const resendInstituteAdminInvite = async (instituteId) => {
   }
 
   const admin = institute.adminId;
-  const token = generateToken({ id: admin._id, role: admin.role || "institute_admin", reset: true });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const token = generateToken({ id: admin._id, role: admin.role || "institute_admin", pv: admin.passwordVersion || 0, reset: true });
+  const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
 
-  await sendMail(
-    admin.email,
-    "Set up your EduHub Institute Admin Account",
-    "Welcome to EduHub! Please click the link to set up your password.",
-    resetLink
-  );
+  let emailSent = false;
+  let emailError = null;
+
+  try {
+    await sendMail(
+      admin.email,
+      "Set up your EduHub Institute Admin Account",
+      "Welcome to EduHub! Please click the link to set up your password.",
+      resetLink
+    );
+    emailSent = true;
+  } catch (err) {
+    console.warn(`[SUPER_ADMIN] Setup email dispatch failed for ${admin.email}:`, err.message);
+    emailError = err.message;
+  }
 
   return {
     success: true,
-    message: `Setup email sent successfully to ${admin.email}`,
+    emailSent,
+    message: emailSent
+      ? `Setup email sent successfully to ${admin.email}`
+      : `Setup link generated. (Email delivery skipped/failed: ${emailError || "SMTP unavailable"}. Please copy and share the link manually)`,
     resetLink,
     admin,
   };
@@ -524,12 +570,12 @@ export const deleteCampus = async (id) => {
 };
 
 /**
- * Global users list
+ * Global users list with optional server-side pagination
  */
 export const getAllUsers = async (query = {}) => {
   const filter = {};
-  if (query.role) filter.role = query.role;
-  if (query.isActive !== undefined) filter.isActive = query.isActive === "true";
+  if (query.role && query.role !== "all") filter.role = query.role;
+  if (query.isActive !== undefined && query.isActive !== "all") filter.isActive = query.isActive === "true";
   if (query.instituteId) filter.instituteId = query.instituteId;
   if (query.campusId) filter.campusId = query.campusId;
 
@@ -540,6 +586,34 @@ export const getAllUsers = async (query = {}) => {
     ];
   }
 
+  // If page is specified, return paginated structure
+  if (query.page || query.limit) {
+    const page = Math.max(1, parseInt(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select("-passwordHash")
+        .populate("instituteId", "name type")
+        .populate("campusId", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter),
+    ]);
+
+    return {
+      users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // Otherwise return full array for backwards compatibility
   const users = await User.find(filter)
     .select("-passwordHash")
     .populate("instituteId", "name type")
@@ -572,6 +646,126 @@ export const toggleUserStatus = async (id) => {
   return user;
 };
 
+// --- Platform Broadcasts ---
+export const createBroadcast = async ({ title, message, severity, audience, instituteId }, userId) => {
+  if (!title || !message) {
+    const error = new Error("Title and message are required");
+    error.statusCode = 400;
+    throw error;
+  }
+  const broadcast = await Alert.create({
+    title: title.trim(),
+    message: message.trim(),
+    severity: severity || "Info",
+    audience: audience || "all",
+    instituteId: instituteId || null,
+    createdBy: userId || null,
+  });
+  return broadcast;
+};
+
+export const getAllBroadcasts = async () => {
+  return await Alert.find()
+    .populate("instituteId", "name type")
+    .populate("createdBy", "name email role")
+    .sort({ createdAt: -1 });
+};
+
+export const deleteBroadcast = async (id) => {
+  const alert = await Alert.findByIdAndDelete(id);
+  if (!alert) {
+    const error = new Error("Broadcast not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  return { message: "Broadcast alert deleted successfully" };
+};
+
+// --- Public Inquiries & Leads ---
+export const getAllInquiries = async (query = {}) => {
+  const filter = {};
+  if (query.status && query.status !== "all") filter.status = query.status;
+  if (query.instituteType && query.instituteType !== "all") filter.instituteType = query.instituteType;
+  if (query.search) {
+    filter.$or = [
+      { fullName: { $regex: query.search, $options: "i" } },
+      { email: { $regex: query.search, $options: "i" } },
+      { instituteName: { $regex: query.search, $options: "i" } },
+    ];
+  }
+  return await Inquiry.find(filter).sort({ createdAt: -1 });
+};
+
+export const updateInquiryStatus = async (id, status) => {
+  const inquiry = await Inquiry.findByIdAndUpdate(
+    id,
+    { status },
+    { new: true, runValidators: true }
+  );
+  if (!inquiry) {
+    const error = new Error("Inquiry not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  return inquiry;
+};
+
+export const convertInquiryToInstitute = async (inquiryId) => {
+  const inquiry = await Inquiry.findById(inquiryId);
+  if (!inquiry) {
+    const error = new Error("Inquiry not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Pre-fill institute creation with inquiry details
+  const institute = await createInstitute(
+    {
+      name: inquiry.instituteName,
+      type: ["School", "College", "University"].includes(inquiry.instituteType) ? inquiry.instituteType : "School",
+      email: inquiry.email,
+      phone: inquiry.phone,
+      board: "Federal",
+      status: "Active",
+    },
+    {
+      name: inquiry.fullName,
+      email: inquiry.email,
+      phone: inquiry.phone,
+    }
+  );
+
+  inquiry.status = "Converted";
+  await inquiry.save();
+
+  return { institute, inquiry };
+};
+
+// --- Platform Audit Logs ---
+export const getPlatformAuditLogs = async (query = {}) => {
+  const filter = {};
+  if (query.entityType && query.entityType !== "all") filter.entityType = query.entityType;
+  if (query.action && query.action !== "all") filter.action = query.action;
+  if (query.instituteId) filter.instituteId = query.instituteId;
+
+  const page = Math.max(1, parseInt(query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 30));
+  const skip = (page - 1) * limit;
+
+  const [logs, total] = await Promise.all([
+    AuditLog.find(filter)
+      .populate("campusId", "name")
+      .populate("instituteId", "name")
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    AuditLog.countDocuments(filter),
+  ]);
+
+  return { logs, total, page, totalPages: Math.ceil(total / limit) };
+};
+
 export default {
   getGlobalStats,
   getAllInstitutes,
@@ -588,4 +782,11 @@ export default {
   deleteCampus,
   getAllUsers,
   toggleUserStatus,
+  createBroadcast,
+  getAllBroadcasts,
+  deleteBroadcast,
+  getAllInquiries,
+  updateInquiryStatus,
+  convertInquiryToInstitute,
+  getPlatformAuditLogs,
 };

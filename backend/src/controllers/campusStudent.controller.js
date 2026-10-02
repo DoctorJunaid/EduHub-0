@@ -17,29 +17,23 @@ export const getCampusStudents = async (req, res) => {
       });
     }
 
-    if (
-      req.user.role !== "campus_admin" &&
-      req.user.role !== "campus_manager"
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied. Campus Manager/Admin only.",
-      });
-    }
+    const campusId = req.user?.campusId?._id || req.user?.campusId || req.query?.campusId;
 
-    const { campusId } = req.user;
-
-    if (!campusId) {
+    if (!campusId && req.user?.role !== "super_admin") {
       return res.status(400).json({
         success: false,
-        message: "Campus Manager/Admin is not assigned to a campus",
+        message: "Campus context required. No campus assigned or specified.",
       });
     }
 
-    const students = await User.find({
-      role: "student",
-      campusId: campusId,
-    })
+    const query = { role: "student" };
+    if (campusId) {
+      query.campusId = campusId;
+    } else if (req.user?.instituteId) {
+      query.instituteId = req.user.instituteId;
+    }
+
+    const students = await User.find(query)
       .select("-passwordHash")
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")

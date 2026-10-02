@@ -72,8 +72,11 @@ const getInstituteIdForAdmin = async (userId) => {
 // GET /settings/institute/me
 router.get("/institute/me", authorize("institute_admin", "super_admin"), async (req, res) => {
   try {
-    const instituteId = req.user.instituteId || await getInstituteIdForAdmin(req.user._id);
-    if (!instituteId) return res.status(400).json({ success: false, message: "No institute assigned to this user" });
+    let instituteId = req.user.instituteId || await getInstituteIdForAdmin(req.user._id);
+    if (!instituteId && req.user.role === "super_admin") {
+      instituteId = req.query.instituteId || (await Campus.db.models.Institute.findOne())?._id;
+    }
+    if (!instituteId) return res.status(200).json({ success: true, data: { name: "EduHub Platform", theme: "light" } });
     const settings = await settingsService.getInstituteSettings(instituteId);
     res.json({ success: true, data: settings });
   } catch (error) {
@@ -84,8 +87,11 @@ router.get("/institute/me", authorize("institute_admin", "super_admin"), async (
 // PUT /settings/institute/me
 router.put("/institute/me", authorize("institute_admin", "super_admin"), async (req, res) => {
   try {
-    const instituteId = req.user.instituteId || await getInstituteIdForAdmin(req.user._id);
-    if (!instituteId) return res.status(400).json({ success: false, message: "No institute assigned to this user" });
+    let instituteId = req.user.instituteId || await getInstituteIdForAdmin(req.user._id);
+    if (!instituteId && req.user.role === "super_admin") {
+      instituteId = req.query.instituteId || (await Campus.db.models.Institute.findOne())?._id;
+    }
+    if (!instituteId) return res.status(400).json({ success: false, message: "No institute specified to update" });
     const settings = await settingsService.updateInstituteSettings(instituteId, req.body, req.user._id);
     res.json({ success: true, data: settings });
   } catch (error) {

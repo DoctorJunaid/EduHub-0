@@ -45,7 +45,19 @@ export default function CampusOverview() {
     dispatch(fetchExams());
     dispatch(fetchFees());
     dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
-  }, [dispatch]);
+
+    const handleCampusChange = () => {
+      dispatch(fetchStudents());
+      dispatch(fetchFaculty());
+      dispatch(fetchSchedules());
+      dispatch(fetchExams());
+      dispatch(fetchFees());
+      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
+    };
+
+    window.addEventListener("campusContextChange", handleCampusChange);
+    return () => window.removeEventListener("campusContextChange", handleCampusChange);
+  }, [dispatch, rawStudents, rawFaculty, rawTimetable]);
 
   // Strictly use real API records - no mock fallbacks
   const students = useMemo(() => rawStudents || [], [rawStudents]);

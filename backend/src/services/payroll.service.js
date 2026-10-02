@@ -70,17 +70,96 @@ export const generatePayroll = async (campusId, userId, { month }) => {
   // 2. Load all salary profiles for this campus
   const salaryProfiles = await TeacherSalaryProfile.find({ campusId, isActive: true }).lean();
   if (!salaryProfiles.length) {
-    return { generated: 0, skipped: 0, message: "No active salary profiles found" };
+    return { generated: 0, skipped: 0, total: 0, message: "No active salary profiles found" };
   }
+
+  // Pre-fetch all supporting data in bulk to eliminate N*9 query bottle-necks
+  const [
+    existingPayrolls,
+    allTeacherProfiles,
+    allAttendances,
+    allSubDuties,
+    allAdjustments,
+    allSessions,
+  ] = await Promise.all([
+    MonthlyPayroll.find({ campusId, month }).lean(),
+    TeacherProfile.find({ campusId }).select("_id user").lean(),
+    TeacherAttendance.find({
+      campusId,
+      date: { $gte: startDate, $lte: endDate },
+    }).lean(),
+    SubstituteAssignment.find({
+      campusId,
+      date: { $gte: startDate, $lte: endDate },
+      status: { $in: ["Assigned", "Completed"] },
+    }).lean(),
+    PayrollAdjustment.find({
+      campusId,
+      targetMonth: month,
+      status: "Pending",
+    }).lean(),
+    TeacherClassSession.find({
+      campusId,
+      date: { $gte: startDate, $lte: endDate },
+    }).lean(),
+  ]);
+
+  // Index supporting data into Maps
+  const existingPayrollMap = new Map();
+  existingPayrolls.forEach((ep) => {
+    existingPayrollMap.set(String(ep.teacherProfileId), ep);
+  });
+
+  const profileToUserMap = new Map();
+  allTeacherProfiles.forEach((tp) => {
+    if (tp.user) profileToUserMap.set(String(tp._id), String(tp.user));
+  });
+
+  const attendanceMap = new Map();
+  allAttendances.forEach((att) => {
+    const key = String(att.teacherProfileId);
+    if (!attendanceMap.has(key)) attendanceMap.set(key, []);
+    attendanceMap.get(key).push(att);
+  });
+
+  const subDutyMap = new Map();
+  allSubDuties.forEach((sd) => {
+    const key = String(sd.substituteTeacherId);
+    if (!subDutyMap.has(key)) subDutyMap.set(key, []);
+    subDutyMap.get(key).push(sd);
+  });
+
+  const adjustmentMap = new Map();
+  allAdjustments.forEach((adj) => {
+    const key = String(adj.teacherProfileId);
+    if (!adjustmentMap.has(key)) adjustmentMap.set(key, []);
+    adjustmentMap.get(key).push(adj);
+  });
+
+  const originalSessionMap = new Map();
+  const actualSessionMap = new Map();
+  allSessions.forEach((sess) => {
+    if (sess.originalTeacherId) {
+      const origKey = String(sess.originalTeacherId);
+      if (!originalSessionMap.has(origKey)) originalSessionMap.set(origKey, []);
+      originalSessionMap.get(origKey).push(sess);
+    }
+    if (sess.actualTeacherId) {
+      const actKey = String(sess.actualTeacherId);
+      if (!actualSessionMap.has(actKey)) actualSessionMap.set(actKey, []);
+      actualSessionMap.get(actKey).push(sess);
+    }
+  });
 
   let generated = 0;
   let skipped = 0;
 
   for (const profile of salaryProfiles) {
     const teacherId = profile.teacherProfileId;
+    const teacherIdStr = String(teacherId);
 
     // PAY-02: Check if payroll already exists and is not Draft
-    const existing = await MonthlyPayroll.findOne({ teacherProfileId: teacherId, month }).lean();
+    const existing = existingPayrollMap.get(teacherIdStr);
     if (existing && existing.status !== "Draft") {
       skipped++;
       continue;
@@ -89,41 +168,34 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     // 3. PAY-04: dailySalary
     const dailySalary = profile.baseSalary / (activePolicy.workingDaysPerMonth || 26);
 
-    // 4. Fetch attendance for this teacher for the month
-    // NOTE: TeacherAttendance.teacherProfileId refs "User" (not TeacherProfile),
-    // so attendance records store the User._id in that field.
-    // We fetch the linked User._id from TeacherProfile and query by that.
-    const teacherProfile = await TeacherProfile.findById(teacherId).select("user").lean();
-    // User._id is the primary key stored in attendance; TeacherProfile._id as fallback
-    const attendanceTeacherIds = teacherProfile?.user
-      ? [teacherProfile.user, teacherId]
-      : [teacherId];
+    // 4. Fetch attendance for this teacher from pre-fetched map
+    const linkedUserId = profileToUserMap.get(teacherIdStr);
+    const attList = [
+      ...(attendanceMap.get(teacherIdStr) || []),
+      ...(linkedUserId ? (attendanceMap.get(linkedUserId) || []) : []),
+    ];
 
-    const attendanceRecords = await TeacherAttendance.find({
-      campusId,
-      teacherProfileId: { $in: attendanceTeacherIds },
-      date: { $gte: startDate, $lte: endDate },
-    }).lean();
+    // Filter duplicates by _id
+    const seenAttIds = new Set();
+    const uniqueAtts = attList.filter((a) => {
+      const idStr = String(a._id);
+      if (seenAttIds.has(idStr)) return false;
+      seenAttIds.add(idStr);
+      return true;
+    });
 
-    // Compare case-insensitively to handle both "Present" and "present" enum values
-    const presentDays = attendanceRecords.filter((a) => a.status?.toLowerCase() === "present").length;
-    const absentDays = attendanceRecords.filter((a) => a.status?.toLowerCase() === "absent").length;
-    const lateCount = attendanceRecords.filter((a) => a.status?.toLowerCase() === "late").length;
-    const leaveDays = attendanceRecords.filter((a) => a.status?.toLowerCase() === "on leave").length;
+    const presentDays = uniqueAtts.filter((a) => a.status?.toLowerCase() === "present").length;
+    const absentDays = uniqueAtts.filter((a) => a.status?.toLowerCase() === "absent").length;
+    const lateCount = uniqueAtts.filter((a) => a.status?.toLowerCase() === "late").length;
+    const leaveDays = uniqueAtts.filter((a) => a.status?.toLowerCase() === "on leave").length;
 
     // 5. Fetch substitute duties where this teacher WAS the substitute
-    const subDuties = await SubstituteAssignment.find({
-      campusId,
-      substituteTeacherId: teacherId,
-      date: { $gte: startDate, $lte: endDate },
-      status: { $in: ["Assigned", "Completed"] },
-    }).lean();
-
+    const subDuties = subDutyMap.get(teacherIdStr) || [];
     const substituteDuties = subDuties.length;
 
     // 6. Build attendance summary snapshot
     const attendanceSummary = {
-      totalWorkingDays: policy.workingDaysPerMonth,
+      totalWorkingDays: activePolicy.workingDaysPerMonth || 26,
       presentDays,
       absentDays,
       lateCount,
@@ -233,14 +305,8 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       });
     }
 
-    // 8b. Incorporate pending carry-forward PayrollAdjustments for this teacher & month
-    const pendingAdjustments = await PayrollAdjustment.find({
-      campusId,
-      teacherProfileId: teacherId,
-      targetMonth: month,
-      status: "Pending",
-    });
-
+    // 8b. Incorporate pending carry-forward PayrollAdjustments from map
+    const pendingAdjustments = adjustmentMap.get(teacherIdStr) || [];
     for (const adj of pendingAdjustments) {
       if (adj.type === "Deduction") {
         deductions.push({
@@ -257,18 +323,16 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       }
     }
 
-    // 8c. Dynamic Missed Classes Deductions (Unsubstituted)
-    const teacherUserIds = attendanceTeacherIds;
+    // 8c. Dynamic Missed Classes Deductions (Unsubstituted) from map
+    const teacherUserKeys = [teacherIdStr, ...(linkedUserId ? [linkedUserId] : [])];
+    const teacherSessions = teacherUserKeys.flatMap((k) => originalSessionMap.get(k) || []);
     
-    // Find completely missed classes (no substitute provided)
-    const trulyMissedClasses = await TeacherClassSession.find({
-      campusId,
-      date: { $gte: startDate, $lte: endDate },
-      originalTeacherId: { $in: teacherUserIds },
-      status: { $in: ["Missed", "Absent"] },
-      isSubstituted: false,
-      substituteAssignmentId: null
-    }).lean();
+    const trulyMissedClasses = teacherSessions.filter(
+      (s) =>
+        ["Missed", "Absent"].includes(s.status) &&
+        !s.isSubstituted &&
+        !s.substituteAssignmentId
+    );
     
     const missedClassCount = trulyMissedClasses.length;
     let missedClassDeductionAmount = 0;
@@ -281,7 +345,7 @@ export const generatePayroll = async (campusId, userId, { month }) => {
         deductions.push({
           reason: `${missedClassCount} genuinely missed class(es) (no substitute)`,
           category: "Absent",
-          days: missedClassCount, // using days field for count
+          days: missedClassCount,
           rate: missedClassDeductionAmount / missedClassCount,
           amount: Math.round(missedClassDeductionAmount),
           note: `MissedSessions: ${trulyMissedClasses.map((s) => s._id).join(",")}`,
@@ -289,21 +353,16 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       }
     }
 
-    // 8d. Fallback: manual approved deductions / bonuses on specific sessions (if any were created manually)
-    const sessionDeductions = await TeacherClassSession.find({
-      campusId,
-      date: { $gte: startDate, $lte: endDate },
-      originalTeacherId: { $in: teacherUserIds },
-      status: { $in: ["Missed", "Absent"] },
-      "adjustmentReview.status": "Approved",
-      deductionValue: { $gt: 0 },
-    }).lean();
+    // 8d. Fallback: manual approved deductions / bonuses on specific sessions
+    const sessionDeductions = teacherSessions.filter(
+      (s) =>
+        ["Missed", "Absent"].includes(s.status) &&
+        s.adjustmentReview?.status === "Approved" &&
+        s.deductionValue > 0
+    );
 
     for (const sess of sessionDeductions) {
-      // prevent duplicate deduction if dynamic rule handled it
       if (activePolicy.missedClassDeductionRules && activePolicy.missedClassDeductionRules.length > 0) {
-        // dynamic rule applied, skip manual ones or apply as well?
-        // best to skip manual ones to avoid double deduction
         continue;
       }
       deductions.push({
@@ -314,19 +373,18 @@ export const generatePayroll = async (campusId, userId, { month }) => {
       });
     }
 
-    const sessionBonuses = await TeacherClassSession.find({
-      campusId,
-      date: { $gte: startDate, $lte: endDate },
-      actualTeacherId: { $in: teacherUserIds },
-      isSubstituted: true,
-      status: "Completed",
-      "adjustmentReview.status": "Approved",
-      bonusValue: { $gt: 0 },
-    }).lean();
+    const actualSessions = teacherUserKeys.flatMap((k) => actualSessionMap.get(k) || []);
+    const sessionBonuses = actualSessions.filter(
+      (s) =>
+        s.isSubstituted &&
+        s.status === "Completed" &&
+        s.adjustmentReview?.status === "Approved" &&
+        s.bonusValue > 0
+    );
 
     for (const sess of sessionBonuses) {
       if (activePolicy.substituteBonusRules && activePolicy.substituteBonusRules.length > 0) {
-        continue; // skip manual if dynamic applied
+        continue;
       }
       bonuses.push({
         reason: `Approved Substitute Period ${sess.period}: ${sess.subject} (${sess.className}) on ${moment.utc(sess.date).format("YYYY-MM-DD")}`,
@@ -340,12 +398,12 @@ export const generatePayroll = async (campusId, userId, { month }) => {
 
     // 9. Compute totals
     const allowancesTotal = (profile.allowances || []).reduce((sum, a) => sum + (a.amount || 0), 0);
-    const grossSalary = profile.baseSalary + allowancesTotal; // PAY-05
-    const deductionsTotal = deductions.reduce((sum, d) => sum + d.amount, 0); // PAY-06
-    const bonusesTotal = bonuses.reduce((sum, b) => sum + b.amount, 0); // PAY-07
-    const netSalary = grossSalary - deductionsTotal + bonusesTotal; // PAY-08
+    const grossSalary = profile.baseSalary + allowancesTotal;
+    const deductionsTotal = deductions.reduce((sum, d) => sum + d.amount, 0);
+    const bonusesTotal = bonuses.reduce((sum, b) => sum + b.amount, 0);
+    const netSalary = grossSalary - deductionsTotal + bonusesTotal;
 
-    // 10. Upsert (PAY-01, PAY-02)
+    // 10. Upsert
     const payrollRecord = await MonthlyPayroll.findOneAndUpdate(
       { teacherProfileId: teacherId, month },
       {

@@ -152,6 +152,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    passwordVersion: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -173,6 +177,9 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   }
   return await bcrypt.compare(candidatePassword, this.passwordHash);
 };
+
+import tenantDerivationPlugin from "../plugins/tenantDerivation.plugin.js";
+userSchema.plugin(tenantDerivationPlugin);
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 

@@ -114,11 +114,21 @@ export default function FeeManagement() {
     dispatch(fetchFeeStructures());
     dispatch(fetchFinancialLedger());
 
+    const handleCampusChange = () => {
+      dispatch(fetchFees(true));
+      dispatch(fetchStudents());
+      dispatch(fetchFeeStructures());
+      dispatch(fetchFinancialLedger());
+    };
+
+    window.addEventListener("campusContextChange", handleCampusChange);
+
     const interval = setInterval(() => {
       dispatch(fetchFees());
     }, 60000);
 
     return () => {
+      window.removeEventListener("campusContextChange", handleCampusChange);
       clearInterval(interval);
     };
   }, [dispatch]);

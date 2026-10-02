@@ -177,7 +177,9 @@ export const setPassword = async ({ token, password }) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? undefined : "default_jwt_secret_key");
+    if (!secret) throw new Error("JWT_SECRET is missing");
+    const decoded = jwt.verify(token, secret);
     if (!decoded.reset) {
       throw new Error("Invalid token type");
     }
@@ -189,7 +191,19 @@ export const setPassword = async ({ token, password }) => {
       throw error;
     }
 
+    // Single-use token enforcement: if token's passwordVersion does not match user's current passwordVersion, reject
+    const tokenVersion = decoded.pv !== undefined ? Number(decoded.pv) : 0;
+    const currentVersion = Number(user.passwordVersion || 0);
+    if (tokenVersion !== currentVersion) {
+      const error = new Error("This setup/reset link has already been used or has expired. Please request a new link.");
+      error.statusCode = 400;
+      throw error;
+    }
+
     user.passwordHash = password;
+    user.status = "Active";
+    user.isActive = true;
+    user.passwordVersion = currentVersion + 1; // Invalidate current token immediately
     await user.save();
 
     const newToken = generateToken({
@@ -204,8 +218,8 @@ export const setPassword = async ({ token, password }) => {
 
     return { token: newToken, user: userObj };
   } catch (err) {
-    const error = new Error("Invalid or expired token");
-    error.statusCode = 400;
+    const error = new Error(err.message || "Invalid or expired token");
+    error.statusCode = err.statusCode || 400;
     throw error;
   }
 };

@@ -51,9 +51,13 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
       />
 
       <div className="main-area">
-        {!isSuperAdmin && (
-          <Header user={profile} {...headerProps} onSignOut={headerProps.onViewProfile ? signOut : undefined} />
-        )}
+        <Header
+          user={profile}
+          {...headerProps}
+          onSignOut={signOut}
+          homePath={isSuperAdmin ? "/super-admin" : undefined}
+          homeLabel={isSuperAdmin ? "Super Admin Master Console" : undefined}
+        />
         <main className={`content-area ${isFlushPage ? 'content-area-flush' : ''}`}>
           <Outlet />
         </main>

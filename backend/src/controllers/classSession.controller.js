@@ -5,7 +5,9 @@ import TeachingCreditConfig from "../models/teachingCreditConfig.model.js";
  * Helper to extract campusId from user context.
  */
 function getCampusId(req) {
-  return req.user?.campusId || req.query?.campusId || req.body?.campusId;
+  const cid = req.body?.campusId || req.query?.campusId || req.user?.campusId;
+  if (!cid) return null;
+  return typeof cid === "object" && cid !== null ? (cid._id || cid.id || cid).toString() : String(cid);
 }
 
 export const generateSessions = async (req, res) => {
@@ -32,7 +34,7 @@ export const getTeacherSessions = async (req, res) => {
     // If teacher role, always use req.user._id
     // If manager role, can query for specific teacherId or use req.user._id
     let teacherUserId = req.user._id;
-    if (["campus_admin", "campus_manager", "principal"].includes(req.user.role)) {
+    if (["campus_admin", "campus_manager", "principal", "institute_admin", "super_admin"].includes(req.user.role)) {
       if (req.query.teacherId) {
         teacherUserId = req.query.teacherId;
       } else if (req.params.teacherId) {

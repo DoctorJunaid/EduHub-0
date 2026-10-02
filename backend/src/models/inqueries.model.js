@@ -44,6 +44,12 @@ const inquirySchema = new mongoose.Schema(
       maxlength: [1000, "Message cannot exceed 1000 characters"],
       default: "",
     },
+    status: {
+      type: String,
+      enum: ["New", "Contacted", "Converted", "Archived"],
+      default: "New",
+      index: true,
+    },
   },
   {
     timestamps: true, // Automatically manages createdAt and updatedAt

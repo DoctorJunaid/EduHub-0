@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import moment from "moment";
+import "../models/academic.model.js";
 import TeacherClassSession from "../models/teacherClassSession.model.js";
 import TeachingCreditConfig from "../models/teachingCreditConfig.model.js";
 import Timetable from "../models/timetable.model.js";
@@ -177,7 +178,59 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
     status: { $in: ["Assigned", "Completed", "Pending Approval"] },
   }).lean();
 
-  const sessions = [];
+  // Pre-fetch existing sessions for today to prevent repeated findOne calls
+  const existingSessions = await TeacherClassSession.find({
+    campusId,
+    date: targetDate,
+  });
+
+  const existingMap = new Map();
+  existingSessions.forEach((s) => {
+    const key = `${s.period}_${s.originalTeacherId}_${s.className}_${s.section}`;
+    existingMap.set(key, s);
+  });
+
+  // Pre-fetch teacher profiles and salary profiles in memory
+  const teacherProfiles = await TeacherProfile.find({ campusId }).select("_id user").lean();
+  const userIdToProfileId = new Map();
+  teacherProfiles.forEach((tp) => {
+    if (tp.user) {
+      userIdToProfileId.set(String(tp.user), String(tp._id));
+    }
+  });
+
+  const salaryProfiles = await TeacherSalaryProfile.find({ campusId }).lean();
+  const salaryMap = new Map();
+  salaryProfiles.forEach((sp) => {
+    if (sp.teacherProfileId) {
+      salaryMap.set(String(sp.teacherProfileId), sp.baseSalary || 30000);
+    }
+  });
+
+  const getDeduction = (tUserId) => {
+    if (config.deductionMode === "FixedAmount" && config.perMissedClassDeduction > 0) {
+      return config.perMissedClassDeduction;
+    }
+    const profId = userIdToProfileId.get(String(tUserId)) || String(tUserId);
+    const base = salaryMap.get(profId) || salaryMap.get(String(tUserId)) || 30000;
+    const workingDays = config.workingDaysPerMonth || 26;
+    const periodsPerDay = config.expectedPeriodsPerDay || 5;
+    const mult = config.missedClassFormulaMultiplier || 1.0;
+    return Math.max(0, Math.round(((base / workingDays) / periodsPerDay) * mult));
+  };
+
+  const sessions = [...existingSessions];
+  const newSessionsToInsert = [];
+
+  const teacherUserCache = new Map();
+  const resolveUserCached = async (id) => {
+    if (!id) return null;
+    const key = String(id);
+    if (teacherUserCache.has(key)) return teacherUserCache.get(key);
+    const u = await resolveTeacherUser(id);
+    teacherUserCache.set(key, u);
+    return u;
+  };
 
   for (let idx = 0; idx < timetableSlots.length; idx++) {
     const slot = timetableSlots[idx];
@@ -187,7 +240,7 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
     if (slot.teacherId?._id) {
       teacherUser = slot.teacherId;
     } else if (slot.teacherId) {
-      teacherUser = await resolveTeacherUser(slot.teacherId);
+      teacherUser = await resolveUserCached(slot.teacherId);
     }
 
     if (!teacherUser?._id) {
@@ -200,18 +253,8 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
     const subjectName = slot.subjectId?.name || slot.subject || "Subject";
     const roomName = slot.room || "Room 101";
 
-    // Check if session record already exists
-    let existingSession = await TeacherClassSession.findOne({
-      campusId,
-      date: targetDate,
-      period: periodNumber,
-      originalTeacherId: teacherUserId,
-      className,
-      section: sectionName,
-    });
-
-    if (existingSession) {
-      sessions.push(existingSession);
+    const sessionKey = `${periodNumber}_${teacherUserId}_${className}_${sectionName}`;
+    if (existingMap.has(sessionKey)) {
       continue;
     }
 
@@ -245,14 +288,14 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
       attendanceStatus = "Absent";
       sessionStatus = "Absent";
       creditValue = 0;
-      deductionValue = await calculatePeriodDeduction(campusId, teacherUserId, config);
+      deductionValue = getDeduction(teacherUserId);
       remarks = "Teacher marked absent for the day";
     } else if (teacherAtt === "present" || teacherAtt === "late") {
       attendanceStatus = teacherAtt === "late" ? "Late" : "Present";
     }
 
     if (matchedSub) {
-      const subUser = await resolveTeacherUser(matchedSub.substituteTeacherId);
+      const subUser = await resolveUserCached(matchedSub.substituteTeacherId);
       if (subUser) {
         actualTeacherId = subUser._id;
         isSubstituted = true;
@@ -264,7 +307,22 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
       }
     }
 
-    const newSession = new TeacherClassSession({
+    let adjustmentReview = undefined;
+    if (sessionStatus === "Missed" || sessionStatus === "Absent") {
+      adjustmentReview = {
+        status: config.requireApprovalForMissedDeduction ? "Pending Review" : "Approved",
+        proposedDeduction: deductionValue,
+        proposedBonus: 0,
+      };
+    } else if (isSubstituted && bonusValue > 0) {
+      adjustmentReview = {
+        status: config.requireApprovalForSubstituteBonus ? "Pending Review" : "Approved",
+        proposedDeduction: 0,
+        proposedBonus: bonusValue,
+      };
+    }
+
+    newSessionsToInsert.push({
       campusId,
       timetableId: slot._id,
       academicSession: "2026-2027",
@@ -290,24 +348,13 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
       bonusValue,
       deductionValue,
       remarks,
+      adjustmentReview,
     });
+  }
 
-    if (sessionStatus === "Missed" || sessionStatus === "Absent") {
-      newSession.adjustmentReview = {
-        status: config.requireApprovalForMissedDeduction ? "Pending Review" : "Approved",
-        proposedDeduction: deductionValue,
-        proposedBonus: 0,
-      };
-    } else if (isSubstituted && bonusValue > 0) {
-      newSession.adjustmentReview = {
-        status: config.requireApprovalForSubstituteBonus ? "Pending Review" : "Approved",
-        proposedDeduction: 0,
-        proposedBonus: bonusValue,
-      };
-    }
-
-    await newSession.save();
-    sessions.push(newSession);
+  if (newSessionsToInsert.length > 0) {
+    const inserted = await TeacherClassSession.insertMany(newSessionsToInsert);
+    sessions.push(...inserted);
   }
 
   return sessions;

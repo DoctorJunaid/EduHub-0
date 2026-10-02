@@ -93,6 +93,20 @@ const slice = createSlice({
     },
     campusDeleted: (state, { payload }) => {
       state.records = state.records.filter((r) => r.id !== payload);
+      if (state.activeCampusId === payload) {
+        state.activeCampusId = null;
+        if (typeof localStorage !== 'undefined') localStorage.removeItem('eduHubActiveCampusId');
+      }
+    },
+    activeCampusChanged: (state, { payload }) => {
+      state.activeCampusId = payload;
+      if (typeof localStorage !== 'undefined') {
+        if (payload) {
+          localStorage.setItem('eduHubActiveCampusId', payload);
+        } else {
+          localStorage.removeItem('eduHubActiveCampusId');
+        }
+      }
     },
   },
   extraReducers: (builder) => {
@@ -105,6 +119,15 @@ const slice = createSlice({
       .addCase(fetchCampuses.fulfilled, (state, { payload }) => {
         state.status = 'succeeded';
         state.records = payload;
+        // If no active campus is selected yet and campuses exist, auto-select first one
+        if (!state.activeCampusId && payload.length > 0) {
+          const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
+          const match = payload.find(c => c.id === stored);
+          state.activeCampusId = match ? match.id : payload[0].id;
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('eduHubActiveCampusId', state.activeCampusId);
+          }
+        }
       })
       .addCase(fetchCampuses.rejected, (state, { payload }) => {
         state.status = 'failed';
@@ -128,9 +151,12 @@ const slice = createSlice({
   },
 });
 
-export const { campusAdded, campusUpdated, campusDeleted } = slice.actions;
+export const { campusAdded, campusUpdated, campusDeleted, activeCampusChanged } = slice.actions;
 export const selectInstituteCampuses = (state) => state.campuses.records;
 export const selectCampusesStatus = (state) => state.campuses.status;
 export const selectCampusesError = (state) => state.campuses.error;
+export const selectActiveCampusId = (state) =>
+  state.campuses.activeCampusId ||
+  (typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null);
 
 export default slice.reducer;

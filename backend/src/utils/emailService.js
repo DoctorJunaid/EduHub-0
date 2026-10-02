@@ -6,14 +6,18 @@ import { getResetPasswordTemplate, sendVerificationTemplate } from "./emailTempl
 import dotenv from "dotenv";
 dotenv.config();
 
+const MAIL_USER = process.env.MAIL_USER || "naseebnoman39@gmail.com";
 const MAIL_PASS = process.env.MAIL_PASS;
+const MAIL_HOST = process.env.MAIL_HOST || "smtp.gmail.com";
+const MAIL_PORT = parseInt(process.env.MAIL_PORT || "587", 10);
+const MAIL_FROM = process.env.MAIL_FROM || `"EduHub App" <${MAIL_USER}>`;
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // Use true for port 465, false for port 587
+  host: MAIL_HOST,
+  port: MAIL_PORT,
+  secure: process.env.MAIL_SECURE === "true", // Use true for port 465, false for port 587
   auth: {
-    user: "naseebnoman39@gmail.com",
+    user: MAIL_USER,
     pass: MAIL_PASS,
   },
 });
@@ -22,7 +26,7 @@ export const sendMail = async (senderMail, subject, Message, resetLink) => {
   try {
     console.log(`[EMAIL DISPATCH] Attempting to send email to "${senderMail}" with subject: "${subject}"`);
     const info = await transporter.sendMail({
-      from: '"EduHub App" <naseebnoman39@gmail.com>',
+      from: MAIL_FROM,
       to: senderMail,
       subject: subject,
       text: Message,

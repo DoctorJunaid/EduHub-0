@@ -7,14 +7,20 @@ const router = express.Router();
 
 router.use(protect);
 
-const editorRoles = ["campus_admin", "campus_manager"];
-const approveRoles = ["campus_admin", "institute_admin", "principal"];
-const readerRoles = [...editorRoles, ...approveRoles, "accountant"];
+const editorRoles = ["campus_admin", "campus_manager", "institute_admin", "super_admin", "principal"];
+const approveRoles = ["campus_admin", "institute_admin", "super_admin", "principal"];
+const readerRoles = [...editorRoles, "accountant"];
+
+const resolveCampusId = (req) => {
+  const cid = req.body?.campusId || req.query?.campusId || req.user?.campusId;
+  if (!cid) return null;
+  return typeof cid === "object" && cid !== null ? (cid._id || cid.id || cid).toString() : String(cid);
+};
 
 // POST /campus/salary/payroll/generate
 router.post("/generate", authorize(...editorRoles), async (req, res) => {
   try {
-    const campusId = req.user.campusId;
+    const campusId = resolveCampusId(req);
     if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
 
     const { month } = req.body; // "2026-09"
@@ -33,7 +39,7 @@ router.post("/generate", authorize(...editorRoles), async (req, res) => {
 // GET /campus/salary/payroll?month=&status=&page=&limit=
 router.get("/", authorize(...readerRoles), async (req, res) => {
   try {
-    const campusId = req.user.campusId || req.query.campusId;
+    const campusId = resolveCampusId(req);
     if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
 
     const { month, status, page, limit } = req.query;
@@ -46,7 +52,7 @@ router.get("/", authorize(...readerRoles), async (req, res) => {
 
 router.get("/my-payslips", authorize("teacher", "faculty"), async (req, res) => {
   try {
-    const campusId = req.user.campusId;
+    const campusId = resolveCampusId(req);
     if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
     const { month, page, limit } = req.query;
     const data = await payrollService.listMyPayslips(campusId, req.user._id, { month, page, limit });
@@ -58,7 +64,8 @@ router.get("/my-payslips", authorize("teacher", "faculty"), async (req, res) => 
 
 router.put("/:id", authorize(...editorRoles), async (req, res) => {
   try {
-    const data = await payrollService.updatePayroll(req.params.id, req.user.campusId, req.body);
+    const campusId = resolveCampusId(req);
+    const data = await payrollService.updatePayroll(req.params.id, campusId, req.body);
     res.json({ success: true, data });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
@@ -67,16 +74,18 @@ router.put("/:id", authorize(...editorRoles), async (req, res) => {
 
 router.post("/:id/approve", authorize(...approveRoles), async (req, res) => {
   try {
-    const data = await payrollService.approvePayroll(req.params.id, req.user.campusId, req.user._id);
+    const campusId = resolveCampusId(req);
+    const data = await payrollService.approvePayroll(req.params.id, campusId, req.user._id);
     res.json({ success: true, data });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
 
-router.post("/:id/mark-paid", authorize("accountant", "campus_admin", "campus_manager"), async (req, res) => {
+router.post("/:id/mark-paid", authorize("accountant", "campus_admin", "campus_manager", "institute_admin", "super_admin"), async (req, res) => {
   try {
-    const data = await payrollService.markPaid(req.params.id, req.user.campusId);
+    const campusId = resolveCampusId(req);
+    const data = await payrollService.markPaid(req.params.id, campusId);
     res.json({ success: true, data });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
@@ -85,7 +94,7 @@ router.post("/:id/mark-paid", authorize("accountant", "campus_admin", "campus_ma
 
 router.get("/:id/export", authorize(...readerRoles, "teacher", "faculty"), async (req, res) => {
   try {
-    const campusId = req.user.campusId;
+    const campusId = resolveCampusId(req);
     const data = await payrollService.exportPayslip(req.params.id, campusId, req.query.format || "csv", ["teacher", "faculty"].includes(req.user.role) ? req.user._id : undefined);
     res.setHeader("Content-Type", data.contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${data.filename}"`);
@@ -98,7 +107,7 @@ router.get("/:id/export", authorize(...readerRoles, "teacher", "faculty"), async
 // GET /campus/salary/payroll/:id
 router.get("/:id", authorize(...readerRoles, "teacher", "faculty"), async (req, res) => {
   try {
-    const campusId = req.user.campusId || req.query.campusId;
+    const campusId = resolveCampusId(req);
     if (!campusId) return res.status(400).json({ success: false, message: "campusId is required" });
 
     const data = await payrollService.getPayroll(req.params.id, campusId, ["teacher", "faculty"].includes(req.user.role) ? req.user._id : undefined);

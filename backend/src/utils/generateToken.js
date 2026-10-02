@@ -4,12 +4,14 @@
  */
 import jwt from "jsonwebtoken";
 
-const generateToken = (payload, expiresIn = "7d") => {
+const generateToken = (payload, expiresIn) => {
   const secret = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? undefined : "default_jwt_secret_key");
   if (!secret) throw new Error("JWT_SECRET is missing in production");
   
+  const tokenExpiry = expiresIn || (payload?.reset ? "1h" : (process.env.JWT_EXPIRES_IN || "7d"));
+
   return jwt.sign(payload, secret, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "30d",
+    expiresIn: tokenExpiry,
   });
 };
 

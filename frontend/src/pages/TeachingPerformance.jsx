@@ -263,6 +263,7 @@ export default function TeachingPerformance() {
             className="tp-month-select"
           />
           <Button
+            type="button"
             onClick={handleGenerateToday}
             disabled={generateMutation.isPending}
             className="tp-generate-button"
@@ -275,6 +276,7 @@ export default function TeachingPerformance() {
             Generate Today&apos;s Sessions
           </Button>
           <Button
+            type="button"
             variant="outline"
             onClick={() => loadPerformance(true)}
             disabled={loading}

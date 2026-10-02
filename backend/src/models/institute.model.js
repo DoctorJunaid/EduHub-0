@@ -74,6 +74,21 @@ const instituteSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    planTier: {
+      type: String,
+      enum: ["free", "pro", "enterprise"],
+      default: "free",
+    },
+    planId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Plan",
+      default: null,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ["Active", "Trial", "Past Due", "Canceled"],
+      default: "Active",
+    },
   },
   {
     timestamps: true,

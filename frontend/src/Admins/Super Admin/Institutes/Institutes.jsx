@@ -99,7 +99,7 @@ export default function Institutes() {
   };
 
   const openInstituteDetails = (institute) => {
-    navigate(`/institutes/${institute.id || institute._id}`);
+    navigate(`/institutes/${institute.id || institute._id}/view`);
   };
 
   const openEditInstitute = (institute) => {

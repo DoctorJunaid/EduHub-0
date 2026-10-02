@@ -86,8 +86,11 @@ teacherSalaryProfileSchema.methods.calculateDailySalary = function calculateDail
 teacherSalaryProfileSchema.set('toJSON', { virtuals: true });
 teacherSalaryProfileSchema.set('toObject', { virtuals: true });
 
+import tenantDerivationPlugin from "../plugins/tenantDerivation.plugin.js";
+
 // Compound Index for fast campus active profile lookups
 teacherSalaryProfileSchema.index({ campusId: 1, isActive: 1 });
+teacherSalaryProfileSchema.plugin(tenantDerivationPlugin);
 
 export const TeacherSalaryProfile = mongoose.model(
   'TeacherSalaryProfile',

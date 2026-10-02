@@ -77,10 +77,12 @@ export const deleteCampus = asyncHandler(async (req, res) => {
 });
 
 export const assignCampusManager = asyncHandler(async (req, res) => {
+  const clientOrigin = req.headers.origin || req.headers.referer;
   const result = await instituteAdminService.assignCampusManager(
     req.instituteId,
     req.params.id,
-    req.body
+    req.body,
+    clientOrigin
   );
   res.status(200).json({
     success: true,
@@ -90,9 +92,11 @@ export const assignCampusManager = asyncHandler(async (req, res) => {
 });
 
 export const resendCampusManagerInvite = asyncHandler(async (req, res) => {
+  const clientOrigin = req.headers.origin || req.headers.referer;
   const result = await instituteAdminService.resendCampusManagerInvite(
     req.instituteId,
-    req.params.id
+    req.params.id,
+    clientOrigin
   );
   res.status(200).json({
     success: true,

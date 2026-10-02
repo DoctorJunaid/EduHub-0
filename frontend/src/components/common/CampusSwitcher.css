@@ -1,0 +1,167 @@
+.campus-switcher-wrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.campus-switcher-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(244, 244, 245, 0.8);
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  padding: 4px 10px 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 38px;
+  outline: none;
+}
+
+.campus-switcher-trigger:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.campus-switcher-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #09090b;
+  color: #ffffff;
+}
+
+.campus-switcher-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.1;
+}
+
+.campus-switcher-sub {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #71717a;
+}
+
+.campus-switcher-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #18181b;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campus-switcher-chevron {
+  color: #a1a1aa;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.campus-switcher-trigger[data-state="open"] .campus-switcher-chevron {
+  transform: rotate(180deg);
+}
+
+.campus-switcher-menu {
+  min-width: 220px;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.campus-switcher-menu-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  padding: 6px 8px;
+}
+
+.campus-switcher-empty {
+  padding: 12px 8px;
+  font-size: 12px;
+  color: #a1a1aa;
+  text-align: center;
+}
+
+.campus-switcher-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.campus-switcher-menu-item.selected {
+  background: #f4f4f5;
+  font-weight: 600;
+}
+
+.campus-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campus-menu-item-name {
+  font-size: 13px;
+  color: #09090b;
+}
+
+.campus-menu-status {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.campus-menu-status.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.campus-menu-status.inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.campus-menu-check {
+  color: #16a34a;
+}
+
+/* Fixed badge for campus-level users */
+.campus-badge-fixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  padding: 4px 10px;
+  border-radius: 8px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #27272a;
+}
+
+.campus-badge-icon {
+  color: #71717a;
+}
+
+.campus-badge-text {
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

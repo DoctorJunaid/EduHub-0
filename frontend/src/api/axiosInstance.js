@@ -17,18 +17,22 @@ const defaultBaseUrl = isLocalhost
 // Create a configured axios instance pointing to the local dev or hosted backend
 const axiosInstance = axios.create({
   baseURL: import.meta?.env?.VITE_API_URL || defaultBaseUrl,
-  timeout: 15000,
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request Interceptor: Attach JWT Token
+// Request Interceptor: Attach JWT Token & Active Campus Context
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubToken') : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    const activeCampusId = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
+    if (activeCampusId && !config.headers['x-campus-id']) {
+      config.headers['x-campus-id'] = activeCampusId;
     }
     return config;
   },

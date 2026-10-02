@@ -7,10 +7,24 @@ import ActivityLog, { logActivity } from "../models/activityLog.model.js";
 
 // Helper to safely extract campus and institute context
 const getContext = (req) => {
-  const campusId = req.user?.campusId || req.query.campusId;
-  const instituteId = req.user?.instituteId || req.query.instituteId;
+  let campusId =
+    req.headers["x-campus-id"] ||
+    req.campusId ||
+    req.query.campusId ||
+    req.user?.campusId;
+
+  if (campusId && typeof campusId === "object" && campusId._id) {
+    campusId = campusId._id;
+  }
+
+  const instituteId =
+    req.headers["x-institute-id"] ||
+    req.instituteId ||
+    req.user?.instituteId ||
+    req.query.instituteId;
+
   if (!campusId && req.user?.role !== "super_admin") {
-    const error = new Error("Campus context required. No campus assigned to user.");
+    const error = new Error("Campus context required. Please select an active campus branch from the top header.");
     error.statusCode = 400;
     throw error;
   }
@@ -59,13 +73,11 @@ export const createCampusAdmin = async (req, res) => {
         .json({ success: false, message: "Email already registered" });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password || "admin123", salt);
-
+    // Pass plain password to User.create so pre('save') hook hashes it once
     const campusAdmin = await User.create({
       name: adminName.trim(),
       email: email.toLowerCase().trim(),
-      passwordHash,
+      passwordHash: password || "admin123",
       role: "campus_admin",
       instituteId,
     });

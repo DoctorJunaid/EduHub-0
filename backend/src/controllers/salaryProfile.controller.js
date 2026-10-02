@@ -1,6 +1,10 @@
 import * as salaryProfileService from '../services/salaryProfile.service.js';
 
-const getCampusId = (req) => req.user?.campusId;
+const getCampusId = (req) => {
+  const cid = req.query?.campusId || req.body?.campusId || req.user?.campusId;
+  if (!cid) return null;
+  return typeof cid === 'object' && cid !== null ? (cid._id || cid.id || cid).toString() : String(cid);
+};
 
 const handleControllerError = (res, error) => {
   if (error.code === 11000) {

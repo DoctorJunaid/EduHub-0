@@ -90,8 +90,11 @@ const monthlyPayrollSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+import tenantDerivationPlugin from "../plugins/tenantDerivation.plugin.js";
+
 // Unique: one payroll per teacher per month
 monthlyPayrollSchema.index({ teacherProfileId: 1, month: 1 }, { unique: true });
+monthlyPayrollSchema.plugin(tenantDerivationPlugin);
 
 export const MonthlyPayroll =
   mongoose.models.MonthlyPayroll ||

@@ -243,15 +243,33 @@ export const assignCampusManager = async (
     throw error;
   }
 
+/**
+ * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
+ */
+const resolveFrontendUrl = (clientOrigin) => {
+  if (clientOrigin) {
+    try {
+      const url = new URL(clientOrigin);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return `${url.protocol}//${url.host}`;
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }
+  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+};
+
   // Set manager on campus
   campus.managerId = managerUser._id;
   await campus.save();
 
   // Generate setup link and dispatch strictly via email
-  const token = generateToken({ id: managerUser._id, role: managerUser.role, reset: true });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const token = generateToken({ id: managerUser._id, role: managerUser.role, pv: managerUser.passwordVersion || 0, reset: true });
+  const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
 
+  let emailSent = false;
   if (sendEmail !== false) {
     try {
       await sendMail(
@@ -260,24 +278,25 @@ export const assignCampusManager = async (
         "Welcome to EduHub! Please click the link to set up your password.",
         resetLink
       );
+      emailSent = true;
     } catch (err) {
-      console.error("Failed to send setup email during campus manager assignment:", err);
+      console.warn("Failed to send setup email during campus manager assignment:", err.message);
     }
   }
 
   const userObj = managerUser.toObject();
   delete userObj.passwordHash;
 
-  return { campus, manager: userObj, message: "Campus manager assigned successfully." };
+  return { campus, manager: userObj, resetLink, emailSent, message: "Campus manager assigned successfully." };
 };
 
 /**
- * Resend setup invite email to Campus Manager
+ * Resend setup invite email to Campus Manager with fail-safe SMTP handling
  */
-export const resendCampusManagerInvite = async (instituteId, campusId) => {
+export const resendCampusManagerInvite = async (instituteId, campusId, clientOrigin = null) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId }).populate(
     "managerId",
-    "name email phone role status"
+    "name email phone role status passwordVersion"
   );
   if (!campus) {
     const error = new Error("Campus not found under your institute");
@@ -291,20 +310,32 @@ export const resendCampusManagerInvite = async (instituteId, campusId) => {
   }
 
   const manager = campus.managerId;
-  const token = generateToken({ id: manager._id, role: manager.role || "campus_manager", reset: true });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const token = generateToken({ id: manager._id, role: manager.role || "campus_manager", pv: manager.passwordVersion || 0, reset: true });
+  const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
 
-  await sendMail(
-    manager.email,
-    "Set up your EduHub Campus Manager Account",
-    "Welcome to EduHub! Please click the link to set up your password.",
-    resetLink
-  );
+  let emailSent = false;
+  let emailError = null;
+
+  try {
+    await sendMail(
+      manager.email,
+      "Set up your EduHub Campus Manager Account",
+      "Welcome to EduHub! Please click the link to set up your password.",
+      resetLink
+    );
+    emailSent = true;
+  } catch (err) {
+    console.warn(`[INSTITUTE_ADMIN] Setup email dispatch failed for ${manager.email}:`, err.message);
+    emailError = err.message;
+  }
 
   return {
     success: true,
-    message: `Setup email sent successfully to ${manager.email}`,
+    emailSent,
+    message: emailSent
+      ? `Setup email sent successfully to ${manager.email}`
+      : `Setup link generated. (Email delivery skipped/failed: ${emailError || "SMTP unavailable"}. Please copy and share the link manually)`,
     resetLink,
     manager,
   };
@@ -429,7 +460,7 @@ export const createCampusManager = async (
     await campus.save();
   }
 
-  const token = generateToken({ id: manager._id, role: manager.role, reset: true });
+  const token = generateToken({ id: manager._id, role: manager.role, pv: manager.passwordVersion || 0, reset: true });
   const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
   
@@ -508,7 +539,7 @@ export const createStaff = async (
     phone: phone ? phone.trim() : "",
   });
 
-  const token = generateToken({ id: staff._id, role: staff.role, reset: true });
+  const token = generateToken({ id: staff._id, role: staff.role, pv: staff.passwordVersion || 0, reset: true });
   const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
   
@@ -601,7 +632,7 @@ export const createStudent = async (
     phone: phone ? phone.trim() : "",
   });
 
-  const token = generateToken({ id: student._id, role: student.role, reset: true });
+  const token = generateToken({ id: student._id, role: student.role, pv: student.passwordVersion || 0, reset: true });
   const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
   

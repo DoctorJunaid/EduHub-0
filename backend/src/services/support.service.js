@@ -242,24 +242,28 @@ export const listTickets = async (user, filters = {}) => {
 
   const query = {};
 
+  const andConditions = [];
+
   // Tenant / Role Scoping
   if (role === "super_admin") {
-    if (filters.campusId) query.campusId = filters.campusId;
-    if (filters.instituteId) query.instituteId = filters.instituteId;
+    if (filters.campusId) andConditions.push({ campusId: filters.campusId });
+    if (filters.instituteId) andConditions.push({ instituteId: filters.instituteId });
   } else if (role === "institute_admin") {
-    query.instituteId = user.instituteId;
-    if (filters.campusId) query.campusId = filters.campusId;
+    andConditions.push({ instituteId: user.instituteId });
+    if (filters.campusId) andConditions.push({ campusId: filters.campusId });
   } else if (role === "campus_admin") {
-    query.campusId = user.campusId;
+    andConditions.push({ campusId: user.campusId });
   } else if (role === "teacher") {
-    query.$or = [
-      { createdBy: user._id },
-      { assignedTo: user._id },
-      { campusId: user.campusId, category: "Academic" },
-    ];
+    andConditions.push({
+      $or: [
+        { createdBy: user._id },
+        { assignedTo: user._id },
+        { campusId: user.campusId, category: "Academic" },
+      ],
+    });
   } else {
     // Student, Parent
-    query.createdBy = user._id;
+    andConditions.push({ createdBy: user._id });
   }
 
   // Filter application
@@ -289,12 +293,18 @@ export const listTickets = async (user, filters = {}) => {
 
   if (filters.search) {
     const s = filters.search.trim();
-    query.$or = [
-      { ticketNumber: { $regex: s, $options: "i" } },
-      { subject: { $regex: s, $options: "i" } },
-      { description: { $regex: s, $options: "i" } },
-      { "createdBySnapshot.name": { $regex: s, $options: "i" } },
-    ];
+    andConditions.push({
+      $or: [
+        { ticketNumber: { $regex: s, $options: "i" } },
+        { subject: { $regex: s, $options: "i" } },
+        { description: { $regex: s, $options: "i" } },
+        { "createdBySnapshot.name": { $regex: s, $options: "i" } },
+      ],
+    });
+  }
+
+  if (andConditions.length > 0) {
+    query.$and = andConditions;
   }
 
   if (filters.startDate || filters.endDate) {

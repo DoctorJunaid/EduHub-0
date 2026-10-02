@@ -22,6 +22,13 @@ import {
   deleteCampus,
   getUsers,
   toggleUserStatus,
+  getBroadcasts,
+  createBroadcast,
+  deleteBroadcast,
+  getInquiries,
+  updateInquiryStatus,
+  convertInquiry,
+  getAuditLogs,
 } from "../controllers/superAdmin.controller.js";
 
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
@@ -72,5 +79,17 @@ router
 // Global User Governance
 router.get("/users", getUsers);
 router.patch("/users/:id/toggle-status", toggleUserStatus);
+
+// Platform Broadcast Alerts
+router.route("/broadcasts").get(getBroadcasts).post(createBroadcast);
+router.delete("/broadcasts/:id", deleteBroadcast);
+
+// Inquiries & Leads Management
+router.get("/inquiries", getInquiries);
+router.patch("/inquiries/:id/status", updateInquiryStatus);
+router.post("/inquiries/:id/convert", convertInquiry);
+
+// Platform Audit Logs
+router.get("/audit-logs", getAuditLogs);
 
 export default router;

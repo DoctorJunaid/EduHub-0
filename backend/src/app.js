@@ -76,9 +76,23 @@ app.use("/api/", limiter);
 app.use(express.json({ limit: "50kb" })); // 50kb to handle populated timetable record payloads
 app.use(express.urlencoded({ extended: true }));
 
-// Data sanitization against NoSQL query injection
-// Disabled temporarily: express-mongo-sanitize v2.2.0 crashes in Express 5.0 because req.query is read-only.
-// app.use(mongoSanitize());
+// Data sanitization against NoSQL query injection (Express 5 safe)
+const sanitizeObject = (obj) => {
+  if (!obj || typeof obj !== "object") return;
+  for (const key of Object.keys(obj)) {
+    if (key.startsWith("$") || key.includes(".")) {
+      delete obj[key];
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      sanitizeObject(obj[key]);
+    }
+  }
+};
+
+app.use((req, res, next) => {
+  if (req.body) sanitizeObject(req.body);
+  if (req.params) sanitizeObject(req.params);
+  next();
+});
 
 // Prevent HTTP Parameter Pollution
 app.use(hpp());

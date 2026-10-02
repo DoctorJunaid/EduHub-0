@@ -38,6 +38,19 @@ export const updatePolicy = async (campusId, payload) => {
     });
     // set as active
     policy.activeVersionId = policy.versions[policy.versions.length - 1]._id;
+
+    // Sync root fields with active version
+    const versionData = payload.newVersion;
+    if (versionData.workingDaysPerMonth !== undefined) policy.workingDaysPerMonth = versionData.workingDaysPerMonth;
+    if (versionData.unpaidAbsentMultiplier !== undefined) policy.unpaidAbsentMultiplier = versionData.unpaidAbsentMultiplier;
+    if (versionData.unpaidLeaveMultiplier !== undefined) policy.unpaidLeaveMultiplier = versionData.unpaidLeaveMultiplier;
+    if (versionData.halfDayMultiplier !== undefined) policy.halfDayMultiplier = versionData.halfDayMultiplier;
+    if (versionData.lateCountForHalfDay !== undefined) policy.lateCountForHalfDay = versionData.lateCountForHalfDay;
+    if (versionData.lateHalfDayPenalty !== undefined) policy.lateHalfDayPenalty = versionData.lateHalfDayPenalty;
+    if (versionData.earlyLeaveMultiplier !== undefined) policy.earlyLeaveMultiplier = versionData.earlyLeaveMultiplier;
+    if (versionData.perfectAttendanceBonus !== undefined) policy.perfectAttendanceBonus = versionData.perfectAttendanceBonus;
+    if (versionData.extraClassBonus !== undefined) policy.extraClassBonus = versionData.extraClassBonus;
+    if (versionData.examDutyBonus !== undefined) policy.examDutyBonus = versionData.examDutyBonus;
   }
 
   // Update legacy allowed fields if provided directly

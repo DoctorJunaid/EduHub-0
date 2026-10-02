@@ -13,6 +13,7 @@ import {
   Wallet,
   ShieldCheck,
   LifeBuoy,
+  Inbox,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -26,6 +27,11 @@ export const ADMIN_NAV = [
     label: "Institutes",
     path: "/institutes",
     icon: <Building2 size={20} />,
+  },
+  {
+    label: "Inquiries & Leads",
+    path: "/super-admin/inquiries",
+    icon: <Inbox size={20} />,
   },
   {
     label: "Global Users",

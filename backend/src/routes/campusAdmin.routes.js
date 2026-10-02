@@ -80,11 +80,12 @@ import {
 import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
+import { checkStudentQuota } from "../middleware/quota.middleware.js";
 
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("campus_admin", "campus_manager", "accountant", "principal"));
+router.use(authorize("super_admin", "institute_admin", "campus_admin", "campus_manager", "accountant", "principal"));
 
 // Real-time Aggregated Campus / School Dashboard Statistics
 router.get("/dashboard/stats", getDashboardStats);
@@ -94,7 +95,7 @@ router
   .get(getCampusStudents)
   .post(validateStudentId, addStudentToCampus);
 
-router.post("/students/new", createStudentForCampus);
+router.post("/students/new", checkStudentQuota, createStudentForCampus);
 router.delete("/students/:id", removeStudentFromCampus);
 router.put("/students/:id", updateStudentInCampus);
 router.get("/students/:id/payments", getStudentPayments);

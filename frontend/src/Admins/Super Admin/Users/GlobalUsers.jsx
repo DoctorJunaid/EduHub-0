@@ -27,21 +27,16 @@ const ROLE_BADGES = {
   student: { label: "Student", color: "#16a34a", bg: "#f0fdf4", icon: GraduationCap },
 };
 
-const getCachedUsers = () => {
-  try {
-    const raw = localStorage.getItem("eduHub_users_cache");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
 export default function GlobalUsers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const instituteParam = searchParams.get("institute") || "";
 
-  const [users, setUsers] = useState(getCachedUsers);
-  const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(25);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(instituteParam);
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -53,26 +48,37 @@ export default function GlobalUsers() {
     }
   }, [instituteParam]);
 
-  const fetchUsers = async (showLoading = false) => {
-    if (showLoading) setLoading(true);
+  const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const res = await axiosInstance.get("/super-admin/users");
-      const list = res.data.data || [];
-      setUsers(list);
-      try {
-        localStorage.setItem("eduHub_users_cache", JSON.stringify(list));
-      } catch {}
+      const params = {
+        page,
+        limit,
+      };
+      if (search.trim()) params.search = search.trim();
+      if (roleFilter !== "all") params.role = roleFilter;
+      if (statusFilter === "active") params.isActive = "true";
+      if (statusFilter === "inactive") params.isActive = "false";
+
+      const res = await axiosInstance.get("/super-admin/users", { params });
+      if (res.data?.data) {
+        setUsers(res.data.data);
+        setTotalUsers(res.data.total ?? res.data.data.length);
+        setTotalPages(res.data.totalPages || 1);
+      }
     } catch {
-      // SWR fallback - retain cached users
+      toast.error("Failed to load users");
     } finally {
-      if (showLoading) setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // SWR: If we have cached users, fetch silently in background. Otherwise show loader.
-    fetchUsers(users.length === 0);
-  }, []);
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [page, search, roleFilter, statusFilter]);
 
   const handleToggleStatus = async (user) => {
     setTogglingId(user._id || user.id);
@@ -94,13 +100,6 @@ export default function GlobalUsers() {
       toast.success(
         `${user.name} is now ${updatedUser.isActive ? "Active" : "Inactive"}`
       );
-      // Persist cache
-      try {
-        const next = users.map((u) =>
-          (u._id || u.id) === (user._id || user.id) ? updatedUser : u
-        );
-        localStorage.setItem("eduHub_users_cache", JSON.stringify(next));
-      } catch {}
     } catch (err) {
       // Revert optimistic update
       setUsers((prev) =>
@@ -116,25 +115,7 @@ export default function GlobalUsers() {
     }
   };
 
-  const filteredUsers = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return users.filter((u) => {
-      const matchesSearch =
-        !q ||
-        (u.name && u.name.toLowerCase().includes(q)) ||
-        (u.email && u.email.toLowerCase().includes(q)) ||
-        (u.instituteId?.name && u.instituteId.name.toLowerCase().includes(q));
-
-      const matchesRole = roleFilter === "all" || u.role === roleFilter;
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && u.isActive !== false) ||
-        (statusFilter === "inactive" && u.isActive === false);
-
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [users, search, roleFilter, statusFilter]);
+  const filteredUsers = users;
 
   const stats = useMemo(() => {
     const total = users.length;
@@ -368,6 +349,32 @@ export default function GlobalUsers() {
               )}
             </tbody>
           </table>
+
+          {/* Server-side Pagination controls */}
+          <div className="global-users-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid #f4f4f5' }}>
+            <span style={{ fontSize: '13px', color: '#71717a' }}>
+              Showing {users.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, totalUsers)} of {totalUsers} total users
+            </span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e4e4e7', background: '#fff', fontSize: '13px', cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? 0.5 : 1 }}
+              >
+                Previous
+              </button>
+              <span style={{ display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: '13px', fontWeight: 600 }}>
+                {page} / {totalPages}
+              </span>
+              <button
+                disabled={page >= totalPages || loading}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e4e4e7', background: '#fff', fontSize: '13px', cursor: page >= totalPages ? 'not-allowed' : 'pointer', opacity: page >= totalPages ? 0.5 : 1 }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
