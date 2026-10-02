@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   ArrowLeft,
@@ -25,12 +25,14 @@ import { selectInstitutes } from "@/store/Slices/institutesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import "./Institutes.css";
+import { cn } from "@/lib/utils";
 
 const emptyMedia =
   "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80";
 
 export default function InstituteDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { instituteId } = useParams();
 
   const institutes = useSelector(selectInstitutes) || [];
@@ -108,7 +110,7 @@ export default function InstituteDetails() {
         if (campRes?.data?.data) {
           setCampuses(campRes.data.data);
         }
-      } catch (err) {
+      } catch {
         if (active && !cachedInstitute) {
           toast.error("Failed to load institute details");
         }
@@ -123,6 +125,16 @@ export default function InstituteDetails() {
       active = false;
     };
   }, [instituteId, cachedInstitute]);
+
+  // Sync dynamic institute name into location.state so Header displays the actual institute name
+  useEffect(() => {
+    if (institute?.name && location.state?.name !== institute.name) {
+      navigate(location.pathname, {
+        replace: true,
+        state: { ...location.state, name: institute.name },
+      });
+    }
+  }, [institute?.name, location.pathname, location.state, navigate]);
 
   if (loading) {
     return (
@@ -184,40 +196,38 @@ export default function InstituteDetails() {
 
   return (
     <section className="institute-details-page">
-      <div className="institute-details-breadcrumbs">
-        <Link to="/super-admin">Dashboard</Link>
-        <span className="sep">&gt;</span>
-        <Link to="/institutes">Institutes</Link>
-        <span className="sep">&gt;</span>
-        <span className="current">{institute.name}</span>
-      </div>
-
-      <section className="institute-details-header">
-        <div className="institute-details-title-wrap">
+      {/* ── TOP HEADER CARD (BACK NAV + IDENTITY + ACTIONS) ── */}
+      <section className="institute-details-top-card">
+        <div className="institute-details-back-bar">
           <button
-            className="institute-details-back"
+            type="button"
+            className="institute-details-back-btn"
             onClick={() => navigate("/institutes")}
             aria-label="Back to institutes"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={15} />
+            <span>Back to Institutes</span>
           </button>
-          <div>
-            <h1>{institute.name}</h1>
+        </div>
+
+        <div className="institute-details-header-content">
+          <div className="institute-details-identity">
+            <h1 className="institute-details-title">{institute.name}</h1>
             <div className="institute-details-meta-strip">
               <span className="meta-row-icon">
-                <Building2 size={16} /> {institute.type || "Institute"}
+                <Building2 size={14} /> {institute.type || "Institute"}
               </span>
-              <span className="meta-row-sep">|</span>
+              <span className="meta-row-sep">•</span>
               <span className="meta-row-icon">
-                <Mail size={16} /> {institute.email || "No email listed"}
+                <Mail size={14} /> {institute.email || "No email listed"}
               </span>
-              <span className="meta-row-sep">|</span>
+              <span className="meta-row-sep">•</span>
               <span className="meta-row-icon">
-                <Phone size={16} /> {institute.phone || "No phone listed"}
+                <Phone size={14} /> {institute.phone || "No phone listed"}
               </span>
-              <span className="meta-row-sep">|</span>
+              <span className="meta-row-sep">•</span>
               <span className="meta-row-icon">
-                <Calendar size={16} /> Registered:{" "}
+                <Calendar size={14} /> Registered:{" "}
                 {new Date(institute.createdAt || institute.added || new Date()).toLocaleDateString(undefined, {
                   year: "numeric",
                   month: "short",
@@ -226,31 +236,39 @@ export default function InstituteDetails() {
               </span>
             </div>
           </div>
-        </div>
 
-        <div className="institute-details-top-actions">
-          <span className="status-chip">
-            <span className="status-dot" /> {institute.status || "Active"}
-          </span>
-          {institute.board && <span className="board-chip">{institute.board}</span>}
-          <button
-            className="public-page-button"
-            onClick={() => navigate(`/institutes/${targetId}`)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
-            <SlidersHorizontal size={14} /> Management Console
-          </button>
-          <button
-            className="edit-details-button"
-            onClick={() => navigate(`/institutes/${targetId}/edit`)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
-            <Pencil size={14} /> Edit Details
-          </button>
+          <div className="institute-details-actions-cluster">
+            <div className="institute-details-badges">
+              <span className="status-chip">
+                <span className="status-dot" /> {institute.status || "Active"}
+              </span>
+              {institute.board && <span className="board-chip">{institute.board}</span>}
+            </div>
+            <div className="institute-details-cta-buttons">
+              <button
+                type="button"
+                className="institute-console-btn"
+                onClick={() => navigate(`/institutes/${targetId}`)}
+              >
+                <SlidersHorizontal size={14} />
+                <span>Management Console</span>
+              </button>
+              <button
+                type="button"
+                className="institute-edit-btn"
+                onClick={() => navigate(`/institutes/${targetId}/edit`)}
+              >
+                <Pencil size={14} />
+                <span>Edit Details</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="institute-details-grid">
+      {/* ── TWO-COLUMN MAIN WORKSPACE ── */}
+      <div className="institute-details-grid">
+        {/* LEFT COLUMN: KPI CARDS + CAMPUSES */}
         <div className="institute-details-main">
           <section className="institute-details-stat-grid">
             {stats.map((stat, idx) => {
@@ -260,7 +278,7 @@ export default function InstituteDetails() {
                   <div className="stat-card-title">
                     <span>{stat.label}</span>
                     <span className="stat-card-icon">
-                      <Icon size={18} />
+                      <Icon size={16} />
                     </span>
                   </div>
                   <div className="stat-card-value">{stat.value}</div>
@@ -280,7 +298,7 @@ export default function InstituteDetails() {
                 <span>Status</span>
               </div>
               {campuses.length === 0 ? (
-                <div style={{ padding: "24px", textAlign: "center", color: "#71717a", fontSize: "13px" }}>
+                <div className="campus-empty-state">
                   No campus branches registered yet for this network.
                 </div>
               ) : (
@@ -298,66 +316,87 @@ export default function InstituteDetails() {
           </section>
         </div>
 
+        {/* RIGHT COLUMN: 4 COHESIVE SIDEBAR CARDS */}
         <aside className="institute-details-side">
-          <section className="institute-details-cover-panel">
-            <h2>Cover Identity</h2>
-            <img
-              className="institute-details-cover"
-              src={institute.coverImageUrl || institute.image || emptyMedia}
-              alt={institute.name}
-              onError={(e) => {
-                e.currentTarget.src = emptyMedia;
-              }}
-            />
+          {/* Card 1: Cover Identity */}
+          <section className="institute-details-sidebar-card">
+            <h2 className="sidebar-card-title">
+              <Image size={15} /> Cover Identity
+            </h2>
+            <div className="institute-details-cover-wrap">
+              <img
+                className="institute-details-cover"
+                src={institute.coverImageUrl || institute.image || emptyMedia}
+                alt={institute.name}
+                onError={(e) => {
+                  e.currentTarget.src = emptyMedia;
+                }}
+              />
+            </div>
           </section>
 
-          <section className="institute-details-contact-panel" style={{ marginTop: "16px" }}>
-            <h2>Institute Administrator</h2>
+          {/* Card 2: Institute Administrator */}
+          <section className="institute-details-sidebar-card">
+            <h2 className="sidebar-card-title">
+              <User size={15} /> Institute Administrator
+            </h2>
             {institute.adminId ? (
-              <div className="contact-info">
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#09090b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "14px" }}>
+              <div className="admin-card-body">
+                <div className="admin-user-row">
+                  <div className="admin-avatar">
                     {(institute.adminId.name || "A").slice(0, 1).toUpperCase()}
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "14px", color: "#09090b" }}>{institute.adminId.name}</div>
-                    <span style={{ display: "inline-block", padding: "2px 8px", background: institute.adminId.status === "Active" ? "#ecfdf5" : "#fef3c7", color: institute.adminId.status === "Active" ? "#065f46" : "#92400e", borderRadius: "999px", fontSize: "11px", fontWeight: 700 }}>
+                  <div className="admin-user-info">
+                    <div className="admin-user-name">{institute.adminId.name}</div>
+                    <span
+                      className={cn(
+                        "admin-status-badge",
+                        institute.adminId.status === "Active" ? "active" : "pending"
+                      )}
+                    >
                       {institute.adminId.status === "Active" ? "Active Account" : "Pending Password Setup"}
                     </span>
                   </div>
                 </div>
-                <span className="contact-label">Admin Email</span>
-                <span className="contact-value email-value">{institute.adminId.email}</span>
-                {institute.adminId.phone && (
-                  <>
-                    <span className="contact-label">Admin Phone</span>
-                    <span className="contact-value">{institute.adminId.phone}</span>
-                  </>
-                )}
-                <div style={{ display: "flex", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #f4f4f5" }}>
+
+                <div className="admin-contact-group">
+                  <span className="sidebar-meta-label">Admin Email</span>
+                  <span className="sidebar-meta-value">{institute.adminId.email}</span>
+                  {institute.adminId.phone && (
+                    <>
+                      <span className="sidebar-meta-label" style={{ marginTop: "6px" }}>Admin Phone</span>
+                      <span className="sidebar-meta-value">{institute.adminId.phone}</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="admin-actions-row">
                   <button
+                    type="button"
                     onClick={handleResendAdminInvite}
                     disabled={resendingEmail}
-                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", height: "32px", padding: "0 10px", background: "#09090b", color: "#fff", borderRadius: "6px", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+                    className="admin-action-btn primary"
                   >
                     {resendingEmail ? <Spinner className="size-3 text-white" /> : <Send size={12} />}
-                    Resend Email
+                    <span>Resend Email</span>
                   </button>
                   <button
+                    type="button"
                     onClick={handleCopyAdminLink}
-                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", height: "32px", padding: "0 10px", background: "#fff", color: "#09090b", borderRadius: "6px", border: "1px solid #e4e4e7", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+                    className="admin-action-btn outline"
                   >
-                    {copiedLink ? <Check size={12} style={{ color: "green" }} /> : <Copy size={12} />}
-                    {copiedLink ? "Copied!" : "Copy Link"}
+                    {copiedLink ? <Check size={12} style={{ color: "#16a34a" }} /> : <Copy size={12} />}
+                    <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: "13px", color: "#71717a", textAlign: "center", padding: "12px 0" }}>
-                No administrator assigned yet.
+              <div className="admin-empty-state">
+                <p>No administrator assigned yet.</p>
                 <button
+                  type="button"
                   onClick={() => navigate(`/institutes/${targetId}`)}
-                  style={{ display: "block", margin: "10px auto 0", padding: "6px 14px", borderRadius: "6px", background: "#09090b", color: "#fff", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+                  className="admin-assign-btn"
                 >
                   Assign Admin
                 </button>
@@ -365,77 +404,67 @@ export default function InstituteDetails() {
             )}
           </section>
 
-          {/* SaaS Subscription Panel */}
-          <section className="institute-details-admin-panel" style={{ marginTop: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
-                <CreditCard size={16} /> SaaS Subscription
+          {/* Card 3: SaaS Subscription */}
+          <section className="institute-details-sidebar-card">
+            <div className="sidebar-card-header-row">
+              <h2 className="sidebar-card-title">
+                <CreditCard size={15} /> SaaS Subscription
               </h2>
-              <span className="status-chip" style={{ fontSize: "11px", padding: "2px 8px" }}>
+              <span className="status-chip subscription">
                 {institute.subscriptionStatus || "Active"}
               </span>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "12.5px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f4f4f5", paddingBottom: "6px" }}>
-                <span style={{ color: "#71717a" }}>Plan Tier:</span>
-                <strong style={{ color: "#09090b", textTransform: "capitalize" }}>
+            <div className="subscription-body">
+              <div className="subscription-row">
+                <span className="subscription-label">Plan Tier:</span>
+                <strong className="subscription-value">
                   {institute.planId?.name || (institute.planTier ? institute.planTier.toUpperCase() : "Free Tier")}
                 </strong>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f4f4f5", paddingBottom: "6px" }}>
-                <span style={{ color: "#71717a" }}>Billing Cycle:</span>
-                <strong style={{ color: "#09090b", textTransform: "capitalize" }}>
+              <div className="subscription-row">
+                <span className="subscription-label">Billing Cycle:</span>
+                <strong className="subscription-value">
                   {institute.subscriptionBillingCycle || "Yearly"}
                 </strong>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "4px" }}>
-                <span style={{ color: "#71717a" }}>Valid Until:</span>
-                <strong style={{ color: "#09090b" }}>
+              <div className="subscription-row">
+                <span className="subscription-label">Valid Until:</span>
+                <strong className="subscription-value">
                   {institute.subscriptionEndDate ? new Date(institute.subscriptionEndDate).toLocaleDateString() : "Lifetime"}
                 </strong>
               </div>
 
               <Link
                 to="/super-admin/subscriptions"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                  height: "32px",
-                  background: "#09090b",
-                  color: "#fff",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  marginTop: "8px",
-                }}
+                className="subscription-manage-link"
               >
                 <CreditCard size={13} />
-                Manage Subscriptions
+                <span>Manage Subscriptions</span>
               </Link>
             </div>
           </section>
 
-          <section className="institute-details-contact-panel">
-            <h2>Contact Information</h2>
-            <div className="contact-info">
-              <span className="contact-label">Head Office</span>
-              <span className="contact-value">
+          {/* Card 4: Contact Information */}
+          <section className="institute-details-sidebar-card">
+            <h2 className="sidebar-card-title">
+              <Building2 size={15} /> Contact Information
+            </h2>
+            <div className="contact-info-body">
+              <span className="sidebar-meta-label">Head Office</span>
+              <span className="sidebar-meta-value">
                 {institute.headOfficeAddress || "Head office address not set"}
               </span>
-              <span className="contact-label">Support Email</span>
-              <span className="contact-value email-value">
+              <span className="sidebar-meta-label" style={{ marginTop: "8px" }}>Support Email</span>
+              <span className="sidebar-meta-value email-value">
                 {institute.email || "N/A"}
               </span>
-              <span className="contact-label">Primary Phone</span>
-              <span className="contact-value">{institute.phone || "N/A"}</span>
+              <span className="sidebar-meta-label" style={{ marginTop: "8px" }}>Primary Phone</span>
+              <span className="sidebar-meta-value">{institute.phone || "N/A"}</span>
             </div>
           </section>
         </aside>
-      </section>
+      </div>
     </section>
   );
 }
