@@ -25,13 +25,20 @@ export default function CampusSwitcher() {
   const activeCampusId = useSelector(selectActiveCampusId);
 
   const role = currentUser?.role;
-  const isMultiCampusAdmin = role === "institute_admin" || role === "super_admin";
+
+  // Super Admin manages the entire platform globally — no campus switcher needed
+  if (role === "super_admin") {
+    return null;
+  }
+
+  // Only institute_admin can switch between multiple campus branches of an institute
+  const isMultiCampusAdmin = role === "institute_admin";
 
   useEffect(() => {
-    if (role === "institute_admin" && campuses.length === 0) {
+    if (isMultiCampusAdmin && campuses.length === 0) {
       dispatch(fetchCampuses());
     }
-  }, [dispatch, role, campuses.length]);
+  }, [dispatch, isMultiCampusAdmin, campuses.length]);
 
   // If user is a campus-level user (campus_admin, teacher, student, etc.)
   if (!isMultiCampusAdmin) {
@@ -105,6 +112,11 @@ export default function CampusSwitcher() {
                 >
                   <div className="campus-menu-item-content">
                     <span className="campus-menu-item-name">{campus.name}</span>
+                    {campus.instituteName && role === "super_admin" && (
+                      <span className="campus-menu-item-inst" title={`Institute: ${campus.instituteName}`}>
+                        {campus.instituteName}
+                      </span>
+                    )}
                     {campus.status && (
                       <span className={`campus-menu-status ${campus.status.toLowerCase()}`}>
                         {campus.status}

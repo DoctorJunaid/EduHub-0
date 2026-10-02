@@ -2,21 +2,43 @@ import { createSlice, createAsyncThunk, createSelector, nanoid } from '@reduxjs/
 import axiosInstance from '../../api/axiosInstance.js';
 import { demoInstitute } from '../../Admins/Institute Admin/instituteData.js';
 
-const normalizeCampus = (c) => ({
-  ...c,
-  id: c._id || c.id,
-  instituteId: c.instituteId || demoInstitute.id,
-  name: c.name || '',
-  address: c.address || '',
-  status: c.status || 'Active',
-});
+const normalizeCampus = (c) => {
+  const instId =
+    typeof c.instituteId === 'object' && c.instituteId !== null
+      ? c.instituteId._id || c.instituteId.id
+      : c.instituteId || demoInstitute.id;
 
-// Async thunks for real API interaction
+  const instName =
+    typeof c.instituteId === 'object' && c.instituteId !== null
+      ? c.instituteId.name
+      : c.instituteName || '';
+
+  const loc =
+    typeof c.address === 'object' && c.address !== null
+      ? [c.address.street, c.address.city, c.address.province].filter(Boolean).join(', ') || c.address.city || ''
+      : c.address || c.location || '';
+
+  return {
+    ...c,
+    id: c._id || c.id,
+    instituteId: instId,
+    instituteName: instName,
+    name: c.name || '',
+    address: loc,
+    location: loc || c.location || '',
+    status: c.status || 'Active',
+  };
+};
+
+// Async thunks for real API interaction (role-aware: super_admin queries /super-admin/campuses)
 export const fetchCampuses = createAsyncThunk(
   'campuses/fetchCampuses',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue, getState }) => {
     try {
-      const response = await axiosInstance.get('/institute-admin/campuses');
+      const state = getState();
+      const role = state.auth?.user?.role;
+      const endpoint = role === 'super_admin' ? '/super-admin/campuses' : '/institute-admin/campuses';
+      const response = await axiosInstance.get(endpoint, { params });
       const data = response.data?.data || response.data || [];
       return Array.isArray(data) ? data.map(normalizeCampus) : [];
     } catch (error) {
@@ -29,9 +51,12 @@ export const fetchCampuses = createAsyncThunk(
 
 export const createCampus = createAsyncThunk(
   'campuses/createCampus',
-  async (campusData, { rejectWithValue }) => {
+  async (campusData, { rejectWithValue, getState }) => {
     try {
-      const response = await axiosInstance.post('/institute-admin/campuses', campusData);
+      const state = getState();
+      const role = state.auth?.user?.role;
+      const endpoint = role === 'super_admin' ? '/super-admin/campuses' : '/institute-admin/campuses';
+      const response = await axiosInstance.post(endpoint, campusData);
       const data = response.data?.data || response.data;
       return normalizeCampus(data);
     } catch (error) {
@@ -44,9 +69,12 @@ export const createCampus = createAsyncThunk(
 
 export const updateCampus = createAsyncThunk(
   'campuses/updateCampus',
-  async ({ id, ...campusData }, { rejectWithValue }) => {
+  async ({ id, ...campusData }, { rejectWithValue, getState }) => {
     try {
-      const response = await axiosInstance.put(`/institute-admin/campuses/${id}`, campusData);
+      const state = getState();
+      const role = state.auth?.user?.role;
+      const endpoint = role === 'super_admin' ? `/super-admin/campuses/${id}` : `/institute-admin/campuses/${id}`;
+      const response = await axiosInstance.put(endpoint, campusData);
       const data = response.data?.data || response.data;
       return normalizeCampus(data);
     } catch (error) {
@@ -59,9 +87,12 @@ export const updateCampus = createAsyncThunk(
 
 export const deleteCampus = createAsyncThunk(
   'campuses/deleteCampus',
-  async (campusId, { rejectWithValue }) => {
+  async (campusId, { rejectWithValue, getState }) => {
     try {
-      await axiosInstance.delete(`/institute-admin/campuses/${campusId}`);
+      const state = getState();
+      const role = state.auth?.user?.role;
+      const endpoint = role === 'super_admin' ? `/super-admin/campuses/${campusId}` : `/institute-admin/campuses/${campusId}`;
+      await axiosInstance.delete(endpoint);
       return campusId;
     } catch (error) {
       return rejectWithValue(
@@ -119,11 +150,12 @@ const slice = createSlice({
       .addCase(fetchCampuses.fulfilled, (state, { payload }) => {
         state.status = 'succeeded';
         state.records = payload;
-        // If no active campus is selected yet and campuses exist, auto-select first one
-        if (!state.activeCampusId && payload.length > 0) {
+        // If no active campus is selected yet or stored active campus is not in payload, select first available
+        if (payload.length > 0) {
           const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
-          const match = payload.find(c => c.id === stored);
-          state.activeCampusId = match ? match.id : payload[0].id;
+          const currentId = state.activeCampusId || stored;
+          const match = payload.find((c) => (c._id || c.id) === currentId);
+          state.activeCampusId = match ? (match._id || match.id) : (payload[0]._id || payload[0].id);
           if (typeof localStorage !== 'undefined') {
             localStorage.setItem('eduHubActiveCampusId', state.activeCampusId);
           }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateInstitute } from "@/store/Slices/institutesSlice";
+import { fetchCampuses } from "@/store/Slices/campusesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import { Building2, User, MapPin, Save, Plus, RefreshCw, Pencil, Send, Copy, Check } from "lucide-react";
@@ -217,6 +218,7 @@ export default function ManageInstitute({ institute, onClose }) {
       setShowCampusForm(false);
       setAddCampusForm({ name: "", location: "", status: "Active" });
       loadCampuses();
+      dispatch(fetchCampuses());
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add campus");
     } finally {

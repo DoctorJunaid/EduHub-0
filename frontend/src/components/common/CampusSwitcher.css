@@ -119,6 +119,20 @@
   color: #09090b;
 }
 
+.campus-menu-item-inst {
+  font-size: 10px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .campus-menu-status {
   font-size: 10px;
   padding: 1px 6px;

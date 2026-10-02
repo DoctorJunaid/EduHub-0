@@ -286,7 +286,7 @@ const Header = ({
       </div>
 
       <div className="header-actions">
-        <CampusSwitcher />
+        {currentRole !== "super_admin" && <CampusSwitcher />}
 
         {showNotifications && (
           <div className="header-notifications-wrap" ref={notificationRef}>
