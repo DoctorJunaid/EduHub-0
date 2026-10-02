@@ -1,6 +1,5 @@
 import {
   Building2,
-  GraduationCap,
   Users,
   MapPin,
   ArrowLeft,
@@ -15,8 +14,6 @@ import {
   fetchInstitutes,
   selectInstitutes,
   addInstitute,
-  updateInstitute,
-  optimisticStatusChange,
 } from "@/store/Slices/institutesSlice";
 import { Button } from "@/components/ui/button";
 import InstituteForm from "../Institutes/InstituteForm";
@@ -45,7 +42,6 @@ export default function SuperAdminDashboard() {
   const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
   const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
   const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
-  const [statusMenuFor, setStatusMenuFor] = useState(null);
 
   useEffect(() => {
     dispatch(fetchGlobalStats());
@@ -91,20 +87,6 @@ export default function SuperAdminDashboard() {
     navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name || "")}`);
   };
 
-  const changeInstituteStatus = async (institute, nextStatus) => {
-    const id = institute._id || institute.id;
-    dispatch(optimisticStatusChange({ id, status: nextStatus }));
-    setStatusMenuFor(null);
-    try {
-      await dispatch(updateInstitute({ id, status: nextStatus })).unwrap();
-      toast.success(`${institute.name} status set to ${nextStatus}`);
-      dispatch(fetchGlobalStats());
-    } catch (error) {
-      toast.error(typeof error === "string" ? error : "Failed to update status");
-      dispatch(fetchInstitutes());
-    }
-  };
-
   const statsArray = [
     {
       label: "Total Users",
@@ -123,12 +105,6 @@ export default function SuperAdminDashboard() {
       value: globalStats?.campuses?.total || 0,
       detail: "Branches globally",
       icon: MapPin,
-    },
-    {
-      label: "Active Programs",
-      value: "-",
-      detail: "Courses across networks",
-      icon: GraduationCap,
     },
   ];
 
@@ -265,9 +241,6 @@ export default function SuperAdminDashboard() {
               ) : (
                 visibleInstitutes.map((institute, index) => {
                   const instId = institute._id || institute.id;
-                  const isMenuOpen = statusMenuFor === instId;
-                  const status = institute.status || "Active";
-                  const statusClass = status.toLowerCase();
 
                   return (
                     <article
@@ -302,42 +275,6 @@ export default function SuperAdminDashboard() {
                       </div>
 
                       <div className="super-admin-institute-meta">
-                        <div className="super-admin-status-wrap">
-                          <button
-                            type="button"
-                            className={`super-admin-active-badge super-admin-status-${statusClass}`}
-                            onClick={() =>
-                              setStatusMenuFor(isMenuOpen ? null : instId)
-                            }
-                            aria-label={`Change status for ${institute.name}`}
-                            title="Click to change status"
-                          >
-                            <span className="super-admin-badge-dot" />
-                            <span>{status}</span>
-                          </button>
-
-                          {isMenuOpen && (
-                            <select
-                              className="super-admin-status-select"
-                              value={status}
-                              autoFocus
-                              onChange={(event) =>
-                                changeInstituteStatus(
-                                  institute,
-                                  event.target.value,
-                                )
-                              }
-                              onBlur={() => setStatusMenuFor(null)}
-                              aria-label={`Set new status for ${institute.name}`}
-                            >
-                              <option value="Active">Active</option>
-                              <option value="Suspended">Suspended</option>
-                              <option value="Pending">Pending</option>
-                              <option value="Inactive">Inactive</option>
-                            </select>
-                          )}
-                        </div>
-
                         <button
                           type="button"
                           className="super-admin-campus-count super-admin-clickable"

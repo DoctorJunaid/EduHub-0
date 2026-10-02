@@ -241,18 +241,19 @@ export default function ManageInstitute({ institute, onClose }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "4px", borderBottom: "1px solid #e4e4e7", paddingBottom: "0" }}>
+      <div style={{ display: "flex", gap: "6px", borderBottom: "1px solid #e4e4e7", paddingBottom: "12px", marginBottom: "4px" }}>
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              padding: "8px 16px", borderRadius: "6px 6px 0 0",
-              border: "none", background: activeTab === id ? "#09090b" : "transparent",
-              color: activeTab === id ? "#fff" : "#52525b",
+              padding: "7px 16px", borderRadius: "8px",
+              border: "none",
+              background: activeTab === id ? "#09090b" : "transparent",
+              color: activeTab === id ? "#ffffff" : "#71717a",
               fontWeight: 600, fontSize: "13px", cursor: "pointer",
-              borderBottom: activeTab === id ? "2px solid #09090b" : "none",
+              transition: "all 0.15s ease",
             }}
           >
             <Icon size={14} />
@@ -264,13 +265,13 @@ export default function ManageInstitute({ institute, onClose }) {
       {/* ── TAB: DETAILS ── */}
       {activeTab === TAB_DETAILS && (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Institute Name</label>
+          <div className="manage-details-grid">
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#71717a" }}>Institute Name</label>
               <Input name="name" value={details.name} onChange={handleDetailChange} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Type</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#71717a" }}>Type</label>
               <select name="type" value={details.type} onChange={handleDetailChange} style={selectStyle}>
                 <option>University</option>
                 <option>College</option>
@@ -278,20 +279,20 @@ export default function ManageInstitute({ institute, onClose }) {
                 <option>Institute</option>
               </select>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Board / Affiliation</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#71717a" }}>Board / Affiliation</label>
               <Input name="board" value={details.board} onChange={handleDetailChange} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Institute Email</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#71717a" }}>Institute Email</label>
               <Input type="email" name="email" value={details.email} onChange={handleDetailChange} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Phone</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#71717a" }}>Phone</label>
               <Input name="phone" value={details.phone} onChange={handleDetailChange} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Status</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "#71717a" }}>Status</label>
               <select name="status" value={details.status} onChange={handleDetailChange} style={selectStyle}>
                 <option>Active</option>
                 <option>Pending</option>
@@ -299,7 +300,7 @@ export default function ManageInstitute({ institute, onClose }) {
               </select>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="manage-details-actions">
             <button
               type="button"
               onClick={() => navigate(`/institutes/${institute._id || institute.id}/edit`)}
@@ -309,13 +310,14 @@ export default function ManageInstitute({ institute, onClose }) {
                 gap: "6px",
                 height: "36px",
                 padding: "0 16px",
-                borderRadius: "6px",
+                borderRadius: "8px",
                 border: "1px solid #e4e4e7",
-                background: "#fff",
+                background: "#ffffff",
                 color: "#09090b",
                 fontWeight: 600,
                 fontSize: "13px",
                 cursor: "pointer",
+                transition: "all 0.15s ease",
               }}
             >
               <Pencil size={14} /> Edit Full Profile
@@ -323,7 +325,22 @@ export default function ManageInstitute({ institute, onClose }) {
             <button
               onClick={saveDetails}
               disabled={savingDetails}
-              style={{ display: "flex", alignItems: "center", gap: "6px", height: "36px", padding: "0 20px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "14px", cursor: "pointer", opacity: savingDetails ? 0.7 : 1 }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                height: "36px",
+                padding: "0 20px",
+                borderRadius: "8px",
+                border: "none",
+                background: "#09090b",
+                color: "#ffffff",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                opacity: savingDetails ? 0.7 : 1,
+              }}
             >
               {savingDetails ? <Spinner className="size-3.5 text-white" /> : <Save size={14} />}
               Save Changes

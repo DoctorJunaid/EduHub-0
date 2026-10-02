@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, Building2, Mail, Image, Save, SlidersHorizontal } from "lucide-react";
 import { PageLoader, Spinner } from "@/components/ui/spinner";
@@ -15,7 +15,6 @@ import {
 import {
   selectInstitutes,
   updateInstitute,
-  fetchInstitutes,
 } from "@/store/Slices/institutesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
@@ -41,6 +40,7 @@ function isValidUrl(value) {
 
 export default function EditInstitute() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { instituteId } = useParams();
 
@@ -107,7 +107,7 @@ export default function EditInstitute() {
           });
         }
       })
-      .catch((err) => {
+      .catch(() => {
         if (active) {
           toast.error("Failed to load institute details");
         }
@@ -121,17 +121,15 @@ export default function EditInstitute() {
     };
   }, [instituteId, cachedInstitute]);
 
-  const loc = useMemo(() => {
-    return [
-      { label: "Dashboard", to: "/super-admin" },
-      { label: "Institutes", to: "/institutes" },
-      {
-        label: institute?.name ?? "Institute",
-        to: `/institutes/${instituteId}`,
-      },
-      { label: "Edit" },
-    ];
-  }, [institute, instituteId]);
+  // Sync institute name into location.state so global Header renders the dynamic institute name in breadcrumbs
+  useEffect(() => {
+    if (institute?.name && location.state?.name !== institute.name) {
+      navigate(location.pathname, {
+        replace: true,
+        state: { ...location.state, name: institute.name },
+      });
+    }
+  }, [institute?.name, location.pathname, location.state, navigate]);
 
   const validate = () => {
     const nextErrors = {};
@@ -203,56 +201,28 @@ export default function EditInstitute() {
 
   return (
     <section className="super-admin-edit-institute">
-      <div className="super-admin-edit-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <div className="super-admin-edit-card">
+        <div className="super-admin-edit-card-topbar">
           <button
-            className="super-admin-back-button"
+            type="button"
+            className="super-admin-edit-back-btn"
             onClick={() => navigate("/institutes")}
             aria-label="Back to institutes"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={15} />
+            <span>Back to Institutes</span>
           </button>
-          <div>
-            <h1>Edit Institute</h1>
-            <p>Update network credentials and general details.</p>
-          </div>
+
+          <button
+            type="button"
+            className="super-admin-edit-console-btn"
+            onClick={() => navigate(`/institutes/${instituteId}`)}
+            aria-label="Open Management Console"
+          >
+            <SlidersHorizontal size={14} />
+            <span>Open Management Console</span>
+          </button>
         </div>
-
-        <button
-          onClick={() => navigate(`/institutes/${instituteId}`)}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            height: "36px",
-            padding: "0 14px",
-            borderRadius: "8px",
-            border: "1px solid #e4e4e7",
-            background: "#fff",
-            color: "#09090b",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          <SlidersHorizontal size={14} /> Open Management Console
-        </button>
-      </div>
-
-      <div className="super-admin-edit-breadcrumbs">
-        {loc.map((item, index) => (
-          <span key={index}>
-            {item.to ? (
-              <Link to={item.to}>{item.label}</Link>
-            ) : (
-              <span>{item.label}</span>
-            )}
-            {index < loc.length - 1 && <span className="sep"> &gt; </span>}
-          </span>
-        ))}
-      </div>
-
-      <div className="super-admin-edit-card">
         <section className="super-admin-edit-section">
           <div className="super-admin-edit-section-title">
             <span className="super-admin-edit-icon">
