@@ -9,63 +9,68 @@ import {
   AlertOctagon,
   Megaphone,
   Trash2,
-  CheckCircle,
   Clock,
   Building2,
+  RotateCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import axiosInstance from "@/api/axiosInstance";
 import "./SuperAdminBroadcasts.css";
-
-const STORAGE_KEY = "eduHub_super_broadcasts";
 
 const SEVERITY_CONFIG = {
   Info: {
     label: "Notice / Info",
-    color: "#0284c7",
-    bg: "#f0f9ff",
-    border: "#bae6fd",
+    color: "#3f3f46",
+    bg: "#f4f4f5",
+    border: "#e4e4e7",
     icon: Info,
   },
   Announcement: {
     label: "Announcement",
-    color: "#16a34a",
+    color: "#15803d",
     bg: "#f0fdf4",
     border: "#bbf7d0",
     icon: Megaphone,
   },
   Warning: {
     label: "Scheduled Maintenance",
-    color: "#d97706",
+    color: "#b45309",
     bg: "#fffbeb",
     border: "#fde68a",
     icon: AlertTriangle,
   },
   Critical: {
     label: "Emergency Alert",
-    color: "#dc2626",
+    color: "#b91c1c",
     bg: "#fef2f2",
     border: "#fecaca",
     icon: AlertOctagon,
   },
 };
 
-const DEFAULT_BROADCASTS = [
-  {
-    id: "b-1",
-    title: "System Update: EduHub Core v2.4",
-    severity: "Info",
-    audience: "All Institutes & Campuses",
-    message: "Platform-wide scheduled maintenance completed successfully. All services are nominal.",
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-  },
-];
-
-import axiosInstance from "@/api/axiosInstance";
+function BroadcastSkeletonCard() {
+  return (
+    <div className="broadcast-card broadcast-skeleton-card">
+      <div className="broadcast-card-top">
+        <div className="skeleton-line skeleton-badge" />
+        <div className="skeleton-line skeleton-delete" />
+      </div>
+      <div className="skeleton-line skeleton-title" />
+      <div className="skeleton-line skeleton-desc" />
+      <div className="skeleton-line skeleton-desc short" />
+      <div className="broadcast-card-foot">
+        <div className="skeleton-line skeleton-foot-item" />
+        <div className="skeleton-line skeleton-foot-item short" />
+      </div>
+    </div>
+  );
+}
 
 export default function SuperAdminBroadcasts() {
   const institutes = useSelector(selectInstitutes) || [];
   const [broadcasts, setBroadcasts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [title, setTitle] = useState("");
   const [severity, setSeverity] = useState("Info");
   const [audience, setAudience] = useState("All Institutes & Campuses");
@@ -74,13 +79,15 @@ export default function SuperAdminBroadcasts() {
 
   const fetchBroadcasts = async () => {
     try {
-      setLoading(true);
+      setError(null);
       const res = await axiosInstance.get("/super-admin/broadcasts");
       setBroadcasts(res.data?.data || []);
     } catch (err) {
-      toast.error("Failed to load platform broadcasts");
+      const msg = err.response?.data?.message || "Failed to load platform broadcasts";
+      setError(msg);
+      toast.error(msg);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -121,8 +128,24 @@ export default function SuperAdminBroadcasts() {
       await axiosInstance.delete(`/super-admin/broadcasts/${id}`);
       toast.success("Broadcast removed.");
       setBroadcasts((prev) => prev.filter((b) => (b._id || b.id) !== id));
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete broadcast");
+    }
+  };
+
+  const formatTimestamp = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
     }
   };
 
@@ -131,7 +154,6 @@ export default function SuperAdminBroadcasts() {
       {/* Heading */}
       <div className="super-broadcasts-head">
         <div>
-          <div className="super-broadcasts-kicker">Network Communications</div>
           <h1 className="super-broadcasts-title">Platform Broadcast Alerts</h1>
           <p className="super-broadcasts-subtitle">
             Broadcast platform-wide alerts, maintenance notices, and emergency advisories across all tenant portals.
@@ -143,10 +165,12 @@ export default function SuperAdminBroadcasts() {
         {/* Left Column: Composer */}
         <div className="super-broadcasts-compose-card">
           <div className="card-header">
-            <Radio size={18} className="head-icon" />
+            <div className="compose-icon-wrap">
+              <Radio size={16} />
+            </div>
             <div>
-              <h3>Compose Broadcast</h3>
-              <p>Send an immediate alert to selected tenant groups</p>
+              <h3 className="compose-title">Compose Broadcast</h3>
+              <p className="compose-desc">Send an immediate alert to selected tenant groups</p>
             </div>
           </div>
 
@@ -213,7 +237,7 @@ export default function SuperAdminBroadcasts() {
               disabled={sending}
               className="publish-broadcast-btn"
             >
-              <Send size={15} />
+              <Send size={14} />
               <span>{sending ? "Dispatching..." : "Dispatch Broadcast"}</span>
             </button>
           </form>
@@ -222,17 +246,40 @@ export default function SuperAdminBroadcasts() {
         {/* Right Column: Active Broadcasts */}
         <div className="super-broadcasts-history">
           <div className="history-header">
-            <h3>Active Broadcasts ({broadcasts.length})</h3>
+            <h3>
+              Active Broadcasts {!initialLoading && `(${broadcasts.length})`}
+            </h3>
             <span className="live-tag">
               <span className="pulse-dot" /> Live Feeds
             </span>
           </div>
 
           <div className="broadcasts-list">
-            {broadcasts.length === 0 ? (
+            {initialLoading ? (
+              <>
+                <BroadcastSkeletonCard />
+                <BroadcastSkeletonCard />
+                <BroadcastSkeletonCard />
+              </>
+            ) : error ? (
+              <div className="error-broadcasts">
+                <div className="error-icon-box">
+                  <AlertTriangle size={20} />
+                </div>
+                <h4>Failed to load broadcasts</h4>
+                <p>{error}</p>
+                <button onClick={fetchBroadcasts} className="retry-broadcast-btn">
+                  <RotateCw size={13} />
+                  <span>Retry</span>
+                </button>
+              </div>
+            ) : broadcasts.length === 0 ? (
               <div className="empty-broadcasts">
-                <Megaphone size={36} opacity={0.3} />
-                <p>No active platform broadcasts right now.</p>
+                <div className="empty-icon-box">
+                  <Megaphone size={22} />
+                </div>
+                <h4>No active platform broadcasts</h4>
+                <p>Dispatched platform-wide alerts and advisories will appear here in real-time.</p>
               </div>
             ) : (
               broadcasts.map((b) => {
@@ -243,11 +290,17 @@ export default function SuperAdminBroadcasts() {
                   <div
                     key={b._id || b.id}
                     className="broadcast-card"
-                    style={{ borderLeft: `4px solid ${config.color}` }}
                   >
                     <div className="broadcast-card-top">
-                      <div className="broadcast-badge" style={{ backgroundColor: config.bg, color: config.color }}>
-                        <Icon size={13} />
+                      <div
+                        className="broadcast-badge"
+                        style={{
+                          backgroundColor: config.bg,
+                          color: config.color,
+                          borderColor: config.border,
+                        }}
+                      >
+                        <Icon size={12} />
                         <span>{config.label}</span>
                       </div>
                       <button
@@ -255,7 +308,7 @@ export default function SuperAdminBroadcasts() {
                         onClick={() => handleDelete(b._id || b.id)}
                         title="Dismiss broadcast"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
 
@@ -267,13 +320,7 @@ export default function SuperAdminBroadcasts() {
                         <Building2 size={12} /> {b.audience}
                       </span>
                       <span className="broadcast-time">
-                        <Clock size={12} />{" "}
-                        {new Date(b.createdAt).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        <Clock size={12} /> {formatTimestamp(b.createdAt)}
                       </span>
                     </div>
                   </div>

@@ -16,18 +16,68 @@ import {
   AlertCircle,
   XCircle,
   X,
-  ChevronDown,
   Layers,
-  ArrowRight,
   User,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import "./SubscriptionsManagement.css";
 
+function SubscriptionSkeletonRow() {
+  return (
+    <tr className="sub-row sub-skeleton-row">
+      <td className="cell-inst">
+        <div className="skeleton-box skeleton-inst-avatar" />
+        <div className="inst-meta">
+          <div className="skeleton-box skeleton-inst-name" />
+          <div className="inst-subline">
+            <div className="skeleton-box skeleton-inst-badge" />
+            <div className="skeleton-box skeleton-inst-email" />
+          </div>
+        </div>
+      </td>
+      <td className="cell-plan">
+        <div className="skeleton-box skeleton-plan-badge" />
+        <div className="skeleton-box skeleton-plan-name" />
+        <div className="skeleton-box skeleton-plan-cycle" />
+      </td>
+      <td className="cell-status">
+        <div className="skeleton-box skeleton-status-badge" />
+      </td>
+      <td className="cell-dates">
+        <div className="skeleton-box skeleton-date-line" />
+        <div className="skeleton-box skeleton-countdown" />
+      </td>
+      <td className="cell-quotas">
+        <div className="quota-bars-wrap">
+          <div className="quota-bar-item">
+            <div className="skeleton-box skeleton-quota-bar" />
+          </div>
+          <div className="quota-bar-item">
+            <div className="skeleton-box skeleton-quota-bar" />
+          </div>
+          <div className="quota-bar-item">
+            <div className="skeleton-box skeleton-quota-bar" />
+          </div>
+        </div>
+      </td>
+      <td className="cell-actions">
+        <div className="action-buttons-group">
+          <div className="skeleton-box skeleton-btn-primary" />
+          <div className="skeleton-box skeleton-btn-secondary" />
+          <div className="skeleton-box skeleton-btn-secondary" />
+          <div className="skeleton-box skeleton-btn-icon" />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function SubscriptionsManagement() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
 
@@ -68,17 +118,21 @@ export default function SubscriptionsManagement() {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [subsRes, plansRes] = await Promise.all([
         axiosInstance.get("/super-admin/subscriptions"),
         axiosInstance.get("/super-admin/plans"),
       ]);
-      setSubscriptions(subsRes.data.data || []);
-      setPlans(plansRes.data.data || []);
+      setSubscriptions(subsRes.data?.data || []);
+      setPlans(plansRes.data?.data || []);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load subscriptions");
+      const msg = err.response?.data?.message || "Failed to load subscriptions";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -246,7 +300,7 @@ export default function SubscriptionsManagement() {
       <div className="subs-header">
         <div className="subs-header-left">
           <div className="subs-title-row">
-            <CreditCard className="subs-title-icon" size={24} />
+            <CreditCard className="subs-title-icon" size={22} />
             <h1 className="subs-title">Institutional SaaS Subscriptions</h1>
           </div>
           <p className="subs-subtitle">
@@ -262,51 +316,67 @@ export default function SubscriptionsManagement() {
             disabled={loading}
             title="Refresh subscriptions"
           >
-            <RefreshCw size={16} className={loading ? "spin" : ""} />
+            <RefreshCw size={14} className={loading ? "spin" : ""} />
             <span>Refresh</span>
           </button>
         </div>
       </div>
 
-      {/* Metrics Row */}
+      {/* Metrics Row: 4 Equal Columns */}
       <div className="subs-metrics-grid">
         <div className="metric-card">
-          <div className="metric-icon-wrap all">
-            <Building2 size={20} />
+          <div className="metric-icon-wrap">
+            <Building2 size={18} />
           </div>
           <div className="metric-info">
             <span className="metric-label">Total Institutions</span>
-            <span className="metric-value">{metrics.total}</span>
+            {initialLoading ? (
+              <div className="metric-value-skeleton" />
+            ) : (
+              <span className="metric-value">{metrics.total}</span>
+            )}
           </div>
         </div>
 
         <div className="metric-card">
-          <div className="metric-icon-wrap active">
-            <CheckCircle2 size={20} />
+          <div className="metric-icon-wrap">
+            <CheckCircle2 size={18} />
           </div>
           <div className="metric-info">
             <span className="metric-label">Active Subscriptions</span>
-            <span className="metric-value">{metrics.active}</span>
+            {initialLoading ? (
+              <div className="metric-value-skeleton" />
+            ) : (
+              <span className="metric-value">{metrics.active}</span>
+            )}
           </div>
         </div>
 
         <div className="metric-card">
-          <div className="metric-icon-wrap trial">
-            <Clock size={20} />
+          <div className="metric-icon-wrap">
+            <Clock size={18} />
           </div>
           <div className="metric-info">
             <span className="metric-label">Active Trials</span>
-            <span className="metric-value">{metrics.trial}</span>
+            {initialLoading ? (
+              <div className="metric-value-skeleton" />
+            ) : (
+              <span className="metric-value">{metrics.trial}</span>
+            )}
           </div>
         </div>
 
         <div className="metric-card">
-          <div className="metric-icon-wrap alert">
-            <ShieldAlert size={20} />
+          <div className="metric-icon-wrap">
+            <ShieldAlert size={18} />
           </div>
           <div className="metric-info">
             <span className="metric-label">Suspended / Expired</span>
-            <span className="metric-value">{metrics.suspendedOrExpired}</span>
+            {initialLoading ? (
+              <div className="metric-value-skeleton" />
+            ) : (
+              <span className="metric-value">{metrics.suspendedOrExpired}</span>
+            )}
           </div>
         </div>
       </div>
@@ -322,7 +392,7 @@ export default function SubscriptionsManagement() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
-            <button type="button" className="clear-search" onClick={() => setSearchQuery("")}>
+            <button type="button" className="clear-search" onClick={() => setSearchQuery("")} title="Clear search">
               <X size={14} />
             </button>
           )}
@@ -348,179 +418,222 @@ export default function SubscriptionsManagement() {
         </div>
       </div>
 
-      {/* Main Table */}
-      {loading ? (
-        <div className="subs-loading">
-          <Spinner size={32} />
-          <p>Loading institutional subscriptions and quotas...</p>
-        </div>
-      ) : filteredSubscriptions.length === 0 ? (
-        <div className="subs-empty">
-          <Building2 size={40} className="empty-icon" />
-          <h3>No Subscriptions Found</h3>
-          <p>No institutions match your search or filter criteria.</p>
-        </div>
-      ) : (
-        <div className="subs-table-card">
+      {/* Main Table: Persistent Shell Across All States */}
+      <div className="subs-table-card">
+        <div className="subs-table-wrap">
           <table className="subs-table">
             <thead>
               <tr>
-                <th>Institution</th>
-                <th>Assigned Plan</th>
-                <th>Status</th>
-                <th>Validity & Dates</th>
-                <th>Quota Consumption</th>
-                <th className="th-actions">Actions</th>
+                <th style={{ width: "24%" }}>Institution</th>
+                <th style={{ width: "16%" }}>Assigned Plan</th>
+                <th style={{ width: "10%" }}>Status</th>
+                <th style={{ width: "18%" }}>Validity & Dates</th>
+                <th style={{ width: "18%" }}>Quota Consumption</th>
+                <th style={{ width: "14%" }} className="th-actions">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {filteredSubscriptions.map((sub) => {
-                const planName = sub.plan?.name || sub.plan?.tier?.toUpperCase() || "Free Plan";
-                const tier = sub.plan?.tier || "free";
-                const startDateStr = sub.startDate ? new Date(sub.startDate).toLocaleDateString() : "—";
-                const endDateStr = sub.endDate ? new Date(sub.endDate).toLocaleDateString() : "Lifetime";
-
-                return (
-                  <tr key={sub.instituteId} className="sub-row">
-                    {/* Institution */}
-                    <td className="cell-inst">
-                      <div className="inst-avatar">
-                        <Building2 size={16} />
-                      </div>
-                      <div className="inst-meta">
-                        <span className="inst-name">{sub.instituteName}</span>
-                        <div className="inst-subline">
-                          <span className="inst-type-badge">{sub.instituteType || "School"}</span>
-                          <span className="inst-email">{sub.instituteEmail}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Plan */}
-                    <td className="cell-plan">
-                      <span className={`plan-tier-badge ${tier}`}>{tier.toUpperCase()}</span>
-                      <span className="plan-display-name">{planName}</span>
-                      <span className="plan-billing-cycle">{sub.billingCycle} billing</span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="cell-status">{getStatusBadge(sub)}</td>
-
-                    {/* Validity */}
-                    <td className="cell-dates">
-                      <div className="date-line">
-                        <span className="date-label">Valid:</span>
-                        <span className="date-val">{startDateStr} → {endDateStr}</span>
-                      </div>
-                      {sub.daysRemaining !== null && (
-                        <div className={`countdown-tag ${sub.isExpired ? "expired" : sub.daysRemaining <= 14 ? "warning" : "ok"}`}>
-                          <Clock size={11} />
-                          <span>
-                            {sub.isExpired
-                              ? "Expired"
-                              : `${sub.daysRemaining} day${sub.daysRemaining === 1 ? "" : "s"} left`}
-                          </span>
-                        </div>
+            <tbody className={loading && !initialLoading ? "is-refreshing" : ""}>
+              {error ? (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="subs-error-state">
+                      <AlertCircle size={32} className="subs-error-icon" />
+                      <h3 className="subs-error-title">Unable to Load Subscriptions</h3>
+                      <p className="subs-error-msg">{error}</p>
+                      <button
+                        type="button"
+                        className="subs-retry-btn"
+                        onClick={loadData}
+                      >
+                        <RefreshCw size={13} />
+                        <span>Retry</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : initialLoading ? (
+                <>
+                  <SubscriptionSkeletonRow />
+                  <SubscriptionSkeletonRow />
+                  <SubscriptionSkeletonRow />
+                  <SubscriptionSkeletonRow />
+                  <SubscriptionSkeletonRow />
+                </>
+              ) : filteredSubscriptions.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="subs-empty">
+                      <Building2 size={40} className="empty-icon" />
+                      <h3 className="subs-empty-title">No Subscriptions Found</h3>
+                      <p className="subs-empty-desc">
+                        {searchQuery || selectedStatusFilter !== "all"
+                          ? "No institutions match your current search or filter criteria."
+                          : "No institutional subscriptions have been configured yet."}
+                      </p>
+                      {(searchQuery || selectedStatusFilter !== "all") && (
+                        <button
+                          type="button"
+                          className="subs-reset-btn"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setSelectedStatusFilter("all");
+                          }}
+                        >
+                          Clear Filters
+                        </button>
                       )}
-                    </td>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredSubscriptions.map((sub) => {
+                  const planName = sub.plan?.name || sub.plan?.tier?.toUpperCase() || "Free Plan";
+                  const tier = sub.plan?.tier || "free";
+                  const startDateStr = sub.startDate ? new Date(sub.startDate).toLocaleDateString() : "—";
+                  const endDateStr = sub.endDate ? new Date(sub.endDate).toLocaleDateString() : "Lifetime";
 
-                    {/* Quotas */}
-                    <td className="cell-quotas">
-                      <div className="quota-bars-wrap">
-                        {/* Campuses */}
-                        <div className="quota-bar-item" title="Campuses Allocated">
-                          <div className="quota-header">
-                            <span>Campuses</span>
-                            <span>{sub.usage.campuses.current} / {sub.usage.campuses.max >= 9999 ? "∞" : sub.usage.campuses.max}</span>
-                          </div>
-                          <div className="quota-track">
-                            <div
-                              className={`quota-fill ${sub.usage.campuses.percent >= 100 ? "full" : ""}`}
-                              style={{ width: `${sub.usage.campuses.percent}%` }}
-                            />
+                  return (
+                    <tr key={sub.instituteId} className="sub-row">
+                      {/* Institution */}
+                      <td className="cell-inst">
+                        <div className="inst-avatar">
+                          <Building2 size={16} />
+                        </div>
+                        <div className="inst-meta">
+                          <span className="inst-name">{sub.instituteName}</span>
+                          <div className="inst-subline">
+                            <span className="inst-type-badge">{sub.instituteType || "School"}</span>
+                            <span className="inst-email">{sub.instituteEmail}</span>
                           </div>
                         </div>
+                      </td>
 
-                        {/* Students */}
-                        <div className="quota-bar-item" title="Enrolled Students">
-                          <div className="quota-header">
-                            <span>Students</span>
-                            <span>{sub.usage.students.current} / {sub.usage.students.max >= 99999 ? "∞" : sub.usage.students.max}</span>
+                      {/* Plan */}
+                      <td className="cell-plan">
+                        <span className={`plan-tier-badge ${tier}`}>{tier.toUpperCase()}</span>
+                        <span className="plan-display-name">{planName}</span>
+                        <span className="plan-billing-cycle">{sub.billingCycle} billing</span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="cell-status">{getStatusBadge(sub)}</td>
+
+                      {/* Validity */}
+                      <td className="cell-dates">
+                        <div className="date-line">
+                          <span className="date-label">Valid:</span>
+                          <span className="date-val">{startDateStr} → {endDateStr}</span>
+                        </div>
+                        {sub.daysRemaining !== null && (
+                          <div className={`countdown-tag ${sub.isExpired ? "expired" : sub.daysRemaining <= 14 ? "warning" : "ok"}`}>
+                            <Clock size={11} />
+                            <span>
+                              {sub.isExpired
+                                ? "Expired"
+                                : `${sub.daysRemaining} day${sub.daysRemaining === 1 ? "" : "s"} left`}
+                            </span>
                           </div>
-                          <div className="quota-track">
-                            <div
-                              className={`quota-fill ${sub.usage.students.percent >= 100 ? "full" : ""}`}
-                              style={{ width: `${sub.usage.students.percent}%` }}
-                            />
+                        )}
+                      </td>
+
+                      {/* Quotas */}
+                      <td className="cell-quotas">
+                        <div className="quota-bars-wrap">
+                          {/* Campuses */}
+                          <div className="quota-bar-item" title="Campuses Allocated">
+                            <div className="quota-header">
+                              <span>Campuses</span>
+                              <span>{sub.usage.campuses.current} / {sub.usage.campuses.max >= 9999 ? "∞" : sub.usage.campuses.max}</span>
+                            </div>
+                            <div className="quota-track">
+                              <div
+                                className={`quota-fill ${sub.usage.campuses.percent >= 100 ? "full" : ""}`}
+                                style={{ width: `${sub.usage.campuses.percent}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Students */}
+                          <div className="quota-bar-item" title="Enrolled Students">
+                            <div className="quota-header">
+                              <span>Students</span>
+                              <span>{sub.usage.students.current} / {sub.usage.students.max >= 99999 ? "∞" : sub.usage.students.max}</span>
+                            </div>
+                            <div className="quota-track">
+                              <div
+                                className={`quota-fill ${sub.usage.students.percent >= 100 ? "full" : ""}`}
+                                style={{ width: `${sub.usage.students.percent}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Staff */}
+                          <div className="quota-bar-item" title="Staff Members">
+                            <div className="quota-header">
+                              <span>Staff</span>
+                              <span>{sub.usage.staff.current} / {sub.usage.staff.max >= 9999 ? "∞" : sub.usage.staff.max}</span>
+                            </div>
+                            <div className="quota-track">
+                              <div
+                                className={`quota-fill ${sub.usage.staff.percent >= 100 ? "full" : ""}`}
+                                style={{ width: `${sub.usage.staff.percent}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
+                      </td>
 
-                        {/* Staff */}
-                        <div className="quota-bar-item" title="Staff Members">
-                          <div className="quota-header">
-                            <span>Staff</span>
-                            <span>{sub.usage.staff.current} / {sub.usage.staff.max >= 9999 ? "∞" : sub.usage.staff.max}</span>
-                          </div>
-                          <div className="quota-track">
-                            <div
-                              className={`quota-fill ${sub.usage.staff.percent >= 100 ? "full" : ""}`}
-                              style={{ width: `${sub.usage.staff.percent}%` }}
-                            />
-                          </div>
+                      {/* Actions */}
+                      <td className="cell-actions">
+                        <div className="action-buttons-group">
+                          <button
+                            type="button"
+                            className="table-act-btn plan"
+                            onClick={() => openAssignModal(sub)}
+                            title="Assign or change plan"
+                          >
+                            <Edit3 size={13} />
+                            <span>Change Plan</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="table-act-btn extend"
+                            onClick={() => openExtendModal(sub)}
+                            title="Extend validity dates"
+                          >
+                            <CalendarPlus size={13} />
+                            <span>Extend</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="table-act-btn status"
+                            onClick={() => openStatusModal(sub)}
+                            title="Change subscription status"
+                          >
+                            <ShieldAlert size={13} />
+                            <span>Status</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="table-act-btn history"
+                            onClick={() => openHistoryModal(sub)}
+                            title="View audit history"
+                          >
+                            <History size={13} />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="cell-actions">
-                      <div className="action-buttons-group">
-                        <button
-                          type="button"
-                          className="table-act-btn plan"
-                          onClick={() => openAssignModal(sub)}
-                          title="Assign or change plan"
-                        >
-                          <Edit3 size={13} />
-                          <span>Change Plan</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="table-act-btn extend"
-                          onClick={() => openExtendModal(sub)}
-                          title="Extend validity dates"
-                        >
-                          <CalendarPlus size={13} />
-                          <span>Extend</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="table-act-btn status"
-                          onClick={() => openStatusModal(sub)}
-                          title="Change subscription status"
-                        >
-                          <ShieldAlert size={13} />
-                          <span>Status</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="table-act-btn history"
-                          onClick={() => openHistoryModal(sub)}
-                          title="View audit history"
-                        >
-                          <History size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
       {/* ── ASSIGN / CHANGE PLAN MODAL ── */}
       {assignModalOpen && selectedInstitute && (

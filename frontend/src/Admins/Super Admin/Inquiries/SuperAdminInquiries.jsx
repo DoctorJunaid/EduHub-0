@@ -4,14 +4,11 @@ import {
   CheckCircle2,
   Phone,
   Mail,
-  Building2,
   Calendar,
   Sparkles,
-  ArrowRight,
   Search,
-  Filter,
   RefreshCw,
-  ExternalLink,
+  AlertTriangle,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import { Spinner } from "@/components/ui/spinner";
@@ -19,15 +16,61 @@ import toast from "react-hot-toast";
 import "./SuperAdminInquiries.css";
 
 const STATUS_CONFIG = {
-  New: { label: "New Lead", bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
-  Contacted: { label: "Contacted", bg: "#fefce8", color: "#ca8a04", border: "#fde047" },
-  Converted: { label: "Converted to Institute", bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" },
-  Archived: { label: "Archived", bg: "#f4f4f5", color: "#71717a", border: "#e4e4e7" },
+  New: {
+    label: "New Lead",
+    bg: "#f4f4f5",
+    color: "#18181b",
+    border: "#e4e4e7",
+  },
+  Contacted: {
+    label: "Contacted",
+    bg: "#fefce8",
+    color: "#854d0e",
+    border: "#fef08a",
+  },
+  Converted: {
+    label: "Converted to Institute",
+    bg: "#f0fdf4",
+    color: "#166534",
+    border: "#bbf7d0",
+  },
+  Archived: {
+    label: "Archived",
+    bg: "#f4f4f5",
+    color: "#71717a",
+    border: "#e4e4e7",
+  },
 };
+
+function InquirySkeletonCard() {
+  return (
+    <div className="inquiry-item-card inquiry-skeleton-card">
+      <div className="inquiry-main">
+        <div className="inquiry-header-row">
+          <div className="skeleton-line skeleton-tag" />
+          <div className="skeleton-line skeleton-title" />
+          <div className="skeleton-line skeleton-pill" />
+        </div>
+        <div className="inquiry-contact-details">
+          <div className="skeleton-line skeleton-contact-item" />
+          <div className="skeleton-line skeleton-contact-item" />
+          <div className="skeleton-line skeleton-contact-item" />
+        </div>
+        <div className="skeleton-line skeleton-quote" />
+      </div>
+      <div className="inquiry-actions">
+        <div className="skeleton-line skeleton-dropdown" />
+        <div className="skeleton-line skeleton-btn" />
+      </div>
+    </div>
+  );
+}
 
 export default function SuperAdminInquiries() {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -35,6 +78,7 @@ export default function SuperAdminInquiries() {
 
   const fetchInquiries = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = {};
       if (statusFilter !== "all") params.status = statusFilter;
@@ -44,9 +88,12 @@ export default function SuperAdminInquiries() {
       const res = await axiosInstance.get("/super-admin/inquiries", { params });
       setInquiries(res.data?.data || []);
     } catch (err) {
-      toast.error("Failed to load inquiries");
+      const msg = err.response?.data?.message || "Failed to load inquiries";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -76,7 +123,7 @@ export default function SuperAdminInquiries() {
 
     setConvertingId(inquiry._id);
     try {
-      const res = await axiosInstance.post(`/super-admin/inquiries/${inquiry._id}/convert`);
+      await axiosInstance.post(`/super-admin/inquiries/${inquiry._id}/convert`);
       toast.success("Institute successfully registered from lead!");
       setInquiries((prev) =>
         prev.map((inq) =>
@@ -101,39 +148,68 @@ export default function SuperAdminInquiries() {
     <div className="super-inquiries-page">
       {/* Top Header */}
       <div className="inquiries-head">
-        <div>
+        <div className="inquiries-head-left">
           <div className="inquiries-kicker">Platform Growth & Pipeline</div>
-          <h1 className="inquiries-title">Public Inquiries & Leads</h1>
+          <div className="inquiries-title-row">
+            <Inbox className="inquiries-title-icon" size={22} />
+            <h1 className="inquiries-title">Public Inquiries & Leads</h1>
+          </div>
           <p className="inquiries-subtitle">
             Review incoming requests from schools, colleges, and academies submitted via the landing page, and convert them directly into active institutes.
           </p>
         </div>
-        <button className="inquiries-refresh-btn" onClick={fetchInquiries} disabled={loading}>
-          <RefreshCw size={15} className={loading ? "spin" : ""} /> Refresh
-        </button>
+
+        <div className="inquiries-head-actions">
+          <button
+            type="button"
+            className="inquiries-refresh-btn"
+            onClick={fetchInquiries}
+            disabled={loading}
+            title="Refresh inquiries"
+          >
+            <RefreshCw size={14} className={loading ? "spin" : ""} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards: Stable 4-Column Grid */}
       <div className="inquiries-metrics-grid">
         <div className="inquiry-stat-card">
           <span className="stat-label">Total Leads</span>
-          <span className="stat-value">{counts.total}</span>
+          {initialLoading ? (
+            <div className="stat-value-skeleton" />
+          ) : (
+            <span className="stat-value">{counts.total}</span>
+          )}
         </div>
         <div className="inquiry-stat-card">
           <span className="stat-label">New Submissions</span>
-          <span className="stat-value" style={{ color: "#2563eb" }}>{counts.new}</span>
+          {initialLoading ? (
+            <div className="stat-value-skeleton" />
+          ) : (
+            <span className="stat-value">{counts.new}</span>
+          )}
         </div>
         <div className="inquiry-stat-card">
           <span className="stat-label">In Discussion</span>
-          <span className="stat-value" style={{ color: "#ca8a04" }}>{counts.contacted}</span>
+          {initialLoading ? (
+            <div className="stat-value-skeleton" />
+          ) : (
+            <span className="stat-value">{counts.contacted}</span>
+          )}
         </div>
         <div className="inquiry-stat-card">
           <span className="stat-label">Converted Institutes</span>
-          <span className="stat-value" style={{ color: "#16a34a" }}>{counts.converted}</span>
+          {initialLoading ? (
+            <div className="stat-value-skeleton" />
+          ) : (
+            <span className="stat-value">{counts.converted}</span>
+          )}
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters Bar: Stays in place during loading */}
       <div className="inquiries-filters-bar">
         <div className="search-wrap">
           <Search size={16} className="search-icon" />
@@ -146,7 +222,11 @@ export default function SuperAdminInquiries() {
         </div>
 
         <div className="filters-wrap">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="all">All Pipeline Stages</option>
             <option value="New">New</option>
             <option value="Contacted">Contacted</option>
@@ -154,7 +234,11 @@ export default function SuperAdminInquiries() {
             <option value="Archived">Archived</option>
           </select>
 
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+          <select
+            className="filter-select"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
             <option value="all">All Institution Types</option>
             <option value="School">School</option>
             <option value="College">College</option>
@@ -164,21 +248,53 @@ export default function SuperAdminInquiries() {
         </div>
       </div>
 
-      {/* Leads List */}
+      {/* Results Container: Retains Identical Structure Across All States */}
       <div className="inquiries-table-card">
-        {loading && inquiries.length === 0 ? (
-          <div className="inquiries-loading">
-            <Spinner className="size-6" />
-            <p>Loading inquiries...</p>
+        {error ? (
+          <div className="inquiries-error-state">
+            <AlertTriangle size={32} className="inquiries-error-icon" />
+            <h3 className="inquiries-error-title">Unable to Load Inquiries</h3>
+            <p className="inquiries-error-msg">{error}</p>
+            <button
+              type="button"
+              className="inquiries-retry-btn"
+              onClick={fetchInquiries}
+            >
+              <RefreshCw size={13} />
+              <span>Retry</span>
+            </button>
+          </div>
+        ) : initialLoading ? (
+          <div className="inquiries-list">
+            <InquirySkeletonCard />
+            <InquirySkeletonCard />
+            <InquirySkeletonCard />
           </div>
         ) : inquiries.length === 0 ? (
           <div className="inquiries-empty">
-            <Inbox size={42} opacity={0.3} />
-            <h3>No Inquiries Found</h3>
-            <p>No landing page inquiries currently match your criteria.</p>
+            <Inbox size={40} className="inquiries-empty-icon" />
+            <h3 className="inquiries-empty-title">No Inquiries Found</h3>
+            <p className="inquiries-empty-desc">
+              {search || statusFilter !== "all" || typeFilter !== "all"
+                ? "No landing page inquiries match your current search or filter criteria."
+                : "No landing page inquiries have been submitted yet."}
+            </p>
+            {(search || statusFilter !== "all" || typeFilter !== "all") && (
+              <button
+                type="button"
+                className="inquiries-reset-btn"
+                onClick={() => {
+                  setSearch("");
+                  setStatusFilter("all");
+                  setTypeFilter("all");
+                }}
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         ) : (
-          <div className="inquiries-list">
+          <div className={`inquiries-list ${loading ? "is-refreshing" : ""}`}>
             {inquiries.map((inq) => {
               const cfg = STATUS_CONFIG[inq.status] || STATUS_CONFIG.New;
               const isConverting = convertingId === inq._id;
@@ -193,17 +309,30 @@ export default function SuperAdminInquiries() {
                       </div>
                       <span
                         className="inquiry-status-pill"
-                        style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                        style={{
+                          backgroundColor: cfg.bg,
+                          color: cfg.color,
+                          borderColor: cfg.border,
+                        }}
                       >
                         {cfg.label}
                       </span>
                     </div>
 
                     <div className="inquiry-contact-details">
-                      <span><strong>Contact Person:</strong> {inq.fullName}</span>
-                      <span><Mail size={13} /> {inq.email}</span>
-                      <span><Phone size={13} /> {inq.phone}</span>
-                      <span><Calendar size={13} /> {new Date(inq.createdAt).toLocaleDateString()}</span>
+                      <span>
+                        <strong className="contact-prefix">Contact:</strong> {inq.fullName}
+                      </span>
+                      <span>
+                        <Mail size={13} className="contact-icon" /> {inq.email}
+                      </span>
+                      <span>
+                        <Phone size={13} className="contact-icon" /> {inq.phone}
+                      </span>
+                      <span>
+                        <Calendar size={13} className="contact-icon" />{" "}
+                        {new Date(inq.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
 
                     {inq.message && (
@@ -227,20 +356,22 @@ export default function SuperAdminInquiries() {
 
                     {inq.status !== "Converted" ? (
                       <button
+                        type="button"
                         className="convert-btn"
                         onClick={() => handleConvert(inq)}
                         disabled={isConverting}
                       >
                         {isConverting ? (
-                          <Spinner className="size-3.5 mr-1" />
+                          <Spinner className="size-3.5" />
                         ) : (
-                          <Sparkles size={14} className="mr-1" />
+                          <Sparkles size={13} />
                         )}
-                        Convert to Institute
+                        <span>Convert to Institute</span>
                       </button>
                     ) : (
                       <span className="converted-badge">
-                        <CheckCircle2 size={15} color="#16a34a" /> Live Tenant
+                        <CheckCircle2 size={14} />
+                        <span>Live Tenant</span>
                       </span>
                     )}
                   </div>
