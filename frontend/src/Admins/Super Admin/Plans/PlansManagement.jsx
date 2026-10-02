@@ -6,7 +6,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Check,
   Building2,
   Users,
   GraduationCap,
@@ -212,21 +211,20 @@ export default function PlansManagement() {
                 className={`plan-card ${isPopular ? "is-popular" : ""} ${!isActive ? "is-inactive" : ""}`}
               >
                 {isPopular && (
-                  <div className="plan-badge-popular">
-                    <Sparkles size={12} />
-                    <span>Most Popular</span>
-                  </div>
+                  <span className="plan-badge-popular">
+                    <Sparkles size={11} />
+                    <span>MOST POPULAR</span>
+                  </span>
                 )}
 
-                <div className="plan-card-header">
-                  <div className="plan-card-title-wrap">
-                    <span className="plan-tier-slug">{plan.tier.toUpperCase()}</span>
-                    <h2 className="plan-card-name">{plan.name}</h2>
-                  </div>
+                <div className="plan-card-top-row">
+                  <span className="plan-tier-slug">{plan.tier.toUpperCase()}</span>
                   <span className={`plan-status-pill ${isActive ? "active" : "inactive"}`}>
                     {isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
+
+                <h2 className="plan-card-name">{plan.name}</h2>
 
                 <p className="plan-description">
                   {plan.description || "Comprehensive multi-tenant subscription plan for educational institutions."}
@@ -235,7 +233,7 @@ export default function PlansManagement() {
                 {/* Pricing Box */}
                 <div className="plan-pricing-box">
                   <div className="plan-price-main">
-                    <span className="price-currency">{plan.currency || "PKR"}&nbsp;</span>
+                    <span className="price-currency">{plan.currency || "PKR"}</span>
                     <span className="price-amount">{Number(plan.priceMonthly || 0).toLocaleString()}</span>
                     <span className="price-period">/ month</span>
                   </div>
@@ -250,7 +248,7 @@ export default function PlansManagement() {
                 <div className="plan-limits-section">
                   <h4 className="plan-section-label">Tier Limits & Quota Capacity</h4>
                   <div className="plan-limits-row">
-                    <div className="limit-pill highlight" title="Maximum Students Allowed">
+                    <div className="limit-pill" title="Maximum Students Allowed">
                       <GraduationCap size={15} className="limit-icon" />
                       <span className="limit-val">{plan.maxStudents >= 99999 ? "Unlimited" : Number(plan.maxStudents).toLocaleString()}</span>
                       <span className="limit-label">Students</span>
@@ -276,17 +274,6 @@ export default function PlansManagement() {
                   )}
                 </div>
 
-                {/* All Features Included Banner */}
-                <div className="plan-modules-included-banner">
-                  <div className="modules-badge-header">
-                    <Sparkles size={14} className="modules-badge-icon" />
-                    <span>All System Features Included</span>
-                  </div>
-                  <p className="modules-badge-text">
-                    All academic, exam, finance, daily diary, and communication modules are fully unlocked. Tiers are strictly distinguished by user & student count capacity.
-                  </p>
-                </div>
-
                 {/* Footer and Management Actions */}
                 <div className="plan-card-footer">
                   <div className="plan-assigned-stat" title="Institutions currently operating under this plan">
@@ -303,7 +290,7 @@ export default function PlansManagement() {
                       onClick={() => openEditModal(plan)}
                       title="Edit plan configuration"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={13} />
                       <span>Edit</span>
                     </button>
 
@@ -322,7 +309,7 @@ export default function PlansManagement() {
                       onClick={() => confirmDelete(plan)}
                       title={instituteCount > 0 ? "Cannot delete plan with active institutions" : "Delete plan"}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
