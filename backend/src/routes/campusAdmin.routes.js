@@ -80,7 +80,11 @@ import {
 import { validateStudentId } from "../middleware/campusStudent.middleware.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
-import { checkStudentQuota } from "../middleware/quota.middleware.js";
+import {
+  checkStudentQuota,
+  checkStaffQuota,
+  checkActiveSubscription,
+} from "../middleware/quota.middleware.js";
 
 const router = express.Router();
 
@@ -95,24 +99,24 @@ router
   .get(getCampusStudents)
   .post(validateStudentId, addStudentToCampus);
 
-router.post("/students/new", checkStudentQuota, createStudentForCampus);
-router.delete("/students/:id", removeStudentFromCampus);
-router.put("/students/:id", updateStudentInCampus);
+router.post("/students/new", checkActiveSubscription, checkStudentQuota, createStudentForCampus);
+router.delete("/students/:id", checkActiveSubscription, removeStudentFromCampus);
+router.put("/students/:id", checkActiveSubscription, updateStudentInCampus);
 router.get("/students/:id/payments", getStudentPayments);
 
 router.route("/faculty").get(getCampusFaculty);
 
-router.post("/faculty/new", createFacultyForCampus);
-router.delete("/faculty/:id", removeFacultyFromCampus);
-router.put("/faculty/:id", updateFacultyInCampus);
+router.post("/faculty/new", checkActiveSubscription, checkStaffQuota, createFacultyForCampus);
+router.delete("/faculty/:id", checkActiveSubscription, removeFacultyFromCampus);
+router.put("/faculty/:id", checkActiveSubscription, updateFacultyInCampus);
 
 // Teachers & Staff Profiles
-router.route("/teachers").get(getTeachers).post(createTeacher);
+router.route("/teachers").get(getTeachers).post(checkActiveSubscription, checkStaffQuota, createTeacher);
 router
   .route("/teachers/:id")
   .get(getTeacherById)
-  .put(updateTeacher)
-  .delete(deleteTeacher);
+  .put(checkActiveSubscription, updateTeacher)
+  .delete(checkActiveSubscription, deleteTeacher);
 
 // Class Schedules & Routines (School Periods)
 router.route("/schedules").get(getClassSchedules).post(createClassSchedule);

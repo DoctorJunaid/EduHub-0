@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   LifeBuoy,
   Inbox,
+  Layers,
+  CreditCard,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -27,6 +29,16 @@ export const ADMIN_NAV = [
     label: "Institutes",
     path: "/institutes",
     icon: <Building2 size={20} />,
+  },
+  {
+    label: "Plans & Pricing",
+    path: "/super-admin/plans",
+    icon: <Layers size={20} />,
+  },
+  {
+    label: "Subscriptions",
+    path: "/super-admin/subscriptions",
+    icon: <CreditCard size={20} />,
   },
   {
     label: "Inquiries & Leads",

@@ -29,6 +29,17 @@ import {
   updateInquiryStatus,
   convertInquiry,
   getAuditLogs,
+  getPlans,
+  createPlan,
+  getPlanById,
+  updatePlan,
+  togglePlanStatus,
+  deletePlan,
+  getSubscriptions,
+  assignSubscription,
+  updateSubscriptionStatus,
+  extendSubscription,
+  getSubscriptionHistory,
 } from "../controllers/superAdmin.controller.js";
 
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
@@ -91,5 +102,26 @@ router.post("/inquiries/:id/convert", convertInquiry);
 
 // Platform Audit Logs
 router.get("/audit-logs", getAuditLogs);
+
+// --- SaaS Plan Management ---
+router
+  .route("/plans")
+  .get(getPlans)
+  .post(createPlan);
+
+router
+  .route("/plans/:id")
+  .get(getPlanById)
+  .put(updatePlan)
+  .delete(deletePlan);
+
+router.patch("/plans/:id/toggle-status", togglePlanStatus);
+
+// --- SaaS Subscription Governance (Manual Assignment) ---
+router.get("/subscriptions", getSubscriptions);
+router.post("/subscriptions/assign", assignSubscription);
+router.patch("/subscriptions/:instituteId/status", updateSubscriptionStatus);
+router.patch("/subscriptions/:instituteId/extend", extendSubscription);
+router.get("/subscriptions/:instituteId/history", getSubscriptionHistory);
 
 export default router;

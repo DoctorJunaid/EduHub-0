@@ -6,6 +6,7 @@
 import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import Campus from "../models/campus.model.js";
+import Plan from "../models/plan.model.js";
 import Alert from "../models/alert.model.js";
 import Inquiry from "../models/inqueries.model.js";
 import AuditLog from "../models/auditLog.model.js";
@@ -766,6 +767,411 @@ export const getPlatformAuditLogs = async (query = {}) => {
   return { logs, total, page, totalPages: Math.ceil(total / limit) };
 };
 
+// --- SaaS Plan Management ---
+
+export const getAllPlans = async () => {
+  const plans = await Plan.find().sort({ priceMonthly: 1 });
+  const enriched = await Promise.all(
+    plans.map(async (plan) => {
+      const instituteCount = await Institute.countDocuments({ planId: plan._id });
+      return {
+        ...plan.toObject(),
+        instituteCount,
+      };
+    })
+  );
+  return enriched;
+};
+
+export const createPlan = async (planData) => {
+  if (!planData.tier || !planData.name) {
+    const error = new Error("Plan tier identifier and name are required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const existing = await Plan.findOne({ tier: planData.tier.toLowerCase().trim() });
+  if (existing) {
+    const error = new Error(`A plan with tier identifier '${planData.tier}' already exists`);
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const plan = await Plan.create({
+    ...planData,
+    tier: planData.tier.toLowerCase().trim(),
+  });
+
+  return plan;
+};
+
+export const getPlanById = async (id) => {
+  const plan = await Plan.findById(id);
+  if (!plan) {
+    const error = new Error("Plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const institutes = await Institute.find({ planId: id })
+    .select("name type email phone status subscriptionStatus subscriptionEndDate")
+    .sort({ name: 1 });
+
+  return {
+    ...plan.toObject(),
+    institutes,
+  };
+};
+
+export const updatePlan = async (id, updateData) => {
+  const plan = await Plan.findById(id);
+  if (!plan) {
+    const error = new Error("Plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (updateData.tier && updateData.tier.toLowerCase().trim() !== plan.tier) {
+    const existing = await Plan.findOne({ tier: updateData.tier.toLowerCase().trim() });
+    if (existing) {
+      const error = new Error(`A plan with tier '${updateData.tier}' already exists`);
+      error.statusCode = 409;
+      throw error;
+    }
+    plan.tier = updateData.tier.toLowerCase().trim();
+  }
+
+  if (updateData.name !== undefined) plan.name = updateData.name;
+  if (updateData.description !== undefined) plan.description = updateData.description;
+  if (updateData.priceMonthly !== undefined) plan.priceMonthly = Number(updateData.priceMonthly);
+  if (updateData.priceYearly !== undefined) plan.priceYearly = Number(updateData.priceYearly);
+  if (updateData.currency !== undefined) plan.currency = updateData.currency;
+  if (updateData.maxCampuses !== undefined) plan.maxCampuses = Number(updateData.maxCampuses);
+  if (updateData.maxStudents !== undefined) plan.maxStudents = Number(updateData.maxStudents);
+  if (updateData.maxStaff !== undefined) plan.maxStaff = Number(updateData.maxStaff);
+  if (updateData.features !== undefined) plan.features = updateData.features;
+  if (updateData.trialDays !== undefined) plan.trialDays = Number(updateData.trialDays);
+  if (updateData.isPopular !== undefined) plan.isPopular = Boolean(updateData.isPopular);
+  if (updateData.isActive !== undefined) plan.isActive = Boolean(updateData.isActive);
+
+  await plan.save();
+
+  // Keep planTier synced on all institutes using this plan
+  await Institute.updateMany(
+    { planId: plan._id },
+    { $set: { planTier: plan.tier } }
+  );
+
+  return plan;
+};
+
+export const togglePlanStatus = async (id) => {
+  const plan = await Plan.findById(id);
+  if (!plan) {
+    const error = new Error("Plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  plan.isActive = !plan.isActive;
+  await plan.save();
+  return plan;
+};
+
+export const deletePlan = async (id) => {
+  const plan = await Plan.findById(id);
+  if (!plan) {
+    const error = new Error("Plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const assignedCount = await Institute.countDocuments({ planId: id });
+  if (assignedCount > 0) {
+    const error = new Error(`Cannot delete plan: ${assignedCount} institution(s) are currently assigned to it. Reassign them first.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await Plan.findByIdAndDelete(id);
+  return { message: "Plan deleted successfully" };
+};
+
+// --- SaaS Subscription Governance (Manual Assignment) ---
+
+export const getAllSubscriptions = async (query = {}) => {
+  const filter = {};
+  if (query.status) filter.subscriptionStatus = query.status;
+  if (query.planTier) filter.planTier = query.planTier;
+  if (query.search) {
+    filter.$or = [
+      { name: { $regex: query.search, $options: "i" } },
+      { email: { $regex: query.search, $options: "i" } },
+    ];
+  }
+
+  const institutes = await Institute.find(filter)
+    .populate("planId")
+    .populate("adminId", "name email phone avatar")
+    .sort({ createdAt: -1 });
+
+  const subscriptions = await Promise.all(
+    institutes.map(async (inst) => {
+      const plan = inst.planId;
+      const [campusCount, studentCount, staffCount] = await Promise.all([
+        Campus.countDocuments({ instituteId: inst._id }),
+        User.countDocuments({ instituteId: inst._id, role: "student" }),
+        User.countDocuments({ instituteId: inst._id, role: { $in: ["teacher", "staff", "campus_admin", "campus_manager"] } }),
+      ]);
+
+      const now = new Date();
+      const endDate = inst.subscriptionEndDate ? new Date(inst.subscriptionEndDate) : null;
+      const daysRemaining = endDate ? Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)) : null;
+      const isExpired = endDate ? endDate < now : false;
+
+      return {
+        instituteId: inst._id,
+        instituteName: inst.name,
+        instituteType: inst.type,
+        instituteEmail: inst.email,
+        instituteStatus: inst.status,
+        admin: inst.adminId ? {
+          id: inst.adminId._id,
+          name: inst.adminId.name,
+          email: inst.adminId.email,
+          phone: inst.adminId.phone,
+        } : null,
+        plan: plan ? {
+          id: plan._id,
+          name: plan.name,
+          tier: plan.tier,
+          priceMonthly: plan.priceMonthly,
+          priceYearly: plan.priceYearly,
+          currency: plan.currency,
+          maxCampuses: plan.maxCampuses,
+          maxStudents: plan.maxStudents,
+          maxStaff: plan.maxStaff,
+          features: plan.features,
+        } : {
+          name: inst.planTier ? inst.planTier.toUpperCase() : "Free",
+          tier: inst.planTier || "free",
+          maxCampuses: 1,
+          maxStudents: 50,
+          maxStaff: 10,
+          features: [],
+        },
+        subscriptionStatus: inst.subscriptionStatus || "Active",
+        billingCycle: inst.subscriptionBillingCycle || "yearly",
+        startDate: inst.subscriptionStartDate || inst.createdAt,
+        endDate: inst.subscriptionEndDate,
+        daysRemaining,
+        isExpired,
+        usage: {
+          campuses: {
+            current: campusCount,
+            max: plan?.maxCampuses ?? 1,
+            percent: Math.min(100, Math.round((campusCount / (plan?.maxCampuses || 1)) * 100)),
+          },
+          students: {
+            current: studentCount,
+            max: plan?.maxStudents ?? 50,
+            percent: Math.min(100, Math.round((studentCount / (plan?.maxStudents || 50)) * 100)),
+          },
+          staff: {
+            current: staffCount,
+            max: plan?.maxStaff ?? 10,
+            percent: Math.min(100, Math.round((staffCount / (plan?.maxStaff || 10)) * 100)),
+          },
+        },
+      };
+    })
+  );
+
+  return subscriptions;
+};
+
+export const assignSubscription = async (instituteId, data, superAdminUser) => {
+  const institute = await Institute.findById(instituteId);
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const plan = await Plan.findById(data.planId);
+  if (!plan) {
+    const error = new Error("Selected plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const startDate = data.startDate ? new Date(data.startDate) : new Date();
+  let endDate;
+
+  if (data.endDate) {
+    endDate = new Date(data.endDate);
+  } else {
+    const cycle = data.billingCycle || "yearly";
+    endDate = new Date(startDate);
+    if (cycle === "monthly") {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (cycle === "yearly") {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    } else if (cycle === "lifetime") {
+      endDate.setFullYear(endDate.getFullYear() + 100);
+    } else {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+  }
+
+  const status = data.status || "Active";
+  const isPlanChange = institute.planId?.toString() !== plan._id.toString();
+
+  institute.planId = plan._id;
+  institute.planTier = plan.tier;
+  institute.subscriptionBillingCycle = data.billingCycle || "yearly";
+  institute.subscriptionStartDate = startDate;
+  institute.subscriptionEndDate = endDate;
+  institute.subscriptionStatus = status;
+
+  if (!institute.subscriptionHistory) institute.subscriptionHistory = [];
+
+  institute.subscriptionHistory.unshift({
+    planId: plan._id,
+    planName: plan.name,
+    planTier: plan.tier,
+    billingCycle: data.billingCycle || "yearly",
+    startDate,
+    endDate,
+    status,
+    action: isPlanChange ? "Changed Plan" : "Assigned Subscription",
+    note: data.note || `Subscription manually assigned by ${superAdminUser?.name || "Super Admin"}`,
+    changedBy: superAdminUser?._id,
+    changedAt: new Date(),
+  });
+
+  await institute.save();
+
+  return {
+    instituteId: institute._id,
+    plan: { id: plan._id, name: plan.name, tier: plan.tier },
+    status: institute.subscriptionStatus,
+    startDate: institute.subscriptionStartDate,
+    endDate: institute.subscriptionEndDate,
+    billingCycle: institute.subscriptionBillingCycle,
+  };
+};
+
+export const updateSubscriptionStatus = async (instituteId, { status, note }, superAdminUser) => {
+  const institute = await Institute.findById(instituteId).populate("planId");
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const oldStatus = institute.subscriptionStatus;
+  institute.subscriptionStatus = status;
+
+  if (!institute.subscriptionHistory) institute.subscriptionHistory = [];
+
+  institute.subscriptionHistory.unshift({
+    planId: institute.planId?._id,
+    planName: institute.planId?.name || institute.planTier,
+    planTier: institute.planTier,
+    billingCycle: institute.subscriptionBillingCycle,
+    startDate: institute.subscriptionStartDate,
+    endDate: institute.subscriptionEndDate,
+    status,
+    action: `Status: ${oldStatus} -> ${status}`,
+    note: note || `Subscription status updated to ${status} by ${superAdminUser?.name || "Super Admin"}`,
+    changedBy: superAdminUser?._id,
+    changedAt: new Date(),
+  });
+
+  await institute.save();
+  return {
+    instituteId: institute._id,
+    subscriptionStatus: institute.subscriptionStatus,
+  };
+};
+
+export const extendSubscription = async (instituteId, { extendDays, extendMonths, newEndDate, note }, superAdminUser) => {
+  const institute = await Institute.findById(instituteId).populate("planId");
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const currentEndDate = institute.subscriptionEndDate ? new Date(institute.subscriptionEndDate) : new Date();
+  let updatedEndDate;
+
+  if (newEndDate) {
+    updatedEndDate = new Date(newEndDate);
+  } else if (extendDays) {
+    updatedEndDate = new Date(currentEndDate);
+    updatedEndDate.setDate(updatedEndDate.getDate() + Number(extendDays));
+  } else if (extendMonths) {
+    updatedEndDate = new Date(currentEndDate);
+    updatedEndDate.setMonth(updatedEndDate.getMonth() + Number(extendMonths));
+  } else {
+    updatedEndDate = new Date(currentEndDate);
+    updatedEndDate.setDate(updatedEndDate.getDate() + 30);
+  }
+
+  const previousDate = institute.subscriptionEndDate;
+  institute.subscriptionEndDate = updatedEndDate;
+  if (institute.subscriptionStatus === "Expired") {
+    institute.subscriptionStatus = "Active";
+  }
+
+  if (!institute.subscriptionHistory) institute.subscriptionHistory = [];
+
+  institute.subscriptionHistory.unshift({
+    planId: institute.planId?._id,
+    planName: institute.planId?.name || institute.planTier,
+    planTier: institute.planTier,
+    billingCycle: institute.subscriptionBillingCycle,
+    startDate: institute.subscriptionStartDate,
+    endDate: updatedEndDate,
+    status: institute.subscriptionStatus,
+    action: "Extended",
+    note: note || `Subscription extended to ${updatedEndDate.toISOString().split("T")[0]} by ${superAdminUser?.name || "Super Admin"}`,
+    changedBy: superAdminUser?._id,
+    changedAt: new Date(),
+  });
+
+  await institute.save();
+
+  return {
+    instituteId: institute._id,
+    subscriptionEndDate: institute.subscriptionEndDate,
+    subscriptionStatus: institute.subscriptionStatus,
+    previousEndDate: previousDate,
+  };
+};
+
+export const getSubscriptionHistory = async (instituteId) => {
+  const institute = await Institute.findById(instituteId)
+    .populate("subscriptionHistory.changedBy", "name email role")
+    .select("name subscriptionHistory subscriptionStatus subscriptionStartDate subscriptionEndDate planTier planId");
+
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    instituteId: institute._id,
+    instituteName: institute.name,
+    currentStatus: institute.subscriptionStatus,
+    currentEndDate: institute.subscriptionEndDate,
+    history: institute.subscriptionHistory || [],
+  };
+};
+
 export default {
   getGlobalStats,
   getAllInstitutes,
@@ -789,4 +1195,15 @@ export default {
   updateInquiryStatus,
   convertInquiryToInstitute,
   getPlatformAuditLogs,
+  getAllPlans,
+  createPlan,
+  getPlanById,
+  updatePlan,
+  togglePlanStatus,
+  deletePlan,
+  getAllSubscriptions,
+  assignSubscription,
+  updateSubscriptionStatus,
+  extendSubscription,
+  getSubscriptionHistory,
 };

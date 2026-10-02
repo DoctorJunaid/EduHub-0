@@ -17,6 +17,7 @@ import {
   Send,
   Copy,
   Check,
+  CreditCard,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import PageLoader from "@/components/shared/PageLoader";
@@ -362,6 +363,60 @@ export default function InstituteDetails() {
                 </button>
               </div>
             )}
+          </section>
+
+          {/* SaaS Subscription Panel */}
+          <section className="institute-details-admin-panel" style={{ marginTop: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+              <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+                <CreditCard size={16} /> SaaS Subscription
+              </h2>
+              <span className="status-chip" style={{ fontSize: "11px", padding: "2px 8px" }}>
+                {institute.subscriptionStatus || "Active"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "12.5px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f4f4f5", paddingBottom: "6px" }}>
+                <span style={{ color: "#71717a" }}>Plan Tier:</span>
+                <strong style={{ color: "#09090b", textTransform: "capitalize" }}>
+                  {institute.planId?.name || (institute.planTier ? institute.planTier.toUpperCase() : "Free Tier")}
+                </strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f4f4f5", paddingBottom: "6px" }}>
+                <span style={{ color: "#71717a" }}>Billing Cycle:</span>
+                <strong style={{ color: "#09090b", textTransform: "capitalize" }}>
+                  {institute.subscriptionBillingCycle || "Yearly"}
+                </strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "4px" }}>
+                <span style={{ color: "#71717a" }}>Valid Until:</span>
+                <strong style={{ color: "#09090b" }}>
+                  {institute.subscriptionEndDate ? new Date(institute.subscriptionEndDate).toLocaleDateString() : "Lifetime"}
+                </strong>
+              </div>
+
+              <Link
+                to="/super-admin/subscriptions"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  height: "32px",
+                  background: "#09090b",
+                  color: "#fff",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  marginTop: "8px",
+                }}
+              >
+                <CreditCard size={13} />
+                Manage Subscriptions
+              </Link>
+            </div>
           </section>
 
           <section className="institute-details-contact-panel">

@@ -76,7 +76,6 @@ const instituteSchema = new mongoose.Schema(
     },
     planTier: {
       type: String,
-      enum: ["free", "pro", "enterprise"],
       default: "free",
     },
     planId: {
@@ -86,9 +85,37 @@ const instituteSchema = new mongoose.Schema(
     },
     subscriptionStatus: {
       type: String,
-      enum: ["Active", "Trial", "Past Due", "Canceled"],
+      enum: ["Active", "Trial", "Past Due", "Canceled", "Suspended", "Expired"],
       default: "Active",
     },
+    subscriptionBillingCycle: {
+      type: String,
+      enum: ["monthly", "yearly", "custom", "lifetime"],
+      default: "yearly",
+    },
+    subscriptionStartDate: {
+      type: Date,
+      default: Date.now,
+    },
+    subscriptionEndDate: {
+      type: Date,
+      default: () => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Default 1 year from creation
+    },
+    subscriptionHistory: [
+      {
+        planId: { type: mongoose.Schema.Types.ObjectId, ref: "Plan" },
+        planName: { type: String, default: "" },
+        planTier: { type: String, default: "" },
+        billingCycle: { type: String, default: "yearly" },
+        startDate: { type: Date, default: Date.now },
+        endDate: { type: Date },
+        status: { type: String, default: "Active" },
+        action: { type: String, default: "Assigned" }, // "Assigned", "Changed", "Extended", "Suspended", "Activated", "Cancelled"
+        note: { type: String, default: "" },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        changedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

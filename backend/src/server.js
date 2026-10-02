@@ -6,6 +6,7 @@ import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import feeSchedulerService from "./services/feeScheduler.service.js";
+import { seedDefaultPlans } from "./services/planSeed.service.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,6 +14,9 @@ const startServer = async () => {
   try {
     // 1. Establish database connection
     await connectDB();
+
+    // 1.1 Seed default plans and verify tenant plan associations
+    await seedDefaultPlans();
 
     // Initialize background fee automation
     feeSchedulerService.start();

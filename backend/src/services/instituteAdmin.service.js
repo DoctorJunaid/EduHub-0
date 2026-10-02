@@ -6,6 +6,7 @@
 import User from "../models/user.model.js";
 import Institute from "../models/institute.model.js";
 import Campus from "../models/campus.model.js";
+import Plan from "../models/plan.model.js";
 import Alert from "../models/alert.model.js";
 import { sendMail } from "../utils/emailService.js";
 import generateToken from "../utils/generateToken.js";
@@ -734,6 +735,82 @@ export const createAlert = async (
   return alert;
 };
 
+/**
+ * Get the institute's current SaaS subscription and quota consumption
+ */
+export const getInstituteSubscription = async (instituteId) => {
+  const institute = await Institute.findById(instituteId).populate("planId");
+  if (!institute) {
+    const error = new Error("Institute not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  let plan = institute.planId;
+  if (!plan) {
+    plan = (await Plan.findOne({ tier: institute.planTier || "free" })) || (await Plan.findOne());
+  }
+
+  const [campusCount, studentCount, staffCount] = await Promise.all([
+    Campus.countDocuments({ instituteId }),
+    User.countDocuments({ instituteId, role: "student" }),
+    User.countDocuments({ instituteId, role: { $in: ["teacher", "staff", "campus_admin", "campus_manager"] } }),
+  ]);
+
+  const now = new Date();
+  const endDate = institute.subscriptionEndDate ? new Date(institute.subscriptionEndDate) : null;
+  const daysRemaining = endDate ? Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))) : null;
+  const isExpired = endDate ? endDate < now : false;
+
+  const maxCampuses = plan?.maxCampuses ?? 1;
+  const maxStudents = plan?.maxStudents ?? 50;
+  const maxStaff = plan?.maxStaff ?? 10;
+
+  return {
+    instituteId: institute._id,
+    instituteName: institute.name,
+    plan: {
+      id: plan?._id,
+      name: plan?.name ?? (institute.planTier ? institute.planTier.toUpperCase() : "Free Community Tier"),
+      tier: plan?.tier ?? institute.planTier ?? "free",
+      description: plan?.description ?? "",
+      priceMonthly: plan?.priceMonthly ?? 0,
+      priceYearly: plan?.priceYearly ?? 0,
+      currency: plan?.currency ?? "USD",
+      features: plan?.features ?? [],
+      maxCampuses,
+      maxStudents,
+      maxStaff,
+    },
+    subscription: {
+      status: institute.subscriptionStatus || "Active",
+      billingCycle: institute.subscriptionBillingCycle || "yearly",
+      startDate: institute.subscriptionStartDate || institute.createdAt,
+      endDate: institute.subscriptionEndDate,
+      daysRemaining,
+      isExpired,
+    },
+    usage: {
+      campuses: {
+        current: campusCount,
+        max: maxCampuses,
+        percentage: Math.min(100, Math.round((campusCount / maxCampuses) * 100)),
+      },
+      students: {
+        current: studentCount,
+        max: maxStudents,
+        percentage: Math.min(100, Math.round((studentCount / maxStudents) * 100)),
+      },
+      staff: {
+        current: staffCount,
+        max: maxStaff,
+        percentage: Math.min(100, Math.round((staffCount / maxStaff) * 100)),
+      },
+    },
+    features: plan?.features ?? [],
+  };
+};
+
 export default {
   getInstituteStats,
   getInstituteProfile,
@@ -754,4 +831,5 @@ export default {
   deleteStudent,
   getAlerts,
   createAlert,
+  getInstituteSubscription,
 };

@@ -40,6 +40,9 @@ import SuperAdminBroadcasts from "./Admins/Super Admin/Broadcasts/SuperAdminBroa
 import SuperAdminInquiries from "./Admins/Super Admin/Inquiries/SuperAdminInquiries";
 import EditInstitute from "./Admins/Super Admin/Institutes/EditInstitute";
 import InstituteDetails from "./Admins/Super Admin/Institutes/InstituteDetails";
+import PlansManagement from "./Admins/Super Admin/Plans/PlansManagement";
+import SubscriptionsManagement from "./Admins/Super Admin/Subscriptions/SubscriptionsManagement";
+import InstituteSubscription from "./Admins/Institute Admin/Subscription/InstituteSubscription";
 import { ADMIN_NAV } from "./constants/navigation";
 import {
   StudentLayout,
@@ -167,6 +170,7 @@ const App = () => {
               element={<InstituteStudents />}
             />
             <Route path="institute-admin/staff" element={<InstituteStaff />} />
+            <Route path="institute-admin/subscription" element={<InstituteSubscription />} />
             <Route path="institute-admin/salary-policies" element={<SalaryPolicies />} />
             <Route path="institute-admin/settings" element={<Settings />} />
             <Route path="institute-admin/support" element={<SupportManage />} />
@@ -270,6 +274,8 @@ const App = () => {
               element={<InstituteDetails />}
             />
             <Route path="institutes/:id" element={<ManageInstitutePage />} />
+            <Route path="super-admin/plans" element={<PlansManagement />} />
+            <Route path="super-admin/subscriptions" element={<SubscriptionsManagement />} />
             <Route path="super-admin/users" element={<GlobalUsers />} />
             <Route
               path="super-admin/inquiries"

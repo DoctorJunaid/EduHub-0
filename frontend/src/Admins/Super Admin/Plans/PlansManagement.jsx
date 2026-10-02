@@ -1,0 +1,643 @@
+import { useState, useEffect } from "react";
+import axiosInstance from "@/api/axiosInstance";
+import toast from "react-hot-toast";
+import {
+  Layers,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  Building2,
+  Users,
+  GraduationCap,
+  Sparkles,
+  RefreshCw,
+  X,
+  AlertTriangle,
+  Info,
+  Clock,
+} from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import "./PlansManagement.css";
+
+const AVAILABLE_FEATURES = [
+  { key: "single_campus", label: "Single Branch Operations", category: "Core" },
+  { key: "multi_campus", label: "Multi-Campus Governance", category: "Core" },
+  { key: "basic_attendance", label: "Student & Faculty Attendance", category: "Academic" },
+  { key: "gradebook", label: "Examinations & Grading", category: "Academic" },
+  { key: "daily_diary", label: "Daily Diary & Homework", category: "Academic" },
+  { key: "advanced_fees", label: "Automated Fee Invoicing", category: "Finance" },
+  { key: "salary_payroll", label: "Salary & Payroll Policies", category: "Finance" },
+  { key: "broadcast_alerts", label: "Platform Broadcast Alerts", category: "Communication" },
+  { key: "standard_support", label: "Standard Support SLA", category: "Support" },
+  { key: "priority_support", label: "Priority 24/7 Dedicated Support", category: "Support" },
+  { key: "custom_branding", label: "Custom Institution Branding", category: "Enterprise" },
+  { key: "audit_compliance", label: "Security & Regulatory Audit Logs", category: "Enterprise" },
+];
+
+const INITIAL_FORM = {
+  tier: "",
+  name: "",
+  description: "",
+  priceMonthly: 0,
+  priceYearly: 0,
+  currency: "USD",
+  maxCampuses: 1,
+  maxStudents: 50,
+  maxStaff: 10,
+  features: ["single_campus", "basic_attendance", "gradebook", "standard_support"],
+  trialDays: 0,
+  isPopular: false,
+  isActive: true,
+};
+
+export default function PlansManagement() {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [saving, setSaving] = useState(false);
+
+  // Delete confirmation
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const loadPlans = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get("/super-admin/plans");
+      setPlans(res.data.data || []);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load SaaS plans");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const openCreateModal = () => {
+    setEditingPlan(null);
+    setFormData(INITIAL_FORM);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (plan) => {
+    setEditingPlan(plan);
+    setFormData({
+      tier: plan.tier || "",
+      name: plan.name || "",
+      description: plan.description || "",
+      priceMonthly: plan.priceMonthly ?? 0,
+      priceYearly: plan.priceYearly ?? 0,
+      currency: plan.currency || "USD",
+      maxCampuses: plan.maxCampuses ?? 1,
+      maxStudents: plan.maxStudents ?? 50,
+      maxStaff: plan.maxStaff ?? 10,
+      features: plan.features || [],
+      trialDays: plan.trialDays ?? 0,
+      isPopular: Boolean(plan.isPopular),
+      isActive: plan.isActive !== false,
+    });
+    setModalOpen(true);
+  };
+
+  const handleFeatureToggle = (key) => {
+    setFormData((prev) => {
+      const exists = prev.features.includes(key);
+      return {
+        ...prev,
+        features: exists
+          ? prev.features.filter((f) => f !== key)
+          : [...prev.features, key],
+      };
+    });
+  };
+
+  const handleSavePlan = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.tier.trim()) {
+      toast.error("Please provide both a plan name and tier identifier.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editingPlan) {
+        await axiosInstance.put(`/super-admin/plans/${editingPlan._id || editingPlan.id}`, formData);
+        toast.success("Plan updated successfully!");
+      } else {
+        await axiosInstance.post("/super-admin/plans", formData);
+        toast.success("New SaaS plan created successfully!");
+      }
+      setModalOpen(false);
+      loadPlans();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save plan");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleStatus = async (plan) => {
+    try {
+      const res = await axiosInstance.patch(`/super-admin/plans/${plan._id || plan.id}/toggle-status`);
+      toast.success(res.data?.message || "Plan status updated");
+      loadPlans();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  const confirmDelete = (plan) => {
+    setPlanToDelete(plan);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!planToDelete) return;
+    setDeleting(true);
+    try {
+      await axiosInstance.delete(`/super-admin/plans/${planToDelete._id || planToDelete.id}`);
+      toast.success("Plan deleted successfully");
+      setDeleteModalOpen(false);
+      setPlanToDelete(null);
+      loadPlans();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete plan");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="plans-page-container">
+      {/* Header Bar */}
+      <div className="plans-header">
+        <div className="plans-header-left">
+          <div className="plans-title-row">
+            <Layers className="plans-title-icon" size={24} />
+            <h1 className="plans-title">SaaS Plans & Pricing Engine</h1>
+          </div>
+          <p className="plans-subtitle">
+            Configure tiered plans, quotas, pricing models, and feature flags. Plans update dynamically across all assigned institutions.
+          </p>
+        </div>
+
+        <div className="plans-header-actions">
+          <button
+            type="button"
+            className="plans-refresh-btn"
+            onClick={loadPlans}
+            disabled={loading}
+            title="Refresh plans list"
+          >
+            <RefreshCw size={16} className={loading ? "spin" : ""} />
+            <span>Refresh</span>
+          </button>
+          <button
+            type="button"
+            className="plans-create-btn"
+            onClick={openCreateModal}
+          >
+            <Plus size={16} />
+            <span>Create New Plan</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Loading state */}
+      {loading ? (
+        <div className="plans-loading">
+          <Spinner size={32} />
+          <p>Loading SaaS tiers and quotas...</p>
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="plans-empty-card">
+          <Layers size={48} className="empty-icon" />
+          <h3>No Subscription Plans Configured</h3>
+          <p>Create your first plan to start defining institutional quotas and features.</p>
+          <button type="button" className="plans-create-btn" onClick={openCreateModal}>
+            <Plus size={16} />
+            <span>Create Plan</span>
+          </button>
+        </div>
+      ) : (
+        /* Plan Cards Grid */
+        <div className="plans-grid">
+          {plans.map((plan) => {
+            const id = plan._id || plan.id;
+            const isPopular = plan.isPopular;
+            const isActive = plan.isActive !== false;
+            const instituteCount = plan.instituteCount || 0;
+
+            return (
+              <div
+                key={id}
+                className={`plan-card ${isPopular ? "is-popular" : ""} ${!isActive ? "is-inactive" : ""}`}
+              >
+                {isPopular && (
+                  <div className="plan-badge-popular">
+                    <Sparkles size={12} />
+                    <span>Most Popular</span>
+                  </div>
+                )}
+
+                <div className="plan-card-header">
+                  <div className="plan-card-title-wrap">
+                    <span className="plan-tier-slug">{plan.tier.toUpperCase()}</span>
+                    <h2 className="plan-card-name">{plan.name}</h2>
+                  </div>
+                  <span className={`plan-status-pill ${isActive ? "active" : "inactive"}`}>
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                <p className="plan-description">
+                  {plan.description || "Comprehensive multi-tenant subscription plan for educational institutions."}
+                </p>
+
+                {/* Pricing Box */}
+                <div className="plan-pricing-box">
+                  <div className="plan-price-main">
+                    <span className="price-currency">{plan.currency || "$"}&nbsp;</span>
+                    <span className="price-amount">{plan.priceMonthly}</span>
+                    <span className="price-period">/ month</span>
+                  </div>
+                  <div className="plan-price-sub">
+                    or {plan.currency || "$"} {plan.priceYearly} billed annually
+                  </div>
+                </div>
+
+                {/* Quota Limits Overview */}
+                <div className="plan-limits-section">
+                  <h4 className="plan-section-label">Institutional Quotas</h4>
+                  <div className="plan-limits-row">
+                    <div className="limit-pill" title="Maximum Campuses">
+                      <Building2 size={14} className="limit-icon" />
+                      <span className="limit-val">{plan.maxCampuses >= 9999 ? "Unlimited" : plan.maxCampuses}</span>
+                      <span className="limit-label">Campuses</span>
+                    </div>
+
+                    <div className="limit-pill" title="Maximum Students">
+                      <GraduationCap size={14} className="limit-icon" />
+                      <span className="limit-val">{plan.maxStudents >= 99999 ? "Unlimited" : plan.maxStudents}</span>
+                      <span className="limit-label">Students</span>
+                    </div>
+
+                    <div className="limit-pill" title="Maximum Staff Members">
+                      <Users size={14} className="limit-icon" />
+                      <span className="limit-val">{plan.maxStaff >= 9999 ? "Unlimited" : plan.maxStaff}</span>
+                      <span className="limit-label">Staff</span>
+                    </div>
+                  </div>
+                  {plan.trialDays > 0 && (
+                    <div className="plan-trial-badge">
+                      <Clock size={12} />
+                      <span>{plan.trialDays}-day free trial included</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Included Features */}
+                <div className="plan-features-section">
+                  <h4 className="plan-section-label">Included Features ({plan.features?.length || 0})</h4>
+                  <ul className="plan-features-list">
+                    {AVAILABLE_FEATURES.map((feat) => {
+                      const included = plan.features?.includes(feat.key);
+                      return (
+                        <li key={feat.key} className={`feature-item ${included ? "included" : "excluded"}`}>
+                          <div className={`feature-check-icon ${included ? "on" : "off"}`}>
+                            {included ? <Check size={12} /> : <X size={10} />}
+                          </div>
+                          <span className="feature-text">{feat.label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                {/* Footer and Management Actions */}
+                <div className="plan-card-footer">
+                  <div className="plan-assigned-stat" title="Institutions currently operating under this plan">
+                    <Building2 size={13} />
+                    <span>
+                      <strong>{instituteCount}</strong> institution{instituteCount === 1 ? "" : "s"} subscribed
+                    </span>
+                  </div>
+
+                  <div className="plan-actions-row">
+                    <button
+                      type="button"
+                      className="plan-action-btn edit"
+                      onClick={() => openEditModal(plan)}
+                      title="Edit plan configuration"
+                    >
+                      <Pencil size={14} />
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`plan-action-btn toggle ${isActive ? "deactivate" : "activate"}`}
+                      onClick={() => handleToggleStatus(plan)}
+                      title={isActive ? "Deactivate plan" : "Activate plan"}
+                    >
+                      <span>{isActive ? "Deactivate" : "Activate"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="plan-action-btn delete"
+                      onClick={() => confirmDelete(plan)}
+                      title={instituteCount > 0 ? "Cannot delete plan with active institutions" : "Delete plan"}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── CREATE / EDIT MODAL ── */}
+      {modalOpen && (
+        <div className="plans-modal-backdrop" onClick={() => !saving && setModalOpen(false)}>
+          <div className="plans-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="plans-modal-header">
+              <div className="modal-title-wrap">
+                <Layers size={20} className="modal-title-icon" />
+                <h3>{editingPlan ? `Edit Plan: ${editingPlan.name}` : "Create New Subscription Plan"}</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setModalOpen(false)}
+                disabled={saving}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePlan} className="plans-modal-form">
+              {/* Basic Details */}
+              <div className="form-section-title">General Information</div>
+              <div className="form-grid-2">
+                <div className="form-group">
+                  <label>Plan Identifier (Slug) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. starter, pro, enterprise"
+                    value={formData.tier}
+                    onChange={(e) => setFormData({ ...formData, tier: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, "") })}
+                    disabled={saving}
+                  />
+                  <span className="field-hint">Unique lowercase code (e.g. starter, campus-plus)</span>
+                </div>
+
+                <div className="form-group">
+                  <label>Display Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Standard Academy Plan"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="Summarize who this tier is designed for and key advantages..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Pricing */}
+              <div className="form-section-title">Pricing & Billing</div>
+              <div className="form-grid-3">
+                <div className="form-group">
+                  <label>Monthly Price</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={formData.priceMonthly}
+                    onChange={(e) => setFormData({ ...formData, priceMonthly: e.target.value })}
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Yearly Price (Discounted)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={formData.priceYearly}
+                    onChange={(e) => setFormData({ ...formData, priceYearly: e.target.value })}
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Currency</label>
+                  <input
+                    type="text"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value.toUpperCase() })}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+
+              {/* Quotas */}
+              <div className="form-section-title">Operational Quotas</div>
+              <div className="form-grid-3">
+                <div className="form-group">
+                  <label>Max Campuses</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.maxCampuses}
+                    onChange={(e) => setFormData({ ...formData, maxCampuses: e.target.value })}
+                    disabled={saving}
+                  />
+                  <span className="field-hint">e.g. 1 for Free, 5 for Pro, 9999 for Enterprise</span>
+                </div>
+
+                <div className="form-group">
+                  <label>Max Students</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.maxStudents}
+                    onChange={(e) => setFormData({ ...formData, maxStudents: e.target.value })}
+                    disabled={saving}
+                  />
+                  <span className="field-hint">Total enrolled students across all branches</span>
+                </div>
+
+                <div className="form-group">
+                  <label>Max Staff Members</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.maxStaff}
+                    onChange={(e) => setFormData({ ...formData, maxStaff: e.target.value })}
+                    disabled={saving}
+                  />
+                  <span className="field-hint">Teachers, managers, and staff accounts</span>
+                </div>
+              </div>
+
+              {/* Trial & Flags */}
+              <div className="form-section-title">Settings & Badges</div>
+              <div className="form-grid-3">
+                <div className="form-group">
+                  <label>Trial Days (0 = None)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.trialDays}
+                    onChange={(e) => setFormData({ ...formData, trialDays: e.target.value })}
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="form-checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={formData.isPopular}
+                      onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
+                      disabled={saving}
+                    />
+                    <span>Highlight as "Most Popular"</span>
+                  </label>
+                </div>
+
+                <div className="form-checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      disabled={saving}
+                    />
+                    <span>Plan is Active for assignment</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Feature Flags */}
+              <div className="form-section-title">Included Feature Flags</div>
+              <div className="features-checkbox-grid">
+                {AVAILABLE_FEATURES.map((feat) => {
+                  const checked = formData.features.includes(feat.key);
+                  return (
+                    <label key={feat.key} className={`feature-checkbox-card ${checked ? "selected" : ""}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleFeatureToggle(feat.key)}
+                        disabled={saving}
+                      />
+                      <div className="feat-check-info">
+                        <span className="feat-label">{feat.label}</span>
+                        <span className="feat-cat">{feat.category}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {/* Form Actions */}
+              <div className="plans-modal-footer">
+                <button
+                  type="button"
+                  className="modal-cancel-btn"
+                  onClick={() => setModalOpen(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="modal-submit-btn"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <Spinner size={16} />
+                      <span>Saving Plan...</span>
+                    </>
+                  ) : (
+                    <span>{editingPlan ? "Update Plan" : "Create Plan"}</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── DELETE MODAL ── */}
+      {deleteModalOpen && planToDelete && (
+        <div className="plans-modal-backdrop" onClick={() => !deleting && setDeleteModalOpen(false)}>
+          <div className="plans-modal delete-confirm" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-content">
+              <div className="delete-icon-wrap">
+                <AlertTriangle size={32} />
+              </div>
+              <h3>Delete Plan "{planToDelete.name}"?</h3>
+              <p>
+                Are you sure you want to remove this plan? This action cannot be undone.
+              </p>
+              {planToDelete.instituteCount > 0 && (
+                <div className="delete-warning-banner">
+                  <Info size={16} />
+                  <span>
+                    Warning: <strong>{planToDelete.instituteCount} institution(s)</strong> are currently assigned to this plan. You must reassign them to another plan before deletion.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="plans-modal-footer">
+              <button
+                type="button"
+                className="modal-cancel-btn"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="modal-delete-btn"
+                onClick={handleDelete}
+                disabled={deleting || planToDelete.instituteCount > 0}
+              >
+                {deleting ? "Deleting..." : "Permanently Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -242,6 +242,16 @@ export const createAlert = asyncHandler(async (req, res) => {
   });
 });
 
+// --- SaaS Subscription View ---
+export const getSubscription = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.getInstituteSubscription(req.instituteId);
+  res.status(200).json({
+    success: true,
+    message: "Institute subscription and quota usage retrieved successfully.",
+    data: result,
+  });
+});
+
 export default {
   getStats,
   getProfile,
@@ -262,4 +272,5 @@ export default {
   deleteStudent,
   getAlerts,
   createAlert,
+  getSubscription,
 };

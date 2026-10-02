@@ -256,6 +256,120 @@ export const getAuditLogs = asyncHandler(async (req, res) => {
   });
 });
 
+// --- SaaS Plan Management ---
+export const getPlans = asyncHandler(async (req, res) => {
+  const plans = await superAdminService.getAllPlans();
+  res.status(200).json({
+    success: true,
+    message: "Plans retrieved successfully.",
+    count: plans.length,
+    data: plans,
+  });
+});
+
+export const createPlan = asyncHandler(async (req, res) => {
+  const plan = await superAdminService.createPlan(req.body);
+  res.status(201).json({
+    success: true,
+    message: "Plan created successfully.",
+    data: plan,
+  });
+});
+
+export const getPlanById = asyncHandler(async (req, res) => {
+  const plan = await superAdminService.getPlanById(req.params.id);
+  res.status(200).json({
+    success: true,
+    message: "Plan retrieved successfully.",
+    data: plan,
+  });
+});
+
+export const updatePlan = asyncHandler(async (req, res) => {
+  const plan = await superAdminService.updatePlan(req.params.id, req.body);
+  res.status(200).json({
+    success: true,
+    message: "Plan updated successfully.",
+    data: plan,
+  });
+});
+
+export const togglePlanStatus = asyncHandler(async (req, res) => {
+  const plan = await superAdminService.togglePlanStatus(req.params.id);
+  res.status(200).json({
+    success: true,
+    message: `Plan ${plan.isActive ? "activated" : "deactivated"} successfully.`,
+    data: plan,
+  });
+});
+
+export const deletePlan = asyncHandler(async (req, res) => {
+  const result = await superAdminService.deletePlan(req.params.id);
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+});
+
+// --- SaaS Subscription Governance (Manual Assignment) ---
+export const getSubscriptions = asyncHandler(async (req, res) => {
+  const subscriptions = await superAdminService.getAllSubscriptions(req.query);
+  res.status(200).json({
+    success: true,
+    message: "Subscriptions retrieved successfully.",
+    count: subscriptions.length,
+    data: subscriptions,
+  });
+});
+
+export const assignSubscription = asyncHandler(async (req, res) => {
+  const result = await superAdminService.assignSubscription(
+    req.body.instituteId,
+    req.body,
+    req.user
+  );
+  res.status(200).json({
+    success: true,
+    message: "Subscription successfully assigned to institution.",
+    data: result,
+  });
+});
+
+export const updateSubscriptionStatus = asyncHandler(async (req, res) => {
+  const result = await superAdminService.updateSubscriptionStatus(
+    req.params.instituteId,
+    req.body,
+    req.user
+  );
+  res.status(200).json({
+    success: true,
+    message: "Subscription status updated successfully.",
+    data: result,
+  });
+});
+
+export const extendSubscription = asyncHandler(async (req, res) => {
+  const result = await superAdminService.extendSubscription(
+    req.params.instituteId,
+    req.body,
+    req.user
+  );
+  res.status(200).json({
+    success: true,
+    message: "Subscription extended successfully.",
+    data: result,
+  });
+});
+
+export const getSubscriptionHistory = asyncHandler(async (req, res) => {
+  const result = await superAdminService.getSubscriptionHistory(req.params.instituteId);
+  res.status(200).json({
+    success: true,
+    message: "Subscription history retrieved successfully.",
+    data: result,
+  });
+});
+
 export default {
   getStats,
   getInstitutes,
@@ -279,4 +393,15 @@ export default {
   updateInquiryStatus,
   convertInquiry,
   getAuditLogs,
+  getPlans,
+  createPlan,
+  getPlanById,
+  updatePlan,
+  togglePlanStatus,
+  deletePlan,
+  getSubscriptions,
+  assignSubscription,
+  updateSubscriptionStatus,
+  extendSubscription,
+  getSubscriptionHistory,
 };
