@@ -4,7 +4,7 @@ import {
   Users,
   MapPin,
   ArrowLeft,
-  Filter,
+  Plus,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -18,44 +18,18 @@ import {
   updateInstitute,
   optimisticStatusChange,
 } from "@/store/Slices/institutesSlice";
+import { Button } from "@/components/ui/button";
 import InstituteForm from "../Institutes/InstituteForm";
 import ManageInstitute from "../Institutes/ManageInstitute";
 import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
-import { loadInstitutes } from "../Institutes/instituteData";
 
-const stats = [
-  {
-    label: "Registered Institutes",
-    value: "24",
-    detail: "Total networks in system",
-    icon: Building2,
-  },
-  {
-    label: "Total Users",
-    value: "12,450",
-    detail: "Across all institutes",
-    icon: Users,
-  },
-  {
-    label: "Total Campuses",
-    value: "142",
-    detail: "Branches globally",
-    icon: MapPin,
-  },
-  {
-    label: "Active Programs",
-    value: "850+",
-    detail: "Courses across networks",
-    icon: GraduationCap,
-  },
+const FILTER_TYPES = [
+  { key: "all", label: "All Types" },
+  { key: "University", label: "Universities" },
+  { key: "College", label: "Colleges" },
+  { key: "School", label: "Schools" },
 ];
-
-function normalizeStatus(status) {
-  if (status === "Suspended") return "Suspended";
-  if (status === "Pending") return "Pending";
-  return "Active";
-}
 
 export default function SuperAdminDashboard() {
   const dispatch = useDispatch();
@@ -69,7 +43,6 @@ export default function SuperAdminDashboard() {
   );
   const [typeFilter, setTypeFilter] = useState("all");
   const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
-  const [showUniversityOnly, setShowUniversityOnly] = useState(false);
   const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
   const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
   const [statusMenuFor, setStatusMenuFor] = useState(null);
@@ -95,8 +68,7 @@ export default function SuperAdminDashboard() {
     const matchesType =
       typeFilter === "all" ||
       institute.type?.toLowerCase() === typeFilter.toLowerCase();
-    
-    // Safely check strings before calling .toLowerCase() or .includes()
+
     const matchesSearch =
       (institute.name || "").toLowerCase().includes(searchValue) ||
       (institute.type || "").toLowerCase().includes(searchValue) ||
@@ -107,7 +79,8 @@ export default function SuperAdminDashboard() {
   });
 
   const handleManage = (institute) => {
-    navigate(`/institutes/${institute.id}`);
+    const id = institute._id || institute.id;
+    navigate(`/institutes/${id}`);
   };
 
   const handleCampusClick = (institute) => {
@@ -115,7 +88,7 @@ export default function SuperAdminDashboard() {
   };
 
   const handleStudentsClick = (institute) => {
-    navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name)}`);
+    navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name || "")}`);
   };
 
   const changeInstituteStatus = async (institute, nextStatus) => {
@@ -133,38 +106,57 @@ export default function SuperAdminDashboard() {
   };
 
   const statsArray = [
-    { label: "Total Users", value: globalStats?.users?.total || 0, detail: "Across all active networks", icon: Users },
-    { label: "Registered Institutes", value: globalStats?.institutes?.total || 0, detail: "Total networks in system", icon: Building2 },
-    { label: "Total Campuses", value: globalStats?.campuses?.total || 0, detail: "Branches globally", icon: MapPin },
-    { label: "Active Programs", value: "-", detail: "Courses across networks", icon: GraduationCap },
+    {
+      label: "Total Users",
+      value: globalStats?.users?.total || 0,
+      detail: "Across all active networks",
+      icon: Users,
+    },
+    {
+      label: "Registered Institutes",
+      value: globalStats?.institutes?.total || 0,
+      detail: "Total networks in system",
+      icon: Building2,
+    },
+    {
+      label: "Total Campuses",
+      value: globalStats?.campuses?.total || 0,
+      detail: "Branches globally",
+      icon: MapPin,
+    },
+    {
+      label: "Active Programs",
+      value: "-",
+      detail: "Courses across networks",
+      icon: GraduationCap,
+    },
   ];
 
   return (
     <section className="super-admin-dashboard">
       {manageDrawerInstitute ? (
-        <div className="super-admin-manage-fullscreen" style={{ animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
-          <div className="super-admin-drawer-head" style={{ marginBottom: '12px', paddingBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none' }}>
+        <div className="super-admin-manage-fullscreen">
+          <div className="super-admin-drawer-head">
             <button
               className="super-admin-back-button"
               onClick={() => setManageDrawerInstitute(null)}
               aria-label="Back to dashboard"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #e4e4e7', background: '#fff', cursor: 'pointer' }}
             >
               <ArrowLeft size={18} />
             </button>
             <div>
-              <span className="super-admin-drawer-kicker" style={{ fontSize: '10px' }}>
+              <span className="super-admin-drawer-kicker">
                 Institute Management
               </span>
-              <h3 style={{ fontSize: '20px', margin: '0' }}>
+              <h3 className="super-admin-drawer-title">
                 {manageDrawerInstitute.mode === "new"
                   ? "Add Institute"
                   : manageDrawerInstitute.name}
               </h3>
             </div>
           </div>
-          
-          <div className="super-admin-manage-card-wrap" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e4e4e7', padding: '16px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.02)', width: '100%', boxSizing: 'border-box' }}>
+
+          <div className="super-admin-manage-card-wrap">
             {manageDrawerInstitute.mode === "new" ? (
               <InstituteForm
                 onSave={async (values) => {
@@ -173,7 +165,9 @@ export default function SuperAdminDashboard() {
                     toast.success("Institute added successfully!");
                     setManageDrawerInstitute(null);
                   } catch (error) {
-                    toast.error(typeof error === 'string' ? error : "Failed to add institute");
+                    toast.error(
+                      typeof error === "string" ? error : "Failed to add institute",
+                    );
                     throw error;
                   }
                 }}
@@ -189,171 +183,197 @@ export default function SuperAdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="super-admin-topbar">
-
-        <button
-          className="add-institute-button"
-          onClick={() => setManageDrawerInstitute({ mode: "new" })}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "8px",
-            background: "#09090b",
-            color: "#fff",
-            border: "none",
-            cursor: "pointer",
-            fontWeight: "600",
-            fontSize: "13px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-            alignSelf: "flex-end",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            transition: "all 0.15s ease",
-          }}
-        >
-          <span>+</span> Add Institute
-        </button>
-      </div>
-
-      <div className="super-admin-stats-grid">
-        {statsArray.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <article className="super-admin-stat-card" key={index}>
-              <div className="super-admin-stat-head">
-                <span className="super-admin-stat-label">{stat.label}</span>
-                <span className="super-admin-stat-icon">
-                  <Icon size={22} />
-                </span>
-              </div>
-              <div className="super-admin-stat-value">{stat.value}</div>
-              <div className="super-admin-stat-detail">{stat.detail}</div>
-            </article>
-          );
-        })}
-      </div>
-
-      <section className="super-admin-institutes-panel">
-        <div className="super-admin-panel-head">
-          <div>
-            <h2>Registered Institutes</h2>
-            <p>Overview of top-performing networks</p>
+          <div className="super-admin-stats-grid">
+            {statsArray.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <article className="super-admin-stat-card" key={index}>
+                  <div className="super-admin-stat-head">
+                    <span className="super-admin-stat-label">{stat.label}</span>
+                    <div className="super-admin-stat-icon" aria-hidden="true">
+                      <Icon size={16} />
+                    </div>
+                  </div>
+                  <div className="super-admin-stat-value">{stat.value}</div>
+                  <div className="super-admin-stat-detail">{stat.detail}</div>
+                </article>
+              );
+            })}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-            {["all", "University", "College", "School"].map((type) => (
-              <button
-                key={type}
-                onClick={() => setTypeFilter(type)}
-                style={{
-                  padding: "5px 12px",
-                  borderRadius: "6px",
-                  border: typeFilter === type ? "1px solid #09090b" : "1px solid #e4e4e7",
-                  background: typeFilter === type ? "#09090b" : "#fff",
-                  color: typeFilter === type ? "#fff" : "#71717a",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
+
+          <section className="super-admin-institutes-panel">
+            <div className="super-admin-panel-head">
+              <div className="super-admin-panel-titles">
+                <h2>Registered Institutes</h2>
+                <p>Overview of top-performing networks</p>
+              </div>
+
+              <Button
+                className="super-admin-add-button"
+                onClick={() => setManageDrawerInstitute({ mode: "new" })}
               >
-                {type === "all" ? "All Types" : `${type}s`}
-              </button>
-            ))}
-          </div>
-        </div>
+                <Plus className="w-4 h-4 mr-1.5" />
+                <span>Add Institute</span>
+              </Button>
+            </div>
 
-        <div className="super-admin-institute-list">
-          {visibleInstitutes.length === 0 && (
-            <article className="super-admin-empty-row">
-              <span>No matching university institutes found.</span>
-            </article>
-          )}
-
-          {visibleInstitutes.map((institute, index) => (
-            <article
-              className={`super-admin-institute-row ${selectedInstitute === institute.name ? "selected" : ""}`}
-              key={index}
-            >
-              <div className="super-admin-institute-main">
-                <img
-                  className="super-admin-institute-image"
-                  src={institute.image || "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80"}
-                  alt=""
-                />
-                <div className="super-admin-institute-copy">
-                  <h3>{institute.name}</h3>
-                  <p>{institute.type} · {institute.board}</p>
-                </div>
-              </div>
-
-              <div className="super-admin-institute-meta">
-                <div className="super-admin-status-wrap">
+            <div className="super-admin-panel-toolbar">
+              <div
+                className="super-admin-filters-group"
+                role="group"
+                aria-label="Filter institutes by type"
+              >
+                {FILTER_TYPES.map((type) => (
                   <button
-                    className="super-admin-active-badge"
-                    onClick={() =>
-                      setStatusMenuFor(
-                        statusMenuFor === institute.name
-                          ? null
-                          : institute.name,
-                      )
-                    }
-                    aria-label={`Change status for ${institute.name}`}
+                    key={type.key}
+                    type="button"
+                    className={`super-admin-filter-pill ${typeFilter === type.key ? "active" : ""}`}
+                    onClick={() => setTypeFilter(type.key)}
                   >
-                    <span className="super-admin-badge-dot" />{" "}
-                    {institute.status}
+                    {type.label}
                   </button>
+                ))}
+              </div>
+            </div>
 
-                  {statusMenuFor === institute.name && (
-                    <select
-                      className="super-admin-status-select"
-                      value={institute.status}
-                      onChange={(event) =>
-                        changeInstituteStatus(
-                          institute,
-                          event.target.value,
-                        )
-                      }
-                      onBlur={() => setStatusMenuFor(null)}
-                      aria-label={`Set new status for ${institute.name}`}
+            <div className="super-admin-institute-list">
+              {visibleInstitutes.length === 0 ? (
+                <div className="super-admin-empty-state">
+                  <div className="super-admin-empty-icon" aria-hidden="true">
+                    <Building2 size={26} />
+                  </div>
+                  <p className="super-admin-empty-title">No institutes found</p>
+                  <p className="super-admin-empty-desc">
+                    {searchTerm || typeFilter !== "all"
+                      ? "No institutions match your search or filter criteria. Try selecting another filter."
+                      : "No institutions have been registered in the system yet."}
+                  </p>
+                  {(searchTerm || typeFilter !== "all") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setTypeFilter("all");
+                        setSearchTerm("");
+                      }}
+                      className="super-admin-empty-action"
                     >
-                      <option value="Active">Active</option>
-                      <option value="Suspended">Suspended</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
+                      Clear Filters
+                    </Button>
                   )}
                 </div>
+              ) : (
+                visibleInstitutes.map((institute, index) => {
+                  const instId = institute._id || institute.id;
+                  const isMenuOpen = statusMenuFor === instId;
+                  const status = institute.status || "Active";
+                  const statusClass = status.toLowerCase();
 
-                <button
-                  className="super-admin-campus-count super-admin-clickable"
-                  onClick={() => handleCampusClick(institute)}
-                  aria-label={`Show campuses for ${institute.name}`}
-                >
-                  {institute.campusCount || 0} Campuses
-                </button>
-                <button
-                  className="super-admin-student-count super-admin-clickable"
-                  onClick={() => handleStudentsClick(institute)}
-                  aria-label={`Show students for ${institute.name}`}
-                >
-                  View Users
-                </button>
-                <button
-                  className="super-admin-manage-button"
-                  onClick={() => handleManage(institute)}
-                  aria-label={`Manage ${institute.name}`}
-                >
-                  Manage
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-      </>
+                  return (
+                    <article
+                      className={`super-admin-institute-row ${
+                        selectedInstitute === institute.name ? "selected" : ""
+                      }`}
+                      key={instId || index}
+                    >
+                      <div className="super-admin-institute-main">
+                        <img
+                          className="super-admin-institute-image"
+                          src={
+                            institute.image ||
+                            "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80"
+                          }
+                          alt=""
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=80&q=80";
+                          }}
+                        />
+                        <div className="super-admin-institute-copy">
+                          <h3 className="super-admin-institute-name">
+                            {institute.name}
+                          </h3>
+                          <p className="super-admin-institute-type">
+                            {institute.type || "Institution"} ·{" "}
+                            {institute.board || "General"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="super-admin-institute-meta">
+                        <div className="super-admin-status-wrap">
+                          <button
+                            type="button"
+                            className={`super-admin-active-badge super-admin-status-${statusClass}`}
+                            onClick={() =>
+                              setStatusMenuFor(isMenuOpen ? null : instId)
+                            }
+                            aria-label={`Change status for ${institute.name}`}
+                            title="Click to change status"
+                          >
+                            <span className="super-admin-badge-dot" />
+                            <span>{status}</span>
+                          </button>
+
+                          {isMenuOpen && (
+                            <select
+                              className="super-admin-status-select"
+                              value={status}
+                              autoFocus
+                              onChange={(event) =>
+                                changeInstituteStatus(
+                                  institute,
+                                  event.target.value,
+                                )
+                              }
+                              onBlur={() => setStatusMenuFor(null)}
+                              aria-label={`Set new status for ${institute.name}`}
+                            >
+                              <option value="Active">Active</option>
+                              <option value="Suspended">Suspended</option>
+                              <option value="Pending">Pending</option>
+                              <option value="Inactive">Inactive</option>
+                            </select>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="super-admin-campus-count super-admin-clickable"
+                          onClick={() => handleCampusClick(institute)}
+                          aria-label={`Show campuses for ${institute.name}`}
+                        >
+                          {institute.campusCount || 0} Campuses
+                        </button>
+
+                        <button
+                          type="button"
+                          className="super-admin-student-count super-admin-clickable"
+                          onClick={() => handleStudentsClick(institute)}
+                          aria-label={`Show users for ${institute.name}`}
+                        >
+                          View Users
+                        </button>
+
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="super-admin-manage-btn"
+                          onClick={() => handleManage(institute)}
+                          aria-label={`Manage ${institute.name}`}
+                        >
+                          Manage
+                        </Button>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+        </>
       )}
-
 
       {campusDrawerInstitute && (
         <div
@@ -396,7 +416,7 @@ export default function SuperAdminDashboard() {
                     </span>
                   </div>
                   <span
-                    className={`super-admin-drawer-campus-status ${campus.status.toLowerCase()}`}
+                    className={`super-admin-drawer-campus-status ${campus.status?.toLowerCase() || "active"}`}
                   >
                     {campus.status}
                   </span>
@@ -430,29 +450,31 @@ export default function SuperAdminDashboard() {
               </button>
             </div>
             <div className="super-admin-drawer-body">
-              {studentsDrawerInstitute.studentRecords.map((student, idx) => (
-                <div
-                  className="super-admin-student-drawer-row"
-                  key={`${student.roll}-${idx}`}
-                >
-                  <div className="super-admin-student-drawer-main">
-                    <span className="super-admin-student-name">
-                      {student.name}
-                    </span>
-                    <span className="super-admin-student-meta">
-                      {student.program} · {student.roll}
-                    </span>
-                    <span className="super-admin-student-campus">
-                      {student.campus}
+              {(studentsDrawerInstitute.studentRecords || []).map(
+                (student, idx) => (
+                  <div
+                    className="super-admin-student-drawer-row"
+                    key={`${student.roll}-${idx}`}
+                  >
+                    <div className="super-admin-student-drawer-main">
+                      <span className="super-admin-student-name">
+                        {student.name}
+                      </span>
+                      <span className="super-admin-student-meta">
+                        {student.program} · {student.roll}
+                      </span>
+                      <span className="super-admin-student-campus">
+                        {student.campus}
+                      </span>
+                    </div>
+                    <span
+                      className={`super-admin-student-status ${student.status?.toLowerCase() || "active"}`}
+                    >
+                      {student.status}
                     </span>
                   </div>
-                  <span
-                    className={`super-admin-student-status ${student.status.toLowerCase()}`}
-                  >
-                    {student.status}
-                  </span>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </aside>
         </div>

@@ -15,7 +15,9 @@ import {
   AlertTriangle,
   Building2,
   ArrowLeft,
+  Plus,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import "./Institutes.css";
 import {
@@ -202,19 +204,6 @@ export default function Institutes() {
               <span className="breadcrumb-sep">&gt;</span>
               <span className="breadcrumb-current">Institutes</span>
             </div>
-
-            <div className="institutes-title-row">
-              <div>
-                <h1>Institutes</h1>
-                <p>Manage all registered networks across the global system.</p>
-              </div>
-              <button
-                className="add-institute-button"
-                onClick={() => setManageDrawer({ mode: "new" })}
-              >
-                <span>+</span> Add Institute
-              </button>
-            </div>
           </div>
 
       <section className="institutes-table-panel">
@@ -251,6 +240,13 @@ export default function Institutes() {
             <SlidersHorizontal size={16} />
             <span>Filters{(typeFilter !== "all" || statusFilter !== "all") ? " (Active)" : ""}</span>
           </button>
+          <Button
+            className="institutes-add-btn"
+            onClick={() => setManageDrawer({ mode: "new" })}
+          >
+            <Plus size={16} className="mr-1.5" />
+            <span>Add Institute</span>
+          </Button>
         </div>
 
         {/* Real Collapsible Filters Bar */}

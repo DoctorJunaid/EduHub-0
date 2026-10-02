@@ -6,10 +6,12 @@
 .super-admin-institutes-page {
   min-height: calc(100vh - 120px);
   background: transparent;
-  padding: 12px;
-  max-width: 1200px;
+  padding: 16px 32px 48px;
+  width: 100%;
+  max-width: 1320px;
   margin: 0 auto;
-  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-sizing: border-box;
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   color: #09090b;
   font-family: inherit;
 }
@@ -17,7 +19,6 @@
 .institutes-top {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 .breadcrumb-row {
@@ -26,7 +27,8 @@
   gap: 8px;
   color: #71717a;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .breadcrumb-home {
@@ -34,92 +36,51 @@
 }
 
 .breadcrumb-sep {
-  color: #71717a;
-}
-
-.institutes-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.institutes-title-row h1 {
-  margin: 0 0 2px;
-  color: #09090b;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.institutes-title-row p {
-  margin: 0;
-  color: #71717a;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.add-institute-button {
-  background: #09090b;
-  color: #ffffff;
-  border-radius: 8px;
-  padding: 8px 14px;
-  border: none;
-  font-weight: 600;
-  font-size: 11px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.2s ease;
-}
-
-.add-institute-button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-}
-
-.add-institute-button:active {
-  transform: scale(0.96);
-}
-
-.add-institute-button span {
-  margin-right: 6px;
+  color: #a1a1aa;
 }
 
 .institutes-table-panel {
-  margin-top: 16px;
+  margin-top: 14px;
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid #e4e4e7;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.02);
-  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  padding: 20px 24px;
   opacity: 0;
-  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
 }
 
 .institutes-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .institutes-search {
-  width: min(760px, 60vw);
-  min-width: 260px;
+  flex: 1;
+  min-width: 0;
   background: #fafafa;
   border-radius: 8px;
   border: 1px solid #e4e4e7;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 0 12px;
+  height: 38px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.institutes-search:focus-within {
+  border-color: #09090b;
+  background: #ffffff;
 }
 
 .institutes-search svg {
   color: #a1a1aa;
+  flex-shrink: 0;
 }
 
 .institutes-search input {
@@ -129,25 +90,51 @@
   width: 100%;
   color: #09090b;
   font-size: 13px;
+  height: 100%;
 }
 
 .institutes-filter {
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 14px;
   border-radius: 8px;
-  padding: 9px 14px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
   color: #09090b;
-  font-weight: 700;
-  font-size: 11px;
-  display: flex;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .institutes-filter:hover {
-  border-color: #a1a1aa;
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+.institutes-filter.active {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+
+.institutes-add-btn {
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .institutes-table-wrap {
@@ -1170,4 +1157,51 @@
 
 .save-button:hover {
   opacity: 0.85;
+}
+
+/* =========================================================
+   RESPONSIVE LAYOUT
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  .super-admin-institutes-page {
+    padding: 16px 24px 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .super-admin-institutes-page {
+    padding: 14px 16px 32px;
+  }
+
+  .institutes-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .institutes-search {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .institutes-filter {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .institutes-add-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .institutes-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .institutes-filter,
+  .institutes-add-btn {
+    width: 100%;
+  }
 }
