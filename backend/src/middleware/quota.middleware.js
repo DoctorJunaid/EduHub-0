@@ -231,38 +231,13 @@ export const checkStaffQuota = async (req, res, next) => {
 };
 
 /**
- * Higher-order middleware factory to require a specific feature flag on the institution's plan
+ * Higher-order middleware factory - feature locking is bypassed as per requirements.
+ * All modules/features remain accessible across plans; tier differences are strictly count/quota based (students, staff, campuses).
  */
 export const requireFeature = (featureKey) => {
-  return async (req, res, next) => {
-    try {
-      if (req.user?.role === "super_admin") {
-        return next();
-      }
-
-      const context = await resolveInstituteAndPlan(req);
-      if (!context) {
-        return next();
-      }
-
-      const { plan } = context;
-      if (plan.tier === "enterprise" || (Array.isArray(plan.features) && plan.features.includes(featureKey))) {
-        return next();
-      }
-
-      return res.status(403).json({
-        success: false,
-        code: "FEATURE_NOT_INCLUDED",
-        message: `The '${featureKey}' feature is not included in your institution's subscription plan (${plan.name}). Please contact Super Admin to enable this feature.`,
-        data: {
-          requiredFeature: featureKey,
-          currentTier: plan.tier,
-        },
-      });
-    } catch (error) {
-      console.error(`requireFeature(${featureKey}) error:`, error);
-      next();
-    }
+  return (req, res, next) => {
+    // Pass-through: No features are locked
+    next();
   };
 };
 

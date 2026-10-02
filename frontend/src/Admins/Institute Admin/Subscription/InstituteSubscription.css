@@ -360,13 +360,24 @@
   margin-bottom: 14px;
 }
 
-.features-count-pill {
-  font-size: 11.5px;
-  font-weight: 600;
-  background: #f4f4f5;
-  color: #52525b;
-  padding: 3px 10px;
-  border-radius: 12px;
+.quota-card.highlight {
+  border-color: #cbd5e1;
+  background: #fdfefe;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: #71717a;
+  margin: 3px 0 0 0;
+  line-height: 1.4;
+}
+
+.features-count-pill.all-enabled {
+  background: #dcfce7;
+  color: #15803d;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .inst-features-grid {

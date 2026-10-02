@@ -97,10 +97,10 @@ router
   .put(checkActiveSubscription, updateStudent)
   .delete(checkActiveSubscription, deleteStudent);
 
-// Broadcast Alerts (Enforces broadcast_alerts feature)
+// Broadcast Alerts
 router
   .route("/alerts")
   .get(getAlerts)
-  .post(checkActiveSubscription, requireFeature("broadcast_alerts"), createAlert);
+  .post(checkActiveSubscription, createAlert);
 
 export default router;

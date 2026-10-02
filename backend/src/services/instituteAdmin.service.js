@@ -776,7 +776,7 @@ export const getInstituteSubscription = async (instituteId) => {
       description: plan?.description ?? "",
       priceMonthly: plan?.priceMonthly ?? 0,
       priceYearly: plan?.priceYearly ?? 0,
-      currency: plan?.currency ?? "USD",
+      currency: plan?.currency ?? "PKR",
       features: plan?.features ?? [],
       maxCampuses,
       maxStudents,

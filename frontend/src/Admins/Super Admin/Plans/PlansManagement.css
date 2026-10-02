@@ -317,6 +317,15 @@
   font-weight: 500;
 }
 
+.limit-pill.highlight {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.limit-pill.highlight .limit-val {
+  color: #0f172a;
+}
+
 .plan-trial-badge {
   display: inline-flex;
   align-items: center;
@@ -331,61 +340,36 @@
   font-weight: 500;
 }
 
-/* Features */
-.plan-features-section {
-  flex: 1;
-  margin-bottom: 20px;
-}
-
-.plan-features-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Modules Included Banner */
+.plan-modules-included-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 220px;
-  overflow-y: auto;
 }
 
-.feature-item {
+.modules-badge-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #09090b;
 }
 
-.feature-item.included {
-  color: #1e293b;
-}
-
-.feature-item.excluded {
-  color: #94a3b8;
-  text-decoration: line-through;
-}
-
-.feature-check-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.feature-check-icon.on {
-  background: #dcfce7;
+.modules-badge-icon {
   color: #16a34a;
 }
 
-.feature-check-icon.off {
-  background: #f1f5f9;
-  color: #94a3b8;
-}
-
-.feature-text {
-  line-height: 1.3;
+.modules-badge-text {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
 }
 
 /* Footer */

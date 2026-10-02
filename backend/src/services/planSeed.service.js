@@ -13,6 +13,26 @@ export const seedDefaultPlans = async () => {
       console.log("[PlanSeed] No subscription plans found. Seeding default tiers...");
       await Plan.insertMany(DEFAULT_PLANS);
       console.log("[PlanSeed] Default plans seeded successfully.");
+    } else {
+      // Migrate any existing USD or legacy-priced plans to PKR
+      const usdPlans = await Plan.find({ $or: [{ currency: "USD" }, { currency: { $exists: false } }] });
+      for (const p of usdPlans) {
+        p.currency = "PKR";
+        if (p.tier === "free") {
+          p.priceMonthly = 0;
+          p.priceYearly = 0;
+        } else if (p.tier === "pro" && (p.priceMonthly === 99 || p.priceMonthly < 1000)) {
+          p.priceMonthly = 15000;
+          p.priceYearly = 150000;
+        } else if (p.tier === "enterprise" && (p.priceMonthly === 299 || p.priceMonthly < 5000)) {
+          p.priceMonthly = 45000;
+          p.priceYearly = 450000;
+        }
+        await p.save();
+      }
+      if (usdPlans.length > 0) {
+        console.log(`[PlanSeed] Migrated ${usdPlans.length} subscription plan(s) to PKR currency.`);
+      }
     }
 
     // Ensure all existing institutes have a valid planId

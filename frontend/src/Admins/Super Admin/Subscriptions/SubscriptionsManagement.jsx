@@ -560,7 +560,7 @@ export default function SubscriptionsManagement() {
                   <option value="" disabled>-- Select a Plan --</option>
                   {plans.map((p) => (
                     <option key={p._id || p.id} value={p._id || p.id}>
-                      {p.name} ({p.tier.toUpperCase()}) — ${p.priceMonthly}/mo | Max {p.maxCampuses} Campuses, {p.maxStudents} Students
+                      {p.name} ({p.tier.toUpperCase()}) — {p.currency || "PKR"} {Number(p.priceMonthly || 0).toLocaleString()}/mo | Max {p.maxStudents >= 99999 ? "Unlimited" : Number(p.maxStudents).toLocaleString()} Students, {p.maxCampuses >= 9999 ? "Unlimited" : p.maxCampuses} Campuses
                     </option>
                   ))}
                 </select>

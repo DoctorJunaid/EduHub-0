@@ -20,32 +20,16 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import "./PlansManagement.css";
 
-const AVAILABLE_FEATURES = [
-  { key: "single_campus", label: "Single Branch Operations", category: "Core" },
-  { key: "multi_campus", label: "Multi-Campus Governance", category: "Core" },
-  { key: "basic_attendance", label: "Student & Faculty Attendance", category: "Academic" },
-  { key: "gradebook", label: "Examinations & Grading", category: "Academic" },
-  { key: "daily_diary", label: "Daily Diary & Homework", category: "Academic" },
-  { key: "advanced_fees", label: "Automated Fee Invoicing", category: "Finance" },
-  { key: "salary_payroll", label: "Salary & Payroll Policies", category: "Finance" },
-  { key: "broadcast_alerts", label: "Platform Broadcast Alerts", category: "Communication" },
-  { key: "standard_support", label: "Standard Support SLA", category: "Support" },
-  { key: "priority_support", label: "Priority 24/7 Dedicated Support", category: "Support" },
-  { key: "custom_branding", label: "Custom Institution Branding", category: "Enterprise" },
-  { key: "audit_compliance", label: "Security & Regulatory Audit Logs", category: "Enterprise" },
-];
-
 const INITIAL_FORM = {
   tier: "",
   name: "",
   description: "",
   priceMonthly: 0,
   priceYearly: 0,
-  currency: "USD",
+  currency: "PKR",
   maxCampuses: 1,
   maxStudents: 50,
   maxStaff: 10,
-  features: ["single_campus", "basic_attendance", "gradebook", "standard_support"],
   trialDays: 0,
   isPopular: false,
   isActive: true,
@@ -94,28 +78,15 @@ export default function PlansManagement() {
       description: plan.description || "",
       priceMonthly: plan.priceMonthly ?? 0,
       priceYearly: plan.priceYearly ?? 0,
-      currency: plan.currency || "USD",
+      currency: plan.currency || "PKR",
       maxCampuses: plan.maxCampuses ?? 1,
       maxStudents: plan.maxStudents ?? 50,
       maxStaff: plan.maxStaff ?? 10,
-      features: plan.features || [],
       trialDays: plan.trialDays ?? 0,
       isPopular: Boolean(plan.isPopular),
       isActive: plan.isActive !== false,
     });
     setModalOpen(true);
-  };
-
-  const handleFeatureToggle = (key) => {
-    setFormData((prev) => {
-      const exists = prev.features.includes(key);
-      return {
-        ...prev,
-        features: exists
-          ? prev.features.filter((f) => f !== key)
-          : [...prev.features, key],
-      };
-    });
   };
 
   const handleSavePlan = async (e) => {
@@ -264,35 +235,37 @@ export default function PlansManagement() {
                 {/* Pricing Box */}
                 <div className="plan-pricing-box">
                   <div className="plan-price-main">
-                    <span className="price-currency">{plan.currency || "$"}&nbsp;</span>
-                    <span className="price-amount">{plan.priceMonthly}</span>
+                    <span className="price-currency">{plan.currency || "PKR"}&nbsp;</span>
+                    <span className="price-amount">{Number(plan.priceMonthly || 0).toLocaleString()}</span>
                     <span className="price-period">/ month</span>
                   </div>
                   <div className="plan-price-sub">
-                    or {plan.currency || "$"} {plan.priceYearly} billed annually
+                    {Number(plan.priceMonthly) === 0
+                      ? "Free tier forever"
+                      : `or ${plan.currency || "PKR"} ${Number(plan.priceYearly || 0).toLocaleString()} billed annually`}
                   </div>
                 </div>
 
                 {/* Quota Limits Overview */}
                 <div className="plan-limits-section">
-                  <h4 className="plan-section-label">Institutional Quotas</h4>
+                  <h4 className="plan-section-label">Tier Limits & Quota Capacity</h4>
                   <div className="plan-limits-row">
-                    <div className="limit-pill" title="Maximum Campuses">
-                      <Building2 size={14} className="limit-icon" />
-                      <span className="limit-val">{plan.maxCampuses >= 9999 ? "Unlimited" : plan.maxCampuses}</span>
-                      <span className="limit-label">Campuses</span>
-                    </div>
-
-                    <div className="limit-pill" title="Maximum Students">
-                      <GraduationCap size={14} className="limit-icon" />
-                      <span className="limit-val">{plan.maxStudents >= 99999 ? "Unlimited" : plan.maxStudents}</span>
+                    <div className="limit-pill highlight" title="Maximum Students Allowed">
+                      <GraduationCap size={15} className="limit-icon" />
+                      <span className="limit-val">{plan.maxStudents >= 99999 ? "Unlimited" : Number(plan.maxStudents).toLocaleString()}</span>
                       <span className="limit-label">Students</span>
                     </div>
 
-                    <div className="limit-pill" title="Maximum Staff Members">
+                    <div className="limit-pill" title="Maximum Staff Members Allowed">
                       <Users size={14} className="limit-icon" />
-                      <span className="limit-val">{plan.maxStaff >= 9999 ? "Unlimited" : plan.maxStaff}</span>
+                      <span className="limit-val">{plan.maxStaff >= 9999 ? "Unlimited" : Number(plan.maxStaff).toLocaleString()}</span>
                       <span className="limit-label">Staff</span>
+                    </div>
+
+                    <div className="limit-pill" title="Maximum Campuses Allowed">
+                      <Building2 size={14} className="limit-icon" />
+                      <span className="limit-val">{plan.maxCampuses >= 9999 ? "Unlimited" : plan.maxCampuses}</span>
+                      <span className="limit-label">Campuses</span>
                     </div>
                   </div>
                   {plan.trialDays > 0 && (
@@ -303,22 +276,15 @@ export default function PlansManagement() {
                   )}
                 </div>
 
-                {/* Included Features */}
-                <div className="plan-features-section">
-                  <h4 className="plan-section-label">Included Features ({plan.features?.length || 0})</h4>
-                  <ul className="plan-features-list">
-                    {AVAILABLE_FEATURES.map((feat) => {
-                      const included = plan.features?.includes(feat.key);
-                      return (
-                        <li key={feat.key} className={`feature-item ${included ? "included" : "excluded"}`}>
-                          <div className={`feature-check-icon ${included ? "on" : "off"}`}>
-                            {included ? <Check size={12} /> : <X size={10} />}
-                          </div>
-                          <span className="feature-text">{feat.label}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                {/* All Features Included Banner */}
+                <div className="plan-modules-included-banner">
+                  <div className="modules-badge-header">
+                    <Sparkles size={14} className="modules-badge-icon" />
+                    <span>All System Features Included</span>
+                  </div>
+                  <p className="modules-badge-text">
+                    All academic, exam, finance, daily diary, and communication modules are fully unlocked. Tiers are strictly distinguished by user & student count capacity.
+                  </p>
                 </div>
 
                 {/* Footer and Management Actions */}
@@ -543,27 +509,7 @@ export default function PlansManagement() {
                 </div>
               </div>
 
-              {/* Feature Flags */}
-              <div className="form-section-title">Included Feature Flags</div>
-              <div className="features-checkbox-grid">
-                {AVAILABLE_FEATURES.map((feat) => {
-                  const checked = formData.features.includes(feat.key);
-                  return (
-                    <label key={feat.key} className={`feature-checkbox-card ${checked ? "selected" : ""}`}>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => handleFeatureToggle(feat.key)}
-                        disabled={saving}
-                      />
-                      <div className="feat-check-info">
-                        <span className="feat-label">{feat.label}</span>
-                        <span className="feat-cat">{feat.category}</span>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
+
 
               {/* Form Actions */}
               <div className="plans-modal-footer">

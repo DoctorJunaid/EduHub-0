@@ -168,8 +168,12 @@ export default function InstituteSubscription() {
 
         <div className="inst-hero-right">
           <div className="inst-pricing-display">
-            <span className="price-tag">{plan?.currency || "$"}{plan?.priceMonthly}</span>
-            <span className="price-unit">/ month</span>
+            <span className="price-tag">
+              {Number(plan?.priceMonthly) === 0
+                ? "Free"
+                : `${plan?.currency || "PKR"} ${Number(plan?.priceMonthly || 0).toLocaleString()}`}
+            </span>
+            {Number(plan?.priceMonthly) > 0 && <span className="price-unit">/ month</span>}
           </div>
           <span className="price-note">
             Centrally managed by Super Admin
@@ -215,7 +219,7 @@ export default function InstituteSubscription() {
           </div>
 
           {/* Students */}
-          <div className="quota-card">
+          <div className="quota-card highlight">
             <div className="quota-card-header">
               <div className="quota-icon-wrap student">
                 <GraduationCap size={20} />
@@ -285,30 +289,32 @@ export default function InstituteSubscription() {
       {/* Included Features Grid */}
       <div className="inst-features-section">
         <div className="features-section-header">
-          <h3 className="section-title">Included Features & Modules</h3>
-          <span className="features-count-pill">
-            {features?.length || 0} of {ALL_SYSTEM_FEATURES.length} Enabled
+          <div>
+            <h3 className="section-title">Included System Capabilities & Modules</h3>
+            <p className="section-subtitle">
+              Full platform access enabled. All academic, examination, finance, daily diary, and communication modules are fully unlocked across all plans.
+            </p>
+          </div>
+          <span className="features-count-pill all-enabled">
+            <Check size={12} /> All Modules Unlocked
           </span>
         </div>
 
         <div className="inst-features-grid">
-          {ALL_SYSTEM_FEATURES.map((feat) => {
-            const isIncluded = features?.includes(feat.key);
-            return (
-              <div
-                key={feat.key}
-                className={`inst-feature-card ${isIncluded ? "enabled" : "disabled"}`}
-              >
-                <div className={`feature-status-dot ${isIncluded ? "on" : "off"}`}>
-                  {isIncluded ? <Check size={12} /> : <X size={10} />}
-                </div>
-                <div className="feature-card-content">
-                  <span className="feat-name">{feat.label}</span>
-                  <span className="feat-sub">{feat.category}</span>
-                </div>
+          {ALL_SYSTEM_FEATURES.map((feat) => (
+            <div
+              key={feat.key}
+              className="inst-feature-card enabled"
+            >
+              <div className="feature-status-dot on">
+                <Check size={12} />
               </div>
-            );
-          })}
+              <div className="feature-card-content">
+                <span className="feat-name">{feat.label}</span>
+                <span className="feat-sub">{feat.category}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -318,9 +324,9 @@ export default function InstituteSubscription() {
           <LifeBuoy size={24} />
         </div>
         <div className="banner-content">
-          <h4>Need higher quotas or specialized institutional modules?</h4>
+          <h4>Need higher student enrollment or campus capacity?</h4>
           <p>
-            Subscriptions and plan upgrades are managed centrally by the EduHub Super Admin team. Contact support or your account administrator to adjust limits or request an enterprise expansion.
+            Subscriptions and quota limits are managed centrally by the EduHub Super Admin team. Contact support or your account administrator to adjust student, staff, or branch capacity.
           </p>
         </div>
         <Link to="/institute-admin/support" className="banner-contact-btn">
