@@ -129,26 +129,6 @@ export default function GlobalUsers() {
 
   return (
     <div className="global-users-page">
-      {/* Top Header */}
-      <div className="global-users-header">
-        <div>
-          <div className="global-users-kicker">Super Admin Control</div>
-          <h1 className="global-users-title">Global User Directory</h1>
-          <p className="global-users-subtitle">
-            Govern and control all users across every institute, campus, and role.
-          </p>
-        </div>
-        <button
-          className="global-users-refresh-btn"
-          onClick={() => fetchUsers(true)}
-          disabled={loading}
-          title="Refresh user list"
-        >
-          {loading ? <Spinner className="size-3.5 mr-1" /> : <RefreshCw size={14} />}
-          <span>Refresh</span>
-        </button>
-      </div>
-
       {/* Mini Stats Banner */}
       <div className="global-users-stats-grid">
         <div className="global-users-stat-card">
@@ -156,83 +136,89 @@ export default function GlobalUsers() {
           <span className="stat-lbl">Total Registered</span>
         </div>
         <div className="global-users-stat-card">
-          <span className="stat-num" style={{ color: "#16a34a" }}>
-            {stats.active}
-          </span>
+          <span className="stat-num">{stats.active}</span>
           <span className="stat-lbl">Active Users</span>
         </div>
         <div className="global-users-stat-card">
-          <span className="stat-num" style={{ color: "#0284c7" }}>
-            {stats.admins}
-          </span>
+          <span className="stat-num">{stats.admins}</span>
           <span className="stat-lbl">Platform Admins</span>
         </div>
         <div className="global-users-stat-card">
-          <span className="stat-num" style={{ color: "#6366f1" }}>
-            {stats.students}
-          </span>
+          <span className="stat-num">{stats.students}</span>
           <span className="stat-lbl">Students</span>
         </div>
       </div>
 
-      {/* Filters & Search Toolbar */}
-      <div className="global-users-toolbar">
-        <div className="global-users-search-wrap">
-          <Search size={16} className="search-icon" />
-          <input
-            type="search"
-            placeholder="Search by name, email, or institute..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        {instituteParam && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0284c7', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
-            <span>Institute: {instituteParam}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchParams({});
-                setSearch("");
-              }}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#0284c7', padding: 0 }}
-              title="Clear institute filter"
-            >
-              <X size={14} />
-            </button>
+      {/* Main Global Users Management Panel */}
+      <div className="global-users-panel">
+        {/* Filters & Search Toolbar */}
+        <div className="global-users-toolbar">
+          <div className="global-users-search-wrap">
+            <Search size={16} className="search-icon" />
+            <input
+              type="search"
+              placeholder="Search by name, email, or institute..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-        )}
 
-        <div className="global-users-filters">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="filter-select"
-            aria-label="Filter by role"
-          >
-            <option value="all">All Roles</option>
-            <option value="institute_admin">Institute Admins</option>
-            <option value="campus_manager">Campus Managers</option>
-            <option value="teacher">Teachers</option>
-            <option value="student">Students</option>
-          </select>
+          {instituteParam && (
+            <div className="institute-filter-chip">
+              <span>Institute: {instituteParam}</span>
+              <button
+                type="button"
+                className="chip-clear-btn"
+                onClick={() => {
+                  setSearchParams({});
+                  setSearch("");
+                }}
+                title="Clear institute filter"
+                aria-label="Clear institute filter"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="filter-select"
-            aria-label="Filter by status"
+          <div className="global-users-filters">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="filter-select"
+              aria-label="Filter by role"
+            >
+              <option value="all">All Roles</option>
+              <option value="institute_admin">Institute Admins</option>
+              <option value="campus_manager">Campus Managers</option>
+              <option value="teacher">Teachers</option>
+              <option value="student">Students</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="filter-select"
+              aria-label="Filter by status"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+          </div>
+
+          <button
+            className="global-users-refresh-btn"
+            onClick={() => fetchUsers(true)}
+            disabled={loading}
+            title="Refresh user list"
           >
-            <option value="all">All Status</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
-          </select>
+            {loading ? <Spinner className="size-3.5 mr-1" /> : <RefreshCw size={14} className={loading ? "animate-spin" : ""} />}
+            <span>Refresh</span>
+          </button>
         </div>
-      </div>
 
-      {/* Users Table */}
-      <div className="global-users-table-card">
+        {/* Users Table */}
         <div className="table-responsive">
           <table className="global-users-table">
             <thead>
@@ -349,31 +335,31 @@ export default function GlobalUsers() {
               )}
             </tbody>
           </table>
+        </div>
 
-          {/* Server-side Pagination controls */}
-          <div className="global-users-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid #f4f4f5' }}>
-            <span style={{ fontSize: '13px', color: '#71717a' }}>
-              Showing {users.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, totalUsers)} of {totalUsers} total users
+        {/* Server-side Pagination controls */}
+        <div className="global-users-pagination">
+          <span className="pagination-info">
+            Showing {users.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, totalUsers)} of {totalUsers} total users
+          </span>
+          <div className="pagination-controls">
+            <button
+              className="pagination-btn"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+            <span className="pagination-current">
+              {page} / {totalPages}
             </span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                disabled={page <= 1 || loading}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e4e4e7', background: '#fff', fontSize: '13px', cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? 0.5 : 1 }}
-              >
-                Previous
-              </button>
-              <span style={{ display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: '13px', fontWeight: 600 }}>
-                {page} / {totalPages}
-              </span>
-              <button
-                disabled={page >= totalPages || loading}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #e4e4e7', background: '#fff', fontSize: '13px', cursor: page >= totalPages ? 'not-allowed' : 'pointer', opacity: page >= totalPages ? 0.5 : 1 }}
-              >
-                Next
-              </button>
-            </div>
+            <button
+              className="pagination-btn"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>

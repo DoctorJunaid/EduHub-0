@@ -39,7 +39,7 @@
 /* ── KPI STATS GRID ── */
 .super-admin-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin: 0 0 20px;
 }
@@ -62,7 +62,6 @@
 .super-admin-stat-card:nth-child(1) { animation-delay: 0.04s; }
 .super-admin-stat-card:nth-child(2) { animation-delay: 0.08s; }
 .super-admin-stat-card:nth-child(3) { animation-delay: 0.12s; }
-.super-admin-stat-card:nth-child(4) { animation-delay: 0.16s; }
 
 .super-admin-stat-card:hover {
   transform: translateY(-2px);
@@ -891,14 +890,20 @@
    RESPONSIVE LAYOUT
    ========================================================= */
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .super-admin-dashboard {
     padding: 16px 24px 36px;
   }
 
   .super-admin-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .super-admin-stats-grid {
+    grid-template-columns: 1fr;
   }
 }
 
