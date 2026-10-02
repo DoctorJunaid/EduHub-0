@@ -22,6 +22,7 @@ import {
 import axiosInstance from "@/api/axiosInstance";
 import { useInstitution, INSTITUTION_TYPES } from "@/context/InstitutionContext";
 import CampusSwitcher from "./CampusSwitcher";
+import GlobalSearchBar from "./GlobalSearchBar";
 
 import { useSelector } from "react-redux";
 
@@ -55,7 +56,6 @@ const Header = ({
 
   const focusProfile = useRef(false);
   const notificationRef = useRef(null);
-  const searchInputRef = useRef(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
@@ -131,10 +131,7 @@ const Header = ({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === "k") {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      } else if (e.key === "Escape") {
+      if (e.key === "Escape") {
         setNotificationsOpen(false);
       }
     };
@@ -268,22 +265,11 @@ const Header = ({
         })}
       </nav>
 
-      <div className="search-box header-search">
-        <Search size={15} aria-hidden="true" />
-        <span className="sr-only">Search</span>
-        <input
-          ref={searchInputRef}
-          type="search"
-          placeholder={effectiveSearchPlaceholder}
-          defaultValue={localStorage.getItem("eduHubSuperSearch") || ""}
-          onChange={handleSearch}
-          aria-label="Search records"
-        />
-        <span className="search-shortcut" title="Press ⌘K or Ctrl+K to search">
-          <kbd>⌘</kbd>
-          <kbd>K</kbd>
-        </span>
-      </div>
+      <GlobalSearchBar
+        placeholder={effectiveSearchPlaceholder}
+        userRole={currentRole}
+        onSearchSubmit={handleSearch}
+      />
 
       <div className="header-actions">
         {currentRole !== "super_admin" && <CampusSwitcher />}

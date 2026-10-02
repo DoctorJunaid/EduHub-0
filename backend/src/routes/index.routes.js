@@ -5,6 +5,7 @@
 import express from "express";
 import authRoutes from "./auth.routes.js";
 import superAdminRoutes from "./superAdmin.routes.js";
+import searchRoutes from "./search.routes.js";
 // import authRoutes from "./auth.routes.js";
 import campusAdminRoutes from "./campusAdmin.routes.js";
 // import userRoutes from "./user.routes.js";
@@ -33,6 +34,7 @@ router.get("/health", (req, res) => {
 
 // Mount Track A governance & authentication routes
 router.use("/auth", authRoutes);
+router.use("/search", searchRoutes);
 router.use("/student", studentRoutes);
 router.use("/super-admin", superAdminRoutes);
 router.use("/institute-admin", instituteAdminRoutes);
