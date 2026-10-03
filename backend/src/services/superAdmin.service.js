@@ -154,6 +154,14 @@ export const createInstitute = async (
     }
   }
 
+  if (!instituteData.planId) {
+    const defaultPlan = (await Plan.findOne({ tier: "free" })) || (await Plan.findOne());
+    if (defaultPlan) {
+      instituteData.planId = defaultPlan._id;
+      instituteData.planTier = defaultPlan.tier || "free";
+    }
+  }
+
   // Create Institute FIRST so we have an ID for the Admin
   const institute = await Institute.create({
     ...instituteData,
