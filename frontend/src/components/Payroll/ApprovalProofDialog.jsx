@@ -15,7 +15,6 @@ import {
   Check,
   Globe,
   Layers,
-  Sparkles,
   Info,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -368,7 +367,7 @@ const ApprovalProofDialog = ({
           {isPending && canApprove && (
             <div className="proof-decision-section">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={18} className="text-amber-500" />
+                <ShieldCheck size={18} className="text-amber-500" />
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                   Administrative Action Required
                 </h3>

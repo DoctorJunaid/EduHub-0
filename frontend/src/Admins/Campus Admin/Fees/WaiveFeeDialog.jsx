@@ -1,7 +1,7 @@
 import { useState, useId } from "react";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-import { ShieldAlert, Sparkles, XCircle } from "lucide-react";
+import { ShieldAlert, Percent, XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -82,7 +82,7 @@ export default function WaiveFeeDialog({ voucher, onClose, onUpdated }) {
         <div className="flex items-center justify-between px-7 py-5 border-b border-zinc-200 bg-white flex-shrink-0">
           <div className="flex items-center gap-3.5">
             <div className={`size-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white ${mode === "waive" ? "bg-purple-700" : "bg-zinc-800"}`}>
-              {mode === "waive" ? <Sparkles className="size-5" /> : <XCircle className="size-5" />}
+              {mode === "waive" ? <Percent className="size-5" /> : <XCircle className="size-5" />}
             </div>
             <div>
               <DialogTitle className="text-base font-semibold text-zinc-900 leading-tight">

@@ -10,7 +10,6 @@ import {
   Mail,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   ExternalLink,
   Clock,
   RefreshCw,
@@ -409,7 +408,7 @@ export default function SuperAdminDashboard() {
                             {convertingId === inquiry._id ? (
                               <Spinner className="size-3 text-white" />
                             ) : (
-                              <Sparkles size={12} />
+                              <Building2 size={13} />
                             )}
                             Convert to Institute
                           </button>

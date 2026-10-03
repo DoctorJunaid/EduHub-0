@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LifeBuoy, Paperclip, X, Plus } from "lucide-react";
+import { Headset, Paperclip, X, Plus } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 import { useSupportCategories } from "@/hooks/useSupportCategories";
@@ -123,7 +123,7 @@ export const NewTicketDialog = ({
         <div className="ntd-header">
           <div className="ntd-header-left">
             <div className="ntd-header-icon" aria-hidden="true">
-              <LifeBuoy className="w-5 h-5" />
+              <Headset className="w-5 h-5" />
             </div>
             <div>
               <DialogTitle className="ntd-title">
@@ -153,7 +153,7 @@ export const NewTicketDialog = ({
                 const IconComp =
                   cat.Icon ||
                   CANONICAL_SUPPORT_CATEGORIES.find((c) => c.id === catId)?.Icon ||
-                  LifeBuoy;
+                  Headset;
                 return (
                   <button
                     key={catId}

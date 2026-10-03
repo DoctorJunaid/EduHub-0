@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Inbox, Clock, CheckCircle2, Archive, AlertTriangle, AlertCircle } from "lucide-react";
 
 export const SupportKpiCards = ({ stats = {}, onSelectFilter, activeStatus = "all" }) => {

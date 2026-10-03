@@ -657,9 +657,11 @@ export const replyToTicket = async (user, ticketId, payload) => {
     readBy: [{ userId: user._id, readAt: new Date() }],
   });
 
+  const creatorId = String(ticket.createdBy?._id || ticket.createdBy);
+  const isCreator = creatorId === String(user._id);
+
   // Update firstResponseAt if staff replies to non-staff creator
   if (!effectiveInternal && isStaff && !ticket.firstResponseAt) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
     if (!isCreator) {
       ticket.firstResponseAt = new Date();
     }
@@ -667,11 +669,10 @@ export const replyToTicket = async (user, ticketId, payload) => {
 
   // Update status transitions on external replies
   if (!effectiveInternal) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
     if (isCreator && ticket.status === "Resolved") {
       ticket.status = "In Progress";
-    } else if (!isCreator && (ticket.status === "Open" || ticket.status === "In Progress")) {
-      ticket.status = "Resolved";
+    } else if (!isCreator && ticket.status === "Open") {
+      ticket.status = "In Progress";
     }
   }
 

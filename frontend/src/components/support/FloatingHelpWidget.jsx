@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  LifeBuoy,
+  Headset,
   X,
   Plus,
   ChevronRight,
@@ -79,7 +79,7 @@ export const FloatingHelpWidget = () => {
             <div className="fhw-header">
               <div className="fhw-header-left">
                 <div className="fhw-header-icon" aria-hidden="true">
-                  <LifeBuoy className="w-5 h-5" />
+                  <Headset className="w-5 h-5" />
                 </div>
                 <div className="fhw-header-titles">
                   <h4 className="fhw-header-title">Help & Support</h4>
@@ -194,7 +194,7 @@ export const FloatingHelpWidget = () => {
             aria-label="Open Help & Support Assistant"
             title="Need Help?"
           >
-            <LifeBuoy className="w-6 h-6" />
+            <Headset className="w-5 h-5" />
             {openCount > 0 && (
               <span className="fhw-badge">
                 {openCount}
