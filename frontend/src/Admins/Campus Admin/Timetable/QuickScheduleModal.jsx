@@ -6,7 +6,7 @@ import {
   BookOpen,
   User,
   Building,
-  Sparkles,
+  Zap,
   Coffee,
   GraduationCap,
   AlertCircle,
@@ -488,7 +488,7 @@ export default function QuickScheduleModal({
         {/* 3. Quick Period Presets Carousel */}
         <div className="qs-presets-bar">
           <span className="qs-presets-label">
-            <Sparkles size={13} style={{ color: "#d97706" }} /> Presets:
+            <Zap size={13} style={{ color: "#d97706" }} /> Presets:
           </span>
           {presets.map((p) => {
             const isSelected = startTime === p.start && endTime === p.end;
@@ -739,7 +739,7 @@ export default function QuickScheduleModal({
                 </span>
                 {durationMinutes > 0 && (
                   <span className="qs-duration-badge">
-                    <Sparkles size={11} style={{ color: "#d97706" }} />
+                    <Clock size={11} style={{ color: "#d97706" }} />
                     {durationMinutes} minutes duration
                   </span>
                 )}

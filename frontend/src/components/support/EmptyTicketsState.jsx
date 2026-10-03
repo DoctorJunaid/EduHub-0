@@ -1,12 +1,12 @@
 import React from "react";
-import { LifeBuoy, Plus } from "lucide-react";
+import { Headset, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function EmptyTicketsState({ onNewTicket, isFiltered = false }) {
   return (
     <div className="flex flex-col items-center justify-center p-12 text-center bg-white border border-zinc-200/80 rounded-xl my-4 min-h-[320px]">
       <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-500 mb-4 shadow-2xs">
-        <LifeBuoy className="w-7 h-7" />
+        <Headset className="w-7 h-7" />
       </div>
       <h3 className="text-base font-bold text-zinc-900 mb-1">
         {isFiltered ? "No Matching Support Tickets" : "No Support Tickets Found"}

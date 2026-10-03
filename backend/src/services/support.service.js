@@ -737,9 +737,11 @@ export const replyToTicket = async (user, ticketId, payload) => {
     readBy: [{ userId: user._id, readAt: new Date() }],
   });
 
+  const creatorId = String(ticket.createdBy?._id || ticket.createdBy);
+  const isCreator = creatorId === String(user._id);
+
   // Update firstResponseAt if staff replies to non-staff creator
   if (!effectiveInternal && isStaff && !ticket.firstResponseAt) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
     if (!isCreator) {
       ticket.firstResponseAt = new Date();
     }
@@ -747,11 +749,10 @@ export const replyToTicket = async (user, ticketId, payload) => {
 
   // Update status transitions on external replies
   if (!effectiveInternal) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
     if (isCreator && ticket.status === "Resolved") {
       ticket.status = "In Progress";
-    } else if (!isCreator && (ticket.status === "Open" || ticket.status === "In Progress")) {
-      ticket.status = "Resolved";
+    } else if (!isCreator && ticket.status === "Open") {
+      ticket.status = "In Progress";
     }
   }
 
@@ -760,13 +761,10 @@ export const replyToTicket = async (user, ticketId, payload) => {
 
   // Push & Email Notifications for Replies (Non-Internal only)
   if (!effectiveInternal) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
-    const msgPreview = (message ? message.trim() : "Sent an attachment").slice(0, 100);
-
     if (!isCreator) {
       // Staff replied -> Notify creator
       createNotification({
-        userId: ticket.createdBy,
+        userId: creatorId,
         title: `New Reply on Ticket #${ticket.ticketNumber}`,
         message: `${user.name || "Support Staff"} replied: "${msgPreview}"`,
         type: "ticket_reply",
