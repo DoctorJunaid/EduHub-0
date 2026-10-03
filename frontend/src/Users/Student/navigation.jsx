@@ -5,7 +5,7 @@ import {
   CircleCheck,
   Award,
   WalletCards,
-  LifeBuoy,
+  Headset,
 } from "lucide-react";
 
 export const getStudentNav = (isSchool) => [
@@ -43,7 +43,7 @@ export const getStudentNav = (isSchool) => [
   {
     label: "Help & Support",
     path: "/student/support",
-    icon: <LifeBuoy size={20} />,
+    icon: <Headset size={20} />,
   },
 ];
 

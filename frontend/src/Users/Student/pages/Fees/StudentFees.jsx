@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { WalletCards, Clock3, Link2, FileText, Receipt, Sparkles, CheckCircle2 } from "lucide-react";
+import { WalletCards, Clock3, Link2, FileText, Receipt, Award, CheckCircle2 } from "lucide-react";
 import SummaryCard from "@/components/common/SummaryCard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -107,7 +107,7 @@ export default function StudentFees() {
     },
     {
       label: "Waiver / Scholarship",
-      icon: Sparkles,
+      icon: Award,
       value: formatPKR(summary.totalWaiver),
       description: "Institutional concessions",
     },

@@ -10,7 +10,7 @@ import {
   Plus,
   Search,
   Settings2,
-  Wand2,
+  FilePlus,
   FileText,
   RefreshCw,
   BookOpen,
@@ -512,7 +512,7 @@ export default function FeeManagement() {
                 onClick={() => setModal({ mode: "generate" })}
                 title="Generate Monthly Fee Vouchers"
               >
-                <Wand2 size={13} />
+                <FilePlus size={13} />
                 Generate Monthly
               </button>
               <button

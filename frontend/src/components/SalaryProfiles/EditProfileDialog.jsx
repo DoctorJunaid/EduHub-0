@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Save, User, DollarSign, Sparkles, ChevronDown, ShieldAlert } from "lucide-react";
+import { X, Plus, Trash2, Save, User, DollarSign, Wallet, ChevronDown, ShieldAlert } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
@@ -75,7 +75,7 @@ const EditProfileDialog = ({ profile, teachers = [], onClose, onSave }) => {
         <div className="salary-profile-dialog-header flex justify-between items-start px-6 py-5 border-b border-slate-100 bg-slate-50/50">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase text-blue-600 bg-blue-50 border border-blue-100/80 mb-1.5">
-              <Sparkles className="w-3 h-3 text-blue-500" />
+              <Wallet className="w-3 h-3 text-blue-500" />
               Finance / Compensation
             </div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">

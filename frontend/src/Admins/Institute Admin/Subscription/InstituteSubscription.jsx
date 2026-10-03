@@ -11,9 +11,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ShieldCheck,
-  LifeBuoy,
+  Headset,
   RefreshCw,
-  Sparkles,
   Check,
   X,
 } from "lucide-react";
@@ -321,7 +320,7 @@ export default function InstituteSubscription() {
       {/* Support / Enterprise Upgrade Banner */}
       <div className="inst-support-banner">
         <div className="banner-icon-wrap">
-          <LifeBuoy size={24} />
+          <Headset size={24} />
         </div>
         <div className="banner-content">
           <h4>Need higher student enrollment or campus capacity?</h4>

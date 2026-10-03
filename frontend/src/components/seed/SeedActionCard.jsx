@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  Sparkles,
+  Building2,
   GraduationCap,
   Users,
   CalendarCheck,
@@ -33,7 +33,7 @@ export default function SeedActionCard({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-semibold uppercase tracking-wider shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Building2 className="w-3.5 h-3.5" />
               Complete School Engine
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">

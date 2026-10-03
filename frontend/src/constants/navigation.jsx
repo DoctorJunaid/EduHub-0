@@ -12,7 +12,7 @@ import {
   Radio,
   Wallet,
   ShieldCheck,
-  LifeBuoy,
+  Headset,
   Inbox,
   Layers,
   CreditCard,
@@ -63,7 +63,7 @@ export const ADMIN_NAV = [
   {
     label: "Help & Support",
     path: "/super-admin/support",
-    icon: <LifeBuoy size={20} />,
+    icon: <Headset size={20} />,
   },
 ];
 
@@ -139,7 +139,7 @@ export const getCampusAdminNav = (isSchool = false) => [
     group: "Finance",
     icon: <ClipboardList size={20} />,
   },
-  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <Headset size={20} /> },
   { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
   {
     label: "Salary Profiles",
@@ -214,7 +214,7 @@ export const TEACHER_NAV = [
   {
     label: "Help & Support",
     path: "/teacher/support",
-    icon: <LifeBuoy size={20} />,
+    icon: <Headset size={20} />,
   },
 ];
 
@@ -234,7 +234,7 @@ export const STUDENT_NAV = [
   { label: "Results", path: "/results", icon: <Trophy size={20} /> },
   { label: "Achievements", path: "/achievements", icon: <Award size={20} /> },
   { label: "Competitions", path: "/competitions", icon: <Trophy size={20} /> },
-  { label: "Help & Support", path: "/student/support", icon: <LifeBuoy size={20} /> },
+  { label: "Help & Support", path: "/student/support", icon: <Headset size={20} /> },
 ];
 
 export const PARENT_NAV = [
@@ -246,7 +246,7 @@ export const PARENT_NAV = [
   { label: "Children", path: "/students", icon: <Users size={20} /> },
   { label: "Attendance", path: "/attendance", icon: <Calendar size={20} /> },
   { label: "Results", path: "/results", icon: <Trophy size={20} /> },
-  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <Headset size={20} /> },
 ];
 
 export const ALUMNI_NAV = [
@@ -257,5 +257,5 @@ export const ALUMNI_NAV = [
   },
   { label: "Events", path: "/events", icon: <Calendar size={20} /> },
   { label: "Network", path: "/alumni", icon: <Users size={20} /> },
-  { label: "Help & Support", path: "/support", icon: <LifeBuoy size={20} /> },
+  { label: "Help & Support", path: "/support", icon: <Headset size={20} /> },
 ];

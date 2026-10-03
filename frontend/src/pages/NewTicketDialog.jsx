@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, LifeBuoy, AlertCircle, X, Paperclip } from "lucide-react";
+import { Plus, Headset, AlertCircle, X, Paperclip } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -76,7 +76,7 @@ export default function NewTicketDialog({
       <DialogContent className="sm:max-w-[540px] p-6">
         <DialogHeader className="pb-3 border-b border-zinc-100">
           <DialogTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-            <LifeBuoy className="w-5 h-5 text-zinc-700" />
+            <Headset className="w-5 h-5 text-zinc-700" />
             Create Help & Support Ticket
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">

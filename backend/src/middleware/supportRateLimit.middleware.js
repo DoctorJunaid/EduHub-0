@@ -5,6 +5,8 @@
  * - Max 50 replies per user per day
  */
 
+import { isAdminRole, normalizeRole } from "./supportAccess.middleware.js";
+
 // In-memory buckets storing timestamps per user ID
 const ticketCreationLog = new Map(); // userId -> Array<timestamp>
 const replyCreationLog = new Map();  // userId -> Array<timestamp>
@@ -19,14 +21,18 @@ export const rateLimitTicketCreate = (req, res, next) => {
   const userId = req.user?._id?.toString();
   if (!userId) return next();
 
+  const role = normalizeRole(req.user?.role);
+  // Admins have higher limit for creating tickets (e.g. system issues)
+  const maxLimit = isAdminRole(role) ? 50 : 10;
+
   const now = Date.now();
   const currentLogs = ticketCreationLog.get(userId) || [];
   const validLogs = cleanOldTimestamps(currentLogs, now);
 
-  if (validLogs.length >= 5) {
+  if (validLogs.length >= maxLimit) {
     return res.status(429).json({
       success: false,
-      message: "Rate limit exceeded: You can only create up to 5 conversations per day. Please wait before creating a new one.",
+      message: `Rate limit exceeded: You can only create up to ${maxLimit} conversations per day. Please wait before creating a new one.`,
     });
   }
 
@@ -39,14 +45,20 @@ export const rateLimitTicketReply = (req, res, next) => {
   const userId = req.user?._id?.toString();
   if (!userId) return next();
 
+  const role = normalizeRole(req.user?.role);
+  // Staff and teachers replying to students should not be capped by student limits
+  if (isAdminRole(role) || role === "teacher") {
+    return next();
+  }
+
   const now = Date.now();
   const currentLogs = replyCreationLog.get(userId) || [];
   const validLogs = cleanOldTimestamps(currentLogs, now);
 
-  if (validLogs.length >= 50) {
+  if (validLogs.length >= 100) {
     return res.status(429).json({
       success: false,
-      message: "Rate limit exceeded: You have reached the maximum of 50 replies per day.",
+      message: "Rate limit exceeded: You have reached the maximum replies per day.",
     });
   }
 
