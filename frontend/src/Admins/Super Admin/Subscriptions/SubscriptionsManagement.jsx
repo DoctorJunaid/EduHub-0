@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import {
-  CreditCard,
   Building2,
   Calendar,
   Clock,
@@ -296,32 +295,6 @@ export default function SubscriptionsManagement() {
 
   return (
     <div className="subscriptions-page-container">
-      {/* Header */}
-      <div className="subs-header">
-        <div className="subs-header-left">
-          <div className="subs-title-row">
-            <CreditCard className="subs-title-icon" size={22} />
-            <h1 className="subs-title">Institutional SaaS Subscriptions</h1>
-          </div>
-          <p className="subs-subtitle">
-            Govern multi-tenant institutional subscriptions. Assign plans, modify quotas, extend validity, and inspect complete audit history.
-          </p>
-        </div>
-
-        <div className="subs-header-actions">
-          <button
-            type="button"
-            className="subs-refresh-btn"
-            onClick={loadData}
-            disabled={loading}
-            title="Refresh subscriptions"
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
-
       {/* Metrics Row: 4 Equal Columns */}
       <div className="subs-metrics-grid">
         <div className="metric-card">
@@ -332,6 +305,8 @@ export default function SubscriptionsManagement() {
             <span className="metric-label">Total Institutions</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
+            ) : error && subscriptions.length === 0 ? (
+              <span className="metric-value" aria-label="Unavailable">—</span>
             ) : (
               <span className="metric-value">{metrics.total}</span>
             )}
@@ -346,6 +321,8 @@ export default function SubscriptionsManagement() {
             <span className="metric-label">Active Subscriptions</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
+            ) : error && subscriptions.length === 0 ? (
+              <span className="metric-value" aria-label="Unavailable">—</span>
             ) : (
               <span className="metric-value">{metrics.active}</span>
             )}
@@ -360,6 +337,8 @@ export default function SubscriptionsManagement() {
             <span className="metric-label">Active Trials</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
+            ) : error && subscriptions.length === 0 ? (
+              <span className="metric-value" aria-label="Unavailable">—</span>
             ) : (
               <span className="metric-value">{metrics.trial}</span>
             )}
@@ -374,6 +353,8 @@ export default function SubscriptionsManagement() {
             <span className="metric-label">Suspended / Expired</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
+            ) : error && subscriptions.length === 0 ? (
+              <span className="metric-value" aria-label="Unavailable">—</span>
             ) : (
               <span className="metric-value">{metrics.suspendedOrExpired}</span>
             )}
@@ -398,23 +379,36 @@ export default function SubscriptionsManagement() {
           )}
         </div>
 
-        <div className="subs-filter-tabs">
-          {[
-            { id: "all", label: "All" },
-            { id: "active", label: "Active" },
-            { id: "trial", label: "Trial" },
-            { id: "suspended", label: "Suspended" },
-            { id: "expired", label: "Expired" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`filter-tab ${selectedStatusFilter === tab.id ? "active" : ""}`}
-              onClick={() => setSelectedStatusFilter(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="subs-controls-right">
+          <div className="subs-filter-tabs">
+            {[
+              { id: "all", label: "All" },
+              { id: "active", label: "Active" },
+              { id: "trial", label: "Trial" },
+              { id: "suspended", label: "Suspended" },
+              { id: "expired", label: "Expired" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`filter-tab ${selectedStatusFilter === tab.id ? "active" : ""}`}
+                onClick={() => setSelectedStatusFilter(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="subs-refresh-btn"
+            onClick={loadData}
+            disabled={loading}
+            title="Refresh subscriptions"
+          >
+            <RefreshCw size={14} className={loading ? "spin" : ""} />
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 

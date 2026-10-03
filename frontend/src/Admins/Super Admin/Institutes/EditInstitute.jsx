@@ -174,12 +174,83 @@ export default function EditInstitute() {
     }
   };
 
-  if (loading) {
-    return (
-      <section className="super-admin-edit-institute">
-        <PageLoader text="Loading institute details..." />
-      </section>
-    );
+function EditInstituteSkeleton({ onBack }) {
+  return (
+    <section className="super-admin-edit-institute">
+      <div className="super-admin-edit-card">
+        <div className="super-admin-edit-card-topbar">
+          <button
+            type="button"
+            className="super-admin-edit-back-btn"
+            onClick={onBack}
+            aria-label="Back to institutes"
+          >
+            <ArrowLeft size={15} />
+            <span>Back to Institutes</span>
+          </button>
+        </div>
+        <section className="super-admin-edit-section">
+          <div className="super-admin-edit-section-title">
+            <span className="super-admin-edit-icon">
+              <Building2 size={18} />
+            </span>
+            <div>
+              <h2>General Information</h2>
+              <p>Basic details about this institute.</p>
+            </div>
+          </div>
+
+          <div className="super-admin-edit-form-grid">
+            <div className="super-admin-edit-field full-width">
+              <div className="inst-skel-line" style={{ width: "120px", height: "14px", marginBottom: "8px" }} />
+              <div className="inst-skel-line" style={{ width: "100%", height: "38px", borderRadius: "8px" }} />
+            </div>
+
+            <div className="super-admin-edit-row">
+              <div className="super-admin-edit-field">
+                <div className="inst-skel-line" style={{ width: "90px", height: "14px", marginBottom: "8px" }} />
+                <div className="inst-skel-line" style={{ width: "100%", height: "38px", borderRadius: "8px" }} />
+              </div>
+              <div className="super-admin-edit-field">
+                <div className="inst-skel-line" style={{ width: "90px", height: "14px", marginBottom: "8px" }} />
+                <div className="inst-skel-line" style={{ width: "100%", height: "38px", borderRadius: "8px" }} />
+              </div>
+            </div>
+
+            <div className="super-admin-edit-row">
+              <div className="super-admin-edit-field">
+                <div className="inst-skel-line" style={{ width: "90px", height: "14px", marginBottom: "8px" }} />
+                <div className="inst-skel-line" style={{ width: "100%", height: "38px", borderRadius: "8px" }} />
+              </div>
+              <div className="super-admin-edit-field">
+                <div className="inst-skel-line" style={{ width: "90px", height: "14px", marginBottom: "8px" }} />
+                <div className="inst-skel-line" style={{ width: "100%", height: "38px", borderRadius: "8px" }} />
+              </div>
+            </div>
+
+            <div className="super-admin-edit-field full-width">
+              <div className="inst-skel-line" style={{ width: "140px", height: "14px", marginBottom: "8px" }} />
+              <div className="inst-skel-line" style={{ width: "100%", height: "70px", borderRadius: "8px" }} />
+            </div>
+
+            <div className="super-admin-edit-field full-width">
+              <div className="inst-skel-line" style={{ width: "130px", height: "14px", marginBottom: "8px" }} />
+              <div className="inst-skel-line" style={{ width: "100%", height: "160px", borderRadius: "10px" }} />
+            </div>
+          </div>
+        </section>
+
+        <div className="super-admin-edit-actions">
+          <div className="inst-skel-line" style={{ width: "90px", height: "36px", borderRadius: "8px" }} />
+          <div className="inst-skel-line" style={{ width: "120px", height: "36px", borderRadius: "8px" }} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+  if (loading && !institute) {
+    return <EditInstituteSkeleton onBack={() => navigate("/institutes")} />;
   }
 
   if (!institute && !loading) {

@@ -987,3 +987,61 @@
     width: 100%;
   }
 }
+
+/* ── Dashboard Skeletons ── */
+.super-admin-stat-skeleton {
+  width: 70px;
+  height: 28px;
+  background: #f4f4f5;
+  border-radius: 6px;
+  margin: 4px 0 6px;
+  animation: dashPulse 1.5s ease-in-out infinite;
+}
+
+.dashboard-skel-row {
+  pointer-events: none;
+}
+
+.dash-skel-line {
+  background: #f4f4f5;
+  border-radius: 4px;
+  animation: dashPulse 1.5s ease-in-out infinite;
+}
+
+.dash-skel-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.dash-skel-name {
+  width: 160px;
+  height: 16px;
+}
+
+.dash-skel-sub {
+  width: 100px;
+  height: 12px;
+}
+
+.dash-skel-pill {
+  width: 85px;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.dash-skel-btn {
+  width: 80px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+@keyframes dashPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

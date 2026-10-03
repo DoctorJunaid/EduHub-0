@@ -6,42 +6,14 @@
   font-family: inherit;
 }
 
-.plans-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.plans-title-row {
+.plans-top-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  margin-bottom: 20px;
 }
 
-.plans-title-icon {
-  color: #09090b;
-}
-
-.plans-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #09090b;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.plans-subtitle {
-  font-size: 13px;
-  color: #71717a;
-  margin: 4px 0 0 0;
-  max-width: 720px;
-  line-height: 1.45;
-}
-
-.plans-header-actions {
+.plans-top-actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -95,6 +67,9 @@
 }
 
 .plans-empty-card {
+  grid-column: 1 / -1;
+  min-height: 320px;
+  justify-content: center;
   background: #ffffff;
   border: 1px dashed #d4d4d8;
   border-radius: 12px;
@@ -104,6 +79,10 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+.plans-error-card .empty-icon {
+  color: #71717a;
 }
 
 .plans-empty-card .empty-icon {
@@ -827,4 +806,108 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* ── Plan Card Skeletons ── */
+.plan-skeleton-card {
+  pointer-events: none;
+}
+
+.plan-skel-line {
+  background: #f4f4f5;
+  border-radius: 4px;
+  animation: planPulse 1.5s ease-in-out infinite;
+}
+
+.plan-skel-slug {
+  width: 70px;
+  height: 18px;
+}
+
+.plan-skel-pill {
+  width: 60px;
+  height: 20px;
+  border-radius: 9999px;
+}
+
+.plan-skel-title {
+  width: 65%;
+  height: 22px;
+  margin: 12px 0 8px;
+}
+
+.plan-skel-desc {
+  width: 95%;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.plan-skel-desc.short {
+  width: 75%;
+  margin-bottom: 16px;
+}
+
+.plan-skel-pricing-box {
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.plan-skel-price {
+  width: 140px;
+  height: 28px;
+}
+
+.plan-skel-period {
+  width: 100px;
+  height: 12px;
+}
+
+.plan-skel-section-label {
+  width: 130px;
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.plan-skel-pill-limit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plan-skel-limit-val {
+  width: 80%;
+  height: 14px;
+}
+
+.plan-skel-footer {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.plan-skel-stat {
+  width: 130px;
+  height: 14px;
+  margin-bottom: 12px;
+}
+
+.plan-skel-btn {
+  width: 70px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.plan-skel-btn.icon {
+  width: 32px;
+}
+
+@keyframes planPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }

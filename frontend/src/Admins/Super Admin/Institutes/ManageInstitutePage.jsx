@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { ArrowLeft, Building2 } from "lucide-react";
-import { PageLoader } from "@/components/ui/spinner";
 import {
   selectInstitutes,
   addInstitute,
@@ -12,6 +11,25 @@ import InstituteForm from "./InstituteForm";
 import ManageInstitute from "./ManageInstitute";
 import toast from "react-hot-toast";
 import "./ManageInstitutePage.css";
+
+function ManageInstituteSkeleton() {
+  return (
+    <div className="manage-page-skeleton-wrap" style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "12px 0" }}>
+      <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid #e4e4e7", paddingBottom: "12px" }}>
+        <div className="inst-skel-line" style={{ width: "120px", height: "34px", borderRadius: "8px" }} />
+        <div className="inst-skel-line" style={{ width: "100px", height: "34px", borderRadius: "8px" }} />
+        <div className="inst-skel-line" style={{ width: "130px", height: "34px", borderRadius: "8px" }} />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="inst-skel-line" style={{ width: "100%", height: "48px", borderRadius: "8px" }} />
+        <div className="inst-skel-line" style={{ width: "100%", height: "48px", borderRadius: "8px" }} />
+        <div className="inst-skel-line" style={{ width: "100%", height: "48px", borderRadius: "8px" }} />
+        <div className="inst-skel-line" style={{ width: "100%", height: "48px", borderRadius: "8px" }} />
+      </div>
+    </div>
+  );
+}
 
 export default function ManageInstitutePage() {
   const { id } = useParams();
@@ -112,7 +130,7 @@ export default function ManageInstitutePage() {
 
         {/* Tab & Form Content Area */}
         {loading ? (
-          <PageLoader text="Loading institute records..." />
+          <ManageInstituteSkeleton />
         ) : isNew ? (
           <div className="manage-page-form-wrapper">
             <InstituteForm

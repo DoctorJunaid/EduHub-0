@@ -414,6 +414,95 @@
   flex-direction: column;
 }
 
+.isu-loading-table {
+  width: 100%;
+  min-height: 280px;
+  flex: 1;
+}
+
+.isu-skeleton-cell {
+  display: inline-block;
+  height: 12px;
+  border-radius: 5px;
+  background: #e4e4e7;
+  animation: isuSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.isu-skeleton-checkbox {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.isu-skeleton-col-0 { width: 16px; }
+.isu-skeleton-col-1 { width: 70px; }
+.isu-skeleton-col-2 { width: min(170px, 90%); }
+.isu-skeleton-col-3 { width: 100px; }
+.isu-skeleton-col-4 { width: 80px; }
+.isu-skeleton-col-5 { width: 62px; }
+.isu-skeleton-col-6 { width: 68px; }
+.isu-skeleton-col-7 { width: 88px; }
+.isu-skeleton-col-8 { width: 94px; }
+
+.isu-ticket-load-error {
+  display: flex;
+  min-height: 280px;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  color: #71717a;
+  text-align: center;
+}
+
+.isu-ticket-load-error p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.isu-pagination-slot {
+  min-height: 64px;
+}
+
+.isu-pagination-slot.is-loading {
+  display: flex;
+  align-items: center;
+}
+
+.isu-pagination-skeleton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+}
+
+.isu-pagination-skeleton .isu-skeleton-cell:first-child {
+  width: 150px;
+}
+
+.isu-pagination-skeleton .isu-skeleton-cell:last-child {
+  width: 190px;
+}
+
+.isu-stat-skeleton-value {
+  display: inline-block;
+  width: 62px;
+  height: 28px;
+  border-radius: 5px;
+  background: #e4e4e7;
+  animation: isuSkeletonPulse 1.5s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+@keyframes isuSkeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
 .isu-panel .isu-panel-body > .overflow-x-auto {
   border: none !important;
   border-radius: 0 !important;
@@ -491,6 +580,11 @@
   background: var(--card, #18181b) !important;
   border-color: var(--border, #27272a) !important;
   color: var(--foreground, #fafafa) !important;
+}
+
+.dark .isu-skeleton-cell,
+.dark .isu-stat-skeleton-value {
+  background: #3f3f46;
 }
 
 .dark .isu-toolbar {
@@ -580,5 +674,9 @@
   .isu-toolbar-actions > button {
     width: 100% !important;
     justify-content: center !important;
+  }
+  .isu-pagination-skeleton {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

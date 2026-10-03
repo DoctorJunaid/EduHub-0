@@ -151,16 +151,6 @@ export default function SuperAdminBroadcasts() {
 
   return (
     <div className="super-broadcasts-page">
-      {/* Heading */}
-      <div className="super-broadcasts-head">
-        <div>
-          <h1 className="super-broadcasts-title">Platform Broadcast Alerts</h1>
-          <p className="super-broadcasts-subtitle">
-            Broadcast platform-wide alerts, maintenance notices, and emergency advisories across all tenant portals.
-          </p>
-        </div>
-      </div>
-
       <div className="super-broadcasts-layout">
         {/* Left Column: Composer */}
         <div className="super-broadcasts-compose-card">
@@ -247,7 +237,15 @@ export default function SuperAdminBroadcasts() {
         <div className="super-broadcasts-history">
           <div className="history-header">
             <h3>
-              Active Broadcasts {!initialLoading && `(${broadcasts.length})`}
+              Active Broadcasts <span className="broadcast-count-slot">
+                {initialLoading ? (
+                  <span className="broadcast-count-skeleton" aria-hidden="true" />
+                ) : error && broadcasts.length === 0 ? (
+                  <span aria-label="Count unavailable">—</span>
+                ) : (
+                  `(${broadcasts.length})`
+                )}
+              </span>
             </h3>
             <span className="live-tag">
               <span className="pulse-dot" /> Live Feeds

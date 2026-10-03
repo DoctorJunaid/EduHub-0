@@ -9,10 +9,11 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchGlobalStats, selectGlobalStats } from "@/store/Slices/superAdminSlice";
+import { fetchGlobalStats, selectGlobalStats, selectSuperAdminStatus } from "@/store/Slices/superAdminSlice";
 import {
   fetchInstitutes,
   selectInstitutes,
+  selectInstitutesStatus,
   addInstitute,
 } from "@/store/Slices/institutesSlice";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,27 @@ import InstituteForm from "../Institutes/InstituteForm";
 import ManageInstitute from "../Institutes/ManageInstitute";
 import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
+
+function DashboardInstituteSkeletonRow() {
+  return (
+    <article className="super-admin-institute-row dashboard-skel-row">
+      <div className="super-admin-institute-main">
+        <div className="dash-skel-line dash-skel-thumb" />
+        <div className="super-admin-institute-copy" style={{ gap: "6px" }}>
+          <div className="dash-skel-line dash-skel-name" />
+          <div className="dash-skel-line dash-skel-sub" />
+        </div>
+      </div>
+      <div className="super-admin-institute-meta">
+        <div className="dash-skel-line dash-skel-pill" />
+        <div className="dash-skel-line dash-skel-pill" />
+      </div>
+      <div className="super-admin-row-actions">
+        <div className="dash-skel-line dash-skel-btn" />
+      </div>
+    </article>
+  );
+}
 
 const FILTER_TYPES = [
   { key: "all", label: "All Types" },
@@ -32,7 +54,12 @@ export default function SuperAdminDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const globalStats = useSelector(selectGlobalStats);
+  const statsStatus = useSelector(selectSuperAdminStatus);
+  const statsLoading = (statsStatus === "idle" || statsStatus === "loading") && !globalStats;
   const instituteData = useSelector(selectInstitutes) || [];
+  const institutesStatus = useSelector(selectInstitutesStatus);
+  const instituteError = useSelector((state) => state.institutes.error);
+  const institutesLoading = (institutesStatus === "idle" || institutesStatus === "loading") && instituteData.length === 0;
   const location = useLocation();
   const selectedInstitute = location.state?.selectedInstitute;
   const [searchTerm, setSearchTerm] = useState(
@@ -170,7 +197,13 @@ export default function SuperAdminDashboard() {
                       <Icon size={16} />
                     </div>
                   </div>
-                  <div className="super-admin-stat-value">{stat.value}</div>
+                  {statsLoading ? (
+                    <div className="super-admin-stat-skeleton" />
+                  ) : statsStatus === "failed" && !globalStats ? (
+                    <div className="super-admin-stat-value" aria-label="Unavailable">—</div>
+                  ) : (
+                    <div className="super-admin-stat-value">{stat.value ?? 0}</div>
+                  )}
                   <div className="super-admin-stat-detail">{stat.detail}</div>
                 </article>
               );
@@ -213,7 +246,29 @@ export default function SuperAdminDashboard() {
             </div>
 
             <div className="super-admin-institute-list">
-              {visibleInstitutes.length === 0 ? (
+              {institutesLoading ? (
+                <>
+                  <DashboardInstituteSkeletonRow />
+                  <DashboardInstituteSkeletonRow />
+                  <DashboardInstituteSkeletonRow />
+                </>
+              ) : institutesStatus === "failed" && instituteData.length === 0 ? (
+                <div className="super-admin-empty-state" role="alert">
+                  <div className="super-admin-empty-icon" aria-hidden="true">
+                    <Building2 size={26} />
+                  </div>
+                  <p className="super-admin-empty-title">Unable to load institutes</p>
+                  <p className="super-admin-empty-desc">{instituteError || "The institute list could not be loaded."}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => dispatch(fetchInstitutes())}
+                    className="super-admin-empty-action"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : visibleInstitutes.length === 0 ? (
                 <div className="super-admin-empty-state">
                   <div className="super-admin-empty-icon" aria-hidden="true">
                     <Building2 size={26} />

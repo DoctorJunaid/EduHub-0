@@ -10,6 +10,143 @@
   color: #111827;
 }
 
+.support-ticket-detail--loading {
+  min-height: 520px;
+}
+
+.ticket-detail-skeleton {
+  display: block;
+  border-radius: 6px;
+  background: #e4e4e7;
+  animation: ticketDetailSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.dark .support-ticket-detail--loading .ticket-detail-skeleton {
+  background: #3f3f46;
+}
+
+.ticket-detail-skeleton--back {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 11px;
+}
+
+.ticket-detail-skeleton--title {
+  width: min(360px, 55vw);
+  height: 28px;
+}
+
+.ticket-detail-skeleton--meta {
+  width: min(460px, 65vw);
+  height: 15px;
+  margin-top: 7px;
+}
+
+.ticket-detail-skeleton--badge {
+  width: 92px;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.ticket-message-thread--loading {
+  justify-content: flex-end;
+}
+
+.ticket-detail-skeleton--message {
+  height: 42px;
+  border-radius: 14px;
+}
+
+.ticket-detail-skeleton--message-own {
+  width: min(310px, 68%);
+  align-self: flex-end;
+}
+
+.ticket-detail-skeleton--message-other {
+  width: min(360px, 76%);
+  height: 54px;
+  align-self: flex-start;
+}
+
+.ticket-detail-skeleton--message-own-short {
+  width: min(220px, 54%);
+  height: 32px;
+  align-self: flex-end;
+}
+
+.ticket-reply-box--loading {
+  min-height: 124px;
+}
+
+.ticket-detail-skeleton--reply-label {
+  width: 170px;
+  height: 14px;
+}
+
+.ticket-detail-skeleton-reply-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.ticket-detail-skeleton--attachment,
+.ticket-detail-skeleton--send {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 999px;
+}
+
+.ticket-detail-skeleton--reply-input {
+  height: 44px;
+  flex: 1;
+}
+
+.ticket-detail-skeleton--reply-hint {
+  width: 210px;
+  height: 12px;
+}
+
+.ticket-sidebar-content--loading {
+  min-height: 410px;
+}
+
+.ticket-sidebar-skeleton-card {
+  display: flex;
+  min-height: 110px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.ticket-sidebar-skeleton-card.ticket-sidebar-card--controls {
+  min-height: 220px;
+}
+
+.ticket-sidebar-skeleton-title {
+  width: 44%;
+  height: 13px;
+}
+
+.ticket-sidebar-skeleton-line {
+  width: 100%;
+  height: 30px;
+}
+
+.ticket-sidebar-skeleton-action {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+}
+
+@keyframes ticketDetailSkeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
 .ticket-detail-header {
   display: flex;
   align-items: center;
@@ -19,6 +156,10 @@
   padding: 18px 22px;
   border-bottom: 1px solid #e4e4e7;
   background: #ffffff;
+}
+
+.ticket-detail-header--loading {
+  min-height: 80px;
 }
 
 .ticket-detail-header__main {
