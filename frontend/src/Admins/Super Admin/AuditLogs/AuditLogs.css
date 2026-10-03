@@ -381,6 +381,12 @@
   border: 1px solid #bfdbfe;
 }
 
+.action-purple {
+  background: #fbf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
 .action-neutral {
   background: #f4f4f5;
   color: #3f3f46;

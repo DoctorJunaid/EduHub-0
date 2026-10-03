@@ -1,4 +1,5 @@
 import Inquiry from "../models/inqueries.model.js";
+import { logAuditEvent } from "../services/auditLog.service.js";
 
 export const createInquiry = async (req, res) => {
   try {
@@ -61,6 +62,22 @@ export const createInquiry = async (req, res) => {
 
     // Create inquiry instance
     const newInquiry = await Inquiry.create(payload);
+
+    // Write real platform audit log
+    await logAuditEvent(req, {
+      entityType: "Inquiry",
+      entityId: newInquiry._id,
+      action: "created",
+      changes: {
+        after: {
+          instituteName: newInquiry.instituteName,
+          fullName: newInquiry.fullName,
+          email: newInquiry.email,
+          phone: newInquiry.phone,
+        },
+      },
+      reason: `Prospective partner inquiry submitted for "${newInquiry.instituteName}" via landing page`,
+    });
 
     return res.status(201).json({
       success: true,

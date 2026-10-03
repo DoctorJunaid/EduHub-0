@@ -520,18 +520,22 @@ class FeeService {
       });
       await feeRecord.save();
 
-      // Notify student
-      try {
-        await Alert.create({
-          instituteId: feeRecord.instituteId,
-          campusId,
-          audience: "student",
-          severity: "Warning",
-          title: `Payment Rejected: ${feeRecord.challanNo}`,
-          message: `Your payment submission of PKR ${payment.amount} was rejected. Reason: ${reason || "Verification failed"}. Please re-submit valid proof.`,
-          createdBy: adminUser._id,
-        });
-      } catch {}
+      // Audit log
+      await AuditLog.create({
+        campusId,
+        instituteId: feeRecord.instituteId,
+        entityType: "PaymentTransaction",
+        entityId: payment._id,
+        action: "rejected",
+        performedBy: {
+          userId: adminUser._id,
+          name: adminUser.name || "Admin",
+          email: adminUser.email || "",
+          role: adminUser.role || "campus_admin",
+        },
+        reason: reason || "Payment verification failed",
+        metadata: { amount: payment.amount, feeRecordId: feeRecord._id },
+      }).catch(() => {});
     }
 
     return { payment, feeRecord };
@@ -613,6 +617,22 @@ class FeeService {
 
     await feeRecord.save();
 
+    await AuditLog.create({
+      campusId,
+      instituteId: feeRecord.instituteId,
+      entityType: "FeeRecord",
+      entityId: feeRecord._id,
+      action: "waived",
+      performedBy: {
+        userId: adminUser._id,
+        name: adminUser.name || "Admin",
+        email: adminUser.email || "",
+        role: adminUser.role || "campus_admin",
+      },
+      reason: reason || "Fee voucher waived",
+      metadata: { challanNo: feeRecord.challanNo, waiverAmount, newTotalPayable },
+    }).catch(() => {});
+
     await ActivityLog.create({
       campus: campusId,
       action: "fee_waived",
@@ -652,6 +672,22 @@ class FeeService {
     });
 
     await feeRecord.save();
+
+    await AuditLog.create({
+      campusId,
+      instituteId: feeRecord.instituteId,
+      entityType: "FeeRecord",
+      entityId: feeRecord._id,
+      action: "omitted",
+      performedBy: {
+        userId: adminUser._id,
+        name: adminUser.name || "Admin",
+        email: adminUser.email || "",
+        role: adminUser.role || "campus_admin",
+      },
+      reason: justification,
+      metadata: { challanNo: feeRecord.challanNo },
+    }).catch(() => {});
 
     logActivity({
       campus: campusId,

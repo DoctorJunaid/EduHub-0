@@ -28,22 +28,34 @@ const ENTITY_OPTIONS = [
   { value: "Institute", label: "Institutes" },
   { value: "Campus", label: "Campuses" },
   { value: "User", label: "Users & Accounts" },
+  { value: "Plan", label: "SaaS Plans" },
+  { value: "Subscription", label: "Subscriptions" },
+  { value: "Inquiry", label: "Inquiries & Leads" },
   { value: "GlobalBroadcast", label: "Broadcasts" },
   { value: "PlatformSetting", label: "Platform Settings" },
   { value: "FeeRecord", label: "Fee Records" },
   { value: "PaymentTransaction", label: "Payments" },
   { value: "MonthlyPayroll", label: "Payroll Batches" },
   { value: "AttendanceApproval", label: "Attendance Approvals" },
+  { value: "TeacherClassSession", label: "Teacher Sessions" },
 ];
 
 const ACTION_OPTIONS = [
   { value: "all", label: "All Actions" },
   { value: "created", label: "Created" },
   { value: "updated", label: "Updated" },
+  { value: "deleted", label: "Deleted" },
+  { value: "assigned", label: "Assigned" },
+  { value: "converted", label: "Converted" },
+  { value: "activated", label: "Activated" },
+  { value: "deactivated", label: "Deactivated" },
+  { value: "broadcasted", label: "Broadcasted" },
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
   { value: "applied", label: "Applied" },
   { value: "paid", label: "Paid" },
+  { value: "waived", label: "Waived" },
+  { value: "omitted", label: "Omitted" },
   { value: "cancelled", label: "Cancelled" },
   { value: "generated", label: "Generated" },
   { value: "confirmed", label: "Confirmed" },
@@ -52,6 +64,9 @@ const ACTION_OPTIONS = [
 function getActionBadgeClass(action) {
   switch (action?.toLowerCase()) {
     case "created":
+    case "activated":
+    case "converted":
+    case "assigned":
       return "action-created";
     case "approved":
     case "confirmed":
@@ -59,10 +74,16 @@ function getActionBadgeClass(action) {
       return "action-success";
     case "rejected":
     case "cancelled":
+    case "deleted":
+    case "deactivated":
       return "action-danger";
     case "updated":
     case "applied":
+    case "waived":
+    case "omitted":
       return "action-info";
+    case "broadcasted":
+      return "action-purple";
     default:
       return "action-neutral";
   }
