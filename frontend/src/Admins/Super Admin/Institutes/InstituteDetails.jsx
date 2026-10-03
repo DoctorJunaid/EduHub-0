@@ -20,7 +20,6 @@ import {
   CreditCard,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import PageLoader from "@/components/shared/PageLoader";
 import { selectInstitutes } from "@/store/Slices/institutesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
@@ -29,6 +28,104 @@ import { cn } from "@/lib/utils";
 
 const emptyMedia =
   "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80";
+
+function InstituteDetailsSkeleton({ onBack }) {
+  return (
+    <section className="institute-details-page institute-details-skeleton-page">
+      <section className="institute-details-top-card">
+        <div className="institute-details-back-bar">
+          <button
+            type="button"
+            className="institute-details-back-btn"
+            onClick={onBack}
+            aria-label="Back to institutes"
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Institutes</span>
+          </button>
+        </div>
+
+        <div className="institute-details-header-card">
+          <div className="institute-details-cover inst-skel-cover" />
+          <div className="institute-details-profile-band">
+            <div className="institute-details-avatar-wrap inst-skel-avatar" />
+            <div className="institute-details-identity">
+              <div className="inst-skel-line inst-skel-head-title" />
+              <div className="institute-details-meta-row">
+                <div className="inst-skel-line inst-skel-meta-item" />
+                <div className="inst-skel-line inst-skel-meta-item" />
+                <div className="inst-skel-line inst-skel-meta-item short" />
+              </div>
+            </div>
+            <div className="institute-details-actions-cluster">
+              <div className="institute-details-badges">
+                <div className="inst-skel-line inst-skel-badge" />
+                <div className="inst-skel-line inst-skel-badge" />
+              </div>
+              <div className="institute-details-actions">
+                <div className="inst-skel-line inst-skel-act-btn" />
+                <div className="inst-skel-line inst-skel-act-btn" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="institute-details-main-grid">
+        <div className="institute-details-content">
+          <div className="details-stats-grid">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="details-stat-card">
+                <div className="details-stat-icon-wrap inst-skel-stat-icon" />
+                <div className="details-stat-data">
+                  <div className="inst-skel-line inst-skel-stat-num" />
+                  <div className="inst-skel-line inst-skel-stat-lbl" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <section className="details-section-card campuses-section">
+            <div className="section-card-head">
+              <div className="inst-skel-line inst-skel-sec-title" />
+            </div>
+            <div className="inst-skel-campuses-box">
+              <div className="inst-skel-line inst-skel-table-row" />
+              <div className="inst-skel-line inst-skel-table-row" />
+            </div>
+          </section>
+
+          <section className="details-section-card">
+            <div className="section-card-head">
+              <div className="inst-skel-line inst-skel-sec-title" />
+            </div>
+            <div className="inst-skel-line inst-skel-text-block" />
+            <div className="inst-skel-line inst-skel-text-block short" />
+          </section>
+        </div>
+
+        <div className="institute-details-sidebar">
+          <section className="details-section-card">
+            <div className="section-card-head">
+              <div className="inst-skel-line inst-skel-sec-title" />
+            </div>
+            <div className="inst-skel-line inst-skel-side-item" />
+            <div className="inst-skel-line inst-skel-side-item" />
+            <div className="inst-skel-line inst-skel-side-item" />
+          </section>
+
+          <section className="details-section-card">
+            <div className="section-card-head">
+              <div className="inst-skel-line inst-skel-sec-title" />
+            </div>
+            <div className="inst-skel-line inst-skel-side-item" />
+            <div className="inst-skel-line inst-skel-side-item" />
+          </section>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function InstituteDetails() {
   const navigate = useNavigate();
@@ -155,12 +252,8 @@ export default function InstituteDetails() {
     }
   }, [institute?.name, location.pathname, location.state, navigate]);
 
-  if (loading) {
-    return (
-      <section className="institute-details-page">
-        <PageLoader text="Loading institute records..." />
-      </section>
-    );
+  if (loading && !institute) {
+    return <InstituteDetailsSkeleton onBack={() => navigate("/institutes")} />;
   }
 
   if (!institute && !loading) {

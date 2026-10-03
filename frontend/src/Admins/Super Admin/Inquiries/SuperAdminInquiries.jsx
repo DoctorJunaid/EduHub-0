@@ -146,39 +146,14 @@ export default function SuperAdminInquiries() {
 
   return (
     <div className="super-inquiries-page">
-      {/* Top Header */}
-      <div className="inquiries-head">
-        <div className="inquiries-head-left">
-          <div className="inquiries-kicker">Platform Growth & Pipeline</div>
-          <div className="inquiries-title-row">
-            <Inbox className="inquiries-title-icon" size={22} />
-            <h1 className="inquiries-title">Public Inquiries & Leads</h1>
-          </div>
-          <p className="inquiries-subtitle">
-            Review incoming requests from schools, colleges, and academies submitted via the landing page, and convert them directly into active institutes.
-          </p>
-        </div>
-
-        <div className="inquiries-head-actions">
-          <button
-            type="button"
-            className="inquiries-refresh-btn"
-            onClick={fetchInquiries}
-            disabled={loading}
-            title="Refresh inquiries"
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
-
       {/* KPI Cards: Stable 4-Column Grid */}
       <div className="inquiries-metrics-grid">
         <div className="inquiry-stat-card">
           <span className="stat-label">Total Leads</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
+          ) : error && inquiries.length === 0 ? (
+            <span className="stat-value" aria-label="Unavailable">—</span>
           ) : (
             <span className="stat-value">{counts.total}</span>
           )}
@@ -187,6 +162,8 @@ export default function SuperAdminInquiries() {
           <span className="stat-label">New Submissions</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
+          ) : error && inquiries.length === 0 ? (
+            <span className="stat-value" aria-label="Unavailable">—</span>
           ) : (
             <span className="stat-value">{counts.new}</span>
           )}
@@ -195,6 +172,8 @@ export default function SuperAdminInquiries() {
           <span className="stat-label">In Discussion</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
+          ) : error && inquiries.length === 0 ? (
+            <span className="stat-value" aria-label="Unavailable">—</span>
           ) : (
             <span className="stat-value">{counts.contacted}</span>
           )}
@@ -203,6 +182,8 @@ export default function SuperAdminInquiries() {
           <span className="stat-label">Converted Institutes</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
+          ) : error && inquiries.length === 0 ? (
+            <span className="stat-value" aria-label="Unavailable">—</span>
           ) : (
             <span className="stat-value">{counts.converted}</span>
           )}
@@ -245,6 +226,17 @@ export default function SuperAdminInquiries() {
             <option value="University">University</option>
             <option value="Academy">Academy</option>
           </select>
+
+          <button
+            type="button"
+            className="inquiries-refresh-btn"
+            onClick={fetchInquiries}
+            disabled={loading}
+            title="Refresh inquiries"
+          >
+            <RefreshCw size={14} className={loading ? "spin" : ""} />
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 

@@ -11,10 +11,10 @@ import {
   Briefcase,
   Building,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import { Spinner } from "@/components/ui/spinner";
-import TableSkeleton from "@/components/shared/TableSkeleton";
 import toast from "react-hot-toast";
 import "./GlobalUsers.css";
 
@@ -27,6 +27,37 @@ const ROLE_BADGES = {
   student: { label: "Student", color: "#16a34a", bg: "#f0fdf4", icon: GraduationCap },
 };
 
+function GlobalUserSkeletonRow() {
+  return (
+    <tr className="user-skel-row">
+      <td>
+        <div className="user-profile-cell">
+          <div className="user-skel-line user-skel-avatar" />
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            <div className="user-skel-line user-skel-name" />
+            <div className="user-skel-line user-skel-email" />
+          </div>
+        </div>
+      </td>
+      <td>
+        <div className="user-skel-line user-skel-pill" />
+      </td>
+      <td>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div className="user-skel-line user-skel-inst" />
+          <div className="user-skel-line user-skel-campus" />
+        </div>
+      </td>
+      <td>
+        <div className="user-skel-line user-skel-status" />
+      </td>
+      <td>
+        <div className="user-skel-line user-skel-btn" />
+      </td>
+    </tr>
+  );
+}
+
 export default function GlobalUsers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const instituteParam = searchParams.get("institute") || "";
@@ -37,6 +68,7 @@ export default function GlobalUsers() {
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState(instituteParam);
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -50,6 +82,7 @@ export default function GlobalUsers() {
 
   const fetchUsers = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const params = {
         page,
@@ -66,7 +99,8 @@ export default function GlobalUsers() {
         setTotalUsers(res.data.total ?? res.data.data.length);
         setTotalPages(res.data.totalPages || 1);
       }
-    } catch {
+    } catch (err) {
+      setLoadError(err.response?.data?.message || "Failed to load users");
       toast.error("Failed to load users");
     } finally {
       setLoading(false);
@@ -132,19 +166,43 @@ export default function GlobalUsers() {
       {/* Mini Stats Banner */}
       <div className="global-users-stats-grid">
         <div className="global-users-stat-card">
-          <span className="stat-num">{stats.total}</span>
+          {loading && users.length === 0 ? (
+            <div className="user-skel-stat-val" />
+          ) : loadError && users.length === 0 ? (
+            <span className="stat-num" aria-label="Unavailable">—</span>
+          ) : (
+            <span className="stat-num">{stats.total}</span>
+          )}
           <span className="stat-lbl">Total Registered</span>
         </div>
         <div className="global-users-stat-card">
-          <span className="stat-num">{stats.active}</span>
+          {loading && users.length === 0 ? (
+            <div className="user-skel-stat-val" />
+          ) : loadError && users.length === 0 ? (
+            <span className="stat-num" aria-label="Unavailable">—</span>
+          ) : (
+            <span className="stat-num">{stats.active}</span>
+          )}
           <span className="stat-lbl">Active Users</span>
         </div>
         <div className="global-users-stat-card">
-          <span className="stat-num">{stats.admins}</span>
+          {loading && users.length === 0 ? (
+            <div className="user-skel-stat-val" />
+          ) : loadError && users.length === 0 ? (
+            <span className="stat-num" aria-label="Unavailable">—</span>
+          ) : (
+            <span className="stat-num">{stats.admins}</span>
+          )}
           <span className="stat-lbl">Platform Admins</span>
         </div>
         <div className="global-users-stat-card">
-          <span className="stat-num">{stats.students}</span>
+          {loading && users.length === 0 ? (
+            <div className="user-skel-stat-val" />
+          ) : loadError && users.length === 0 ? (
+            <span className="stat-num" aria-label="Unavailable">—</span>
+          ) : (
+            <span className="stat-num">{stats.students}</span>
+          )}
           <span className="stat-lbl">Students</span>
         </div>
       </div>
@@ -232,9 +290,21 @@ export default function GlobalUsers() {
             </thead>
             <tbody>
               {loading && users.length === 0 ? (
+                <>
+                  <GlobalUserSkeletonRow />
+                  <GlobalUserSkeletonRow />
+                  <GlobalUserSkeletonRow />
+                  <GlobalUserSkeletonRow />
+                  <GlobalUserSkeletonRow />
+                </>
+              ) : loadError && users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-0">
-                    <TableSkeleton rows={5} columns={5} />
+                  <td colSpan={5} className="empty-cell" role="alert">
+                    <AlertTriangle size={28} style={{ margin: "0 auto 8px", opacity: 0.55 }} />
+                    <p>Unable to load users.</p>
+                    <button type="button" className="users-retry-btn" onClick={fetchUsers}>
+                      Retry
+                    </button>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (

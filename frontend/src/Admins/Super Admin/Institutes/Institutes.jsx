@@ -8,14 +8,13 @@ import {
   SlidersHorizontal,
   Users,
   Star,
-  X,
   Eye,
   Pencil,
   Trash2,
   AlertTriangle,
-  Building2,
   ArrowLeft,
   Plus,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -23,26 +22,63 @@ import "./Institutes.css";
 import {
   fetchInstitutes,
   selectInstitutes,
+  selectInstitutesStatus,
   addInstitute,
-  updateInstitute,
   deleteInstitute,
-  optimisticStatusChange,
 } from "@/store/Slices/institutesSlice";
 import InstituteForm from "./InstituteForm";
 import ManageInstitute from "./ManageInstitute";
 import toast from "react-hot-toast";
 
+function InstituteSkeletonRow() {
+  return (
+    <tr className="institute-list-row institute-skeleton-row">
+      <td className="col-name">
+        <div className="institute-name-cell">
+          <div className="inst-skel-line inst-skel-thumb" />
+          <div className="inst-skel-text-wrap">
+            <div className="inst-skel-line inst-skel-name" />
+            <div className="inst-skel-line inst-skel-date" />
+          </div>
+        </div>
+      </td>
+      <td className="col-type">
+        <div className="institute-type-cell">
+          <div className="inst-skel-line inst-skel-pill" />
+          <div className="inst-skel-line inst-skel-pill short" />
+        </div>
+      </td>
+      <td className="col-rating">
+        <div className="rating-cell">
+          <div className="inst-skel-line inst-skel-rating" />
+        </div>
+      </td>
+      <td className="col-actions">
+        <div className="action-icons">
+          <div className="inst-skel-line inst-skel-btn" />
+          <div className="inst-skel-line inst-skel-btn" />
+          <div className="inst-skel-line inst-skel-btn" />
+          <div className="inst-skel-line inst-skel-btn" />
+          <div className="inst-skel-line inst-skel-btn" />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function Institutes() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const institutes = useSelector(selectInstitutes);
+  const status = useSelector(selectInstitutesStatus);
+  const instituteError = useSelector((state) => state.institutes.error);
+  const loading = (status === "idle" || status === "loading") && institutes.length === 0;
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [manageDrawer, setManageDrawer] = useState(null);
 
-  const [statusMenuFor, setStatusMenuFor] = useState(null);
   const [instituteToDelete, setInstituteToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -73,18 +109,6 @@ export default function Institutes() {
       return matchesQuery && matchesType && matchesStatus;
     });
   }, [data, query, typeFilter, statusFilter]);
-
-  const updateStatus = async (instituteId, nextStatus) => {
-    dispatch(optimisticStatusChange({ id: instituteId, status: nextStatus }));
-    setStatusMenuFor(null);
-    try {
-      await dispatch(updateInstitute({ id: instituteId, status: nextStatus })).unwrap();
-      toast.success("Status updated successfully");
-    } catch (error) {
-      toast.error(typeof error === "string" ? error : "Failed to update status");
-      dispatch(fetchInstitutes());
-    }
-  };
 
   const confirmDelete = async () => {
     if (!instituteToDelete) return;
@@ -197,15 +221,6 @@ export default function Institutes() {
           </div>
         </div>
       ) : (
-        <>
-          <div className="institutes-top">
-            <div className="breadcrumb-row">
-              <span className="breadcrumb-home">Dashboard</span>
-              <span className="breadcrumb-sep">&gt;</span>
-              <span className="breadcrumb-current">Institutes</span>
-            </div>
-          </div>
-
       <section className="institutes-table-panel">
         <div className="institutes-toolbar">
           <div className="institutes-search">
@@ -324,21 +339,59 @@ export default function Institutes() {
           <table className="institutes-table">
             <thead>
               <tr>
-                <th>Institute Name</th>
-                <th>Board / Type</th>
-                <th>Status</th>
-                <th>Rating</th>
-                <th>Actions</th>
+                <th className="col-name">Institute Name</th>
+                <th className="col-type">Board / Type</th>
+                <th className="col-rating">Rating</th>
+                <th className="col-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {visible.map((institute) => (
-                <tr
-                  key={institute.id || institute._id}
-                  onClick={() => openInstituteDetails(institute)}
-                  className="institute-list-row"
-                >
-                  <td>
+              {loading ? (
+                <>
+                  <InstituteSkeletonRow />
+                  <InstituteSkeletonRow />
+                  <InstituteSkeletonRow />
+                  <InstituteSkeletonRow />
+                  <InstituteSkeletonRow />
+                </>
+              ) : status === "failed" && institutes.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="institutes-empty-cell" role="alert">
+                    <div className="institutes-empty-content">
+                      <AlertTriangle size={32} className="empty-icon" />
+                      <p className="empty-title">Unable to load institutes</p>
+                      <p className="empty-sub">{instituteError || "The institute list could not be loaded."}</p>
+                      <button
+                        type="button"
+                        className="institutes-retry-btn"
+                        onClick={() => dispatch(fetchInstitutes())}
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : visible.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="institutes-empty-cell">
+                    <div className="institutes-empty-content">
+                      <Building2 size={36} className="empty-icon" />
+                      <p className="empty-title">No institutes found</p>
+                      <p className="empty-sub">
+                        {query || typeFilter !== "all" || statusFilter !== "all"
+                          ? "No institutes matched your search or active filters."
+                          : "No educational institutions registered yet."}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : visible.map((institute) => (
+                  <tr
+                    key={institute.id || institute._id}
+                    onClick={() => openInstituteDetails(institute)}
+                    className="institute-list-row"
+                  >
+                  <td className="col-name">
                     <div className="institute-name-cell">
                       <img
                         className="institute-thumb"
@@ -362,54 +415,21 @@ export default function Institutes() {
                     </div>
                   </td>
 
-                  <td>
+                  <td className="col-type">
                     <div className="institute-type-cell">
                       <span className="type-label">{institute.type}</span>
                       <span className="board-label">{institute.board}</span>
                     </div>
                   </td>
 
-                  <td>
-                    <div className="status-wrap">
-                      <button
-                        className={`status-badge status-${institute.status.toLowerCase()}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          const instId = institute.id || institute._id;
-                          setStatusMenuFor(
-                            statusMenuFor === instId ? null : instId
-                          );
-                        }}
-                      >
-                        <span className="badge-dot" /> {institute.status}
-                      </button>
-                      {statusMenuFor === (institute.id || institute._id) && (
-                        <select
-                          className="status-select"
-                          value={institute.status}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={(event) =>
-                            updateStatus(institute.id || institute._id, event.target.value)
-                          }
-                          onBlur={() => setStatusMenuFor(null)}
-                          aria-label={`Change status for ${institute.name}`}
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Suspended">Suspended</option>
-                          <option value="Pending">Pending</option>
-                        </select>
-                      )}
-                    </div>
-                  </td>
-
-                  <td>
+                  <td className="col-rating">
                     <div className="rating-cell">
                       <Star size={14} fill="#f9b203" stroke="#f9b203" />
                       <span>{institute.rating}</span>
                     </div>
                   </td>
 
-                  <td>
+                  <td className="col-actions">
                     <div className="action-icons">
                       <button
                         className="icon-button eye"
@@ -469,8 +489,6 @@ export default function Institutes() {
           </table>
         </div>
       </section>
-
-        </>
       )}
 
       {/* Delete Confirmation Modal */}

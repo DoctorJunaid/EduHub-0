@@ -10,7 +10,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Spinner from "@/components/ui/spinner";
 import DataPagination from "@/components/shared/DataPagination";
 import toast from "react-hot-toast";
 
@@ -29,6 +28,37 @@ import NewTicketDialog from "@/components/support/NewTicketDialog";
 import AssignDialog from "@/components/support/AssignDialog";
 import { getSupportBasePath } from "@/utils/supportRouting";
 import "./SupportManage.css";
+
+function SupportTicketTableSkeleton() {
+  const columns = ["", "Ticket #", "Subject", "Creator", "Category", "Priority", "Status", "Assigned To", "Last Activity"];
+
+  return (
+    <div className="isu-loading-table overflow-x-auto rounded-xl border border-zinc-200 bg-white" role="status" aria-label="Loading support tickets">
+      <table className="w-full text-left text-sm border-collapse" aria-hidden="true">
+        <thead className="bg-zinc-50 border-b border-zinc-200">
+          <tr className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+            {columns.map((column, index) => (
+              <th className="p-3.5" key={`${column}-${index}`}>
+                {column || <span className="isu-skeleton-cell isu-skeleton-checkbox" />}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-100">
+          {Array.from({ length: 5 }, (_, row) => (
+            <tr key={row}>
+              {columns.map((column, index) => (
+                <td className="p-3.5" key={`${column}-${index}`}>
+                  <span className={`isu-skeleton-cell isu-skeleton-col-${index}`} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export const SupportManage = () => {
   const navigate = useNavigate();
@@ -59,7 +89,7 @@ export const SupportManage = () => {
     endDate: "",
   });
 
-  const { stats = {} } = useSupportStats();
+  const { stats, isLoading: statsLoading, error: statsError } = useSupportStats();
   const { categories = [] } = useSupportCategories();
 
   const queryParams = {
@@ -74,7 +104,7 @@ export const SupportManage = () => {
     ...(filters.endDate ? { endDate: filters.endDate } : {}),
   };
 
-  const { data, isLoading } = useSupportTickets(queryParams);
+  const { data, isLoading, error: ticketsError, refetch: refetchTickets } = useSupportTickets(queryParams);
   const createMutation = useCreateTicket();
   const assignMutation = useAssignTicket();
   const closeMutation = useCloseTicket();
@@ -154,7 +184,7 @@ export const SupportManage = () => {
           <span className="isu-stat-label">SLA Breach / Overdue</span>
           <div className="isu-stat-row">
             <span className="isu-stat-value red">
-              {stats.overdue ?? 0}
+              {statsLoading ? <span className="isu-stat-skeleton-value" /> : statsError && !stats ? "—" : stats?.overdue ?? 0}
             </span>
             <div className="isu-stat-icon red" aria-hidden="true">
               <AlertTriangle className="w-5 h-5" />
@@ -167,7 +197,7 @@ export const SupportManage = () => {
           <span className="isu-stat-label">Avg First Response</span>
           <div className="isu-stat-row">
             <span className="isu-stat-value blue">
-              {stats.avgFirstResponseHours ? `${stats.avgFirstResponseHours}h` : "—"}
+              {statsLoading ? <span className="isu-stat-skeleton-value" /> : statsError && !stats ? "—" : stats?.avgFirstResponseHours ? `${stats.avgFirstResponseHours}h` : "—"}
             </span>
             <div className="isu-stat-icon blue" aria-hidden="true">
               <Clock className="w-5 h-5" />
@@ -180,7 +210,7 @@ export const SupportManage = () => {
           <span className="isu-stat-label">Avg Resolution Time</span>
           <div className="isu-stat-row">
             <span className="isu-stat-value emerald">
-              {stats.avgResolutionHours ? `${stats.avgResolutionHours}h` : "—"}
+              {statsLoading ? <span className="isu-stat-skeleton-value" /> : statsError && !stats ? "—" : stats?.avgResolutionHours ? `${stats.avgResolutionHours}h` : "—"}
             </span>
             <div className="isu-stat-icon emerald" aria-hidden="true">
               <Zap className="w-5 h-5" />
@@ -231,11 +261,16 @@ export const SupportManage = () => {
         />
 
         {/* Table Content */}
-        <div className="isu-panel-body">
+        <div className="isu-panel-body" aria-busy={isLoading}>
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 flex-1">
-              <Spinner className="w-8 h-8 text-primary" />
-              <p className="text-xs text-muted-foreground mt-3">Loading tickets...</p>
+            <SupportTicketTableSkeleton />
+          ) : ticketsError && !data ? (
+            <div className="isu-ticket-load-error" role="alert">
+              <AlertTriangle className="w-7 h-7" aria-hidden="true" />
+              <p>Unable to load support tickets.</p>
+              <Button size="sm" variant="outline" onClick={() => refetchTickets()}>
+                Retry
+              </Button>
             </div>
           ) : (
             <TicketListTable
@@ -250,8 +285,13 @@ export const SupportManage = () => {
       </div>
 
       {/* Pagination */}
-      {!isLoading && total > 0 && (
-        <div className="pt-1">
+      <div className={`isu-pagination-slot${isLoading ? " is-loading" : ""}`} aria-busy={isLoading}>
+        {isLoading ? (
+          <div className="isu-pagination-skeleton" aria-hidden="true">
+            <span className="isu-skeleton-cell" />
+            <span className="isu-skeleton-cell" />
+          </div>
+        ) : total > 0 ? (
           <DataPagination
             currentPage={page}
             totalPages={pageCount}
@@ -263,8 +303,8 @@ export const SupportManage = () => {
               setPage(1);
             }}
           />
-        </div>
-      )}
+        ) : null}
+      </div>
 
       {/* New Ticket Dialog */}
       <NewTicketDialog

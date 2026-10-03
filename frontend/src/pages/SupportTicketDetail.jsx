@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/store/Slices/authSlice";
-import Spinner from "@/components/ui/spinner";
 import {
   useSupportTicket,
   useReplyToTicket,
@@ -23,6 +22,76 @@ import CloseTicketDialog from "@/components/support/CloseTicketDialog";
 import RatingDialog from "@/components/support/RatingDialog";
 import { getSupportBasePath } from "@/utils/supportRouting";
 import "./SupportTicketDetail.css";
+
+function TicketDetailLoadingShell({ role, isAdmin }) {
+  return (
+    <section
+      className={`support-ticket-detail support-ticket-detail--${role} support-ticket-detail--loading`}
+      aria-busy="true"
+      role="status"
+      aria-label="Loading support conversation"
+    >
+      <header className="ticket-detail-header ticket-detail-header--loading" aria-hidden="true">
+        <div className="ticket-detail-header__main">
+          <span className="ticket-detail-skeleton ticket-detail-skeleton--back" />
+          <div className="ticket-detail-header__copy">
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--title" />
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--meta" />
+          </div>
+        </div>
+        <div className="ticket-detail-header__badges">
+          {isAdmin && <span className="ticket-detail-skeleton ticket-detail-skeleton--badge" />}
+          <span className="ticket-detail-skeleton ticket-detail-skeleton--badge" />
+        </div>
+      </header>
+
+      <div className={`support-ticket-workspace${isAdmin ? " support-ticket-workspace--admin" : ""}`}>
+        <main className="support-ticket-conversation">
+          <div className="ticket-message-thread ticket-message-thread--loading" aria-hidden="true">
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--message ticket-detail-skeleton--message-own" />
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--message ticket-detail-skeleton--message-other" />
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--message ticket-detail-skeleton--message-own-short" />
+          </div>
+          <div className="ticket-reply-box ticket-reply-box--loading" aria-hidden="true">
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--reply-label" />
+            <div className="ticket-detail-skeleton-reply-row">
+              <span className="ticket-detail-skeleton ticket-detail-skeleton--attachment" />
+              <span className="ticket-detail-skeleton ticket-detail-skeleton--reply-input" />
+              <span className="ticket-detail-skeleton ticket-detail-skeleton--send" />
+            </div>
+            <span className="ticket-detail-skeleton ticket-detail-skeleton--reply-hint" />
+          </div>
+        </main>
+
+        {isAdmin && (
+          <aside className="support-ticket-sidebar" aria-hidden="true">
+            <div className="ticket-sidebar-content ticket-sidebar-content--loading">
+              <div className="ticket-sidebar-card ticket-sidebar-card--sla ticket-sidebar-skeleton-card">
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-title" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-line" />
+              </div>
+              <div className="ticket-sidebar-card ticket-sidebar-card--controls ticket-sidebar-skeleton-card">
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-title" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-line" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-line" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-action" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-action" />
+              </div>
+              <div className="ticket-sidebar-card ticket-sidebar-card--requester ticket-sidebar-skeleton-card">
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-title" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-line" />
+              </div>
+              <div className="ticket-sidebar-card ticket-sidebar-card--timeline ticket-sidebar-skeleton-card">
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-title" />
+                <span className="ticket-detail-skeleton ticket-sidebar-skeleton-line" />
+              </div>
+            </div>
+          </aside>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export const SupportTicketDetail = () => {
   const { id } = useParams();
@@ -51,14 +120,7 @@ export const SupportTicketDetail = () => {
   const rateMutation = useRateTicket();
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
-        <Spinner className="w-8 h-8 text-primary" />
-        <p className="text-xs text-muted-foreground mt-3">
-          Loading conversation...
-        </p>
-      </div>
-    );
+    return <TicketDetailLoadingShell role={role} isAdmin={isAdmin} />;
   }
 
   if (error || !data?.ticket) {

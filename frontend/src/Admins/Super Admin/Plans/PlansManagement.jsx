@@ -9,7 +9,6 @@ import {
   Building2,
   Users,
   GraduationCap,
-  Sparkles,
   RefreshCw,
   X,
   AlertTriangle,
@@ -34,9 +33,59 @@ const INITIAL_FORM = {
   isActive: true,
 };
 
+function PlanSkeletonCard({ isFeatured = false }) {
+  return (
+    <div className={`plan-card plan-skeleton-card ${isFeatured ? "is-popular" : ""}`}>
+      {isFeatured && (
+        <span className="plan-badge-popular">
+          <span>MOST POPULAR</span>
+        </span>
+      )}
+      <div className="plan-card-top-row">
+        <div className="plan-skel-line plan-skel-slug" />
+        <div className="plan-skel-line plan-skel-pill" />
+      </div>
+      <div className="plan-skel-line plan-skel-title" />
+      <div className="plan-skel-line plan-skel-desc" />
+      <div className="plan-skel-line plan-skel-desc short" />
+
+      <div className="plan-pricing-box plan-skel-pricing-box">
+        <div className="plan-skel-line plan-skel-price" />
+        <div className="plan-skel-line plan-skel-period" />
+      </div>
+
+      <div className="plan-limits-section">
+        <div className="plan-skel-line plan-skel-section-label" />
+        <div className="plan-limits-row">
+          <div className="limit-pill plan-skel-pill-limit">
+            <div className="plan-skel-line plan-skel-limit-val" />
+          </div>
+          <div className="limit-pill plan-skel-pill-limit">
+            <div className="plan-skel-line plan-skel-limit-val" />
+          </div>
+          <div className="limit-pill plan-skel-pill-limit">
+            <div className="plan-skel-line plan-skel-limit-val" />
+          </div>
+        </div>
+      </div>
+
+      <div className="plan-card-footer plan-skel-footer">
+        <div className="plan-skel-line plan-skel-stat" />
+        <div className="plan-actions-row">
+          <div className="plan-skel-line plan-skel-btn" />
+          <div className="plan-skel-line plan-skel-btn" />
+          <div className="plan-skel-line plan-skel-btn icon" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PlansManagement() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [formData, setFormData] = useState(INITIAL_FORM);
@@ -49,11 +98,15 @@ export default function PlansManagement() {
 
   const loadPlans = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await axiosInstance.get("/super-admin/plans");
       setPlans(res.data.data || []);
+      setHasLoaded(true);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load SaaS plans");
+      const message = err.response?.data?.message || "Failed to load SaaS plans";
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -146,19 +199,9 @@ export default function PlansManagement() {
 
   return (
     <div className="plans-page-container">
-      {/* Header Bar */}
-      <div className="plans-header">
-        <div className="plans-header-left">
-          <div className="plans-title-row">
-            <Layers className="plans-title-icon" size={24} />
-            <h1 className="plans-title">SaaS Plans & Pricing Engine</h1>
-          </div>
-          <p className="plans-subtitle">
-            Configure tiered plans, quotas, pricing models, and feature flags. Plans update dynamically across all assigned institutions.
-          </p>
-        </div>
-
-        <div className="plans-header-actions">
+      {/* Top Action Bar */}
+      <div className="plans-top-bar">
+        <div className="plans-top-actions">
           <button
             type="button"
             className="plans-refresh-btn"
@@ -166,7 +209,7 @@ export default function PlansManagement() {
             disabled={loading}
             title="Refresh plans list"
           >
-            <RefreshCw size={16} className={loading ? "spin" : ""} />
+            <RefreshCw size={14} className={loading ? "spin" : ""} />
             <span>Refresh</span>
           </button>
           <button
@@ -174,32 +217,42 @@ export default function PlansManagement() {
             className="plans-create-btn"
             onClick={openCreateModal}
           >
-            <Plus size={16} />
+            <Plus size={15} />
             <span>Create New Plan</span>
           </button>
         </div>
       </div>
 
-      {/* Loading state */}
-      {loading ? (
-        <div className="plans-loading">
-          <Spinner size={32} />
-          <p>Loading SaaS tiers and quotas...</p>
-        </div>
-      ) : plans.length === 0 ? (
-        <div className="plans-empty-card">
-          <Layers size={48} className="empty-icon" />
-          <h3>No Subscription Plans Configured</h3>
-          <p>Create your first plan to start defining institutional quotas and features.</p>
-          <button type="button" className="plans-create-btn" onClick={openCreateModal}>
-            <Plus size={16} />
-            <span>Create Plan</span>
-          </button>
-        </div>
-      ) : (
-        /* Plan Cards Grid */
-        <div className="plans-grid">
-          {plans.map((plan) => {
+      {/* Plan Cards Grid / Skeletons / Empty */}
+      <div className="plans-grid">
+        {loading && !hasLoaded ? (
+          <>
+            <PlanSkeletonCard />
+            <PlanSkeletonCard isFeatured={true} />
+            <PlanSkeletonCard />
+          </>
+        ) : loadError && !hasLoaded ? (
+          <div className="plans-empty-card plans-error-card" role="alert">
+            <AlertTriangle size={40} className="empty-icon" />
+            <h3>Unable to Load Subscription Plans</h3>
+            <p>{loadError}</p>
+            <button type="button" className="plans-refresh-btn" onClick={loadPlans}>
+              <RefreshCw size={14} />
+              <span>Retry</span>
+            </button>
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="plans-empty-card">
+            <Layers size={48} className="empty-icon" />
+            <h3>No Subscription Plans Configured</h3>
+            <p>Create your first plan to start defining institutional quotas and features.</p>
+            <button type="button" className="plans-create-btn" onClick={openCreateModal}>
+              <Plus size={16} />
+              <span>Create Plan</span>
+            </button>
+          </div>
+        ) : (
+          plans.map((plan) => {
             const id = plan._id || plan.id;
             const isPopular = plan.isPopular;
             const isActive = plan.isActive !== false;
@@ -212,7 +265,6 @@ export default function PlansManagement() {
               >
                 {isPopular && (
                   <span className="plan-badge-popular">
-                    <Sparkles size={11} />
                     <span>MOST POPULAR</span>
                   </span>
                 )}
@@ -315,9 +367,9 @@ export default function PlansManagement() {
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
       {/* ── CREATE / EDIT MODAL ── */}
       {modalOpen && (
