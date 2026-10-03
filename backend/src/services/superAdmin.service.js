@@ -98,22 +98,32 @@ export const getAllInstitutes = async (query = {}) => {
     .populate("adminId", "name email phone avatar isActive")
     .sort({ createdAt: -1 });
 
-  // Bulk compute child campus counts for all returned institutes
+  // Bulk compute child campus and student counts for all returned institutes
   const instituteIds = institutes.map((inst) => inst._id);
-  const campusCounts = await Campus.aggregate([
-    { $match: { instituteId: { $in: instituteIds } } },
-    { $group: { _id: "$instituteId", count: { $sum: 1 } } },
+  const [campusCounts, studentCounts] = await Promise.all([
+    Campus.aggregate([
+      { $match: { instituteId: { $in: instituteIds } } },
+      { $group: { _id: "$instituteId", count: { $sum: 1 } } },
+    ]),
+    User.aggregate([
+      { $match: { instituteId: { $in: instituteIds }, role: "student" } },
+      { $group: { _id: "$instituteId", count: { $sum: 1 } } },
+    ]),
   ]);
 
-  const countMap = new Map(
+  const campusCountMap = new Map(
     campusCounts.map((c) => [c._id.toString(), c.count])
+  );
+  const studentCountMap = new Map(
+    studentCounts.map((s) => [s._id.toString(), s.count])
   );
 
   const enriched = institutes.map((inst) => {
     const instObj = inst.toObject ? inst.toObject() : { ...inst };
     return {
       ...instObj,
-      campusCount: countMap.get(inst._id.toString()) || 0,
+      campusCount: campusCountMap.get(inst._id.toString()) || 0,
+      studentCount: studentCountMap.get(inst._id.toString()) || 0,
     };
   });
 
@@ -231,10 +241,19 @@ export const getInstituteById = async (id) => {
     throw error;
   }
 
-  // Count campuses under this institute
-  const campusCount = await Campus.countDocuments({ instituteId: id });
+  // Count campuses, students, and faculty under this institute in real time
+  const [campusCount, studentCount, facultyCount] = await Promise.all([
+    Campus.countDocuments({ instituteId: id }),
+    User.countDocuments({ instituteId: id, role: "student" }),
+    User.countDocuments({ instituteId: id, role: { $in: ["teacher", "faculty"] } }),
+  ]);
 
-  return { ...institute.toObject(), campusCount };
+  return {
+    ...institute.toObject(),
+    campusCount,
+    studentCount,
+    facultyCount,
+  };
 };
 
 /**
