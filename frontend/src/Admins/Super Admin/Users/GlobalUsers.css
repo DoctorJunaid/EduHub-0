@@ -104,7 +104,7 @@
   height: 100%;
 }
 
-.search-icon {
+.global-users-search-wrap .search-icon {
   color: #a1a1aa;
   flex-shrink: 0;
 }
