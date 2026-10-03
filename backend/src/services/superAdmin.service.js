@@ -14,6 +14,7 @@ import { sendMail } from "../utils/emailService.js";
 import generateToken from "../utils/generateToken.js";
 import crypto from "crypto";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { broadcastToAudience } from "./notification.service.js";
 
 /**
  * Global Platform Statistics
@@ -734,6 +735,21 @@ export const createBroadcast = async ({ title, message, severity, audience, inst
     instituteId: instituteId || null,
     createdBy: userId || null,
   });
+
+  // Dispatch In-App Notifications to all targeted users across the platform
+  try {
+    await broadcastToAudience({
+      title: `📢 ${title.trim()}`,
+      message: message.trim(),
+      severity: (severity || "Info").toLowerCase(),
+      audience: audience || "all",
+      instituteId: instituteId || null,
+      link: "/super-admin/broadcasts",
+    });
+  } catch (err) {
+    console.error("[BROADCAST NOTIFICATION ERR]", err);
+  }
+
   return broadcast;
 };
 

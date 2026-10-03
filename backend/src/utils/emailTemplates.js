@@ -331,3 +331,65 @@ export const sendVerificationTemplate = (verificationLink) => `
 </html>
 `;
 
+export const getTicketNotificationTemplate = ({
+  badgeText = "Help & Support",
+  title = "Support Notification",
+  greeting = "Hello,",
+  mainText = "You have an update regarding your support ticket.",
+  details = [],
+  actionUrl = "",
+  actionText = "View Conversation in EduHub",
+}) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} | EduHub</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #18181b; background-color: #f4f4f5; margin: 0; padding: 0;">
+    <div style="width: 100%; background-color: #f4f4f5; padding: 40px 16px; box-sizing: border-box;">
+        <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e4e4e7; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+            <div style="background-color: #09090b; padding: 32px 28px; text-align: center;">
+                <div style="display: inline-block; background-color: #18181b; color: #d4d4d8; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 12px; border-radius: 9999px; border: 1px solid #27272a; margin-bottom: 12px;">${badgeText}</div>
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em;">${title}</h1>
+            </div>
+            <div style="padding: 32px 28px; color: #27272a;">
+                <p style="font-size: 16px; font-weight: 600; color: #09090b; margin: 0 0 14px 0;">${greeting}</p>
+                <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.65; color: #3f3f46;">${mainText}</p>
+                
+                ${
+                  details.length > 0
+                    ? `<div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                        ${details
+                          .map(
+                            (d) =>
+                              `<div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f4f4f5; font-size: 13px;">
+                                <strong style="color: #71717a;">${d.label}:</strong>
+                                <span style="color: #09090b; font-weight: 600;">${d.value}</span>
+                              </div>`
+                          )
+                          .join("")}
+                       </div>`
+                    : ""
+                }
+                
+                ${
+                  actionUrl
+                    ? `<div style="text-align: center; margin: 28px 0 12px 0;">
+                        <a href="${actionUrl}" style="display: inline-block; padding: 12px 30px; background-color: #09090b; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.01em;">${actionText}</a>
+                       </div>`
+                    : ""
+                }
+            </div>
+            <div style="background-color: #fafafa; padding: 20px; text-align: center; font-size: 12px; color: #71717a; border-top: 1px solid #e4e4e7; line-height: 1.6;">
+                <p style="margin: 0 0 4px 0;">EduHub Support Automation System.</p>
+                <p style="margin: 0;">&copy; ${new Date().getFullYear()} EduHub Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+
