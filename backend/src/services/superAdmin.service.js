@@ -62,7 +62,24 @@ export const getGlobalStats = async () => {
 };
 
 /**
- * List all institutes with optional search & filter
+ * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
+ */
+const resolveFrontendUrl = (clientOrigin) => {
+  if (clientOrigin) {
+    try {
+      const url = new URL(clientOrigin);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return `${url.protocol}//${url.host}`;
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }
+  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+};
+
+/**
+ * List all institutes with optional search & filter and real-time campusCount
  */
 export const getAllInstitutes = async (query = {}) => {
   const filter = {};
@@ -81,13 +98,37 @@ export const getAllInstitutes = async (query = {}) => {
     .populate("adminId", "name email phone avatar isActive")
     .sort({ createdAt: -1 });
 
-  return institutes;
+  // Bulk compute child campus counts for all returned institutes
+  const instituteIds = institutes.map((inst) => inst._id);
+  const campusCounts = await Campus.aggregate([
+    { $match: { instituteId: { $in: instituteIds } } },
+    { $group: { _id: "$instituteId", count: { $sum: 1 } } },
+  ]);
+
+  const countMap = new Map(
+    campusCounts.map((c) => [c._id.toString(), c.count])
+  );
+
+  const enriched = institutes.map((inst) => {
+    const instObj = inst.toObject ? inst.toObject() : { ...inst };
+    return {
+      ...instObj,
+      campusCount: countMap.get(inst._id.toString()) || 0,
+    };
+  });
+
+  return enriched;
 };
 
 /**
  * Create a new Institute with optional inline Institute Admin
  */
-export const createInstitute = async (instituteData, adminData = null, file = null) => {
+export const createInstitute = async (
+  instituteData,
+  adminData = null,
+  file = null,
+  clientOrigin = null
+) => {
   const existingInstitute = await Institute.findOne({ name: instituteData.name.trim() });
   if (existingInstitute) {
     const error = new Error("An institute with this name already exists");
@@ -110,6 +151,8 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
   });
 
   let createdAdmin = null;
+  let resetLink = null;
+  let emailSent = false;
 
   // If admin credentials are provided inline, create the admin and link to the institute
   if (adminData && adminData.email) {
@@ -144,8 +187,8 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
       reset: true,
     });
     
-    const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
-    const resetLink = `${frontendUrl}/set-password?token=${token}`;
+    const frontendUrl = resolveFrontendUrl(clientOrigin);
+    resetLink = `${frontendUrl}/set-password?token=${token}`;
     
     try {
       await sendMail(
@@ -154,8 +197,9 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
         "Welcome to EduHub! Please click the link to set up your password.",
         resetLink
       );
+      emailSent = true;
     } catch (err) {
-      console.error("Failed to send setup email:", err);
+      console.warn("[SUPER_ADMIN] Setup email dispatch failed during institute creation:", err.message);
     }
   }
 
@@ -163,7 +207,13 @@ export const createInstitute = async (instituteData, adminData = null, file = nu
     "adminId",
     "name email phone avatar"
   );
-  return result;
+  const resultObj = result.toObject ? result.toObject() : { ...result };
+  return {
+    ...resultObj,
+    campusCount: 0,
+    resetLink,
+    emailSent,
+  };
 };
 
 /**
@@ -248,23 +298,6 @@ export const deleteInstitute = async (id) => {
 };
 
 /**
- * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
- */
-const resolveFrontendUrl = (clientOrigin) => {
-  if (clientOrigin) {
-    try {
-      const url = new URL(clientOrigin);
-      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-        return `${url.protocol}//${url.host}`;
-      }
-    } catch {
-      // Ignore URL parse error
-    }
-  }
-  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
-};
-
-/**
  * Assign or reassign Institute Admin
  */
 export const assignInstituteAdmin = async (instituteId, { userId, email, newAdminData }, clientOrigin = null) => {
@@ -304,6 +337,18 @@ export const assignInstituteAdmin = async (instituteId, { userId, email, newAdmi
     const error = new Error("User to assign as Institute Admin not found");
     error.statusCode = 404;
     throw error;
+  }
+
+  // If replacing existing admin, safely retire previous admin privileges
+  if (institute.adminId && institute.adminId.toString() !== adminUser._id.toString()) {
+    try {
+      await User.findByIdAndUpdate(institute.adminId, {
+        status: "Inactive",
+        isActive: false,
+      });
+    } catch (err) {
+      console.warn("Could not deactivate previous admin:", err.message);
+    }
   }
 
   // Update user role and assign institute
@@ -849,7 +894,6 @@ export const updatePlan = async (id, updateData) => {
   if (updateData.maxCampuses !== undefined) plan.maxCampuses = Number(updateData.maxCampuses);
   if (updateData.maxStudents !== undefined) plan.maxStudents = Number(updateData.maxStudents);
   if (updateData.maxStaff !== undefined) plan.maxStaff = Number(updateData.maxStaff);
-  if (updateData.features !== undefined) plan.features = updateData.features;
   if (updateData.trialDays !== undefined) plan.trialDays = Number(updateData.trialDays);
   if (updateData.isPopular !== undefined) plan.isPopular = Boolean(updateData.isPopular);
   if (updateData.isActive !== undefined) plan.isActive = Boolean(updateData.isActive);

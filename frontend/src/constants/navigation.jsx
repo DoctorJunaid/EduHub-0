@@ -56,6 +56,11 @@ export const ADMIN_NAV = [
     icon: <Radio size={20} />,
   },
   {
+    label: "Audit Logs",
+    path: "/super-admin/audit-logs",
+    icon: <ShieldCheck size={20} />,
+  },
+  {
     label: "Help & Support",
     path: "/super-admin/support",
     icon: <LifeBuoy size={20} />,

@@ -5,7 +5,7 @@ import { updateInstitute } from "@/store/Slices/institutesSlice";
 import { fetchCampuses } from "@/store/Slices/campusesSlice";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
-import { Building2, User, MapPin, Save, Plus, RefreshCw, Pencil, Send, Copy, Check } from "lucide-react";
+import { Building2, User, MapPin, Save, Plus, RefreshCw, Pencil, Send, Copy, Check, Trash2 } from "lucide-react";
 import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/Input";
 
@@ -216,6 +216,11 @@ export default function ManageInstitute({ institute, onClose }) {
   const [addingCampus, setAddingCampus] = useState(false);
   const [showCampusForm, setShowCampusForm] = useState(false);
 
+  const [editingCampus, setEditingCampus] = useState(null);
+  const [editCampusForm, setEditCampusForm] = useState({ name: "", location: "", status: "Active" });
+  const [savingCampus, setSavingCampus] = useState(false);
+  const [deletingCampusId, setDeletingCampusId] = useState(null);
+
   const loadCampuses = async () => {
     if (!institute._id && !institute.id) return;
     setCampusLoading(true);
@@ -248,6 +253,52 @@ export default function ManageInstitute({ institute, onClose }) {
       toast.error(err.response?.data?.message || "Failed to add campus");
     } finally {
       setAddingCampus(false);
+    }
+  };
+
+  const startEditCampus = (campus) => {
+    setEditingCampus(campus);
+    setEditCampusForm({
+      name: campus.name || "",
+      location: campus.location || campus.address?.city || "",
+      status: campus.status || "Active",
+    });
+  };
+
+  const saveEditCampus = async (e) => {
+    e.preventDefault();
+    if (!editCampusForm.name.trim()) { toast.error("Campus name is required"); return; }
+    setSavingCampus(true);
+    try {
+      await axiosInstance.put(`/super-admin/campuses/${editingCampus._id || editingCampus.id}`, {
+        name: editCampusForm.name.trim(),
+        location: editCampusForm.location.trim(),
+        address: { city: editCampusForm.location.trim() },
+        status: editCampusForm.status,
+      });
+      toast.success("Campus updated successfully!");
+      setEditingCampus(null);
+      loadCampuses();
+      dispatch(fetchCampuses());
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update campus");
+    } finally {
+      setSavingCampus(false);
+    }
+  };
+
+  const deleteCampus = async (campus) => {
+    if (!window.confirm(`Are you sure you want to permanently delete campus "${campus.name}"?`)) return;
+    setDeletingCampusId(campus._id || campus.id);
+    try {
+      await axiosInstance.delete(`/super-admin/campuses/${campus._id || campus.id}`);
+      toast.success("Campus deleted successfully!");
+      loadCampuses();
+      dispatch(fetchCampuses());
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete campus");
+    } finally {
+      setDeletingCampusId(null);
     }
   };
 
@@ -580,6 +631,38 @@ export default function ManageInstitute({ institute, onClose }) {
             </div>
           )}
 
+          {/* Edit Campus Modal Form */}
+          {editingCampus && (
+            <form onSubmit={saveEditCampus} style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <p style={{ fontSize: "13px", fontWeight: 600, color: "#09090b", margin: 0 }}>Edit Campus</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Campus Name</label>
+                  <Input value={editCampusForm.name} onChange={(e) => setEditCampusForm(f => ({ ...f, name: e.target.value }))} required />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Location / City</label>
+                  <Input value={editCampusForm.location} onChange={(e) => setEditCampusForm(f => ({ ...f, location: e.target.value }))} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Status</label>
+                  <select value={editCampusForm.status} onChange={(e) => setEditCampusForm(f => ({ ...f, status: e.target.value }))} style={selectStyle}>
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button type="button" onClick={() => setEditingCampus(null)} style={{ height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" disabled={savingCampus} style={{ display: "flex", alignItems: "center", gap: "6px", height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#09090b", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: savingCampus ? 0.7 : 1 }}>
+                  {savingCampus ? <Spinner className="size-3 text-white" /> : <Save size={13} />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          )}
+
           {campusLoading ? (
             <div style={{ padding: "16px 0" }}>
               <SpinnerCustom text="Loading campuses..." size="default" />
@@ -600,9 +683,32 @@ export default function ManageInstitute({ institute, onClose }) {
                       </div>
                     )}
                   </div>
-                  <span style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: campus.status === "Active" ? "#09090b" : "#f4f4f5", color: campus.status === "Active" ? "#fff" : "#52525b" }}>
-                    {campus.status || "Active"}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: campus.status === "Active" ? "#09090b" : "#f4f4f5", color: campus.status === "Active" ? "#fff" : "#52525b" }}>
+                      {campus.status || "Active"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => startEditCampus(campus)}
+                      style={{ border: "1px solid #e4e4e7", background: "#fff", borderRadius: "6px", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#09090b" }}
+                      title="Edit campus"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={deletingCampusId === (campus._id || campus.id)}
+                      onClick={() => deleteCampus(campus)}
+                      style={{ border: "1px solid #fee2e2", background: "#fff5f5", borderRadius: "6px", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#dc2626" }}
+                      title="Delete campus"
+                    >
+                      {deletingCampusId === (campus._id || campus.id) ? (
+                        <Spinner className="size-3 text-red-600" />
+                      ) : (
+                        <Trash2 size={12} />
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

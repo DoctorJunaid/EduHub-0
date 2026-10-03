@@ -6,6 +6,9 @@ export const createInquiry = async (req, res) => {
     const {
       fullName,
       full_name,
+      contactName,
+      contact_name,
+      name,
       instituteName,
       institute_name,
       instituteType,
@@ -13,16 +16,32 @@ export const createInquiry = async (req, res) => {
       email,
       phone,
       message,
+      city,
+      studentCount,
+      student_count,
     } = req.body;
+
+    const resolvedFullName =
+      fullName || full_name || contactName || contact_name || name;
+
+    let composedMessage = message || "";
+    const extraDetails = [];
+    if (city) extraDetails.push(`City: ${city}`);
+    if (studentCount || student_count) extraDetails.push(`Student Count: ${studentCount || student_count}`);
+    if (extraDetails.length > 0) {
+      composedMessage = composedMessage
+        ? `${composedMessage} (${extraDetails.join(" | ")})`
+        : extraDetails.join(" | ");
+    }
 
     // Normalize field names to match schema requirements
     const payload = {
-      fullName: fullName || full_name,
+      fullName: resolvedFullName,
       instituteName: instituteName || institute_name,
-      instituteType: instituteType || institute_type,
+      instituteType: instituteType || institute_type || "University",
       email,
       phone,
-      message,
+      message: composedMessage,
     };
 
     // Quick validation for required missing body fields before hit database

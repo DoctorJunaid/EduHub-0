@@ -32,9 +32,13 @@ export const createInstitute = asyncHandler(async (req, res) => {
     try { adminData = JSON.parse(adminData); } catch (e) {}
   }
   const instituteData = { ...req.body };
-  delete instituteData.admin;
-
-  const institute = await superAdminService.createInstitute(instituteData, adminData, req.file);
+  const clientOrigin = req.headers.origin || req.headers.referer;
+  const institute = await superAdminService.createInstitute(
+    instituteData,
+    adminData,
+    req.file,
+    clientOrigin
+  );
   res.status(201).json({
     success: true,
     message: "Institute registered successfully.",
@@ -379,6 +383,8 @@ export default {
   updateInstitute,
   deleteInstitute,
   assignInstituteAdmin,
+  resendInstituteAdminInvite,
+  updateInstituteAdmin,
   getInstituteAdmins,
   createInstituteAdmin,
   getCampuses,

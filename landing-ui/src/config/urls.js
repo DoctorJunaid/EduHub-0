@@ -11,6 +11,32 @@ export const MANAGEMENT_APP_LOCAL_URL = "http://localhost:5173";
 export const LANDING_PAGE_PRODUCTION_URL = "https://edu-hub-0.vercel.app";
 export const LANDING_PAGE_LOCAL_URL = "http://localhost:5174";
 
+export const BACKEND_API_PRODUCTION_URL =
+  "https://edu-hub-backend-blond.vercel.app/api/v1";
+export const BACKEND_API_LOCAL_URL = "http://localhost:5000/api/v1";
+
+/**
+ * Returns the backend API base URL.
+ */
+export const getBackendApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, "");
+  }
+
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.startsWith("192.168.")
+    ) {
+      return BACKEND_API_LOCAL_URL;
+    }
+  }
+
+  return BACKEND_API_PRODUCTION_URL;
+};
+
 /**
  * Returns the base URL for the EduHub Management System (frontend).
  */

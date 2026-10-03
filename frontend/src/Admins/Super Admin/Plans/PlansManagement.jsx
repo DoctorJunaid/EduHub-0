@@ -548,8 +548,6 @@ export default function PlansManagement() {
                 </div>
               </div>
 
-
-
               {/* Form Actions */}
               <div className="plans-modal-footer">
                 <button

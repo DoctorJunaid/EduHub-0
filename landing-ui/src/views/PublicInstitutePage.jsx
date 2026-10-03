@@ -18,6 +18,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { institutes, getInstituteData } from '@/data/mockData'
 import Navbar from '@/components/layout/Navbar'
 import GetStartedModal from '@/components/GetStartedModal'
+import { getBackendApiUrl } from '@/config/urls'
 
 export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted }) {
   const { id: instituteId } = useParams()
@@ -61,12 +62,33 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
     setIsApplyModalOpen(true)
   }
 
-  const handleApplySubmit = (e) => {
+  const handleApplySubmit = async (e) => {
     e.preventDefault()
     if (!applyForm.name || !applyForm.email || !applyForm.phone) return
-    const randomId = `EDU-2026-${inst.shortName}-${Math.floor(1000 + Math.random() * 9000)}`
+    const randomId = `EDU-2026-${inst.shortName || 'ADM'}-${Math.floor(1000 + Math.random() * 9000)}`
     setApplicationId(randomId)
     setApplySuccess(true)
+
+    try {
+      const apiUrl = getBackendApiUrl()
+      await fetch(`${apiUrl}/inquiries`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: applyForm.name.trim(),
+          instituteName: inst.fullName || inst.name || "Target Institution",
+          instituteType: "University",
+          email: applyForm.email.trim().toLowerCase(),
+          phone: applyForm.phone.trim(),
+          message: `Direct Student Admission Application for Program: ${applyForm.program || 'Undergraduate'} (Ref: ${randomId})`,
+        }),
+      })
+    } catch (err) {
+      console.warn("Admission lead background sync failed:", err)
+    }
   }
 
   const handleDownloadProspectus = () => {
