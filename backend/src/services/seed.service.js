@@ -972,31 +972,8 @@ export async function seedExtras(campusId, instituteId) {
     await Assignment.insertMany(sampleAssignments, { ordered: false });
   }
 
-  // 2. Admission Inquiries
-  const sampleInquiries = [
-    {
-      fullName: "Muhammad Rizwan",
-      instituteName: "The Educators Campus",
-      instituteType: "School",
-      email: "rizwan.parent@gmail.com",
-      phone: "0300-4829104",
-      message: "Looking for admission criteria and fee structure for Class 4 for next term.",
-    },
-    {
-      fullName: "Mrs. Shazia Farooq",
-      instituteName: "Beaconhouse School",
-      instituteType: "School",
-      email: "shazia.farooq@yahoo.com",
-      phone: "0321-9182736",
-      message: "Inquiry regarding school transport routes and science lab facilities.",
-    },
-  ];
-
-  try {
-    await Inquiry.insertMany(sampleInquiries, { ordered: false });
-  } catch {
-    // ignore
-  }
+  // 2. Admission Inquiries are now strictly organic and dynamic from the public landing page
+  // (No mock inquiries inserted to preserve real production database state)
 
   // 3. Broadcast Alerts
   const sampleAlerts = [

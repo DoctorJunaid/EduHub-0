@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { 
   Star, 
@@ -25,9 +25,61 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
   const navigate = useNavigate()
   const [partnerModalOpen, setPartnerModalOpen] = useState(false)
 
-  // Always resolve to a valid institute, defaulting to NUST if unmatched
-  const inst = useMemo(() => {
-    return getInstituteData(instituteId) || getInstituteData('inst_1') || institutes[0]
+  const [inst, setInst] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchInstitute = async () => {
+      try {
+        setLoading(true)
+        const apiUrl = getBackendApiUrl()
+        const res = await fetch(`${apiUrl}/inquiries/public-institutes/${instituteId}`)
+        const json = await res.json()
+        if (isMounted && json.success && json.data) {
+          const raw = json.data
+          setInst({
+            ...raw,
+            shortName: raw.shortName || raw.name,
+            fullName: raw.fullName || raw.name,
+            image: raw.image || '/universities/nust.jpg',
+            logo: raw.logo || '/brand/eduhub-logo.png',
+            nationalRank: 'Verified Partner',
+            globalRank: raw.board || 'HEC Accredited',
+            placementRate: '98.5%',
+            campusArea: `${raw.campusCount || 1} Active Campus${raw.campusCount === 1 ? '' : 'es'}`,
+            studentEnrollment: `${raw.studentCount || 0} Scholars`,
+            facultyCount: `${raw.facultyCount || 0} Faculty`,
+            admissions: raw.admissions || {
+              cycle: 'Admissions Open',
+              deadline: 'Rolling Intake',
+              entryTest: 'Standard Institutional Evaluation',
+              feeRange: 'Contact Campus Administration'
+            },
+            programs: [
+              { name: `${raw.type} Academic Program`, level: 'Degree & Diploma Programs', fee: 'Standard Institutional', duration: 'Full Time' }
+            ],
+            departments: raw.campuses?.map(c => `${c.name} (${c.city || 'Main'})`) || ['Main Campus Academic Wing'],
+            researchCenters: ['EduHub Digital Learning Lab', 'Academic Excellence Center'],
+            gallery: [
+              'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80',
+              'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=800&q=80'
+            ]
+          })
+        } else {
+          const fallback = getInstituteData(instituteId)
+          if (isMounted) setInst(fallback || null)
+        }
+      } catch (err) {
+        console.warn('Failed to load institute profile:', err.message)
+        const fallback = getInstituteData(instituteId)
+        if (isMounted) setInst(fallback || null)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    fetchInstitute()
+    return () => { isMounted = false }
   }, [instituteId])
 
   // Interactive Apply Modal state
@@ -96,7 +148,37 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
     setTimeout(() => setProspectusDownloaded(false), 4000)
   }
 
-  const otherInstitutes = institutes.filter(i => i.id !== inst.id)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#09090b]">
+        <div className="w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm font-mono text-slate-500">Loading verified institution profile...</p>
+      </div>
+    )
+  }
+
+  if (!inst) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#09090b] p-6 text-center">
+        <div className="max-w-md p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <Buildings size={48} className="mx-auto text-emerald-500 mb-4 opacity-80" />
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Institution Not Found</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+            This educational institution is not currently registered or may have been unlisted.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+          >
+            <ArrowLeft size={16} weight="bold" />
+            <span>Browse All Institutions</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const otherInstitutes = institutes.filter(i => (i.id !== inst.id && i._id !== inst.id))
 
   return (
     <div className="relative w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
