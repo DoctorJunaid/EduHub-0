@@ -48,17 +48,11 @@ export const canViewTicket = (user, ticket) => {
     return String(ticket.campusId) === String(user.campusId);
   }
 
-  // Teachers see tickets they created OR assigned to them OR campus Academic tickets
+  // Teachers see only tickets they created OR tickets explicitly assigned to them
   if (role === "teacher") {
     const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(user._id);
     const isAssignee = ticket.assignedTo && String(ticket.assignedTo?._id || ticket.assignedTo) === String(user._id);
-    const isCampusAcademic = Boolean(
-      user.campusId &&
-      ticket.campusId &&
-      String(ticket.campusId) === String(user.campusId) &&
-      ticket.category === "Academic"
-    );
-    return isCreator || isAssignee || isCampusAcademic;
+    return isCreator || isAssignee;
   }
 
   // Students and parents see only tickets they created

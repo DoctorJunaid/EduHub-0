@@ -279,7 +279,6 @@ export const listTickets = async (user, filters = {}) => {
       $or: [
         { createdBy: user._id },
         { assignedTo: user._id },
-        { campusId: user.campusId, category: "Academic" },
       ],
     });
   } else {
@@ -913,7 +912,6 @@ export const getStats = async (user) => {
     query.$or = [
       { createdBy: user._id },
       { assignedTo: user._id },
-      { campusId: user.campusId, category: "Academic" },
     ];
   } else {
     query.createdBy = user._id;
