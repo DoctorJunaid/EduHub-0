@@ -549,6 +549,11 @@
     align-items: stretch;
   }
 
+  .inquiries-filters-bar .search-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
   .filters-wrap {
     width: 100%;
   }

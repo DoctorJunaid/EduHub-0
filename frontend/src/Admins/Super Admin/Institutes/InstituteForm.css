@@ -31,3 +31,10 @@
   font-weight: 500;
   color: #52525b;
 }
+
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

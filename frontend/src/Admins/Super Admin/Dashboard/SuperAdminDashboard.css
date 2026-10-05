@@ -22,6 +22,37 @@
    Spacious container, clear visual rhythm, premium EduHub styling
    ========================================================= */
 
+/* Keep the shared search bar inside the Super Admin header at tablet widths. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin"]) .header .global-search-container {
+    flex: 1 1 220px;
+    width: auto;
+    min-width: 0;
+    max-width: 360px;
+  }
+
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin"]) .header .global-search-input {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin"]) .header .global-search-container {
+    flex: 1 1 120px;
+    width: auto;
+    min-width: 0;
+    max-width: 360px;
+  }
+
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin"]) .header .breadcrumbs {
+    min-width: 0;
+  }
+
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin"]) .header .global-search-input {
+    min-width: 0;
+  }
+}
+
 .super-admin-dashboard {
   width: 100%;
   max-width: 1320px;
@@ -1034,6 +1065,21 @@
   .super-admin-manage-btn {
     margin-left: auto;
   }
+
+  .super-admin-inquiry-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .super-admin-inquiry-side {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    border-top: 1px solid #f4f4f5;
+    padding-top: 10px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1073,6 +1119,17 @@
     grid-column: span 2;
     margin-left: 0;
     width: 100%;
+  }
+
+  .super-admin-inquiry-side {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .super-admin-inquiry-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

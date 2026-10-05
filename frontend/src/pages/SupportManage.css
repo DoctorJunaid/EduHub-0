@@ -734,3 +734,201 @@
     align-items: flex-start;
   }
 }
+
+/* Super Admin support-only refinements. The base support views remain shared. */
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support {
+  --isu-admin-text: #09090b;
+  --isu-admin-muted: #71717a;
+  --isu-admin-border: #e4e4e7;
+  --isu-admin-surface-muted: #f4f4f5;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-stat-card {
+  min-height: 112px;
+  padding: 18px 20px;
+  border-color: var(--isu-admin-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-stat-icon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--isu-admin-border);
+  border-radius: 9px;
+  background: var(--isu-admin-surface-muted);
+  color: #18181b;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-stat-icon.red {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-stat-value.red {
+  color: #b91c1c;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-toolbar {
+  padding: 12px 16px;
+  gap: 10px;
+  border-color: var(--isu-admin-border);
+  background: #fafafa;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-toolbar-grid,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-toolbar-actions {
+  gap: 8px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-search-wrapper {
+  min-width: 220px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-search-input,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-select-trigger,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-new-btn {
+  height: 38px !important;
+  min-height: 38px !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-select-trigger {
+  padding: 0 12px !important;
+  border-color: var(--isu-admin-border) !important;
+  color: var(--isu-admin-text) !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-new-btn {
+  width: auto !important;
+  min-width: 0;
+  flex: 0 0 auto;
+  padding: 0 16px !important;
+  gap: 8px !important;
+  line-height: 1 !important;
+  background: #09090b !important;
+  border: 1px solid #09090b !important;
+  color: #ffffff !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-new-btn svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-table-wrapper {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table {
+  width: 100%;
+  min-width: 1170px;
+  table-layout: fixed;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td {
+  padding: 12px;
+  vertical-align: middle;
+  border-color: #f4f4f5;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(1),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(1) { width: 44px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(2),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(2) { width: 132px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(4),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(4) { width: 164px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(5),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(5) { width: 132px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(6),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) { width: 104px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(7),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(7) { width: 116px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(8),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(8) { width: 152px; }
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(9),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(9) {
+  width: 126px;
+  text-align: right;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table th:nth-child(3),
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(3) {
+  min-width: 200px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(3) {
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(4) > div,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(8) > div {
+  min-width: 0;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(8) > div > span {
+  min-width: 0;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(5) > span,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) > span,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(7) > span {
+  display: inline-flex;
+  height: 24px;
+  align-items: center;
+  gap: 5px !important;
+  padding: 0 8px !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 6px !important;
+  background: #f4f4f5 !important;
+  color: #52525b !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(5) > span svg,
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) > span svg {
+  width: 12px !important;
+  height: 12px !important;
+  color: currentColor !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) > span.bg-rose-50 {
+  border-color: #fecdd3 !important;
+  background: #fff1f2 !important;
+  color: #be123c !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) > span.bg-amber-50 {
+  border-color: #fde68a !important;
+  background: #fffbeb !important;
+  color: #b45309 !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-ticket-table td:nth-child(7) > span > span:first-child {
+  background: #a1a1aa !important;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-search-wrapper {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-toolbar-actions > .isu-new-btn {
+    width: 100% !important;
+  }
+}

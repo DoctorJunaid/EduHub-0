@@ -204,6 +204,7 @@
 /* ── TABLE ── */
 .table-responsive {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
 }
 
@@ -212,6 +213,7 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
+  min-width: 720px;
 }
 
 .global-users-table th {

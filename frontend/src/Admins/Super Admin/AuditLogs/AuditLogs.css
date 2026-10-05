@@ -239,6 +239,7 @@
 .audit-table-responsive {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .audit-table {
@@ -246,6 +247,7 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
+  min-width: 740px;
 }
 
 .audit-table thead {
@@ -803,4 +805,79 @@
 
 .audit-modal-done-btn:hover {
   background: #27272a;
+}
+
+
+/* ── Additional Responsive Styles ── */
+@media (max-width: 1024px) {
+  .audit-logs-page {
+    padding: 16px 24px 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .audit-logs-page {
+    padding: 14px 16px 40px;
+  }
+
+  .audit-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .audit-refresh-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .audit-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .audit-search-box {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .audit-filters-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .audit-select-wrap {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .audit-select-wrap select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .audit-modal-backdrop {
+    padding: 12px;
+  }
+
+  .audit-modal {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .audit-modal-header,
+  .audit-modal-body,
+  .audit-modal-footer {
+    padding: 14px 16px;
+  }
+
+  .modal-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-pagination-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
 }

@@ -31,7 +31,7 @@ const emptyMedia =
 
 function InstituteDetailsSkeleton({ onBack }) {
   return (
-    <section className="institute-details-page institute-details-skeleton-page">
+    <section className="institute-details-page">
       <section className="institute-details-top-card">
         <div className="institute-details-back-bar">
           <button
@@ -40,88 +40,85 @@ function InstituteDetailsSkeleton({ onBack }) {
             onClick={onBack}
             aria-label="Back to institutes"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={15} />
             <span>Back to Institutes</span>
           </button>
         </div>
 
-        <div className="institute-details-header-card">
-          <div className="institute-details-cover inst-skel-cover" />
-          <div className="institute-details-profile-band">
-            <div className="institute-details-avatar-wrap inst-skel-avatar" />
-            <div className="institute-details-identity">
-              <div className="inst-skel-line inst-skel-head-title" />
-              <div className="institute-details-meta-row">
-                <div className="inst-skel-line inst-skel-meta-item" />
-                <div className="inst-skel-line inst-skel-meta-item" />
-                <div className="inst-skel-line inst-skel-meta-item short" />
-              </div>
+        <div className="institute-details-header-content">
+          <div className="institute-details-identity">
+            <div className="inst-skel-line" style={{ width: "240px", height: "26px", marginBottom: "8px" }} />
+            <div className="institute-details-meta-strip">
+              <div className="inst-skel-line" style={{ width: "90px", height: "14px" }} />
+              <span className="meta-row-sep">•</span>
+              <div className="inst-skel-line" style={{ width: "140px", height: "14px" }} />
+              <span className="meta-row-sep">•</span>
+              <div className="inst-skel-line" style={{ width: "110px", height: "14px" }} />
             </div>
-            <div className="institute-details-actions-cluster">
-              <div className="institute-details-badges">
-                <div className="inst-skel-line inst-skel-badge" />
-                <div className="inst-skel-line inst-skel-badge" />
-              </div>
-              <div className="institute-details-actions">
-                <div className="inst-skel-line inst-skel-act-btn" />
-                <div className="inst-skel-line inst-skel-act-btn" />
-              </div>
+          </div>
+
+          <div className="institute-details-actions-cluster">
+            <div className="institute-details-badges">
+              <div className="inst-skel-line" style={{ width: "70px", height: "26px", borderRadius: "999px" }} />
+              <div className="inst-skel-line" style={{ width: "80px", height: "26px", borderRadius: "999px" }} />
+            </div>
+            <div className="institute-details-cta-buttons">
+              <div className="inst-skel-line" style={{ width: "160px", height: "34px", borderRadius: "8px" }} />
+              <div className="inst-skel-line" style={{ width: "110px", height: "34px", borderRadius: "8px" }} />
             </div>
           </div>
         </div>
       </section>
 
-      <div className="institute-details-main-grid">
-        <div className="institute-details-content">
-          <div className="details-stats-grid">
+      <div className="institute-details-grid">
+        <div className="institute-details-main">
+          <section className="institute-details-stat-grid">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="details-stat-card">
-                <div className="details-stat-icon-wrap inst-skel-stat-icon" />
-                <div className="details-stat-data">
-                  <div className="inst-skel-line inst-skel-stat-num" />
-                  <div className="inst-skel-line inst-skel-stat-lbl" />
+              <article className="institute-details-stat-card" key={i}>
+                <div className="stat-card-title">
+                  <div className="inst-skel-line" style={{ width: "80px", height: "12px" }} />
+                  <div className="stat-card-icon inst-skel-line" style={{ width: "32px", height: "32px", borderRadius: "8px" }} />
                 </div>
-              </div>
+                <div className="inst-skel-line" style={{ width: "50px", height: "26px", marginTop: "12px" }} />
+              </article>
             ))}
-          </div>
-
-          <section className="details-section-card campuses-section">
-            <div className="section-card-head">
-              <div className="inst-skel-line inst-skel-sec-title" />
-            </div>
-            <div className="inst-skel-campuses-box">
-              <div className="inst-skel-line inst-skel-table-row" />
-              <div className="inst-skel-line inst-skel-table-row" />
-            </div>
           </section>
 
-          <section className="details-section-card">
-            <div className="section-card-head">
-              <div className="inst-skel-line inst-skel-sec-title" />
+          <section className="institute-details-campus-panel">
+            <div className="panel-heading">
+              <div className="inst-skel-line" style={{ width: "160px", height: "18px" }} />
             </div>
-            <div className="inst-skel-line inst-skel-text-block" />
-            <div className="inst-skel-line inst-skel-text-block short" />
-          </section>
-        </div>
-
-        <div className="institute-details-sidebar">
-          <section className="details-section-card">
-            <div className="section-card-head">
-              <div className="inst-skel-line inst-skel-sec-title" />
+            <div className="campus-table">
+              <div className="campus-table-head">
+                <span>Campus Name</span>
+                <span>Location / Address</span>
+                <span>Status</span>
+              </div>
+              {[1, 2].map((i) => (
+                <div className="campus-table-row" key={i}>
+                  <div className="inst-skel-line" style={{ width: "120px", height: "16px" }} />
+                  <div className="inst-skel-line" style={{ width: "140px", height: "14px" }} />
+                  <div className="inst-skel-line" style={{ width: "60px", height: "20px", borderRadius: "999px" }} />
+                </div>
+              ))}
             </div>
-            <div className="inst-skel-line inst-skel-side-item" />
-            <div className="inst-skel-line inst-skel-side-item" />
-            <div className="inst-skel-line inst-skel-side-item" />
-          </section>
-
-          <section className="details-section-card">
-            <div className="section-card-head">
-              <div className="inst-skel-line inst-skel-sec-title" />
-            </div>
-            <div className="inst-skel-line inst-skel-side-item" />
-            <div className="inst-skel-line inst-skel-side-item" />
           </section>
         </div>
+
+        <aside className="institute-details-side">
+          <section className="institute-details-sidebar-card">
+            <div className="inst-skel-line" style={{ width: "120px", height: "16px", marginBottom: "12px" }} />
+            <div className="inst-skel-line" style={{ width: "100%", height: "120px", borderRadius: "8px" }} />
+          </section>
+          <section className="institute-details-sidebar-card">
+            <div className="inst-skel-line" style={{ width: "140px", height: "16px", marginBottom: "12px" }} />
+            <div className="inst-skel-line" style={{ width: "100%", height: "70px", borderRadius: "8px" }} />
+          </section>
+          <section className="institute-details-sidebar-card">
+            <div className="inst-skel-line" style={{ width: "110px", height: "16px", marginBottom: "12px" }} />
+            <div className="inst-skel-line" style={{ width: "100%", height: "50px", borderRadius: "8px" }} />
+          </section>
+        </aside>
       </div>
     </section>
   );

@@ -492,3 +492,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .super-broadcasts-compose-card {
+    padding: 16px;
+  }
+
+  .broadcast-card {
+    padding: 12px 14px;
+  }
+
+  .broadcast-card-foot {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
