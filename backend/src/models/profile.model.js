@@ -353,11 +353,21 @@ const performanceSchema = new mongoose.Schema(
     examName: { type: String, required: true, trim: true },
     subject: { type: String, required: true, trim: true },
     term: { type: String, required: true, trim: true },
+    className: { type: String, default: "" },
+    gradeOrClass: { type: String, default: "" },
+    section: { type: String, default: "" },
     marksObtained: { type: Number, required: true, min: 0 },
     totalMarks: { type: Number, required: true, min: 1 },
     grade: { type: String, default: "" },
+    gpa: { type: Number, default: 0 },
     percentage: { type: Number, default: 0 },
     remarks: { type: String, default: "" },
+    isPublished: { type: Boolean, default: true },
+    markedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Institute",
@@ -375,6 +385,8 @@ const performanceSchema = new mongoose.Schema(
 );
 
 performanceSchema.index({ campusId: 1, studentId: 1 });
+performanceSchema.index({ campusId: 1, className: 1, section: 1, term: 1 });
+performanceSchema.index({ campusId: 1, examName: 1 });
 
 export const TeacherProfile = mongoose.model(
   "TeacherProfile",
