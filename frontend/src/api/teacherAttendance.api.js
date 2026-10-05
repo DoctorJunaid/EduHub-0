@@ -1,7 +1,7 @@
 import api from "./axiosInstance.js";
 
 /**
- * Teacher & Staff Attendance API client
+ * Teacher & Staff Attendance API client (Campus Admin view)
  * Base path: /api/v1/campus/attendance/teachers
  */
 
@@ -40,3 +40,19 @@ export const updateAttendance = (id, payload) =>
 // DELETE /api/v1/campus/attendance/teachers/:id
 export const deleteAttendance = (id) =>
   api.delete(`/campus/attendance/teachers/${id}`);
+
+// ==========================================
+// Teacher Taking Student Attendance APIs
+// ==========================================
+
+// GET /api/v1/teacher/attendance/classes
+export const getTeacherAttendanceClasses = () =>
+  api.get("/teacher/attendance/classes");
+
+// GET /api/v1/teacher/attendance/roster?classId=&className=&section=&date=
+export const getTeacherAttendanceRoster = (params = {}) =>
+  api.get("/teacher/attendance/roster", { params });
+
+// POST /api/v1/teacher/attendance/save
+export const saveTeacherStudentAttendance = (payload) =>
+  api.post("/teacher/attendance/save", payload);
