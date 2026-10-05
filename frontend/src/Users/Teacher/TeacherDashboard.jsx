@@ -21,6 +21,7 @@ import {
   teacherOwnsRecord,
 } from "./teacherScope";
 import { getTodayClasses, getMySummary, markSessionStatus } from "@/api/classSession.api";
+import { getTeacherAssignments, getTeacherClasses } from "@/api/assignment.api";
 import { dateKey } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { SpinnerCustom } from "@/components/ui/spinner";
@@ -37,15 +38,17 @@ const initials = (name = "") =>
     .toUpperCase() || "ST";
 
 export default function TeacherDashboard() {
-  const classes = useSelector(selectAssignedTeacherClasses);
+  const reduxClasses = useSelector(selectAssignedTeacherClasses);
   const teacher = useSelector(selectTeacherIdentity);
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
-  const assignments = useSelector((state) => state.assignments?.records || []);
-  const submissions = useSelector((state) => state.submissions?.records || []);
+  const reduxAssignments = useSelector((state) => state.assignments?.records || []);
+  const reduxSubmissions = useSelector((state) => state.submissions?.records || []);
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
   const [todaySessions, setTodaySessions] = useState([]);
   const [creditSummary, setCreditSummary] = useState(null);
+  const [liveAssignments, setLiveAssignments] = useState([]);
+  const [liveClasses, setLiveClasses] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [creditsError, setCreditsError] = useState("");
 
@@ -53,12 +56,25 @@ export default function TeacherDashboard() {
     try {
       setLoadingSessions(true);
       setCreditsError("");
-      const [todayRes, sumRes] = await Promise.all([
+      const [todayRes, sumRes, assignRes, classRes] = await Promise.allSettled([
         getTodayClasses(),
         getMySummary({ month: dateKey(new Date()).slice(0, 7) }),
+        getTeacherAssignments(),
+        getTeacherClasses(),
       ]);
-      if (todayRes.data?.success) setTodaySessions(todayRes.data.data || []);
-      if (sumRes.data?.success) setCreditSummary(sumRes.data.data || null);
+
+      if (todayRes.status === "fulfilled" && todayRes.value.data?.success) {
+        setTodaySessions(todayRes.value.data.data || []);
+      }
+      if (sumRes.status === "fulfilled" && sumRes.value.data?.success) {
+        setCreditSummary(sumRes.value.data.data || null);
+      }
+      if (assignRes.status === "fulfilled" && assignRes.value.data?.success) {
+        setLiveAssignments(assignRes.value.data.data || []);
+      }
+      if (classRes.status === "fulfilled" && classRes.value.data?.success) {
+        setLiveClasses(classRes.value.data.data || []);
+      }
     } catch (error) {
       setTodaySessions([]);
       setCreditSummary(null);
@@ -86,41 +102,58 @@ export default function TeacherDashboard() {
     }
   };
 
+  const classes = liveClasses.length > 0 ? liveClasses : reduxClasses;
+  const assignments = liveAssignments.length > 0 ? liveAssignments : reduxAssignments;
+  const submissions = reduxSubmissions;
+
   const classIds = new Set(classes.map((item) => item.id || item._id));
   const filteredClasses = classes.filter((item) =>
     `${item.title || ""} ${item.subject || ""} ${item.className || ""} ${item.section || ""} ${item.room || ""} ${item.teacherName || item.instructor || ""} ${(item.days || []).join(" ")} ${item.dayOfWeek || ""} ${item.startTime || ""} ${item.endTime || ""}`
       .toLowerCase()
       .includes(scheduleSearch.toLowerCase()),
   );
-  const assignedCourseCount = new Set(
+  const assignedCourseCount = classes.length > 0 ? classes.length : new Set(
     classes
       .map((item) => item.courseId || item.subjectId || item.title || item.subject)
       .filter(Boolean),
   ).size;
-  const assignedAssignments = assignments.filter(
-    (assignment) =>
-      classIds.has(assignment.classId) &&
-      teacherOwnsRecord(assignment, teacher),
+
+  const liveSubmissions = liveAssignments.flatMap((a) =>
+    (a.submissions || []).map((s) => ({
+      ...s,
+      id: s._id || s.id || `sub_${s.studentId}`,
+      assignmentId: a._id || a.id,
+      assignmentTitle: a.title,
+      studentName: s.studentName || (typeof s.studentId === "object" ? s.studentId?.name : null) || "Student",
+      submittedAt: s.submittedAt ? new Date(s.submittedAt).toLocaleDateString("en-CA") : "—",
+    }))
   );
-  const assignedAssignmentIds = new Set(assignedAssignments.map((assignment) => assignment.id));
-  const pending = submissions.filter(
-    (item) => item.status === "Submitted" && assignedAssignmentIds.has(item.assignmentId),
+
+  const allSubmissions = liveSubmissions.length > 0 ? liveSubmissions : submissions;
+  const pending = allSubmissions.filter((item) =>
+    item.status === "Submitted" || item.status === "Late" || item.status === "Pending"
   );
+
   const assignmentTitle = (submission) =>
-    assignedAssignments.find((assignment) => assignment.id === submission.assignmentId)?.title ||
     submission.assignmentTitle ||
-    submission.assignmentId;
+    assignments.find((a) => (a.id || a._id) === submission.assignmentId)?.title ||
+    submission.assignmentId ||
+    "Assignment";
+
   const filteredSubmissions = pending.filter((item) =>
-    `${item.studentName || item.studentId} ${assignmentTitle(item)}`
+    `${item.studentName || item.studentId || ""} ${assignmentTitle(item)}`
       .toLowerCase()
       .includes(submissionSearch.toLowerCase()),
   );
-  const enrolledStudentCount = enrolledStudents.length;
+
+  const pendingSubmissionsCount = pending.length;
+  const enrolledStudentCount = classes.reduce((sum, c) => sum + (c.enrolledStudentsCount || 0), 0) || enrolledStudents.length;
+
   const metric = [
     [Award, "Monthly Credits", creditSummary?.totalCredits ?? "—"],
     [Coins, "Bonus Earned", `PKR ${(creditSummary?.totalBonusEarned || 0).toLocaleString()}`],
     [BookOpen, "Assigned Courses", assignedCourseCount],
-    [FileText, "Pending Submissions", pending.length],
+    [FileText, "Pending Submissions", pendingSubmissionsCount],
     [Users, "Enrolled Students", enrolledStudentCount],
   ];
 
