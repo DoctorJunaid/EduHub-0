@@ -29,7 +29,7 @@ export const getInstitutes = asyncHandler(async (req, res) => {
 export const createInstitute = asyncHandler(async (req, res) => {
   let adminData = req.body.admin;
   if (typeof adminData === 'string') {
-    try { adminData = JSON.parse(adminData); } catch (e) {}
+    try { adminData = JSON.parse(adminData); } catch (e) { }
   }
   const instituteData = { ...req.body };
   delete instituteData.admin;
