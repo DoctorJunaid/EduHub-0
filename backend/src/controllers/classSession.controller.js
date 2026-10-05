@@ -1,18 +1,32 @@
 import classSessionService from "../services/classSession.service.js";
 import TeachingCreditConfig from "../models/teachingCreditConfig.model.js";
+import User from "../models/user.model.js";
+import { TeacherProfile } from "../models/profile.model.js";
 
 /**
- * Helper to extract campusId from user context.
+ * Helper to extract campusId from user context with multi-level fallback.
  */
-function getCampusId(req) {
-  const cid = req.body?.campusId || req.query?.campusId || req.user?.campusId;
-  if (!cid) return null;
-  return typeof cid === "object" && cid !== null ? (cid._id || cid.id || cid).toString() : String(cid);
+async function getCampusId(req) {
+  let cid = req.body?.campusId || req.query?.campusId || req.headers?.["x-campus-id"] || req.user?.campusId;
+  if (cid) {
+    return typeof cid === "object" && cid !== null ? (cid._id || cid.id || cid).toString() : String(cid);
+  }
+  if (req.user?._id) {
+    const userDoc = await User.findById(req.user._id).select("campusId").lean();
+    if (userDoc?.campusId) {
+      return (userDoc.campusId._id || userDoc.campusId).toString();
+    }
+    const prof = await TeacherProfile.findOne({ user: req.user._id }).select("campusId").lean();
+    if (prof?.campusId) {
+      return (prof.campusId._id || prof.campusId).toString();
+    }
+  }
+  return null;
 }
 
 export const generateSessions = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     if (!campusId) {
       return res.status(400).json({ success: false, message: "Campus ID is required." });
     }
@@ -26,7 +40,7 @@ export const generateSessions = async (req, res) => {
 
 export const getTeacherSessions = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     if (!campusId) {
       return res.status(400).json({ success: false, message: "Campus ID is required." });
     }
@@ -55,7 +69,7 @@ export const getTeacherSessions = async (req, res) => {
 
 export const getTodayClasses = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     if (!campusId) {
       return res.status(400).json({ success: false, message: "Campus ID is required." });
     }
@@ -76,7 +90,7 @@ export const getTodayClasses = async (req, res) => {
 
 export const markSessionStatus = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const { id } = req.params;
     const { status, remarks } = req.body;
 
@@ -105,7 +119,7 @@ export const markSessionStatus = async (req, res) => {
 
 export const requestDispute = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -134,7 +148,7 @@ export const requestDispute = async (req, res) => {
 
 export const resolveDispute = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const { id } = req.params;
     const { decision, resolutionRemark, adjustedStatus, adjustedDeduction } = req.body;
 
@@ -163,7 +177,7 @@ export const resolveDispute = async (req, res) => {
 
 export const reviewAdjustment = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const { id } = req.params;
     const { action, remark, adjustedAmount } = req.body;
 
@@ -192,7 +206,7 @@ export const reviewAdjustment = async (req, res) => {
 
 export const assignSubstitute = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const { id } = req.params;
     const { substituteTeacherId, reason, notes } = req.body;
 
@@ -221,7 +235,7 @@ export const assignSubstitute = async (req, res) => {
 
 export const getTeacherSummary = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     let teacherUserId = req.user._id;
 
     if (["campus_admin", "campus_manager", "principal"].includes(req.user.role)) {
@@ -242,7 +256,7 @@ export const getTeacherSummary = async (req, res) => {
 
 export const getCampusPerformance = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const performance = await classSessionService.getCampusTeachingPerformance(
       campusId,
       req.query
@@ -255,7 +269,7 @@ export const getCampusPerformance = async (req, res) => {
 
 export const getSalaryReviewCenter = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const items = await classSessionService.getSalaryReviewCenterItems(
       campusId,
       req.query
@@ -268,7 +282,7 @@ export const getSalaryReviewCenter = async (req, res) => {
 
 export const getTeacherTimeline = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     let teacherUserId = req.params.teacherId || req.query.teacherId || req.user._id;
 
     const timeline = await classSessionService.getTeacherSessionTimeline(
@@ -284,7 +298,7 @@ export const getTeacherTimeline = async (req, res) => {
 
 export const getConfig = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const config = await classSessionService.getEffectiveTeachingConfig(campusId);
     res.status(200).json({ success: true, data: config });
   } catch (err) {
@@ -294,7 +308,7 @@ export const getConfig = async (req, res) => {
 
 export const updateConfig = async (req, res) => {
   try {
-    const campusId = getCampusId(req);
+    const campusId = await getCampusId(req);
     const updated = await TeachingCreditConfig.findOneAndUpdate(
       { campusId },
       { $set: { ...req.body, lastEditedBy: req.user._id } },

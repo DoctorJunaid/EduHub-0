@@ -83,7 +83,13 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     allSessions,
   ] = await Promise.all([
     MonthlyPayroll.find({ campusId, month }).lean(),
-    TeacherProfile.find({ campusId }).select("_id user").lean(),
+    TeacherProfile.find({
+      $or: [
+        { campusId },
+        { _id: { $in: salaryProfiles.map((p) => p.teacherProfileId).filter(Boolean) } },
+        { user: { $in: salaryProfiles.map((p) => p.teacherProfileId).filter(Boolean) } },
+      ],
+    }).select("_id user campusId").lean(),
     TeacherAttendance.find({
       campusId,
       date: { $gte: startDate, $lte: endDate },
@@ -111,8 +117,14 @@ export const generatePayroll = async (campusId, userId, { month }) => {
   });
 
   const profileToUserMap = new Map();
+  const userToProfileMap = new Map();
   allTeacherProfiles.forEach((tp) => {
-    if (tp.user) profileToUserMap.set(String(tp._id), String(tp.user));
+    if (tp.user) {
+      const uId = String(tp.user._id || tp.user);
+      const pId = String(tp._id);
+      profileToUserMap.set(pId, uId);
+      userToProfileMap.set(uId, pId);
+    }
   });
 
   const attendanceMap = new Map();
@@ -140,12 +152,12 @@ export const generatePayroll = async (campusId, userId, { month }) => {
   const actualSessionMap = new Map();
   allSessions.forEach((sess) => {
     if (sess.originalTeacherId) {
-      const origKey = String(sess.originalTeacherId);
+      const origKey = String(sess.originalTeacherId?._id || sess.originalTeacherId);
       if (!originalSessionMap.has(origKey)) originalSessionMap.set(origKey, []);
       originalSessionMap.get(origKey).push(sess);
     }
     if (sess.actualTeacherId) {
-      const actKey = String(sess.actualTeacherId);
+      const actKey = String(sess.actualTeacherId?._id || sess.actualTeacherId);
       if (!actualSessionMap.has(actKey)) actualSessionMap.set(actKey, []);
       actualSessionMap.get(actKey).push(sess);
     }
@@ -324,7 +336,8 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     }
 
     // 8c. Dynamic Missed Classes Deductions (Unsubstituted) from map
-    const teacherUserKeys = [teacherIdStr, ...(linkedUserId ? [linkedUserId] : [])];
+    const linkedProfileId = userToProfileMap.get(teacherIdStr);
+    const teacherUserKeys = [teacherIdStr, ...(linkedUserId ? [linkedUserId] : []), ...(linkedProfileId ? [linkedProfileId] : [])];
     const teacherSessions = teacherUserKeys.flatMap((k) => originalSessionMap.get(k) || []);
     
     const trulyMissedClasses = teacherSessions.filter(
