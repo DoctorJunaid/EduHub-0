@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
 import {
   Star,
@@ -15,7 +15,7 @@ import {
   ArrowRight
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { top_alumni, institutes, events } from '@/data/mockData'
+import { top_alumni, events } from '@/data/mockData'
 import Navbar from '@/components/layout/Navbar'
 import HeroFanDeck from '@/components/HeroFanDeck/HeroFanDeck'
 import WebGLBackground from '@/components/WebGLBackground'
@@ -23,21 +23,42 @@ import BentoCard from '@/components/shared/BentoCard'
 import GetStartedModal from '@/components/GetStartedModal'
 import DeviceShowcase from '@/components/showcase/DeviceShowcase'
 import AIChatDemo from '@/components/AIChatDemo/AIChatDemo'
-import { getManagementLoginUrl, getManagementDashboardUrl } from '@/config/urls'
+import { getManagementLoginUrl, getManagementDashboardUrl, getBackendApiUrl } from '@/config/urls'
 
 export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   const navigate = useNavigate()
   const [modalOpen, setModalOpen] = useState(false)
   const [showAllInstitutes, setShowAllInstitutes] = useState(false)
+  const [institutes, setInstitutes] = useState([])
+  const [loadingInstitutes, setLoadingInstitutes] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchInstitutes = async () => {
+      try {
+        const apiUrl = getBackendApiUrl()
+        const res = await fetch(`${apiUrl}/inquiries/public-institutes`)
+        const json = await res.json()
+        if (isMounted && json.success && Array.isArray(json.data)) {
+          setInstitutes(json.data)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch live institutes directory:', err.message)
+      } finally {
+        if (isMounted) setLoadingInstitutes(false)
+      }
+    }
+    fetchInstitutes()
+    return () => { isMounted = false }
+  }, [])
 
   // Duplicate alumni for seamless infinite scrolling marquee
   const marqueeAlumni = [...top_alumni, ...top_alumni]
 
-  // Top Ranked Institutions structured spotlight matching editorial layout
-  const featuredInst = institutes.find(i => i.shortName === 'NUST') || institutes[0]
-  const top4GridInsts = institutes.filter(i => i.id !== featuredInst?.id && ['LUMS', 'GIKI', 'FAST', 'IBA'].includes(i.shortName)).slice(0, 4)
-  const allRemainingInsts = institutes.filter(i => i.id !== featuredInst?.id)
-  const displayedGridInsts = showAllInstitutes ? allRemainingInsts : top4GridInsts
+  // Top Ranked Real Institutions spotlight from live database
+  const featuredInst = institutes[0] || null
+  const otherInsts = institutes.slice(1)
+  const displayedGridInsts = showAllInstitutes ? otherInsts : otherInsts.slice(0, 4)
 
   const handleOpenGetStarted = () => {
     if (onGetStarted) {
@@ -139,198 +160,226 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xs font-medium">
                 Accreditation tiers, real semester fees, verified placement rates, and alumni career data — all in one index.
               </p>
-              <button
-                onClick={() => setShowAllInstitutes(prev => !prev)}
-                className="px-4 py-2 rounded-xl bg-white/95 dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-800 text-xs font-bold transition-all shadow-sm flex items-center gap-2 shrink-0 cursor-pointer"
-              >
-                <Buildings size={15} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
-                <span>{showAllInstitutes ? 'Show Top 5 Only' : 'View All 7 Campuses'}</span>
-                {showAllInstitutes ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
-              </button>
+              {institutes.length > 5 && (
+                <button
+                  onClick={() => setShowAllInstitutes(prev => !prev)}
+                  className="px-4 py-2 rounded-xl bg-white/95 dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-800 text-xs font-bold transition-all shadow-sm flex items-center gap-2 shrink-0 cursor-pointer"
+                >
+                  <Buildings size={15} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+                  <span>{showAllInstitutes ? 'Show Top 5 Only' : `View All ${institutes.length} Institutions`}</span>
+                  {showAllInstitutes ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+                </button>
+              )}
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-            {/* Featured Hero University Card (Rank #1: NUST) */}
-            {featuredInst && (
-              <div
-                className="lg:col-span-5 rounded-3xl overflow-hidden relative border border-slate-200/70 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl shadow-[0_10px_35px_-5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)] transition-all duration-300 hover:border-emerald-500/50 hover:shadow-[0_25px_50px_-12px_rgba(16,185,129,0.18)] hover:-translate-y-1 flex flex-col justify-between group cursor-pointer"
-                onClick={() => navigate('/institute/' + featuredInst.id)}
-              >
-                {/* Subtle crystal top sheen */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-emerald-500/[0.02] dark:from-white/[0.04] dark:via-transparent dark:to-emerald-500/[0.03] pointer-events-none z-10" />
-
-                {/* Hero Image Banner with Rank #01 Badge */}
-                <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0">
-                  <img
-                    src={featuredInst.image}
-                    alt={featuredInst.shortName}
-                    onError={(e) => { e.currentTarget.src = '/universities/nust.jpg' }}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    loading="eager"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-
-                  {/* Clean Monospace Rank Pill */}
-                  <div className="absolute top-3.5 right-3.5 px-3 py-1 rounded-md bg-slate-950/70 backdrop-blur-md border border-white/20 text-white font-mono text-xs font-black tracking-wider flex items-center gap-1.5 shadow-lg z-20">
-                    <span className="text-emerald-400">#01</span>
-                    <span className="text-[10px] text-white/80 uppercase tracking-widest">National Rank</span>
-                  </div>
-                </div>
-
-                {/* Card Details */}
-                <div className="p-6 flex flex-col justify-between flex-1 space-y-4 relative z-20">
-                  {/* Real Logo & Big Typography */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200/80 dark:border-slate-700/70 p-2 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
-                      <img
-                        src={featuredInst.logo}
-                        alt={featuredInst.shortName}
-                        onError={(e) => { e.currentTarget.src = '/brand/eduhub-logo.png' }}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-none">
-                        {featuredInst.shortName}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-1">
-                        {featuredInst.fullName}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Institutional Key Metrics Grid */}
-                  <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 shadow-sm text-center">
-                    <div>
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Global Rank</span>
-                      <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">QS #334</span>
-                    </div>
-                    <div className="border-x border-slate-200/60 dark:border-slate-700/60">
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Placement</span>
-                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm">98.4%</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Programs</span>
-                      <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">160+ Deg.</span>
-                    </div>
-                  </div>
-
-                  {/* High-Impact Metadata Pod */}
-                  <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-xs">
-                    <div>
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Campus</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate block">{featuredInst.address}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Primary Domain</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs truncate block">{featuredInst.sector}</span>
-                    </div>
-                  </div>
-
-                  {/* Bottom Baseline Action Bar */}
-                  <div className="flex items-center justify-between pt-2 mt-auto">
-                    <div className="flex items-center gap-1.5 text-amber-500 font-bold text-sm">
-                      <Star size={16} weight="fill" />
-                      <span className="text-slate-900 dark:text-white font-black text-base">{featuredInst.rating}</span>
-                      <span className="text-slate-400 font-normal text-xs">({featuredInst.reviewsCount})</span>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 font-bold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1.5 transition-transform">
-                      Explore Institution <ArrowRight size={14} weight="bold" />
-                    </span>
-                  </div>
-                </div>
+          {loadingInstitutes ? (
+            <div className="py-20 flex flex-col items-center justify-center gap-3">
+              <div className="w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-mono text-slate-500">Loading registered institutions...</p>
+            </div>
+          ) : institutes.length === 0 ? (
+            <div className="rounded-3xl p-12 text-center bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 backdrop-blur-xl shadow-lg">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center mb-4">
+                <Buildings size={32} weight="duotone" />
               </div>
-            )}
-
-            {/* Grid with Real Logos, Crisp Photos, and Layered Tactile Cards */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {displayedGridInsts.map((inst) => (
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Institutions Registered Yet</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
+                EduHub is running on live, real database records. Submit an inquiry or register your educational institution to be showcased here.
+              </p>
+              <button
+                onClick={handleOpenGetStarted}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <Buildings size={16} weight="bold" />
+                <span>Register Your Institution</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+              {/* Featured Hero University Card */}
+              {featuredInst && (
                 <div
-                  key={inst.id}
-                  className="rounded-3xl overflow-hidden relative bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/70 dark:border-slate-800 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)] hover:shadow-[0_25px_50px_-12px_rgba(16,185,129,0.18)] hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
-                  onClick={() => navigate('/institute/' + inst.id)}
+                  className="lg:col-span-5 rounded-3xl overflow-hidden relative border border-slate-200/70 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl shadow-[0_10px_35px_-5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)] transition-all duration-300 hover:border-emerald-500/50 hover:shadow-[0_25px_50px_-12px_rgba(16,185,129,0.18)] hover:-translate-y-1 flex flex-col justify-between group cursor-pointer"
+                  onClick={() => navigate('/institute/' + (featuredInst.id || featuredInst._id))}
                 >
                   {/* Subtle crystal top sheen */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-emerald-500/[0.02] dark:from-white/[0.04] dark:via-transparent dark:to-emerald-500/[0.03] pointer-events-none z-10" />
 
-                  {/* Campus Image Banner with Frosted Rank Badge */}
-                  <div className="relative h-28 sm:h-32 w-full overflow-hidden shrink-0">
+                  {/* Hero Image Banner with Rank #01 Badge */}
+                  <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0">
                     <img
-                      src={inst.image}
-                      alt={inst.shortName}
+                      src={featuredInst.image || '/universities/nust.jpg'}
+                      alt={featuredInst.shortName || featuredInst.name}
                       onError={(e) => { e.currentTarget.src = '/universities/nust.jpg' }}
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       loading="eager"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
 
-                    {/* Monospace Editorial Rank Badge */}
-                    <div className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-md text-xs font-mono font-black tracking-wider shadow-md backdrop-blur-md bg-slate-950/70 text-white border border-white/20 flex items-center gap-1 z-20">
-                      <span className="text-emerald-400">#</span>{inst.rank < 10 ? '0' + inst.rank : inst.rank}
+                    {/* Clean Monospace Rank Pill */}
+                    <div className="absolute top-3.5 right-3.5 px-3 py-1 rounded-md bg-slate-950/70 backdrop-blur-md border border-white/20 text-white font-mono text-xs font-black tracking-wider flex items-center gap-1.5 shadow-lg z-20">
+                      <span className="text-emerald-400">#01</span>
+                      <span className="text-[10px] text-white/80 uppercase tracking-widest">Verified Institution</span>
                     </div>
                   </div>
 
-                  {/* Card Content */}
-                  <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 space-y-3 relative z-20">
-                    {/* Header with Real Official Logo and Bold Typography */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200/80 dark:border-slate-700/70 p-1.5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+                  {/* Card Details */}
+                  <div className="p-6 flex flex-col justify-between flex-1 space-y-4 relative z-20">
+                    {/* Real Logo & Big Typography */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200/80 dark:border-slate-700/70 p-2 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <img
-                          src={inst.logo}
-                          alt={inst.shortName}
+                          src={featuredInst.logo || '/brand/eduhub-logo.png'}
+                          alt={featuredInst.shortName || featuredInst.name}
                           onError={(e) => { e.currentTarget.src = '/brand/eduhub-logo.png' }}
                           className="w-full h-full object-contain"
                         />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xl font-black font-display text-slate-900 dark:text-white truncate leading-tight">
-                          {inst.shortName}
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                          {inst.fullName}
+                        <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-none">
+                          {featuredInst.shortName || featuredInst.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-1">
+                          {featuredInst.fullName || featuredInst.name}
                         </p>
                       </div>
                     </div>
 
-                    {/* Layered Location & Sector Pod */}
-                    <div className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 gap-2">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">{inst.address}</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-[140px] text-right">{inst.sector}</span>
+                    {/* Institutional Key Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 shadow-sm text-center">
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Affiliation</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate block">{featuredInst.board || 'HEC Accredited'}</span>
+                      </div>
+                      <div className="border-x border-slate-200/60 dark:border-slate-700/60">
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Campuses</span>
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm">{featuredInst.campusCount || 1} Campus{featuredInst.campusCount === 1 ? '' : 'es'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Students</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">{featuredInst.studentCount || 0} Scholars</span>
+                      </div>
                     </div>
 
-                    {/* Footer Row */}
-                    <div className="flex items-center justify-between pt-1 mt-auto">
-                      <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
-                        <Star size={14} weight="fill" />
-                        <span className="text-slate-900 dark:text-white font-extrabold text-sm">{inst.rating}</span>
-                        <span className="text-slate-400 font-normal text-[11px]">({inst.reviewsCount})</span>
+                    {/* High-Impact Metadata Pod */}
+                    <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-xs">
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">City</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate block">{featuredInst.city || 'Islamabad'}</span>
                       </div>
-                      <span className="inline-flex items-center gap-1 font-bold text-xs text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
-                        View Profile <ArrowRight size={13} weight="bold" />
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] block uppercase tracking-wider font-semibold">Classification</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs truncate block">{featuredInst.type}</span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Baseline Action Bar */}
+                    <div className="flex items-center justify-between pt-2 mt-auto">
+                      <div className="flex items-center gap-1.5 text-amber-500 font-bold text-sm">
+                        <Star size={16} weight="fill" />
+                        <span className="text-slate-900 dark:text-white font-black text-base">{featuredInst.rating || 4.9}</span>
+                        <span className="text-slate-400 font-normal text-xs">({featuredInst.reviewsCount || 'Verified'})</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 font-bold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1.5 transition-transform">
+                        Explore Institution <ArrowRight size={14} weight="bold" />
                       </span>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Grid with Real Logos, Crisp Photos, and Layered Tactile Cards */}
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {displayedGridInsts.map((inst, idx) => (
+                  <div
+                    key={inst.id || inst._id}
+                    className="rounded-3xl overflow-hidden relative bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/70 dark:border-slate-800 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)] hover:shadow-[0_25px_50px_-12px_rgba(16,185,129,0.18)] hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+                    onClick={() => navigate('/institute/' + (inst.id || inst._id))}
+                  >
+                    {/* Subtle crystal top sheen */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-emerald-500/[0.02] dark:from-white/[0.04] dark:via-transparent dark:to-emerald-500/[0.03] pointer-events-none z-10" />
+
+                    {/* Campus Image Banner with Frosted Rank Badge */}
+                    <div className="relative h-28 sm:h-32 w-full overflow-hidden shrink-0">
+                      <img
+                        src={inst.image || '/universities/nust.jpg'}
+                        alt={inst.shortName || inst.name}
+                        onError={(e) => { e.currentTarget.src = '/universities/nust.jpg' }}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        loading="eager"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+
+                      {/* Monospace Editorial Rank Badge */}
+                      <div className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-md text-xs font-mono font-black tracking-wider shadow-md backdrop-blur-md bg-slate-950/70 text-white border border-white/20 flex items-center gap-1 z-20">
+                        <span className="text-emerald-400">#</span>{(idx + 2) < 10 ? '0' + (idx + 2) : (idx + 2)}
+                      </div>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 space-y-3 relative z-20">
+                      {/* Header with Real Official Logo and Bold Typography */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200/80 dark:border-slate-700/70 p-1.5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+                          <img
+                            src={inst.logo || '/brand/eduhub-logo.png'}
+                            alt={inst.shortName || inst.name}
+                            onError={(e) => { e.currentTarget.src = '/brand/eduhub-logo.png' }}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xl font-black font-display text-slate-900 dark:text-white truncate leading-tight">
+                            {inst.shortName || inst.name}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                            {inst.fullName || inst.name}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Layered Location & Sector Pod */}
+                      <div className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 gap-2">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[130px]">{inst.city || 'Pakistan'}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-[140px] text-right">{inst.type} • {inst.campusCount || 1} Campus{inst.campusCount === 1 ? '' : 'es'}</span>
+                      </div>
+
+                      {/* Footer Row */}
+                      <div className="flex items-center justify-between pt-1 mt-auto">
+                        <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
+                          <Star size={14} weight="fill" />
+                          <span className="text-slate-900 dark:text-white font-extrabold text-sm">{inst.rating || 4.9}</span>
+                          <span className="text-slate-400 font-normal text-[11px]">({inst.reviewsCount || 'Verified'})</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 font-bold text-xs text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
+                          View Profile <ArrowRight size={13} weight="bold" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Bottom Expand Toggle Bar */}
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={() => setShowAllInstitutes(prev => !prev)}
-              className="px-6 py-3 rounded-2xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/50 text-xs sm:text-sm font-bold transition-all shadow-sm flex items-center gap-2.5 group cursor-pointer"
-            >
-              <Buildings size={17} weight="bold" className="text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
-              <span>
-                {showAllInstitutes 
-                  ? 'Collapse to Top 5 Institutions' 
-                  : 'View All 7 Verified Campuses (Includes AKU & NCA)'}
-              </span>
-              {showAllInstitutes ? <CaretUp size={15} weight="bold" /> : <CaretDown size={15} weight="bold" />}
-            </button>
-          </div>
+          {institutes.length > 5 && (
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => setShowAllInstitutes(prev => !prev)}
+                className="px-6 py-3 rounded-2xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/50 text-xs sm:text-sm font-bold transition-all shadow-sm flex items-center gap-2.5 group cursor-pointer"
+              >
+                <Buildings size={17} weight="bold" className="text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span>
+                  {showAllInstitutes 
+                    ? 'Collapse to Top 5 Institutions' 
+                    : `View All ${institutes.length} Registered Institutions`}
+                </span>
+                {showAllInstitutes ? <CaretUp size={15} weight="bold" /> : <CaretDown size={15} weight="bold" />}
+              </button>
+            </div>
+          )}
         </section>
 
         {/* ─── Upcoming Events (Interactive Layout) ─── */}

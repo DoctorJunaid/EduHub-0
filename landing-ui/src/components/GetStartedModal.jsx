@@ -9,7 +9,9 @@ import {
   Envelope, 
   User, 
   MapPin, 
-  Users 
+  Users,
+  WarningCircle,
+  SpinnerGap
 } from '@phosphor-icons/react'
 import { 
   Dialog, 
@@ -21,31 +23,94 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { getBackendApiUrl } from '@/config/urls'
+
+const INITIAL_FORM = {
+  instituteName: '',
+  instituteType: 'University',
+  city: 'Islamabad',
+  contactName: '',
+  email: '',
+  phone: '',
+  studentCount: '1000+'
+}
 
 export default function GetStartedModal({ isOpen, onClose }) {
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [formData, setFormData] = useState({
-    instituteName: '',
-    instituteType: 'University',
-    city: 'Islamabad',
-    contactName: '',
-    email: '',
-    phone: '',
-    studentCount: '1000+'
-  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [referenceId, setReferenceId] = useState(null)
+  const [formData, setFormData] = useState(INITIAL_FORM)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    if (errorMessage) setErrorMessage(null)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setIsSubmitted(true)
+    setErrorMessage(null)
+
+    if (!formData.instituteName.trim()) {
+      setErrorMessage("Please enter the name of your institution.")
+      return
+    }
+    if (!formData.contactName.trim()) {
+      setErrorMessage("Please enter the authorized contact person's name.")
+      return
+    }
+    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
+      setErrorMessage("Please enter a valid official email address.")
+      return
+    }
+    if (!formData.phone.trim()) {
+      setErrorMessage("Please enter a valid phone number.")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const apiUrl = getBackendApiUrl()
+      const response = await fetch(`${apiUrl}/inquiries`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: formData.contactName.trim(),
+          instituteName: formData.instituteName.trim(),
+          instituteType: formData.instituteType,
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+          city: formData.city,
+          studentCount: formData.studentCount,
+          message: `Digital Onboarding Lead from Landing Page. City: ${formData.city} | Approximate Students: ${formData.studentCount}`,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.errors?.[0] || "Failed to submit registration. Please try again.")
+      }
+
+      setReferenceId(data.data?._id || data.data?.id || `INQ-${Date.now().toString().slice(-6)}`)
+      setIsSubmitted(true)
+    } catch (err) {
+      console.error("Partner registration error:", err)
+      setErrorMessage(err.message || "Network error. Please verify backend connection.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleClose = () => {
     setIsSubmitted(false)
+    setIsSubmitting(false)
+    setErrorMessage(null)
+    setFormData(INITIAL_FORM)
     onClose()
   }
 
@@ -81,6 +146,13 @@ export default function GetStartedModal({ isOpen, onClose }) {
                     </DialogDescription>
                   </DialogHeader>
 
+                  {errorMessage && (
+                    <div className="p-3 mb-4 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+                      <WarningCircle size={18} className="shrink-0 text-red-500" weight="fill" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Institution Name */}
@@ -91,6 +163,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                         </label>
                         <Input
                           required
+                          disabled={isSubmitting}
                           name="instituteName"
                           placeholder="e.g. National University of Sciences & Tech"
                           value={formData.instituteName}
@@ -105,10 +178,11 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           Institution Type
                         </label>
                         <select
+                          disabled={isSubmitting}
                           name="instituteType"
                           value={formData.instituteType}
                           onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                         >
                           <option value="University">University</option>
                           <option value="College">College</option>
@@ -124,10 +198,11 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           Primary City
                         </label>
                         <select
+                          disabled={isSubmitting}
                           name="city"
                           value={formData.city}
                           onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                         >
                           <option value="Islamabad">Islamabad</option>
                           <option value="Lahore">Lahore</option>
@@ -148,6 +223,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                         </label>
                         <Input
                           required
+                          disabled={isSubmitting}
                           name="contactName"
                           placeholder="Dr. / Prof. / Mr. Name"
                           value={formData.contactName}
@@ -164,6 +240,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                         </label>
                         <Input
                           required
+                          disabled={isSubmitting}
                           type="email"
                           name="email"
                           placeholder="registrar@institution.edu.pk"
@@ -181,6 +258,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                         </label>
                         <Input
                           required
+                          disabled={isSubmitting}
                           type="tel"
                           name="phone"
                           placeholder="+92 300 1234567"
@@ -197,10 +275,11 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           Student Body Size
                         </label>
                         <select
+                          disabled={isSubmitting}
                           name="studentCount"
                           value={formData.studentCount}
                           onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                         >
                           <option value="100 - 500">100 - 500 Students</option>
                           <option value="500 - 2,000">500 - 2,000 Students</option>
@@ -211,12 +290,21 @@ export default function GetStartedModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="pt-4 flex items-center justify-end gap-3">
-                      <Button type="button" variant="ghost" onClick={handleClose}>
+                      <Button type="button" variant="ghost" disabled={isSubmitting} onClick={handleClose}>
                         Cancel
                       </Button>
-                      <Button type="submit" variant="glow" className="gap-2">
-                        <span>Submit Registration</span>
-                        <ArrowRight size={16} weight="bold" />
+                      <Button type="submit" variant="glow" disabled={isSubmitting} className="gap-2">
+                        {isSubmitting ? (
+                          <>
+                            <SpinnerGap size={16} className="animate-spin" />
+                            <span>Submitting Application...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Submit Registration</span>
+                            <ArrowRight size={16} weight="bold" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   </form>
@@ -235,6 +323,12 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   <h3 className="text-2xl font-bold font-display text-slate-900 dark:text-white">
                     Application Received!
                   </h3>
+                  {referenceId && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-semibold">
+                      <span>Docket Ref:</span>
+                      <span className="font-bold">{referenceId}</span>
+                    </div>
+                  )}
                   <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                     Thank you, <strong className="text-slate-800 dark:text-slate-200">{formData.contactName || 'Representative'}</strong>. 
                     Our institutional partnership team will review <strong className="text-slate-800 dark:text-slate-200">{formData.instituteName || 'your institution'}</strong> and connect with you at <strong className="text-emerald-600">{formData.email}</strong> within 24 business hours.
@@ -246,6 +340,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   </div>
                 </motion.div>
               )}
+
             </AnimatePresence>
           </div>
         </div>

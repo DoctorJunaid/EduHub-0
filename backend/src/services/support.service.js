@@ -7,6 +7,7 @@ import SupportTicket from "../models/supportTicket.model.js";
 import SupportMessage from "../models/supportMessage.model.js";
 import User from "../models/user.model.js";
 import generateTicketNumber from "../utils/ticketNumber.js";
+import { createNotification } from "./notification.service.js";
 import {
   normalizeRole,
   isAdminRole,
@@ -222,6 +223,26 @@ export const createTicket = async (user, payload) => {
     readBy: [{ userId: user._id, readAt: new Date() }],
   });
 
+  // Push & Email Notification to Assigned Staff / Admin
+  if (assignedUser && String(assignedUser._id) !== String(user._id)) {
+    createNotification({
+      userId: assignedUser._id,
+      title: `New Support Ticket #${ticketNumber}`,
+      message: `${user.name || "A user"} opened a ${priority} ticket: "${subject.trim()}".`,
+      type: "ticket_created",
+      severity: priority === "Urgent" || priority === "High" ? "high" : "info",
+      link: assignedUser.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+      ticketId: ticket._id,
+      metadata: {
+        ticketNumber,
+        category,
+        priority,
+        status: "Open",
+      },
+      sendEmail: true,
+    });
+  }
+
   return ticket;
 };
 
@@ -258,7 +279,6 @@ export const listTickets = async (user, filters = {}) => {
       $or: [
         { createdBy: user._id },
         { assignedTo: user._id },
-        { campusId: user.campusId, category: "Academic" },
       ],
     });
   } else {
@@ -473,6 +493,26 @@ export const assignTicket = async (user, ticketId, assigneeId) => {
     isInternal: true,
   });
 
+  // Push & Email Notification to Assignee
+  if (String(assignee._id) !== String(user._id)) {
+    createNotification({
+      userId: assignee._id,
+      title: `Ticket #${ticket.ticketNumber} Assigned to You`,
+      message: `${user.name} assigned ticket "${ticket.subject}" to you.`,
+      type: "ticket_assigned",
+      severity: ticket.priority === "Urgent" ? "critical" : "info",
+      link: assignee.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+      ticketId: ticket._id,
+      metadata: {
+        ticketNumber: ticket.ticketNumber,
+        category: ticket.category,
+        priority: ticket.priority,
+        status: ticket.status,
+      },
+      sendEmail: true,
+    });
+  }
+
   return ticket;
 };
 
@@ -525,6 +565,25 @@ export const changeStatus = async (user, ticketId, newStatus) => {
     message: `Status updated from "${oldStatus}" to "${newStatus}"`,
     isInternal: true,
   });
+
+  // Push & Email Notification to Ticket Creator
+  if (String(ticket.createdBy) !== String(user._id)) {
+    createNotification({
+      userId: ticket.createdBy,
+      title: `Ticket #${ticket.ticketNumber} Status: ${newStatus}`,
+      message: `Your support ticket has been marked as "${newStatus}" by ${user.name}.`,
+      type: "ticket_status",
+      severity: newStatus === "Resolved" || newStatus === "Closed" ? "success" : "info",
+      link: `/support/${ticket._id}`,
+      ticketId: ticket._id,
+      metadata: {
+        ticketNumber: ticket.ticketNumber,
+        category: ticket.category,
+        status: newStatus,
+      },
+      sendEmail: true,
+    });
+  }
 
   return ticket;
 };
@@ -603,6 +662,26 @@ export const escalateTicket = async (user, ticketId, reason = "") => {
     isInternal: true,
   });
 
+  // Push & Email Notification to New Escalation Assignee
+  if (newAssignee && String(newAssignee._id) !== String(user._id)) {
+    createNotification({
+      userId: newAssignee._id,
+      title: `🚨 Ticket #${ticket.ticketNumber} Escalated (Level ${nextLevel})`,
+      message: `${user.name} escalated ticket "${ticket.subject}". Reason: ${reason || "Immediate review required"}`,
+      type: "ticket_escalated",
+      severity: "critical",
+      link: newAssignee.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+      ticketId: ticket._id,
+      metadata: {
+        ticketNumber: ticket.ticketNumber,
+        category: ticket.category,
+        escalationLevel: nextLevel,
+        status: "Escalated",
+      },
+      sendEmail: true,
+    });
+  }
+
   return ticket;
 };
 
@@ -657,9 +736,11 @@ export const replyToTicket = async (user, ticketId, payload) => {
     readBy: [{ userId: user._id, readAt: new Date() }],
   });
 
+  const creatorId = String(ticket.createdBy?._id || ticket.createdBy);
+  const isCreator = creatorId === String(user._id);
+
   // Update firstResponseAt if staff replies to non-staff creator
   if (!effectiveInternal && isStaff && !ticket.firstResponseAt) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
     if (!isCreator) {
       ticket.firstResponseAt = new Date();
     }
@@ -667,16 +748,54 @@ export const replyToTicket = async (user, ticketId, payload) => {
 
   // Update status transitions on external replies
   if (!effectiveInternal) {
-    const isCreator = String(ticket.createdBy) === String(user._id);
     if (isCreator && ticket.status === "Resolved") {
       ticket.status = "In Progress";
-    } else if (!isCreator && (ticket.status === "Open" || ticket.status === "In Progress")) {
-      ticket.status = "Resolved";
+    } else if (!isCreator && ticket.status === "Open") {
+      ticket.status = "In Progress";
     }
   }
 
   ticket.lastActivityAt = new Date();
   await ticket.save();
+
+  // Push & Email Notifications for Replies (Non-Internal only)
+  if (!effectiveInternal) {
+    if (!isCreator) {
+      // Staff replied -> Notify creator
+      createNotification({
+        userId: creatorId,
+        title: `New Reply on Ticket #${ticket.ticketNumber}`,
+        message: `${user.name || "Support Staff"} replied: "${msgPreview}"`,
+        type: "ticket_reply",
+        severity: "info",
+        link: `/support/${ticket._id}`,
+        ticketId: ticket._id,
+        metadata: {
+          ticketNumber: ticket.ticketNumber,
+          category: ticket.category,
+          status: ticket.status,
+        },
+        sendEmail: true,
+      });
+    } else if (ticket.assignedTo && String(ticket.assignedTo) !== String(user._id)) {
+      // Creator replied -> Notify assigned staff/admin
+      createNotification({
+        userId: ticket.assignedTo,
+        title: `Customer Replied: Ticket #${ticket.ticketNumber}`,
+        message: `${user.name || "Customer"} replied: "${msgPreview}"`,
+        type: "ticket_reply",
+        severity: "info",
+        link: ticket.assignedToSnapshot?.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+        ticketId: ticket._id,
+        metadata: {
+          ticketNumber: ticket.ticketNumber,
+          category: ticket.category,
+          status: ticket.status,
+        },
+        sendEmail: true,
+      });
+    }
+  }
 
   return newMessage;
 };
@@ -714,6 +833,25 @@ export const closeTicket = async (user, ticketId) => {
     message: "✓ Conversation marked as resolved and closed.",
     isInternal: false,
   });
+
+  // Push & Email Notification to Creator on Close
+  if (String(ticket.createdBy) !== String(user._id)) {
+    createNotification({
+      userId: ticket.createdBy,
+      title: `Ticket #${ticket.ticketNumber} Closed`,
+      message: `Your conversation has been closed and resolved. Thank you for contacting EduHub Support.`,
+      type: "ticket_status",
+      severity: "success",
+      link: `/support/${ticket._id}`,
+      ticketId: ticket._id,
+      metadata: {
+        ticketNumber: ticket.ticketNumber,
+        category: ticket.category,
+        status: "Closed",
+      },
+      sendEmail: true,
+    });
+  }
 
   return ticket;
 };
@@ -774,7 +912,6 @@ export const getStats = async (user) => {
     query.$or = [
       { createdBy: user._id },
       { assignedTo: user._id },
-      { campusId: user.campusId, category: "Academic" },
     ];
   } else {
     query.createdBy = user._id;

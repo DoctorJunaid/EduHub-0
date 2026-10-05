@@ -9,7 +9,9 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -57,62 +59,23 @@ const Header = ({
   const focusProfile = useRef(false);
   const notificationRef = useRef(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  const navigate = useNavigate();
 
   const currentRole = user?.role || userRole;
 
-  useEffect(() => {
-    let active = true;
-    const loadAlerts = async () => {
-      try {
-        const token = localStorage.getItem("eduHubToken");
-        if (!token) return;
-
-        // Restrict institute alerts loading to institute_admin only (prevents redundant calls for super_admin)
-        if (currentRole !== "institute_admin") {
-          return;
-        }
-
-        const res = await axiosInstance.get("/institute-admin/alerts");
-        const list = res.data?.data || [];
-        if (active && Array.isArray(list) && list.length > 0) {
-          setNotifications(
-            list.map((item, idx) => ({
-              id: item._id || item.id || idx,
-              title: item.title || `${item.severity} Announcement`,
-              description: item.message,
-              time: item.createdAt
-                ? new Date(item.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "Recent",
-              unread: true,
-              type:
-                item.severity?.toLowerCase() === "critical"
-                  ? "warning"
-                  : item.severity?.toLowerCase() === "warning"
-                    ? "warning"
-                    : "info",
-            }))
-          );
-        }
-      } catch {
-        // Fallback gracefully if not logged in or unauthorized
-      }
-    };
-    loadAlerts();
-    return () => {
-      active = false;
-    };
-  }, [currentRole]);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    requestDesktopPermission,
+    pushPermission,
+  } = useNotifications();
 
   const institute = user?.role === "Institute Admin";
   const location = useLocation();
   const segments = location.pathname.split("/").filter(Boolean);
   const student = user?.role === "Student";
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -139,18 +102,14 @@ const Header = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleMarkAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, unread: false } : item
-      )
-    );
-  };
-
-  const handleMarkAllRead = () => {
-    setNotifications((prev) =>
-      prev.map((item) => ({ ...item, unread: false }))
-    );
+  const handleNotificationClick = async (item) => {
+    if (!item.isRead) {
+      await markAsRead(item._id);
+    }
+    setNotificationsOpen(false);
+    if (item.link) {
+      navigate(item.link);
+    }
   };
 
   const profileButton = (
@@ -305,15 +264,28 @@ const Header = ({
                     </span>
                   )}
                 </div>
-                {unreadCount > 0 && (
-                  <button
-                    type="button"
-                    className="notification-mark-read-btn"
-                    onClick={handleMarkAllRead}
-                  >
-                    Mark all read
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {pushPermission !== "granted" && pushPermission !== "unsupported" && (
+                    <button
+                      type="button"
+                      onClick={requestDesktopPermission}
+                      className="text-[11px] text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-1 font-medium bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded cursor-pointer"
+                      title="Enable Desktop Web Push Notifications"
+                    >
+                      <Bell size={11} />
+                      <span>Push</span>
+                    </button>
+                  )}
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      className="notification-mark-read-btn"
+                      onClick={() => markAllAsRead()}
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="notification-list">
@@ -323,51 +295,67 @@ const Header = ({
                     <p>No new notifications</p>
                   </div>
                 ) : (
-                  notifications.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`notification-item ${
-                        item.unread ? "unread" : ""
-                      }`}
-                      onClick={() => handleMarkAsRead(item.id)}
-                    >
-                      <div className={`notification-item-icon ${item.type}`}>
-                        {item.type === "info" && <Info size={14} />}
-                        {item.type === "success" && (
-                          <CheckCircle2 size={14} />
-                        )}
-                        {item.type === "warning" && (
-                          <AlertTriangle size={14} />
-                        )}
-                      </div>
-                      <div className="notification-item-content">
-                        <div className="notification-item-header">
-                          <span className="notification-item-title">
-                            {item.title}
-                          </span>
-                          <span className="notification-item-time">
-                            {item.time}
-                          </span>
+                  notifications.map((item) => {
+                    const isUnread = !item.isRead;
+                    const timeAgo = item.createdAt
+                      ? formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })
+                      : "Just now";
+                    const isCrit = item.severity === "critical" || item.severity === "high";
+
+                    return (
+                      <div
+                        key={item._id}
+                        className={`notification-item ${isUnread ? "unread" : ""}`}
+                        onClick={() => handleNotificationClick(item)}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <div className={`notification-item-icon ${isCrit ? "warning" : item.severity === "success" ? "success" : "info"}`}>
+                          {isCrit ? (
+                            <AlertTriangle size={14} />
+                          ) : item.type === "ticket_created" || item.type === "ticket_reply" ? (
+                            <Info size={14} />
+                          ) : (
+                            <CheckCircle2 size={14} />
+                          )}
                         </div>
-                        <p className="notification-item-desc">
-                          {item.description}
-                        </p>
+                        <div className="notification-item-content">
+                          <div className="notification-item-header">
+                            <span className="notification-item-title">
+                              {item.title}
+                            </span>
+                            <span className="notification-item-time">
+                              {timeAgo}
+                            </span>
+                          </div>
+                          <p className="notification-item-desc">
+                            {item.message}
+                          </p>
+                        </div>
+                        {isUnread && (
+                          <span className="notification-unread-dot" />
+                        )}
                       </div>
-                      {item.unread && (
-                        <span className="notification-unread-dot" />
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 
               <div className="notification-panel-footer">
                 <Link
-                  to={institute ? "/institute-admin/alerts" : "/messages"}
+                  to={
+                    currentRole === "super_admin"
+                      ? "/super-admin/broadcasts"
+                      : institute
+                      ? "/institute-admin/alerts"
+                      : "/support"
+                  }
                   className="notification-footer-link"
                   onClick={() => setNotificationsOpen(false)}
                 >
-                  View all broadcast alerts &rarr;
+                  {currentRole === "super_admin"
+                    ? "Manage Platform Broadcasts &rarr;"
+                    : "View all broadcast alerts &rarr;"}
                 </Link>
               </div>
             </div>

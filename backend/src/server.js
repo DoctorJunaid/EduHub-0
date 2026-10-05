@@ -6,7 +6,7 @@ import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import feeSchedulerService from "./services/feeScheduler.service.js";
-import { seedDefaultPlans } from "./services/planSeed.service.js";
+import { seedDefaultPlans, ensureSuperAdmin } from "./services/planSeed.service.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -17,6 +17,9 @@ const startServer = async () => {
 
     // 1.1 Seed default plans and verify tenant plan associations
     await seedDefaultPlans();
+
+    // 1.2 Guarantee initial Super Admin account exists for zero-config production start
+    await ensureSuperAdmin();
 
     // Initialize background fee automation
     feeSchedulerService.start();

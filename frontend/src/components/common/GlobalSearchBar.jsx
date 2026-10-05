@@ -12,7 +12,7 @@ import {
   CreditCard,
   Inbox,
   Bell,
-  LifeBuoy,
+  Headset,
   Settings,
   ArrowRight,
   Clock,
@@ -21,7 +21,7 @@ import {
   Book,
   Calendar,
   Award,
-  Sparkles,
+  Compass,
   LayoutDashboard,
   PlusCircle,
   FileText,
@@ -46,7 +46,8 @@ const ICON_MAP = {
   "credit-card": CreditCard,
   inbox: Inbox,
   bell: Bell,
-  "life-buoy": LifeBuoy,
+  headset: Headset,
+  "life-buoy": Headset,
   settings: Settings,
   "layout-dashboard": LayoutDashboard,
   "plus-circle": PlusCircle,
@@ -75,7 +76,7 @@ const STATIC_NAV_LINKS = [
   { title: "Fee Management", subtitle: "Challans and collections", url: "/fees", icon: "credit-card", category: "navigation", categoryLabel: "Pages & Navigation" },
   { title: "Teacher Assignments", subtitle: "Map teachers to classes", url: "/teacher-assignments", icon: "user-check", category: "navigation", categoryLabel: "Pages & Navigation" },
   { title: "Examinations & Schedules", subtitle: "Exams and date sheets", url: "/exams", icon: "file-text", category: "navigation", categoryLabel: "Pages & Navigation" },
-  { title: "Help & Support", subtitle: "Tickets and help desk", url: "/support", icon: "life-buoy", category: "navigation", categoryLabel: "Pages & Navigation" },
+  { title: "Help & Support", subtitle: "Tickets and help desk", url: "/support", icon: "headset", category: "navigation", categoryLabel: "Pages & Navigation" },
   { title: "Settings", subtitle: "System and profile preferences", url: "/settings", icon: "settings", category: "navigation", categoryLabel: "Pages & Navigation" },
 ];
 
@@ -620,7 +621,7 @@ export default function GlobalSearchBar({
                   <div className="global-search-group">
                     <div className="global-search-group-header">
                       <span className="group-title">
-                        <Sparkles size={13} /> Quick Navigation & Shortcuts
+                        <Compass size={13} /> Quick Navigation & Shortcuts
                       </span>
                     </div>
                     <div className="group-items">

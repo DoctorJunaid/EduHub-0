@@ -3,7 +3,6 @@ import {
   Database,
   ShieldCheck,
   RefreshCw,
-  Sparkles,
   AlertTriangle,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";

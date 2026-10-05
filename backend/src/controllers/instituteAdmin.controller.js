@@ -5,6 +5,7 @@
  */
 import asyncHandler from "../utils/asyncHandler.js";
 import instituteAdminService from "../services/instituteAdmin.service.js";
+import { logAuditEvent } from "../services/auditLog.service.js";
 
 // --- Analytics ---
 export const getStats = asyncHandler(async (req, res) => {
@@ -39,6 +40,17 @@ export const getCampuses = asyncHandler(async (req, res) => {
 
 export const createCampus = asyncHandler(async (req, res) => {
   const campus = await instituteAdminService.createCampus(req.instituteId, req.body);
+
+  await logAuditEvent(req, {
+    entityType: "Campus",
+    entityId: campus._id,
+    instituteId: req.instituteId,
+    campusId: campus._id,
+    action: "created",
+    changes: { after: { name: campus.name, code: campus.code, city: campus.city } },
+    reason: `Created branch campus "${campus.name}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Campus branch created successfully.",
@@ -61,6 +73,17 @@ export const updateCampus = asyncHandler(async (req, res) => {
     req.params.id,
     req.body
   );
+
+  await logAuditEvent(req, {
+    entityType: "Campus",
+    entityId: campus._id,
+    instituteId: req.instituteId,
+    campusId: campus._id,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Updated branch campus "${campus.name}"`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Campus updated successfully.",
@@ -70,6 +93,15 @@ export const updateCampus = asyncHandler(async (req, res) => {
 
 export const deleteCampus = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.deleteCampus(req.instituteId, req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "Campus",
+    entityId: req.params.id,
+    instituteId: req.instituteId,
+    action: "deleted",
+    reason: `Deleted branch campus ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -84,6 +116,15 @@ export const assignCampusManager = asyncHandler(async (req, res) => {
     req.body,
     clientOrigin
   );
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: result.manager?._id || req.params.id,
+    instituteId: req.instituteId,
+    action: "assigned",
+    reason: `Appointed campus manager for campus ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Campus Manager appointed successfully.",
@@ -162,6 +203,17 @@ export const getStaff = asyncHandler(async (req, res) => {
 
 export const createStaff = asyncHandler(async (req, res) => {
   const staff = await instituteAdminService.createStaff(req.instituteId, req.body);
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: staff._id,
+    instituteId: req.instituteId,
+    campusId: staff.campusId,
+    action: "created",
+    changes: { after: { name: staff.name, email: staff.email, role: staff.role } },
+    reason: `Added staff member ${staff.name} (${staff.role})`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Staff member created successfully.",
@@ -171,6 +223,15 @@ export const createStaff = asyncHandler(async (req, res) => {
 
 export const deleteStaff = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.deleteStaff(req.instituteId, req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: req.params.id,
+    instituteId: req.instituteId,
+    action: "deleted",
+    reason: `Removed staff member ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,

@@ -7,7 +7,7 @@ import {
   BookOpen,
   User,
   Building,
-  Sparkles,
+  Zap,
   GraduationCap,
   AlertCircle,
   FileClock,
@@ -236,7 +236,7 @@ export default function QuickExamModal({
         {/* 2. Quick Shift & Custom Time Presets */}
         <div className="qs-presets-bar">
           <span className="qs-presets-label">
-            <Sparkles size={12} style={{ color: "#f59e0b" }} />
+            <Zap size={12} style={{ color: "#f59e0b" }} />
             Presets:
           </span>
           {EXAM_SHIFT_PRESETS.map((p) => {

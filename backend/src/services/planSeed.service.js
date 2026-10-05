@@ -5,6 +5,29 @@
  */
 import Plan, { DEFAULT_PLANS } from "../models/plan.model.js";
 import Institute from "../models/institute.model.js";
+import User from "../models/user.model.js";
+
+export const ensureSuperAdmin = async () => {
+  try {
+    const existing = await User.countDocuments({ role: "super_admin" });
+    if (existing === 0) {
+      const email = (process.env.SUPER_ADMIN_EMAIL || "junaid.aurangzeb5@gmail.com").toLowerCase().trim();
+      const password = process.env.SUPER_ADMIN_PASSWORD || "SuperAdmin@123456";
+      const name = process.env.SUPER_ADMIN_NAME || "Super Admin";
+
+      await User.create({
+        name,
+        email,
+        passwordHash: password, // will be securely hashed by userSchema.pre('save')
+        role: "super_admin",
+        isActive: true,
+      });
+      console.log(`[SuperAdminBootstrap] Initial Super Admin provisioned successfully: ${email}`);
+    }
+  } catch (error) {
+    console.error("[SuperAdminBootstrap] Error provisioning initial Super Admin:", error.message);
+  }
+};
 
 export const seedDefaultPlans = async () => {
   try {

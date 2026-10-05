@@ -5,6 +5,14 @@ import {
   ArrowLeft,
   Plus,
   X,
+  Inbox,
+  Phone,
+  Mail,
+  ArrowRight,
+  CheckCircle2,
+  ExternalLink,
+  Clock,
+  RefreshCw,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -16,11 +24,20 @@ import {
   selectInstitutesStatus,
   addInstitute,
 } from "@/store/Slices/institutesSlice";
+import axiosInstance from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import InstituteForm from "../Institutes/InstituteForm";
 import ManageInstitute from "../Institutes/ManageInstitute";
 import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
+
+const INQUIRY_STATUS_CONFIG = {
+  New: { label: "New Lead", bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
+  Contacted: { label: "Contacted", bg: "#fefce8", color: "#ca8a04", border: "#fde047" },
+  Converted: { label: "Converted", bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" },
+  Archived: { label: "Archived", bg: "#f4f4f5", color: "#71717a", border: "#e4e4e7" },
+};
 
 function DashboardInstituteSkeletonRow() {
   return (
@@ -67,13 +84,61 @@ export default function SuperAdminDashboard() {
   );
   const [typeFilter, setTypeFilter] = useState("all");
   const [manageDrawerInstitute, setManageDrawerInstitute] = useState(null);
-  const [campusDrawerInstitute, setCampusDrawerInstitute] = useState(null);
-  const [studentsDrawerInstitute, setStudentsDrawerInstitute] = useState(null);
+
+  // Live Registration Inquiries from Landing Page
+  const [inquiries, setInquiries] = useState([]);
+  const [inquiriesLoading, setInquiriesLoading] = useState(true);
+  const [convertingId, setConvertingId] = useState(null);
+
+  const fetchInquiries = async () => {
+    try {
+      setInquiriesLoading(true);
+      const res = await axiosInstance.get("/super-admin/inquiries");
+      setInquiries(res.data?.data || []);
+    } catch (err) {
+      console.warn("Failed to load dashboard inquiries:", err.message);
+    } finally {
+      setInquiriesLoading(false);
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchGlobalStats());
     dispatch(fetchInstitutes());
+    fetchInquiries();
   }, [dispatch]);
+
+  const handleMarkContacted = async (id) => {
+    try {
+      await axiosInstance.patch(`/super-admin/inquiries/${id}/status`, { status: "Contacted" });
+      toast.success("Lead marked as Contacted");
+      setInquiries((prev) =>
+        prev.map((inq) => (inq._id === id ? { ...inq, status: "Contacted" } : inq))
+      );
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleConvertLead = async (inquiry) => {
+    if (!window.confirm(`Convert "${inquiry.instituteName}" to a registered institution on EduHub?`)) {
+      return;
+    }
+    setConvertingId(inquiry._id);
+    try {
+      await axiosInstance.post(`/super-admin/inquiries/${inquiry._id}/convert`);
+      toast.success(`Registered ${inquiry.instituteName} successfully!`);
+      setInquiries((prev) =>
+        prev.map((inq) => (inq._id === inquiry._id ? { ...inq, status: "Converted" } : inq))
+      );
+      dispatch(fetchInstitutes());
+      dispatch(fetchGlobalStats());
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to convert inquiry");
+    } finally {
+      setConvertingId(null);
+    }
+  };
 
   useEffect(() => {
     const onSearch = (event) => {
@@ -114,6 +179,8 @@ export default function SuperAdminDashboard() {
     navigate(`/super-admin/users?institute=${encodeURIComponent(institute.name || "")}`);
   };
 
+  const pendingLeadsCount = inquiries.filter((i) => i.status === "New").length;
+
   const statsArray = [
     {
       label: "Total Users",
@@ -132,6 +199,13 @@ export default function SuperAdminDashboard() {
       value: globalStats?.campuses?.total || 0,
       detail: "Branches globally",
       icon: MapPin,
+    },
+    {
+      label: "Landing Page Leads",
+      value: pendingLeadsCount,
+      detail: `${inquiries.length} total submissions`,
+      icon: Inbox,
+      highlight: pendingLeadsCount > 0,
     },
   ];
 
@@ -210,6 +284,149 @@ export default function SuperAdminDashboard() {
             })}
           </div>
 
+          {/* ── LANDING PAGE LEADS & INQUIRIES WIDGET ── */}
+          <section className="super-admin-inquiries-panel">
+            <div className="super-admin-panel-head">
+              <div className="super-admin-panel-titles">
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div className="super-admin-inquiry-icon" style={{ width: "28px", height: "28px", borderRadius: "6px" }}>
+                    <Inbox size={15} />
+                  </div>
+                  <h2 style={{ margin: 0 }}>Landing Page Inquiries & Registrations</h2>
+                </div>
+                <p>Live partner registrations submitted from the public landing page</p>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={fetchInquiries}
+                  className="super-admin-empty-action"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "32px", padding: "0 12px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#52525b", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
+                  title="Refresh leads"
+                >
+                  <RefreshCw size={12} className={inquiriesLoading ? "animate-spin" : ""} />
+                  Refresh
+                </button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate("/super-admin/inquiries")}
+                  className="gap-1.5"
+                >
+                  <span>View All Inquiries ({inquiries.length})</span>
+                  <ArrowRight size={14} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="super-admin-inquiry-list" style={{ marginTop: "16px" }}>
+              {inquiriesLoading ? (
+                <div style={{ padding: "20px 0", textAlign: "center" }}>
+                  <Spinner size={24} className="mx-auto text-emerald-600" />
+                  <p style={{ fontSize: "13px", color: "#71717a", marginTop: "8px" }}>Loading incoming inquiries...</p>
+                </div>
+              ) : inquiries.length === 0 ? (
+                <div className="super-admin-empty-state" style={{ padding: "24px 16px" }}>
+                  <div className="super-admin-empty-icon" aria-hidden="true">
+                    <Inbox size={24} />
+                  </div>
+                  <p className="super-admin-empty-title">No pending registration leads</p>
+                  <p className="super-admin-empty-desc">
+                    When prospective institutions submit the registration form on the public landing page, they will show up here instantly in real-time.
+                  </p>
+                </div>
+              ) : (
+                inquiries.slice(0, 5).map((inquiry) => {
+                  const cfg = INQUIRY_STATUS_CONFIG[inquiry.status] || INQUIRY_STATUS_CONFIG.New;
+                  const dateStr = inquiry.createdAt
+                    ? new Date(inquiry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                    : "Recently";
+
+                  return (
+                    <article className="super-admin-inquiry-row" key={inquiry._id}>
+                      <div className="super-admin-inquiry-main">
+                        <div className="super-admin-inquiry-icon">
+                          <Building2 size={20} />
+                        </div>
+                        <div className="super-admin-inquiry-info">
+                          <div className="super-admin-inquiry-title-row">
+                            <h3 className="super-admin-inquiry-inst-name">{inquiry.instituteName}</h3>
+                            <span className="super-admin-inquiry-type-tag">{inquiry.instituteType}</span>
+                            <span
+                              className="super-admin-inquiry-status-badge"
+                              style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
+                            >
+                              {cfg.label}
+                            </span>
+                          </div>
+
+                          <div className="super-admin-inquiry-rep">
+                            <span>Representative: <strong>{inquiry.fullName}</strong></span>
+                            {inquiry.createdAt && (
+                              <span style={{ color: "#a1a1aa", marginLeft: "10px", fontSize: "11px" }}>
+                                <Clock size={11} style={{ display: "inline", marginRight: "3px" }} />
+                                {dateStr}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="super-admin-inquiry-contacts">
+                            <a href={`mailto:${inquiry.email}`}>
+                              <Mail size={12} /> {inquiry.email}
+                            </a>
+                            <a href={`tel:${inquiry.phone}`}>
+                              <Phone size={12} /> {inquiry.phone}
+                            </a>
+                          </div>
+
+                          {inquiry.message && (
+                            <div className="super-admin-inquiry-note">
+                              {inquiry.message}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="super-admin-inquiry-side">
+                        {inquiry.status === "New" && (
+                          <button
+                            type="button"
+                            className="super-admin-inquiry-btn super-admin-inquiry-btn-contact"
+                            onClick={() => handleMarkContacted(inquiry._id)}
+                          >
+                            Mark Contacted
+                          </button>
+                        )}
+                        {inquiry.status !== "Converted" && (
+                          <button
+                            type="button"
+                            className="super-admin-inquiry-btn super-admin-inquiry-btn-convert"
+                            disabled={convertingId === inquiry._id}
+                            onClick={() => handleConvertLead(inquiry)}
+                          >
+                            {convertingId === inquiry._id ? (
+                              <Spinner className="size-3 text-white" />
+                            ) : (
+                              <Building2 size={13} />
+                            )}
+                            Convert to Institute
+                          </button>
+                        )}
+                        {inquiry.status === "Converted" && (
+                          <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <CheckCircle2 size={14} /> Registered
+                          </span>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          {/* ── REGISTERED INSTITUTES LIST ── */}
           <section className="super-admin-institutes-panel">
             <div className="super-admin-panel-head">
               <div className="super-admin-panel-titles">
@@ -366,111 +583,7 @@ export default function SuperAdminDashboard() {
           </section>
         </>
       )}
-
-      {campusDrawerInstitute && (
-        <div
-          className="super-admin-drawer-backdrop"
-          onClick={() => setCampusDrawerInstitute(null)}
-        >
-          <aside
-            className="super-admin-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="super-admin-drawer-head">
-              <div>
-                <span className="super-admin-drawer-kicker">Campuses</span>
-                <h3>{campusDrawerInstitute.name}</h3>
-              </div>
-              <button
-                className="super-admin-drawer-close"
-                onClick={() => setCampusDrawerInstitute(null)}
-                aria-label="Close campuses drawer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="super-admin-drawer-body">
-              {(
-                campusDrawerInstitute.campusesDetails ||
-                campusDrawerInstitute.campusDetails ||
-                []
-              ).map((campus, idx) => (
-                <div
-                  className="super-admin-drawer-row"
-                  key={`${campus.name}-${idx}`}
-                >
-                  <div className="super-admin-drawer-row-main">
-                    <span className="super-admin-drawer-campus-name">
-                      {campus.name}
-                    </span>
-                    <span className="super-admin-drawer-campus-location">
-                      {campus.location}
-                    </span>
-                  </div>
-                  <span
-                    className={`super-admin-drawer-campus-status ${campus.status?.toLowerCase() || "active"}`}
-                  >
-                    {campus.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </aside>
-        </div>
-      )}
-
-      {studentsDrawerInstitute && (
-        <div
-          className="super-admin-drawer-backdrop"
-          onClick={() => setStudentsDrawerInstitute(null)}
-        >
-          <aside
-            className="super-admin-student-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="super-admin-drawer-head">
-              <div>
-                <span className="super-admin-drawer-kicker">Students</span>
-                <h3>{studentsDrawerInstitute.name}</h3>
-              </div>
-              <button
-                className="super-admin-drawer-close"
-                onClick={() => setStudentsDrawerInstitute(null)}
-                aria-label="Close students drawer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="super-admin-drawer-body">
-              {(studentsDrawerInstitute.studentRecords || []).map(
-                (student, idx) => (
-                  <div
-                    className="super-admin-student-drawer-row"
-                    key={`${student.roll}-${idx}`}
-                  >
-                    <div className="super-admin-student-drawer-main">
-                      <span className="super-admin-student-name">
-                        {student.name}
-                      </span>
-                      <span className="super-admin-student-meta">
-                        {student.program} · {student.roll}
-                      </span>
-                      <span className="super-admin-student-campus">
-                        {student.campus}
-                      </span>
-                    </div>
-                    <span
-                      className={`super-admin-student-status ${student.status?.toLowerCase() || "active"}`}
-                    >
-                      {student.status}
-                    </span>
-                  </div>
-                ),
-              )}
-            </div>
-          </aside>
-        </div>
-      )}
     </section>
   );
 }
+

@@ -1,9 +1,11 @@
 /**
  * Super Admin Controller
  * Thin controller layer delegating all global administrative logic to superAdmin.service.
+ * Enforces real forensic platform audit logging across every administrative action.
  */
 import asyncHandler from "../utils/asyncHandler.js";
 import superAdminService from "../services/superAdmin.service.js";
+import { logAuditEvent } from "../services/auditLog.service.js";
 
 // --- Analytics ---
 export const getStats = asyncHandler(async (req, res) => {
@@ -28,13 +30,37 @@ export const getInstitutes = asyncHandler(async (req, res) => {
 
 export const createInstitute = asyncHandler(async (req, res) => {
   let adminData = req.body.admin;
-  if (typeof adminData === 'string') {
-    try { adminData = JSON.parse(adminData); } catch (e) { }
+  if (typeof adminData === "string") {
+    try {
+      adminData = JSON.parse(adminData);
+    } catch (e) {}
   }
   const instituteData = { ...req.body };
-  delete instituteData.admin;
+  const clientOrigin = req.headers.origin || req.headers.referer;
+  const institute = await superAdminService.createInstitute(
+    instituteData,
+    adminData,
+    req.file,
+    clientOrigin
+  );
 
-  const institute = await superAdminService.createInstitute(instituteData, adminData, req.file);
+  // Forensic Audit Log
+  await logAuditEvent(req, {
+    entityType: "Institute",
+    entityId: institute._id,
+    instituteId: institute._id,
+    action: "created",
+    changes: {
+      after: {
+        name: institute.name,
+        code: institute.code,
+        type: institute.type,
+        city: institute.city,
+      },
+    },
+    reason: `Registered new institution "${institute.name}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Institute registered successfully.",
@@ -52,7 +78,21 @@ export const getInstituteById = asyncHandler(async (req, res) => {
 });
 
 export const updateInstitute = asyncHandler(async (req, res) => {
-  const institute = await superAdminService.updateInstitute(req.params.id, req.body, req.file);
+  const institute = await superAdminService.updateInstitute(
+    req.params.id,
+    req.body,
+    req.file
+  );
+
+  await logAuditEvent(req, {
+    entityType: "Institute",
+    entityId: institute._id,
+    instituteId: institute._id,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Updated institution profile for "${institute.name}"`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Institute updated successfully.",
@@ -62,6 +102,15 @@ export const updateInstitute = asyncHandler(async (req, res) => {
 
 export const deleteInstitute = asyncHandler(async (req, res) => {
   const result = await superAdminService.deleteInstitute(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "Institute",
+    entityId: req.params.id,
+    instituteId: req.params.id,
+    action: "deleted",
+    reason: `Permanently deleted institution ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -70,7 +119,21 @@ export const deleteInstitute = asyncHandler(async (req, res) => {
 
 export const assignInstituteAdmin = asyncHandler(async (req, res) => {
   const clientOrigin = req.headers.origin || req.headers.referer;
-  const result = await superAdminService.assignInstituteAdmin(req.params.id, req.body, clientOrigin);
+  const result = await superAdminService.assignInstituteAdmin(
+    req.params.id,
+    req.body,
+    clientOrigin
+  );
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: result.admin?._id || req.params.id,
+    instituteId: req.params.id,
+    action: "assigned",
+    reason: `Assigned primary administrator for institution`,
+    metadata: { instituteId: req.params.id },
+  });
+
   res.status(200).json({
     success: true,
     message: "Institute Admin assigned successfully.",
@@ -80,7 +143,19 @@ export const assignInstituteAdmin = asyncHandler(async (req, res) => {
 
 export const resendInstituteAdminInvite = asyncHandler(async (req, res) => {
   const clientOrigin = req.headers.origin || req.headers.referer;
-  const result = await superAdminService.resendInstituteAdminInvite(req.params.id, clientOrigin);
+  const result = await superAdminService.resendInstituteAdminInvite(
+    req.params.id,
+    clientOrigin
+  );
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: req.params.id,
+    instituteId: req.params.id,
+    action: "updated",
+    reason: `Resent admin invitation email`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -93,6 +168,16 @@ export const updateInstituteAdmin = asyncHandler(async (req, res) => {
     req.params.id,
     req.body
   );
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: updatedAdmin._id,
+    instituteId: updatedAdmin.instituteId || req.params.id,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Updated administrator profile for ${updatedAdmin.name}`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Institute Admin details updated successfully.",
@@ -113,6 +198,16 @@ export const getInstituteAdmins = asyncHandler(async (req, res) => {
 
 export const createInstituteAdmin = asyncHandler(async (req, res) => {
   const admin = await superAdminService.createInstituteAdmin(req.body);
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: admin._id,
+    instituteId: admin.instituteId,
+    action: "created",
+    changes: { after: { name: admin.name, email: admin.email, role: admin.role } },
+    reason: `Created institute admin account for ${admin.name}`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Institute Admin created successfully.",
@@ -133,6 +228,17 @@ export const getCampuses = asyncHandler(async (req, res) => {
 
 export const createCampus = asyncHandler(async (req, res) => {
   const campus = await superAdminService.createCampus(req.body);
+
+  await logAuditEvent(req, {
+    entityType: "Campus",
+    entityId: campus._id,
+    campusId: campus._id,
+    instituteId: campus.instituteId,
+    action: "created",
+    changes: { after: { name: campus.name, code: campus.code, city: campus.city } },
+    reason: `Created campus "${campus.name}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Campus created successfully.",
@@ -142,6 +248,17 @@ export const createCampus = asyncHandler(async (req, res) => {
 
 export const updateCampus = asyncHandler(async (req, res) => {
   const campus = await superAdminService.updateCampus(req.params.id, req.body);
+
+  await logAuditEvent(req, {
+    entityType: "Campus",
+    entityId: campus._id,
+    campusId: campus._id,
+    instituteId: campus.instituteId,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Updated campus "${campus.name}"`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Campus updated successfully.",
@@ -151,6 +268,15 @@ export const updateCampus = asyncHandler(async (req, res) => {
 
 export const deleteCampus = asyncHandler(async (req, res) => {
   const result = await superAdminService.deleteCampus(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "Campus",
+    entityId: req.params.id,
+    campusId: req.params.id,
+    action: "deleted",
+    reason: `Deleted campus ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -181,6 +307,16 @@ export const getUsers = asyncHandler(async (req, res) => {
 
 export const toggleUserStatus = asyncHandler(async (req, res) => {
   const user = await superAdminService.toggleUserStatus(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: user._id,
+    instituteId: user.instituteId,
+    campusId: user.campusId,
+    action: user.isActive ? "activated" : "deactivated",
+    reason: `Changed user status to ${user.isActive ? "active" : "inactive"} for ${user.name}`,
+  });
+
   res.status(200).json({
     success: true,
     message: `User status changed to ${user.isActive ? "active" : "inactive"}.`,
@@ -200,6 +336,21 @@ export const getBroadcasts = asyncHandler(async (req, res) => {
 
 export const createBroadcast = asyncHandler(async (req, res) => {
   const broadcast = await superAdminService.createBroadcast(req.body, req.user._id);
+
+  await logAuditEvent(req, {
+    entityType: "GlobalBroadcast",
+    entityId: broadcast._id,
+    action: "broadcasted",
+    changes: {
+      after: {
+        title: broadcast.title,
+        priority: broadcast.priority,
+        targetAudience: broadcast.targetAudience,
+      },
+    },
+    reason: `Published platform broadcast alert: "${broadcast.title}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Broadcast published successfully.",
@@ -209,6 +360,14 @@ export const createBroadcast = asyncHandler(async (req, res) => {
 
 export const deleteBroadcast = asyncHandler(async (req, res) => {
   const result = await superAdminService.deleteBroadcast(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "GlobalBroadcast",
+    entityId: req.params.id,
+    action: "deleted",
+    reason: `Deleted platform broadcast ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -227,7 +386,19 @@ export const getInquiries = asyncHandler(async (req, res) => {
 });
 
 export const updateInquiryStatus = asyncHandler(async (req, res) => {
-  const inquiry = await superAdminService.updateInquiryStatus(req.params.id, req.body.status);
+  const inquiry = await superAdminService.updateInquiryStatus(
+    req.params.id,
+    req.body.status
+  );
+
+  await logAuditEvent(req, {
+    entityType: "Inquiry",
+    entityId: inquiry._id,
+    action: "updated",
+    changes: { after: { status: inquiry.status } },
+    reason: `Updated prospective partner lead status to ${inquiry.status}`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Inquiry status updated successfully.",
@@ -237,6 +408,15 @@ export const updateInquiryStatus = asyncHandler(async (req, res) => {
 
 export const convertInquiry = asyncHandler(async (req, res) => {
   const result = await superAdminService.convertInquiryToInstitute(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "Inquiry",
+    entityId: req.params.id,
+    instituteId: result.institute?._id,
+    action: "converted",
+    reason: `Converted prospective lead to registered institution "${result.institute?.name}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Inquiry converted to registered institute successfully!",
@@ -270,6 +450,22 @@ export const getPlans = asyncHandler(async (req, res) => {
 
 export const createPlan = asyncHandler(async (req, res) => {
   const plan = await superAdminService.createPlan(req.body);
+
+  await logAuditEvent(req, {
+    entityType: "Plan",
+    entityId: plan._id,
+    action: "created",
+    changes: {
+      after: {
+        tier: plan.tier,
+        name: plan.name,
+        priceMonthly: plan.priceMonthly,
+        maxStudents: plan.maxStudents,
+      },
+    },
+    reason: `Configured new SaaS subscription plan "${plan.name}" (${plan.tier})`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Plan created successfully.",
@@ -288,6 +484,15 @@ export const getPlanById = asyncHandler(async (req, res) => {
 
 export const updatePlan = asyncHandler(async (req, res) => {
   const plan = await superAdminService.updatePlan(req.params.id, req.body);
+
+  await logAuditEvent(req, {
+    entityType: "Plan",
+    entityId: plan._id,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Updated configuration for subscription plan "${plan.name}"`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Plan updated successfully.",
@@ -297,6 +502,14 @@ export const updatePlan = asyncHandler(async (req, res) => {
 
 export const togglePlanStatus = asyncHandler(async (req, res) => {
   const plan = await superAdminService.togglePlanStatus(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "Plan",
+    entityId: plan._id,
+    action: plan.isActive ? "activated" : "deactivated",
+    reason: `Changed plan "${plan.name}" status to ${plan.isActive ? "active" : "inactive"}`,
+  });
+
   res.status(200).json({
     success: true,
     message: `Plan ${plan.isActive ? "activated" : "deactivated"} successfully.`,
@@ -306,6 +519,14 @@ export const togglePlanStatus = asyncHandler(async (req, res) => {
 
 export const deletePlan = asyncHandler(async (req, res) => {
   const result = await superAdminService.deletePlan(req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "Plan",
+    entityId: req.params.id,
+    action: "deleted",
+    reason: `Deleted SaaS subscription plan ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -329,6 +550,16 @@ export const assignSubscription = asyncHandler(async (req, res) => {
     req.body,
     req.user
   );
+
+  await logAuditEvent(req, {
+    entityType: "Subscription",
+    entityId: result.institute?._id || req.body.instituteId,
+    instituteId: req.body.instituteId,
+    action: "assigned",
+    changes: { after: req.body },
+    reason: `Assigned subscription tier for institute`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Subscription successfully assigned to institution.",
@@ -342,6 +573,16 @@ export const updateSubscriptionStatus = asyncHandler(async (req, res) => {
     req.body,
     req.user
   );
+
+  await logAuditEvent(req, {
+    entityType: "Subscription",
+    entityId: req.params.instituteId,
+    instituteId: req.params.instituteId,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Subscription status updated for institute`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Subscription status updated successfully.",
@@ -355,6 +596,16 @@ export const extendSubscription = asyncHandler(async (req, res) => {
     req.body,
     req.user
   );
+
+  await logAuditEvent(req, {
+    entityType: "Subscription",
+    entityId: req.params.instituteId,
+    instituteId: req.params.instituteId,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Extended subscription validity for institute`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Subscription extended successfully.",
@@ -363,7 +614,9 @@ export const extendSubscription = asyncHandler(async (req, res) => {
 });
 
 export const getSubscriptionHistory = asyncHandler(async (req, res) => {
-  const result = await superAdminService.getSubscriptionHistory(req.params.instituteId);
+  const result = await superAdminService.getSubscriptionHistory(
+    req.params.instituteId
+  );
   res.status(200).json({
     success: true,
     message: "Subscription history retrieved successfully.",
@@ -379,6 +632,8 @@ export default {
   updateInstitute,
   deleteInstitute,
   assignInstituteAdmin,
+  resendInstituteAdminInvite,
+  updateInstituteAdmin,
   getInstituteAdmins,
   createInstituteAdmin,
   getCampuses,

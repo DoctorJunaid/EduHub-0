@@ -71,6 +71,9 @@ import supportRoutes from "./support.routes.js";
 router.use("/support", supportRoutes);
 router.use("/messages", supportRoutes);
 
+import notificationRoutes from "./notification.routes.js";
+router.use("/notifications", notificationRoutes);
+
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);
 

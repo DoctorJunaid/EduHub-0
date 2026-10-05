@@ -51,3 +51,27 @@ export const sendVerificationMail = async (senderMail, subject, Message, verific
 
   return info.messageId;
 };
+
+/**
+ * Send generic notification or ticket update email
+ * Non-blocking, safe execution.
+ */
+export const sendNotificationEmail = async ({ to, subject, html, text }) => {
+  if (!to) return null;
+  try {
+    console.log(`[EMAIL DISPATCH] Sending notification email to "${to}" -> "${subject}"`);
+    const info = await transporter.sendMail({
+      from: MAIL_FROM,
+      to,
+      subject,
+      text: text || subject,
+      html,
+    });
+    console.log(`[EMAIL SUCCESS] Notification email sent to "${to}". MessageId: ${info.messageId}`);
+    return info.messageId;
+  } catch (err) {
+    console.warn(`[EMAIL WARNING] Failed to send notification email to "${to}":`, err.message || err);
+    return null;
+  }
+};
+

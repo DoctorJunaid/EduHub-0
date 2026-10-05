@@ -5,6 +5,7 @@
  */
 import asyncHandler from "../utils/asyncHandler.js";
 import authService from "../services/auth.service.js";
+import { logAuditEvent } from "../services/auditLog.service.js";
 
 /**
  * @desc    Public student self-registration
@@ -13,6 +14,17 @@ import authService from "../services/auth.service.js";
  */
 export const register = asyncHandler(async (req, res) => {
   const result = await authService.registerUser(req.body);
+
+  if (result?.user) {
+    await logAuditEvent(req, {
+      entityType: "User",
+      entityId: result.user._id,
+      instituteId: result.user.instituteId,
+      campusId: result.user.campusId,
+      action: "created",
+      reason: `New student registration: ${result.user.name} (${result.user.email})`,
+    });
+  }
 
   res.status(201).json({
     success: true,
@@ -43,6 +55,17 @@ export const login = asyncHandler(async (req, res) => {
  */
 export const setPassword = asyncHandler(async (req, res) => {
   const result = await authService.setPassword(req.body);
+
+  if (result?.user) {
+    await logAuditEvent(req, {
+      entityType: "User",
+      entityId: result.user._id,
+      instituteId: result.user.instituteId,
+      campusId: result.user.campusId,
+      action: "updated",
+      reason: `Password configured via verification link for ${result.user.name}`,
+    });
+  }
 
   res.status(200).json({
     success: true,

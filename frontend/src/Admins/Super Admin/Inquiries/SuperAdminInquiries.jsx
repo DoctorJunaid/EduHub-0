@@ -5,7 +5,7 @@ import {
   Phone,
   Mail,
   Calendar,
-  Sparkles,
+  Building2,
   Search,
   RefreshCw,
   AlertTriangle,
@@ -356,7 +356,7 @@ export default function SuperAdminInquiries() {
                         {isConverting ? (
                           <Spinner className="size-3.5" />
                         ) : (
-                          <Sparkles size={13} />
+                          <Building2 size={13} />
                         )}
                         <span>Convert to Institute</span>
                       </button>

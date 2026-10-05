@@ -43,6 +43,7 @@ import InstituteDetails from "./Admins/Super Admin/Institutes/InstituteDetails";
 import PlansManagement from "./Admins/Super Admin/Plans/PlansManagement";
 import SubscriptionsManagement from "./Admins/Super Admin/Subscriptions/SubscriptionsManagement";
 import InstituteSubscription from "./Admins/Institute Admin/Subscription/InstituteSubscription";
+import AuditLogs from "./Admins/Super Admin/AuditLogs/AuditLogs";
 import { ADMIN_NAV } from "./constants/navigation";
 import {
   StudentLayout,
@@ -285,6 +286,7 @@ const App = () => {
               path="super-admin/broadcasts"
               element={<SuperAdminBroadcasts />}
             />
+            <Route path="super-admin/audit-logs" element={<AuditLogs />} />
             <Route path="super-admin/support" element={<SupportManage />} />
             <Route path="super-admin/support/:id" element={<SupportTicketDetail />} />
             <Route path="super-admin/messages" element={<SupportManage />} />

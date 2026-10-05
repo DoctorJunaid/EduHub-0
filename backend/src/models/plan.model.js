@@ -1,24 +1,9 @@
 /**
  * SaaS Subscription Plan Model
  * Defines configurable tiered plans, operational quotas (campuses, students, staff),
- * trial settings, and feature flags. Managed completely by Super Admin.
+ * and trial settings. Managed completely by Super Admin.
  */
 import mongoose from "mongoose";
-
-export const AVAILABLE_FEATURES = [
-  { key: "single_campus", label: "Single Branch Operations", category: "Core", description: "Operate a single campus branch" },
-  { key: "multi_campus", label: "Multi-Campus Governance", category: "Core", description: "Manage multiple connected campuses with cross-branch reporting" },
-  { key: "basic_attendance", label: "Student & Faculty Attendance", category: "Academic", description: "QR code, manual, and daily attendance logging" },
-  { key: "gradebook", label: "Examinations & Grading", category: "Academic", description: "Exam creation, marks distribution, and gradebook management" },
-  { key: "daily_diary", label: "Daily Diary & Homework", category: "Academic", description: "Teacher daily diary notes, assignments, and parent announcements" },
-  { key: "advanced_fees", label: "Automated Fee Invoicing", category: "Finance", description: "Automatic monthly fee scheduling, vouchers, and collection tracking" },
-  { key: "salary_payroll", label: "Salary & Payroll Policies", category: "Finance", description: "Staff salary structures, deductions, and payroll management" },
-  { key: "broadcast_alerts", label: "Platform Broadcast Alerts", category: "Communication", description: "Send emergency and general notices to all branches, faculty, and students" },
-  { key: "standard_support", label: "Standard Support", category: "Support", description: "Ticketing system and standard business-hours support" },
-  { key: "priority_support", label: "Priority 24/7 Support", category: "Support", description: "Priority resolution SLA and dedicated response channels" },
-  { key: "custom_branding", label: "Custom Institution Identity", category: "Enterprise", description: "Custom badges, institute watermarks, and white-labeled headers" },
-  { key: "audit_compliance", label: "Audit & Compliance Logs", category: "Enterprise", description: "Deep forensic audit logging of all administrative actions" },
-];
 
 const planSchema = new mongoose.Schema(
   {
