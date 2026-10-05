@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState, useId } from "react";
+import React, { useState, useId } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Award,
   CheckCircle2,
@@ -20,6 +21,8 @@ import {
   requestDispute,
 } from "@/api/classSession.api";
 import { dateKey } from "@/lib/dates";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,72 +38,87 @@ import "./TeacherClassCredits.css";
 const formatPKR = (amt) => `PKR ${Number(amt || 0).toLocaleString("en-PK")}`;
 
 export default function TeacherClassCredits() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("today");
-  const [sessions, setSessions] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState("");
 
   // Filters
   const currentMonthStr = dateKey(new Date()).slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [statusFilter, setStatusFilter] = useState("All");
 
   // Dispute Dialog State
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [activeDisputeSession, setActiveDisputeSession] = useState(null);
   const [disputeReason, setDisputeReason] = useState("");
-  const [submittingDispute, setSubmittingDispute] = useState(false);
 
   const disputeTextareaId = useId();
 
-  const loadData = useCallback(async (showToast = false) => {
-    try {
-      if (showToast) setRefreshing(true);
-      else setLoading(true);
-      setLoadError("");
-
-      const [sessRes, sumRes] = await Promise.all([
-        getMySessions(
-          activeTab === "today"
-            ? { date: dateKey(new Date()) }
-            : { month: selectedMonth },
-        ),
-        getMySummary({ month: selectedMonth }),
-      ]);
-
-      if (sessRes.data?.success) setSessions(sessRes.data.data || []);
-      if (sumRes.data?.success) setSummary(sumRes.data.data || null);
-
-      if (showToast) toast.success("Teaching sessions synchronized.");
-    } catch (err) {
-      const message = err.response?.data?.message || "Failed to load teaching records.";
-      setLoadError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [activeTab, selectedMonth]);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
-
-  const handleMarkStatus = async (sessionId, status) => {
-    try {
-      const res = await markSessionStatus(sessionId, { status });
-      if (res.data?.success) {
-        toast.success(res.data.message || `Class marked as ${status}`);
-        loadData();
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to update class status.",
+  // 1. Sessions Query
+  const sessionsQuery = useQuery({
+    queryKey: qk.teacherSessions({
+      tab: activeTab,
+      month: selectedMonth,
+      date: activeTab === "today" ? dateKey(new Date()) : undefined,
+    }),
+    queryFn: async () => {
+      const res = await getMySessions(
+        activeTab === "today"
+          ? { date: dateKey(new Date()) }
+          : { month: selectedMonth },
       );
-    }
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 2. Summary Query
+  const summaryQuery = useQuery({
+    queryKey: qk.teacherSummary({ month: selectedMonth }),
+    queryFn: async () => {
+      const res = await getMySummary({ month: selectedMonth });
+      return res.data?.data || null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 3. Mark Status Mutation
+  const statusMutation = useMutation({
+    mutationFn: ({ sessionId, status }) => markSessionStatus(sessionId, { status }),
+    onSuccess: (res, vars) => {
+      toast.success(res.data?.message || `Class marked as ${vars.status}`);
+      queryClient.invalidateQueries({ queryKey: ["teacher", "sessions"] });
+      queryClient.invalidateQueries({ queryKey: qk.teacherSummary({ month: selectedMonth }) });
+      queryClient.invalidateQueries({ queryKey: qk.teacherTodayClasses() });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to update class status.");
+    },
+  });
+
+  // 4. Dispute Mutation
+  const disputeMutation = useMutation({
+    mutationFn: ({ sessionId, reason }) => requestDispute(sessionId, { reason }),
+    onSuccess: () => {
+      toast.success("Review request submitted to Campus Manager.");
+      setDisputeOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["teacher", "sessions"] });
+      queryClient.invalidateQueries({ queryKey: qk.teacherSummary({ month: selectedMonth }) });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to submit dispute.");
+    },
+  });
+
+  const sessions = sessionsQuery.data || [];
+  const summary = summaryQuery.data;
+  const loading = sessionsQuery.isLoading;
+  const isRefreshing = sessionsQuery.isFetching && !sessionsQuery.isLoading;
+  const loadError = sessionsQuery.error?.response?.data?.message || (sessionsQuery.error ? "Failed to load teaching records." : "");
+
+  const handleMarkStatus = (sessionId, status) => {
+    statusMutation.mutate({ sessionId, status });
   };
 
   const handleOpenDispute = (session) => {
@@ -109,29 +127,20 @@ export default function TeacherClassCredits() {
     setDisputeOpen(true);
   };
 
-  const handleSubmitDispute = async (e) => {
+  const handleSubmitDispute = (e) => {
     e.preventDefault();
     if (!disputeReason.trim()) {
       toast.error("Please enter a justification for review.");
       return;
     }
-
-    try {
-      setSubmittingDispute(true);
-      const res = await requestDispute(activeDisputeSession._id, {
-        reason: disputeReason,
-      });
-      if (res.data?.success) {
-        toast.success("Review request submitted to Campus Manager.");
-        setDisputeOpen(false);
-        loadData();
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to submit dispute.");
-    } finally {
-      setSubmittingDispute(false);
-    }
+    if (!activeDisputeSession?._id) return;
+    disputeMutation.mutate({
+      sessionId: activeDisputeSession._id,
+      reason: disputeReason,
+    });
   };
+
+  const submittingDispute = disputeMutation.isPending;
 
   const getStatusBadge = (session) => {
     const status = session.status;
@@ -194,7 +203,7 @@ export default function TeacherClassCredits() {
     const matchesSearch =
       `${s.subject || ""} ${s.className || ""} ${s.section || ""} ${s.room || ""}`
         .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        .includes(debouncedSearchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === "All" ? true : s.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -216,11 +225,15 @@ export default function TeacherClassCredits() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadData(true)}
-            disabled={refreshing}
+            onClick={() => {
+              sessionsQuery.refetch();
+              summaryQuery.refetch();
+              toast.success("Teaching sessions synchronized.");
+            }}
+            disabled={isRefreshing}
             className="teacher-credits-sync toolbar-btn-outline flex items-center gap-1.5"
           >
-            {refreshing ? (
+            {isRefreshing ? (
               <Spinner className="size-3.5" />
             ) : (
               <RefreshCw size={14} />
@@ -611,8 +624,9 @@ export default function TeacherClassCredits() {
               <Button
                 type="submit"
                 disabled={submittingDispute}
-                className="toolbar-btn toolbar-btn-primary"
+                className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
               >
+                {submittingDispute && <Spinner className="size-4 mr-1 text-white" />}
                 {submittingDispute ? "Submitting..." : "Submit Review Request"}
               </Button>
             </DialogFooter>

@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ClipboardCheck, Clock3, FileText, MoreVertical, Search } from "lucide-react";
 import {
   selectAssignedTeacherClasses,
   selectTeacherIdentity,
 } from "./teacherScope";
+import { getTeacherClasses } from "@/api/assignment.api";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import { dayLabel, timeLabel, weekdays } from "@/lib/schedule";
 import TeacherPagination from "./TeacherPagination";
 import { Button } from "@/components/ui/button";
+import { SpinnerCustom } from "@/components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,15 +40,26 @@ const daysFor = (days = []) =>
     .filter((day) => day > 0);
 
 export default function MyClasses() {
-  const records = useSelector(selectAssignedTeacherClasses);
+  const reduxClasses = useSelector(selectAssignedTeacherClasses);
   const teacher = useSelector(selectTeacherIdentity);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300);
   const [subject, setSubject] = useState("");
   const [room, setRoom] = useState("");
   const [day, setDay] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 8;
-  const classes = records;
+
+  const { data: liveClasses = [], isLoading } = useQuery({
+    queryKey: qk.teacherClasses(),
+    queryFn: async () => {
+      const res = await getTeacherClasses();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const classes = liveClasses.length > 0 ? liveClasses : reduxClasses;
   const subjects = [
     ...new Set(
       classes
@@ -75,7 +91,7 @@ export default function MyClasses() {
       .join(" ")
       .toLowerCase();
     return (
-      (!query || text.includes(query.toLowerCase())) &&
+      (!debouncedQuery || text.includes(debouncedQuery.toLowerCase())) &&
       (!subject ||
         value(record, "subject", "title", "periodName") === subject) &&
       (!room || value(record, "room", "roomNumber") === room) &&

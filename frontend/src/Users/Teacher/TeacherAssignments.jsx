@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useState, useId } from "react";
-import { useDispatch, useSelector } from "react-redux";
+
+import React, { useState, useId, useMemo, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
   MoreVertical,
@@ -28,6 +30,8 @@ import {
   gradeSubmission,
 } from "@/api/assignment.api";
 import { selectTeacherIdentity } from "./teacherScope";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import TeacherConfirmDialog from "./TeacherConfirmDialog";
 import TeacherPagination from "./TeacherPagination";
 import { dateKey, validDate } from "@/lib/dates";
@@ -64,23 +68,17 @@ const formatDate = (value) =>
 
 export default function TeacherAssignments() {
   const [params] = useSearchParams();
+  const queryClient = useQueryClient();
   const teacher = useSelector(selectTeacherIdentity);
 
-  // Live Backend State
-  const [classes, setClasses] = useState([]);
-  const [assignments, setAssignments] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
-
-  const [loading, setLoading] = useState(true);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
 
   // Filters & Search
   const [selectedClassFilter, setSelectedClassFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [submissionQuery, setSubmissionQuery] = useState("");
+  const debouncedSubmissionQuery = useDebounce(submissionQuery, 300);
   const [submissionStatusFilter, setSubmissionStatusFilter] = useState("All");
 
   // Pagination
@@ -93,154 +91,93 @@ export default function TeacherAssignments() {
   const [formClassChoice, setFormClassChoice] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [gradingTarget, setGradingTarget] = useState(null); // { submission, assignment }
-  const [submittingGrade, setSubmittingGrade] = useState(false);
-  const [savingAssignment, setSavingAssignment] = useState(false);
 
   const feedbackTextareaId = useId();
 
-  // 1. Fetch Teacher Classes & Assignments from Backend
-  const loadData = useCallback(async (showToast = false) => {
-    try {
-      if (showToast) setRefreshing(true);
-      else setLoading(true);
-      setLoadError("");
+  // 1. Classes Query
+  const classesQuery = useQuery({
+    queryKey: qk.teacherClasses(),
+    queryFn: async () => {
+      const res = await getTeacherClasses();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const [classesRes, assignmentsRes] = await Promise.all([
-        getTeacherClasses(),
-        getTeacherAssignments(),
-      ]);
+  // 2. Assignments Query
+  const assignmentsQuery = useQuery({
+    queryKey: qk.teacherAssignments(),
+    queryFn: async () => {
+      const res = await getTeacherAssignments();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const loadedClasses = classesRes.data?.data || [];
-      const loadedAssignments = assignmentsRes.data?.data || [];
+  const classes = classesQuery.data || [];
+  const assignments = assignmentsQuery.data || [];
 
-      setClasses(loadedClasses);
-      setAssignments(loadedAssignments);
-
-      // Auto-select first assignment or requested from URL
-      const requestedSubId = params.get("submissionId");
-      if (loadedAssignments.length > 0) {
-        setSelectedAssignment((prev) => {
-          if (prev) {
-            const stillExists = loadedAssignments.find(
-              (a) => a._id === prev._id || a.id === prev.id
-            );
-            return stillExists || loadedAssignments[0];
-          }
-          return loadedAssignments[0];
-        });
-      } else {
-        setSelectedAssignment(null);
-      }
-
-      if (showToast) toast.success("Assignments synchronized.");
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || "Failed to load teacher assignments.";
-      setLoadError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [params]);
-
+  // Sync selected assignment
   useEffect(() => {
-    void loadData();
-  }, [loadData]);
-
-  // 2. Fetch Submissions whenever Selected Assignment Changes
-  const loadSubmissions = useCallback(async (assignmentId) => {
-    if (!assignmentId) {
-      setSubmissions([]);
-      return;
-    }
-    try {
-      setLoadingSubmissions(true);
-      const res = await getAssignmentSubmissions(assignmentId);
-      if (res.data?.success) {
-        setSubmissions(res.data.data?.submissions || []);
+    if (assignments.length > 0) {
+      if (!selectedAssignmentId || !assignments.some((a) => (a._id || a.id) === selectedAssignmentId)) {
+        const requestedSubId = params.get("submissionId");
+        const found = requestedSubId
+          ? assignments.find((a) => (a.submissions || []).some((s) => (s._id || s.id) === requestedSubId))
+          : null;
+        setSelectedAssignmentId(found ? (found._id || found.id) : (assignments[0]._id || assignments[0].id));
       }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to load assignment submissions."
-      );
-    } finally {
-      setLoadingSubmissions(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedAssignment?._id || selectedAssignment?.id) {
-      const aId = selectedAssignment._id || selectedAssignment.id;
-      void loadSubmissions(aId);
     } else {
-      setSubmissions([]);
+      setSelectedAssignmentId(null);
     }
-  }, [selectedAssignment, loadSubmissions]);
+  }, [assignments, selectedAssignmentId, params]);
 
-  // Filtered Assignments
-  const filteredAssignments = assignments.filter((a) => {
-    const matchesClass =
-      selectedClassFilter === "All"
-        ? true
-        : a.classId === selectedClassFilter ||
-          `${a.className} - ${a.section}` === selectedClassFilter;
-    const matchesSearch =
-      `${a.title || ""} ${a.subject || ""} ${a.className || ""} ${a.section || ""}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-    return matchesClass && matchesSearch;
+  const selectedAssignment = useMemo(() => {
+    return assignments.find((a) => (a._id || a.id) === selectedAssignmentId) || assignments[0] || null;
+  }, [assignments, selectedAssignmentId]);
+
+  // 3. Submissions Query for Selected Assignment
+  const activeAssignmentId = selectedAssignment?._id || selectedAssignment?.id;
+  const submissionsQuery = useQuery({
+    queryKey: qk.teacherAssignmentSubmissions(activeAssignmentId),
+    queryFn: async () => {
+      if (!activeAssignmentId) return [];
+      const res = await getAssignmentSubmissions(activeAssignmentId);
+      return res.data?.data?.submissions || [];
+    },
+    enabled: Boolean(activeAssignmentId),
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Filtered Submissions for Selected Assignment
-  const filteredSubmissions = submissions.filter((s) => {
-    const matchesStatus =
-      submissionStatusFilter === "All"
-        ? true
-        : s.status === submissionStatusFilter;
-    const text =
-      `${s.studentName || ""} ${s.rollNumber || ""} ${s.notes || ""} ${s.email || ""}`.toLowerCase();
-    const matchesSearch = text.includes(submissionQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
+  const submissions = submissionsQuery.data || [];
+  const loading = assignmentsQuery.isLoading || classesQuery.isLoading;
+  const loadingSubmissions = submissionsQuery.isLoading;
+  const isRefreshing = assignmentsQuery.isFetching || submissionsQuery.isFetching;
+  const loadError =
+    assignmentsQuery.error?.response?.data?.message ||
+    classesQuery.error?.response?.data?.message ||
+    "";
+
+  // 4. Create / Update Assignment Mutation
+  const saveAssignmentMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      if (id) {
+        return updateAssignment(id, payload);
+      }
+      return createAssignment(payload);
+    },
+    onSuccess: (res, vars) => {
+      toast.success(vars.id ? "Assignment updated successfully!" : "New assignment created successfully!");
+      setEditingAssignment(null);
+      queryClient.invalidateQueries({ queryKey: qk.teacherAssignments() });
+      queryClient.invalidateQueries({ queryKey: qk.teacherTodayClasses() });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to save assignment record.");
+    },
   });
 
-  // Pagination Math
-  const assignmentPageCount = Math.max(
-    1,
-    Math.ceil(filteredAssignments.length / pageSize)
-  );
-  const currentAssignmentPage = Math.min(assignmentPage, assignmentPageCount);
-  const visibleAssignments = filteredAssignments.slice(
-    (currentAssignmentPage - 1) * pageSize,
-    currentAssignmentPage * pageSize
-  );
-
-  const submissionPageCount = Math.max(
-    1,
-    Math.ceil(filteredSubmissions.length / pageSize)
-  );
-  const currentSubmissionPage = Math.min(submissionPage, submissionPageCount);
-  const visibleSubmissions = filteredSubmissions.slice(
-    (currentSubmissionPage - 1) * pageSize,
-    currentSubmissionPage * pageSize
-  );
-
-  // Overall KPI Metrics
-  const totalSubmissionsAll = assignments.reduce(
-    (sum, a) => sum + (a.submissionsCount || 0),
-    0
-  );
-  const totalGradedAll = assignments.reduce(
-    (sum, a) => sum + (a.gradedCount || 0),
-    0
-  );
-  const totalPendingAll = assignments.reduce(
-    (sum, a) => sum + (a.pendingCount || 0),
-    0
-  );
-
-  // 3. Create or Update Assignment Handler
-  const handleSaveAssignment = async (e) => {
+  const handleSaveAssignment = (e) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const classId = String(form.get("classId") || "");
@@ -285,64 +222,59 @@ export default function TeacherAssignments() {
       return;
     }
 
-    try {
-      setSavingAssignment(true);
-      const payload = {
-        classId: selectedCls?._id || editingAssignment?.classId || undefined,
-        className: finalClassName,
-        gradeOrClass: finalClassName,
-        section: finalSection,
-        subject: finalSubject,
-        title,
-        description,
-        dueDate,
-        totalMarks,
-      };
+    const payload = {
+      classId: selectedCls?._id || editingAssignment?.classId || undefined,
+      className: finalClassName,
+      gradeOrClass: finalClassName,
+      section: finalSection,
+      subject: finalSubject,
+      title,
+      description,
+      dueDate,
+      totalMarks,
+    };
 
-      if (editingAssignment?._id || editingAssignment?.id) {
-        const aId = editingAssignment._id || editingAssignment.id;
-        const res = await updateAssignment(aId, payload);
-        if (res.data?.success) {
-          toast.success("Assignment updated successfully!");
-        }
-      } else {
-        const res = await createAssignment(payload);
-        if (res.data?.success) {
-          toast.success("New assignment created successfully!");
-        }
-      }
-
-      setEditingAssignment(null);
-      await loadData();
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to save assignment record."
-      );
-    } finally {
-      setSavingAssignment(false);
-    }
+    saveAssignmentMutation.mutate({
+      id: editingAssignment?._id || editingAssignment?.id || undefined,
+      payload,
+    });
   };
 
-  // 4. Delete Assignment Handler
-  const handleDeleteAssignment = async () => {
+  const savingAssignment = saveAssignmentMutation.isPending;
+
+  // 5. Delete Assignment Mutation
+  const deleteAssignmentMutation = useMutation({
+    mutationFn: (aId) => deleteAssignment(aId),
+    onSuccess: () => {
+      toast.success("Assignment deleted successfully.");
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: qk.teacherAssignments() });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to delete assignment.");
+    },
+  });
+
+  const handleDeleteAssignment = () => {
     if (!deleteTarget) return;
-    try {
-      const aId = deleteTarget._id || deleteTarget.id;
-      const res = await deleteAssignment(aId);
-      if (res.data?.success) {
-        toast.success("Assignment deleted successfully.");
-        setDeleteTarget(null);
-        await loadData();
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to delete assignment."
-      );
-    }
+    deleteAssignmentMutation.mutate(deleteTarget._id || deleteTarget.id);
   };
 
-  // 5. Grade Submission Handler
-  const handleSaveGrade = async (e) => {
+  // 6. Grade Submission Mutation
+  const gradeMutation = useMutation({
+    mutationFn: ({ assignmentId, payload }) => gradeSubmission(assignmentId, payload),
+    onSuccess: (res, vars) => {
+      toast.success("Grade and feedback saved successfully!");
+      setGradingTarget(null);
+      queryClient.invalidateQueries({ queryKey: qk.teacherAssignmentSubmissions(vars.assignmentId) });
+      queryClient.invalidateQueries({ queryKey: qk.teacherAssignments() });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to submit student grade.");
+    },
+  });
+
+  const handleSaveGrade = (e) => {
     e.preventDefault();
     if (!gradingTarget) return;
     const form = new FormData(e.currentTarget);
@@ -355,30 +287,84 @@ export default function TeacherAssignments() {
       return;
     }
 
-    try {
-      setSubmittingGrade(true);
-      const aId = gradingTarget.assignment._id || gradingTarget.assignment.id;
-      const res = await gradeSubmission(aId, {
+    const aId = gradingTarget.assignment._id || gradingTarget.assignment.id;
+    gradeMutation.mutate({
+      assignmentId: aId,
+      payload: {
         submissionId: gradingTarget.submission?.submissionId || gradingTarget.submission?._id,
         studentId: gradingTarget.submission?.studentId,
         score,
         feedback,
-      });
-
-      if (res.data?.success) {
-        toast.success("Grade and feedback saved successfully!");
-        setGradingTarget(null);
-        // Refresh submissions and assignment stats
-        await Promise.all([loadSubmissions(aId), loadData()]);
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to submit student grade."
-      );
-    } finally {
-      setSubmittingGrade(false);
-    }
+      },
+    });
   };
+
+  const submittingGrade = gradeMutation.isPending;
+
+  // Filtered Assignments
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((a) => {
+      const matchesClass =
+        selectedClassFilter === "All"
+          ? true
+          : a.classId === selectedClassFilter ||
+            `${a.className} - ${a.section}` === selectedClassFilter;
+      const matchesSearch =
+        `${a.title || ""} ${a.subject || ""} ${a.className || ""} ${a.section || ""}`
+          .toLowerCase()
+          .includes(debouncedSearchQuery.toLowerCase());
+      return matchesClass && matchesSearch;
+    });
+  }, [assignments, selectedClassFilter, debouncedSearchQuery]);
+
+  // Filtered Submissions for Selected Assignment
+  const filteredSubmissions = useMemo(() => {
+    return submissions.filter((s) => {
+      const matchesStatus =
+        submissionStatusFilter === "All"
+          ? true
+          : s.status === submissionStatusFilter;
+      const text =
+        `${s.studentName || ""} ${s.rollNumber || ""} ${s.notes || ""} ${s.email || ""}`.toLowerCase();
+      const matchesSearch = text.includes(debouncedSubmissionQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
+  }, [submissions, submissionStatusFilter, debouncedSubmissionQuery]);
+
+  // Pagination Math
+  const assignmentPageCount = Math.max(
+    1,
+    Math.ceil(filteredAssignments.length / pageSize)
+  );
+  const currentAssignmentPage = Math.min(assignmentPage, assignmentPageCount);
+  const visibleAssignments = filteredAssignments.slice(
+    (currentAssignmentPage - 1) * pageSize,
+    currentAssignmentPage * pageSize
+  );
+
+  const submissionPageCount = Math.max(
+    1,
+    Math.ceil(filteredSubmissions.length / pageSize)
+  );
+  const currentSubmissionPage = Math.min(submissionPage, submissionPageCount);
+  const visibleSubmissions = filteredSubmissions.slice(
+    (currentSubmissionPage - 1) * pageSize,
+    currentSubmissionPage * pageSize
+  );
+
+  // Overall KPI Metrics
+  const totalSubmissionsAll = assignments.reduce(
+    (sum, a) => sum + (a.submissionsCount || 0),
+    0
+  );
+  const totalGradedAll = assignments.reduce(
+    (sum, a) => sum + (a.gradedCount || 0),
+    0
+  );
+  const totalPendingAll = assignments.reduce(
+    (sum, a) => sum + (a.pendingCount || 0),
+    0
+  );
 
   return (
     <main
@@ -417,11 +403,16 @@ export default function TeacherAssignments() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadData(true)}
-            disabled={refreshing}
+            onClick={() => {
+              classesQuery.refetch();
+              assignmentsQuery.refetch();
+              submissionsQuery.refetch();
+              toast.success("Assignments synchronized.");
+            }}
+            disabled={isRefreshing}
             className="toolbar-btn-outline flex items-center gap-1.5"
           >
-            {refreshing ? (
+            {isRefreshing ? (
               <Spinner className="size-3.5" />
             ) : (
               <RefreshCw size={14} />
@@ -992,10 +983,11 @@ export default function TeacherAssignments() {
                   Cancel
                 </Button>
                 <Button
-                  className="toolbar-btn toolbar-btn-primary"
+                  className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
                   type="submit"
                   disabled={savingAssignment}
                 >
+                  {savingAssignment && <Spinner className="size-4 mr-1 text-white" />}
                   {savingAssignment ? "Saving..." : "Save Assignment"}
                 </Button>
               </DialogFooter>
@@ -1077,10 +1069,11 @@ export default function TeacherAssignments() {
                   Cancel
                 </Button>
                 <Button
-                  className="toolbar-btn toolbar-btn-primary"
+                  className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
                   type="submit"
                   disabled={submittingGrade}
                 >
+                  {submittingGrade && <Spinner className="size-4 mr-1 text-white" />}
                   {submittingGrade ? "Saving Grade..." : "Record Grade"}
                 </Button>
               </DialogFooter>
