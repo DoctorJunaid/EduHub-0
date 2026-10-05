@@ -183,7 +183,7 @@ export const SupportManage = () => {
         <div className="isu-stat-card">
           <span className="isu-stat-label">SLA Breach / Overdue</span>
           <div className="isu-stat-row">
-            <span className="isu-stat-value red">
+            <span className={role === "super_admin" ? "isu-stat-value" : "isu-stat-value red"}>
               {statsLoading ? <span className="isu-stat-skeleton-value" /> : statsError && !stats ? "—" : stats?.overdue ?? 0}
             </span>
             <div className="isu-stat-icon red" aria-hidden="true">

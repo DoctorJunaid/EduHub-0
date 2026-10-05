@@ -766,10 +766,6 @@
   color: #b91c1c;
 }
 
-.dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-stat-value.red {
-  color: #b91c1c;
-}
-
 .dashboard-shell:has(.sidebar-nav a[href="/super-admin/support"]) .institute-support .isu-toolbar {
   padding: 12px 16px;
   gap: 10px;
