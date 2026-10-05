@@ -7,7 +7,6 @@ import {
   Clock,
   Search,
   RefreshCw,
-  Edit3,
   CalendarPlus,
   ShieldAlert,
   History,
@@ -57,14 +56,6 @@ function SubscriptionSkeletonRow() {
           <div className="quota-bar-item">
             <div className="skeleton-box skeleton-quota-bar" />
           </div>
-        </div>
-      </td>
-      <td className="cell-actions">
-        <div className="action-buttons-group">
-          <div className="skeleton-box skeleton-btn-primary" />
-          <div className="skeleton-box skeleton-btn-secondary" />
-          <div className="skeleton-box skeleton-btn-secondary" />
-          <div className="skeleton-box skeleton-btn-icon" />
         </div>
       </td>
     </tr>
@@ -418,18 +409,17 @@ export default function SubscriptionsManagement() {
           <table className="subs-table">
             <thead>
               <tr>
-                <th style={{ width: "24%" }}>Institution</th>
-                <th style={{ width: "16%" }}>Assigned Plan</th>
-                <th style={{ width: "10%" }}>Status</th>
+                <th style={{ width: "30%" }}>Institution</th>
+                <th style={{ width: "20%" }}>Assigned Plan</th>
+                <th style={{ width: "12%" }}>Status</th>
                 <th style={{ width: "18%" }}>Validity & Dates</th>
-                <th style={{ width: "18%" }}>Quota Consumption</th>
-                <th style={{ width: "14%" }} className="th-actions">Actions</th>
+                <th style={{ width: "20%" }}>Quota Consumption</th>
               </tr>
             </thead>
             <tbody className={loading && !initialLoading ? "is-refreshing" : ""}>
               {error ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={5}>
                     <div className="subs-error-state">
                       <AlertCircle size={32} className="subs-error-icon" />
                       <h3 className="subs-error-title">Unable to Load Subscriptions</h3>
@@ -455,7 +445,7 @@ export default function SubscriptionsManagement() {
                 </>
               ) : filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={5}>
                     <div className="subs-empty">
                       <Building2 size={40} className="empty-icon" />
                       <h3 className="subs-empty-title">No Subscriptions Found</h3>
@@ -497,7 +487,8 @@ export default function SubscriptionsManagement() {
                           <span className="inst-name">{sub.instituteName}</span>
                           <div className="inst-subline">
                             <span className="inst-type-badge">{sub.instituteType || "School"}</span>
-                            <span className="inst-email">{sub.instituteEmail}</span>
+                            {sub.instituteEmail && <span className="inst-subline-dot" aria-hidden="true">•</span>}
+                            {sub.instituteEmail && <span className="inst-email">{sub.instituteEmail}</span>}
                           </div>
                         </div>
                       </td>
@@ -574,50 +565,6 @@ export default function SubscriptionsManagement() {
                               />
                             </div>
                           </div>
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="cell-actions">
-                        <div className="action-buttons-group">
-                          <button
-                            type="button"
-                            className="table-act-btn plan"
-                            onClick={() => openAssignModal(sub)}
-                            title="Assign or change plan"
-                          >
-                            <Edit3 size={13} />
-                            <span>Change Plan</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className="table-act-btn extend"
-                            onClick={() => openExtendModal(sub)}
-                            title="Extend validity dates"
-                          >
-                            <CalendarPlus size={13} />
-                            <span>Extend</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className="table-act-btn status"
-                            onClick={() => openStatusModal(sub)}
-                            title="Change subscription status"
-                          >
-                            <ShieldAlert size={13} />
-                            <span>Status</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className="table-act-btn history"
-                            onClick={() => openHistoryModal(sub)}
-                            title="View audit history"
-                          >
-                            <History size={13} />
-                          </button>
                         </div>
                       </td>
                     </tr>

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Award,
   BookOpen,
@@ -18,12 +19,14 @@ import {
   selectAssignedTeacherClasses,
   selectStudentsForAssignedClasses,
   selectTeacherIdentity,
-  teacherOwnsRecord,
 } from "./teacherScope";
 import { getTodayClasses, getMySummary, markSessionStatus } from "@/api/classSession.api";
+import { getTeacherAssignments, getTeacherClasses } from "@/api/assignment.api";
 import { dateKey } from "@/lib/dates";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
-import { SpinnerCustom } from "@/components/ui/spinner";
+import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
 import toast from "react-hot-toast";
 import "./TeacherDashboard.css";
 
@@ -37,90 +40,129 @@ const initials = (name = "") =>
     .toUpperCase() || "ST";
 
 export default function TeacherDashboard() {
-  const classes = useSelector(selectAssignedTeacherClasses);
+  const queryClient = useQueryClient();
+  const reduxClasses = useSelector(selectAssignedTeacherClasses);
   const teacher = useSelector(selectTeacherIdentity);
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
-  const assignments = useSelector((state) => state.assignments?.records || []);
-  const submissions = useSelector((state) => state.submissions?.records || []);
+  const reduxAssignments = useSelector((state) => state.assignments?.records || []);
+  const reduxSubmissions = useSelector((state) => state.submissions?.records || []);
+
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
-  const [todaySessions, setTodaySessions] = useState([]);
-  const [creditSummary, setCreditSummary] = useState(null);
-  const [loadingSessions, setLoadingSessions] = useState(true);
-  const [creditsError, setCreditsError] = useState("");
+  const debouncedScheduleSearch = useDebounce(scheduleSearch, 300);
+  const debouncedSubmissionSearch = useDebounce(submissionSearch, 300);
 
-  const fetchLiveCredits = useCallback(async () => {
-    try {
-      setLoadingSessions(true);
-      setCreditsError("");
-      const [todayRes, sumRes] = await Promise.all([
-        getTodayClasses(),
-        getMySummary({ month: dateKey(new Date()).slice(0, 7) }),
-      ]);
-      if (todayRes.data?.success) setTodaySessions(todayRes.data.data || []);
-      if (sumRes.data?.success) setCreditSummary(sumRes.data.data || null);
-    } catch (error) {
-      setTodaySessions([]);
-      setCreditSummary(null);
-      setCreditsError(
-        error.response?.data?.message || "Unable to load today's teaching records."
-      );
-    } finally {
-      setLoadingSessions(false);
-    }
-  }, []);
+  const currentMonthKey = dateKey(new Date()).slice(0, 7);
 
-  useEffect(() => {
-    void fetchLiveCredits();
-  }, [fetchLiveCredits]);
+  // 1. Parallel React Query Fetches with 5 min staleTime
+  const todaySessionsQuery = useQuery({
+    queryKey: qk.teacherTodayClasses(),
+    queryFn: async () => {
+      const res = await getTodayClasses();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const handleQuickComplete = async (sessionId) => {
-    try {
-      const res = await markSessionStatus(sessionId, { status: "Completed" });
-      if (res.data?.success) {
-        toast.success("Teaching credit recorded!");
-        fetchLiveCredits();
-      }
-    } catch (err) {
+  const summaryQuery = useQuery({
+    queryKey: qk.teacherSummary({ month: currentMonthKey }),
+    queryFn: async () => {
+      const res = await getMySummary({ month: currentMonthKey });
+      return res.data?.data || null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const assignmentsQuery = useQuery({
+    queryKey: qk.teacherAssignments(),
+    queryFn: async () => {
+      const res = await getTeacherAssignments();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const classesQuery = useQuery({
+    queryKey: qk.teacherClasses(),
+    queryFn: async () => {
+      const res = await getTeacherClasses();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 2. Complete Session Mutation
+  const completeMutation = useMutation({
+    mutationFn: (sessionId) => markSessionStatus(sessionId, { status: "Completed" }),
+    onSuccess: () => {
+      toast.success("Teaching credit recorded!");
+      queryClient.invalidateQueries({ queryKey: qk.teacherTodayClasses() });
+      queryClient.invalidateQueries({ queryKey: qk.teacherSummary({ month: currentMonthKey }) });
+    },
+    onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to mark class completed.");
-    }
-  };
+    },
+  });
 
-  const classIds = new Set(classes.map((item) => item.id || item._id));
+  const todaySessions = todaySessionsQuery.data || [];
+  const creditSummary = summaryQuery.data;
+  const liveAssignments = assignmentsQuery.data || [];
+  const liveClasses = classesQuery.data || [];
+
+  const loadingSessions = todaySessionsQuery.isLoading;
+  const creditsError = todaySessionsQuery.error?.response?.data?.message || (todaySessionsQuery.error ? "Unable to load today's teaching records." : "");
+
+  const classes = liveClasses.length > 0 ? liveClasses : reduxClasses;
+  const assignments = liveAssignments.length > 0 ? liveAssignments : reduxAssignments;
+  const submissions = reduxSubmissions;
+
   const filteredClasses = classes.filter((item) =>
     `${item.title || ""} ${item.subject || ""} ${item.className || ""} ${item.section || ""} ${item.room || ""} ${item.teacherName || item.instructor || ""} ${(item.days || []).join(" ")} ${item.dayOfWeek || ""} ${item.startTime || ""} ${item.endTime || ""}`
       .toLowerCase()
-      .includes(scheduleSearch.toLowerCase()),
+      .includes(debouncedScheduleSearch.toLowerCase()),
   );
-  const assignedCourseCount = new Set(
+  const assignedCourseCount = classes.length > 0 ? classes.length : new Set(
     classes
       .map((item) => item.courseId || item.subjectId || item.title || item.subject)
       .filter(Boolean),
   ).size;
-  const assignedAssignments = assignments.filter(
-    (assignment) =>
-      classIds.has(assignment.classId) &&
-      teacherOwnsRecord(assignment, teacher),
+
+  const liveSubmissions = liveAssignments.flatMap((a) =>
+    (a.submissions || []).map((s) => ({
+      ...s,
+      id: s._id || s.id || `sub_${s.studentId}`,
+      assignmentId: a._id || a.id,
+      assignmentTitle: a.title,
+      studentName: s.studentName || (typeof s.studentId === "object" ? s.studentId?.name : null) || "Student",
+      submittedAt: s.submittedAt ? new Date(s.submittedAt).toLocaleDateString("en-CA") : "—",
+    }))
   );
-  const assignedAssignmentIds = new Set(assignedAssignments.map((assignment) => assignment.id));
-  const pending = submissions.filter(
-    (item) => item.status === "Submitted" && assignedAssignmentIds.has(item.assignmentId),
+
+  const allSubmissions = liveSubmissions.length > 0 ? liveSubmissions : submissions;
+  const pending = allSubmissions.filter((item) =>
+    item.status === "Submitted" || item.status === "Late" || item.status === "Pending"
   );
+
   const assignmentTitle = (submission) =>
-    assignedAssignments.find((assignment) => assignment.id === submission.assignmentId)?.title ||
     submission.assignmentTitle ||
-    submission.assignmentId;
+    assignments.find((a) => (a.id || a._id) === submission.assignmentId)?.title ||
+    submission.assignmentId ||
+    "Assignment";
+
   const filteredSubmissions = pending.filter((item) =>
-    `${item.studentName || item.studentId} ${assignmentTitle(item)}`
+    `${item.studentName || item.studentId || ""} ${assignmentTitle(item)}`
       .toLowerCase()
-      .includes(submissionSearch.toLowerCase()),
+      .includes(debouncedSubmissionSearch.toLowerCase()),
   );
-  const enrolledStudentCount = enrolledStudents.length;
+
+  const pendingSubmissionsCount = pending.length;
+  const enrolledStudentCount = classes.reduce((sum, c) => sum + (c.enrolledStudentsCount || 0), 0) || enrolledStudents.length;
+
   const metric = [
     [Award, "Monthly Credits", creditSummary?.totalCredits ?? "—"],
     [Coins, "Bonus Earned", `PKR ${(creditSummary?.totalBonusEarned || 0).toLocaleString()}`],
     [BookOpen, "Assigned Courses", assignedCourseCount],
-    [FileText, "Pending Submissions", pending.length],
+    [FileText, "Pending Submissions", pendingSubmissionsCount],
     [Users, "Enrolled Students", enrolledStudentCount],
   ];
 
@@ -257,9 +299,15 @@ export default function TeacherDashboard() {
                           <Button
                             size="sm"
                             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-3 text-xs font-semibold"
-                            onClick={() => handleQuickComplete(sess._id)}
+                            disabled={completeMutation.isPending && completeMutation.variables === sess._id}
+                            onClick={() => completeMutation.mutate(sess._id)}
                           >
-                            <CheckCircle2 size={13} className="mr-1" /> Mark Done
+                            {completeMutation.isPending && completeMutation.variables === sess._id ? (
+                              <Spinner className="mr-1 size-3 text-white" />
+                            ) : (
+                              <CheckCircle2 size={13} className="mr-1" />
+                            )}
+                            Mark Done
                           </Button>
                         )}
                         {sess.status === "Completed" && (

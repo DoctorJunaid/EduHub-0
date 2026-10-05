@@ -109,7 +109,7 @@ export const TicketFilters = ({
                   <span>All Statuses</span>
                 </SelectItem>
                 <SelectItem value="Open" className="isu-select-item">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                   <span>Open</span>
                 </SelectItem>
                 <SelectItem value="In Progress" className="isu-select-item">
@@ -117,7 +117,7 @@ export const TicketFilters = ({
                   <span>In Progress</span>
                 </SelectItem>
                 <SelectItem value="Resolved" className="isu-select-item">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
                   <span>Resolved</span>
                 </SelectItem>
                 <SelectItem value="Closed" className="isu-select-item">
@@ -125,7 +125,7 @@ export const TicketFilters = ({
                   <span>Closed</span>
                 </SelectItem>
                 <SelectItem value="Escalated" className="isu-select-item">
-                  <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                   <span>Escalated</span>
                 </SelectItem>
                 <SelectItem value="Overdue" className="isu-select-item">
@@ -157,15 +157,15 @@ export const TicketFilters = ({
                   <span>Urgent</span>
                 </SelectItem>
                 <SelectItem value="High" className="isu-select-item">
-                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                   <span>High</span>
                 </SelectItem>
                 <SelectItem value="Medium" className="isu-select-item">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-zinc-400 shrink-0" />
                   <span>Medium</span>
                 </SelectItem>
                 <SelectItem value="Low" className="isu-select-item">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-zinc-400 shrink-0" />
                   <span>Low</span>
                 </SelectItem>
               </SelectContent>

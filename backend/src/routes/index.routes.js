@@ -58,10 +58,27 @@ router.use("/campus/salary/payroll", payrollRoutes);
 router.use("/campus/salary/approvals", attendanceApprovalRoutes);
 import teacherProfileRoutes from "./teacherProfile.routes.js";
 import seedRoutes from "./seed.routes.js";
+import teacherAssignmentRoutes from "./teacherAssignment.routes.js";
+import teacherStudentAttendanceRoutes from "./teacherStudentAttendance.routes.js";
 
 router.use("/campus/salary/policy", salaryPolicyRoutes);
 router.use("/campus/class-sessions", classSessionRoutes);
 router.use("/teacher/class-sessions", classSessionRoutes);
+
+router.use("/teacher/assignments", teacherAssignmentRoutes);
+router.use("/campus/assignments", teacherAssignmentRoutes);
+
+import teacherDiaryRoutes from "./teacherDiary.routes.js";
+import teacherGradebookRoutes from "./teacherGradebook.routes.js";
+
+router.use("/teacher/attendance", teacherStudentAttendanceRoutes);
+router.use("/campus/student-attendance", teacherStudentAttendanceRoutes);
+
+router.use("/teacher/diary", teacherDiaryRoutes);
+router.use("/campus/diary", teacherDiaryRoutes);
+
+router.use("/teacher/gradebook", teacherGradebookRoutes);
+router.use("/campus/gradebook", teacherGradebookRoutes);
 
 router.use("/campus/teachers", teacherProfileRoutes);
 router.use("/campus-admin/teachers", teacherProfileRoutes);

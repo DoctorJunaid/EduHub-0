@@ -4,13 +4,11 @@ import {
   MapPin,
   ArrowLeft,
   Plus,
-  X,
   Inbox,
   Phone,
   Mail,
   ArrowRight,
   CheckCircle2,
-  ExternalLink,
   Clock,
   RefreshCw,
 } from "lucide-react";
@@ -51,10 +49,8 @@ function DashboardInstituteSkeletonRow() {
       </div>
       <div className="super-admin-institute-meta">
         <div className="dash-skel-line dash-skel-pill" />
-        <div className="dash-skel-line dash-skel-pill" />
-      </div>
-      <div className="super-admin-row-actions">
-        <div className="dash-skel-line dash-skel-btn" />
+        <div className="dash-skel-line dash-skel-btn" style={{ width: "88px" }} />
+        <div className="dash-skel-line dash-skel-btn" style={{ width: "76px" }} />
       </div>
     </article>
   );
@@ -288,34 +284,36 @@ export default function SuperAdminDashboard() {
           <section className="super-admin-inquiries-panel">
             <div className="super-admin-panel-head">
               <div className="super-admin-panel-titles">
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div className="super-admin-inquiry-icon" style={{ width: "28px", height: "28px", borderRadius: "6px" }}>
+                <div className="super-admin-panel-title-row">
+                  <div className="super-admin-panel-title-icon">
                     <Inbox size={15} />
                   </div>
-                  <h2 style={{ margin: 0 }}>Landing Page Inquiries & Registrations</h2>
+                  <h2>Landing Page Inquiries & Registrations</h2>
                 </div>
                 <p>Live partner registrations submitted from the public landing page</p>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <button
+              <div className="super-admin-panel-actions">
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={fetchInquiries}
-                  className="super-admin-empty-action"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "32px", padding: "0 12px", borderRadius: "6px", border: "1px solid #e4e4e7", background: "#fff", color: "#52525b", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
+                  className="super-admin-header-btn super-admin-refresh-btn"
                   title="Refresh leads"
                 >
-                  <RefreshCw size={12} className={inquiriesLoading ? "animate-spin" : ""} />
-                  Refresh
-                </button>
+                  <RefreshCw size={13} className={inquiriesLoading ? "animate-spin" : ""} />
+                  <span>Refresh</span>
+                </Button>
                 <Button
-                  size="sm"
+                  type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => navigate("/super-admin/inquiries")}
-                  className="gap-1.5"
+                  className="super-admin-header-btn super-admin-view-all-btn"
                 >
                   <span>View All Inquiries ({inquiries.length})</span>
-                  <ArrowRight size={14} />
+                  <ArrowRight size={13} />
                 </Button>
               </div>
             </div>
@@ -556,19 +554,22 @@ export default function SuperAdminDashboard() {
                           {institute.campusCount || 0} Campuses
                         </button>
 
-                        <button
+                        <Button
                           type="button"
-                          className="super-admin-student-count super-admin-clickable"
+                          size="sm"
+                          variant="outline"
+                          className="super-admin-row-btn super-admin-view-users-btn"
                           onClick={() => handleStudentsClick(institute)}
                           aria-label={`Show users for ${institute.name}`}
                         >
                           View Users
-                        </button>
+                        </Button>
 
                         <Button
+                          type="button"
                           size="sm"
                           variant="default"
-                          className="super-admin-manage-btn"
+                          className="super-admin-row-btn super-admin-manage-btn"
                           onClick={() => handleManage(institute)}
                           aria-label={`Manage ${institute.name}`}
                         >

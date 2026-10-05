@@ -33,12 +33,12 @@ function SupportTicketTableSkeleton() {
   const columns = ["", "Ticket #", "Subject", "Creator", "Category", "Priority", "Status", "Assigned To", "Last Activity"];
 
   return (
-    <div className="isu-loading-table overflow-x-auto rounded-xl border border-zinc-200 bg-white" role="status" aria-label="Loading support tickets">
-      <table className="w-full text-left text-sm border-collapse" aria-hidden="true">
-        <thead className="bg-zinc-50 border-b border-zinc-200">
-          <tr className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+    <div className="isu-loading-table isu-table-wrapper w-full overflow-x-auto" role="status" aria-label="Loading support tickets">
+      <table className="isu-ticket-table w-full text-left text-sm border-collapse" aria-hidden="true">
+        <thead className="bg-zinc-50/80 border-b border-zinc-200">
+          <tr className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
             {columns.map((column, index) => (
-              <th className="p-3.5" key={`${column}-${index}`}>
+              <th className="py-3 px-3.5" key={`${column}-${index}`}>
                 {column || <span className="isu-skeleton-cell isu-skeleton-checkbox" />}
               </th>
             ))}
@@ -48,7 +48,7 @@ function SupportTicketTableSkeleton() {
           {Array.from({ length: 5 }, (_, row) => (
             <tr key={row}>
               {columns.map((column, index) => (
-                <td className="p-3.5" key={`${column}-${index}`}>
+                <td className="py-3 px-3.5" key={`${column}-${index}`}>
                   <span className={`isu-skeleton-cell isu-skeleton-col-${index}`} />
                 </td>
               ))}
@@ -196,10 +196,10 @@ export const SupportManage = () => {
         <div className="isu-stat-card">
           <span className="isu-stat-label">Avg First Response</span>
           <div className="isu-stat-row">
-            <span className="isu-stat-value blue">
+            <span className="isu-stat-value">
               {statsLoading ? <span className="isu-stat-skeleton-value" /> : statsError && !stats ? "—" : stats?.avgFirstResponseHours ? `${stats.avgFirstResponseHours}h` : "—"}
             </span>
-            <div className="isu-stat-icon blue" aria-hidden="true">
+            <div className="isu-stat-icon" aria-hidden="true">
               <Clock className="w-5 h-5" />
             </div>
           </div>
@@ -209,10 +209,10 @@ export const SupportManage = () => {
         <div className="isu-stat-card">
           <span className="isu-stat-label">Avg Resolution Time</span>
           <div className="isu-stat-row">
-            <span className="isu-stat-value emerald">
+            <span className="isu-stat-value">
               {statsLoading ? <span className="isu-stat-skeleton-value" /> : statsError && !stats ? "—" : stats?.avgResolutionHours ? `${stats.avgResolutionHours}h` : "—"}
             </span>
-            <div className="isu-stat-icon emerald" aria-hidden="true">
+            <div className="isu-stat-icon" aria-hidden="true">
               <Zap className="w-5 h-5" />
             </div>
           </div>
@@ -231,7 +231,7 @@ export const SupportManage = () => {
               size="sm"
               variant="outline"
               onClick={() => setIsBulkAssignOpen(true)}
-              className="rounded-lg text-xs h-8 gap-1.5"
+              className="rounded-lg text-xs h-8 gap-1.5 border-zinc-200 text-zinc-800 hover:bg-zinc-100"
             >
               <UserCheck className="w-3.5 h-3.5" />
               <span>Assign Selected</span>
@@ -239,7 +239,7 @@ export const SupportManage = () => {
             <Button
               size="sm"
               onClick={handleBulkClose}
-              className="rounded-lg text-xs h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="rounded-lg text-xs h-8 gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-white"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Close Selected</span>

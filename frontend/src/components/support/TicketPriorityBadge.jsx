@@ -1,30 +1,29 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Clock } from "lucide-react";
 
 export const PRIORITY_CONFIG = {
   Urgent: {
     label: "Urgent (2h SLA)",
     shortLabel: "Urgent",
-    className: "bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400 font-semibold",
+    className: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
     icon: AlertCircle,
   },
   High: {
     label: "High (8h SLA)",
     shortLabel: "High",
-    className: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400 font-medium",
+    className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
     icon: Clock,
   },
   Medium: {
     label: "Medium (24h SLA)",
     shortLabel: "Medium",
-    className: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400 font-medium",
+    className: "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
     icon: Clock,
   },
   Low: {
     label: "Low (72h SLA)",
     shortLabel: "Low",
-    className: "bg-slate-500/10 text-slate-600 border-slate-500/20 dark:text-slate-400 font-normal",
+    className: "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700",
     icon: Clock,
   },
 };
@@ -34,13 +33,12 @@ export const TicketPriorityBadge = ({ priority = "Medium", showSla = false, clas
   const Icon = config.icon;
 
   return (
-    <Badge
-      variant="outline"
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs shadow-none ${config.className} ${className}`}
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shrink-0 leading-none ${config.className} ${className}`}
     >
-      <Icon className="w-3 h-3" />
+      <Icon className="w-3 h-3 shrink-0" />
       <span>{showSla ? config.label : config.shortLabel}</span>
-    </Badge>
+    </span>
   );
 };
 

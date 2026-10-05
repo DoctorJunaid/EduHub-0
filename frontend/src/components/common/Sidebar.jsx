@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut,
   PanelLeftClose,
@@ -8,6 +9,14 @@ import {
 } from "lucide-react";
 import { getLandingPageUrl } from "@/config/urls";
 import { useSupportStats } from "@/hooks/useSupportStats";
+import { qk } from "@/lib/queryKeys";
+import { dateKey } from "@/lib/dates";
+import { getTodayClasses, getMySummary, getMySessions } from "@/api/classSession.api";
+import { getTeacherClasses, getTeacherAssignments } from "@/api/assignment.api";
+import { getTeacherAttendanceClasses } from "@/api/teacherAttendance.api";
+import { getTeacherDiaryClasses, getTeacherDiaryEntries } from "@/api/diary.api";
+import { getTeacherGradebookClasses } from "@/api/gradebook.api";
+import { getMySalaryProfile } from "@/api/salaryProfile.api";
 
 const Sidebar = ({
   items = [],
@@ -16,9 +25,85 @@ const Sidebar = ({
   onSignOut,
   user = { name: "Admin User", initials: "A" },
 }) => {
+  const queryClient = useQueryClient();
   const { pathname } = useLocation();
   const { stats } = useSupportStats();
   const badgeCount = stats?.badgeCount || 0;
+
+  const handlePrefetch = (path) => {
+    if (!path) return;
+    const currentMonthKey = dateKey(new Date()).slice(0, 7);
+
+    if (path === "/teacher") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherTodayClasses(),
+        queryFn: async () => (await getTodayClasses()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherSummary({ month: currentMonthKey }),
+        queryFn: async () => (await getMySummary({ month: currentMonthKey })).data?.data || null,
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/teacher/credits") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherSessions({ tab: "today", month: currentMonthKey, date: dateKey(new Date()) }),
+        queryFn: async () => (await getMySessions({ date: dateKey(new Date()) })).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherSummary({ month: currentMonthKey }),
+        queryFn: async () => (await getMySummary({ month: currentMonthKey })).data?.data || null,
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/teacher/classes") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherClasses(),
+        queryFn: async () => (await getTeacherClasses()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/teacher/assignments") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherAssignments(),
+        queryFn: async () => (await getTeacherAssignments()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherClasses(),
+        queryFn: async () => (await getTeacherClasses()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/teacher/attendance") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherAttendanceClasses(),
+        queryFn: async () => (await getTeacherAttendanceClasses()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/teacher/diary") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherDiaryClasses(),
+        queryFn: async () => (await getTeacherDiaryClasses()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherDiaryEntries(),
+        queryFn: async () => (await getTeacherDiaryEntries()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/teacher/gradebook") {
+      queryClient.prefetchQuery({
+        queryKey: qk.teacherGradebookClasses(),
+        queryFn: async () => (await getTeacherGradebookClasses()).data?.data || [],
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (path === "/my-salary") {
+      queryClient.prefetchQuery({
+        queryKey: qk.mySalary(),
+        queryFn: async () => (await getMySalaryProfile()).data?.data || null,
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+  };
 
   return (
     <aside
@@ -97,6 +182,7 @@ const Sidebar = ({
               ) : (
                 <Link
                   to={item.path}
+                  onMouseEnter={() => handlePrefetch(item.path)}
                   className={`sidebar-item ${isActive ? "active" : ""}`}
                   aria-current={isActive ? "page" : undefined}
                   aria-label={item.label}
