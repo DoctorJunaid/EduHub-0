@@ -473,6 +473,39 @@
   .plans-grid {
     grid-template-columns: 1fr;
   }
+
+  .plans-modal-backdrop {
+    padding: 12px;
+  }
+
+  .plans-modal {
+    max-height: calc(100dvh - 24px);
+    width: 100%;
+  }
+
+  .form-grid-2,
+  .form-grid-3,
+  .features-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plans-modal-header,
+  .plans-modal-form,
+  .plans-modal-footer {
+    padding: 14px 16px;
+  }
+
+  .plans-modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-cancel-btn,
+  .modal-submit-btn,
+  .modal-delete-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Modal styles */

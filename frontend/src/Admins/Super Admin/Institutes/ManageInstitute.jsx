@@ -317,10 +317,11 @@ export default function ManageInstitute({ institute, onClose }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "6px", borderBottom: "1px solid #e4e4e7", paddingBottom: "12px", marginBottom: "4px" }}>
+      <div className="manage-tabs-scroll">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
+            className="manage-tab-btn"
             onClick={() => setActiveTab(id)}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
@@ -509,7 +510,7 @@ export default function ManageInstitute({ institute, onClose }) {
               {isEditingAdmin && (
                 <form onSubmit={saveAdminDetails} style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                   <p style={{ fontSize: "13px", fontWeight: 600, color: "#09090b", margin: 0 }}>Edit Admin Profile</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="manage-form-grid-2">
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Full Name</label>
                       <Input value={editAdminForm.name} onChange={(e) => setEditAdminForm(f => ({ ...f, name: e.target.value }))} required />
@@ -560,7 +561,7 @@ export default function ManageInstitute({ institute, onClose }) {
           {showAssignForm && (
             <div style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
               <p style={{ fontSize: "13px", fontWeight: 600, color: "#09090b", margin: 0 }}>New Admin Details</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div className="manage-form-grid-2">
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Full Name</label>
                   <Input placeholder="Admin Full Name" value={assignForm.name} onChange={(e) => setAssignForm(f => ({ ...f, name: e.target.value }))} />
@@ -603,7 +604,7 @@ export default function ManageInstitute({ institute, onClose }) {
           {showCampusForm && (
             <div style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
               <p style={{ fontSize: "13px", fontWeight: 600, color: "#09090b", margin: 0 }}>New Campus</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+              <div className="manage-form-grid-3">
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Campus Name</label>
                   <Input placeholder="e.g. Main Campus" value={addCampusForm.name} onChange={(e) => setAddCampusForm(f => ({ ...f, name: e.target.value }))} />
@@ -635,7 +636,7 @@ export default function ManageInstitute({ institute, onClose }) {
           {editingCampus && (
             <form onSubmit={saveEditCampus} style={{ background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
               <p style={{ fontSize: "13px", fontWeight: 600, color: "#09090b", margin: 0 }}>Edit Campus</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+              <div className="manage-form-grid-3">
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 600, color: "#52525b" }}>Campus Name</label>
                   <Input value={editCampusForm.name} onChange={(e) => setEditCampusForm(f => ({ ...f, name: e.target.value }))} required />

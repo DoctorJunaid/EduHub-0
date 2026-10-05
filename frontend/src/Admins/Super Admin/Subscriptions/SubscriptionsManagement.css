@@ -1,4 +1,6 @@
 .subscriptions-page-container {
+  width: 100%;
+  min-width: 0;
   padding: 12px 32px 80px;
   max-width: 1320px;
   margin: 0 auto;
@@ -240,6 +242,7 @@
 .subs-table-wrap {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .subs-table {
@@ -998,6 +1001,8 @@
 
   .subs-filter-tabs {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 }
 
@@ -1018,5 +1023,9 @@
 
   .subs-metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    padding: 14px 16px;
   }
 }

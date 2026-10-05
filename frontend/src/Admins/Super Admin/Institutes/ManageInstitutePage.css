@@ -88,6 +88,35 @@
 }
 
 /* ── DETAILS FORM GRID & ACTIONS ── */
+
+.manage-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.manage-form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.manage-tabs-scroll {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.manage-tab-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .manage-details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -160,7 +189,9 @@
 }
 
 @media (max-width: 640px) {
-  .manage-details-grid {
+  .manage-details-grid,
+  .manage-form-grid-2,
+  .manage-form-grid-3 {
     grid-template-columns: 1fr !important;
   }
 
