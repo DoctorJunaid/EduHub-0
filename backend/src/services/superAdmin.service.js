@@ -837,6 +837,11 @@ export const getPlatformAuditLogs = async (query = {}) => {
   if (query.action && query.action !== "all") filter.action = query.action;
   if (query.instituteId) filter.instituteId = query.instituteId;
 
+  // Filter out any automated test script executions and dummy e2e actors by default
+  if (!query.includeTest) {
+    filter["performedBy.email"] = { $not: /\.e2e@|@.*\.e2e|e2e@eduhub\.com/i };
+  }
+
   const page = Math.max(1, parseInt(query.page) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 30));
   const skip = (page - 1) * limit;
