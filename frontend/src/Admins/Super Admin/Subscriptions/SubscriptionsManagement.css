@@ -194,12 +194,15 @@
   padding: 3px;
   border-radius: 8px;
   border: 1px solid #e4e4e7;
+  height: 38px;
+  box-sizing: border-box;
 }
 
 .filter-tab {
   border: none;
   background: transparent;
-  padding: 6px 14px;
+  padding: 0 14px;
+  height: 30px;
   border-radius: 6px;
   font-size: 12.5px;
   font-weight: 500;
@@ -207,6 +210,9 @@
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filter-tab:hover:not(.active) {
@@ -241,7 +247,7 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
-  min-width: 980px;
+  min-width: 860px;
 }
 
 .subs-table thead {
@@ -257,11 +263,6 @@
   letter-spacing: 0.05em;
   color: #71717a;
   white-space: nowrap;
-}
-
-.subs-table th.th-actions {
-  text-align: right;
-  padding-right: 20px;
 }
 
 .subs-table tbody {
@@ -369,24 +370,6 @@
   height: 12px;
 }
 
-.skeleton-btn-primary {
-  width: 86px;
-  height: 30px;
-  border-radius: 6px;
-}
-
-.skeleton-btn-secondary {
-  width: 60px;
-  height: 30px;
-  border-radius: 6px;
-}
-
-.skeleton-btn-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-}
-
 /* ── Cell Specifics ── */
 .cell-inst {
   display: flex;
@@ -414,17 +397,24 @@
 }
 
 .inst-name {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #09090b;
-  line-height: 1.3;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .inst-subline {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+}
+
+.inst-subline-dot {
+  color: #a1a1aa;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .inst-type-badge {
@@ -436,18 +426,20 @@
   padding: 1px 6px;
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
 }
 
 .inst-email {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #71717a;
+  word-break: break-all;
 }
 
 .cell-plan {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .plan-tier-badge {
@@ -457,7 +449,7 @@
   font-weight: 700;
   padding: 1.5px 6px;
   border-radius: 4px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
   color: #18181b;
@@ -465,13 +457,13 @@
 }
 
 .plan-display-name {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #09090b;
 }
 
 .plan-billing-cycle {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #71717a;
   text-transform: capitalize;
 }
@@ -481,16 +473,18 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
-  padding: 2.5px 8px;
+  height: 24px;
+  padding: 0 9px;
   border-radius: 6px;
-  line-height: 1.2;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .sub-badge.active {
-  background: #dcfce7;
-  color: #166534;
+  background: #f0fdf4;
+  color: #15803d;
   border: 1px solid #bbf7d0;
 }
 
@@ -501,9 +495,9 @@
 }
 
 .sub-badge.suspended {
-  background: #fff1f2;
-  color: #9f1239;
-  border: 1px solid #fecdd3;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .sub-badge.expired {
@@ -522,12 +516,13 @@
 .cell-dates {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .date-line {
   font-size: 12px;
-  color: #334155;
+  color: #3f3f46;
+  line-height: 1.3;
 }
 
 .date-label {
@@ -536,16 +531,22 @@
   margin-right: 4px;
 }
 
+.date-val {
+  font-weight: 500;
+  color: #09090b;
+}
+
 .countdown-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 10.5px;
-  font-weight: 500;
-  padding: 2px 7px;
+  font-weight: 600;
+  height: 20px;
+  padding: 0 7px;
   border-radius: 4px;
   align-self: flex-start;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .countdown-tag.ok {
@@ -571,8 +572,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 140px;
-  max-width: 180px;
+  width: 100%;
+  max-width: 200px;
 }
 
 .quota-bar-item {
@@ -584,9 +585,22 @@
 .quota-header {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  align-items: center;
+  font-size: 11px;
+  color: #52525b;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.quota-header span:first-child {
   color: #71717a;
   font-weight: 500;
+}
+
+.quota-header span:last-child {
+  color: #09090b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .quota-track {
@@ -606,52 +620,6 @@
 
 .quota-fill.full {
   background: #ef4444;
-}
-
-/* ── Action Buttons ── */
-.cell-actions {
-  text-align: right;
-}
-
-.action-buttons-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.table-act-btn {
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  border: 1px solid #e4e4e7;
-  background: #ffffff;
-  color: #27272a;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.table-act-btn:hover {
-  background: #f4f4f5;
-  color: #09090b;
-  border-color: #d4d4d8;
-}
-
-.table-act-btn.plan {
-  background: #09090b;
-  border-color: #09090b;
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.table-act-btn.plan:hover {
-  background: #27272a;
-  border-color: #27272a;
 }
 
 /* Modals */

@@ -39,7 +39,7 @@
 /* ── KPI STATS GRID ── */
 .super-admin-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin: 0 0 20px;
 }
@@ -62,6 +62,7 @@
 .super-admin-stat-card:nth-child(1) { animation-delay: 0.04s; }
 .super-admin-stat-card:nth-child(2) { animation-delay: 0.08s; }
 .super-admin-stat-card:nth-child(3) { animation-delay: 0.12s; }
+.super-admin-stat-card:nth-child(4) { animation-delay: 0.16s; }
 
 .super-admin-stat-card:hover {
   transform: translateY(-2px);
@@ -137,6 +138,25 @@
   gap: 2px;
 }
 
+.super-admin-panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.super-admin-panel-title-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .super-admin-panel-titles h2 {
   margin: 0;
   color: #09090b;
@@ -152,9 +172,33 @@
   font-weight: 400;
 }
 
+.super-admin-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.super-admin-header-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.super-admin-view-all-btn {
+  padding: 0 14px;
+}
+
 .super-admin-add-button {
-  height: 36px;
-  padding: 0 15px;
+  height: 34px;
+  padding: 0 14px;
   font-size: 13px;
   font-weight: 600;
   display: inline-flex;
@@ -400,7 +444,32 @@
   color: #09090b;
 }
 
-/* ── VIEW USERS BUTTON ── */
+/* ── ROW ACTION BUTTONS ── */
+.super-admin-row-btn {
+  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.super-admin-view-users-btn {
+  padding: 0 12px;
+  min-width: 88px;
+}
+
+.super-admin-manage-btn {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 76px;
+}
+
 .super-admin-student-count {
   background: transparent;
   border: 1px solid #e4e4e7;
@@ -420,15 +489,6 @@
   background: #f4f4f5;
   border-color: #d4d4d8;
   color: #09090b;
-}
-
-/* ── MANAGE BUTTON ── */
-.super-admin-manage-btn {
-  height: 32px;
-  padding: 0 14px;
-  font-size: 12px;
-  font-weight: 600;
-  min-width: 76px;
 }
 
 /* ── EMPTY STATE ── */
@@ -710,9 +770,30 @@
   color: #a1a1aa;
 }
 
-.dark .super-admin-institutes-panel {
+.dark .super-admin-institutes-panel,
+.dark .super-admin-inquiries-panel {
   background: #18181b;
   border-color: #27272a;
+}
+
+.dark .super-admin-panel-title-icon {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.dark .super-admin-header-btn,
+.dark .super-admin-view-users-btn {
+  border-color: #27272a;
+  color: #f4f4f5;
+  background: #18181b;
+}
+
+.dark .super-admin-header-btn:hover,
+.dark .super-admin-view-users-btn:hover {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #ffffff;
 }
 
 .dark .super-admin-panel-titles h2 {
@@ -890,20 +971,14 @@
    RESPONSIVE LAYOUT
    ========================================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .super-admin-dashboard {
     padding: 16px 24px 36px;
   }
 
   .super-admin-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-}
-
-@media (max-width: 600px) {
-  .super-admin-stats-grid {
-    grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 
@@ -913,8 +988,16 @@
   }
 
   .super-admin-panel-head {
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
+  }
+
+  .super-admin-panel-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .super-admin-panel-toolbar {
@@ -953,11 +1036,15 @@
   }
 }
 
-@media (max-width: 540px) {
-  .super-admin-panel-head {
-    flex-direction: column;
-    align-items: flex-start;
+@media (max-width: 640px) {
+  .super-admin-stats-grid {
+    grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .super-admin-header-btn {
+    flex: 1;
+    min-width: 0;
   }
 
   .super-admin-add-button {
@@ -966,10 +1053,6 @@
 }
 
 @media (max-width: 480px) {
-  .super-admin-stats-grid {
-    grid-template-columns: 1fr;
-  }
-
   .super-admin-filter-pill {
     font-size: 11px;
     padding: 0 6px;
@@ -979,6 +1062,11 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+
+  .super-admin-row-btn {
+    width: 100%;
+    min-width: 0;
   }
 
   .super-admin-manage-btn {

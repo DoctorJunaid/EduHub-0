@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
+import { getCategoryIcon, getCategoryLabel } from "./supportCategories";
 
 export const CATEGORY_ICONS = {
   Academic: { icon: "📚", label: "Homework or subject" },
@@ -16,24 +16,24 @@ export const CATEGORY_ICONS = {
 };
 
 export const TicketCategoryBadge = ({ category = "Other", showIconOnly = false, className = "" }) => {
-  const info = CATEGORY_ICONS[category] || { icon: "❓", label: category };
+  const label = getCategoryLabel(category);
+  const Icon = getCategoryIcon(category);
 
   if (showIconOnly) {
     return (
-      <span className={`inline-flex items-center justify-center text-base select-none ${className}`} title={info.label}>
-        {info.icon}
+      <span className={`inline-flex items-center justify-center text-zinc-600 ${className}`} title={label}>
+        <Icon className="w-3.5 h-3.5 text-zinc-500" />
       </span>
     );
   }
 
   return (
-    <Badge
-      variant="secondary"
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-normal bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 ${className}`}
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-zinc-100 text-zinc-700 border border-zinc-200/80 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 shrink-0 whitespace-nowrap ${className}`}
     >
-      <span className="text-xs leading-none">{info.icon}</span>
-      <span>{info.label}</span>
-    </Badge>
+      <Icon className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+      <span>{label}</span>
+    </span>
   );
 };
 

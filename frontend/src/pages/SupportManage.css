@@ -1,17 +1,19 @@
 /* =========================================================
-   EduHub — Institute Admin Support Management Console
-   Standardized layout conforming to Institute Admin design system
+   EduHub — Super Admin Help & Support Management Console
+   Standardized layout conforming to Super Admin neutral theme
    ========================================================= */
 
 .institute-support {
+  padding: 12px 32px 80px;
+  max-width: 1320px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: #09090b;
   display: flex;
   flex-direction: column;
-  gap: 24px !important;
-  color: #09090b;
+  gap: 20px;
   width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 24px 28px;
 }
 
 /* ---------------------------------------------------------
@@ -78,29 +80,33 @@
 }
 
 .isu-new-btn {
-  height: 40px !important;
-  padding: 0 18px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
   background: #09090b !important;
   color: #ffffff !important;
+  border: 1px solid #09090b !important;
   border-radius: 8px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  justify-content: center !important;
+  gap: 7px !important;
   flex-shrink: 0 !important;
   cursor: pointer !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   transition: all 0.2s ease !important;
+  white-space: nowrap !important;
 }
 
 .isu-new-btn:hover {
   background: #27272a !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  border-color: #27272a !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* ---------------------------------------------------------
-   KPI Metrics Grid
+   KPI Metrics Grid (3 cards in 1 row on desktop)
    --------------------------------------------------------- */
 .isu-stats {
   display: grid;
@@ -113,12 +119,12 @@
   background: #ffffff;
   border: 1px solid #e4e4e7;
   border-radius: 12px;
-  padding: 20px 22px;
+  padding: 18px 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 124px;
+  min-height: 112px;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -130,9 +136,9 @@
 
 .isu-stat-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #71717a;
   line-height: 1;
   margin-bottom: 10px;
@@ -147,48 +153,34 @@
 }
 
 .isu-stat-value {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: #09090b;
 }
 
 .isu-stat-value.red {
-  color: #e11d48;
-}
-
-.isu-stat-value.blue {
-  color: #2563eb;
-}
-
-.isu-stat-value.emerald {
-  color: #10b981;
+  color: #dc2626;
 }
 
 .isu-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
 }
 
 .isu-stat-icon.red {
-  background: rgba(225, 29, 72, 0.08);
-  color: #e11d48;
-}
-
-.isu-stat-icon.blue {
-  background: rgba(37, 99, 235, 0.08);
-  color: #2563eb;
-}
-
-.isu-stat-icon.emerald {
-  background: rgba(16, 185, 129, 0.08);
-  color: #10b981;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
 }
 
 .isu-stat-sub {
@@ -202,7 +194,7 @@
    Bulk Action Bar
    --------------------------------------------------------- */
 .isu-bulk-bar {
-  padding: 12px 18px;
+  padding: 10px 16px;
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
   border-radius: 10px;
@@ -220,23 +212,25 @@
 
 /* ---------------------------------------------------------
    Ticket Panel (Filter Toolbar + Table / Empty State)
+   NO INTERNAL VERTICAL SCROLL: Grows naturally with content
    --------------------------------------------------------- */
 .isu-panel {
   background: #ffffff;
   border: 1px solid #e4e4e7;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
   width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* ---------------------------------------------------------
-   Filter Toolbar
+   Filter Toolbar (Clean unified row)
    --------------------------------------------------------- */
 .isu-toolbar {
-  padding: 14px 18px;
+  padding: 12px 16px;
   background: #fafafa;
   border-bottom: 1px solid #e4e4e7;
   display: flex;
@@ -245,18 +239,21 @@
   gap: 12px;
   width: 100%;
   box-sizing: border-box;
+  border-radius: 12px 12px 0 0;
 }
 
 .isu-toolbar-grid {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) 185px 145px 145px;
-  gap: 12px;
+  display: flex;
   align-items: center;
+  gap: 10px;
   flex: 1;
+  min-width: 0;
 }
 
 .isu-toolbar-grid.user-grid {
-  grid-template-columns: minmax(280px, 1fr) 200px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .isu-toolbar-actions {
@@ -270,24 +267,25 @@
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%;
+  flex: 1;
+  min-width: 220px;
 }
 
 .isu-search-icon {
   position: absolute;
-  left: 14px;
+  left: 13px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   color: #71717a;
   pointer-events: none;
 }
 
 .isu-search-input {
   width: 100%;
-  height: 42px !important;
-  padding: 0 14px 0 40px !important;
+  height: 38px !important;
+  padding: 0 14px 0 38px !important;
   font-size: 13px !important;
   border: 1px solid #e4e4e7 !important;
   border-radius: 8px !important;
@@ -304,11 +302,11 @@
 }
 
 .isu-search-input::placeholder {
-  color: #71717a !important;
+  color: #a1a1aa !important;
 }
 
 .isu-select-trigger {
-  height: 42px !important;
+  height: 38px !important;
   border-radius: 8px !important;
   border: 1px solid #e4e4e7 !important;
   background: #ffffff !important;
@@ -318,6 +316,9 @@
   cursor: pointer !important;
   box-sizing: border-box !important;
   transition: all 0.2s ease !important;
+  width: auto !important;
+  min-width: 135px !important;
+  flex-shrink: 0 !important;
 }
 
 .isu-select-trigger:hover {
@@ -334,14 +335,14 @@
   background: #ffffff !important;
   border: 1px solid #e4e4e7 !important;
   border-radius: 10px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
   padding: 5px !important;
   z-index: 9999 !important;
   font-family: inherit !important;
 }
 
 .isu-select-content.category-content {
-  min-width: 220px !important;
+  min-width: 200px !important;
   max-height: 320px !important;
 }
 
@@ -355,7 +356,7 @@
 
 /* Styled Select Item */
 .isu-select-item {
-  height: 36px !important;
+  height: 34px !important;
   padding: 0 28px 0 10px !important;
   border-radius: 6px !important;
   font-size: 13px !important;
@@ -383,10 +384,10 @@
 }
 
 .isu-reset-btn {
-  height: 42px !important;
-  padding: 0 14px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
   color: #71717a !important;
   background: #ffffff !important;
   border: 1px solid #e4e4e7 !important;
@@ -398,26 +399,75 @@
   box-sizing: border-box !important;
   transition: all 0.2s ease !important;
   flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 .isu-reset-btn:hover {
   color: #09090b !important;
-  border-color: #09090b !important;
+  border-color: #d4d4d8 !important;
+  background: #f4f4f5 !important;
 }
 
 /* ---------------------------------------------------------
    Panel Content (Table or Empty State)
+   Natural vertical growth, no internal vertical scrolling
    --------------------------------------------------------- */
 .isu-panel-body {
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
+  min-height: 200px;
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.isu-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 12px 12px;
+}
+
+.isu-ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+  min-width: 900px;
+}
+
+.isu-ticket-table thead {
+  background: #f8fafc;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.isu-ticket-table th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.isu-ticket-table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+.isu-ticket-table tbody tr {
+  border-bottom: 1px solid #f4f4f5;
+  transition: background 0.15s ease;
+}
+
+.isu-ticket-table tbody tr:last-child {
+  border-bottom: none;
 }
 
 .isu-loading-table {
   width: 100%;
-  min-height: 280px;
-  flex: 1;
+  min-height: 200px;
 }
 
 .isu-skeleton-cell {
@@ -446,8 +496,7 @@
 
 .isu-ticket-load-error {
   display: flex;
-  min-height: 280px;
-  flex: 1;
+  min-height: 240px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -463,7 +512,7 @@
 }
 
 .isu-pagination-slot {
-  min-height: 64px;
+  min-height: 56px;
 }
 
 .isu-pagination-slot.is-loading {
@@ -491,7 +540,7 @@
 .isu-stat-skeleton-value {
   display: inline-block;
   width: 62px;
-  height: 28px;
+  height: 26px;
   border-radius: 5px;
   background: #e4e4e7;
   animation: isuSkeletonPulse 1.5s ease-in-out infinite;
@@ -501,11 +550,6 @@
 @keyframes isuSkeletonPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
-}
-
-.isu-panel .isu-panel-body > .overflow-x-auto {
-  border: none !important;
-  border-radius: 0 !important;
 }
 
 .isu-empty {
@@ -548,8 +592,8 @@
 }
 
 .isu-empty-btn {
-  height: 40px !important;
-  padding: 0 20px !important;
+  height: 38px !important;
+  padding: 0 18px !important;
   background: #09090b !important;
   color: #ffffff !important;
   border-radius: 8px !important;
@@ -580,6 +624,12 @@
   background: var(--card, #18181b) !important;
   border-color: var(--border, #27272a) !important;
   color: var(--foreground, #fafafa) !important;
+}
+
+.dark .isu-stat-icon {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #fafafa;
 }
 
 .dark .isu-skeleton-cell,
@@ -632,17 +682,17 @@
    --------------------------------------------------------- */
 @media (max-width: 1024px) {
   .institute-support {
-    padding: 20px 24px;
-    gap: 20px !important;
+    padding: 16px 24px;
+    gap: 16px;
   }
   .isu-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   .isu-toolbar {
     flex-wrap: wrap;
   }
   .isu-toolbar-grid {
-    grid-template-columns: 1fr 1fr;
+    flex-wrap: wrap;
   }
   .isu-toolbar-actions {
     width: 100%;
@@ -652,8 +702,8 @@
 
 @media (max-width: 768px) {
   .institute-support {
-    padding: 16px;
-    gap: 16px !important;
+    padding: 12px 16px;
+    gap: 16px;
   }
   .isu-stats {
     grid-template-columns: 1fr;
@@ -661,10 +711,14 @@
   .isu-toolbar {
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 12px;
   }
   .isu-toolbar-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .isu-toolbar-grid .isu-select-trigger {
+    width: 100% !important;
   }
   .isu-toolbar-actions {
     width: 100%;
