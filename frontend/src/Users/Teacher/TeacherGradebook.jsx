@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Award,
   MoreVertical,
@@ -20,6 +22,8 @@ import {
   saveGradebookResult,
   deleteGradebookResult,
 } from "@/api/gradebook.api";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,78 +64,51 @@ const calculateGradeAndGpa = (percentage) => {
 
 export default function TeacherGradebook() {
   const [params] = useSearchParams();
+  const queryClient = useQueryClient();
 
-  // Backend Data State
-  const [classes, setClasses] = useState([]);
+  // State
   const [selectedClassId, setSelectedClassId] = useState("");
-  const [students, setStudents] = useState([]);
-  const [exams, setExams] = useState([]);
-  const [results, setResults] = useState([]);
-  const [stats, setStats] = useState(null);
-
-  // Loading States
-  const [loading, setLoading] = useState(true);
-  const [loadingResults, setLoadingResults] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  // Filters & Search
   const [selectedTerm, setSelectedTerm] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   // Dialog & Action States
   const [editingResult, setEditingResult] = useState(null); // null = closed, {} = add, obj = edit
   const [modalClassId, setModalClassId] = useState("");
-  const [modalStudents, setModalStudents] = useState([]);
-  const [loadingModalStudents, setLoadingModalStudents] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Form interactive calculation state
   const [formMarksObtained, setFormMarksObtained] = useState(85);
   const [formTotalMarks, setFormTotalMarks] = useState(100);
 
-  // 1. Fetch Classes on mount
-  const loadClasses = useCallback(async (showToast = false) => {
-    try {
-      if (showToast) setRefreshing(true);
-      else setLoading(true);
-      setLoadError("");
-
+  // 1. Classes Query
+  const classesQuery = useQuery({
+    queryKey: qk.teacherGradebookClasses(),
+    queryFn: async () => {
       const res = await getTeacherGradebookClasses();
-      const loadedClasses = res.data?.data || [];
-      setClasses(loadedClasses);
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (loadedClasses.length > 0) {
-        const requestedClassId = params.get("classId");
-        const found = loadedClasses.find(
-          (c) => String(c.id || c._id || c.classId) === requestedClassId
-        );
-        setSelectedClassId(
-          found
-            ? String(found.id || found._id || found.classId)
-            : String(loadedClasses[0].id || loadedClasses[0]._id || loadedClasses[0].classId)
-        );
-      } else {
-        setSelectedClassId("");
-      }
+  const classes = classesQuery.data || [];
 
-      if (showToast) toast.success("Classes synchronized.");
-    } catch (err) {
-      const msg = err.response?.data?.message || "Failed to load assigned classes.";
-      setLoadError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [params]);
-
+  // Sync selected class id on load or param
   useEffect(() => {
-    void loadClasses();
-  }, [loadClasses]);
+    if (classes.length > 0 && !selectedClassId) {
+      const requestedClassId = params.get("classId");
+      const found = classes.find(
+        (c) => String(c.id || c._id || c.classId) === requestedClassId
+      );
+      setSelectedClassId(
+        found
+          ? String(found.id || found._id || found.classId)
+          : String(classes[0].id || classes[0]._id || classes[0].classId)
+      );
+    }
+  }, [classes, selectedClassId, params]);
 
   const selectedClass = useMemo(() => {
     return (
@@ -141,78 +118,123 @@ export default function TeacherGradebook() {
     );
   }, [classes, selectedClassId]);
 
-  // 2. Fetch Students, Exams & Results when Class or Term changes
-  const loadClassData = useCallback(async (cls, termVal) => {
-    if (!cls && !selectedClassId) {
-      setStudents([]);
-      setExams([]);
-      setResults([]);
-      return;
-    }
-    try {
-      setLoadingResults(true);
-      const cId = cls?.id || cls?._id || cls?.classId || selectedClassId;
-      const cName = cls?.className || cls?.gradeOrClass || "";
-      const cSec = cls?.section || "";
-      const cSub = cls?.subject || "";
+  const cId = selectedClass?.id || selectedClass?._id || selectedClass?.classId || selectedClassId;
+  const cName = selectedClass?.className || selectedClass?.gradeOrClass || "";
+  const cSec = selectedClass?.section || "";
+  const cSub = selectedClass?.subject || "";
 
-      const [studentsRes, examsRes, resultsRes] = await Promise.all([
-        getGradebookStudents({ classId: cId, className: cName, section: cSec }),
-        getGradebookExams({ className: cName, section: cSec, subject: cSub }),
-        getGradebookResults({
-          className: cName,
-          section: cSec,
-          subject: cSub,
-          term: termVal !== "All" ? termVal : undefined,
-        }),
-      ]);
+  // 2. Results Query
+  const resultsQuery = useQuery({
+    queryKey: qk.teacherGradebookResults({
+      className: cName,
+      section: cSec,
+      subject: cSub,
+      term: selectedTerm,
+    }),
+    queryFn: async () => {
+      if (!cName && !cId) return { results: [], stats: null };
+      const res = await getGradebookResults({
+        className: cName,
+        section: cSec,
+        subject: cSub,
+        term: selectedTerm !== "All" ? selectedTerm : undefined,
+      });
+      return res.data?.data || { results: [], stats: null };
+    },
+    enabled: Boolean(cName || cId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const loadedStudents = studentsRes.data?.data || [];
-      setStudents(loadedStudents);
-      setExams(examsRes.data?.data || []);
-      setResults(resultsRes.data?.data?.results || []);
-      setStats(resultsRes.data?.data?.stats || null);
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to load gradebook records."
-      );
-    } finally {
-      setLoadingResults(false);
-    }
-  }, [selectedClassId]);
+  // 3. Exams Query
+  const examsQuery = useQuery({
+    queryKey: qk.teacherGradebookExams({
+      className: cName,
+      section: cSec,
+      subject: cSub,
+    }),
+    queryFn: async () => {
+      if (!cName && !cId) return [];
+      const res = await getGradebookExams({
+        className: cName,
+        section: cSec,
+        subject: cSub,
+      });
+      return res.data?.data || [];
+    },
+    enabled: Boolean(cName || cId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    if (selectedClass) {
-      void loadClassData(selectedClass, selectedTerm);
-    }
-  }, [selectedClass, selectedTerm, loadClassData]);
-
-  // Load Registered Students for Modal Class Selector
-  useEffect(() => {
-    const targetId = modalClassId || selectedClassId;
-    if (!targetId && !classes.length) return;
-    const targetCls = classes.find(
-      (c) => String(c.id || c._id || c.classId) === String(targetId)
+  // 4. Modal Students Query
+  const targetModalClassId = modalClassId || selectedClassId;
+  const targetModalCls = useMemo(() => {
+    return classes.find(
+      (c) => String(c.id || c._id || c.classId) === String(targetModalClassId)
     ) || selectedClass;
+  }, [classes, targetModalClassId, selectedClass]);
 
-    if (targetCls) {
-      setLoadingModalStudents(true);
-      getGradebookStudents({
-        classId: targetCls.id || targetCls._id || targetCls.classId,
-        className: targetCls.className || targetCls.gradeOrClass,
-        section: targetCls.section,
-      })
-        .then((res) => {
-          setModalStudents(res.data?.data || []);
-        })
-        .catch(() => {
-          setModalStudents([]);
-        })
-        .finally(() => {
-          setLoadingModalStudents(false);
-        });
-    }
-  }, [modalClassId, selectedClassId, classes, selectedClass]);
+  const modalStudentsQuery = useQuery({
+    queryKey: qk.teacherGradebookStudents({
+      classId: targetModalCls?.id || targetModalCls?._id || targetModalCls?.classId,
+      className: targetModalCls?.className || targetModalCls?.gradeOrClass,
+      section: targetModalCls?.section,
+    }),
+    queryFn: async () => {
+      if (!targetModalCls) return [];
+      const res = await getGradebookStudents({
+        classId: targetModalCls.id || targetModalCls._id || targetModalCls.classId,
+        className: targetModalCls.className || targetModalCls.gradeOrClass,
+        section: targetModalCls.section,
+      });
+      return res.data?.data || [];
+    },
+    enabled: Boolean(editingResult !== null && targetModalCls),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const results = resultsQuery.data?.results || [];
+  const stats = resultsQuery.data?.stats || null;
+  const exams = examsQuery.data || [];
+  const modalStudents = modalStudentsQuery.data || [];
+  const loadingModalStudents = modalStudentsQuery.isLoading;
+
+  const loading = classesQuery.isLoading;
+  const loadingResults = resultsQuery.isLoading;
+  const isRefreshing = classesQuery.isFetching || resultsQuery.isFetching;
+  const loadError =
+    classesQuery.error?.response?.data?.message ||
+    resultsQuery.error?.response?.data?.message ||
+    "";
+
+  // 5. Save Marks Mutation
+  const saveMutation = useMutation({
+    mutationFn: (payload) => saveGradebookResult(payload),
+    onSuccess: (res, vars) => {
+      toast.success(
+        vars._id
+          ? "Marks updated successfully!"
+          : "Student marks recorded successfully!"
+      );
+      setEditingResult(null);
+      queryClient.invalidateQueries({ queryKey: ["teacher", "gradebook", "results"] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to record student marks.");
+    },
+  });
+
+  // 6. Delete Marks Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteGradebookResult(id),
+    onSuccess: () => {
+      toast.success("Marks record deleted successfully.");
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["teacher", "gradebook", "results"] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to delete record.");
+    },
+  });
 
   // Extract available distinct terms
   const termsList = useMemo(() => {
@@ -223,9 +245,9 @@ export default function TeacherGradebook() {
     return Array.from(set);
   }, [results]);
 
-  // Filtered Results with Search
+  // Filtered Results with Debounced Search
   const filteredResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = debouncedSearchQuery.trim().toLowerCase();
     return results.filter((row) => {
       const studentName = (row.student?.name || "").toLowerCase();
       const rollNo = (row.student?.rollNumber || "").toLowerCase();
@@ -242,15 +264,7 @@ export default function TeacherGradebook() {
         remarks.includes(q)
       );
     });
-  }, [results, searchQuery]);
-
-  // Pagination Math
-  const pageCount = Math.max(1, Math.ceil(filteredResults.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visibleRows = filteredResults.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  }, [results, debouncedSearchQuery]);
 
   // Open Add Marks Dialog
   const openAddMarks = () => {
@@ -263,7 +277,7 @@ export default function TeacherGradebook() {
     setFormTotalMarks(100);
     setEditingResult({
       classId: defaultClsId,
-      studentId: students[0]?.id || students[0]?._id || "",
+      studentId: modalStudents[0]?.id || modalStudents[0]?._id || "",
       examName: exams[0]?.examName || "Midterm Examination",
       term: "Midterm",
       totalMarks: 100,
@@ -298,8 +312,8 @@ export default function TeacherGradebook() {
     return calculateGradeAndGpa(formPercentage);
   }, [formPercentage]);
 
-  // 3. Save Marks Handler
-  const handleSaveMarks = async (e) => {
+  // Save Marks Form Submit
+  const handleSaveMarks = (e) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const chosenClassId = String(form.get("modalClassId") || modalClassId || selectedClassId);
@@ -335,57 +349,35 @@ export default function TeacherGradebook() {
       return;
     }
 
-    try {
-      setSaving(true);
-      const payload = {
-        _id: editingResult?._id || editingResult?.id || undefined,
-        studentId,
-        examName,
-        subject: activeCls?.subject || "General",
-        className: activeCls?.className || "Class 10",
-        section: activeCls?.section || "A",
-        term,
-        marksObtained,
-        totalMarks,
-        remarks,
-      };
-
-      const res = await saveGradebookResult(payload);
-      if (res.data?.success) {
-        toast.success(
-          editingResult?._id || editingResult?.id
-            ? "Marks updated successfully!"
-            : "Student marks recorded successfully!"
-        );
-        setEditingResult(null);
-        await loadClassData(selectedClass, selectedTerm);
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to record student marks."
-      );
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({
+      _id: editingResult?._id || editingResult?.id || undefined,
+      studentId,
+      examName,
+      subject: activeCls?.subject || "General",
+      className: activeCls?.className || "Class 10",
+      section: activeCls?.section || "A",
+      term,
+      marksObtained,
+      totalMarks,
+      remarks,
+    });
   };
 
-  // 4. Delete Marks Handler
-  const handleDeleteMarks = async () => {
+  const saving = saveMutation.isPending;
+
+  // Delete Marks Confirm Handler
+  const handleDeleteMarks = () => {
     if (!deleteTarget) return;
-    try {
-      const id = deleteTarget._id || deleteTarget.id;
-      const res = await deleteGradebookResult(id);
-      if (res.data?.success) {
-        toast.success("Marks record deleted successfully.");
-        setDeleteTarget(null);
-        await loadClassData(selectedClass, selectedTerm);
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to delete record."
-      );
-    }
+    deleteMutation.mutate(deleteTarget._id || deleteTarget.id);
   };
+
+  // Pagination Math
+  const pageCount = Math.max(1, Math.ceil(filteredResults.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const visibleRows = filteredResults.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <main
@@ -398,12 +390,17 @@ export default function TeacherGradebook() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadClasses(true)}
-            disabled={refreshing}
+            onClick={() => {
+              classesQuery.refetch();
+              resultsQuery.refetch();
+              examsQuery.refetch();
+              toast.success("Gradebook synchronized.");
+            }}
+            disabled={isRefreshing}
             className="toolbar-btn-outline flex items-center gap-1.5"
           >
-            {refreshing ? (
-              <RefreshCw className="size-3.5 animate-spin" />
+            {isRefreshing ? (
+              <Spinner className="size-3.5" />
             ) : (
               <RefreshCw size={14} />
             )}
@@ -833,10 +830,11 @@ export default function TeacherGradebook() {
                   Cancel
                 </Button>
                 <Button
-                  className="toolbar-btn toolbar-btn-primary"
+                  className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
                   type="submit"
                   disabled={saving || modalStudents.length === 0}
                 >
+                  {saving && <Spinner className="size-4 mr-1 text-white" />}
                   {saving ? "Saving..." : "Save Marks"}
                 </Button>
               </DialogFooter>

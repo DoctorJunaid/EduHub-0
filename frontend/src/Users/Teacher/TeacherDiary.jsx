@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
   MoreVertical,
@@ -20,6 +21,8 @@ import {
   updateDiaryEntry,
   deleteDiaryEntry,
 } from "@/api/diary.api";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,20 +63,12 @@ const formatDateDisplay = (dateVal) => {
 
 export default function TeacherDiary() {
   const [params] = useSearchParams();
-
-  // Live Backend Data
-  const [classes, setClasses] = useState([]);
-  const [entries, setEntries] = useState([]);
-
-  // Loading & sync states
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   // Filters & Search
   const [selectedClassFilter, setSelectedClassFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [page, setPage] = useState(1);
   const pageSize = 6;
 
@@ -82,38 +77,34 @@ export default function TeacherDiary() {
   const [formClassChoice, setFormClassChoice] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // 1. Fetch Classes and Diary Entries from Backend
-  const loadData = useCallback(async (showToast = false) => {
-    try {
-      if (showToast) setRefreshing(true);
-      else setLoading(true);
-      setLoadError("");
+  // 1. Classes Query
+  const classesQuery = useQuery({
+    queryKey: qk.teacherDiaryClasses(),
+    queryFn: async () => {
+      const res = await getTeacherDiaryClasses();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const [classesRes, entriesRes] = await Promise.all([
-        getTeacherDiaryClasses(),
-        getTeacherDiaryEntries(),
-      ]);
+  // 2. Entries Query
+  const entriesQuery = useQuery({
+    queryKey: qk.teacherDiaryEntries(),
+    queryFn: async () => {
+      const res = await getTeacherDiaryEntries();
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const loadedClasses = classesRes.data?.data || [];
-      const loadedEntries = entriesRes.data?.data || [];
-
-      setClasses(loadedClasses);
-      setEntries(loadedEntries);
-
-      if (showToast) toast.success("Diary entries synchronized.");
-    } catch (err) {
-      const msg = err.response?.data?.message || "Failed to load daily diary records.";
-      setLoadError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+  const classes = classesQuery.data || [];
+  const entries = entriesQuery.data || [];
+  const loading = classesQuery.isLoading || entriesQuery.isLoading;
+  const isRefreshing = classesQuery.isFetching || entriesQuery.isFetching;
+  const loadError =
+    classesQuery.error?.response?.data?.message ||
+    entriesQuery.error?.response?.data?.message ||
+    "";
 
   // Handle URL requested class
   useEffect(() => {
@@ -125,7 +116,7 @@ export default function TeacherDiary() {
 
   // Filtered & Searched Entries
   const filteredEntries = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = debouncedSearchQuery.trim().toLowerCase();
     return entries.filter((entry) => {
       const matchesClass =
         selectedClassFilter === "All"
@@ -141,7 +132,7 @@ export default function TeacherDiary() {
 
       return matchesClass && matchesSearch;
     });
-  }, [entries, selectedClassFilter, searchQuery]);
+  }, [entries, selectedClassFilter, debouncedSearchQuery]);
 
   // Pagination Math
   const pageCount = Math.max(1, Math.ceil(filteredEntries.length / pageSize));
@@ -170,8 +161,25 @@ export default function TeacherDiary() {
     setFormEntry(entry);
   };
 
-  // 2. Save / Update Entry Handler
-  const handleSaveEntry = async (e) => {
+  // 3. Save / Update Entry Mutation
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      if (id) {
+        return updateDiaryEntry(id, payload);
+      }
+      return createDiaryEntry(payload);
+    },
+    onSuccess: (res, vars) => {
+      toast.success(vars.id ? "Diary entry updated successfully!" : "New diary entry published!");
+      setFormEntry(null);
+      queryClient.invalidateQueries({ queryKey: qk.teacherDiaryEntries() });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to save diary entry.");
+    },
+  });
+
+  const handleSaveEntry = (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const classId = String(formData.get("classId") || "");
@@ -213,62 +221,44 @@ export default function TeacherDiary() {
       return;
     }
 
-    try {
-      setSaving(true);
-      const payload = {
-        classId: selectedCls?._id || selectedCls?.id || formEntry?.classId || undefined,
-        className: finalClassName,
-        gradeOrClass: finalClassName,
-        section: finalSection,
-        subject: finalSubject,
-        date,
-        title,
-        recap,
-        homework,
-        resources,
-      };
+    const payload = {
+      classId: selectedCls?._id || selectedCls?.id || formEntry?.classId || undefined,
+      className: finalClassName,
+      gradeOrClass: finalClassName,
+      section: finalSection,
+      subject: finalSubject,
+      date,
+      title,
+      recap,
+      homework,
+      resources,
+    };
 
-      if (formEntry?._id || formEntry?.id) {
-        const id = formEntry._id || formEntry.id;
-        const res = await updateDiaryEntry(id, payload);
-        if (res.data?.success) {
-          toast.success("Diary entry updated successfully!");
-        }
-      } else {
-        const res = await createDiaryEntry(payload);
-        if (res.data?.success) {
-          toast.success("New diary entry published!");
-        }
-      }
-
-      setFormEntry(null);
-      await loadData();
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to save diary entry."
-      );
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({
+      id: formEntry?._id || formEntry?.id || undefined,
+      payload,
+    });
   };
 
-  // 3. Delete Entry Handler
-  const handleDeleteEntry = async () => {
+  // 4. Delete Entry Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteDiaryEntry(id),
+    onSuccess: () => {
+      toast.success("Diary entry deleted successfully.");
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: qk.teacherDiaryEntries() });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to delete diary entry.");
+    },
+  });
+
+  const handleDeleteEntry = () => {
     if (!deleteTarget) return;
-    try {
-      const id = deleteTarget._id || deleteTarget.id;
-      const res = await deleteDiaryEntry(id);
-      if (res.data?.success) {
-        toast.success("Diary entry deleted successfully.");
-        setDeleteTarget(null);
-        await loadData();
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to delete diary entry."
-      );
-    }
+    deleteMutation.mutate(deleteTarget._id || deleteTarget.id);
   };
+
+  const saving = saveMutation.isPending;
 
   return (
     <main
@@ -303,12 +293,16 @@ export default function TeacherDiary() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadData(true)}
-            disabled={refreshing}
+            onClick={() => {
+              classesQuery.refetch();
+              entriesQuery.refetch();
+              toast.success("Diary entries synchronized.");
+            }}
+            disabled={isRefreshing}
             className="toolbar-btn-outline flex items-center gap-1.5"
           >
-            {refreshing ? (
-              <RefreshCw className="size-3.5 animate-spin" />
+            {isRefreshing ? (
+              <Spinner className="size-3.5" />
             ) : (
               <RefreshCw size={14} />
             )}
@@ -606,10 +600,11 @@ export default function TeacherDiary() {
                   Cancel
                 </Button>
                 <Button
-                  className="toolbar-btn toolbar-btn-primary"
+                  className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
                   type="submit"
                   disabled={saving}
                 >
+                  {saving && <Spinner className="size-4 mr-1 text-white" />}
                   {saving ? "Saving..." : "Save Diary Entry"}
                 </Button>
               </DialogFooter>

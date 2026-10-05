@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCheck,
   CircleAlert,
@@ -18,6 +19,8 @@ import {
   getTeacherAttendanceRoster,
   saveTeacherStudentAttendance,
 } from "@/api/teacherAttendance.api";
+import { qk } from "@/lib/queryKeys";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -43,65 +46,43 @@ const initials = (name = "") =>
 
 export default function TeacherAttendance() {
   const [params] = useSearchParams();
+  const queryClient = useQueryClient();
 
-  // Backend state
-  const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [date, setDate] = useState(getTodayKey());
-  const [roster, setRoster] = useState([]);
-  
-  // Loading & sync state
-  const [loadingClasses, setLoadingClasses] = useState(true);
-  const [loadingRoster, setLoadingRoster] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState("");
-
-  // Filters & Draft state
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [draft, setDraft] = useState({}); // { [studentId]: "Present" | "Absent" | "Late" | "On Leave" }
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  // 1. Fetch Teacher Classes
-  const loadClasses = useCallback(async (showToast = false) => {
-    try {
-      if (showToast) setRefreshing(true);
-      else setLoadingClasses(true);
-      setLoadError("");
-
+  // 1. Classes Query
+  const classesQuery = useQuery({
+    queryKey: qk.teacherAttendanceClasses(),
+    queryFn: async () => {
       const res = await getTeacherAttendanceClasses();
-      const loadedClasses = res.data?.data || [];
-      setClasses(loadedClasses);
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (loadedClasses.length > 0) {
-        const requestedClassId = params.get("classId");
-        const found = loadedClasses.find(
-          (c) => String(c.id || c._id || c.classId) === requestedClassId
-        );
-        setSelectedClassId(
-          found
-            ? String(found.id || found._id || found.classId)
-            : String(loadedClasses[0].id || loadedClasses[0]._id || loadedClasses[0].classId)
-        );
-      } else {
-        setSelectedClassId("");
-      }
+  const classes = classesQuery.data || [];
+  const loadingClasses = classesQuery.isLoading;
 
-      if (showToast) toast.success("Classes synchronized.");
-    } catch (err) {
-      const msg = err.response?.data?.message || "Failed to load assigned classes.";
-      setLoadError(msg);
-      toast.error(msg);
-    } finally {
-      setLoadingClasses(false);
-      setRefreshing(false);
-    }
-  }, [params]);
-
+  // Sync selectedClassId on load or query param
   useEffect(() => {
-    void loadClasses();
-  }, [loadClasses]);
+    if (classes.length > 0 && !selectedClassId) {
+      const requestedClassId = params.get("classId");
+      const found = classes.find(
+        (c) => String(c.id || c._id || c.classId) === requestedClassId
+      );
+      setSelectedClassId(
+        found
+          ? String(found.id || found._id || found.classId)
+          : String(classes[0].id || classes[0]._id || classes[0].classId)
+      );
+    }
+  }, [classes, selectedClassId, params]);
 
   const selectedClass = useMemo(() => {
     return (
@@ -111,56 +92,56 @@ export default function TeacherAttendance() {
     );
   }, [classes, selectedClassId]);
 
-  // 2. Fetch Student Roster with Existing Attendance for selected Class & Date
-  const loadRoster = useCallback(
-    async (cls, dateVal) => {
-      if (!cls && !selectedClassId) {
-        setRoster([]);
-        return;
-      }
-      try {
-        setLoadingRoster(true);
-        const cId = cls?.id || cls?._id || cls?.classId || selectedClassId;
-        const cName = cls?.className || cls?.gradeOrClass || "";
-        const cSec = cls?.section || "";
+  // 2. Roster Query
+  const cId = selectedClass?.id || selectedClass?._id || selectedClass?.classId || selectedClassId;
+  const cName = selectedClass?.className || selectedClass?.gradeOrClass || "";
+  const cSec = selectedClass?.section || "";
 
-        const res = await getTeacherAttendanceRoster({
-          classId: cId,
-          className: cName,
-          section: cSec,
-          date: dateVal,
-        });
-
-        if (res.data?.success) {
-          const students = res.data.data?.students || [];
-          setRoster(students);
-          // Pre-populate draft with existing statuses
-          const initialDraft = {};
-          students.forEach((s) => {
-            if (s.status) {
-              initialDraft[s._id || s.id] = s.status;
-            }
-          });
-          setDraft(initialDraft);
-        }
-      } catch (err) {
-        toast.error(
-          err.response?.data?.message || "Failed to load class attendance roster."
-        );
-      } finally {
-        setLoadingRoster(false);
-      }
+  const rosterQuery = useQuery({
+    queryKey: qk.teacherAttendanceRoster({
+      classId: cId,
+      className: cName,
+      section: cSec,
+      date,
+    }),
+    queryFn: async () => {
+      if (!cId) return [];
+      const res = await getTeacherAttendanceRoster({
+        classId: cId,
+        className: cName,
+        section: cSec,
+        date,
+      });
+      return res.data?.data?.students || [];
     },
-    [selectedClassId]
-  );
+    enabled: Boolean(cId),
+    staleTime: 5 * 60 * 1000,
+  });
 
+  const roster = rosterQuery.data || [];
+  const loadingRoster = rosterQuery.isLoading;
+  const isFetchingRoster = rosterQuery.isFetching && !rosterQuery.isLoading;
+  const loadError =
+    classesQuery.error?.response?.data?.message ||
+    rosterQuery.error?.response?.data?.message ||
+    "";
+
+  // Reset draft on class/date switch if roster changes
   useEffect(() => {
-    if (selectedClass) {
-      void loadRoster(selectedClass, date);
+    if (roster.length > 0) {
+      const initialDraft = {};
+      roster.forEach((s) => {
+        if (s.status) {
+          initialDraft[s._id || s.id] = s.status;
+        }
+      });
+      setDraft(initialDraft);
+    } else {
+      setDraft({});
     }
-  }, [selectedClass, date, loadRoster]);
+  }, [roster]);
 
-  // Helper to get effective status for a student (Draft takes precedence over loaded record)
+  // Helper to get effective status for a student
   const getStatus = (student) => {
     const sId = student._id || student.id;
     return draft[sId] !== undefined ? draft[sId] : student.status || "";
@@ -181,42 +162,21 @@ export default function TeacherAttendance() {
     toast.success(`Marked all ${roster.length} students as ${status}.`);
   };
 
-  // Filtered Students Search
-  const filteredStudents = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return roster;
-    return roster.filter((s) => {
-      const name = (s.name || "").toLowerCase();
-      const roll = (s.rollNumber || s.roll || "").toLowerCase();
-      const email = (s.email || "").toLowerCase();
-      return name.includes(q) || roll.includes(q) || email.includes(q);
-    });
-  }, [roster, search]);
+  // 3. Save Attendance Mutation
+  const saveMutation = useMutation({
+    mutationFn: (payload) => saveTeacherStudentAttendance(payload),
+    onSuccess: (res, vars) => {
+      toast.success(res.data?.message || `Saved attendance for ${vars.records.length} students!`);
+      queryClient.invalidateQueries({
+        queryKey: ["teacher", "attendance", "roster"],
+      });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to save attendance records.");
+    },
+  });
 
-  // Pagination
-  const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visibleRows = filteredStudents.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  // Live KPI Metrics Computation
-  const counts = useMemo(() => {
-    const tally = { Present: 0, Absent: 0, Late: 0, "On Leave": 0, Unmarked: 0 };
-    roster.forEach((s) => {
-      const st = getStatus(s);
-      if (st === "Present") tally.Present += 1;
-      else if (st === "Absent") tally.Absent += 1;
-      else if (st === "Late") tally.Late += 1;
-      else if (st === "On Leave" || st === "Leave" || st === "Excused") tally["On Leave"] += 1;
-      else tally.Unmarked += 1;
-    });
-    return tally;
-  }, [roster, draft]);
-
-  // 3. Save Attendance to Backend
-  const handleSaveAttendance = async () => {
+  const handleSaveAttendance = () => {
     if (date > getTodayKey()) {
       toast.error("Future attendance cannot be recorded.");
       return;
@@ -245,35 +205,51 @@ export default function TeacherAttendance() {
       return;
     }
 
-    try {
-      setSaving(true);
-      const payload = {
-        classId: selectedClass.id || selectedClass._id || selectedClass.classId,
-        className: selectedClass.className,
-        section: selectedClass.section,
-        subject: selectedClass.subject,
-        date,
-        records: recordsToSave,
-      };
-
-      const res = await saveTeacherStudentAttendance(payload);
-      if (res.data?.success) {
-        toast.success(
-          res.data.message || `Saved attendance for ${recordsToSave.length} students!`
-        );
-        const updatedStudents = res.data.data?.students || [];
-        if (updatedStudents.length > 0) {
-          setRoster(updatedStudents);
-        }
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to save attendance records."
-      );
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({
+      classId: selectedClass.id || selectedClass._id || selectedClass.classId,
+      className: selectedClass.className,
+      section: selectedClass.section,
+      subject: selectedClass.subject,
+      date,
+      records: recordsToSave,
+    });
   };
+
+  const saving = saveMutation.isPending;
+
+  // Filtered Students Search with Debounce
+  const filteredStudents = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase();
+    if (!q) return roster;
+    return roster.filter((s) => {
+      const name = (s.name || "").toLowerCase();
+      const roll = (s.rollNumber || s.roll || "").toLowerCase();
+      const email = (s.email || "").toLowerCase();
+      return name.includes(q) || roll.includes(q) || email.includes(q);
+    });
+  }, [roster, debouncedSearch]);
+
+  // Pagination
+  const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const visibleRows = filteredStudents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Live KPI Metrics Computation
+  const counts = useMemo(() => {
+    const tally = { Present: 0, Absent: 0, Late: 0, "On Leave": 0, Unmarked: 0 };
+    roster.forEach((s) => {
+      const st = getStatus(s);
+      if (st === "Present") tally.Present += 1;
+      else if (st === "Absent") tally.Absent += 1;
+      else if (st === "Late") tally.Late += 1;
+      else if (st === "On Leave" || st === "Leave" || st === "Excused") tally["On Leave"] += 1;
+      else tally.Unmarked += 1;
+    });
+    return tally;
+  }, [roster, draft]);
 
   const hasMarkedAny = Object.keys(draft).length > 0 || roster.some((s) => s.status);
 
@@ -288,12 +264,16 @@ export default function TeacherAttendance() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadClasses(true)}
-            disabled={refreshing}
+            onClick={() => {
+              classesQuery.refetch();
+              rosterQuery.refetch();
+              toast.success("Attendance synced.");
+            }}
+            disabled={classesQuery.isFetching || isFetchingRoster}
             className="toolbar-btn-outline flex items-center gap-1.5"
           >
-            {refreshing ? (
-              <RefreshCw className="size-3.5 animate-spin" />
+            {classesQuery.isFetching || isFetchingRoster ? (
+              <Spinner className="size-3.5" />
             ) : (
               <RefreshCw size={14} />
             )}
@@ -308,7 +288,7 @@ export default function TeacherAttendance() {
             disabled={saving || !selectedClass || roster.length === 0 || date > getTodayKey()}
           >
             {saving ? (
-              <RefreshCw className="size-3.5 animate-spin mr-1" />
+              <Spinner className="size-4 mr-1 text-white" />
             ) : (
               <Save size={14} className="mr-1" />
             )}
@@ -445,7 +425,7 @@ export default function TeacherAttendance() {
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => loadClasses(true)}
+                onClick={() => classesQuery.refetch()}
               >
                 <RefreshCw size={14} className="mr-1.5" /> Check for Classes
               </Button>

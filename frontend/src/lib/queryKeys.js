@@ -1,5 +1,22 @@
 export const qk = {
-  // Teaching Performance & Sessions
+  // Teacher Portal Specific Keys
+  teacherTodayClasses: () => ["teacher", "today-classes"],
+  teacherSummary: (params) => ["teacher", "summary", params],
+  teacherSessions: (params) => ["teacher", "sessions", params],
+  teacherCredits: (params) => ["teacher", "credits", params],
+  teacherClasses: () => ["teacher", "classes"],
+  teacherAssignments: (params) => ["teacher", "assignments", params],
+  teacherAssignmentSubmissions: (id) => ["teacher", "assignment-submissions", id],
+  teacherAttendanceClasses: () => ["teacher", "attendance", "classes"],
+  teacherAttendanceRoster: (params) => ["teacher", "attendance", "roster", params],
+  teacherDiaryClasses: () => ["teacher", "diary", "classes"],
+  teacherDiaryEntries: (params) => ["teacher", "diary", "entries", params],
+  teacherGradebookClasses: () => ["teacher", "gradebook", "classes"],
+  teacherGradebookStudents: (params) => ["teacher", "gradebook", "students", params],
+  teacherGradebookExams: (params) => ["teacher", "gradebook", "exams", params],
+  teacherGradebookResults: (params) => ["teacher", "gradebook", "results", params],
+
+  // Teaching Performance & Sessions (Campus Admin)
   campusPerformance: (month) => ["teaching-performance", month],
   teacherTimeline: (teacherId, month) => ["teacher-timeline", teacherId, month],
 
@@ -20,10 +37,7 @@ export const qk = {
   teacherAttendanceStats: (params) => ["teacher-attendance-stats", params],
   teacherProfile: (id) => ["teacher-profile", id],
   teacherTimetable: (id) => ["teacher-timetable", id],
-  teacherClasses: (id) => ["teacher-classes", id],
-  teacherAssignments: (params) => ["teacher-assignments", params],
   teacherGradebook: (params) => ["teacher-gradebook", params],
-  teacherCredits: (params) => ["teacher-credits", params],
 
   // Student Queries
   studentFees: (params) => ["student-fees", params],
@@ -32,5 +46,6 @@ export const qk = {
   // Dashboard, Stats & System
   campusOverview: (params) => ["campus-overview", params],
   stats: () => ["stats"],
+  supportBadge: () => ["support", "badge"],
   notifications: () => ["notifications"],
 };
