@@ -3,6 +3,7 @@ import { protect } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
 import {
   getStudentPortal,
+  getStudentSubjects,
   getStudentFees,
   submitAssignment,
   sendConversationMessage,
@@ -12,6 +13,7 @@ import {
 const router = express.Router();
 router.use(protect, authorize("student"));
 router.get("/portal", getStudentPortal);
+router.get("/subjects", getStudentSubjects);
 router.get("/fees", getStudentFees);
 router.post("/assignments/:id/submission", submitAssignment);
 router.post("/conversations/:id/messages", sendConversationMessage);

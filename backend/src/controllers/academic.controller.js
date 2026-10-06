@@ -265,3 +265,142 @@ export const deleteTeacherAssignment = async (req, res) => {
     res.status(500).json({ message: "Server error removing assignment", error });
   }
 };
+
+// PESHAWAR BOARD PRESET SEEDER FOR CAMPUS ADMIN
+export const PESHAWAR_BOARD_CATALOG = [
+  { name: "English Compulsory", code: "ENG-9", description: "BISE Peshawar Board - English Language, Grammar, Composition & Literature" },
+  { name: "Urdu Compulsory", code: "URD-9", description: "BISE Peshawar Board - Urdu Qawaid, Nazm, Ghazal & Sabaq" },
+  { name: "Mathematics", code: "MATH-9", description: "BISE Peshawar Board - Algebra, Geometry, Trigonometry & Matrices" },
+  { name: "Physics", code: "PHY-9", description: "BISE Peshawar Board - Kinematics, Dynamics, Optics & Practical Labs" },
+  { name: "Chemistry", code: "CHEM-9", description: "BISE Peshawar Board - Structure of Atoms, Chemical Reactions & Lab Work" },
+  { name: "Computer Science", code: "CS-9", description: "BISE Peshawar Board - Computer Systems, C/Python Coding, Database & IT Labs" },
+  { name: "Biology", code: "BIO-9", description: "BISE Peshawar Board - Cell Biology, Genetics, Enzymes, Physiology & Lab" },
+  { name: "Islamic Studies (Islamiat)", code: "ISL-9", description: "BISE Peshawar Board - Selected Surahs, Ahadith & Islamic Morals" },
+  { name: "Pakistan Studies", code: "PAK-10", description: "BISE Peshawar Board - Creation of Pakistan, Constitution & Geography" },
+  { name: "Mutala-e-Quran-e-Hakeem", code: "MQH-9", description: "BISE Peshawar Board - Translation & Tajweed of the Holy Quran" },
+  { name: "General Science", code: "GSCI-8", description: "Integrated Foundation Sciences for Middle / Secondary Groups" },
+];
+
+export const PESHAWAR_BOARD_GRADES = [
+  { name: "Class 6", desc: "Middle School Grade 6 Curriculum" },
+  { name: "Class 7", desc: "Middle School Grade 7 Curriculum" },
+  { name: "Class 8", desc: "Middle School Grade 8 Curriculum" },
+  { name: "Class 9", desc: "Secondary School Certificate Part 1 (SSC-I) - Peshawar Board" },
+  { name: "Class 10", desc: "Secondary School Certificate Part 2 (SSC-II) - Peshawar Board" },
+  { name: "1st Year (11th)", desc: "Higher Secondary School Certificate Part 1 (HSSC-I) - FSc / ICS / FA" },
+  { name: "2nd Year (12th)", desc: "Higher Secondary School Certificate Part 2 (HSSC-II) - FSc / ICS / FA" },
+];
+
+export const getPeshawarPresetPreview = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      board: "BISE Peshawar (Khyber Pakhtunkhwa)",
+      subjects: PESHAWAR_BOARD_CATALOG,
+      grades: PESHAWAR_BOARD_GRADES,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const seedPeshawarBoardPreset = async (req, res) => {
+  try {
+    const campusId = req.user.campusId;
+    const instituteId = req.user.instituteId;
+
+    if (!campusId) {
+      return res.status(400).json({ success: false, message: "Campus context required" });
+    }
+
+    // 1. Upsert Subjects
+    const subjectDocs = [];
+    for (const sub of PESHAWAR_BOARD_CATALOG) {
+      const doc = await Subject.findOneAndUpdate(
+        { campusId, name: sub.name },
+        { $set: { code: sub.code, description: sub.description, instituteId } },
+        { upsert: true, new: true }
+      );
+      subjectDocs.push(doc);
+    }
+    const subMap = new Map(subjectDocs.map((s) => [s.name, s]));
+
+    // 2. Upsert Grades & Sections
+    const gradeDocs = [];
+    for (const item of PESHAWAR_BOARD_GRADES) {
+      const gDoc = await Grade.findOneAndUpdate(
+        { campusId, name: item.name },
+        { $set: { description: item.desc, instituteId } },
+        { upsert: true, new: true }
+      );
+      gradeDocs.push(gDoc);
+
+      for (const sName of ["Section A", "Section B"]) {
+        await Section.findOneAndUpdate(
+          { campusId, gradeId: gDoc._id, name: sName },
+          { $set: { instituteId } },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    // 3. Link GradeSubjects
+    const gsOps = [];
+    for (const g of gradeDocs) {
+      let subjectList = [];
+      if (g.name === "Class 9") {
+        subjectList = ["English Compulsory", "Urdu Compulsory", "Mathematics", "Physics", "Chemistry", "Computer Science", "Biology", "Islamic Studies (Islamiat)", "Mutala-e-Quran-e-Hakeem"];
+      } else if (g.name === "Class 10") {
+        subjectList = ["English Compulsory", "Urdu Compulsory", "Mathematics", "Physics", "Chemistry", "Computer Science", "Biology", "Pakistan Studies", "Mutala-e-Quran-e-Hakeem"];
+      } else if (g.name.includes("1st Year") || g.name.includes("2nd Year")) {
+        subjectList = ["English Compulsory", "Urdu Compulsory", "Mathematics", "Physics", "Chemistry", "Computer Science", "Islamic Studies (Islamiat)", "Pakistan Studies"];
+      } else {
+        subjectList = ["English Compulsory", "Urdu Compulsory", "Mathematics", "General Science", "Islamic Studies (Islamiat)", "Computer Science"];
+      }
+
+      for (const sName of subjectList) {
+        const sub = subMap.get(sName);
+        if (sub) {
+          gsOps.push({
+            updateOne: {
+              filter: { campusId, gradeId: g._id, subjectId: sub._id },
+              update: { $set: { campusId, instituteId, gradeId: g._id, subjectId: sub._id } },
+              upsert: true,
+            },
+          });
+        }
+      }
+    }
+    if (gsOps.length) await GradeSubject.bulkWrite(gsOps);
+
+    // 4. Also update students in this campus with the standard subjects string if empty
+    const students = await User.find({ campusId, role: "student" });
+    const class9Subjects = ["English Compulsory", "Urdu Compulsory", "Mathematics", "Physics", "Chemistry", "Computer Science", "Biology", "Islamic Studies (Islamiat)", "Mutala-e-Quran-e-Hakeem"].join(", ");
+    const updateOps = students.map((s) => ({
+      updateOne: {
+        filter: { _id: s._id },
+        update: {
+          $set: {
+            gradeOrClass: s.gradeOrClass || "Class 9",
+            program: s.program || "Class 9",
+            section: s.section || "Section A",
+            subjects: s.subjects || class9Subjects,
+          },
+        },
+      },
+    }));
+    if (updateOps.length) await User.bulkWrite(updateOps);
+
+    return res.status(200).json({
+      success: true,
+      message: "BISE Peshawar Board standard academic structure and subjects seeded successfully!",
+      gradesCount: gradeDocs.length,
+      subjectsCount: subjectDocs.length,
+      gradeSubjectsCount: gsOps.length,
+    });
+  } catch (error) {
+    console.error("Seed Peshawar Board Preset Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+

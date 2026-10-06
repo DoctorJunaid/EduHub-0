@@ -80,23 +80,27 @@ export const selectStudentDashboard = createSelector(
         cgpa: null,
         results: [],
       };
+    const hasExplicitSubjects = student.subjects !== undefined && student.subjects !== null && String(student.subjects).trim().length > 0;
     const rawSubjects = Array.isArray(student.subjects)
       ? student.subjects
       : String(student.subjects || "").split(",");
-    const courses = [
-      ...new Set(
-        rawSubjects
-          .map((subject) =>
-            typeof subject === "object"
-              ? subject.name || subject.title || subject.subject || ""
-              : subject,
-          )
-          .map((subject) => String(subject).trim())
-          .filter(Boolean),
-      ),
-    ];
-    // Match the existing program/section relationship; never include other sections to fill the reference.
     const className = student.program || student.gradeOrClass;
+    const courses = hasExplicitSubjects
+      ? [
+          ...new Set(
+            rawSubjects
+              .map((subject) =>
+                typeof subject === "object"
+                  ? subject.name || subject.title || subject.subject || ""
+                  : subject,
+              )
+              .map((subject) => String(subject).trim())
+              .filter(Boolean),
+          ),
+        ]
+      : [];
+
+    // Match the existing program/section relationship; never include other sections to fill the reference.
     const classes =
       className && student.section
         ? timetable
@@ -109,10 +113,10 @@ export const selectStudentDashboard = createSelector(
                 courses.some(
                   (course) =>
                     course.toLowerCase() ===
-                    session.subject.trim().toLowerCase(),
+                    (session.subject || "").trim().toLowerCase(),
                 ),
             )
-            .sort((a, b) => a.startTime.localeCompare(b.startTime))
+            .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""))
         : [];
     const rows = attendanceHistory.filter(
       (row) => row.student.id === student.id,

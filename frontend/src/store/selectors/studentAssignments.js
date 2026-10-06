@@ -23,7 +23,7 @@ export const selectStudentAssignments = createSelector(
           (record) =>
             [record.id, record._id, record.classId]
               .map(referenceId)
-              .some((id) => String(id) === assignmentClassId) &&
+              .some((id) => id && String(id) === assignmentClassId) &&
             courses.some(
               (course) => normalize(course) === normalize(record.subject),
             ),
@@ -32,19 +32,20 @@ export const selectStudentAssignments = createSelector(
           session ||
           (!assignmentClassId &&
             timetable.find(
-            (record) =>
-              courses.some(
-                (course) => normalize(course) === normalize(record.subject),
-              ) &&
-              (normalize(record.subject) === normalize(assignment.subject) ||
-                normalize(record.title) === normalize(assignment.subject)),
+              (record) =>
+                courses.some(
+                  (course) => normalize(course) === normalize(record.subject),
+                ) &&
+                (normalize(record.subject) === normalize(assignment.subject) ||
+                  normalize(record.title) === normalize(assignment.subject)),
             ));
         if (!fallbackSession) return [];
+
         const submission = submissions.find(
           (record) =>
             validSubmission(record) &&
-            record.assignmentId === assignment.id &&
-            record.studentId === student.id,
+            String(record.assignmentId) === String(assignment.id) &&
+            String(record.studentId) === String(student.id),
         );
         const status = submission?.status ?? "Pending Submission";
         return [
@@ -68,7 +69,9 @@ export const selectStudentAssignments = createSelector(
       .sort(
         (a, b) =>
           (a.dueDate || "9999").localeCompare(b.dueDate || "9999") ||
-          a.title.localeCompare(b.title),
+          (a.title || "").localeCompare(b.title || ""),
       );
   },
 );
+
+
