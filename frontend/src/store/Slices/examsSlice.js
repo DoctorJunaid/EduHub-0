@@ -97,6 +97,12 @@ const slice = createSlice({
     error: null,
   },
   reducers: {
+    examsLoaded: (state, { payload }) => {
+      const list = Array.isArray(payload) ? payload : (payload?.data || []);
+      state.records = list.map(normalizeExam);
+      state.status = 'succeeded';
+      state.error = null;
+    },
     examAdded: {
       prepare: (values) => ({ payload: normalizeExam(values) }),
       reducer: (state, { payload }) => {
@@ -157,8 +163,9 @@ const slice = createSlice({
   },
 });
 
-export const { examAdded, examUpdated, examDeleted } = slice.actions;
+export const { examsLoaded, examAdded, examUpdated, examDeleted } = slice.actions;
 export const selectExams = (state) => state.exams.records;
+
 export const selectExamsStatus = (state) => state.exams.status;
 
 export const selectExamStats = createSelector(

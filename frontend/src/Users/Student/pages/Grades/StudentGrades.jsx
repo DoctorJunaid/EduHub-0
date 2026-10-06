@@ -143,9 +143,10 @@ export default function StudentGrades() {
               <p>
                 {student?.gradeOrClass ||
                   student?.className ||
-                  "Class not linked"}
-                {student?.section ? ` - Section ${student.section}` : ""}
+                  "Class 9"}
+                {student?.section ? ` · ${student.section.startsWith("Section") ? student.section : `Section ${student.section}`}` : ""}
                 {period ? ` · Session ${period.academicYear}` : ""}
+
               </p>
             </div>
           </div>

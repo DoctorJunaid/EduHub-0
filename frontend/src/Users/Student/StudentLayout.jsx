@@ -14,6 +14,7 @@ import { schedulesLoaded } from "@/store/Slices/timetableSlice";
 import { studentAttendanceLoaded } from "@/store/Slices/studentAttendanceSlice";
 import { feesLoaded } from "@/store/Slices/feesSlice";
 import { resultsLoaded } from "@/store/Slices/resultsSlice";
+import { examsLoaded } from "@/store/Slices/examsSlice";
 import { facultyLoaded } from "@/store/Slices/facultySlice";
 import {
   assignmentsLoaded,
@@ -47,10 +48,10 @@ export default function StudentLayout() {
   const pageLabel = {
     "/student/courses": isSchool ? "Subjects" : "Courses",
     "/student/assignments": isSchool ? "Daily Diary & Homework" : "Assignments",
-    "/student/attendance": "Attendance",
+    "/student/attendance": "Attendance Record",
     "/student/diary": isSchool ? "Daily Diary & Homework" : "Diary",
-    "/student/grades": isSchool ? "Report Card" : "Results",
-    "/student/fees": isSchool ? "Challans" : "Fees",
+    "/student/grades": isSchool ? "Progress Report Card" : "Results",
+    "/student/fees": isSchool ? "School Fee Challan" : "Fees",
     "/student/messages": "Messages",
   }[location.pathname];
 
@@ -85,6 +86,7 @@ export default function StudentLayout() {
         dispatch(studentAttendanceLoaded(portal.attendance));
         dispatch(feesLoaded(portal.fees));
         dispatch(resultsLoaded(portal.results));
+        if (portal.exams) dispatch(examsLoaded(portal.exams));
         dispatch(facultyLoaded(portal.faculty));
         dispatch(assignmentsLoaded(portal.assignments));
         dispatch(submissionsLoaded(portal.submissions));
@@ -96,6 +98,7 @@ export default function StudentLayout() {
       active = false;
     };
   }, [dispatch, profile?.id]);
+
 
   return (
     <MainLayout
