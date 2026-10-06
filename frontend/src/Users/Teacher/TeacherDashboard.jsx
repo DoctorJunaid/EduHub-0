@@ -7,6 +7,8 @@ import {
   BookOpen,
   CalendarCheck,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   CircleAlert,
   ClipboardList,
   Clock3,
@@ -47,10 +49,18 @@ export default function TeacherDashboard() {
   const reduxAssignments = useSelector((state) => state.assignments?.records || []);
   const reduxSubmissions = useSelector((state) => state.submissions?.records || []);
 
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
   const debouncedScheduleSearch = useDebounce(scheduleSearch, 300);
   const debouncedSubmissionSearch = useDebounce(submissionSearch, 300);
+
+  const handleScheduleSearchChange = (val) => {
+    setScheduleSearch(val);
+    setCurrentPage(1);
+  };
+
 
   const currentMonthKey = dateKey(new Date()).slice(0, 7);
 
@@ -121,6 +131,15 @@ export default function TeacherDashboard() {
       .toLowerCase()
       .includes(debouncedScheduleSearch.toLowerCase()),
   );
+
+  const totalClassItems = filteredClasses.length;
+  const totalClassPages = Math.max(1, Math.ceil(totalClassItems / ITEMS_PER_PAGE));
+
+
+  const safePage = Math.min(Math.max(1, currentPage), totalClassPages);
+  const classStartIndex = (safePage - 1) * ITEMS_PER_PAGE;
+  const classEndIndex = Math.min(classStartIndex + ITEMS_PER_PAGE, totalClassItems);
+  const visibleClasses = filteredClasses.slice(classStartIndex, classStartIndex + ITEMS_PER_PAGE);
   const assignedCourseCount = classes.length > 0 ? classes.length : new Set(
     classes
       .map((item) => item.courseId || item.subjectId || item.title || item.subject)
@@ -335,10 +354,45 @@ export default function TeacherDashboard() {
         title="My Teaching Schedule & Classes"
         subtitle="Assigned weekly lectures and room allocations"
         search={scheduleSearch}
-        setSearch={setScheduleSearch}
+        setSearch={handleScheduleSearchChange}
         placeholder="Search classes or subjects..."
         actionLabel="Mark Attendance Now"
         actionTo="/teacher/attendance"
+        footer={
+          totalClassItems > 0 ? (
+            <footer className="teacher-table-pagination" aria-label="Classes pagination">
+              <span className="teacher-pagination-info">
+                Showing <strong>{classStartIndex + 1} - {classEndIndex}</strong> of{" "}
+                <strong>{totalClassItems}</strong> {totalClassItems === 1 ? "class" : "classes"}
+              </span>
+              <div className="teacher-pagination-controls">
+                <button
+                  type="button"
+                  className="teacher-pagination-btn"
+                  onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                  disabled={safePage <= 1}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={14} />
+                  <span>Previous</span>
+                </button>
+                <span className="teacher-pagination-pages">
+                  {safePage} / {totalClassPages}
+                </span>
+                <button
+                  type="button"
+                  className="teacher-pagination-btn"
+                  onClick={() => setCurrentPage(Math.min(totalClassPages, safePage + 1))}
+                  disabled={safePage >= totalClassPages}
+                  aria-label="Next page"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </footer>
+          ) : null
+        }
       >
         <table className="teacher-overview-table">
           <thead>
@@ -351,8 +405,8 @@ export default function TeacherDashboard() {
             </tr>
           </thead>
           <tbody>
-            {filteredClasses.map((item) => (
-              <tr key={item.id || item._id}>
+            {visibleClasses.map((item, idx) => (
+              <tr key={item.id ? `${item.id}-${classStartIndex + idx}` : (item._id ? `${item._id}-${classStartIndex + idx}` : `class-${classStartIndex + idx}`)}>
                 <td className="font-bold text-slate-900">
                   {item.title || item.subject || "Untitled class"}
                 </td>
@@ -388,8 +442,11 @@ export default function TeacherDashboard() {
             ))}
           </tbody>
         </table>
-        {!filteredClasses.length && (
-          <EmptyRow text="No assigned classes are available yet." />
+        {!totalClassItems && (
+          <EmptyRow
+            text={scheduleSearch ? "No classes match your search query." : "No teaching classes scheduled for today."}
+            detail={scheduleSearch ? "Try checking your spelling or clearing the search." : "All current items for this section have been processed."}
+          />
         )}
       </TeacherTable>
 
@@ -463,6 +520,7 @@ function TeacherTable({
   actionLabel,
   actionTo,
   children,
+  footer = null,
 }) {
   return (
     <div className="teacher-section-container">
@@ -488,6 +546,7 @@ function TeacherTable({
           </div>
         </div>
         <div className="teacher-table-scroll">{children}</div>
+        {footer}
       </section>
     </div>
   );

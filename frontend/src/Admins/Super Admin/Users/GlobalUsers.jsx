@@ -66,7 +66,7 @@ export default function GlobalUsers() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const [limit] = useState(25);
+  const limit = 10;
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState(instituteParam);
@@ -77,6 +77,7 @@ export default function GlobalUsers() {
   useEffect(() => {
     if (instituteParam) {
       setSearch(instituteParam);
+      setPage(1);
     }
   }, [instituteParam]);
 
@@ -96,8 +97,20 @@ export default function GlobalUsers() {
       const res = await axiosInstance.get("/super-admin/users", { params });
       if (res.data?.data) {
         setUsers(res.data.data);
-        setTotalUsers(res.data.total ?? res.data.data.length);
-        setTotalPages(res.data.totalPages || 1);
+        const nextTotal = Number(res.data.total ?? res.data.data.length);
+        const nextTotalPages = Math.max(
+          1,
+          Number(res.data.totalPages) || Math.ceil(nextTotal / limit)
+        );
+        setTotalUsers(nextTotal);
+        setTotalPages(nextTotalPages);
+        // If the result set shrank (for example after a status change), move
+        // back to the last valid page and let the normal effect reload it.
+        setPage((currentPage) =>
+          currentPage === page && currentPage > nextTotalPages
+            ? nextTotalPages
+            : currentPage
+        );
       }
     } catch (err) {
       setLoadError(err.response?.data?.message || "Failed to load users");
@@ -217,7 +230,10 @@ export default function GlobalUsers() {
               type="search"
               placeholder="Search by name, email, or institute..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setPage(1);
+                setSearch(e.target.value);
+              }}
             />
           </div>
 
@@ -229,6 +245,7 @@ export default function GlobalUsers() {
                 className="chip-clear-btn"
                 onClick={() => {
                   setSearchParams({});
+                  setPage(1);
                   setSearch("");
                 }}
                 title="Clear institute filter"
@@ -242,7 +259,10 @@ export default function GlobalUsers() {
           <div className="global-users-filters">
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => {
+                setPage(1);
+                setRoleFilter(e.target.value);
+              }}
               className="filter-select"
               aria-label="Filter by role"
             >
@@ -255,7 +275,10 @@ export default function GlobalUsers() {
 
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setPage(1);
+                setStatusFilter(e.target.value);
+              }}
               className="filter-select"
               aria-label="Filter by status"
             >

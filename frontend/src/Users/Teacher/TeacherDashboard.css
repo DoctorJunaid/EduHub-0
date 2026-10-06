@@ -303,6 +303,77 @@
   background: #ffffff;
 }
 
+/* 7. TABLE PAGINATION FOOTER */
+.teacher-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e4e4e7;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.teacher-pagination-info {
+  font-size: 12px;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.teacher-pagination-info strong {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.teacher-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teacher-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.teacher-pagination-btn:hover:not(:disabled) {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #09090b;
+}
+
+.teacher-pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #ffffff;
+  border-color: #e4e4e7;
+  color: #a1a1aa;
+}
+
+.teacher-pagination-pages {
+  font-size: 12px;
+  font-weight: 600;
+  color: #09090b;
+  padding: 0 4px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
 /* 6. RESPONSIVE BREAKPOINTS */
 @media (max-width: 1200px) {
   .teacher-metrics.campus-kpi-track {
@@ -374,5 +445,15 @@
   }
   .teacher-search-box {
     width: 100%;
+  }
+  .teacher-table-pagination {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .teacher-pagination-controls {
+    width: 100%;
+    justify-content: space-between;
   }
 }
