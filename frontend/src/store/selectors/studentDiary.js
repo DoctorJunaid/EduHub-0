@@ -3,6 +3,8 @@ import { selectDiary, validDiaryEntry } from "../Slices/diarySlice.js";
 import { selectStudentCourses } from "./studentCourses.js";
 import { selectStudentAssignments } from "./studentAssignments.js";
 
+const normalize = (value) => String(value || "").trim().toLowerCase();
+
 export const selectStudentDiary = createSelector(
   [selectDiary, selectStudentCourses, selectStudentAssignments],
   (entries, courses, assignments) =>
@@ -28,14 +30,15 @@ export const selectStudentDiary = createSelector(
             ...entry,
             subject: course.title,
             section: course.section,
-            instructor: routine.instructor,
+            instructor: routine.instructor || entry.teacherName || entry.instructor || "Assigned Teacher",
             assignment,
           },
         ];
       })
       .sort(
         (a, b) =>
-          b.date.localeCompare(a.date) || a.title.localeCompare(b.title),
+          (b.date || "").localeCompare(a.date || "") ||
+          (a.title || "").localeCompare(b.title || ""),
       ),
 );
 
@@ -43,3 +46,5 @@ export const filterDiaryBySubject = (entries, subject) =>
   subject ? entries.filter((entry) => entry.subject === subject) : entries;
 export const diaryEntriesForDate = (entries, date) =>
   entries.filter((entry) => entry.date === date);
+
+

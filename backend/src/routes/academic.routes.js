@@ -17,12 +17,18 @@ import {
   getTeacherAssignments,
   createTeacherAssignment,
   deleteTeacherAssignment,
+  getPeshawarPresetPreview,
+  seedPeshawarBoardPreset,
 } from "../controllers/academic.controller.js";
 
 const router = express.Router();
 
 router.use(protect);
 router.use(authorize("campus_admin", "campus_manager", "principal"));
+
+// Peshawar Board Presets
+router.get("/preset-peshawar", getPeshawarPresetPreview);
+router.post("/preset-peshawar/apply", seedPeshawarBoardPreset);
 
 // Grades
 router.route("/grades")

@@ -184,8 +184,46 @@ export default function AcademicsConfig() {
     }
   };
 
+  const [isApplyingPreset, setIsApplyingPreset] = useState(false);
+  const handleApplyPeshawarPreset = async () => {
+    if (!window.confirm("Apply standard BISE Peshawar Board curriculum preset (Class 6 - 12 & core subjects)? This will populate standard subjects and class mappings.")) return;
+    try {
+      setIsApplyingPreset(true);
+      const res = await axiosInstance.post("/academic/preset-peshawar/apply");
+      toast.success(res.data?.message || "BISE Peshawar Board preset applied successfully!");
+      await fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to apply preset");
+    } finally {
+      setIsApplyingPreset(false);
+    }
+  };
+
   return (
     <div className="academics-config-page mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6">
+      {/* Top Header Row with Preset Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-zinc-900 to-zinc-800 p-5 rounded-2xl text-white shadow-md">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight">Academic Structure & Subjects Master</h2>
+          <p className="text-xs text-zinc-300 mt-0.5">
+            Configure grades, sections, master subjects, and assign curriculum to classes.
+          </p>
+        </div>
+        <Button
+          type="button"
+          onClick={handleApplyPeshawarPreset}
+          disabled={isApplyingPreset || loading}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl shadow-sm shrink-0"
+        >
+          {isApplyingPreset ? (
+            <Spinner className="w-4 h-4 mr-2" />
+          ) : (
+            <Plus className="w-4 h-4 mr-2" />
+          )}
+          {isApplyingPreset ? "Applying Preset..." : "Apply Peshawar Board Preset"}
+        </Button>
+      </div>
+
       {loadError && (
         <div className="academics-config-load-error" role="alert">
           <span>{loadError}</span>
