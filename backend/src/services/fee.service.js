@@ -813,7 +813,8 @@ class FeeService {
    * Student Portal: Real-time fee vouchers & payment history
    */
   async getStudentFeeHistory(studentId, campusId) {
-    const [vouchers, payments] = await Promise.all([
+    const [studentUser, vouchers, payments] = await Promise.all([
+      User.findById(studentId).select("name roll email gradeOrClass program section campusId instituteId").lean(),
       FeeRecord.find({ campusId, studentId, "omitted.isOmitted": { $ne: true } })
         .sort({ dueDate: -1, createdAt: -1 })
         .lean(),
@@ -827,35 +828,57 @@ class FeeService {
     let totalPaid = 0;
     let pendingDues = 0;
     let overdueDues = 0;
+    let totalWaiver = 0;
 
     const now = new Date();
 
-    for (const v of vouchers) {
+    const formattedVouchers = vouchers.map((v) => {
       const amt = v.totalPayable > 0 ? v.totalPayable : v.amount || 0;
       const paid = v.paidAmount || 0;
       const rem = Math.max(0, amt - paid);
 
       totalBilled += amt;
       totalPaid += paid;
+      if (v.waiver?.amount > 0) totalWaiver += v.waiver.amount;
       if (rem > 0) {
         pendingDues += rem;
         if (now > new Date(v.dueDate)) {
           overdueDues += rem;
         }
       }
-    }
+
+      return {
+        ...v,
+        voucherNo: v.challanNo || `VCH-${String(v._id).slice(-6).toUpperCase()}`,
+        feeCategory: v.feeType || "Monthly Tuition Fee",
+        totalPayable: amt,
+      };
+    });
 
     return {
-      vouchers,
+      student: studentUser ? {
+        ...studentUser,
+        id: String(studentUser._id),
+        roll: studentUser.roll || `STU-${String(studentUser._id).slice(-4).toUpperCase()}`,
+        gradeOrClass: studentUser.gradeOrClass || studentUser.program || "Class 9",
+        section: studentUser.section || "Section A",
+      } : null,
+      vouchers: formattedVouchers,
       payments,
       summary: {
         totalBilled,
         totalPaid,
         pendingDues,
         overdueDues,
+        totalOutstanding: pendingDues,
+        totalOverdue: overdueDues,
+        totalWaiver,
+        clearedCount: vouchers.filter((v) => (v.status || "").toUpperCase() === "PAID").length,
+        unpaidCount: vouchers.filter((v) => ["UNPAID", "PARTIALLY_PAID", "OVERDUE"].includes((v.status || "").toUpperCase())).length,
       },
     };
   }
+
 }
 
 const feeService = new FeeService();

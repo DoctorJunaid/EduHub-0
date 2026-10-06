@@ -111,69 +111,69 @@ const subjectConfigs = [
 async function seedProgressReportCards() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("Connected to MongoDB for Progress Report Cards seeding...");
+    console.log("Connected to MongoDB for fast Progress Report Cards seeding...");
 
     const campuses = await Campus.find().lean();
-    console.log(`Found ${campuses.length} campuses to process.`);
+    console.log(`Found ${campuses.length} campuses.`);
+
+    const examOps = [];
+    const perfOps = [];
 
     for (const campus of campuses) {
       const campusId = campus._id;
       const instituteId = campus.instituteId || null;
-
       const students = await User.find({ campusId, role: "student" }).lean();
       const teachers = await User.find({ campusId, role: { $in: ["teacher", "faculty"] } }).lean();
       const headTeacher = teachers[0] || null;
-
-      console.log(`Campus: ${campus.name} | Students: ${students.length} | Teachers: ${teachers.length}`);
 
       for (const tConfig of reportCardTerms) {
         for (const sConf of subjectConfigs) {
           const examDateStr = tConfig.dates[sConf.subject] || "2026-09-20";
           const examDate = new Date(`${examDateStr}T09:00:00.000Z`);
 
-          // 1. Upsert ExamSchedule for Class 9 & Class 10
           for (const cName of ["Class 9", "Class 10"]) {
-            await ExamSchedule.findOneAndUpdate(
-              {
-                campusId,
-                subject: sConf.subject,
-                $or: [{ className: cName }, { gradeOrClass: cName }],
-                section: "Section A",
-                examType: tConfig.examType,
+            examOps.push({
+              updateOne: {
+                filter: {
+                  campusId,
+                  subject: sConf.subject,
+                  className: cName,
+                  section: "Section A",
+                  examType: tConfig.examType,
+                },
+                update: {
+                  $set: {
+                    campusId,
+                    instituteId,
+                    examName: `${tConfig.term} - ${sConf.subject}`,
+                    examType: tConfig.examType,
+                    institutionType: "School",
+                    program: cName,
+                    className: cName,
+                    gradeOrClass: cName,
+                    department: cName,
+                    section: "Section A",
+                    subject: sConf.subject,
+                    examDate,
+                    date: examDateStr,
+                    startTime: "09:00",
+                    endTime: "12:00",
+                    roomNumber: "Examination Hall 1",
+                    room: "Examination Hall 1",
+                    totalMarks: sConf.totalMarks,
+                    sessionOrShift: "Morning",
+                    invigilator: headTeacher ? headTeacher.name : "Senior Invigilator",
+                    teacherId: headTeacher ? headTeacher._id : null,
+                  },
+                },
+                upsert: true,
               },
-              {
-                campusId,
-                instituteId,
-                examName: `${tConfig.term} - ${sConf.subject}`,
-                examType: tConfig.examType,
-                institutionType: "School",
-                program: cName,
-                className: cName,
-                gradeOrClass: cName,
-                department: cName,
-                section: "Section A",
-                subject: sConf.subject,
-                examDate,
-                date: examDateStr,
-                startTime: "09:00",
-                endTime: "12:00",
-                roomNumber: "Examination Hall 1",
-                room: "Examination Hall 1",
-                totalMarks: sConf.totalMarks,
-                sessionOrShift: "Morning",
-                invigilator: headTeacher ? headTeacher.name : "Senior Invigilator",
-                teacherId: headTeacher ? headTeacher._id : null,
-              },
-              { upsert: true, new: true },
-            );
+            });
           }
 
-          // 2. Upsert Performance for every student in this campus
           for (const student of students) {
             const studentClass = student.gradeOrClass || student.program || "Class 9";
             const studentSection = student.section || "Section A";
-
-            // Calculate scaled score with slight student-based variation
             const seedOffset = (student._id.toString().charCodeAt(student._id.toString().length - 1) % 5) - 2;
             const marksObtained = Math.min(
               sConf.totalMarks,
@@ -188,40 +188,52 @@ async function seedProgressReportCards() {
             else if (percentage >= 60) { grade = "C"; gpa = 2.8; }
             else { grade = "D"; gpa = 2.0; }
 
-            await Performance.findOneAndUpdate(
-              {
-                campusId,
-                studentId: student._id,
-                subject: sConf.subject,
-                term: tConfig.term,
+            perfOps.push({
+              updateOne: {
+                filter: {
+                  campusId,
+                  studentId: student._id,
+                  subject: sConf.subject,
+                  term: tConfig.term,
+                },
+                update: {
+                  $set: {
+                    campusId,
+                    instituteId,
+                    studentId: student._id,
+                    examName: `${tConfig.term} - ${sConf.subject}`,
+                    subject: sConf.subject,
+                    term: tConfig.term,
+                    className: studentClass,
+                    gradeOrClass: studentClass,
+                    section: studentSection,
+                    marksObtained,
+                    totalMarks: sConf.totalMarks,
+                    grade,
+                    gpa,
+                    percentage,
+                    remarks: sConf.remarks,
+                    isPublished: true,
+                    markedBy: headTeacher ? headTeacher._id : null,
+                  },
+                },
+                upsert: true,
               },
-              {
-                campusId,
-                instituteId,
-                studentId: student._id,
-                examName: `${tConfig.term} - ${sConf.subject}`,
-                subject: sConf.subject,
-                term: tConfig.term,
-                className: studentClass,
-                gradeOrClass: studentClass,
-                section: studentSection,
-                marksObtained,
-                totalMarks: sConf.totalMarks,
-                grade,
-                gpa,
-                percentage,
-                remarks: sConf.remarks,
-                isPublished: true,
-                markedBy: headTeacher ? headTeacher._id : null,
-              },
-              { upsert: true, new: true },
-            );
+            });
           }
         }
       }
     }
 
-    console.log("Successfully seeded Exam Schedules and Progress Report Cards for all campuses!");
+    if (examOps.length > 0) {
+      await ExamSchedule.bulkWrite(examOps);
+      console.log(`Executed ${examOps.length} ExamSchedule bulk operations.`);
+    }
+    if (perfOps.length > 0) {
+      await Performance.bulkWrite(perfOps);
+      console.log(`Executed ${perfOps.length} Performance bulk operations.`);
+    }
+    console.log("Successfully fast-seeded Exam Schedules and Progress Report Cards!");
   } catch (err) {
     console.error("Error seeding progress report cards:", err);
   } finally {
@@ -230,3 +242,4 @@ async function seedProgressReportCards() {
 }
 
 seedProgressReportCards();
+
