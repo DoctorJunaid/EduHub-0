@@ -376,8 +376,8 @@ export default function TeacherAssignments() {
       </h1>
 
       {/* 1. Header Toolbar */}
-      <div className="teacher-credits-toolbar">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="teacher-assignments-toolbar">
+        <div className="teacher-assignments-toolbar-filters">
           {classes.length > 0 && (
             <select
               value={selectedClassFilter}
@@ -385,7 +385,7 @@ export default function TeacherAssignments() {
                 setSelectedClassFilter(e.target.value);
                 setAssignmentPage(1);
               }}
-              className="text-xs border border-slate-200 rounded-lg px-3 py-1.5 bg-white font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="teacher-assignments-class-filter"
               aria-label="Filter by assigned class"
             >
               <option value="All">All Assigned Classes ({classes.length})</option>
@@ -410,7 +410,7 @@ export default function TeacherAssignments() {
               toast.success("Assignments synchronized.");
             }}
             disabled={isRefreshing}
-            className="toolbar-btn-outline flex items-center gap-1.5"
+            className="teacher-assignments-sync flex items-center gap-1.5"
           >
             {isRefreshing ? (
               <Spinner className="size-3.5" />
@@ -421,9 +421,9 @@ export default function TeacherAssignments() {
           </Button>
         </div>
 
-        <div className="toolbar-right">
+        <div className="teacher-assignments-toolbar-actions">
           <Button
-            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
+            className="toolbar-btn toolbar-btn-primary teacher-assignments-create flex items-center gap-1.5"
             onClick={() => {
               setFormClassChoice(classes[0]?.id || classes[0]?._id || "__custom__");
               setEditingAssignment({});
@@ -435,54 +435,54 @@ export default function TeacherAssignments() {
       </div>
 
       {/* 2. KPI Metrics Strip */}
-      <div className="campus-kpi-track teacher-credits-kpis">
-        <div className="campus-kpi-card teacher-credits-kpi">
+      <div className="campus-kpi-track teacher-assignments-kpis">
+        <div className="campus-kpi-card teacher-assignments-kpi">
           <div className="kpi-wrap">
-            <div className="kpi-icon blue">
+            <div className="teacher-assignments-kpi-icon">
               <FileText size={18} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">TOTAL ASSIGNMENTS</span>
-              <div className="kpi-value">{assignments.length}</div>
+              <div className="kpi-value teacher-assignments-kpi-value">{assignments.length}</div>
               <span className="kpi-subtext">Across {classes.length} classes</span>
             </div>
           </div>
         </div>
 
-        <div className="campus-kpi-card teacher-credits-kpi">
+        <div className="campus-kpi-card teacher-assignments-kpi">
           <div className="kpi-wrap">
-            <div className="kpi-icon emerald">
+            <div className="teacher-assignments-kpi-icon">
               <CheckCircle2 size={18} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">GRADED SUBMISSIONS</span>
-              <div className="kpi-value text-emerald-600">{totalGradedAll}</div>
+              <div className="kpi-value teacher-assignments-kpi-value">{totalGradedAll}</div>
               <span className="kpi-subtext">Completed evaluations</span>
             </div>
           </div>
         </div>
 
-        <div className="campus-kpi-card teacher-credits-kpi">
+        <div className="campus-kpi-card teacher-assignments-kpi">
           <div className="kpi-wrap">
-            <div className="kpi-icon amber">
+            <div className="teacher-assignments-kpi-icon">
               <Clock3 size={18} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">PENDING REVIEWS</span>
-              <div className="kpi-value text-amber-600">{totalPendingAll}</div>
+              <div className="kpi-value teacher-assignments-kpi-value">{totalPendingAll}</div>
               <span className="kpi-subtext">Submissions awaiting grading</span>
             </div>
           </div>
         </div>
 
-        <div className="campus-kpi-card teacher-credits-kpi">
+        <div className="campus-kpi-card teacher-assignments-kpi">
           <div className="kpi-wrap">
-            <div className="kpi-icon neutral">
+            <div className="teacher-assignments-kpi-icon">
               <Users size={18} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">TOTAL SUBMISSIONS</span>
-              <div className="kpi-value">{totalSubmissionsAll}</div>
+              <div className="kpi-value teacher-assignments-kpi-value">{totalSubmissionsAll}</div>
               <span className="kpi-subtext">Delivered student work</span>
             </div>
           </div>
@@ -544,9 +544,8 @@ export default function TeacherAssignments() {
             </span>
             <h2>No assignments created yet</h2>
             <p>
-              Create your first homework or lab assignment for your classes (
-              {classes.map((c) => `${c.className} ${c.subject}`).join(", ")}) to
-              start collecting and grading student submissions.
+              Create your first homework or lab assignment for your assigned
+              classes to start collecting and grading student submissions.
             </p>
             <Button
               className="toolbar-btn toolbar-btn-primary"

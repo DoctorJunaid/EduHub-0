@@ -1,0 +1,253 @@
+/* Teacher-only polish for the shared support list view. */
+.teacher-help-support {
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teacher-help-support .academics-config-tab-list {
+  align-self: stretch;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 4px;
+  border-color: #e4e4e7;
+  border-radius: 10px;
+  background: #fafafa;
+  box-shadow: none;
+}
+
+.teacher-help-support .academics-config-tab-list::-webkit-scrollbar {
+  display: none;
+}
+
+.teacher-help-support .academics-config-tab-list > button {
+  min-height: 38px;
+  padding: 0 12px;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #52525b;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.teacher-help-support .academics-config-tab-list > button:hover {
+  background: #f4f4f5;
+  color: #18181b;
+}
+
+.teacher-help-support .academics-config-tab-list > button.bg-zinc-900 {
+  border-color: #e4e4e7;
+  background: #ffffff;
+  color: #18181b;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+
+.teacher-help-support .academics-config-tab-list > button > span:last-child {
+  min-width: 19px;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: #52525b;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 19px;
+  text-align: center;
+}
+
+.teacher-help-support .academics-config-card {
+  overflow: visible;
+  border-color: #e4e4e7;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+}
+
+.teacher-help-support .academics-config-card-header {
+  padding: 20px 24px 16px;
+}
+
+.teacher-help-support .academics-config-card-header [data-slot="card-title"] {
+  color: #18181b;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.teacher-help-support .academics-config-card-header [data-slot="card-description"] {
+  margin-top: 4px;
+  color: #71717a;
+  font-size: 14px;
+}
+
+.teacher-help-support .academics-config-card-header [data-slot="button"] {
+  min-height: 40px;
+  height: 40px;
+  padding: 0 16px;
+  gap: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.teacher-help-support .academics-config-card-content {
+  min-width: 0;
+  padding: 16px 24px 22px;
+}
+
+.teacher-help-support .academics-config-card-content > .teacher-support-toolbar {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.teacher-help-support .teacher-support-toolbar > div:first-child {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.teacher-help-support .teacher-support-search {
+  width: 100%;
+  min-width: 0;
+  max-width: 480px;
+  flex: 1 1 320px;
+}
+
+.teacher-help-support .teacher-support-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: #71717a;
+  pointer-events: none;
+}
+
+.teacher-help-support .teacher-support-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 38px !important;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #18181b;
+  font-size: 14px;
+}
+
+.teacher-help-support .teacher-support-search-input::placeholder {
+  color: #a1a1aa;
+}
+
+.teacher-help-support .teacher-support-toolbar select {
+  box-sizing: border-box;
+  width: 240px !important;
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-color: #e4e4e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #18181b;
+  font-size: 14px;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto table {
+  min-width: 600px;
+  border-collapse: collapse;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e4e7;
+  background: #fafafa;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f2;
+  color: #3f3f46;
+  vertical-align: middle;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto td:nth-child(3) > span {
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.teacher-help-support .academics-config-card-content > div.overflow-x-auto td:nth-child(3) > span > span:first-child {
+  width: 6px;
+  height: 6px;
+}
+
+@media (max-width: 760px) {
+  .teacher-help-support .academics-config-tab-list {
+    width: 100%;
+  }
+
+  .teacher-help-support .academics-config-card-header {
+    padding: 17px 16px 14px;
+  }
+
+  .teacher-help-support .academics-config-card-header > div {
+    align-items: flex-start;
+  }
+
+  .teacher-help-support .academics-config-card-content {
+    padding: 14px 16px 18px;
+  }
+
+  .teacher-help-support .academics-config-card-content > .teacher-support-toolbar,
+  .teacher-help-support .teacher-support-toolbar > div:first-child {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .teacher-help-support .teacher-support-search,
+  .teacher-help-support .teacher-support-toolbar select {
+    width: 100% !important;
+    max-width: none;
+    flex-basis: auto;
+  }
+}

@@ -19,21 +19,25 @@
   margin-bottom: 4px;
 }
 
+.teacher-attendance-toolbar button {
+  min-height: 36px;
+  padding-inline: 14px;
+  gap: 8px;
+}
+
 /* KPI Strip */
 .teacher-attendance-metrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: #e4e4e7;
-  border: 1px solid #e4e4e7;
-  border-radius: 8px;
-  overflow: hidden;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
   width: 100%;
 }
 
 .teacher-attendance-metrics article {
   background: #ffffff;
-  padding: 16px 20px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 16px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -97,7 +101,6 @@
   border: 1px solid #e4e4e7;
   border-radius: 8px;
   width: 100%;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
@@ -167,7 +170,7 @@
 }
 
 .teacher-attendance-bulk button {
-  height: 34px;
+  min-height: 36px;
   font-size: 13px;
   font-weight: 500;
   display: inline-flex;
@@ -219,7 +222,18 @@
 .teacher-status-actions {
   display: flex;
   align-items: center;
+  flex-flow: row nowrap;
   gap: 4px;
+  white-space: nowrap;
+}
+
+.teacher-attendance .teacher-status-actions [data-slot="button"] {
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 28px;
+  padding-inline: 8px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 /* Status Badges */
@@ -311,6 +325,35 @@
   color: #71717a;
 }
 
+.teacher-attendance-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #52525b;
+  white-space: nowrap;
+}
+
+.teacher-attendance-page-button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #27272a;
+  font: inherit;
+  cursor: pointer;
+}
+
+.teacher-attendance-page-button:hover:not(:disabled) {
+  background: #f4f4f5;
+}
+
+.teacher-attendance-page-button:disabled {
+  color: #a1a1aa;
+  background: #fafafa;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .teacher-attendance-metrics {
@@ -330,7 +373,18 @@
   }
 
   .teacher-attendance-metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .teacher-attendance-metrics article {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .teacher-attendance-metric-icon {
+    width: 36px;
+    height: 36px;
   }
 
   .teacher-attendance-controls {
@@ -340,5 +394,27 @@
 
   .teacher-attendance-search {
     max-width: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .teacher-attendance-controls select,
+  .teacher-attendance-controls input[type="date"] {
+    width: 100%;
+  }
+
+  .teacher-attendance-bulk {
+    flex-wrap: wrap;
+  }
+
+  .teacher-attendance-bulk button {
+    flex: 1 1 auto;
+  }
+
+  .teacher-attendance-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
   }
 }

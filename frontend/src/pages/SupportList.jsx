@@ -15,6 +15,7 @@ import { useSupportCategories } from "@/hooks/useSupportCategories";
 import ConversationList from "@/components/support/ConversationList";
 import TicketListTable from "@/components/support/TicketListTable";
 import NewTicketDialog from "@/components/support/NewTicketDialog";
+import "@/Users/Teacher/TeacherHelpSupport.css";
 
 export const SupportList = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export const SupportList = () => {
   const currentUser = auth?.user;
   const role = currentUser?.role || "student";
   const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(role);
+  const isTeacherPortal = ["teacher", "faculty"].includes(role);
 
   // Filter and pagination states
   const [page, setPage] = useState(1);
@@ -103,7 +105,7 @@ export const SupportList = () => {
   );
 
   return (
-    <div className="academics-config-page mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6">
+    <div className={`academics-config-page mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 ${isTeacherPortal ? "teacher-help-support" : ""}`}>
       {/* 1. Floating Pill Tabs Bar (matches AcademicsConfig tab list) */}
       <div className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit">
         {tabs.map((tab) => {
@@ -147,6 +149,8 @@ export const SupportList = () => {
               <CardDescription className="text-sm text-zinc-500 mt-1">
                 {isAdmin
                   ? "Triage, assign, escalate, and resolve institutional support requests."
+                  : isTeacherPortal
+                  ? "Ask questions, submit requests regarding schedules, classes, or account support, and track replies."
                   : "Ask questions, get help with your studies, fees, or account, and track replies."}
               </CardDescription>
             </div>
@@ -186,17 +190,17 @@ export const SupportList = () => {
 
         <CardContent className="academics-config-card-content px-5 pb-5 sm:px-6 sm:pb-6 pt-5 space-y-4">
           {/* Search & Filter Row */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="teacher-support-toolbar flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0 flex-wrap">
               {/* Search input */}
-              <div className="relative flex-1 min-w-[220px] max-w-sm">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              <div className="teacher-support-search relative flex-1 min-w-[220px] max-w-sm">
+                <Search className="teacher-support-search-icon w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder={isAdmin ? "Search tickets by #, subject, or creator..." : "Search conversations..."}
                   value={filters.search || ""}
                   onChange={(e) => handleFilterChange("search", e.target.value)}
-                  className="w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
+                  className="teacher-support-search-input w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
                 />
               </div>
 
