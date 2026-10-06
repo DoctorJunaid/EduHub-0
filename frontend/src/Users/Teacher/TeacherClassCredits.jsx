@@ -212,110 +212,113 @@ export default function TeacherClassCredits() {
 
   return (
     <div className="campus-tab-page teacher-credits-page">
-      {/* 1. Toolbar Controls (Date/Month & Sync) */}
-      <div className="teacher-credits-toolbar">
-        <div className="teacher-credits-controls">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="teacher-credits-month"
-            aria-label="Select month"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              sessionsQuery.refetch();
-              summaryQuery.refetch();
-              toast.success("Teaching sessions synchronized.");
-            }}
-            disabled={isRefreshing}
-            className="teacher-credits-sync toolbar-btn-outline flex items-center gap-1.5"
-          >
-            {isRefreshing ? (
-              <Spinner className="size-3.5" />
-            ) : (
-              <RefreshCw size={14} />
-            )}
-            Sync
-          </Button>
-        </div>
-      </div>
-
-      {/* 2. KPI Cards Strip */}
-      <div className="campus-kpi-track teacher-credits-kpis">
-        {/* Total Credits */}
-        <div className="campus-kpi-card teacher-credits-kpi">
-          <div className="kpi-wrap">
-            <div className="kpi-icon blue">
-              <Award size={18} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">TOTAL CREDITS</span>
-              <div className="kpi-value">{summary?.totalCredits ?? "—"}</div>
-              <span className="kpi-subtext">
-                {summary?.regularCredits || 0} Regular +{" "}
-                {summary?.substituteCredits || 0} Substitute
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Classes Completed */}
-        <div className="campus-kpi-card teacher-credits-kpi">
-          <div className="kpi-wrap">
-            <div className="kpi-icon emerald">
-              <CheckCircle2 size={18} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">CLASSES COMPLETED</span>
-              <div className="kpi-value">{summary?.completedCount ?? "—"}</div>
-              <span className="kpi-subtext">
-                of {summary?.scheduledCount || 0} scheduled classes
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Substitution Bonus */}
-        <div className="campus-kpi-card teacher-credits-kpi">
-          <div className="kpi-wrap">
-            <div className="kpi-icon amber">
-              <Coins size={18} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">SUBSTITUTION BONUS</span>
-              <div className="kpi-value text-amber-600">
-                +{formatPKR(summary?.totalBonusEarned)}
+      {/* KPI Cards followed by Date/Month and Sync Controls */}
+      <div className="teacher-credits-header-group">
+        {/* 1. KPI Cards Strip */}
+        <div className="campus-kpi-track teacher-credits-kpis">
+          {/* Total Credits */}
+          <div className="campus-kpi-card teacher-credits-kpi">
+            <div className="kpi-wrap">
+              <div className="kpi-icon blue">
+                <Award size={18} />
               </div>
-              <span className="kpi-subtext">
-                {summary?.substituteDutiesTaken || 0} classes covered
-              </span>
+              <div className="kpi-info">
+                <span className="kpi-label">TOTAL CREDITS</span>
+                <div className="kpi-value">{summary?.totalCredits ?? "—"}</div>
+                <span className="kpi-subtext">
+                  {summary?.regularCredits || 0} Regular +{" "}
+                  {summary?.substituteCredits || 0} Substitute
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Classes Completed */}
+          <div className="campus-kpi-card teacher-credits-kpi">
+            <div className="kpi-wrap">
+              <div className="kpi-icon emerald">
+                <CheckCircle2 size={18} />
+              </div>
+              <div className="kpi-info">
+                <span className="kpi-label">CLASSES COMPLETED</span>
+                <div className="kpi-value">{summary?.completedCount ?? "—"}</div>
+                <span className="kpi-subtext">
+                  of {summary?.scheduledCount || 0} scheduled classes
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Substitution Bonus */}
+          <div className="campus-kpi-card teacher-credits-kpi">
+            <div className="kpi-wrap">
+              <div className="kpi-icon amber">
+                <Coins size={18} />
+              </div>
+              <div className="kpi-info">
+                <span className="kpi-label">SUBSTITUTION BONUS</span>
+                <div className="kpi-value text-amber-600">
+                  +{formatPKR(summary?.totalBonusEarned)}
+                </div>
+                <span className="kpi-subtext">
+                  {summary?.substituteDutiesTaken || 0} classes covered
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Approved Deductions */}
+          <div className="campus-kpi-card teacher-credits-kpi">
+            <div className="kpi-wrap">
+              <div className={`kpi-icon ${hasApprovedDeductions ? "rose" : "neutral"}`}>
+                <TrendingDown size={18} />
+              </div>
+              <div className="kpi-info">
+                <span className="kpi-label">APPROVED DEDUCTIONS</span>
+                <div
+                  className={`kpi-value ${
+                    hasApprovedDeductions ? "text-rose-600" : ""
+                  }`}
+                >
+                  -{formatPKR(summary?.approvedDeductionsTotal)}
+                </div>
+                <span className="kpi-subtext">
+                  {summary?.missedCount || 0} missed,{" "}
+                  {summary?.pendingReviewsCount || 0} pending review
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Approved Deductions */}
-        <div className="campus-kpi-card teacher-credits-kpi">
-          <div className="kpi-wrap">
-            <div className={`kpi-icon ${hasApprovedDeductions ? "rose" : "neutral"}`}>
-              <TrendingDown size={18} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">APPROVED DEDUCTIONS</span>
-              <div
-                className={`kpi-value ${
-                  hasApprovedDeductions ? "text-rose-600" : ""
-                }`}
-              >
-                -{formatPKR(summary?.approvedDeductionsTotal)}
-              </div>
-              <span className="kpi-subtext">
-                {summary?.missedCount || 0} missed,{" "}
-                {summary?.pendingReviewsCount || 0} pending review
-              </span>
-            </div>
+        {/* 2. Date/Month and Sync Controls */}
+        <div className="teacher-credits-toolbar">
+          <div className="teacher-credits-controls">
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="teacher-credits-month"
+              aria-label="Select month"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                sessionsQuery.refetch();
+                summaryQuery.refetch();
+                toast.success("Teaching sessions synchronized.");
+              }}
+              disabled={isRefreshing}
+              className="teacher-credits-sync toolbar-btn-outline flex items-center gap-1.5"
+            >
+              {isRefreshing ? (
+                <Spinner className="size-3.5" />
+              ) : (
+                <RefreshCw size={14} />
+              )}
+              Sync
+            </Button>
           </div>
         </div>
       </div>

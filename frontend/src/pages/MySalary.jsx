@@ -79,7 +79,10 @@ export default function MySalary() {
 
   return (
     <div className="salary-profiles-page campus-tab-page">
-      <div className="p-6 max-w-4xl mx-auto space-y-6 w-full">
+      <div
+        className="p-6 max-w-4xl mx-auto space-y-6 w-full"
+        style={{ width: "100%", maxWidth: "none" }}
+      >
         {/* Main Contract Card */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
           {/* Card Header with Employee Info & Payslips Action */}
