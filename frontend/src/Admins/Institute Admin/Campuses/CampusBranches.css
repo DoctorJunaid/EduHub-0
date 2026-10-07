@@ -126,7 +126,34 @@
 
 .campuses-card table {
   width: 100%;
+  min-width: 900px;
+  table-layout: fixed;
   border-collapse: collapse;
+}
+
+.campuses-card th:nth-child(1),
+.campuses-card td:nth-child(1) {
+  width: 23%;
+}
+
+.campuses-card th:nth-child(2),
+.campuses-card td:nth-child(2) {
+  width: 25%;
+}
+
+.campuses-card th:nth-child(3),
+.campuses-card td:nth-child(3) {
+  width: 22%;
+}
+
+.campuses-card th:nth-child(4),
+.campuses-card td:nth-child(4) {
+  width: 10%;
+}
+
+.campuses-card th:nth-child(5),
+.campuses-card td:nth-child(5) {
+  width: 20%;
 }
 
 .campuses-card th {
@@ -169,6 +196,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+}
+
+.campus-name > div {
+  min-width: 0;
 }
 
 .campus-name strong {
@@ -177,6 +209,7 @@
   font-size: 14px;
   font-weight: 600;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .campus-name small {
@@ -185,6 +218,7 @@
   font-size: 11px;
   color: #71717a;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
 }
 
 .campus-building {
@@ -203,19 +237,24 @@
 .campus-address {
   color: #52525b;
   font-size: 13px;
-  max-width: 240px;
-  line-height: 1.4;
-  word-break: break-word;
+  min-width: 0;
+  padding-right: 16px !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
 }
 
 .campus-manager-cell {
-  max-width: 260px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .manager-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .manager-name-row {
@@ -226,9 +265,11 @@
 }
 
 .manager-name-row strong {
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   color: #09090b;
+  overflow-wrap: anywhere;
 }
 
 .manager-status-badge {
@@ -255,10 +296,10 @@
   color: #71717a;
   font-size: 12px;
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 220px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
 }
 
 .manager-unassigned {
