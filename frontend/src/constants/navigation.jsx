@@ -16,6 +16,7 @@ import {
   Inbox,
   Layers,
   CreditCard,
+  GraduationCap,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -175,6 +176,11 @@ export const TEACHER_NAV = [
     label: "Overview",
     path: "/teacher",
     icon: <LayoutDashboard size={20} />,
+  },
+  {
+    label: "My Class",
+    path: "/teacher/my-class",
+    icon: <GraduationCap size={20} />,
   },
   {
     label: "My Teaching Credits",

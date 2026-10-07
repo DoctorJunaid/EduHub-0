@@ -15,6 +15,12 @@ const teacherProfileSchema = new mongoose.Schema(
     qualification: { type: String, required: true },
     designation: { type: String, default: "Teacher" },
     hireDate: { type: Date, default: Date.now },
+    isClassTeacher: { type: Boolean, default: false, index: true },
+    classTeacherOf: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Section",
+      default: null,
+    },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },

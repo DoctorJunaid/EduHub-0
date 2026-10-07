@@ -21,6 +21,7 @@ import StudentProfileDialog from '@/Admins/Campus Admin/Students/StudentProfileD
 import CampusThinCards from './components/CampusThinCards';
 import CampusOperationsHub from './components/CampusOperationsHub';
 import CampusActivitySidebar from './components/CampusActivitySidebar';
+import UnmarkedAttendanceBanner from '@/components/classTeacher/UnmarkedAttendanceBanner';
 import { useInstitution } from '@/context/InstitutionContext';
 
 import './CampusOverview.css';
@@ -161,6 +162,9 @@ export default function CampusOverview() {
 
   return (
     <div className="campus-overview" aria-label="Campus Executive Command Center">
+      {/* 0. Morning Unmarked Attendance Alert */}
+      <UnmarkedAttendanceBanner userRole={currentUser?.role || "campus_admin"} />
+
       {/* 1. 4 Clean KPI Cards Touching Border-to-Border */}
       <CampusThinCards
         students={students}

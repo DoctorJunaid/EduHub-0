@@ -41,6 +41,26 @@ const sectionSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    classTeacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TeacherProfile",
+      default: null,
+      index: true,
+    },
+    classTeacherAssignedAt: {
+      type: Date,
+      default: null,
+    },
+    classTeacherAssignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    classTeacherNote: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Institute",
@@ -50,6 +70,7 @@ const sectionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campus",
       required: true,
+      index: true,
     },
   },
   { timestamps: true }
@@ -161,6 +182,7 @@ teacherAssignmentSchema.index({ teacherId: 1, gradeId: 1, sectionId: 1, subjectI
 
 export const Grade = mongoose.models.Grade || mongoose.model("Grade", gradeSchema);
 export const Section = mongoose.models.Section || mongoose.model("Section", sectionSchema);
+export const ClassRoom = Section;
 export const Subject = mongoose.models.Subject || mongoose.model("Subject", subjectSchema);
 export const GradeSubject = mongoose.models.GradeSubject || mongoose.model("GradeSubject", gradeSubjectSchema);
 export const TeacherAssignment = mongoose.models.TeacherAssignment || mongoose.model("TeacherAssignment", teacherAssignmentSchema);
