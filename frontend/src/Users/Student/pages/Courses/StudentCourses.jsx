@@ -59,7 +59,7 @@ export default function StudentCourses() {
   }, [courses]);
 
   return (
-    <section className="student-courses-page w-full p-4 sm:p-6">
+    <section className="student-courses-page w-full">
       {/* 2. Standardized Neutral KPI Metric Cards */}
       <div className="student-course-metrics grid grid-cols-2 lg:grid-cols-4">
         <Card className="student-course-metric">

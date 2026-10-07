@@ -127,10 +127,27 @@
 .student-shell .content-area:has(.student-grades-page),
 .student-shell .content-area:has(.student-fees-page),
 .student-shell .content-area:has(.student-messages-page),
+.student-shell .content-area:has(.student-help-support),
 .student-shell .content-area:has(.student-courses),
 .student-shell .content-area:has(.student-assignments),
 .student-shell .content-area:has(.student-diary-page) {
   padding: 0;
+}
+
+.student-shell
+  .content-area
+  > :is(
+    .student-dashboard,
+    .student-attendance-page,
+    .student-grades-page,
+    .student-fees-page,
+    .student-messages-page,
+    .student-help-support,
+    .student-courses-page,
+    .student-assignments,
+    .student-diary-page
+  ) {
+  padding-inline: 24px !important;
 }
 
 .student-shell .header {
@@ -195,6 +212,22 @@
 @media (max-width: 768px) {
   .student-shell .content-area {
     padding: 20px 16px;
+  }
+
+  .student-shell
+    .content-area
+    > :is(
+      .student-dashboard,
+      .student-attendance-page,
+      .student-grades-page,
+      .student-fees-page,
+      .student-messages-page,
+      .student-help-support,
+      .student-courses-page,
+      .student-assignments,
+      .student-diary-page
+    ) {
+    padding-inline: 16px !important;
   }
 
   .student-shell .header {
