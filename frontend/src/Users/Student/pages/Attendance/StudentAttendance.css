@@ -284,4 +284,116 @@
   .sta-card-heading h2 {
     font-size: 17px;
   }
+  .sta-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px 8px;
+  }
+  .sta-pagination-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Pagination footer */
+.sta-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #f4f4f5;
+  padding: 12px 16px 8px;
+  margin-top: 4px;
+}
+
+.sta-pagination-info {
+  font-size: 12px;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.sta-pagination-info strong {
+  font-weight: 600;
+  color: #09090b;
+}
+
+.sta-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sta-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.sta-pagination-btn:hover:not(:disabled) {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #09090b;
+}
+
+.sta-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #ffffff;
+  border-color: #e4e4e7;
+  color: #a1a1aa;
+}
+
+.sta-pagination-pages {
+  font-size: 12px;
+  font-weight: 600;
+  color: #09090b;
+  padding: 0 4px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.dark .sta-pagination {
+  border-top-color: #27272a;
+}
+
+.dark .sta-pagination-info {
+  color: #a1a1aa;
+}
+
+.dark .sta-pagination-info strong {
+  color: #f4f4f5;
+}
+
+.dark .sta-pagination-btn {
+  background: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+
+.dark .sta-pagination-btn:hover:not(:disabled) {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+.dark .sta-pagination-btn:disabled {
+  background: #18181b;
+  border-color: #27272a;
+  color: #71717a;
+}
+
+.dark .sta-pagination-pages {
+  color: #f4f4f5;
 }

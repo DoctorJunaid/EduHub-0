@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Users,
@@ -5,6 +6,8 @@ import {
   CalendarDays,
   Clock3,
   ChartNoAxesColumnIncreasing,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import {
@@ -22,10 +25,91 @@ import { selectStudentAttendancePage } from "@/store/selectors/studentAttendance
 import "./StudentAttendance.css";
 
 const percentage = (rate) => `${Number(rate.toFixed(1))}%`;
+const ITEMS_PER_PAGE = 10;
+
+function AttendancePagination({
+  currentPage,
+  totalPages,
+  startIndex,
+  endIndex,
+  totalItems,
+  itemLabel = "subjects",
+  onPageChange,
+  ariaLabel,
+}) {
+  const itemWord = totalItems === 1 ? itemLabel.replace(/s$/, "") : itemLabel;
+
+  return (
+    <footer
+      className="sta-pagination flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-neutral-100 dark:border-neutral-800 pt-3 px-4 pb-2 mt-3 -mx-4 -mb-4 sm:-mx-3 sm:-mb-2.5"
+      aria-label={ariaLabel}
+    >
+      <span className="sta-pagination-info text-xs text-neutral-500 dark:text-neutral-400">
+        Showing <strong>{startIndex + 1} - {endIndex}</strong> of{" "}
+        <strong>{totalItems}</strong> total {itemWord}
+      </span>
+      <div className="sta-pagination-controls flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+        <button
+          type="button"
+          className="sta-pagination-btn h-8 px-3 text-xs font-medium border border-neutral-200 dark:border-neutral-800 rounded-md inline-flex items-center gap-1.5 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed select-none"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage <= 1}
+          aria-label="Previous page"
+        >
+          <ChevronLeft size={14} aria-hidden="true" />
+          <span>Previous</span>
+        </button>
+        <span className="sta-pagination-pages text-xs font-medium text-neutral-700 dark:text-neutral-200 px-2 select-none">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          type="button"
+          className="sta-pagination-btn h-8 px-3 text-xs font-medium border border-neutral-200 dark:border-neutral-800 rounded-md inline-flex items-center gap-1.5 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed select-none"
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage >= totalPages}
+          aria-label="Next page"
+        >
+          <span>Next</span>
+          <ChevronRight size={14} aria-hidden="true" />
+        </button>
+      </div>
+    </footer>
+  );
+}
 
 export default function StudentAttendance() {
   const { student, attendance, courses, rows, absent, late, leave } =
     useSelector(selectStudentAttendancePage);
+
+  const [coursePage, setCoursePage] = useState(1);
+  const [logPage, setLogPage] = useState(1);
+
+  const totalCourseItems = (courses || []).length;
+  const totalCoursePages = Math.max(1, Math.ceil(totalCourseItems / ITEMS_PER_PAGE));
+  const safeCoursePage = Math.min(Math.max(1, coursePage), totalCoursePages);
+  const courseStartIndex = (safeCoursePage - 1) * ITEMS_PER_PAGE;
+  const courseEndIndex = Math.min(courseStartIndex + ITEMS_PER_PAGE, totalCourseItems);
+  const visibleCourses = (courses || []).slice(courseStartIndex, courseEndIndex);
+
+  const [prevTotalCourses, setPrevTotalCourses] = useState(totalCourseItems);
+  if (totalCourseItems !== prevTotalCourses) {
+    setPrevTotalCourses(totalCourseItems);
+    setCoursePage(1);
+  }
+
+  const totalLogItems = (rows || []).length;
+  const totalLogPages = Math.max(1, Math.ceil(totalLogItems / ITEMS_PER_PAGE));
+  const safeLogPage = Math.min(Math.max(1, logPage), totalLogPages);
+  const logStartIndex = (safeLogPage - 1) * ITEMS_PER_PAGE;
+  const logEndIndex = Math.min(logStartIndex + ITEMS_PER_PAGE, totalLogItems);
+  const visibleRows = (rows || []).slice(logStartIndex, logEndIndex);
+
+  const [prevTotalLogs, setPrevTotalLogs] = useState(totalLogItems);
+  if (totalLogItems !== prevTotalLogs) {
+    setPrevTotalLogs(totalLogItems);
+    setLogPage(1);
+  }
+
   const stats = [
     {
       label: "Attendance Rate",
@@ -56,6 +140,7 @@ export default function StudentAttendance() {
         : "Student record not linked",
     },
   ];
+
   return (
     <section className="student-attendance-page">
       <div className="sta-stats">
@@ -80,7 +165,7 @@ export default function StudentAttendance() {
           </h2>
         </div>
         <div className="sta-courses">
-          {courses.map((course) => (
+          {visibleCourses.map((course) => (
             <div className="sta-course" key={course.title}>
               <div className="sta-course-heading">
                 <h3>{course.title}</h3>
@@ -110,6 +195,18 @@ export default function StudentAttendance() {
             No attendance data available for enrolled courses.
           </p>
         )}
+        {totalCourseItems > 0 && (
+          <AttendancePagination
+            currentPage={safeCoursePage}
+            totalPages={totalCoursePages}
+            startIndex={courseStartIndex}
+            endIndex={courseEndIndex}
+            totalItems={totalCourseItems}
+            itemLabel="subjects"
+            onPageChange={setCoursePage}
+            ariaLabel="Daily attendance progress pagination"
+          />
+        )}
       </Card>
       <Card className="sta-card">
         <div className="sta-card-heading">
@@ -134,7 +231,7 @@ export default function StudentAttendance() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map(({ record, session, date }) => (
+            {visibleRows.map(({ record, session, date }) => (
               <TableRow key={record.id}>
                 <TableCell>
                   <time dateTime={date}>{date}</time>
@@ -159,6 +256,18 @@ export default function StudentAttendance() {
             )}
           </TableBody>
         </Table>
+        {totalLogItems > 0 && (
+          <AttendancePagination
+            currentPage={safeLogPage}
+            totalPages={totalLogPages}
+            startIndex={logStartIndex}
+            endIndex={logEndIndex}
+            totalItems={totalLogItems}
+            itemLabel="records"
+            onPageChange={setLogPage}
+            ariaLabel="Daily attendance log pagination"
+          />
+        )}
       </Card>
     </section>
   );
