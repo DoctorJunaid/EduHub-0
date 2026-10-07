@@ -5,7 +5,13 @@ import { selectAuth } from "@/store/Slices/authSlice";
 import { Plus, SlidersHorizontal, Search, X } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import DataPagination from "@/components/shared/DataPagination";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 
 import { useSupportTickets, useCreateTicket } from "@/hooks/useSupportTickets";
@@ -16,13 +22,16 @@ import ConversationList from "@/components/support/ConversationList";
 import TicketListTable from "@/components/support/TicketListTable";
 import NewTicketDialog from "@/components/support/NewTicketDialog";
 import "@/Users/Teacher/TeacherHelpSupport.css";
+import "./StudentSupport.css";
 
 export const SupportList = () => {
   const navigate = useNavigate();
   const auth = useSelector(selectAuth);
   const currentUser = auth?.user;
   const role = currentUser?.role || "student";
-  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(role);
+  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(
+    role,
+  );
   const isTeacherPortal = ["teacher", "faculty"].includes(role);
 
   // Filter and pagination states
@@ -85,27 +94,45 @@ export const SupportList = () => {
     ? [
         { id: "all", label: "All Tickets", count: stats.total || totalCount },
         { id: "Open", label: "Open", count: stats.open || stats.waiting || 0 },
-        { id: "In Progress", label: "In Progress", count: stats.inProgress || stats.lookingAt || 0 },
-        { id: "Resolved", label: "Resolved", count: stats.resolved || stats.answered || 0 },
-        { id: "Closed", label: "Closed", count: stats.closed || stats.done || 0 },
+        {
+          id: "In Progress",
+          label: "In Progress",
+          count: stats.inProgress || stats.lookingAt || 0,
+        },
+        {
+          id: "Resolved",
+          label: "Resolved",
+          count: stats.resolved || stats.answered || 0,
+        },
+        {
+          id: "Closed",
+          label: "Closed",
+          count: stats.closed || stats.done || 0,
+        },
       ]
     : [
         { id: "all", label: "All Conversations", count: totalCount },
         { id: "Open", label: "Waiting for reply", count: stats.waiting || 0 },
-        { id: "In Progress", label: "Being looked at", count: stats.lookingAt || 0 },
+        {
+          id: "In Progress",
+          label: "Being looked at",
+          count: stats.lookingAt || 0,
+        },
         { id: "Resolved", label: "Answered", count: stats.answered || 0 },
         { id: "Closed", label: "Done", count: stats.done || 0 },
       ];
 
   const hasActiveFilters = Boolean(
     filters.search ||
-      (filters.category && filters.category !== "all") ||
-      (filters.status && filters.status !== "all") ||
-      (filters.priority && filters.priority !== "all")
+    (filters.category && filters.category !== "all") ||
+    (filters.status && filters.status !== "all") ||
+    (filters.priority && filters.priority !== "all"),
   );
 
   return (
-    <div className={`academics-config-page mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 ${isTeacherPortal ? "teacher-help-support" : ""}`}>
+    <div
+      className={`academics-config-page mx-auto w-full max-w-7xl space-y-6 ${isTeacherPortal ? "teacher-help-support" : !isAdmin ? "student-help-support" : ""}`}
+    >
       {/* 1. Floating Pill Tabs Bar (matches AcademicsConfig tab list) */}
       <div className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit">
         {tabs.map((tab) => {
@@ -150,8 +177,8 @@ export const SupportList = () => {
                 {isAdmin
                   ? "Triage, assign, escalate, and resolve institutional support requests."
                   : isTeacherPortal
-                  ? "Ask questions, submit requests regarding schedules, classes, or account support, and track replies."
-                  : "Ask questions, get help with your studies, fees, or account, and track replies."}
+                    ? "Ask questions, submit requests regarding schedules, classes, or account support, and track replies."
+                    : "Ask questions, get help with your studies, fees, or account, and track replies."}
               </CardDescription>
             </div>
 
@@ -165,8 +192,8 @@ export const SupportList = () => {
                       role === "super_admin"
                         ? "/super-admin/support"
                         : role === "institute_admin"
-                        ? "/institute-admin/support"
-                        : "/support/manage"
+                          ? "/institute-admin/support"
+                          : "/support/manage",
                     )
                   }
                   className="h-10 rounded-lg border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs sm:text-sm font-medium"
@@ -197,7 +224,11 @@ export const SupportList = () => {
                 <Search className="teacher-support-search-icon w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder={isAdmin ? "Search tickets by #, subject, or creator..." : "Search conversations..."}
+                  placeholder={
+                    isAdmin
+                      ? "Search tickets by #, subject, or creator..."
+                      : "Search conversations..."
+                  }
                   value={filters.search || ""}
                   onChange={(e) => handleFilterChange("search", e.target.value)}
                   className="teacher-support-search-input w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
@@ -213,7 +244,8 @@ export const SupportList = () => {
                 <option value="all">All Categories</option>
                 {categories.map((c) => (
                   <option key={c.id || c} value={c.id || c}>
-                    {c.icon ? `${c.icon} ` : ""}{c.label || c}
+                    {c.icon ? `${c.icon} ` : ""}
+                    {c.label || c}
                   </option>
                 ))}
               </select>
@@ -222,7 +254,9 @@ export const SupportList = () => {
                 <>
                   <select
                     value={filters.priority || "all"}
-                    onChange={(e) => handleFilterChange("priority", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("priority", e.target.value)
+                    }
                     className="!w-auto h-10 px-3 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-900 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 outline-none transition-all cursor-pointer shrink-0"
                   >
                     <option value="all">All Priorities</option>
@@ -252,7 +286,9 @@ export const SupportList = () => {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 rounded-xl border border-zinc-200 bg-zinc-50/50">
               <Spinner className="w-8 h-8 text-zinc-900" />
-              <p className="text-xs text-zinc-500 mt-3 font-medium">Loading conversations...</p>
+              <p className="text-xs text-zinc-500 mt-3 font-medium">
+                Loading conversations...
+              </p>
             </div>
           ) : isAdmin ? (
             <TicketListTable
