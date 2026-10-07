@@ -1,22 +1,18 @@
 import { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   CalendarDays,
   FileText,
   BookOpen,
   Search,
-  RefreshCw,
   Clock,
   CheckCircle2,
-  Users,
   GraduationCap,
   Sparkles,
-  ClipboardList,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
   Table,
@@ -34,10 +30,6 @@ import AssignmentStatusBadge from "../../components/AssignmentStatusBadge";
 import AssignmentSubmissionForm from "../../components/AssignmentSubmissionForm";
 import AssignmentFeedbackDialog from "../../components/AssignmentFeedbackDialog";
 import StudentDiaryEntry from "../../components/StudentDiaryEntry";
-import axiosInstance from "@/api/axiosInstance";
-import { assignmentsLoaded, submissionsLoaded } from "@/store/Slices/assignmentsSlice";
-import { diaryLoaded } from "@/store/Slices/diarySlice";
-import { schedulesLoaded } from "@/store/Slices/timetableSlice";
 import "./StudentAssignments.css";
 
 function AssignmentAction({ assignment }) {
@@ -70,30 +62,12 @@ function AssignmentAction({ assignment }) {
 }
 
 export default function StudentAssignments() {
-  const dispatch = useDispatch();
   const assignments = useSelector(selectStudentAssignments);
   const diaryEntries = useSelector(selectStudentDiary);
   const student = useSelector(selectCurrentStudent);
 
   const [activeTab, setActiveTab] = useState("all"); // "all", "diary", "pending", "completed"
   const [searchQuery, setSearchQuery] = useState("");
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      const { data } = await axiosInstance.get("/student/portal");
-      const portal = data?.data || {};
-      if (portal.assignments) dispatch(assignmentsLoaded(portal.assignments));
-      if (portal.submissions) dispatch(submissionsLoaded(portal.submissions));
-      if (portal.diary) dispatch(diaryLoaded(portal.diary));
-      if (portal.schedules) dispatch(schedulesLoaded(portal.schedules));
-    } catch {
-      // Keep existing state on error
-    } finally {
-      setTimeout(() => setIsRefreshing(false), 600);
-    }
-  };
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -106,7 +80,8 @@ export default function StudentAssignments() {
 
     if (!matchesSearch) return false;
     if (activeTab === "pending") return item.status === "Pending Submission";
-    if (activeTab === "completed") return item.status === "Submitted" || item.status === "Graded";
+    if (activeTab === "completed")
+      return item.status === "Submitted" || item.status === "Graded";
     return true;
   });
 
@@ -120,80 +95,59 @@ export default function StudentAssignments() {
     );
   });
 
-  const pendingCount = assignments.filter((a) => a.status === "Pending Submission").length;
-  const completedCount = assignments.filter((a) => a.status === "Submitted" || a.status === "Graded").length;
+  const pendingCount = assignments.filter(
+    (a) => a.status === "Pending Submission",
+  ).length;
+  const completedCount = assignments.filter(
+    (a) => a.status === "Submitted" || a.status === "Graded",
+  ).length;
 
   return (
     <section className="student-assignments">
-      {/* Top Header & Overview */}
       <div className="sa-header-wrapper">
-        <div className="sa-header-main">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-              <ClipboardList className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                Daily Diary &amp; Homework Portal
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Live academic stream from your subject teachers &amp; class instructors
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="sa-sync-btn"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
-            {isRefreshing ? "Syncing..." : "Sync Live Updates"}
-          </Button>
-        </div>
-
         {/* Metric KPI Cards */}
         <div className="sa-kpi-grid">
           <Card className="sa-kpi-card">
-            <div className="sa-kpi-icon-wrap bg-amber-500/10 text-amber-600">
+            <div className="sa-kpi-icon-wrap">
               <Clock className="w-4 h-4" />
             </div>
             <div className="sa-kpi-info">
-              <span className="sa-kpi-num">{pendingCount}</span>
               <span className="sa-kpi-label">Pending Tasks</span>
+              <span className="sa-kpi-num">{pendingCount}</span>
             </div>
           </Card>
 
           <Card className="sa-kpi-card">
-            <div className="sa-kpi-icon-wrap bg-emerald-500/10 text-emerald-600">
+            <div className="sa-kpi-icon-wrap">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div className="sa-kpi-info">
-              <span className="sa-kpi-num">{completedCount}</span>
               <span className="sa-kpi-label">Submitted / Graded</span>
+              <span className="sa-kpi-num">{completedCount}</span>
             </div>
           </Card>
 
           <Card className="sa-kpi-card">
-            <div className="sa-kpi-icon-wrap bg-blue-500/10 text-blue-600">
+            <div className="sa-kpi-icon-wrap">
               <BookOpen className="w-4 h-4" />
             </div>
             <div className="sa-kpi-info">
-              <span className="sa-kpi-num">{diaryEntries.length}</span>
               <span className="sa-kpi-label">Daily Diary Notes</span>
+              <span className="sa-kpi-num">{diaryEntries.length}</span>
             </div>
           </Card>
 
           <Card className="sa-kpi-card">
-            <div className="sa-kpi-icon-wrap bg-purple-500/10 text-purple-600">
+            <div className="sa-kpi-icon-wrap">
               <GraduationCap className="w-4 h-4" />
             </div>
             <div className="sa-kpi-info">
+              <span className="sa-kpi-label">
+                Section {student?.section || "A"}
+              </span>
               <span className="sa-kpi-num">
                 {student?.gradeOrClass || student?.program || "Class 9"}
               </span>
-              <span className="sa-kpi-label">Section {student?.section || "A"}</span>
             </div>
           </Card>
         </div>
@@ -253,7 +207,9 @@ export default function StudentAssignments() {
               </span>
               Active Course Tasks &amp; Homework Assignments
             </h2>
-            <p className="sa-count-tag">{filteredAssignments.length} assignments found</p>
+            <p className="sa-count-tag">
+              {filteredAssignments.length} assignments found
+            </p>
           </div>
 
           <div className="sa-table-container">
@@ -279,15 +235,23 @@ export default function StudentAssignments() {
                   <TableRow key={assignment.id} className="sa-table-row">
                     <TableCell>
                       <div className="sa-title-cell">
-                        <strong className="sa-task-title">{assignment.title}</strong>
+                        <strong className="sa-task-title">
+                          {assignment.title}
+                        </strong>
                         <div className="sa-subject-tag-row">
-                          <span className="sa-badge-sub">{assignment.subject}</span>
+                          <span className="sa-badge-sub">
+                            {assignment.subject}
+                          </span>
                           {assignment.section && (
-                            <span className="sa-badge-sec">Sec {assignment.section}</span>
+                            <span className="sa-badge-sec">
+                              Sec {assignment.section}
+                            </span>
                           )}
                         </div>
                         {assignment.description && (
-                          <p className="sa-task-desc">{assignment.description}</p>
+                          <p className="sa-task-desc">
+                            {assignment.description}
+                          </p>
                         )}
                       </div>
                     </TableCell>
@@ -295,10 +259,14 @@ export default function StudentAssignments() {
                       {assignment.dueDate ? (
                         <span className="sa-date">
                           <CalendarDays className="w-3.5 h-3.5 text-primary" />
-                          <time dateTime={assignment.dueDate}>{assignment.dueDate}</time>
+                          <time dateTime={assignment.dueDate}>
+                            {assignment.dueDate}
+                          </time>
                         </span>
                       ) : (
-                        <span className="text-muted-foreground text-xs">Due date not set</span>
+                        <span className="text-muted-foreground text-xs">
+                          Due date not set
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -312,7 +280,11 @@ export default function StudentAssignments() {
                       <AssignmentStatusBadge status={assignment.status} />
                     </TableCell>
                     <TableCell
-                      className={assignment.status === "Graded" ? "sa-score font-semibold" : ""}
+                      className={
+                        assignment.status === "Graded"
+                          ? "sa-score font-semibold"
+                          : ""
+                      }
                     >
                       {assignment.scoreLabel}
                     </TableCell>
@@ -352,7 +324,9 @@ export default function StudentAssignments() {
               </span>
               Daily Diary &amp; Teacher Lecture Notes
             </h2>
-            <p className="sa-count-tag">{filteredDiary.length} published notes</p>
+            <p className="sa-count-tag">
+              {filteredDiary.length} published notes
+            </p>
           </div>
           <div className="sa-diary-list" aria-live="polite">
             {filteredDiary.map((entry) => (
@@ -361,7 +335,10 @@ export default function StudentAssignments() {
             {!filteredDiary.length && (
               <div className="sa-diary-empty-card">
                 <Sparkles className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p>Diary notes and homework will appear here when published by your class teacher.</p>
+                <p>
+                  Diary notes and homework will appear here when published by
+                  your class teacher.
+                </p>
               </div>
             )}
           </div>
@@ -370,4 +347,3 @@ export default function StudentAssignments() {
     </section>
   );
 }
-

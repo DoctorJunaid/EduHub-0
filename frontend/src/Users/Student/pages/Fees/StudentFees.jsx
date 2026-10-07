@@ -5,11 +5,9 @@ import {
   FileText,
   Receipt,
   Award,
-  CheckCircle2,
   Printer,
   CreditCard,
   Building2,
-  RefreshCw,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -57,27 +55,21 @@ function PrintChallan({ voucher, student, demo }) {
 export default function StudentFees() {
   const [portalData, setPortalData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [paymentVoucher, setPaymentVoucher] = useState(null);
   const [receiptVoucher, setReceiptVoucher] = useState(null);
   const [activeTab, setActiveTab] = useState("vouchers"); // "vouchers" | "payments"
 
-  const fetchStudentFees = async (showToast = false) => {
+  const fetchStudentFees = async () => {
     try {
-      if (showToast) setIsRefreshing(true);
-      else setLoading(true);
-
+      setLoading(true);
       const res = await axiosInstance.get("/student/fees");
       if (res.data?.success) {
         setPortalData(res.data.data);
-        if (showToast) toast.success("Fee ledger updated!");
       }
     } catch (err) {
       console.error("Failed to load student fees:", err);
-      if (showToast) toast.error("Could not refresh fee records.");
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
     }
   };
 
@@ -98,8 +90,13 @@ export default function StudentFees() {
   const handleSubmitPayment = async (data) => {
     try {
       const voucherId = paymentVoucher._id || paymentVoucher.id;
-      await axiosInstance.post(`/student/fees/${voucherId}/submit-payment`, data);
-      toast.success("Payment submitted successfully! Awaiting finance verification.");
+      await axiosInstance.post(
+        `/student/fees/${voucherId}/submit-payment`,
+        data,
+      );
+      toast.success(
+        "Payment submitted successfully! Awaiting finance verification.",
+      );
       setPaymentVoucher(null);
       fetchStudentFees();
     } catch (err) {
@@ -109,74 +106,61 @@ export default function StudentFees() {
 
   return (
     <section className="student-fees-page">
-      {/* Top Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-border">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            School Fee Challan &amp; Billing
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Official monthly fee vouchers, bank challan slips &amp; online payment records
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchStudentFees(true)}
-          disabled={isRefreshing}
-          className="h-9 gap-1.5 text-xs font-semibold"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
-          {isRefreshing ? "Updating..." : "Refresh Ledger"}
-        </Button>
-      </div>
-
       {/* KPI Cards */}
       <div className="sf-stats">
         <Card className="sf-stat-card">
-          <div className="sf-stat-icon-wrap bg-emerald-500/10 text-emerald-600">
+          <div className="sf-stat-icon-wrap">
             <WalletCards className="w-5 h-5" />
           </div>
           <div className="sf-stat-info">
-            <span className="sf-stat-num text-emerald-700">{formatPKR(summary.totalPaid)}</span>
+            <span className="sf-stat-num">{formatPKR(summary.totalPaid)}</span>
             <span className="sf-stat-label">Total Paid Fees</span>
-            <span className="sf-stat-desc">Cleared vouchers &amp; receipts</span>
-          </div>
-        </Card>
-
-        <Card className="sf-stat-card">
-          <div className="sf-stat-icon-wrap bg-amber-500/10 text-amber-600">
-            <Clock3 className="w-5 h-5" />
-          </div>
-          <div className="sf-stat-info">
-            <span className="sf-stat-num text-amber-700">{formatPKR(summary.totalOutstanding)}</span>
-            <span className="sf-stat-label">Outstanding Dues</span>
             <span className="sf-stat-desc">
-              {summary.totalOverdue > 0 ? `${formatPKR(summary.totalOverdue)} overdue` : "Current payable dues"}
+              Cleared vouchers &amp; receipts
             </span>
           </div>
         </Card>
 
         <Card className="sf-stat-card">
-          <div className="sf-stat-icon-wrap bg-purple-500/10 text-purple-600">
+          <div className="sf-stat-icon-wrap">
+            <Clock3 className="w-5 h-5" />
+          </div>
+          <div className="sf-stat-info">
+            <span className="sf-stat-num">
+              {formatPKR(summary.totalOutstanding)}
+            </span>
+            <span className="sf-stat-label">Outstanding Dues</span>
+            <span className="sf-stat-desc">
+              {summary.totalOverdue > 0
+                ? `${formatPKR(summary.totalOverdue)} overdue`
+                : "Current payable dues"}
+            </span>
+          </div>
+        </Card>
+
+        <Card className="sf-stat-card">
+          <div className="sf-stat-icon-wrap">
             <Award className="w-5 h-5" />
           </div>
           <div className="sf-stat-info">
-            <span className="sf-stat-num text-purple-700">{formatPKR(summary.totalWaiver)}</span>
+            <span className="sf-stat-num">
+              {formatPKR(summary.totalWaiver)}
+            </span>
             <span className="sf-stat-label">Waiver / Scholarship</span>
             <span className="sf-stat-desc">Approved fee concessions</span>
           </div>
         </Card>
 
         <Card className="sf-stat-card">
-          <div className="sf-stat-icon-wrap bg-blue-500/10 text-blue-600">
+          <div className="sf-stat-icon-wrap">
             <Building2 className="w-5 h-5" />
           </div>
           <div className="sf-stat-info">
-            <span className="sf-stat-num text-blue-700">{student?.roll || "STU-9A"}</span>
+            <span className="sf-stat-num">{student?.roll || "STU-9A"}</span>
             <span className="sf-stat-label">Student Billing ID</span>
             <span className="sf-stat-desc">
-              {student?.gradeOrClass || "Class 9"} - Sec {student?.section || "A"}
+              {student?.gradeOrClass || "Class 9"} - Sec{" "}
+              {student?.section || "A"}
             </span>
           </div>
         </Card>
@@ -235,8 +219,15 @@ export default function StudentFees() {
               </TableHeader>
               <TableBody>
                 {vouchers.map((voucher) => {
-                  const totalBilled = voucher.totalPayable > 0 ? voucher.totalPayable : voucher.amount;
-                  const statusNormalized = (voucher.status || voucher.paymentStatus || "").toUpperCase();
+                  const totalBilled =
+                    voucher.totalPayable > 0
+                      ? voucher.totalPayable
+                      : voucher.amount;
+                  const statusNormalized = (
+                    voucher.status ||
+                    voucher.paymentStatus ||
+                    ""
+                  ).toUpperCase();
                   const canPay =
                     statusNormalized === "UNPAID" ||
                     statusNormalized === "PARTIALLY_PAID" ||
@@ -246,25 +237,42 @@ export default function StudentFees() {
                   return (
                     <TableRow key={voucher._id || voucher.id}>
                       <TableCell>
-                        <strong className="block text-foreground">{voucher.voucherNo}</strong>
-                        <small className="text-muted-foreground">{voucher.feeCategory || voucher.feeType}</small>
+                        <strong className="block text-foreground">
+                          {voucher.voucherNo}
+                        </strong>
+                        <small className="text-muted-foreground">
+                          {voucher.feeCategory || voucher.feeType}
+                        </small>
                         {voucher.previousArrears > 0 && (
-                          <span className="block text-[11px] text-amber-600 font-medium">
-                            (Includes {formatPKR(voucher.previousArrears)} prior arrears)
+                          <span className="sf-fee-note block text-[11px] font-medium">
+                            (Includes {formatPKR(voucher.previousArrears)} prior
+                            arrears)
                           </span>
                         )}
                         {voucher.waiver?.amount > 0 && (
-                          <span className="block text-[11px] text-purple-600 font-medium">
-                            (Waiver concession: {formatPKR(voucher.waiver.amount)})
+                          <span className="sf-fee-note block text-[11px] font-medium">
+                            (Waiver concession:{" "}
+                            {formatPKR(voucher.waiver.amount)})
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>{voucher.month || voucher.semester || "—"}</TableCell>
-                      <TableCell className="font-bold text-foreground">{formatPKR(totalBilled)}</TableCell>
-                      <TableCell className="text-emerald-700 font-bold">{formatPKR(voucher.paidAmount || 0)}</TableCell>
                       <TableCell>
-                        <time dateTime={voucher.dueDate} className="font-medium">
-                          {voucher.dueDate ? new Date(voucher.dueDate).toLocaleDateString() : "—"}
+                        {voucher.month || voucher.semester || "—"}
+                      </TableCell>
+                      <TableCell className="font-bold text-foreground">
+                        {formatPKR(totalBilled)}
+                      </TableCell>
+                      <TableCell className="sf-paid-amount font-bold">
+                        {formatPKR(voucher.paidAmount || 0)}
+                      </TableCell>
+                      <TableCell>
+                        <time
+                          dateTime={voucher.dueDate}
+                          className="font-medium"
+                        >
+                          {voucher.dueDate
+                            ? new Date(voucher.dueDate).toLocaleDateString()
+                            : "—"}
                         </time>
                       </TableCell>
                       <TableCell>
@@ -291,7 +299,8 @@ export default function StudentFees() {
                               Pay Online
                             </button>
                           )}
-                          {(voucher.paidAmount > 0 || statusNormalized === "PAID") && (
+                          {(voucher.paidAmount > 0 ||
+                            statusNormalized === "PAID") && (
                             <button
                               type="button"
                               className="sf-btn-receipt"
@@ -323,7 +332,6 @@ export default function StudentFees() {
             </Table>
           </div>
         </Card>
-
       ) : (
         /* ── PAYMENT RECEIPTS & HISTORY TAB ── */
         <Card className="sf-history">
@@ -357,84 +365,87 @@ export default function StudentFees() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {payments.map((p) => {
+                  const isConfirmed = p.status === "CONFIRMED";
+                  const isRejected = p.status === "REJECTED";
+                  const parentVoucher = vouchers.find(
+                    (v) => String(v._id || v.id) === String(p.feeRecordId),
+                  );
 
-              {payments.map((p) => {
-                const isConfirmed = p.status === "CONFIRMED";
-                const isRejected = p.status === "REJECTED";
-                const parentVoucher = vouchers.find(
-                  (v) => String(v._id || v.id) === String(p.feeRecordId)
-                );
-
-                return (
-                  <TableRow key={p._id}>
-                    <TableCell className="font-mono font-bold text-zinc-900">
-                      {p.receiptNo || "—"}
-                    </TableCell>
-                    <TableCell className="font-mono text-zinc-700">
-                      {p.voucherNo || parentVoucher?.voucherNo || "—"}
-                    </TableCell>
-                    <TableCell className="font-bold text-emerald-700">
-                      {formatPKR(p.amount)}
-                    </TableCell>
-                    <TableCell>
-                      {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}
-                    </TableCell>
-                    <TableCell>{p.paymentMethod || "Bank Transfer"}</TableCell>
-                    <TableCell className="font-mono text-xs">{p.referenceNo || "—"}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          isConfirmed
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : isRejected
-                            ? "bg-rose-100 text-rose-800 border border-rose-300"
-                            : "bg-amber-100 text-amber-800 border border-amber-300"
-                        }
-                      >
-                        {p.status}
-                      </Badge>
-                      {isRejected && p.rejectionReason && (
-                        <span className="block text-[10px] text-rose-600 mt-0.5">
-                          Reason: {p.rejectionReason}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isConfirmed && parentVoucher && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setReceiptVoucher({ voucher: parentVoucher, payment: p })}
-                          className="inline-flex items-center gap-1"
+                  return (
+                    <TableRow key={p._id}>
+                      <TableCell className="font-mono font-bold text-zinc-900">
+                        {p.receiptNo || "—"}
+                      </TableCell>
+                      <TableCell className="font-mono text-zinc-700">
+                        {p.voucherNo || parentVoucher?.voucherNo || "—"}
+                      </TableCell>
+                      <TableCell className="sf-paid-amount font-bold">
+                        {formatPKR(p.amount)}
+                      </TableCell>
+                      <TableCell>
+                        {p.paymentDate
+                          ? new Date(p.paymentDate).toLocaleDateString()
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {p.paymentMethod || "Bank Transfer"}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {p.referenceNo || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className="sf-payment-status"
                         >
-                          <Receipt className="size-3.5" />
-                          View Receipt
-                        </Button>
-                      )}
+                          {p.status}
+                        </Badge>
+                        {isRejected && p.rejectionReason && (
+                          <span className="sf-rejection-reason block text-[10px] mt-0.5">
+                            Reason: {p.rejectionReason}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isConfirmed && parentVoucher && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setReceiptVoucher({
+                                voucher: parentVoucher,
+                                payment: p,
+                              })
+                            }
+                            className="inline-flex items-center gap-1"
+                          >
+                            <Receipt className="size-3.5" />
+                            View Receipt
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {loading && !payments.length ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="p-0">
+                      <TableSkeleton rows={4} columns={8} />
                     </TableCell>
                   </TableRow>
-                );
-              })}
-              {loading && !payments.length ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="p-0">
-                    <TableSkeleton rows={4} columns={8} />
-                  </TableCell>
-                </TableRow>
-              ) : !payments.length ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="sf-empty">
-                    No payment submissions recorded yet.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
-    )}
-
+                ) : !payments.length ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="sf-empty">
+                      No payment submissions recorded yet.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
 
       {paymentVoucher && (
         <SubmitPaymentDialog

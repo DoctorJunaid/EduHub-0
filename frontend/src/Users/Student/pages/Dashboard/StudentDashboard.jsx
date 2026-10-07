@@ -67,7 +67,8 @@ export default function StudentDashboard() {
     session.days.includes(parseDate(today).getDay()),
   );
   const displayedClasses = todaysClasses.length > 0 ? todaysClasses : timetable;
-  const isShowingAllClasses = todaysClasses.length === 0 && timetable.length > 0;
+  const isShowingAllClasses =
+    todaysClasses.length === 0 && timetable.length > 0;
 
   const stats = [
     {
@@ -110,7 +111,9 @@ export default function StudentDashboard() {
   ];
 
   const todayDiary = diaryEntriesForDate(diary, today);
-  const upcomingAssignments = assignments.filter((assignment) => assignment.dueDate >= today);
+  const upcomingAssignments = assignments.filter(
+    (assignment) => assignment.dueDate >= today,
+  );
 
   return (
     <section className="student-dashboard" aria-label="Student dashboard">
@@ -128,8 +131,12 @@ export default function StudentDashboard() {
             <div>
               <h2>
                 {isShowingAllClasses
-                  ? (isSchool ? "Weekly Period Routine" : "Weekly Class Timetable")
-                  : (isSchool ? "Today's Period Timetable" : "Today's Class Timetable")}
+                  ? isSchool
+                    ? "Weekly Period Routine"
+                    : "Weekly Class Timetable"
+                  : isSchool
+                    ? "Today's Period Timetable"
+                    : "Today's Class Timetable"}
               </h2>
               <p>
                 {student?.section
@@ -146,7 +153,10 @@ export default function StudentDashboard() {
                   })}
                 </time>
                 {isShowingAllClasses && (
-                  <Badge variant="outline" className="ml-2 text-xs font-normal bg-muted/40">
+                  <Badge
+                    variant="outline"
+                    className="ml-2 text-xs font-normal bg-muted/40"
+                  >
                     Showing Regular Routine
                   </Badge>
                 )}
@@ -216,7 +226,7 @@ export default function StudentDashboard() {
         </Table>
       </Card>
       <div className="sd-bottom-grid">
-        <Card className="sd-bottom-card">
+        <Card className="sd-bottom-card sd-diary-card">
           <div className="sd-section-heading">
             <div className="sd-section-title">
               <span className="sd-icon">
@@ -248,7 +258,9 @@ export default function StudentDashboard() {
             </div>
           ) : assignments.length > 0 ? (
             <div className="sd-assignment-list">
-              <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Recent Assigned Homework:</p>
+              <p className="text-xs text-muted-foreground px-2 py-1 font-medium">
+                Recent Assigned Homework:
+              </p>
               {assignments.slice(0, 3).map((assignment) => (
                 <Link to="/student/assignments" key={assignment.id}>
                   <FileText aria-hidden="true" />
@@ -272,13 +284,17 @@ export default function StudentDashboard() {
             </div>
           )}
         </Card>
-        <Card className="sd-bottom-card">
+        <Card className="sd-bottom-card sd-diary-card">
           <div className="sd-section-heading">
             <div className="sd-section-title">
               <span className="sd-icon">
                 <ClipboardList aria-hidden="true" />
               </span>
-              <h2>{todayDiary.length > 0 ? "Today's Class Diary" : "Latest Class Diary Notes"}</h2>
+              <h2>
+                {todayDiary.length > 0
+                  ? "Today's Class Diary"
+                  : "Latest Class Diary Notes"}
+              </h2>
             </div>
             <Button variant="ghost" asChild>
               <Link to="/student/diary">
@@ -295,7 +311,9 @@ export default function StudentDashboard() {
             </div>
           ) : diary.length > 0 ? (
             <div className="sd-diary-list">
-              <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Recent Published Lecture Notes:</p>
+              <p className="text-xs text-muted-foreground px-2 py-1 font-medium">
+                Recent Published Lecture Notes:
+              </p>
               {diary.slice(0, 2).map((entry) => (
                 <StudentDiaryEntry key={entry.id} entry={entry} compact />
               ))}

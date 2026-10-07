@@ -10,68 +10,76 @@
 .sa-header-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.sa-header-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.sa-sync-btn {
-  height: 36px;
-  font-weight: 500;
-  gap: 6px;
-  border-radius: 8px;
+  gap: 0;
 }
 
 /* KPI Cards Grid */
 .sa-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  width: 100%;
+  border-bottom: 1px solid #e4e4e7;
 }
 
 .sa-kpi-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 6px 12px;
+  border: 0;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.sa-kpi-card:last-child {
+  border-right: 0;
 }
 
 .sa-kpi-icon-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 20px;
+  height: 20px;
+  color: #09090b;
   flex-shrink: 0;
+}
+
+.sa-kpi-icon-wrap svg {
+  width: 18px;
+  height: 18px;
 }
 
 .sa-kpi-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  gap: 2px;
 }
 
 .sa-kpi-num {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--foreground);
-  line-height: 1.2;
+  overflow: hidden;
+  color: #09090b;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sa-kpi-label {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin-top: 2px;
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* Controls & Tabs */
@@ -164,13 +172,17 @@
   display: flex;
   padding: 6px;
   border-radius: 8px;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.12);
+  color: #09090b;
+  background: #f4f4f5;
 }
 
 .sa-diary-icon-bg {
-  color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.12) !important;
+  color: #09090b !important;
+  background: #f4f4f5 !important;
+}
+
+.sa-diary-icon-bg svg {
+  color: #09090b !important;
 }
 
 .sa-count-tag {
@@ -212,7 +224,7 @@
 }
 
 .sa-table-row:hover td {
-  background: rgba(var(--primary-rgb, 59, 130, 246), 0.02);
+  background: rgba(9, 9, 11, 0.025);
 }
 
 .sa-title-cell {
@@ -236,17 +248,67 @@
 .sa-badge-sub {
   font-size: 11px;
   font-weight: 600;
-  color: #1d4ed8;
-  background: #eff6ff;
+  color: #18181b;
+  background: #f4f4f5;
   padding: 1px 8px;
   border-radius: 4px;
-  border: 1px solid #dbeafe;
+  border: 1px solid #e4e4e7;
 }
 
 .dark .sa-badge-sub {
-  background: rgba(37, 99, 235, 0.15);
-  color: #93c5fd;
-  border-color: rgba(37, 99, 235, 0.3);
+  background: #27272a;
+  color: #e4e4e7;
+  border-color: #3f3f46;
+}
+
+.sa-card .sa-date svg {
+  color: #09090b;
+}
+
+.sa-diary-stream .sde-subject-pill {
+  background: #f4f4f5;
+  color: #18181b;
+  border-color: #d4d4d8;
+}
+
+.dark .sa-diary-stream .sde-subject-pill {
+  background: #27272a;
+  color: #e4e4e7;
+  border-color: #3f3f46;
+}
+
+.sa-diary-stream .sde-meta-item svg.text-primary,
+.sa-diary-stream .sde-recap-box .sde-box-header svg {
+  color: #09090b;
+}
+
+.sa-diary-stream .sde-recap-box {
+  border-left-color: #09090b;
+}
+
+.sa-diary-stream .sde-hw-box {
+  border-left-color: #09090b;
+}
+
+.sa-diary-stream .sde-hw-box .sde-box-header svg {
+  color: #09090b;
+}
+
+.sa-diary-stream .sde-assignment-link {
+  color: #18181b;
+  background: #f4f4f5;
+}
+
+.sa-diary-stream .sde-assignment-link:hover {
+  background: #e4e4e7;
+}
+
+.sa-diary-stream .student-diary-entry:hover {
+  border-color: #09090b;
+}
+
+.sa-diary-stream .sde-resources-bar {
+  border-color: #d4d4d8;
 }
 
 .sa-badge-sec {
@@ -317,6 +379,20 @@
   border-radius: 6px;
 }
 
+@media (max-width: 900px) {
+  .sa-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sa-kpi-card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .sa-kpi-card:nth-child(-n + 2) {
+    border-bottom: 1px solid #e4e4e7;
+  }
+}
+
 @media (max-width: 768px) {
   .student-assignments {
     padding: 12px 14px;
@@ -327,3 +403,19 @@
   }
 }
 
+@media (max-width: 480px) {
+  .sa-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sa-kpi-card,
+  .sa-kpi-card:nth-child(2n) {
+    justify-content: flex-start;
+    border-right: 0;
+    border-bottom: 1px solid #e4e4e7;
+  }
+
+  .sa-kpi-card:last-child {
+    border-bottom: 0;
+  }
+}

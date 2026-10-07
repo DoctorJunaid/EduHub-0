@@ -1,83 +1,130 @@
 .student-fees-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   min-width: 0;
-  padding: 18px 20px 24px;
+  padding: 16px 18px 24px;
   color: var(--foreground);
 }
 
-/* KPI Cards Grid */
 .sf-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
   width: 100%;
+  border-bottom: 1px solid #e4e4e7;
+  background: #fff;
 }
 
-.sf-stat-card {
+.student-fees-page .sf-stat-card {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease-in-out;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 8px 14px;
+  border: 0;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: background-color 0.15s ease;
 }
 
-.sf-stat-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.student-fees-page .sf-stat-card:hover {
+  background: #fafafa;
+}
+
+.student-fees-page .sf-stat-card:last-child {
+  border-right: 0;
 }
 
 .sf-stat-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  color: #09090b;
+}
+
+.sf-stat-icon-wrap svg {
+  width: 18px;
+  height: 18px;
 }
 
 .sf-stat-info {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 2px;
 }
 
 .sf-stat-num {
-  font-size: 19px;
-  font-weight: 800;
-  color: var(--foreground);
-  line-height: 1.2;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  color: #09090b;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sf-stat-label {
-  font-size: 12px;
+  color: #52525b;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--muted-foreground);
-  margin-top: 2px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .sf-stat-desc {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  opacity: 0.8;
-  margin-top: 1px;
+  overflow: hidden;
+  color: #71717a;
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .sf-stats {
+  border-color: #3f3f46;
+  background: #18181b;
+}
+
+.dark .student-fees-page .sf-stat-card {
+  border-color: #3f3f46;
+}
+
+.dark .student-fees-page .sf-stat-card:hover {
+  background: #27272a;
+}
+
+.dark .sf-stat-icon-wrap,
+.dark .sf-stat-num {
+  color: #f4f4f5;
+}
+
+.dark .sf-stat-label {
+  color: #d4d4d8;
+}
+
+.dark .sf-stat-desc {
+  color: #a1a1aa;
 }
 
 /* Tabs */
 .sf-tabs-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   padding: 4px;
-  background: var(--muted);
-  border-radius: 10px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
   width: fit-content;
   max-width: 100%;
   overflow-x: auto;
@@ -87,11 +134,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  min-height: 34px;
+  padding: 7px 12px;
   font-size: 12px;
   font-weight: 600;
-  border-radius: 7px;
-  border: none;
+  border-radius: 6px;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
@@ -103,10 +151,16 @@
   color: var(--foreground);
 }
 
+.sf-tab-btn:focus-visible {
+  outline: 2px solid #52525b;
+  outline-offset: 2px;
+}
+
 .sf-tab-btn.active {
-  background: var(--card);
-  color: var(--foreground);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-color: #d4d4d8;
+  background: #fff;
+  color: #09090b;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 /* History Card & Table */
@@ -142,8 +196,13 @@
   display: flex;
   padding: 6px;
   border-radius: 8px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.dark .sf-history-heading h2 span {
+  background: #27272a;
+  color: #f4f4f5;
 }
 
 .sf-history-heading p {
@@ -186,7 +245,7 @@
 }
 
 .sf-history tr:hover td {
-  background: rgba(var(--primary-rgb, 59, 130, 246), 0.02);
+  background: rgba(9, 9, 11, 0.025);
 }
 
 .sf-history td strong {
@@ -206,49 +265,42 @@
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 6px;
+  border: 1px solid #d4d4d8;
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: #27272a;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.sf-status-paid {
-  color: #047857;
-  background: #d1fae5;
-  border: 1px solid #a7f3d0;
+.sf-payment-status {
+  border: 1px solid #d4d4d8 !important;
+  border-radius: 999px;
+  background: #f4f4f5 !important;
+  color: #27272a !important;
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.sf-status-unpaid,
-.sf-status-pending {
-  color: #b45309;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+.sf-fee-note,
+.sf-paid-amount,
+.sf-rejection-reason {
+  color: #52525b !important;
 }
 
-.sf-status-overdue {
-  color: #b91c1c;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
+.dark .sf-status,
+.dark .sf-payment-status {
+  border-color: #3f3f46 !important;
+  background: #27272a !important;
+  color: #e4e4e7 !important;
 }
 
-.dark .sf-status-paid {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.dark .sf-status-unpaid,
-.dark .sf-status-pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fcd34d;
-  border-color: rgba(245, 158, 11, 0.3);
-}
-
-.dark .sf-status-overdue {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.3);
+.dark .sf-fee-note,
+.dark .sf-paid-amount,
+.dark .sf-rejection-reason {
+  color: #d4d4d8 !important;
 }
 
 .sf-history .sf-empty {
@@ -261,6 +313,7 @@
 .sf-btn-group {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -281,7 +334,7 @@
   font-size: 12px;
   font-weight: 600;
   border-radius: 6px;
-  background: #2563eb;
+  background: #09090b;
   color: #ffffff;
   border: none;
   display: inline-flex;
@@ -291,7 +344,7 @@
 }
 
 .sf-btn-pay:hover {
-  background: #1d4ed8;
+  background: #27272a;
   color: #ffffff;
 }
 
@@ -301,26 +354,26 @@
   font-size: 12px;
   font-weight: 600;
   border-radius: 6px;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  background: #ecfdf5;
+  color: #27272a;
+  border: 1px solid #d4d4d8;
+  background: #f4f4f5;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
 .sf-btn-receipt:hover {
-  background: #d1fae5;
-  color: #065f46;
+  background: #e4e4e7;
+  color: #18181b;
 }
 
 .student-challan-dialog {
   width: calc(100% - 32px);
-  max-width: 620px;
+  max-width: min(1360px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
-  padding: 24px;
-  gap: 20px;
+  padding: 20px;
+  gap: 16px;
   background: var(--card);
   color: var(--foreground);
   border: 1px solid var(--border);
@@ -332,5 +385,58 @@
     padding: 12px 14px;
     gap: 12px;
   }
+
+  .sf-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-fees-page .sf-stat-card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .student-fees-page .sf-stat-card:nth-child(-n + 2) {
+    border-bottom: 1px solid #e4e4e7;
+  }
+
+  .dark .student-fees-page .sf-stat-card:nth-child(-n + 2) {
+    border-bottom-color: #3f3f46;
+  }
+
+  .sf-tabs-wrap {
+    width: 100%;
+  }
 }
 
+@media (max-width: 480px) {
+  .sf-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-fees-page .sf-stat-card,
+  .student-fees-page .sf-stat-card:nth-child(2n) {
+    justify-content: flex-start;
+    border-right: 0;
+    border-bottom: 1px solid #e4e4e7;
+  }
+
+  .student-fees-page .sf-stat-card:last-child {
+    border-bottom: 0;
+  }
+
+  .dark .student-fees-page .sf-stat-card {
+    border-bottom-color: #3f3f46;
+  }
+
+  .sf-history-heading {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .sf-history-heading h2 {
+    font-size: 15px;
+  }
+
+  .sf-btn-group {
+    min-width: 210px;
+  }
+}

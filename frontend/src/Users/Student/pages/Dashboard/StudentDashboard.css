@@ -367,6 +367,32 @@
 .sd-bottom-card .sd-section-title {
   gap: 6px;
 }
+.sd-diary-card .sd-section-heading > button {
+  color: #09090b;
+}
+.sd-diary-card .sde-subject-pill {
+  background: #09090b;
+  color: #fff;
+  border-color: #09090b;
+}
+.sd-diary-card .sde-meta-item svg,
+.sd-diary-card .sde-box-header svg {
+  color: #09090b;
+}
+.sd-diary-card .sde-recap-box,
+.sd-diary-card .sde-hw-box {
+  border-left-color: #09090b;
+}
+.sd-diary-card .sde-assignment-link {
+  color: #09090b;
+  background: #f4f4f5;
+}
+.sd-diary-card .sde-assignment-link:hover {
+  background: #e4e4e7;
+}
+.sd-diary-card .student-diary-entry:hover {
+  border-color: #09090b;
+}
 .sd-bottom-card .sd-section-heading > button {
   padding-inline: 0;
   color: var(--color-success);
