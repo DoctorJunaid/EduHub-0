@@ -12,6 +12,7 @@ import CampusBranches from "./Admins/Institute Admin/Campuses/CampusBranches";
 import ManageCampusPage from "./Admins/Institute Admin/Campuses/ManageCampusPage";
 import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStudents";
 import InstituteStaff from "./Admins/Institute Admin/Staff/InstituteStaff";
+import InstituteAuditLogs from "./Admins/Institute Admin/AuditLogs/InstituteAuditLogs";
 import "./Admins/Institute Admin/InstituteAdmin.css";
 import { instituteNavigation } from "./Admins/Institute Admin/navigation";
 import SalaryPolicies from "./Admins/Institute Admin/Payroll/SalaryPolicies";
@@ -174,6 +175,7 @@ const App = () => {
               element={<InstituteStudents />}
             />
             <Route path="institute-admin/staff" element={<InstituteStaff />} />
+            <Route path="institute-admin/audit-logs" element={<InstituteAuditLogs />} />
             <Route path="institute-admin/subscription" element={<InstituteSubscription />} />
             <Route path="institute-admin/salary-policies" element={<SalaryPolicies />} />
             <Route path="institute-admin/settings" element={<Settings />} />
