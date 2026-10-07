@@ -1,55 +1,31 @@
 import { useState, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   BookOpen,
   Search,
-  RefreshCw,
   Clock,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   CalendarDays,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
 import { selectStudentCourses } from "@/store/selectors/studentCourses";
-import { selectCurrentStudent } from "@/store/selectors/studentDashboard";
 import StudentCourseCard from "../../components/StudentCourseCard";
-import axiosInstance from "@/api/axiosInstance";
-import { studentsLoaded } from "@/store/Slices/studentsSlice";
-import { schedulesLoaded } from "@/store/Slices/timetableSlice";
-import toast from "react-hot-toast";
 import "./StudentCourses.css";
 
 export default function StudentCourses() {
-  const dispatch = useDispatch();
   const courses = useSelector(selectStudentCourses);
-  const student = useSelector(selectCurrentStudent);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      const res = await axiosInstance.get("/student/portal");
-      if (res.data?.data) {
-        const portal = res.data.data;
-        if (portal.student) dispatch(studentsLoaded(portal.student));
-        if (portal.schedules) dispatch(schedulesLoaded(portal.schedules));
-        toast.success("Enrolled subjects and schedules refreshed!");
-      }
-    } catch {
-      toast.error("Could not refresh live subjects. Please check connection.");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const categories = ["All", "Compulsory", "Science & Technical", "Electives & Arts"];
+  const categories = [
+    "All",
+    "Compulsory",
+    "Science & Technical",
+    "Electives & Arts",
+  ];
 
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
@@ -62,9 +38,12 @@ export default function StudentCourses() {
 
       const matchesCategory =
         selectedCategory === "All" ||
-        (selectedCategory === "Compulsory" && course.category === "Compulsory") ||
-        (selectedCategory === "Science & Technical" && course.category === "Science & Technical") ||
-        (selectedCategory === "Electives & Arts" && course.category === "Electives & Arts");
+        (selectedCategory === "Compulsory" &&
+          course.category === "Compulsory") ||
+        (selectedCategory === "Science & Technical" &&
+          course.category === "Science & Technical") ||
+        (selectedCategory === "Electives & Arts" &&
+          course.category === "Electives & Arts");
 
       return matchesSearch && matchesCategory;
     });
@@ -79,96 +58,61 @@ export default function StudentCourses() {
     return Math.round(rates.reduce((a, b) => a + b, 0) / rates.length);
   }, [courses]);
 
-  const className = student?.gradeOrClass || student?.program || "Class 9";
-  const sectionName = student?.section || "Section A";
-
   return (
     <section className="student-courses-page w-full p-4 sm:p-6">
-      {/* 1. Restructured Clean Page Header */}
-      <div className="student-courses-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="student-courses-heading space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-              My Subjects
-            </h1>
-            <Badge
-              variant="outline"
-              className="bg-neutral-100/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 text-xs font-medium px-2.5 py-0.5 gap-1 rounded-md"
-            >
-              <Sparkles className="w-3 h-3 text-neutral-500" /> BISE Peshawar Board Standard
-            </Badge>
-            <Badge
-              variant="outline"
-              className="bg-neutral-100/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 text-xs font-medium px-2.5 py-0.5 rounded-md"
-            >
-              {className} • {sectionName}
-            </Badge>
-          </div>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-2xl">
-            Access your registered curriculum, lesson syllabus, weekly class schedule, and subject-wise attendance performance.
-          </p>
-        </div>
-
-        <div className="flex items-center shrink-0 self-start sm:self-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="h-9 px-3 gap-2 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium rounded-lg shadow-xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            {isRefreshing ? "Syncing..." : "Sync Subjects"}
-          </Button>
-        </div>
-      </div>
-
       {/* 2. Standardized Neutral KPI Metric Cards */}
-      <div className="student-course-metrics grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="student-course-metric p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs flex flex-row items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
-            <BookOpen className="w-5 h-5" />
+      <div className="student-course-metrics grid grid-cols-2 lg:grid-cols-4">
+        <Card className="student-course-metric">
+          <div className="student-course-metric-icon">
+            <BookOpen className="w-4 h-4" />
           </div>
           <div className="student-course-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">Total Subjects</span>
-            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+              Total Subjects
+            </span>
+            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
               {courses.length}
             </span>
           </div>
         </Card>
 
-        <Card className="student-course-metric p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs flex flex-row items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
+        <Card className="student-course-metric">
+          <div className="student-course-metric-icon">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
           <div className="student-course-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">Avg. Attendance</span>
-            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+              Avg. Attendance
+            </span>
+            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
               {averageAttendance}%
             </span>
           </div>
         </Card>
 
-        <Card className="student-course-metric p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs flex flex-row items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
+        <Card className="student-course-metric">
+          <div className="student-course-metric-icon">
+            <Clock className="w-4 h-4" />
           </div>
           <div className="student-course-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">Weekly Periods</span>
-            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+              Weekly Periods
+            </span>
+            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
               {courses.length * 5} Periods
             </span>
           </div>
         </Card>
 
-        <Card className="student-course-metric p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs flex flex-row items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
-            <CalendarDays className="w-5 h-5" />
+        <Card className="student-course-metric">
+          <div className="student-course-metric-icon">
+            <CalendarDays className="w-4 h-4" />
           </div>
           <div className="student-course-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">Current Term</span>
-            <span className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-neutral-100 truncate block">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+              Current Term
+            </span>
+            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100 truncate block">
               Annual 2026
             </span>
           </div>
@@ -221,13 +165,15 @@ export default function StudentCourses() {
           <strong className="font-semibold text-neutral-900 dark:text-neutral-200 uppercase tracking-wide text-[11px] mr-1.5">
             Peshawar Board Academic Session Active:
           </strong>
-          All subjects are synchronized with your campus academic records. Clicking any subject card lets you view its full Peshawar Board syllabus units, textbook recommendations, and instructor details.
+          All subjects are synchronized with your campus academic records.
+          Clicking any subject card lets you view its full Peshawar Board
+          syllabus units, textbook recommendations, and instructor details.
         </p>
       </div>
 
       {/* Grid of Subject Cards */}
       {filteredCourses.length > 0 ? (
-        <div className="student-courses-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+        <div className="student-courses-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {filteredCourses.map((course) => (
             <StudentCourseCard key={course.title} course={course} />
           ))}
