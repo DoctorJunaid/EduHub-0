@@ -67,6 +67,9 @@ import TeacherLayout from "./Users/Teacher/TeacherLayout";
 import TeacherDashboard from "./Users/Teacher/TeacherDashboard";
 import TeacherPage from "./Users/Teacher/TeacherPage";
 import TeacherClassCredits from "./Users/Teacher/TeacherClassCredits";
+import MyClass from "./pages/teacher/MyClass";
+import ClassAttendance from "./pages/teacher/ClassAttendance";
+import MyClassResults from "./pages/teacher/MyClassResults";
 import TeachingPerformance from "./pages/TeachingPerformance";
 import SalaryReviewCenter from "./pages/SalaryReviewCenter";
 import AdminSeed from "./pages/AdminSeed";
@@ -247,6 +250,9 @@ const App = () => {
         >
           <Route element={<TeacherLayout />}>
             <Route path="teacher" element={<TeacherDashboard />} />
+            <Route path="teacher/my-class" element={<MyClass />} />
+            <Route path="teacher/my-class/attendance" element={<ClassAttendance />} />
+            <Route path="teacher/my-class/results" element={<MyClassResults />} />
             <Route path="teacher/credits" element={<TeacherClassCredits />} />
             <Route path="teacher/classes" element={<TeacherPage />} />
             <Route path="teacher/assignments" element={<TeacherPage />} />

@@ -4,10 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "@/components/shared/TableSkeleton";
 import axiosInstance from "@/api/axiosInstance";
+import * as classTeacherApi from "@/api/classTeacher.api";
+import AssignClassTeacherDialog from "@/components/classTeacher/AssignClassTeacherDialog";
 import toast from "react-hot-toast";
 
 export default function AcademicsConfig() {
@@ -15,10 +18,13 @@ export default function AcademicsConfig() {
   const [sections, setSections] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [gradeSubjects, setGradeSubjects] = useState([]);
+  const [classTeachers, setClassTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState(null);
   const [loadError, setLoadError] = useState("");
+  const [selectedSectionForAssign, setSelectedSectionForAssign] = useState(null);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   // Form states
   const [newGrade, setNewGrade] = useState({ name: "", description: "" });
@@ -30,28 +36,32 @@ export default function AcademicsConfig() {
     setLoadError("");
     setLoading(true);
     try {
-      const [gRes, secRes, subRes, gsRes] = await Promise.allSettled([
+      const [gRes, secRes, subRes, gsRes, ctRes] = await Promise.allSettled([
           axiosInstance.get("/academic/grades", { timeout: 12000 }),
           axiosInstance.get("/academic/sections", { timeout: 12000 }),
           axiosInstance.get("/academic/subjects", { timeout: 12000 }),
           axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
+          classTeacherApi.getAllClassTeachers(),
       ]);
       const failures = [];
       const applyResult = (result, label, setter) => {
         if (result.status === "fulfilled") {
-          setter(result.value.data);
+          setter(result.value.data?.data || result.value.data || []);
           return;
         }
         const reason = result.reason;
-        const detail = reason.code === "ECONNABORTED"
+        const detail = reason?.code === "ECONNABORTED"
           ? "request timed out"
-          : (reason.response?.data?.message || reason.message || "request failed");
+          : (reason?.response?.data?.message || reason?.message || "request failed");
         failures.push(`${label}: ${detail}`);
       };
       applyResult(gRes, "Grades", setGrades);
       applyResult(secRes, "Sections", setSections);
       applyResult(subRes, "Subjects", setSubjects);
       applyResult(gsRes, "Class subjects", setGradeSubjects);
+      if (ctRes.status === "fulfilled") {
+        setClassTeachers(ctRes.value.data || []);
+      }
       if (failures.length) {
         const message = `Some academic data could not be loaded. ${failures.join("; ")}`;
         setLoadError(message);
@@ -234,6 +244,7 @@ export default function AcademicsConfig() {
         <TabsList className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit">
           <TabsTrigger value="grades" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Grades/Classes</TabsTrigger>
           <TabsTrigger value="sections" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Sections</TabsTrigger>
+          <TabsTrigger value="class_teachers" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-indigo-600 data-[state=active]:text-white sm:px-4 sm:text-sm font-semibold flex items-center gap-1.5">🎓 Class Teachers</TabsTrigger>
           <TabsTrigger value="subjects" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Subjects Master</TabsTrigger>
           <TabsTrigger value="class_subjects" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Class Subjects</TabsTrigger>
         </TabsList>
@@ -360,37 +371,179 @@ export default function AcademicsConfig() {
                     <tr>
                       <th className="px-4 py-3 font-medium">Grade</th>
                       <th className="px-4 py-3 font-medium">Section</th>
+                      <th className="px-4 py-3 font-medium">Class Teacher</th>
                       <th className="px-4 py-3 font-medium w-24">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading && sections.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="p-0">
-                          <TableSkeleton rows={4} columns={3} />
+                        <td colSpan={4} className="p-0">
+                          <TableSkeleton rows={4} columns={4} />
                         </td>
                       </tr>
                     ) : sections.length === 0 ? (
-                      <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">No sections defined yet.</td></tr>
-                    ) : sections.map((s) => (
-                      <tr key={s._id} className="border-b last:border-0">
-                        <td className="px-4 py-3 font-medium">{s.gradeId?.name || "Unknown Grade"}</td>
-                        <td className="px-4 py-3">{s.name}</td>
-                        <td className="px-4 py-3">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            disabled={isDeletingId === s._id}
-                            onClick={() => handleDeleteSection(s._id)} 
-                            className="text-destructive"
-                          >
-                            {isDeletingId === s._id ? <Spinner className="size-4 text-destructive" /> : <Trash2 className="w-4 h-4" />}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                      <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">No sections defined yet.</td></tr>
+                    ) : sections.map((s) => {
+                      const ctInfo = classTeachers.find((ct) => String(ct.classId || ct._id) === String(s._id));
+                      const teacher = ctInfo?.classTeacher;
+
+                      return (
+                        <tr key={s._id} className="border-b last:border-0 hover:bg-slate-50/50">
+                          <td className="px-4 py-3 font-medium">{s.gradeId?.name || "Unknown Grade"}</td>
+                          <td className="px-4 py-3 font-bold">{s.name}</td>
+                          <td className="px-4 py-3">
+                            {teacher ? (
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30 text-xs px-2 py-0.5">
+                                  {teacher.name}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setSelectedSectionForAssign(ctInfo || s);
+                                    setIsAssignDialogOpen(true);
+                                  }}
+                                  className="h-6 px-1.5 text-xs text-indigo-600 hover:text-indigo-800"
+                                >
+                                  <Edit size={12} className="mr-1" /> Change
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedSectionForAssign(ctInfo || s);
+                                  setIsAssignDialogOpen(true);
+                                }}
+                                className="h-7 px-2.5 text-xs border-dashed border-amber-400 text-amber-700 hover:bg-amber-50"
+                              >
+                                <UserPlus size={13} className="mr-1" /> Assign Teacher
+                              </Button>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              disabled={isDeletingId === s._id}
+                              onClick={() => handleDeleteSection(s._id)} 
+                              className="text-destructive"
+                            >
+                              {isDeletingId === s._id ? <Spinner className="size-4 text-destructive" /> : <Trash2 className="w-4 h-4" />}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* CLASS TEACHERS TAB */}
+        <TabsContent value="class_teachers" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="text-indigo-600" />
+                  Class Teacher Roles & Section Ownership
+                </CardTitle>
+                <CardDescription>
+                  Every class section has one primary Class Teacher responsible for daily attendance, student records, and compiling term results.
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {classTeachers.map((ct) => {
+                  const hasTeacher = !!ct.classTeacher;
+                  return (
+                    <div
+                      key={ct._id || ct.classId}
+                      className="p-5 rounded-2xl border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-base text-zinc-900">
+                            {ct.className}
+                          </h4>
+                          {hasTeacher ? (
+                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">
+                              Assigned
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
+                              Unassigned
+                            </Badge>
+                          )}
+                        </div>
+
+                        {hasTeacher ? (
+                          <div className="space-y-2 text-xs text-zinc-600 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">
+                                {ct.classTeacher.name?.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-bold text-zinc-900 block text-sm">
+                                  {ct.classTeacher.name}
+                                </span>
+                                <span className="text-zinc-500">
+                                  {ct.classTeacher.department || "Faculty"}
+                                </span>
+                              </div>
+                            </div>
+                            {ct.classTeacher.email && (
+                              <div className="text-zinc-500 truncate">
+                                📧 {ct.classTeacher.email}
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-200">
+                              <span>Students: <strong>{ct.studentCount || 0}</strong></span>
+                              <span>Attendance Today: <strong>{ct.isAttendanceMarkedToday ? "✅ Marked" : "⏳ Pending"}</strong></span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center text-xs text-zinc-400 bg-zinc-50/50 rounded-xl border border-dashed border-zinc-200">
+                            No teacher assigned yet.
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant={hasTeacher ? "outline" : "default"}
+                          onClick={() => {
+                            setSelectedSectionForAssign(ct);
+                            setIsAssignDialogOpen(true);
+                          }}
+                          className={`text-xs rounded-xl ${
+                            hasTeacher
+                              ? "border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                              : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                          }`}
+                        >
+                          {hasTeacher ? (
+                            <>
+                              <Edit size={13} className="mr-1" /> Reassign
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus size={13} className="mr-1" /> Assign Teacher
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -556,6 +709,15 @@ export default function AcademicsConfig() {
         </TabsContent>
 
       </Tabs>
+
+      <AssignClassTeacherDialog
+        isOpen={isAssignDialogOpen}
+        onClose={() => setIsAssignDialogOpen(false)}
+        classSection={selectedSectionForAssign}
+        onSuccess={() => {
+          fetchData();
+        }}
+      />
     </div>
   );
 }

@@ -29,6 +29,8 @@ import { qk } from "@/lib/queryKeys";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
+import useMyClass from "@/hooks/useMyClass";
+import MyClassWidget from "@/components/classTeacher/MyClassWidget";
 import toast from "react-hot-toast";
 import "./TeacherDashboard.css";
 
@@ -43,6 +45,7 @@ const initials = (name = "") =>
 
 export default function TeacherDashboard() {
   const queryClient = useQueryClient();
+  const { isClassTeacher, classInfo, attendance, loading: myClassLoading } = useMyClass();
   const reduxClasses = useSelector(selectAssignedTeacherClasses);
   const teacher = useSelector(selectTeacherIdentity);
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
@@ -191,6 +194,17 @@ export default function TeacherDashboard() {
       aria-labelledby="teacher-dashboard-title"
     >
       <h1 id="teacher-dashboard-title" className="sr-only">Teacher Overview</h1>
+
+      {/* Class Teacher Hero Card (if assigned) */}
+      {isClassTeacher && classInfo && (
+        <div className="mb-6">
+          <MyClassWidget
+            classInfo={classInfo}
+            attendance={attendance}
+            loading={myClassLoading}
+          />
+        </div>
+      )}
 
       {/* 1. KPI Cards Strip */}
       <section className="teacher-metrics campus-kpi-track" aria-label="Teaching summary">

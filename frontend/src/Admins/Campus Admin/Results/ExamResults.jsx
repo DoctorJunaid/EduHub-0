@@ -40,6 +40,7 @@ import {
 import ResultsTable from "./ResultsTable";
 import ResultForm from "./ResultForm";
 import TranscriptDialog from "./TranscriptDialog";
+import PendingResultsApprovals from "@/components/results/PendingResultsApprovals";
 import "../Timetable/ClassTimetable.css";
 import "./ExamResults.css";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -180,9 +181,12 @@ export default function ExamResults() {
 
   return (
     <section
-      className="campus-tab-page exam-results"
+      className="campus-tab-page exam-results space-y-4"
       aria-label="Exam Results and Academic Performance"
     >
+      {/* Pending Result Approvals Queue from Class Teachers */}
+      <PendingResultsApprovals onApproved={() => dispatch(fetchResults())} />
+
       {/* 1. Top Thin KPI Cards (Flush Border-to-Border, 56px) */}
       <div className="campus-kpi-track">
         <div className="campus-kpi-card">

@@ -91,6 +91,17 @@ router.use("/messages", supportRoutes);
 import notificationRoutes from "./notification.routes.js";
 router.use("/notifications", notificationRoutes);
 
+import classTeacherRoutes from "./classTeacher.routes.js";
+import resultCompilationRoutes from "./resultCompilation.routes.js";
+
+// Class Teacher & Result Compilation Routes
+router.use("/campus", classTeacherRoutes);
+router.use("/campus", resultCompilationRoutes);
+router.use("/teacher", classTeacherRoutes);
+router.use("/teacher", resultCompilationRoutes);
+router.use("/results", resultCompilationRoutes);
+router.use("/student", resultCompilationRoutes);
+
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);
 
