@@ -251,6 +251,17 @@ export const getStudents = asyncHandler(async (req, res) => {
 
 export const createStudent = asyncHandler(async (req, res) => {
   const student = await instituteAdminService.createStudent(req.instituteId, req.body);
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: student._id,
+    instituteId: req.instituteId,
+    campusId: student.campusId,
+    action: "created",
+    changes: { after: { name: student.name, email: student.email, role: "student" } },
+    reason: `Enrolled new student "${student.name}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Student enrolled successfully.",
@@ -264,6 +275,17 @@ export const updateStudent = asyncHandler(async (req, res) => {
     req.params.id,
     req.body
   );
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: student._id,
+    instituteId: req.instituteId,
+    campusId: student.campusId,
+    action: "updated",
+    changes: { after: req.body },
+    reason: `Updated student record for "${student.name}"`,
+  });
+
   res.status(200).json({
     success: true,
     message: "Student updated successfully.",
@@ -273,6 +295,15 @@ export const updateStudent = asyncHandler(async (req, res) => {
 
 export const deleteStudent = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.deleteStudent(req.instituteId, req.params.id);
+
+  await logAuditEvent(req, {
+    entityType: "User",
+    entityId: req.params.id,
+    instituteId: req.instituteId,
+    action: "deleted",
+    reason: `Removed student record ID ${req.params.id}`,
+  });
+
   res.status(200).json({
     success: true,
     message: result.message,
@@ -296,6 +327,17 @@ export const createAlert = asyncHandler(async (req, res) => {
     req.body,
     req.user?._id
   );
+
+  await logAuditEvent(req, {
+    entityType: "GlobalBroadcast",
+    entityId: alert._id,
+    instituteId: req.instituteId,
+    campusId: alert.campusId || null,
+    action: "broadcasted",
+    changes: { after: { title: alert.title, message: alert.message, severity: alert.severity } },
+    reason: `Dispatched broadcast notice "${alert.title}"`,
+  });
+
   res.status(201).json({
     success: true,
     message: "Broadcast alert dispatched successfully.",
@@ -310,6 +352,24 @@ export const getSubscription = asyncHandler(async (req, res) => {
     success: true,
     message: "Institute subscription and quota usage retrieved successfully.",
     data: result,
+  });
+});
+
+// --- Institute Audit Logs (All Campuses & Per-Campus) ---
+export const getAuditLogs = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.getInstituteAuditLogs(
+    req.instituteId,
+    req.query
+  );
+  res.status(200).json({
+    success: true,
+    message: "Institute audit logs retrieved successfully.",
+    data: result.logs,
+    total: result.total,
+    page: result.page,
+    totalPages: result.totalPages,
+    campuses: result.campuses,
+    stats: result.stats,
   });
 });
 
@@ -334,4 +394,5 @@ export default {
   getAlerts,
   createAlert,
   getSubscription,
+  getAuditLogs,
 };

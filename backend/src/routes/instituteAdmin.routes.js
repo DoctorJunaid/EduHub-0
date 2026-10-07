@@ -28,6 +28,7 @@ import {
   getAlerts,
   createAlert,
   getSubscription,
+  getAuditLogs,
 } from "../controllers/instituteAdmin.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -49,6 +50,7 @@ router.use(instituteAdminScope);
 // Analytics & Profile
 router.get("/stats", getStats);
 router.get("/profile", getProfile);
+router.get("/audit-logs", getAuditLogs);
 
 // SaaS Subscription & Quota Usage View
 router.get("/subscription", getSubscription);

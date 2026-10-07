@@ -8,6 +8,7 @@ import Institute from "../models/institute.model.js";
 import Campus from "../models/campus.model.js";
 import Plan from "../models/plan.model.js";
 import Alert from "../models/alert.model.js";
+import AuditLog from "../models/auditLog.model.js";
 import { sendMail } from "../utils/emailService.js";
 import generateToken from "../utils/generateToken.js";
 import crypto from "crypto";
@@ -811,6 +812,127 @@ export const getInstituteSubscription = async (instituteId) => {
   };
 };
 
+/**
+ * Get Institute-wide Audit Logs with Multi-Campus Filtering (Pure Real Data)
+ */
+export const getInstituteAuditLogs = async (instituteId, query = {}) => {
+  // 1. Fetch all campuses of this institute for validation and dropdown
+  const campuses = await Campus.find({ instituteId })
+    .select("_id name code city status")
+    .sort({ name: 1 })
+    .lean();
+
+  const campusIds = campuses.map((c) => c._id);
+
+  // 2. Build multi-tenant filter query
+  const andConditions = [];
+
+  // Campus Scope Filter: Either specific campus or all institute campuses
+  if (query.campusId && query.campusId !== "all" && query.campusId !== "") {
+    andConditions.push({ campusId: query.campusId });
+  } else {
+    andConditions.push({
+      $or: [
+        { instituteId },
+        { campusId: { $in: campusIds } },
+      ],
+    });
+  }
+
+  // Entity Type Filter
+  if (query.entityType && query.entityType !== "all") {
+    andConditions.push({ entityType: query.entityType });
+  }
+
+  // Action Filter
+  if (query.action && query.action !== "all") {
+    andConditions.push({ action: query.action });
+  }
+
+  // Date Range Filter
+  if (query.startDate || query.endDate) {
+    const timeFilter = {};
+    if (query.startDate) {
+      timeFilter.$gte = new Date(query.startDate);
+    }
+    if (query.endDate) {
+      const end = new Date(query.endDate);
+      end.setHours(23, 59, 59, 999);
+      timeFilter.$lte = end;
+    }
+    andConditions.push({ timestamp: timeFilter });
+  }
+
+  // Free text search
+  if (query.search && query.search.trim()) {
+    const s = query.search.trim();
+    andConditions.push({
+      $or: [
+        { "performedBy.name": { $regex: s, $options: "i" } },
+        { "performedBy.email": { $regex: s, $options: "i" } },
+        { "performedBy.role": { $regex: s, $options: "i" } },
+        { reason: { $regex: s, $options: "i" } },
+        { entityType: { $regex: s, $options: "i" } },
+        { action: { $regex: s, $options: "i" } },
+      ],
+    });
+  }
+
+  const finalFilter = andConditions.length > 0 ? { $and: andConditions } : {};
+
+  // 3. Pagination
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 25));
+  const skip = (page - 1) * limit;
+
+  const [logs, total] = await Promise.all([
+    AuditLog.find(finalFilter)
+      .populate("campusId", "name code city")
+      .populate("instituteId", "name")
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    AuditLog.countDocuments(finalFilter),
+  ]);
+
+  // 4. Compute Aggregate Stats for the Institute
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const [todayCount, criticalCount] = await Promise.all([
+    AuditLog.countDocuments({
+      $or: [{ instituteId }, { campusId: { $in: campusIds } }],
+      timestamp: { $gte: startOfToday },
+    }),
+    AuditLog.countDocuments({
+      $or: [{ instituteId }, { campusId: { $in: campusIds } }],
+      action: { $in: ["deleted", "rejected", "waived", "deactivated", "cancelled"] },
+    }),
+  ]);
+
+  return {
+    logs,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit) || 1,
+    campuses: campuses.map((c) => ({
+      _id: c._id.toString(),
+      id: c._id.toString(),
+      name: c.name,
+      code: c.code || "",
+      city: c.city || "",
+    })),
+    stats: {
+      totalLogs: total,
+      todayLogs: todayCount,
+      criticalEvents: criticalCount,
+      totalCampuses: campuses.length,
+    },
+  };
+};
+
 export default {
   getInstituteStats,
   getInstituteProfile,
@@ -832,4 +954,5 @@ export default {
   getAlerts,
   createAlert,
   getInstituteSubscription,
+  getInstituteAuditLogs,
 };
