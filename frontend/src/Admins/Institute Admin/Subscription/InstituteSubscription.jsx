@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import {
-  CreditCard,
   Building2,
   Users,
   GraduationCap,
@@ -14,7 +13,6 @@ import {
   Headset,
   RefreshCw,
   Check,
-  X,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Link } from "react-router-dom";
@@ -77,7 +75,7 @@ export default function InstituteSubscription() {
     );
   }
 
-  const { plan, subscription, usage, features } = data;
+  const { plan, subscription, usage } = data;
   const isExpired = subscription?.isExpired;
   const daysRemaining = subscription?.daysRemaining;
 
@@ -107,29 +105,6 @@ export default function InstituteSubscription() {
 
   return (
     <div className="inst-subscription-page">
-      {/* Top Header */}
-      <div className="inst-sub-header">
-        <div>
-          <div className="inst-sub-title-row">
-            <CreditCard className="title-icon" size={24} />
-            <h1>Institution Plan & Quotas</h1>
-          </div>
-          <p className="inst-sub-subtitle">
-            Overview of your institution's active SaaS subscription, operational capacity, and enabled modules.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="inst-sub-refresh-btn"
-          onClick={loadSubscription}
-          title="Refresh subscription details"
-        >
-          <RefreshCw size={15} />
-          <span>Refresh</span>
-        </button>
-      </div>
-
       {/* Hero Plan Overview Banner */}
       <div className="inst-hero-card">
         <div className="inst-hero-left">
@@ -166,17 +141,29 @@ export default function InstituteSubscription() {
         </div>
 
         <div className="inst-hero-right">
-          <div className="inst-pricing-display">
-            <span className="price-tag">
-              {Number(plan?.priceMonthly) === 0
-                ? "Free"
-                : `${plan?.currency || "PKR"} ${Number(plan?.priceMonthly || 0).toLocaleString()}`}
+          <button
+            type="button"
+            className="inst-sub-refresh-btn h-8 px-3 text-xs font-medium border border-neutral-200 dark:border-neutral-800 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center gap-1.5"
+            onClick={loadSubscription}
+            title="Refresh subscription details"
+          >
+            <RefreshCw size={13} />
+            <span>Refresh</span>
+          </button>
+
+          <div className="inst-pricing-group">
+            <div className="inst-pricing-display">
+              <span className="price-tag">
+                {Number(plan?.priceMonthly) === 0
+                  ? "Free"
+                  : `${plan?.currency || "PKR"} ${Number(plan?.priceMonthly || 0).toLocaleString()}`}
+              </span>
+              {Number(plan?.priceMonthly) > 0 && <span className="price-unit">/ month</span>}
+            </div>
+            <span className="price-note">
+              Centrally managed by Super Admin
             </span>
-            {Number(plan?.priceMonthly) > 0 && <span className="price-unit">/ month</span>}
           </div>
-          <span className="price-note">
-            Centrally managed by Super Admin
-          </span>
         </div>
       </div>
 
