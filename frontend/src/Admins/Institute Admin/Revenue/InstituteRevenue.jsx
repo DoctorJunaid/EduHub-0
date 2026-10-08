@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Coins,
   TrendingUp,
@@ -46,6 +47,7 @@ export default function InstituteRevenue() {
   const [txPage, setTxPage] = useState(1);
   const [txLoading, setTxLoading] = useState(false);
   const [txSearch, setTxSearch] = useState("");
+  const debouncedTxSearch = useDebounce(txSearch, 350);
   const [txStatus, setTxStatus] = useState("all");
   const [txMethod, setTxMethod] = useState("all");
 
@@ -55,6 +57,7 @@ export default function InstituteRevenue() {
   const [invPage, setInvPage] = useState(1);
   const [invLoading, setInvLoading] = useState(false);
   const [invSearch, setInvSearch] = useState("");
+  const debouncedInvSearch = useDebounce(invSearch, 350);
   const [invStatus, setInvStatus] = useState("all");
 
   // Structures Tab State
@@ -96,7 +99,7 @@ export default function InstituteRevenue() {
       if (selectedCampus !== "all") params.campusId = selectedCampus;
       if (txStatus !== "all") params.status = txStatus;
       if (txMethod !== "all") params.paymentMethod = txMethod;
-      if (txSearch.trim()) params.search = txSearch.trim();
+      if (debouncedTxSearch.trim()) params.search = debouncedTxSearch.trim();
       if (selectedMonth) params.month = selectedMonth;
 
       const res = await instituteRevenueApi.getTransactions(params);
@@ -109,7 +112,7 @@ export default function InstituteRevenue() {
     } finally {
       setTxLoading(false);
     }
-  }, [selectedCampus, txPage, txStatus, txMethod, txSearch, selectedMonth]);
+  }, [selectedCampus, txPage, txStatus, txMethod, debouncedTxSearch, selectedMonth]);
 
   // 3. Fetch Invoices / FeeRecords
   const fetchInvoices = useCallback(async () => {
@@ -121,7 +124,7 @@ export default function InstituteRevenue() {
       };
       if (selectedCampus !== "all") params.campusId = selectedCampus;
       if (invStatus !== "all") params.status = invStatus;
-      if (invSearch.trim()) params.search = invSearch.trim();
+      if (debouncedInvSearch.trim()) params.search = debouncedInvSearch.trim();
       if (selectedMonth) params.month = selectedMonth;
 
       const res = await instituteRevenueApi.getFeeRecords(params);
@@ -134,7 +137,7 @@ export default function InstituteRevenue() {
     } finally {
       setInvLoading(false);
     }
-  }, [selectedCampus, invPage, invStatus, invSearch, selectedMonth]);
+  }, [selectedCampus, invPage, invStatus, debouncedInvSearch, selectedMonth]);
 
   // 4. Fetch Fee Structures
   const fetchStructures = useCallback(async () => {
@@ -176,6 +179,7 @@ export default function InstituteRevenue() {
     try {
       const params = {};
       if (selectedCampus !== "all") params.campusId = selectedCampus;
+      if (selectedMonth) params.month = selectedMonth;
       const res = await instituteRevenueApi.exportData(params);
       const rows = res.data || [];
 
@@ -253,6 +257,18 @@ export default function InstituteRevenue() {
   const campuses = analytics?.campuses || [];
   const campusBreakdown = analytics?.campusBreakdown || [];
 
+  const availableMonths = useMemo(() => {
+    const list = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleString("en-US", { month: "long", year: "numeric" });
+      list.push({ val, label });
+    }
+    return list;
+  }, []);
+
   return (
     <div className="ir-container">
       {/* ── HEADER BANNER ── */}
@@ -301,10 +317,11 @@ export default function InstituteRevenue() {
             aria-label="Filter by Billing Month"
           >
             <option value="">📅 All Billing Cycles</option>
-            <option value="2026-10">October 2026</option>
-            <option value="2026-09">September 2026</option>
-            <option value="2026-08">August 2026</option>
-            <option value="2026-07">July 2026</option>
+            {availableMonths.map((m) => (
+              <option key={m.val} value={m.val}>
+                {m.label}
+              </option>
+            ))}
           </select>
 
           <button

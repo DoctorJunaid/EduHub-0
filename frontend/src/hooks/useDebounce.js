@@ -21,3 +21,5 @@ export function useDebounce(value, delay = 400) {
 
   return debouncedValue;
 }
+
+export default useDebounce;

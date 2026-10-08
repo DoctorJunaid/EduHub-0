@@ -975,6 +975,12 @@ export const getInstituteAuditLogs = async (instituteId, query = {}) => {
  * ============================================================================
  */
 
+// Safe regex escape helper to prevent RegExp injection and invalid character crashes
+const escapeRegex = (string) => {
+  if (typeof string !== "string") return "";
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 /**
  * Comprehensive Revenue Analytics across all campuses or filtered by branch
  */
@@ -992,6 +998,9 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
     if (valid) {
       targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
       isFilteredCampus = true;
+    } else {
+      targetCampusIds = [new mongoose.Types.ObjectId()]; // Strict isolation: invalid campus returns 0 results
+      isFilteredCampus = true;
     }
   }
 
@@ -1000,10 +1009,10 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
     campusId: { $in: targetCampusIds },
     "omitted.isOmitted": { $ne: true },
   };
-  if (query.month) {
+  if (query.month && typeof query.month === "string") {
     feeMatch.month = query.month;
   }
-  if (query.academicSession) {
+  if (query.academicSession && typeof query.academicSession === "string") {
     feeMatch.academicSession = query.academicSession;
   }
 
@@ -1011,11 +1020,13 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
     campusId: { $in: targetCampusIds },
     status: "CONFIRMED",
   };
-  if (query.month) {
+  if (query.month && typeof query.month === "string") {
     const [yearStr, monthStr] = query.month.split("-");
-    if (yearStr && monthStr) {
-      const start = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, 1));
-      const end = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10), 1));
+    const y = parseInt(yearStr, 10);
+    const m = parseInt(monthStr, 10);
+    if (!isNaN(y) && !isNaN(m) && m >= 1 && m <= 12) {
+      const start = new Date(Date.UTC(y, m - 1, 1));
+      const end = new Date(Date.UTC(y, m, 1));
       paymentMatch.paymentDate = { $gte: start, $lt: end };
     }
   }
@@ -1280,7 +1291,12 @@ export const getInstituteRevenueTransactions = async (instituteId, query = {}) =
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    if (valid) {
+      targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
+    } else {
+      targetCampusIds = [new mongoose.Types.ObjectId()]; // Strict isolation
+    }
   }
 
   const page = Math.max(1, parseInt(query.page, 10) || 1);
@@ -1295,17 +1311,34 @@ export const getInstituteRevenueTransactions = async (instituteId, query = {}) =
     matchFilter.status = query.status.toUpperCase();
   }
   if (query.paymentMethod && query.paymentMethod !== "all") {
-    matchFilter.paymentMethod = new RegExp(`^${query.paymentMethod}$`, "i");
+    matchFilter.paymentMethod = { $regex: `^${escapeRegex(query.paymentMethod)}$`, $options: "i" };
   }
   if (query.startDate || query.endDate) {
     matchFilter.paymentDate = {};
-    if (query.startDate) matchFilter.paymentDate.$gte = new Date(query.startDate);
-    if (query.endDate) matchFilter.paymentDate.$lte = new Date(query.endDate);
+    if (query.startDate && !isNaN(new Date(query.startDate).getTime())) {
+      matchFilter.paymentDate.$gte = new Date(query.startDate);
+    }
+    if (query.endDate && !isNaN(new Date(query.endDate).getTime())) {
+      matchFilter.paymentDate.$lte = new Date(query.endDate);
+    }
+  }
+
+  if (query.month && typeof query.month === "string") {
+    const [yearStr, monthStr] = query.month.split("-");
+    const y = parseInt(yearStr, 10);
+    const m = parseInt(monthStr, 10);
+    if (!isNaN(y) && !isNaN(m) && m >= 1 && m <= 12) {
+      const start = new Date(Date.UTC(y, m - 1, 1));
+      const end = new Date(Date.UTC(y, m, 1));
+      matchFilter.paymentDate = matchFilter.paymentDate || {};
+      matchFilter.paymentDate.$gte = start;
+      matchFilter.paymentDate.$lt = end;
+    }
   }
 
   // If search query is provided, find matching students first
   if (query.search && query.search.trim()) {
-    const sTerm = query.search.trim();
+    const sTerm = escapeRegex(query.search.trim());
     const matchingStudents = await User.find({
       campusId: { $in: targetCampusIds },
       role: "student",
@@ -1372,7 +1405,12 @@ export const getInstituteFeeRecords = async (instituteId, query = {}) => {
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    if (valid) {
+      targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
+    } else {
+      targetCampusIds = [new mongoose.Types.ObjectId()]; // Strict isolation
+    }
   }
 
   const page = Math.max(1, parseInt(query.page, 10) || 1);
@@ -1385,20 +1423,20 @@ export const getInstituteFeeRecords = async (instituteId, query = {}) => {
   };
 
   if (query.status && query.status !== "all") {
-    matchFilter.status = new RegExp(`^${query.status}$`, "i");
+    matchFilter.status = { $regex: `^${escapeRegex(query.status)}$`, $options: "i" };
   }
   if (query.feeType && query.feeType !== "all") {
-    matchFilter.feeType = new RegExp(`^${query.feeType}$`, "i");
+    matchFilter.feeType = { $regex: `^${escapeRegex(query.feeType)}$`, $options: "i" };
   }
   if (query.gradeOrClass && query.gradeOrClass !== "all") {
     matchFilter.gradeOrClass = query.gradeOrClass;
   }
-  if (query.month) {
+  if (query.month && typeof query.month === "string") {
     matchFilter.month = query.month;
   }
 
   if (query.search && query.search.trim()) {
-    const sTerm = query.search.trim();
+    const sTerm = escapeRegex(query.search.trim());
     const matchingStudents = await User.find({
       campusId: { $in: targetCampusIds },
       role: "student",
@@ -1466,7 +1504,12 @@ export const getInstituteFeeStructures = async (instituteId, query = {}) => {
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    if (valid) {
+      targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
+    } else {
+      targetCampusIds = [new mongoose.Types.ObjectId()];
+    }
   }
 
   const structures = await FeeStructure.find({
@@ -1488,13 +1531,31 @@ export const exportInstituteRevenueData = async (instituteId, query = {}) => {
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    if (valid) {
+      targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
+    } else {
+      targetCampusIds = [new mongoose.Types.ObjectId()];
+    }
   }
 
-  const transactions = await PaymentTransaction.find({
+  const txFilter = {
     campusId: { $in: targetCampusIds },
     status: "CONFIRMED",
-  })
+  };
+
+  if (query.month && typeof query.month === "string") {
+    const [yearStr, monthStr] = query.month.split("-");
+    const y = parseInt(yearStr, 10);
+    const m = parseInt(monthStr, 10);
+    if (!isNaN(y) && !isNaN(m) && m >= 1 && m <= 12) {
+      const start = new Date(Date.UTC(y, m - 1, 1));
+      const end = new Date(Date.UTC(y, m, 1));
+      txFilter.paymentDate = { $gte: start, $lt: end };
+    }
+  }
+
+  const transactions = await PaymentTransaction.find(txFilter)
     .sort({ paymentDate: -1 })
     .populate("studentId", "name email roll rollNo gradeOrClass")
     .populate("campusId", "name code")
