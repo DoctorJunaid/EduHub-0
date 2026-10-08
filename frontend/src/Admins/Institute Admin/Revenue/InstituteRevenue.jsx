@@ -32,6 +32,8 @@ import ReceiptModal from "./ReceiptModal";
 import toast from "react-hot-toast";
 import "./InstituteRevenue.css";
 
+const NEUTRAL_PALETTE = ["#09090b", "#475569", "#64748b", "#94a3b8", "#cbd5e1"];
+
 export default function InstituteRevenue() {
   const [activeTab, setActiveTab] = useState("overview"); // overview | transactions | invoices | structures
   const [selectedCampus, setSelectedCampus] = useState("all");
@@ -112,7 +114,14 @@ export default function InstituteRevenue() {
     } finally {
       setTxLoading(false);
     }
-  }, [selectedCampus, txPage, txStatus, txMethod, debouncedTxSearch, selectedMonth]);
+  }, [
+    selectedCampus,
+    txPage,
+    txStatus,
+    txMethod,
+    debouncedTxSearch,
+    selectedMonth,
+  ]);
 
   // 3. Fetch Invoices / FeeRecords
   const fetchInvoices = useCallback(async () => {
@@ -222,7 +231,7 @@ export default function InstituteRevenue() {
             `"${r.paymentMethod}"`,
             `"${r.referenceNo}"`,
             `"${r.status}"`,
-          ].join(",")
+          ].join(","),
         ),
       ].join("\n");
 
@@ -232,7 +241,7 @@ export default function InstituteRevenue() {
       link.href = url;
       link.setAttribute(
         "download",
-        `EduHub_Revenue_Report_${selectedCampus === "all" ? "All_Campuses" : "Campus"}_${new Date().toISOString().split("T")[0]}.csv`
+        `EduHub_Revenue_Report_${selectedCampus === "all" ? "All_Campuses" : "Campus"}_${new Date().toISOString().split("T")[0]}.csv`,
       );
       document.body.appendChild(link);
       link.click();
@@ -263,7 +272,10 @@ export default function InstituteRevenue() {
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleString("en-US", { month: "long", year: "numeric" });
+      const label = d.toLocaleString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
       list.push({ val, label });
     }
     return list;
@@ -271,21 +283,127 @@ export default function InstituteRevenue() {
 
   return (
     <div className="ir-container">
-      {/* ── HEADER BANNER ── */}
-      <header className="ir-header">
-        <div className="ir-header-left">
-          <div className="ir-icon-circle">
-            <Coins size={26} />
+      {/* ── 1. SUMMARY KPI METRIC CARDS (UNIFIED 6-CARD GRID DIRECTLY AT TOP) ── */}
+      <section className="ir-kpi-grid" aria-label="Revenue KPIs">
+        {/* Total Collected */}
+        <div className="ir-kpi-card">
+          <div className="ir-kpi-top">
+            <span className="ir-kpi-label">Revenue Collected</span>
+            <div className="ir-kpi-icon-wrap">
+              <CheckCircle2 size={16} />
+            </div>
           </div>
-          <div className="ir-title-wrap">
-            <h1>Multi-Campus Revenue & Collections</h1>
-            <p>
-              Consolidated financial monitoring, revenue collection efficiency, and multi-branch fee ledgers
-            </p>
+          <h2 className="ir-kpi-val">
+            Rs. {kpis.totalRevenue.toLocaleString()}
+          </h2>
+          <div className="ir-kpi-sub">
+            <span className="ir-kpi-pill">{kpis.collectionRate}%</span>
+            <span>of total billed invoiced</span>
           </div>
         </div>
 
-        <div className="ir-header-actions">
+        {/* Total Billed */}
+        <div className="ir-kpi-card">
+          <div className="ir-kpi-top">
+            <span className="ir-kpi-label">Total Invoiced / Billed</span>
+            <div className="ir-kpi-icon-wrap">
+              <FileText size={16} />
+            </div>
+          </div>
+          <h2 className="ir-kpi-val">
+            Rs. {kpis.totalBilled.toLocaleString()}
+          </h2>
+          <div className="ir-kpi-sub">
+            <span>{kpis.totalVouchers || 0} student vouchers</span>
+          </div>
+        </div>
+
+        {/* Total Outstanding */}
+        <div className="ir-kpi-card">
+          <div className="ir-kpi-top">
+            <span className="ir-kpi-label">Pending / Outstanding</span>
+            <div className="ir-kpi-icon-wrap">
+              <Clock size={16} />
+            </div>
+          </div>
+          <h2 className="ir-kpi-val">
+            Rs. {kpis.totalOutstanding.toLocaleString()}
+          </h2>
+          <div className="ir-kpi-sub">
+            <span>
+              {kpis.unpaidVouchersCount || 0} unpaid •{" "}
+              {kpis.overdueVouchersCount || 0} overdue
+            </span>
+          </div>
+        </div>
+
+        {/* Collection Efficiency */}
+        <div className="ir-kpi-card">
+          <div className="ir-kpi-top">
+            <span className="ir-kpi-label">Collection Efficiency</span>
+            <div className="ir-kpi-icon-wrap">
+              <TrendingUp size={16} />
+            </div>
+          </div>
+          <h2 className="ir-kpi-val">{kpis.collectionRate}%</h2>
+          <div className="ir-kpi-sub">
+            <span>{kpis.paidVouchersCount || 0} paid in full</span>
+          </div>
+        </div>
+
+        {/* Waivers & Discounts */}
+        <div className="ir-kpi-card">
+          <div className="ir-kpi-top">
+            <span className="ir-kpi-label">Waivers & Discounts</span>
+            <div className="ir-kpi-icon-wrap">
+              <Percent size={16} />
+            </div>
+          </div>
+          <h2 className="ir-kpi-val">
+            Rs. {(kpis.totalWaived || 0).toLocaleString()}
+          </h2>
+          <div className="ir-kpi-sub">
+            <span>Approved concessions</span>
+          </div>
+        </div>
+
+        {/* Paying Students */}
+        <div className="ir-kpi-card">
+          <div className="ir-kpi-top">
+            <span className="ir-kpi-label">Paying Students</span>
+            <div className="ir-kpi-icon-wrap">
+              <Users size={16} />
+            </div>
+          </div>
+          <h2 className="ir-kpi-val">{kpis.activePayingStudents || 0}</h2>
+          <div className="ir-kpi-sub">
+            <span>Active student accounts</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 2. "REVENUE & COLLECTIONS" CONTAINER ── */}
+      <div className="ir-page-header">
+        <div className="ir-header-left">
+          <div className="ir-icon-circle">
+            <Coins size={22} />
+          </div>
+          <div className="ir-title-wrap">
+            <h1>Revenue & Collections</h1>
+            <p>
+              Consolidated financial monitoring, revenue collection efficiency,
+              and multi-branch fee ledgers
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. MULTI-CAMPUS CONTROLS & FILTER TOOLBAR ── */}
+      <section
+        className="ir-toolbar-card"
+        aria-label="Multi-Campus Revenue Controls"
+      >
+        <div className="ir-toolbar-left">
           {/* Campus Selector */}
           <select
             className="ir-select"
@@ -323,7 +441,9 @@ export default function InstituteRevenue() {
               </option>
             ))}
           </select>
+        </div>
 
+        <div className="ir-toolbar-right">
           <button
             className="ir-btn-outline"
             onClick={() => {
@@ -335,7 +455,10 @@ export default function InstituteRevenue() {
             title="Refresh Financial Records"
             type="button"
           >
-            <RefreshCw size={14} className={loadingAnalytics ? "animate-spin" : ""} />
+            <RefreshCw
+              size={14}
+              className={loadingAnalytics ? "animate-spin" : ""}
+            />
             Refresh
           </button>
 
@@ -359,96 +482,6 @@ export default function InstituteRevenue() {
             Print Report
           </button>
         </div>
-      </header>
-
-      {/* ── TOP KPI METRIC CARDS ── */}
-      <section className="ir-kpi-grid" aria-label="Revenue KPIs">
-        {/* Total Collected */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Revenue Collected</span>
-            <div className="ir-kpi-icon-wrap emerald">
-              <CheckCircle2 size={18} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val">Rs. {kpis.totalRevenue.toLocaleString()}</h2>
-          <div className="ir-kpi-sub">
-            <span className="ir-kpi-pill emerald">{kpis.collectionRate}%</span>
-            <span>of total billed invoiced</span>
-          </div>
-        </div>
-
-        {/* Total Billed */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Total Invoiced / Billed</span>
-            <div className="ir-kpi-icon-wrap blue">
-              <FileText size={18} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val">Rs. {kpis.totalBilled.toLocaleString()}</h2>
-          <div className="ir-kpi-sub">
-            <span>{kpis.totalVouchers || 0} student vouchers</span>
-          </div>
-        </div>
-
-        {/* Total Outstanding */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Pending / Outstanding</span>
-            <div className="ir-kpi-icon-wrap amber">
-              <Clock size={18} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val" style={{ color: "#b45309" }}>
-            Rs. {kpis.totalOutstanding.toLocaleString()}
-          </h2>
-          <div className="ir-kpi-sub">
-            <span>{kpis.unpaidVouchersCount || 0} unpaid • {kpis.overdueVouchersCount || 0} overdue</span>
-          </div>
-        </div>
-
-        {/* Collection Efficiency */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Collection Efficiency</span>
-            <div className="ir-kpi-icon-wrap indigo">
-              <TrendingUp size={18} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val">{kpis.collectionRate}%</h2>
-          <div className="ir-kpi-sub">
-            <span>{kpis.paidVouchersCount || 0} paid in full</span>
-          </div>
-        </div>
-
-        {/* Waivers & Discounts */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Waivers & Discounts</span>
-            <div className="ir-kpi-icon-wrap purple">
-              <Percent size={18} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val">Rs. {(kpis.totalWaived || 0).toLocaleString()}</h2>
-          <div className="ir-kpi-sub">
-            <span>Approved concessions</span>
-          </div>
-        </div>
-
-        {/* Enrolled Paying Students */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Paying Students</span>
-            <div className="ir-kpi-icon-wrap cyan">
-              <Users size={18} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val">{kpis.activePayingStudents || 0}</h2>
-          <div className="ir-kpi-sub">
-            <span>Active student accounts</span>
-          </div>
-        </div>
       </section>
 
       {/* ── TABS NAVIGATION ── */}
@@ -467,7 +500,8 @@ export default function InstituteRevenue() {
           type="button"
         >
           <CreditCard size={16} />
-          Confirmed Receipts Ledger ({txTotal || kpis.totalTransactionsCount || 0})
+          Confirmed Receipts Ledger (
+          {txTotal || kpis.totalTransactionsCount || 0})
         </button>
         <button
           className={`ir-tab-btn ${activeTab === "invoices" ? "active" : ""}`}
@@ -489,18 +523,41 @@ export default function InstituteRevenue() {
 
       {/* ── TAB CONTENT ── */}
       {loadingAnalytics ? (
-        <PageLoader message="Loading multi-campus financial data..." className="py-12" />
+        <PageLoader
+          message="Loading multi-campus financial data..."
+          className="py-12"
+        />
       ) : activeTab === "overview" ? (
         /* ═════════ TAB 1: CAMPUSES BREAKDOWN & COMPARISON ═════════ */
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {/* Section Heading */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
-              <h2 style={{ fontSize: "16px", fontWeight: 800, margin: 0, color: "#09090b" }}>
+              <h2
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 800,
+                  margin: 0,
+                  color: "#09090b",
+                }}
+              >
                 Branch-by-Branch Performance
               </h2>
-              <p style={{ fontSize: "13px", color: "#71717a", margin: "2px 0 0 0" }}>
-                Real-time collection efficiency and revenue comparison across all campuses
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#71717a",
+                  margin: "2px 0 0 0",
+                }}
+              >
+                Real-time collection efficiency and revenue comparison across
+                all campuses
               </p>
             </div>
             {selectedCampus !== "all" && (
@@ -518,7 +575,8 @@ export default function InstituteRevenue() {
           <div className="ir-campus-grid">
             {campusBreakdown.map((campus) => {
               const rate = campus.collectionRate || 0;
-              const rateClass = rate >= 75 ? "high" : rate >= 40 ? "mid" : "low";
+              const rateClass =
+                rate >= 75 ? "high" : rate >= 40 ? "mid" : "low";
 
               return (
                 <div key={campus.id} className="ir-campus-card">
@@ -532,7 +590,8 @@ export default function InstituteRevenue() {
                         <div className="ir-campus-title">
                           <h3>{campus.name}</h3>
                           <p>
-                            {campus.city || "Main City"} {campus.code ? `• Code: ${campus.code}` : ""}
+                            {campus.city || "Main City"}{" "}
+                            {campus.code ? `• Code: ${campus.code}` : ""}
                           </p>
                         </div>
                       </div>
@@ -540,10 +599,10 @@ export default function InstituteRevenue() {
                       <Badge
                         variant="secondary"
                         style={{
-                          background: rate >= 75 ? "#ecfdf5" : rate >= 40 ? "#fffbeb" : "#fef2f2",
-                          color: rate >= 75 ? "#065f46" : rate >= 40 ? "#92400e" : "#991b1b",
-                          border: `1px solid ${rate >= 75 ? "#a7f3d0" : rate >= 40 ? "#fde68a" : "#fecaca"}`,
-                          fontWeight: 700,
+                          background: "#f4f4f5",
+                          color: "#27272a",
+                          border: "1px solid #e4e4e7",
+                          fontWeight: 600,
                           fontSize: "12px",
                         }}
                       >
@@ -552,36 +611,47 @@ export default function InstituteRevenue() {
                     </div>
 
                     {/* Manager Row */}
-                    <div className="ir-campus-manager-row" style={{ marginTop: "14px" }}>
+                    <div
+                      className="ir-campus-manager-row"
+                      style={{ marginTop: "14px" }}
+                    >
                       <span>Campus Manager:</span>
                       <strong>{campus.manager?.name || "Unassigned"}</strong>
                     </div>
 
                     {/* Collection Progress */}
-                    <div className="ir-progress-wrap" style={{ marginTop: "14px" }}>
+                    <div
+                      className="ir-progress-wrap"
+                      style={{ marginTop: "14px" }}
+                    >
                       <div className="ir-progress-meta">
                         <span>Collection Rate</span>
                         <span>{rate}%</span>
                       </div>
                       <div className="ir-progress-track">
                         <div
-                          className={`ir-progress-fill ${rateClass}`}
-                          style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                          className="ir-progress-fill"
+                          style={{
+                            width: `${Math.min(100, Math.max(0, rate))}%`,
+                          }}
                         />
                       </div>
                     </div>
 
                     {/* Financial Stats Grid */}
-                    <div className="ir-campus-financial-grid" style={{ marginTop: "14px" }}>
+                    <div
+                      className="ir-campus-financial-grid"
+                      style={{ marginTop: "14px" }}
+                    >
                       <div className="ir-cfg-item">
                         <span>Total Invoiced</span>
                         <p>Rs. {campus.totalBilled.toLocaleString()}</p>
                       </div>
-                      <div className="ir-cfg-item collected">
+                      <div className="ir-cfg-item">
                         <span>Collected</span>
                         <p>Rs. {campus.totalCollected.toLocaleString()}</p>
                       </div>
-                      <div className="ir-cfg-item outstanding">
+                      <div className="ir-cfg-item">
                         <span>Outstanding</span>
                         <p>Rs. {campus.totalOutstanding.toLocaleString()}</p>
                       </div>
@@ -594,8 +664,8 @@ export default function InstituteRevenue() {
                       <strong>{campus.studentsCount}</strong> enrolled students
                     </span>
                     <button
-                      className="ir-btn-outline"
-                      style={{ height: "30px", fontSize: "11px", padding: "0 10px" }}
+                      className="ir-branch-link-btn"
+                      type="button"
                       onClick={() => {
                         setSelectedCampus(campus.id);
                         setActiveTab("transactions");
@@ -627,14 +697,19 @@ export default function InstituteRevenue() {
                           <strong>{m.month}</strong> ({m.vouchers} vouchers)
                         </span>
                         <span>
-                          <strong style={{ color: "#059669" }}>Rs. {m.collected.toLocaleString()}</strong> of Rs.{" "}
-                          {m.billed.toLocaleString()} ({m.collectionRate}%)
+                          <strong style={{ color: "#09090b" }}>
+                            Rs. {m.collected.toLocaleString()}
+                          </strong>{" "}
+                          of Rs. {m.billed.toLocaleString()} ({m.collectionRate}
+                          %)
                         </span>
                       </div>
                       <div className="ir-monthly-bars">
                         <div
                           className="ir-monthly-bar-collected"
-                          style={{ width: `${Math.min(100, m.collectionRate)}%` }}
+                          style={{
+                            width: `${Math.min(100, m.collectionRate)}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -663,7 +738,7 @@ export default function InstituteRevenue() {
                           className="ir-dist-dot"
                           style={{
                             background:
-                              idx === 0 ? "#059669" : idx === 1 ? "#2563eb" : idx === 2 ? "#7c3aed" : "#f59e0b",
+                              NEUTRAL_PALETTE[idx % NEUTRAL_PALETTE.length],
                           }}
                         />
                         <span>{item.name}</span>
@@ -681,8 +756,20 @@ export default function InstituteRevenue() {
                 </div>
               )}
 
-              <div style={{ marginTop: "20px", paddingTop: "14px", borderTop: "1px solid #f4f4f5" }}>
-                <h4 style={{ fontSize: "13px", fontWeight: 700, margin: "0 0 10px 0" }}>
+              <div
+                style={{
+                  marginTop: "20px",
+                  paddingTop: "14px",
+                  borderTop: "1px solid #f4f4f5",
+                }}
+              >
+                <h4
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    margin: "0 0 10px 0",
+                  }}
+                >
                   Payment Methods Utilized:
                 </h4>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -690,9 +777,14 @@ export default function InstituteRevenue() {
                     <Badge
                       key={idx}
                       variant="secondary"
-                      style={{ padding: "4px 10px", fontSize: "12px", fontWeight: 600 }}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                      }}
                     >
-                      {pm.method}: Rs. {pm.totalAmount.toLocaleString()} ({pm.count} txns)
+                      {pm.method}: Rs. {pm.totalAmount.toLocaleString()} (
+                      {pm.count} txns)
                     </Badge>
                   ))}
                 </div>
@@ -751,7 +843,10 @@ export default function InstituteRevenue() {
 
           <div className="ir-table-wrapper">
             {txLoading ? (
-              <PageLoader message="Loading transaction records..." className="py-12" />
+              <PageLoader
+                message="Loading transaction records..."
+                className="py-12"
+              />
             ) : transactions.length > 0 ? (
               <table className="ir-data-table">
                 <thead>
@@ -776,7 +871,12 @@ export default function InstituteRevenue() {
                     return (
                       <tr key={t._id}>
                         <td>
-                          <strong style={{ fontFamily: "monospace", color: "#09090b" }}>
+                          <strong
+                            style={{
+                              fontFamily: "monospace",
+                              color: "#09090b",
+                            }}
+                          >
                             {t.receiptNo || fr.receiptNo || "—"}
                           </strong>
                         </td>
@@ -787,7 +887,10 @@ export default function InstituteRevenue() {
                             </div>
                             <div className="ir-student-meta">
                               <strong>{st.name || "Student"}</strong>
-                              <span>Roll: {st.roll || st.rollNo || "N/A"} • {st.gradeOrClass || "General"}</span>
+                              <span>
+                                Roll: {st.roll || st.rollNo || "N/A"} •{" "}
+                                {st.gradeOrClass || "General"}
+                              </span>
                             </div>
                           </div>
                         </td>
@@ -799,28 +902,42 @@ export default function InstituteRevenue() {
                         </td>
                         <td>{fr.feeType || "Tuition Fee"}</td>
                         <td>
-                          <strong style={{ color: "#059669" }}>Rs. {(t.amount || 0).toLocaleString()}</strong>
+                          <strong style={{ color: "#059669" }}>
+                            Rs. {(t.amount || 0).toLocaleString()}
+                          </strong>
                         </td>
                         <td>
-                          <Badge variant="outline" style={{ fontSize: "11px", fontWeight: 600 }}>
+                          <Badge
+                            variant="outline"
+                            style={{ fontSize: "11px", fontWeight: 600 }}
+                          >
                             {t.paymentMethod || "Cash"}
                           </Badge>
                         </td>
                         <td>
                           {t.paymentDate
-                            ? new Date(t.paymentDate).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
+                            ? new Date(t.paymentDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )
                             : "—"}
                         </td>
                         <td>
                           <Badge
                             variant="secondary"
                             style={{
-                              background: t.status === "CONFIRMED" ? "#ecfdf5" : "#fef3c7",
-                              color: t.status === "CONFIRMED" ? "#065f46" : "#92400e",
+                              background:
+                                t.status === "CONFIRMED"
+                                  ? "#ecfdf5"
+                                  : "#fef3c7",
+                              color:
+                                t.status === "CONFIRMED"
+                                  ? "#065f46"
+                                  : "#92400e",
                               fontWeight: 700,
                             }}
                           >
@@ -905,7 +1022,10 @@ export default function InstituteRevenue() {
 
           <div className="ir-table-wrapper">
             {invLoading ? (
-              <PageLoader message="Loading student invoices..." className="py-12" />
+              <PageLoader
+                message="Loading student invoices..."
+                className="py-12"
+              />
             ) : invoices.length > 0 ? (
               <table className="ir-data-table">
                 <thead>
@@ -933,7 +1053,12 @@ export default function InstituteRevenue() {
                     return (
                       <tr key={inv._id}>
                         <td>
-                          <strong style={{ fontFamily: "monospace", color: "#09090b" }}>
+                          <strong
+                            style={{
+                              fontFamily: "monospace",
+                              color: "#09090b",
+                            }}
+                          >
                             {inv.challanNo || "—"}
                           </strong>
                         </td>
@@ -944,7 +1069,10 @@ export default function InstituteRevenue() {
                             </div>
                             <div className="ir-student-meta">
                               <strong>{st.name || "Student"}</strong>
-                              <span>Roll: {st.roll || st.rollNo || "N/A"} • {inv.gradeOrClass || "General"}</span>
+                              <span>
+                                Roll: {st.roll || st.rollNo || "N/A"} •{" "}
+                                {inv.gradeOrClass || "General"}
+                              </span>
                             </div>
                           </div>
                         </td>
@@ -957,20 +1085,27 @@ export default function InstituteRevenue() {
                         <td>{inv.month || "Current"}</td>
                         <td>Rs. {billed.toLocaleString()}</td>
                         <td>
-                          <strong style={{ color: "#059669" }}>Rs. {paid.toLocaleString()}</strong>
+                          <strong style={{ color: "#059669" }}>
+                            Rs. {paid.toLocaleString()}
+                          </strong>
                         </td>
                         <td>
-                          <strong style={{ color: due > 0 ? "#b45309" : "#71717a" }}>
+                          <strong
+                            style={{ color: due > 0 ? "#b45309" : "#71717a" }}
+                          >
                             Rs. {due.toLocaleString()}
                           </strong>
                         </td>
                         <td>
                           {inv.dueDate
-                            ? new Date(inv.dueDate).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
+                            ? new Date(inv.dueDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )
                             : "—"}
                         </td>
                         <td>
@@ -981,18 +1116,18 @@ export default function InstituteRevenue() {
                                 inv.status === "PAID"
                                   ? "#ecfdf5"
                                   : inv.status === "PARTIALLY_PAID"
-                                  ? "#fef3c7"
-                                  : inv.status === "OVERDUE"
-                                  ? "#fef2f2"
-                                  : "#f4f4f5",
+                                    ? "#fef3c7"
+                                    : inv.status === "OVERDUE"
+                                      ? "#fef2f2"
+                                      : "#f4f4f5",
                               color:
                                 inv.status === "PAID"
                                   ? "#065f46"
                                   : inv.status === "PARTIALLY_PAID"
-                                  ? "#92400e"
-                                  : inv.status === "OVERDUE"
-                                  ? "#991b1b"
-                                  : "#3f3f46",
+                                    ? "#92400e"
+                                    : inv.status === "OVERDUE"
+                                      ? "#991b1b"
+                                      : "#3f3f46",
                               fontWeight: 700,
                             }}
                           >
@@ -1047,8 +1182,15 @@ export default function InstituteRevenue() {
             <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0 }}>
               Campus Fee Structure Configurations
             </h3>
-            <p style={{ fontSize: "12px", color: "#71717a", margin: "4px 0 0 0" }}>
-              Comparative overview of tuition fees, admission fees, and lab rates configured by each campus branch
+            <p
+              style={{
+                fontSize: "12px",
+                color: "#71717a",
+                margin: "4px 0 0 0",
+              }}
+            >
+              Comparative overview of tuition fees, admission fees, and lab
+              rates configured by each campus branch
             </p>
           </div>
 
@@ -1073,8 +1215,16 @@ export default function InstituteRevenue() {
                   {structures.map((fs) => (
                     <tr key={fs._id}>
                       <td>
-                        <strong style={{ color: "#09090b" }}>{fs.campusId?.name || "Campus"}</strong>
-                        <span style={{ display: "block", fontSize: "11px", color: "#71717a" }}>
+                        <strong style={{ color: "#09090b" }}>
+                          {fs.campusId?.name || "Campus"}
+                        </strong>
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "11px",
+                            color: "#71717a",
+                          }}
+                        >
                           {fs.campusId?.city || "Branch"}
                         </span>
                       </td>
@@ -1115,7 +1265,10 @@ export default function InstituteRevenue() {
                 <Layers size={24} />
               </div>
               <h4>No fee structures configured yet</h4>
-              <p>Campus managers configure fee structures for their respective class grades.</p>
+              <p>
+                Campus managers configure fee structures for their respective
+                class grades.
+              </p>
             </div>
           )}
         </div>
@@ -1129,7 +1282,11 @@ export default function InstituteRevenue() {
           setSelectedItem(null);
         }}
         item={selectedItem}
-        instituteName={analytics?.campuses?.[0]?.name ? "EduHub Multi-Campus Network" : "EduHub Institution"}
+        instituteName={
+          analytics?.campuses?.[0]?.name
+            ? "EduHub Multi-Campus Network"
+            : "EduHub Institution"
+        }
       />
     </div>
   );
