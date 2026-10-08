@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { fetchCampuses, selectInstituteCampuses, selectCampusesStatus } from "@/store/Slices/campusesSlice";
 import axiosInstance from "@/api/axiosInstance";
-import { Plus, Trash2, Save, AlertCircle, RefreshCw, Search, RotateCcw, Check, Building2, HelpCircle } from "lucide-react";
+import { Plus, Trash2, Save, AlertCircle, RefreshCw, Search, RotateCcw, Check, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -475,53 +475,8 @@ export default function SalaryPolicies() {
   )?.name || "Select Campus";
 
   return (
-    <main className="salary-policies-container" aria-labelledby="salary-policies-title">
-      <div className="salary-policies-header-intro">
-        <div>
-          <h1 id="salary-policies-title" className="salary-policies-main-title">
-            Institute Salary Policy
-          </h1>
-          <p className="salary-policies-subtitle">
-            Configure campus-specific deduction formulas, attendance thresholds, and compensation rates.
-          </p>
-        </div>
-
-        {/* Top Direct Action Bar */}
-        <div className="salary-policies-header-actions">
-          {isDirty && (
-            <span className="unsaved-badge" title="You have unsaved changes in this policy">
-              <span className="unsaved-dot" /> Unsaved Changes
-            </span>
-          )}
-          {isDirty && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="btn-revert"
-              onClick={handleRevert}
-              disabled={saving}
-            >
-              <RotateCcw size={14} /> Discard
-            </Button>
-          )}
-          <Button
-            type="button"
-            className={`btn-save-header ${isDirty ? "btn-save-highlight" : ""}`}
-            onClick={handleSavePolicy}
-            disabled={saving || !selectedCampusId}
-            id="save-policy-header-btn"
-          >
-            {saving ? (
-              <><RefreshCw className="salary-policy-spinner" size={15} /> Saving...</>
-            ) : (
-              <><Save size={15} /> Save Policy</>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Toolbar: Search & Campus Selector */}
+    <main className="salary-policies-container" aria-label="Salary Policies Management">
+      {/* Toolbar: Search, Campus Selector & Relocated Save Action */}
       <div className="salary-policies-toolbar">
         <div className="salary-policy-search">
           <Search size={15} className="salary-policy-search-icon" aria-hidden="true" />
@@ -535,29 +490,58 @@ export default function SalaryPolicies() {
           />
         </div>
 
-        <div className="campus-selector-wrapper">
-          <label htmlFor="salary-policy-campus">
-            <Building2 size={15} className="campus-label-icon" /> Target Campus:
-          </label>
-          <Select
-            value={selectedCampusId || undefined}
-            onValueChange={setSelectedCampusId}
-            disabled={!campuses.length}
+        <div className="salary-policies-toolbar-right">
+          <div className="campus-selector-wrapper">
+            <label htmlFor="salary-policy-campus">
+              <Building2 size={15} className="campus-label-icon" /> Target Campus:
+            </label>
+            <Select
+              value={selectedCampusId || undefined}
+              onValueChange={setSelectedCampusId}
+              disabled={!campuses.length}
+            >
+              <SelectTrigger id="salary-policy-campus" className="campus-select">
+                <SelectValue placeholder={campuses.length ? "Select a campus" : "No campuses available"} />
+              </SelectTrigger>
+              <SelectContent>
+                {campuses.map((campus) => {
+                  const cId = String(campus.id || campus._id);
+                  return (
+                    <SelectItem key={cId} value={cId}>
+                      {campus.name}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {isDirty && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="btn-revert"
+              onClick={handleRevert}
+              disabled={saving}
+            >
+              <RotateCcw size={14} /> Discard
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            className={`btn-save-toolbar ${isDirty ? "btn-save-highlight" : ""}`}
+            onClick={handleSavePolicy}
+            disabled={saving || !selectedCampusId}
+            id="save-policy-header-btn"
           >
-            <SelectTrigger id="salary-policy-campus" className="campus-select">
-              <SelectValue placeholder={campuses.length ? "Select a campus" : "No campuses available"} />
-            </SelectTrigger>
-            <SelectContent>
-              {campuses.map((campus) => {
-                const cId = String(campus.id || campus._id);
-                return (
-                  <SelectItem key={cId} value={cId}>
-                    {campus.name}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+            {saving ? (
+              <><RefreshCw className="salary-policy-spinner" size={15} /> Saving...</>
+            ) : (
+              <><Save size={15} /> Save Policy</>
+            )}
+          </Button>
         </div>
       </div>
 
