@@ -1,0 +1,332 @@
+/* Digital Receipt & Challan Voucher Modal */
+.rm-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(9, 9, 11, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+  animation: rmFadeIn 0.15s ease-out;
+}
+
+@keyframes rmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rm-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid #e4e4e7;
+  overflow: hidden;
+  animation: rmSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rmSlideUp {
+  from { transform: translateY(16px) scale(0.98); }
+  to { transform: translateY(0) scale(1); }
+}
+
+.rm-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+}
+
+.rm-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rm-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #09090b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-header-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.rm-header-title p {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.rm-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #71717a;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.rm-close-btn:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.rm-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Printable Document Card */
+.rm-receipt-paper {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.rm-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  font-size: 72px;
+  font-weight: 900;
+  color: rgba(16, 185, 129, 0.06);
+  pointer-events: none;
+  text-transform: uppercase;
+  user-select: none;
+  letter-spacing: 0.1em;
+}
+
+.rm-watermark.unpaid {
+  color: rgba(239, 68, 68, 0.06);
+}
+
+.rm-watermark.partial {
+  color: rgba(245, 158, 11, 0.06);
+}
+
+.rm-brand-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 2px dashed #e4e4e7;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.rm-inst-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #09090b;
+  margin: 0;
+}
+
+.rm-campus-name {
+  font-size: 13px;
+  color: #71717a;
+  margin: 3px 0 0 0;
+}
+
+.rm-doc-meta {
+  text-align: right;
+}
+
+.rm-doc-id {
+  font-size: 15px;
+  font-weight: 800;
+  color: #09090b;
+  font-family: monospace;
+}
+
+.rm-doc-date {
+  font-size: 12px;
+  color: #71717a;
+  margin-top: 3px;
+}
+
+.rm-student-box {
+  background: #f9fafb;
+  border: 1px solid #f4f4f5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rm-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #71717a;
+  letter-spacing: 0.04em;
+}
+
+.rm-field-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #09090b;
+  margin-top: 2px;
+}
+
+/* Itemized fee table */
+.rm-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.rm-table th {
+  background: #f4f4f5;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  color: #52525b;
+}
+
+.rm-table th:last-child {
+  text-align: right;
+}
+
+.rm-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #09090b;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.rm-table td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Totals Summary */
+.rm-totals-card {
+  margin-top: 12px;
+  border-top: 2px solid #e4e4e7;
+  padding-top: 12px;
+}
+
+.rm-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #52525b;
+}
+
+.rm-total-row.grand {
+  font-size: 16px;
+  font-weight: 800;
+  color: #09090b;
+  border-top: 1px solid #e4e4e7;
+  margin-top: 6px;
+  padding-top: 8px;
+}
+
+.rm-paid-row {
+  color: #059669;
+  font-weight: 700;
+}
+
+.rm-due-row {
+  color: #d97706;
+  font-weight: 700;
+}
+
+/* Footer / Actions */
+.rm-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #fafafa;
+}
+
+.rm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rm-btn-primary {
+  background: #09090b;
+  color: #ffffff;
+  border: none;
+}
+
+.rm-btn-primary:hover {
+  background: #27272a;
+}
+
+.rm-btn-outline {
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid #e4e4e7;
+}
+
+.rm-btn-outline:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+/* Print Styling */
+@media print {
+  .rm-overlay {
+    position: static;
+    background: transparent;
+    padding: 0;
+  }
+  .rm-modal {
+    max-width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+  .rm-header,
+  .rm-footer {
+    display: none !important;
+  }
+  .rm-receipt-paper {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+}

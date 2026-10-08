@@ -8,6 +8,7 @@ import Signup from "./auth/Signup";
 import Login from "./auth/Login";
 import SetPassword from "./auth/SetPassword";
 import InstituteDashboard from "./Admins/Institute Admin/InstituteDashboard";
+import InstituteRevenue from "./Admins/Institute Admin/Revenue/InstituteRevenue";
 import CampusBranches from "./Admins/Institute Admin/Campuses/CampusBranches";
 import ManageCampusPage from "./Admins/Institute Admin/Campuses/ManageCampusPage";
 import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStudents";
@@ -154,6 +155,14 @@ const App = () => {
             }
           >
             <Route path="institute-admin" element={<InstituteDashboard />} />
+            <Route
+              path="institute-admin/revenue"
+              element={<InstituteRevenue />}
+            />
+            <Route
+              path="institute-admin/fees"
+              element={<InstituteRevenue />}
+            />
             <Route
               path="institute-admin/campuses"
               element={<CampusBranches />}

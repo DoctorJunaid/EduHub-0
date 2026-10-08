@@ -9,27 +9,66 @@ import Campus from "../models/campus.model.js";
 import Plan from "../models/plan.model.js";
 import Alert from "../models/alert.model.js";
 import AuditLog from "../models/auditLog.model.js";
+import { FeeRecord } from "../models/profile.model.js";
+import PaymentTransaction from "../models/paymentTransaction.model.js";
+import FeeStructure from "../models/feeStructure.model.js";
 import { sendMail } from "../utils/emailService.js";
 import generateToken from "../utils/generateToken.js";
 import crypto from "crypto";
+import mongoose from "mongoose";
+
+/**
+ * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
+ */
+const resolveFrontendUrl = (clientOrigin) => {
+  if (clientOrigin) {
+    try {
+      const url = new URL(clientOrigin);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return `${url.protocol}//${url.host}`;
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }
+  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+};
 
 /**
  * Get Institute-wide KPIs & Statistics
  */
 export const getInstituteStats = async (instituteId) => {
+  const campuses = await Campus.find({ instituteId }).select("_id").lean();
+  const campusIds = campuses.map((c) => c._id);
+
   const [
     totalCampuses,
     activeCampuses,
     totalManagers,
     totalTeachers,
     totalStudents,
+    revenueAgg,
   ] = await Promise.all([
     Campus.countDocuments({ instituteId }),
     Campus.countDocuments({ instituteId, status: "Active" }),
     User.countDocuments({ instituteId, role: { $in: ["campus_manager", "campus_admin"] } }),
     User.countDocuments({ instituteId, role: "teacher" }),
     User.countDocuments({ instituteId, role: "student" }),
+    FeeRecord.aggregate([
+      { $match: { campusId: { $in: campusIds }, "omitted.isOmitted": { $ne: true } } },
+      {
+        $group: {
+          _id: null,
+          totalBilled: { $sum: { $ifNull: ["$totalPayable", "$amount"] } },
+          totalCollected: { $sum: "$paidAmount" },
+        },
+      },
+    ]),
   ]);
+
+  const totalBilled = revenueAgg[0]?.totalBilled || 0;
+  const totalCollected = revenueAgg[0]?.totalCollected || 0;
+  const collectionRate = totalBilled > 0 ? Number(((totalCollected / totalBilled) * 100).toFixed(1)) : 0;
 
   return {
     instituteId,
@@ -44,6 +83,12 @@ export const getInstituteStats = async (instituteId) => {
     },
     students: {
       total: totalStudents,
+    },
+    revenue: {
+      totalBilled,
+      totalCollected,
+      totalOutstanding: Math.max(0, totalBilled - totalCollected),
+      collectionRate,
     },
   };
 };
@@ -186,7 +231,8 @@ export const deleteCampus = async (instituteId, campusId) => {
 export const assignCampusManager = async (
   instituteId,
   campusId,
-  { userId, email, name, phone, sendEmail = true }
+  { userId, email, name, phone, sendEmail = true },
+  clientOrigin = null
 ) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId });
   if (!campus) {
@@ -245,22 +291,10 @@ export const assignCampusManager = async (
     throw error;
   }
 
-/**
- * Resolve frontend URL dynamically based on caller origin (e.g. localhost) with fallback to env
- */
-const resolveFrontendUrl = (clientOrigin) => {
-  if (clientOrigin) {
-    try {
-      const url = new URL(clientOrigin);
-      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-        return `${url.protocol}//${url.host}`;
-      }
-    } catch {
-      // Ignore URL parse error
-    }
+  // Clear any existing campus manager reference if appointing a different user
+  if (campus.managerId && campus.managerId.toString() !== managerUser._id.toString()) {
+    await User.findByIdAndUpdate(campus.managerId, { campusId: null });
   }
-  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
-};
 
   // Set manager on campus
   campus.managerId = managerUser._id;
@@ -422,7 +456,8 @@ export const getCampusManagers = async (instituteId) => {
  */
 export const createCampusManager = async (
   instituteId,
-  { name, email, campusId, phone }
+  { name, email, campusId, phone },
+  clientOrigin = null
 ) => {
   if (!name || !email || !campusId) {
     const error = new Error("Name, email, and campusId are required");
@@ -463,7 +498,7 @@ export const createCampusManager = async (
   }
 
   const token = generateToken({ id: manager._id, role: manager.role, pv: manager.passwordVersion || 0, reset: true });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
   
   try {
@@ -933,6 +968,556 @@ export const getInstituteAuditLogs = async (instituteId, query = {}) => {
   };
 };
 
+/**
+ * ============================================================================
+ * MULTI-CAMPUS REVENUE & FEES COLLECTION SUITE (Institute Admin)
+ * Consolidated overview across all campuses or drill-down per campus
+ * ============================================================================
+ */
+
+/**
+ * Comprehensive Revenue Analytics across all campuses or filtered by branch
+ */
+export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
+  const allCampuses = await Campus.find({ instituteId })
+    .populate("managerId", "name email phone")
+    .lean();
+  const allCampusIds = allCampuses.map((c) => c._id);
+  const campusMap = new Map(allCampuses.map((c) => [c._id.toString(), c]));
+
+  let targetCampusIds = allCampusIds;
+  let isFilteredCampus = false;
+  if (query.campusId && query.campusId !== "all") {
+    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    if (valid) {
+      targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
+      isFilteredCampus = true;
+    }
+  }
+
+  // Base matches
+  const feeMatch = {
+    campusId: { $in: targetCampusIds },
+    "omitted.isOmitted": { $ne: true },
+  };
+  if (query.month) {
+    feeMatch.month = query.month;
+  }
+  if (query.academicSession) {
+    feeMatch.academicSession = query.academicSession;
+  }
+
+  const paymentMatch = {
+    campusId: { $in: targetCampusIds },
+    status: "CONFIRMED",
+  };
+  if (query.month) {
+    const [yearStr, monthStr] = query.month.split("-");
+    if (yearStr && monthStr) {
+      const start = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, 1));
+      const end = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10), 1));
+      paymentMatch.paymentDate = { $gte: start, $lt: end };
+    }
+  }
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  // Parallel execution of financial aggregates
+  const [
+    feeStats,
+    paymentStats,
+    todayPayments,
+    monthPayments,
+    uniquePayingStudents,
+    campusAgg,
+    studentCounts,
+    monthlyAgg,
+    feeTypeAgg,
+    paymentMethodAgg,
+  ] = await Promise.all([
+    FeeRecord.aggregate([
+      { $match: feeMatch },
+      {
+        $group: {
+          _id: null,
+          totalBilled: { $sum: { $ifNull: ["$totalPayable", "$amount"] } },
+          totalCollected: { $sum: "$paidAmount" },
+          totalWaivers: {
+            $sum: {
+              $add: [
+                { $ifNull: ["$waiver.amount", 0] },
+                { $ifNull: ["$discount.amount", 0] },
+              ],
+            },
+          },
+          count: { $sum: 1 },
+          paidCount: { $sum: { $cond: [{ $in: ["$status", ["PAID", "paid"]] }, 1, 0] } },
+          partialCount: { $sum: { $cond: [{ $in: ["$status", ["PARTIALLY_PAID", "partially_paid"]] }, 1, 0] } },
+          unpaidCount: { $sum: { $cond: [{ $in: ["$status", ["UNPAID", "unpaid", "GENERATED"]] }, 1, 0] } },
+          overdueCount: { $sum: { $cond: [{ $in: ["$status", ["OVERDUE", "overdue"]] }, 1, 0] } },
+        },
+      },
+    ]),
+    PaymentTransaction.aggregate([
+      { $match: paymentMatch },
+      {
+        $group: {
+          _id: null,
+          totalPaymentsVolume: { $sum: "$amount" },
+          totalTransactionsCount: { $sum: 1 },
+        },
+      },
+    ]),
+    PaymentTransaction.aggregate([
+      {
+        $match: {
+          campusId: { $in: targetCampusIds },
+          status: "CONFIRMED",
+          paymentDate: { $gte: startOfToday },
+        },
+      },
+      { $group: { _id: null, todayTotal: { $sum: "$amount" }, count: { $sum: 1 } } },
+    ]),
+    PaymentTransaction.aggregate([
+      {
+        $match: {
+          campusId: { $in: targetCampusIds },
+          status: "CONFIRMED",
+          paymentDate: { $gte: startOfMonth },
+        },
+      },
+      { $group: { _id: null, monthTotal: { $sum: "$amount" }, count: { $sum: 1 } } },
+    ]),
+    FeeRecord.distinct("studentId", feeMatch),
+    // Multi-campus comparison aggregation across all campuses
+    FeeRecord.aggregate([
+      { $match: { campusId: { $in: allCampusIds }, "omitted.isOmitted": { $ne: true } } },
+      {
+        $group: {
+          _id: "$campusId",
+          totalBilled: { $sum: { $ifNull: ["$totalPayable", "$amount"] } },
+          totalCollected: { $sum: "$paidAmount" },
+          totalWaivers: {
+            $sum: {
+              $add: [
+                { $ifNull: ["$waiver.amount", 0] },
+                { $ifNull: ["$discount.amount", 0] },
+              ],
+            },
+          },
+          vouchersCount: { $sum: 1 },
+          paidCount: { $sum: { $cond: [{ $in: ["$status", ["PAID", "paid"]] }, 1, 0] } },
+          partialCount: { $sum: { $cond: [{ $in: ["$status", ["PARTIALLY_PAID", "partially_paid"]] }, 1, 0] } },
+          unpaidCount: { $sum: { $cond: [{ $in: ["$status", ["UNPAID", "unpaid", "GENERATED"]] }, 1, 0] } },
+          overdueCount: { $sum: { $cond: [{ $in: ["$status", ["OVERDUE", "overdue"]] }, 1, 0] } },
+        },
+      },
+    ]),
+    User.aggregate([
+      { $match: { campusId: { $in: allCampusIds }, role: "student" } },
+      { $group: { _id: "$campusId", count: { $sum: 1 } } },
+    ]),
+    // Monthly trend aggregation (last 12 months)
+    FeeRecord.aggregate([
+      {
+        $match: {
+          campusId: { $in: targetCampusIds },
+          "omitted.isOmitted": { $ne: true },
+          month: { $exists: true, $ne: "" },
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          billed: { $sum: { $ifNull: ["$totalPayable", "$amount"] } },
+          collected: { $sum: "$paidAmount" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 12 },
+    ]),
+    // Fee Category breakdown
+    FeeRecord.aggregate([
+      { $match: feeMatch },
+      {
+        $group: {
+          _id: "$feeType",
+          totalCollected: { $sum: "$paidAmount" },
+          totalBilled: { $sum: { $ifNull: ["$totalPayable", "$amount"] } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { totalBilled: -1 } },
+    ]),
+    // Payment Methods breakdown
+    PaymentTransaction.aggregate([
+      { $match: paymentMatch },
+      {
+        $group: {
+          _id: "$paymentMethod",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { totalAmount: -1 } },
+    ]),
+  ]);
+
+  const totalBilled = feeStats[0]?.totalBilled || 0;
+  const totalCollected = feeStats[0]?.totalCollected || paymentStats[0]?.totalPaymentsVolume || 0;
+  const totalOutstanding = Math.max(0, totalBilled - totalCollected);
+  const collectionRate = totalBilled > 0 ? Number(((totalCollected / totalBilled) * 100).toFixed(1)) : 0;
+  const totalWaived = feeStats[0]?.totalWaivers || 0;
+
+  // Map student counts and campus breakdown
+  const studentCountMap = new Map(studentCounts.map((s) => [s._id.toString(), s.count]));
+  const campusAggMap = new Map(campusAgg.map((a) => [a._id.toString(), a]));
+
+  const campusBreakdown = allCampuses.map((c) => {
+    const cIdStr = c._id.toString();
+    const aggData = campusAggMap.get(cIdStr) || {};
+    const cBilled = aggData.totalBilled || 0;
+    const cCollected = aggData.totalCollected || 0;
+    const cOutstanding = Math.max(0, cBilled - cCollected);
+    const cRate = cBilled > 0 ? Number(((cCollected / cBilled) * 100).toFixed(1)) : 0;
+
+    return {
+      id: cIdStr,
+      _id: cIdStr,
+      name: c.name,
+      code: c.code || "",
+      city: typeof c.address === "object" ? c.address?.city || "" : c.city || "",
+      address: typeof c.address === "object" ? c.address?.street || c.address?.city || "" : c.address || "",
+      manager: c.managerId
+        ? {
+            name: c.managerId.name,
+            email: c.managerId.email,
+            phone: c.managerId.phone || "",
+          }
+        : null,
+      studentsCount: studentCountMap.get(cIdStr) || 0,
+      totalBilled: cBilled,
+      totalCollected: cCollected,
+      totalOutstanding: cOutstanding,
+      collectionRate: cRate,
+      vouchersCount: aggData.vouchersCount || 0,
+      paidCount: aggData.paidCount || 0,
+      partialCount: aggData.partialCount || 0,
+      unpaidCount: aggData.unpaidCount || 0,
+      overdueCount: aggData.overdueCount || 0,
+      totalWaivers: aggData.totalWaivers || 0,
+    };
+  });
+
+  return {
+    kpis: {
+      totalBilled,
+      totalRevenue: totalCollected,
+      totalCollected,
+      totalOutstanding,
+      collectionRate,
+      totalWaived,
+      totalVouchers: feeStats[0]?.count || 0,
+      paidVouchersCount: feeStats[0]?.paidCount || 0,
+      partialVouchersCount: feeStats[0]?.partialCount || 0,
+      unpaidVouchersCount: feeStats[0]?.unpaidCount || 0,
+      overdueVouchersCount: feeStats[0]?.overdueCount || 0,
+      todayRevenue: todayPayments[0]?.todayTotal || 0,
+      thisMonthRevenue: monthPayments[0]?.monthTotal || 0,
+      activePayingStudents: uniquePayingStudents.length,
+      totalTransactionsCount: paymentStats[0]?.totalTransactionsCount || 0,
+    },
+    campusBreakdown,
+    monthlyTrend: monthlyAgg.map((m) => {
+      const b = m.billed || 0;
+      const c = m.collected || 0;
+      return {
+        month: m._id,
+        billed: b,
+        collected: c,
+        outstanding: Math.max(0, b - c),
+        collectionRate: b > 0 ? Number(((c / b) * 100).toFixed(1)) : 0,
+        vouchers: m.count || 0,
+      };
+    }),
+    feeTypeBreakdown: feeTypeAgg.map((f) => ({
+      name: f._id || "Tuition Fee",
+      feeType: f._id || "Tuition Fee",
+      billed: f.totalBilled || 0,
+      collected: f.totalCollected || 0,
+      percentage: totalBilled > 0 ? Number(((f.totalBilled / totalBilled) * 100).toFixed(1)) : 0,
+      count: f.count || 0,
+    })),
+    paymentMethodBreakdown: paymentMethodAgg.map((p) => ({
+      method: p._id || "Cash",
+      totalAmount: p.totalAmount || 0,
+      count: p.count || 0,
+      percentage: totalCollected > 0 ? Number(((p.totalAmount / totalCollected) * 100).toFixed(1)) : 0,
+    })),
+    campuses: allCampuses.map((c) => ({
+      id: c._id.toString(),
+      _id: c._id.toString(),
+      name: c.name,
+      code: c.code || "",
+      city: typeof c.address === "object" ? c.address?.city || "" : c.city || "",
+    })),
+    selectedCampusId: isFilteredCampus ? query.campusId : "all",
+  };
+};
+
+/**
+ * Paginated Payment Transactions Ledger across campuses
+ */
+export const getInstituteRevenueTransactions = async (instituteId, query = {}) => {
+  const allCampuses = await Campus.find({ instituteId }).select("_id name code").lean();
+  const allCampusIds = allCampuses.map((c) => c._id);
+
+  let targetCampusIds = allCampusIds;
+  if (query.campusId && query.campusId !== "all") {
+    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+  }
+
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 15));
+  const skip = (page - 1) * limit;
+
+  const matchFilter = {
+    campusId: { $in: targetCampusIds },
+  };
+
+  if (query.status && query.status !== "all") {
+    matchFilter.status = query.status.toUpperCase();
+  }
+  if (query.paymentMethod && query.paymentMethod !== "all") {
+    matchFilter.paymentMethod = new RegExp(`^${query.paymentMethod}$`, "i");
+  }
+  if (query.startDate || query.endDate) {
+    matchFilter.paymentDate = {};
+    if (query.startDate) matchFilter.paymentDate.$gte = new Date(query.startDate);
+    if (query.endDate) matchFilter.paymentDate.$lte = new Date(query.endDate);
+  }
+
+  // If search query is provided, find matching students first
+  if (query.search && query.search.trim()) {
+    const sTerm = query.search.trim();
+    const matchingStudents = await User.find({
+      campusId: { $in: targetCampusIds },
+      role: "student",
+      $or: [
+        { name: { $regex: sTerm, $options: "i" } },
+        { email: { $regex: sTerm, $options: "i" } },
+        { roll: { $regex: sTerm, $options: "i" } },
+        { rollNo: { $regex: sTerm, $options: "i" } },
+      ],
+    }).select("_id");
+
+    const studentIds = matchingStudents.map((s) => s._id);
+
+    matchFilter.$or = [
+      { receiptNo: { $regex: sTerm, $options: "i" } },
+      { referenceNo: { $regex: sTerm, $options: "i" } },
+      { studentId: { $in: studentIds } },
+    ];
+  }
+
+  const [transactions, total, summaryAgg] = await Promise.all([
+    PaymentTransaction.find(matchFilter)
+      .sort({ paymentDate: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("studentId", "name email roll rollNo gradeOrClass avatar phone")
+      .populate("campusId", "name code address")
+      .populate("feeRecordId", "challanNo feeType month dueDate amount paidAmount totalPayable status breakdown discount waiver")
+      .populate("confirmedBy", "name email")
+      .lean(),
+    PaymentTransaction.countDocuments(matchFilter),
+    PaymentTransaction.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" },
+          confirmedAmount: { $sum: { $cond: [{ $eq: ["$status", "CONFIRMED"] }, "$amount", 0] } },
+        },
+      },
+    ]),
+  ]);
+
+  return {
+    transactions,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit) || 1,
+    summary: {
+      totalAmount: summaryAgg[0]?.totalAmount || 0,
+      confirmedAmount: summaryAgg[0]?.confirmedAmount || 0,
+      filteredCount: total,
+    },
+  };
+};
+
+/**
+ * Paginated Student Fee Records / Invoices across campuses
+ */
+export const getInstituteFeeRecords = async (instituteId, query = {}) => {
+  const allCampuses = await Campus.find({ instituteId }).select("_id name code").lean();
+  const allCampusIds = allCampuses.map((c) => c._id);
+
+  let targetCampusIds = allCampusIds;
+  if (query.campusId && query.campusId !== "all") {
+    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+  }
+
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 15));
+  const skip = (page - 1) * limit;
+
+  const matchFilter = {
+    campusId: { $in: targetCampusIds },
+    "omitted.isOmitted": { $ne: true },
+  };
+
+  if (query.status && query.status !== "all") {
+    matchFilter.status = new RegExp(`^${query.status}$`, "i");
+  }
+  if (query.feeType && query.feeType !== "all") {
+    matchFilter.feeType = new RegExp(`^${query.feeType}$`, "i");
+  }
+  if (query.gradeOrClass && query.gradeOrClass !== "all") {
+    matchFilter.gradeOrClass = query.gradeOrClass;
+  }
+  if (query.month) {
+    matchFilter.month = query.month;
+  }
+
+  if (query.search && query.search.trim()) {
+    const sTerm = query.search.trim();
+    const matchingStudents = await User.find({
+      campusId: { $in: targetCampusIds },
+      role: "student",
+      $or: [
+        { name: { $regex: sTerm, $options: "i" } },
+        { email: { $regex: sTerm, $options: "i" } },
+        { roll: { $regex: sTerm, $options: "i" } },
+        { rollNo: { $regex: sTerm, $options: "i" } },
+      ],
+    }).select("_id");
+
+    const studentIds = matchingStudents.map((s) => s._id);
+
+    matchFilter.$or = [
+      { challanNo: { $regex: sTerm, $options: "i" } },
+      { receiptNo: { $regex: sTerm, $options: "i" } },
+      { studentId: { $in: studentIds } },
+    ];
+  }
+
+  const [records, total, summaryAgg] = await Promise.all([
+    FeeRecord.find(matchFilter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("studentId", "name email roll rollNo gradeOrClass avatar phone")
+      .populate("campusId", "name code address")
+      .lean(),
+    FeeRecord.countDocuments(matchFilter),
+    FeeRecord.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: null,
+          totalBilled: { $sum: { $ifNull: ["$totalPayable", "$amount"] } },
+          totalCollected: { $sum: "$paidAmount" },
+        },
+      },
+    ]),
+  ]);
+
+  const billed = summaryAgg[0]?.totalBilled || 0;
+  const collected = summaryAgg[0]?.totalCollected || 0;
+
+  return {
+    records,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit) || 1,
+    summary: {
+      totalBilled: billed,
+      totalCollected: collected,
+      totalOutstanding: Math.max(0, billed - collected),
+    },
+  };
+};
+
+/**
+ * Fee Structures oversight across all campuses
+ */
+export const getInstituteFeeStructures = async (instituteId, query = {}) => {
+  const allCampuses = await Campus.find({ instituteId }).select("_id name code city").lean();
+  const allCampusIds = allCampuses.map((c) => c._id);
+
+  let targetCampusIds = allCampusIds;
+  if (query.campusId && query.campusId !== "all") {
+    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+  }
+
+  const structures = await FeeStructure.find({
+    campusId: { $in: targetCampusIds },
+  })
+    .populate("campusId", "name code city")
+    .sort({ campusId: 1, gradeOrClass: 1 })
+    .lean();
+
+  return structures;
+};
+
+/**
+ * Export full revenue dataset for financial reporting
+ */
+export const exportInstituteRevenueData = async (instituteId, query = {}) => {
+  const allCampuses = await Campus.find({ instituteId }).select("_id name code").lean();
+  const allCampusIds = allCampuses.map((c) => c._id);
+
+  let targetCampusIds = allCampusIds;
+  if (query.campusId && query.campusId !== "all") {
+    targetCampusIds = allCampusIds.filter((id) => id.toString() === query.campusId.toString());
+  }
+
+  const transactions = await PaymentTransaction.find({
+    campusId: { $in: targetCampusIds },
+    status: "CONFIRMED",
+  })
+    .sort({ paymentDate: -1 })
+    .populate("studentId", "name email roll rollNo gradeOrClass")
+    .populate("campusId", "name code")
+    .populate("feeRecordId", "challanNo feeType month")
+    .lean();
+
+  return transactions.map((t) => ({
+    receiptNo: t.receiptNo || "—",
+    challanNo: t.feeRecordId?.challanNo || "—",
+    date: t.paymentDate ? new Date(t.paymentDate).toISOString().split("T")[0] : "",
+    studentName: t.studentId?.name || "Student",
+    studentRoll: t.studentId?.roll || t.studentId?.rollNo || "—",
+    gradeOrClass: t.studentId?.gradeOrClass || "—",
+    campus: t.campusId?.name || "Main Campus",
+    feeType: t.feeRecordId?.feeType || "Tuition Fee",
+    month: t.feeRecordId?.month || "—",
+    amountPaid: t.amount || 0,
+    paymentMethod: t.paymentMethod || "Cash",
+    referenceNo: t.referenceNo || "—",
+    status: t.status,
+  }));
+};
+
 export default {
   getInstituteStats,
   getInstituteProfile,
@@ -942,6 +1527,9 @@ export default {
   updateCampus,
   deleteCampus,
   assignCampusManager,
+  resendCampusManagerInvite,
+  updateCampusManager,
+  unassignCampusManager,
   getCampusManagers,
   createCampusManager,
   getStaff,
@@ -955,4 +1543,10 @@ export default {
   createAlert,
   getInstituteSubscription,
   getInstituteAuditLogs,
+  // Multi-Campus Revenue & Fees Collection System
+  getInstituteRevenueAnalytics,
+  getInstituteRevenueTransactions,
+  getInstituteFeeRecords,
+  getInstituteFeeStructures,
+  exportInstituteRevenueData,
 };

@@ -14,6 +14,7 @@ import {
   Plus,
   Megaphone,
   SlidersHorizontal,
+  Coins,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,14 @@ export default function InstituteDashboard() {
       value: campuses.length || statsData?.campuses?.total || 0,
     },
     {
+      icon: Coins,
+      label: "Revenue Collected",
+      value:
+        statsData?.revenue?.totalCollected !== undefined
+          ? `Rs. ${Number(statsData.revenue.totalCollected).toLocaleString()}`
+          : "—",
+    },
+    {
       icon: Layers,
       label: "Institute Type",
       value: institute?.type || "Institute",
@@ -196,6 +205,7 @@ export default function InstituteDashboard() {
       <div className="institute-actions">
         {[
           [Plus, "Add New Campus", "/institute-admin/campuses?add=1"],
+          [Coins, "Revenue & Collections Hub", "/institute-admin/revenue"],
           [Users, "View Staff Directory", "/institute-admin/staff"],
           [Megaphone, "Broadcast Message", "/institute-admin/alerts"],
         ].map(([Icon, label, destination]) => (

@@ -69,11 +69,40 @@ export default function CampusForm({ campus, onSave, onCancel, loading, headerAc
     onSave(payload, { addAnother });
   };
 
+  const copyToClipboard = async (text) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (err) {
+      console.warn("navigator.clipboard failed, attempting fallback:", err);
+    }
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error("Fallback copy failed:", err);
+      return false;
+    }
+  };
+
+  const campusId = campus?.id || campus?._id;
+
   const handleResendInvite = async () => {
-    if (!campus?.id) return;
+    if (!campusId) return;
     setResendingEmail(true);
     try {
-      const res = await axiosInstance.post(`/institute-admin/campuses/${campus.id}/resend-invite`);
+      const res = await axiosInstance.post(`/institute-admin/campuses/${campusId}/resend-invite`);
       toast.success(res.data?.message || "Setup email sent successfully!");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to resend setup email.");
@@ -83,15 +112,19 @@ export default function CampusForm({ campus, onSave, onCancel, loading, headerAc
   };
 
   const handleCopyLink = async () => {
-    if (!campus?.id) return;
+    if (!campusId) return;
     try {
-      const res = await axiosInstance.post(`/institute-admin/campuses/${campus.id}/resend-invite`);
+      const res = await axiosInstance.post(`/institute-admin/campuses/${campusId}/resend-invite`);
       const link = res.data?.data?.resetLink;
       if (link) {
-        await navigator.clipboard.writeText(link);
-        setCopiedLink(true);
-        toast.success("Setup link copied to clipboard!");
-        setTimeout(() => setCopiedLink(false), 3000);
+        const ok = await copyToClipboard(link);
+        if (ok) {
+          setCopiedLink(true);
+          toast.success("Setup link copied to clipboard!");
+          setTimeout(() => setCopiedLink(false), 3000);
+        } else {
+          toast.error("Failed to copy link to clipboard.");
+        }
       }
     } catch (err) {
       toast.error("Failed to generate setup link: " + (err.response?.data?.message || err.message));
@@ -100,10 +133,10 @@ export default function CampusForm({ campus, onSave, onCancel, loading, headerAc
 
   const handleSaveExistingManager = async (e) => {
     e.preventDefault();
-    if (!campus?.id) return;
+    if (!campusId) return;
     setSavingExistingManager(true);
     try {
-      await axiosInstance.put(`/institute-admin/campuses/${campus.id}/manager`, existingManagerForm);
+      await axiosInstance.put(`/institute-admin/campuses/${campusId}/manager`, existingManagerForm);
       toast.success("Manager details updated!");
       setIsEditingExistingManager(false);
     } catch (err) {

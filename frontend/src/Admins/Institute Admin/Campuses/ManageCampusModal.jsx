@@ -10,6 +10,7 @@ import {
   Check,
   Pencil,
   UserPlus,
+  UserMinus,
   ExternalLink,
   ShieldAlert,
   GraduationCap,
@@ -25,6 +26,33 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import "./ManageCampusModal.css";
 
+const copyToClipboard = async (text) => {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn("navigator.clipboard failed, attempting fallback:", err);
+  }
+  try {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    console.error("Fallback copy failed:", err);
+    return false;
+  }
+};
+
 export default function ManageCampusModal({ campus, open, onClose, onCampusUpdated }) {
   const [activeTab, setActiveTab] = useState("manager"); // "manager" | "overview"
   const [campusData, setCampusData] = useState(campus || null);
@@ -34,6 +62,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
   const [resendingEmail, setResendingEmail] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [latestSetupLink, setLatestSetupLink] = useState("");
+  const [unassigningManager, setUnassigningManager] = useState(false);
 
   // Edit Manager State
   const [isEditingManager, setIsEditingManager] = useState(false);
@@ -57,10 +86,19 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
 
   // Sync state and fetch fresh details with counts
   useEffect(() => {
-    if (!open || !campus?.id) return;
+    const campusId = campus?.id || campus?._id;
+    if (!open || !campusId) return;
 
     let isMounted = true;
     setCampusData(campus);
+    if (campus.managerId && typeof campus.managerId === "object") {
+      setEditManagerForm({
+        name: campus.managerId.name || "",
+        email: campus.managerId.email || "",
+        phone: campus.managerId.phone || "",
+        status: campus.managerId.status || "Active",
+      });
+    }
     setLatestSetupLink("");
     setCopiedLink(false);
     setIsEditingManager(false);
@@ -69,7 +107,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
     const fetchDetails = async () => {
       setLoadingCampus(true);
       try {
-        const res = await axiosInstance.get(`/institute-admin/campuses/${campus.id}`);
+        const res = await axiosInstance.get(`/institute-admin/campuses/${campusId}`);
         if (isMounted && res.data?.data) {
           setCampusData(res.data.data);
           if (res.data.data.managerId) {
@@ -107,7 +145,8 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
   const handleResendInvite = async () => {
     setResendingEmail(true);
     try {
-      const res = await axiosInstance.post(`/institute-admin/campuses/${campusData._id || campusData.id}/resend-invite`);
+      const targetId = campusData._id || campusData.id;
+      const res = await axiosInstance.post(`/institute-admin/campuses/${targetId}/resend-invite`);
       toast.success(res.data?.message || "Setup email sent successfully!");
       if (res.data?.data?.resetLink) {
         setLatestSetupLink(res.data.data.resetLink);
@@ -124,9 +163,9 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
     let linkToCopy = latestSetupLink;
 
     if (!linkToCopy) {
-      // Fetch or generate link
       try {
-        const res = await axiosInstance.post(`/institute-admin/campuses/${campusData._id || campusData.id}/resend-invite`);
+        const targetId = campusData._id || campusData.id;
+        const res = await axiosInstance.post(`/institute-admin/campuses/${targetId}/resend-invite`);
         linkToCopy = res.data?.data?.resetLink;
         if (linkToCopy) setLatestSetupLink(linkToCopy);
       } catch (err) {
@@ -136,13 +175,13 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
     }
 
     if (linkToCopy) {
-      try {
-        await navigator.clipboard.writeText(linkToCopy);
+      const ok = await copyToClipboard(linkToCopy);
+      if (ok) {
         setCopiedLink(true);
         toast.success("Setup link copied to clipboard!");
         setTimeout(() => setCopiedLink(false), 3000);
-      } catch {
-        toast.error("Failed to copy to clipboard.");
+      } else {
+        toast.error("Failed to copy automatically. Please copy the URL below.");
       }
     }
   };
@@ -152,8 +191,9 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
     e.preventDefault();
     setSavingManager(true);
     try {
+      const targetId = campusData._id || campusData.id;
       const res = await axiosInstance.put(
-        `/institute-admin/campuses/${campusData._id || campusData.id}/manager`,
+        `/institute-admin/campuses/${targetId}/manager`,
         editManagerForm
       );
       toast.success("Manager details updated!");
@@ -179,8 +219,9 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
     }
     setAppointingManager(true);
     try {
+      const targetId = campusData._id || campusData.id;
       const res = await axiosInstance.post(
-        `/institute-admin/campuses/${campusData._id || campusData.id}/assign-manager`,
+        `/institute-admin/campuses/${targetId}/assign-manager`,
         assignForm
       );
       toast.success("Campus Manager appointed successfully!");
@@ -200,6 +241,31 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
       toast.error(err.response?.data?.message || "Failed to appoint manager.");
     } finally {
       setAppointingManager(false);
+    }
+  };
+
+  // 5. Unassign Manager
+  const handleUnassignManager = async () => {
+    if (!window.confirm("Are you sure you want to remove the current Campus Manager from this branch?")) {
+      return;
+    }
+    setUnassigningManager(true);
+    try {
+      const targetId = campusData._id || campusData.id;
+      const res = await axiosInstance.delete(`/institute-admin/campuses/${targetId}/manager`);
+      toast.success(res.data?.message || "Manager removed successfully.");
+      setCampusData((prev) => ({
+        ...prev,
+        managerId: null,
+      }));
+      setLatestSetupLink("");
+      setIsEditingManager(false);
+      setIsAssigningManager(false);
+      if (onCampusUpdated) onCampusUpdated();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to remove manager.");
+    } finally {
+      setUnassigningManager(false);
     }
   };
 
@@ -327,6 +393,14 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                       <button
                         className="mcm-btn-outline"
                         onClick={() => {
+                          if (!isEditingManager && manager) {
+                            setEditManagerForm({
+                              name: manager.name || "",
+                              email: manager.email || "",
+                              phone: manager.phone || "",
+                              status: manager.status || "Active",
+                            });
+                          }
                           setIsEditingManager(!isEditingManager);
                           setIsAssigningManager(false);
                         }}
@@ -343,7 +417,21 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                         }}
                       >
                         <UserPlus size={14} />
-                        Reassign Manager
+                        {isAssigningManager ? "Cancel Reassign" : "Reassign Manager"}
+                      </button>
+
+                      <button
+                        className="mcm-btn-outline mcm-btn-danger"
+                        onClick={handleUnassignManager}
+                        disabled={unassigningManager}
+                        title="Remove current manager from this campus"
+                      >
+                        {unassigningManager ? (
+                          <Spinner className="size-3.5 mr-1.5" />
+                        ) : (
+                          <UserMinus size={14} />
+                        )}
+                        Remove Manager
                       </button>
                     </div>
                   </div>

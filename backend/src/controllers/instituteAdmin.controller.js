@@ -182,7 +182,8 @@ export const getManagers = asyncHandler(async (req, res) => {
 });
 
 export const createManager = asyncHandler(async (req, res) => {
-  const manager = await instituteAdminService.createCampusManager(req.instituteId, req.body);
+  const clientOrigin = req.headers.origin || req.headers.referer;
+  const manager = await instituteAdminService.createCampusManager(req.instituteId, req.body, clientOrigin);
   res.status(201).json({
     success: true,
     message: "Campus Manager appointed successfully.",
@@ -373,6 +374,79 @@ export const getAuditLogs = asyncHandler(async (req, res) => {
   });
 });
 
+// --- Multi-Campus Revenue & Fees Collection Controllers ---
+export const getRevenueAnalytics = asyncHandler(async (req, res) => {
+  const analytics = await instituteAdminService.getInstituteRevenueAnalytics(
+    req.instituteId,
+    req.query
+  );
+  res.status(200).json({
+    success: true,
+    message: "Revenue analytics retrieved successfully.",
+    data: analytics,
+  });
+});
+
+export const getRevenueTransactions = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.getInstituteRevenueTransactions(
+    req.instituteId,
+    req.query
+  );
+  res.status(200).json({
+    success: true,
+    message: "Revenue transactions retrieved successfully.",
+    data: result.transactions,
+    total: result.total,
+    page: result.page,
+    limit: result.limit,
+    totalPages: result.totalPages,
+    summary: result.summary,
+  });
+});
+
+export const getFeeRecords = asyncHandler(async (req, res) => {
+  const result = await instituteAdminService.getInstituteFeeRecords(
+    req.instituteId,
+    req.query
+  );
+  res.status(200).json({
+    success: true,
+    message: "Fee records retrieved successfully.",
+    data: result.records,
+    total: result.total,
+    page: result.page,
+    limit: result.limit,
+    totalPages: result.totalPages,
+    summary: result.summary,
+  });
+});
+
+export const getFeeStructures = asyncHandler(async (req, res) => {
+  const structures = await instituteAdminService.getInstituteFeeStructures(
+    req.instituteId,
+    req.query
+  );
+  res.status(200).json({
+    success: true,
+    message: "Campus fee structures retrieved successfully.",
+    count: structures.length,
+    data: structures,
+  });
+});
+
+export const exportRevenueData = asyncHandler(async (req, res) => {
+  const records = await instituteAdminService.exportInstituteRevenueData(
+    req.instituteId,
+    req.query
+  );
+  res.status(200).json({
+    success: true,
+    message: "Revenue export generated successfully.",
+    count: records.length,
+    data: records,
+  });
+});
+
 export default {
   getStats,
   getProfile,
@@ -382,6 +456,9 @@ export default {
   updateCampus,
   deleteCampus,
   assignCampusManager,
+  resendCampusManagerInvite,
+  updateCampusManager,
+  unassignCampusManager,
   getManagers,
   createManager,
   getStaff,
@@ -395,4 +472,9 @@ export default {
   createAlert,
   getSubscription,
   getAuditLogs,
+  getRevenueAnalytics,
+  getRevenueTransactions,
+  getFeeRecords,
+  getFeeStructures,
+  exportRevenueData,
 };

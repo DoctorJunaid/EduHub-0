@@ -29,6 +29,11 @@ import {
   createAlert,
   getSubscription,
   getAuditLogs,
+  getRevenueAnalytics,
+  getRevenueTransactions,
+  getFeeRecords,
+  getFeeStructures,
+  exportRevenueData,
 } from "../controllers/instituteAdmin.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -51,6 +56,19 @@ router.use(instituteAdminScope);
 router.get("/stats", getStats);
 router.get("/profile", getProfile);
 router.get("/audit-logs", getAuditLogs);
+
+// Multi-Campus Revenue & Fees Collection System
+router.get("/revenue/analytics", getRevenueAnalytics);
+router.get("/revenue/transactions", getRevenueTransactions);
+router.get("/revenue/records", getFeeRecords);
+router.get("/revenue/fee-structures", getFeeStructures);
+router.get("/revenue/export", exportRevenueData);
+
+// Aliases for fees path
+router.get("/fees/analytics", getRevenueAnalytics);
+router.get("/fees/transactions", getRevenueTransactions);
+router.get("/fees/records", getFeeRecords);
+router.get("/fees/structures", getFeeStructures);
 
 // SaaS Subscription & Quota Usage View
 router.get("/subscription", getSubscription);
