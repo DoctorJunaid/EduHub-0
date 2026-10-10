@@ -64,9 +64,9 @@ export const instituteNavigation = [
     path: "/institute-admin/support",
     icon: <Headset size={20} />,
   },
-  {
-    label: "Settings",
-    path: "/institute-admin/settings",
-    icon: <Settings size={20} />,
-  },
+  // {
+  //   label: "Settings",
+  //   path: "/institute-admin/settings",
+  //   icon: <Settings size={20} />,
+  // },
 ];
