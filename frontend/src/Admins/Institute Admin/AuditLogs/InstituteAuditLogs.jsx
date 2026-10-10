@@ -90,13 +90,22 @@ function formatRelativeTime(dateString) {
   if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
   if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
   if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export default function InstituteAuditLogs() {
   const [logs, setLogs] = useState([]);
   const [campuses, setCampuses] = useState([]);
-  const [stats, setStats] = useState({ totalLogs: 0, todayLogs: 0, criticalEvents: 0, totalCampuses: 0 });
+  const [stats, setStats] = useState({
+    totalLogs: 0,
+    todayLogs: 0,
+    criticalEvents: 0,
+    totalCampuses: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [selectedCampusId, setSelectedCampusId] = useState("all");
   const [entityType, setEntityType] = useState("all");
@@ -124,7 +133,9 @@ export default function InstituteAuditLogs() {
         endDate: endDate || undefined,
       };
 
-      const res = await axiosInstance.get("/institute-admin/audit-logs", { params });
+      const res = await axiosInstance.get("/institute-admin/audit-logs", {
+        params,
+      });
       if (res.data?.success) {
         setLogs(res.data.data || []);
         setTotalLogs(res.data.total || 0);
@@ -166,7 +177,16 @@ export default function InstituteAuditLogs() {
       return;
     }
 
-    const headers = ["Timestamp", "Campus", "Actor Name", "Actor Role", "Action", "Entity Type", "Reason", "IP Address"];
+    const headers = [
+      "Timestamp",
+      "Campus",
+      "Actor Name",
+      "Actor Role",
+      "Action",
+      "Entity Type",
+      "Reason",
+      "IP Address",
+    ];
     const rows = logs.map((log) => [
       new Date(log.timestamp).toISOString(),
       log.campusId?.name || "Institute-level",
@@ -178,11 +198,16 @@ export default function InstituteAuditLogs() {
       log.ipAddress || "—",
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `institute_audit_logs_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `institute_audit_logs_${new Date().toISOString().split("T")[0]}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -191,28 +216,7 @@ export default function InstituteAuditLogs() {
 
   return (
     <div className="institute-audit-logs-page flex flex-col gap-5 pb-12">
-      {/* ── 1. Top Action Toolbar (Aligned Right under Header / Breadcrumbs) ── */}
-      <div className="flex items-center justify-end gap-2.5">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={exportToCsv}
-          className="h-9 px-3 gap-2 border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-sm font-medium rounded-md cursor-pointer shadow-none"
-        >
-          <Download size={15} /> Export CSV
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchLogs()}
-          disabled={loading}
-          className="h-9 px-3 gap-2 border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-sm font-medium rounded-md cursor-pointer shadow-none"
-        >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Refresh
-        </Button>
-      </div>
-
-      {/* ── 2. Summary KPI Metrics Card Row ── */}
+      {/* ── 1. SUMMARY KPI METRICS CARD ROW (DIRECTLY BENEATH HEADER / BREADCRUMBS) ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
         <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div className="space-y-1">
@@ -271,7 +275,9 @@ export default function InstituteAuditLogs() {
           </div>
           <div
             className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-              stats.criticalEvents > 0 ? "bg-rose-50 text-rose-600" : "bg-neutral-100 text-neutral-600"
+              stats.criticalEvents > 0
+                ? "bg-rose-50 text-rose-600"
+                : "bg-neutral-100 text-neutral-600"
             }`}
           >
             <AlertTriangle size={16} />
@@ -279,62 +285,109 @@ export default function InstituteAuditLogs() {
         </div>
       </div>
 
-      {/* ── 3. Filter Bar & Campus Selector ── */}
-      <div className="bg-white border border-neutral-200 p-4 rounded-xl shadow-xs space-y-4">
-        {/* Campus Quick Switcher Strip */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
-          <div className="flex items-center shrink-0">
-            <Building2 className="w-4 h-4 text-muted-foreground mr-1.5 shrink-0" />
-            <span className="text-xs font-semibold text-neutral-700">
-              Filter by Campus Branch:
-            </span>
-          </div>
+      {/* ── 2. UNIFIED CONTENT TOOLBAR & CRITERIA FILTER CARD ── */}
+      <div className="audit-filter-card bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 shadow-none w-full flex flex-col gap-4">
+        {/* Top Strip: Campus Branch Selector + Action Buttons */}
+        <div className="audit-filter-top-row flex flex-col md:flex-row md:items-center justify-between gap-3 w-full pb-3.5 border-b border-neutral-100">
+          {/* Campus Branch Tabs */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+            <div className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+              <Building2 className="w-4 h-4 text-muted-foreground mr-1.5 shrink-0" />
+              <span>Filter by Campus Branch:</span>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCampusId("all");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
-                selectedCampusId === "all"
-                  ? "bg-neutral-900 text-white shadow-xs"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200/80 hover:text-neutral-900 border border-neutral-200/70"
-              }`}
-            >
-              <span>All Campuses ({totalLogs})</span>
-            </button>
-
-            {campuses.map((campus) => {
-              const isSelected = (campus.id || campus._id) === selectedCampusId;
-              return (
-                <button
-                  key={campus.id || campus._id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCampusId(campus.id || campus._id);
-                    setPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    isSelected
-                      ? "bg-neutral-900 text-white shadow-xs"
-                      : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200/80 hover:text-neutral-900 border border-neutral-200/70"
+            {/* Campus Pill Tabs Container */}
+            <div className="audit-campus-pills-container inline-flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCampusId("all");
+                  setPage(1);
+                }}
+                className={`audit-campus-pill px-3 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer flex items-center ${
+                  selectedCampusId === "all"
+                    ? "bg-neutral-900 text-white shadow-sm border border-neutral-900"
+                    : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 border border-neutral-200/80"
+                }`}
+              >
+                <span>All Campuses</span>
+                <span
+                  className={`text-[10px] ml-1 font-normal opacity-70 ${
+                    selectedCampusId === "all"
+                      ? "text-neutral-300"
+                      : "text-muted-foreground"
                   }`}
                 >
-                  <span>{campus.name}</span>
-                  {campus.code && <span className="opacity-70 text-[10px]">({campus.code})</span>}
-                </button>
-              );
-            })}
+                  ({totalLogs})
+                </span>
+              </button>
+
+              {campuses.map((campus) => {
+                const isSelected =
+                  (campus.id || campus._id) === selectedCampusId;
+                return (
+                  <button
+                    key={campus.id || campus._id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCampusId(campus.id || campus._id);
+                      setPage(1);
+                    }}
+                    className={`audit-campus-pill px-3 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer flex items-center ${
+                      isSelected
+                        ? "bg-neutral-900 text-white shadow-sm border border-neutral-900"
+                        : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 border border-neutral-200/80"
+                    }`}
+                  >
+                    <span>{campus.name}</span>
+                    {campus.code && (
+                      <span
+                        className={`text-[10px] ml-1 font-normal opacity-70 ${
+                          isSelected
+                            ? "text-neutral-300"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        ({campus.code})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Action Buttons: Export CSV & Refresh */}
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCsv}
+              className="audit-action-btn h-9 px-3 text-xs font-medium border border-neutral-200 rounded-md hover:bg-neutral-50 flex items-center gap-1.5 bg-white text-neutral-700 shadow-none cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Export CSV</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchLogs()}
+              disabled={loading}
+              className="audit-action-btn h-9 px-3 text-xs font-medium border border-neutral-200 rounded-md hover:bg-neutral-50 flex items-center gap-1.5 bg-white text-neutral-700 shadow-none cursor-pointer"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 text-neutral-600 ${loading ? "animate-spin" : ""}`}
+              />
+              <span>Refresh</span>
+            </Button>
           </div>
         </div>
 
-        {/* Search & Filter Toolbar Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Search Input with Pl-9 Icon Clearance */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        {/* Bottom Strip: Search & Criteria Filter Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full items-center">
+          {/* Fix Search Input Collision */}
+          <div className="audit-search-wrap relative w-full sm:col-span-2 lg:col-span-1">
+            <Search className="audit-search-icon absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               placeholder="Search user, action, reason..."
@@ -343,19 +396,19 @@ export default function InstituteAuditLogs() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full h-9 pl-9 pr-3 bg-white border border-neutral-200 rounded-md text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
+              className="audit-search-input pl-9 pr-3 py-2 h-9 text-xs sm:text-sm border border-neutral-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-neutral-400 w-full"
             />
           </div>
 
-          {/* Entity Type Dropdown */}
-          <div>
+          {/* All Entity Types Dropdown */}
+          <div className="w-full">
             <select
               value={entityType}
               onChange={(e) => {
                 setEntityType(e.target.value);
                 setPage(1);
               }}
-              className="w-full h-9 px-3 bg-white border border-neutral-200 rounded-md text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer transition-colors"
+              className="audit-filter-select h-9 px-3 text-xs sm:text-sm border border-neutral-200 rounded-md bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer w-full"
             >
               {ENTITY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -365,15 +418,15 @@ export default function InstituteAuditLogs() {
             </select>
           </div>
 
-          {/* Action Dropdown */}
-          <div>
+          {/* All Actions Dropdown */}
+          <div className="w-full">
             <select
               value={action}
               onChange={(e) => {
                 setAction(e.target.value);
                 setPage(1);
               }}
-              className="w-full h-9 px-3 bg-white border border-neutral-200 rounded-md text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer transition-colors"
+              className="audit-filter-select h-9 px-3 text-xs sm:text-sm border border-neutral-200 rounded-md bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer w-full"
             >
               {ACTION_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -383,8 +436,8 @@ export default function InstituteAuditLogs() {
             </select>
           </div>
 
-          {/* Date Range & Clear */}
-          <div className="flex items-center gap-2">
+          {/* Date Picker: Start Date */}
+          <div className="w-full">
             <input
               type="date"
               value={startDate}
@@ -392,9 +445,13 @@ export default function InstituteAuditLogs() {
                 setStartDate(e.target.value);
                 setPage(1);
               }}
-              className="w-1/2 h-9 px-2.5 bg-white border border-neutral-200 rounded-md text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors cursor-pointer"
+              className="audit-filter-date h-9 px-3 text-xs sm:text-sm border border-neutral-200 rounded-md bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer w-full"
               title="From Date"
             />
+          </div>
+
+          {/* Date Picker: End Date + Reset Button */}
+          <div className="w-full flex items-center gap-2">
             <input
               type="date"
               value={endDate}
@@ -402,14 +459,14 @@ export default function InstituteAuditLogs() {
                 setEndDate(e.target.value);
                 setPage(1);
               }}
-              className="w-1/2 h-9 px-2.5 bg-white border border-neutral-200 rounded-md text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors cursor-pointer"
+              className="audit-filter-date h-9 px-3 text-xs sm:text-sm border border-neutral-200 rounded-md bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer flex-1 min-w-0"
               title="To Date"
             />
             <Button
               variant="ghost"
               size="sm"
               onClick={handleResetFilters}
-              className="h-9 px-2.5 text-xs text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-md border border-neutral-200 shrink-0 cursor-pointer transition-colors"
+              className="audit-reset-btn h-9 w-9 p-0 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-md border border-neutral-200 shrink-0 cursor-pointer transition-colors"
               title="Reset all filters"
             >
               <X size={14} />
@@ -427,23 +484,38 @@ export default function InstituteAuditLogs() {
                 <th className="px-5 py-3.5 whitespace-nowrap">Timestamp</th>
                 <th className="px-4 py-3.5 whitespace-nowrap">Campus Branch</th>
                 <th className="px-4 py-3.5 whitespace-nowrap">Performed By</th>
-                <th className="px-4 py-3.5 whitespace-nowrap">Action &amp; Target</th>
-                <th className="px-4 py-3.5 min-w-[240px]">Reason / Description</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Payload</th>
+                <th className="px-4 py-3.5 whitespace-nowrap">
+                  Action &amp; Target
+                </th>
+                <th className="px-4 py-3.5 min-w-[240px]">
+                  Reason / Description
+                </th>
+                <th className="px-4 py-3.5 text-center whitespace-nowrap">
+                  Payload
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-neutral-400">
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-neutral-400"
+                  >
                     <Spinner size="md" className="mx-auto mb-2" />
                     Fetching institute audit records...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-neutral-400">
-                    <ShieldCheck size={36} className="mx-auto mb-2 text-neutral-300" />
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-neutral-400"
+                  >
+                    <ShieldCheck
+                      size={36}
+                      className="mx-auto mb-2 text-neutral-300"
+                    />
                     <p className="font-semibold text-neutral-800 text-sm">
                       No audit log entries found
                     </p>
@@ -480,7 +552,10 @@ export default function InstituteAuditLogs() {
                       {/* Campus Badge */}
                       <td className="px-4 py-3.5 whitespace-nowrap align-middle">
                         <span className="campus-badge inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200/70 shrink-0 whitespace-nowrap">
-                          <Building2 size={13} className="text-muted-foreground shrink-0" />
+                          <Building2
+                            size={13}
+                            className="text-muted-foreground shrink-0"
+                          />
                           <span>{campusName}</span>
                         </span>
                       </td>
@@ -491,8 +566,14 @@ export default function InstituteAuditLogs() {
                           {actorName}
                         </div>
                         <div className="text-[10px] text-neutral-500 flex items-center gap-1.5 mt-0.5">
-                          <span className="capitalize">{actorRole.replace(/_/g, " ")}</span>
-                          {actorEmail && <span className="text-neutral-400">• {actorEmail}</span>}
+                          <span className="capitalize">
+                            {actorRole.replace(/_/g, " ")}
+                          </span>
+                          {actorEmail && (
+                            <span className="text-neutral-400">
+                              • {actorEmail}
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -501,7 +582,7 @@ export default function InstituteAuditLogs() {
                         <div className="flex items-center gap-1.5">
                           <span
                             className={`action-badge inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md border shrink-0 whitespace-nowrap ${getActionBadgeClass(
-                              log.action
+                              log.action,
                             )}`}
                           >
                             {log.action}
@@ -540,8 +621,9 @@ export default function InstituteAuditLogs() {
         {totalPages > 1 && (
           <div className="p-3.5 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-neutral-600">
             <span>
-              Showing Page <strong className="text-neutral-900">{page}</strong> of{" "}
-              <strong className="text-neutral-900">{totalPages}</strong> ({totalLogs} total events)
+              Showing Page <strong className="text-neutral-900">{page}</strong>{" "}
+              of <strong className="text-neutral-900">{totalPages}</strong> (
+              {totalLogs} total events)
             </span>
 
             <div className="flex items-center gap-2">
@@ -597,28 +679,37 @@ export default function InstituteAuditLogs() {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">Campus Branch:</span>
+                <span className="text-muted-foreground font-medium block">
+                  Campus Branch:
+                </span>
                 <span className="font-semibold text-neutral-900 mt-0.5 block">
                   {selectedLog.campusId?.name || "Institute Root"}
                 </span>
               </div>
               <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">Action &amp; Target:</span>
+                <span className="text-muted-foreground font-medium block">
+                  Action &amp; Target:
+                </span>
                 <span className="font-semibold text-neutral-900 mt-0.5 block capitalize">
                   {selectedLog.action} {selectedLog.entityType}
                 </span>
               </div>
               <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">Executed By:</span>
+                <span className="text-muted-foreground font-medium block">
+                  Executed By:
+                </span>
                 <span className="font-semibold text-neutral-900 mt-0.5 block">
-                  {selectedLog.performedBy?.name} ({selectedLog.performedBy?.role})
+                  {selectedLog.performedBy?.name} (
+                  {selectedLog.performedBy?.role})
                 </span>
                 <span className="text-muted-foreground text-[10px]">
                   {selectedLog.performedBy?.email || "No email"}
                 </span>
               </div>
               <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">IP &amp; Client:</span>
+                <span className="text-muted-foreground font-medium block">
+                  IP &amp; Client:
+                </span>
                 <span className="font-mono text-neutral-800 mt-0.5 block truncate">
                   {selectedLog.ipAddress || "Internal Server"}
                 </span>
@@ -630,7 +721,9 @@ export default function InstituteAuditLogs() {
 
             {selectedLog.reason && (
               <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200 text-xs">
-                <span className="text-muted-foreground font-medium block mb-1">Reason / Note:</span>
+                <span className="text-muted-foreground font-medium block mb-1">
+                  Reason / Note:
+                </span>
                 <p className="text-neutral-800">{selectedLog.reason}</p>
               </div>
             )}
@@ -638,12 +731,20 @@ export default function InstituteAuditLogs() {
             {/* Changes JSON payload */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium text-neutral-800">Payload &amp; State Changes:</span>
+                <span className="font-medium text-neutral-800">
+                  Payload &amp; State Changes:
+                </span>
                 <button
-                  onClick={() => handleCopyJson(selectedLog.changes || selectedLog.metadata)}
+                  onClick={() =>
+                    handleCopyJson(selectedLog.changes || selectedLog.metadata)
+                  }
                   className="flex items-center gap-1 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
                 >
-                  {copied ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                  {copied ? (
+                    <Check size={13} className="text-emerald-600" />
+                  ) : (
+                    <Copy size={13} />
+                  )}
                   <span>{copied ? "Copied" : "Copy JSON"}</span>
                 </button>
               </div>
@@ -654,7 +755,7 @@ export default function InstituteAuditLogs() {
                     metadata: selectedLog.metadata,
                   },
                   null,
-                  2
+                  2,
                 )}
               </pre>
             </div>
