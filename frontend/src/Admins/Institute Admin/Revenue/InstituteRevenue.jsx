@@ -5,6 +5,7 @@ import {
   TrendingUp,
   CreditCard,
   Building2,
+  Calendar,
   Users,
   Search,
   Download,
@@ -12,19 +13,22 @@ import {
   RefreshCw,
   Clock,
   CheckCircle2,
-  AlertCircle,
   FileText,
-  Filter,
   Layers,
   ChevronRight,
   Receipt,
-  GraduationCap,
   Percent,
   Banknote,
   Eye,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/Badge";
-import { Spinner } from "@/components/ui/spinner";
 import PageLoader from "@/components/shared/PageLoader";
 import DataPagination from "@/components/shared/DataPagination";
 import instituteRevenueApi from "@/api/instituteRevenue.api";
@@ -248,7 +252,7 @@ export default function InstituteRevenue() {
       document.body.removeChild(link);
       toast.dismiss(toastId);
       toast.success("Revenue report downloaded successfully!");
-    } catch (err) {
+    } catch (_err) {
       toast.dismiss(toastId);
       toast.error("Failed to generate export.");
     }
@@ -283,8 +287,8 @@ export default function InstituteRevenue() {
 
   return (
     <div className="ir-container">
-      {/* ── 1. SUMMARY KPI METRIC CARDS (UNIFIED 6-CARD GRID DIRECTLY AT TOP) ── */}
-      <section className="ir-kpi-grid" aria-label="Revenue KPIs">
+      {/* ── 1. SUMMARY KPI METRIC CARDS (UNIFIED 5-CARD GRID DIRECTLY AT TOP) ── */}
+      <section className="ir-kpi-grid grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 w-full" aria-label="Revenue KPIs">
         {/* Total Collected */}
         <div className="ir-kpi-card">
           <div className="ir-kpi-top">
@@ -334,20 +338,6 @@ export default function InstituteRevenue() {
               {kpis.unpaidVouchersCount || 0} unpaid •{" "}
               {kpis.overdueVouchersCount || 0} overdue
             </span>
-          </div>
-        </div>
-
-        {/* Collection Efficiency */}
-        <div className="ir-kpi-card">
-          <div className="ir-kpi-top">
-            <span className="ir-kpi-label">Collection Efficiency</span>
-            <div className="ir-kpi-icon-wrap">
-              <TrendingUp size={16} />
-            </div>
-          </div>
-          <h2 className="ir-kpi-val">{kpis.collectionRate}%</h2>
-          <div className="ir-kpi-sub">
-            <span>{kpis.paidVouchersCount || 0} paid in full</span>
           </div>
         </div>
 
@@ -405,42 +395,63 @@ export default function InstituteRevenue() {
       >
         <div className="ir-toolbar-left">
           {/* Campus Selector */}
-          <select
-            className="ir-select"
+          <Select
             value={selectedCampus}
-            onChange={(e) => {
-              setSelectedCampus(e.target.value);
+            onValueChange={(val) => {
+              setSelectedCampus(val);
               setTxPage(1);
               setInvPage(1);
             }}
-            aria-label="Select Campus Branch"
           >
-            <option value="all">🏢 All Campuses (Consolidated)</option>
-            {campuses.map((c) => (
-              <option key={c.id} value={c.id}>
-                📍 {c.name} {c.city ? `(${c.city})` : ""}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              className="h-9 w-full sm:w-[260px] bg-white border border-neutral-200 text-neutral-900 text-sm font-medium px-3 rounded-lg shadow-none focus:ring-1 focus:ring-neutral-900 cursor-pointer"
+              aria-label="Select Campus Branch"
+            >
+              <div className="flex items-center min-w-0 mr-auto truncate">
+                <Building2 className="w-4 h-4 text-muted-foreground mr-2 shrink-0" />
+                <SelectValue placeholder="All Campuses (Consolidated)" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-white border-neutral-200 shadow-md">
+              <SelectItem value="all">All Campuses (Consolidated)</SelectItem>
+              {campuses.map((c) => {
+                const cId = String(c.id || c._id);
+                return (
+                  <SelectItem key={cId} value={cId}>
+                    {c.name} {c.city ? `(${c.city})` : ""}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
 
           {/* Month Filter */}
-          <select
-            className="ir-select"
-            value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
+          <Select
+            value={selectedMonth || "all"}
+            onValueChange={(val) => {
+              setSelectedMonth(val === "all" ? "" : val);
               setTxPage(1);
               setInvPage(1);
             }}
-            aria-label="Filter by Billing Month"
           >
-            <option value="">📅 All Billing Cycles</option>
-            {availableMonths.map((m) => (
-              <option key={m.val} value={m.val}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              className="h-9 w-full sm:w-[220px] bg-white border border-neutral-200 text-neutral-900 text-sm font-medium px-3 rounded-lg shadow-none focus:ring-1 focus:ring-neutral-900 cursor-pointer"
+              aria-label="Filter by Billing Month"
+            >
+              <div className="flex items-center min-w-0 mr-auto truncate">
+                <Calendar className="w-4 h-4 text-muted-foreground mr-2 shrink-0" />
+                <SelectValue placeholder="All Billing Cycles" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-white border-neutral-200 shadow-md">
+              <SelectItem value="all">All Billing Cycles</SelectItem>
+              {availableMonths.map((m) => (
+                <SelectItem key={m.val} value={m.val}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="ir-toolbar-right">
@@ -575,7 +586,7 @@ export default function InstituteRevenue() {
           <div className="ir-campus-grid">
             {campusBreakdown.map((campus) => {
               const rate = campus.collectionRate || 0;
-              const rateClass =
+              const _rateClass =
                 rate >= 75 ? "high" : rate >= 40 ? "mid" : "low";
 
               return (

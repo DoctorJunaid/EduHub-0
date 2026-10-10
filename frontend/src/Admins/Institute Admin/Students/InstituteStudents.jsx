@@ -14,6 +14,11 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import DataPagination from "@/components/shared/DataPagination";
 import PageLoader from "@/components/shared/PageLoader";
@@ -31,6 +36,92 @@ import "../../Campus Admin/Students/StudentsDirectory.css";
 import "./InstituteStudents.css";
 
 const PAGE_SIZE = 10;
+
+function parseSubjects(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+        if (item && typeof item === "object") {
+          return (item.name || item.title || item.subject || "").trim();
+        }
+        return "";
+      })
+      .filter(Boolean);
+  }
+  if (typeof raw === "string") {
+    return raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function EnrolledSubjectsCell({ subjects }) {
+  const list = parseSubjects(subjects);
+
+  if (!list.length) {
+    return <span className="text-muted-foreground text-xs">—</span>;
+  }
+
+  const MAX_VISIBLE = 2;
+  const visible = list.slice(0, MAX_VISIBLE);
+  const remaining = list.slice(MAX_VISIBLE);
+
+  return (
+    <div className="isd-subjects-wrap flex flex-wrap items-center gap-1.5 max-w-[280px]">
+      {visible.map((subject, idx) => (
+        <span
+          key={idx}
+          className="isd-subject-pill text-xs px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200/60 font-medium truncate max-w-[130px]"
+          title={subject}
+        >
+          {subject}
+        </span>
+      ))}
+
+      {remaining.length > 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="isd-subject-pill-more text-xs px-2 py-0.5 rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border border-neutral-200/80 font-medium transition-colors cursor-pointer"
+              title={remaining.join(", ")}
+              aria-label={`View ${remaining.length} more enrolled subjects`}
+            >
+              +{remaining.length} more
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            align="center"
+            sideOffset={6}
+            className="isd-tooltip-content w-[290px] max-w-xs p-3 bg-neutral-900 text-neutral-100 border border-neutral-800 rounded-lg shadow-xl text-xs z-50 text-left"
+          >
+            <div className="isd-tooltip-header">
+              <span className="text-[11px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
+                ADDITIONAL ENROLLED SUBJECTS ({remaining.length})
+              </span>
+            </div>
+            <div className="isd-tooltip-divider border-b border-neutral-800/90 mb-2.5 pb-0.5" />
+            <div className="isd-tooltip-list flex flex-wrap gap-1.5">
+              {remaining.map((sub, idx) => (
+                <span
+                  key={idx}
+                  className="isd-tooltip-badge text-xs px-2 py-0.5 rounded bg-neutral-800 text-neutral-200 border border-neutral-700/60 font-normal"
+                >
+                  {sub}
+                </span>
+              ))}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
 
 export default function InstituteStudents() {
   const dispatch = useDispatch();
@@ -212,17 +303,13 @@ export default function InstituteStudents() {
         <div className="isd-table-container">
           <Table aria-label="Institute students directory">
             <TableHeader>
-              <TableRow>
-                {[
-                  "Student & Roll No",
-                  "Class / Program & Section",
-                  "Enrolled Subjects",
-                  "Campus Branch",
-                  "Status",
-                  "Actions",
-                ].map((label) => (
-                  <TableHead key={label}>{label}</TableHead>
-                ))}
+              <TableRow className="h-11">
+                <TableHead className="min-w-[190px]">Student &amp; Roll No</TableHead>
+                <TableHead className="min-w-[150px]">Class / Program &amp; Section</TableHead>
+                <TableHead className="w-[280px] min-w-[260px] max-w-[300px]">Enrolled Subjects</TableHead>
+                <TableHead className="min-w-[160px]">Campus Branch</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -237,8 +324,8 @@ export default function InstituteStudents() {
                 </TableRow>
               ) : paginatedStudents.length > 0 ? (
                 paginatedStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>
+                  <TableRow key={student.id} className="h-16 hover:bg-neutral-50/60 transition-colors">
+                    <TableCell className="align-middle">
                       <div className="isd-person">
                         <Avatar>
                           <AvatarFallback>{student.initials}</AvatarFallback>
@@ -251,7 +338,7 @@ export default function InstituteStudents() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="align-middle">
                       <strong>{student.program}</strong>
                       <small className="isd-subtext">
                         {[
@@ -262,13 +349,13 @@ export default function InstituteStudents() {
                           .join(" • ")}
                       </small>
                     </TableCell>
-                    <TableCell className="isd-subjects">
-                      {student.subjects || "—"}
+                    <TableCell className="isd-subjects w-[280px] min-w-[260px] max-w-[300px] align-middle">
+                      <EnrolledSubjectsCell subjects={student.subjects} />
                     </TableCell>
-                    <TableCell className="isd-campus-cell">
+                    <TableCell className="isd-campus-cell align-middle">
                       {student.campus}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="align-middle">
                       <StudentStatusBadge status={student.status} />
                     </TableCell>
                     <TableCell className="text-right">
