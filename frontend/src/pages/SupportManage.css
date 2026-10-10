@@ -457,12 +457,37 @@
 }
 
 .isu-ticket-table tbody tr {
+  height: 56px;
   border-bottom: 1px solid #f4f4f5;
   transition: background 0.15s ease;
 }
 
 .isu-ticket-table tbody tr:last-child {
   border-bottom: none;
+}
+
+/* Standardized Table Row Badges (Category, Priority, Status) */
+.isu-ticket-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 24px !important;
+  padding: 3px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+  width: fit-content !important;
+  max-width: none !important;
+  flex-shrink: 0 !important;
+}
+
+.isu-ticket-badge span {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
 .isu-loading-table {

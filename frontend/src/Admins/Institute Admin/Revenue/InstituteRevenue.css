@@ -158,7 +158,7 @@
   opacity: 0.9;
 }
 
-/* KPI Cards Grid - Strict 6-col (Desktop), 3-col (Tablet), 2-col (Mobile) */
+/* KPI Cards Grid - Strict 5-col (Desktop), 3-col (Tablet), 2-col (Mobile) */
 .ir-kpi-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -172,9 +172,9 @@
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1024px) {
   .ir-kpi-grid {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
@@ -753,6 +753,7 @@
   }
 
   .ir-toolbar-left .ir-select,
+  .ir-toolbar-left [data-slot="select-trigger"],
   .ir-toolbar-right button {
     width: 100%;
     justify-content: center;

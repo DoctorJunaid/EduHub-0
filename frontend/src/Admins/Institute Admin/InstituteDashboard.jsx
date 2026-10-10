@@ -178,25 +178,35 @@ export default function InstituteDashboard() {
   ];
 
   return (
-    <section className="institute-dashboard" aria-labelledby="institute-title">
+    <section className="institute-dashboard w-full" aria-labelledby="institute-title">
       <header className="institute-heading">
         <h1 id="institute-title">
           {institute?.name || "Institute Dashboard"}
         </h1>
       </header>
 
-      <div className="edu-stats-grid institute-stats">
+      <div className={`edu-stats-grid institute-stats grid grid-cols-2 sm:grid-cols-3 ${stats.length === 5 ? "xl:grid-cols-5" : "xl:grid-cols-6"} gap-3.5 lg:gap-4 w-full`}>
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <article className="edu-stat-card institute-stat" key={stat.label}>
-              <div className="edu-stat-head">
-                <span className="edu-stat-label">{stat.label}</span>
-                <span className="edu-stat-icon">
+            <article
+              className="edu-stat-card institute-stat p-3.5 lg:p-4 rounded-xl border border-neutral-200 bg-white"
+              key={stat.label}
+            >
+              <div className="edu-stat-head flex items-center justify-between w-full">
+                <span className="edu-stat-label text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  {stat.label}
+                </span>
+                <span className="edu-stat-icon w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-900 flex items-center justify-center shrink-0">
                   <Icon size={16} />
                 </span>
               </div>
-              <div className="edu-stat-value">{stat.value}</div>
+              <div
+                className="edu-stat-value text-xl lg:text-2xl font-bold text-neutral-900 tracking-tight mt-2.5 truncate"
+                title={String(stat.value)}
+              >
+                {stat.value}
+              </div>
             </article>
           );
         })}

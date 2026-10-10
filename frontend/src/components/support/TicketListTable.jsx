@@ -70,13 +70,13 @@ export const TicketListTable = ({
               <tr
                 key={ticket._id}
                 onClick={() => navigate(getSupportTicketPath(role, ticket._id))}
-                className={`group cursor-pointer transition-colors hover:bg-zinc-50/80 ${
+                className={`h-14 group cursor-pointer transition-colors hover:bg-zinc-50/80 ${
                   isSelected ? "bg-zinc-100/60" : ""
                 }`}
               >
                 {onToggleSelect && (
                   <td
-                    className="py-3 px-3.5 text-center"
+                    className="py-3 px-3.5 text-center align-middle"
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleSelect(ticket._id);
@@ -90,7 +90,7 @@ export const TicketListTable = ({
                     />
                   </td>
                 )}
-                <td className="py-3 px-3.5 font-mono text-xs font-semibold text-zinc-900 whitespace-nowrap">
+                <td className="py-3 px-3.5 font-mono text-xs font-semibold text-zinc-900 whitespace-nowrap align-middle">
                   <div className="flex items-center gap-1.5">
                     <span>{ticket.ticketNumber}</span>
                     {ticket.isOverdue && (
@@ -100,10 +100,10 @@ export const TicketListTable = ({
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-3.5 text-zinc-900 font-medium text-[13px] max-w-xs truncate group-hover:text-zinc-950 transition-colors">
+                <td className="py-3 px-3.5 text-zinc-900 font-medium text-[13px] max-w-xs truncate group-hover:text-zinc-950 transition-colors align-middle">
                   {ticket.subject}
                 </td>
-                <td className="py-3 px-3.5 whitespace-nowrap">
+                <td className="py-3 px-3.5 whitespace-nowrap align-middle">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-semibold text-zinc-700 shrink-0">
                       {creatorInitial}
@@ -118,16 +118,16 @@ export const TicketListTable = ({
                     </div>
                   </div>
                 </td>
-                <td className="py-3 px-3.5 whitespace-nowrap">
+                <td className="py-3 px-3.5 whitespace-nowrap align-middle">
                   <TicketCategoryBadge category={ticket.category} />
                 </td>
-                <td className="py-3 px-3.5 whitespace-nowrap">
+                <td className="py-3 px-3.5 whitespace-nowrap align-middle">
                   <TicketPriorityBadge priority={ticket.priority} />
                 </td>
-                <td className="py-3 px-3.5 whitespace-nowrap">
+                <td className="py-3 px-3.5 whitespace-nowrap align-middle">
                   <TicketStatusBadge status={ticket.status} isAdmin={true} />
                 </td>
-                <td className="py-3 px-3.5 whitespace-nowrap">
+                <td className="py-3 px-3.5 whitespace-nowrap align-middle">
                   {assigneeName ? (
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-semibold text-zinc-700 shrink-0">
@@ -144,7 +144,7 @@ export const TicketListTable = ({
                     </div>
                   )}
                 </td>
-                <td className="py-3 px-3.5 text-right text-xs text-zinc-500 whitespace-nowrap">
+                <td className="py-3 px-3.5 text-right text-xs text-zinc-500 whitespace-nowrap align-middle">
                   {timeAgo}
                 </td>
               </tr>
