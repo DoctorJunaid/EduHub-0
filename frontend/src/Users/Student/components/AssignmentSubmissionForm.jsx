@@ -10,21 +10,28 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { submitStudentAssignment } from "@/store/submitStudentAssignment";
 
 export default function AssignmentSubmissionForm({ assignment, onSaved }) {
   const dispatch = useDispatch();
   const [notes, setNotes] = useState(assignment.submission?.notes ?? "");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const editing = Boolean(assignment.submission);
-  const submit = (event) => {
+
+  const submit = async (event) => {
     event.preventDefault();
-    Promise.resolve(
-      dispatch(submitStudentAssignment({ assignmentId: assignment.id, notes })),
-    ).then((problem) => {
+    try {
+      setIsSubmitting(true);
+      const problem = await Promise.resolve(
+        dispatch(submitStudentAssignment({ assignmentId: assignment.id, notes })),
+      );
       if (problem) setError(problem);
       else onSaved();
-    });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <DialogContent className="student-assignment-dialog">
@@ -57,11 +64,12 @@ export default function AssignmentSubmissionForm({ assignment, onSaved }) {
         )}
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" disabled={isSubmitting}>
               Cancel
             </Button>
           </DialogClose>
-          <Button type="submit">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Spinner className="mr-2 size-4" />}
             {editing ? "Save Changes" : "Submit Work"}
           </Button>
         </DialogFooter>

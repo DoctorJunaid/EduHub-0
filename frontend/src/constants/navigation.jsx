@@ -174,7 +174,7 @@ export const CAMPUS_ADMIN_NAV = getCampusAdminNav(false);
 export const TEACHER_NAV = [
   {
     label: "Overview",
-    path: "/teacher",
+    path: "/teacher/dashboard",
     icon: <LayoutDashboard size={20} />,
   },
   {
@@ -236,10 +236,9 @@ export const STUDENT_NAV = [
     path: "/student/assignments",
     icon: <ClipboardList size={20} />,
   },
-  { label: "Exams", path: "/exams", icon: <Award size={20} /> },
-  { label: "Results", path: "/results", icon: <Trophy size={20} /> },
-  { label: "Achievements", path: "/achievements", icon: <Award size={20} /> },
-  { label: "Competitions", path: "/competitions", icon: <Trophy size={20} /> },
+  { label: "Attendance", path: "/student/attendance", icon: <Calendar size={20} /> },
+  { label: "Results", path: "/student/grades", icon: <Trophy size={20} /> },
+  { label: "Fees", path: "/student/fees", icon: <Wallet size={20} /> },
   { label: "Help & Support", path: "/student/support", icon: <Headset size={20} /> },
 ];
 

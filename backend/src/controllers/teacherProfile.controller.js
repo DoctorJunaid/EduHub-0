@@ -16,10 +16,20 @@ const getCampusId = (req) => {
   );
 };
 
+const resolveEffectiveTeacherId = (req) => {
+  if (req.user?.role === "teacher" || req.user?.role === "faculty") {
+    return req.user._id.toString();
+  }
+  if (req.params.teacherId === "me") {
+    return req.user._id.toString();
+  }
+  return req.params.teacherId;
+};
+
 export const getTeacherProfile = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const data = await teacherProfileService.getTeacherFullProfile(campusId, teacherId);
 
     res.status(200).json({
@@ -34,7 +44,7 @@ export const getTeacherProfile = async (req, res, next) => {
 export const getTeacherClasses = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const result = await teacherProfileService.getTeacherClasses(campusId, teacherId);
 
     res.status(200).json({
@@ -50,7 +60,7 @@ export const getTeacherClasses = async (req, res, next) => {
 export const getTeacherTimetable = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const data = await teacherProfileService.getTeacherTimetable(campusId, teacherId);
 
     res.status(200).json({
@@ -65,7 +75,7 @@ export const getTeacherTimetable = async (req, res, next) => {
 export const getTeacherAttendance = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const { days } = req.query;
     const data = await teacherProfileService.getTeacherAttendance(campusId, teacherId, days);
 
@@ -81,7 +91,7 @@ export const getTeacherAttendance = async (req, res, next) => {
 export const getTeacherPayroll = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const data = await teacherProfileService.getTeacherPayroll(campusId, teacherId);
 
     res.status(200).json({
@@ -96,7 +106,7 @@ export const getTeacherPayroll = async (req, res, next) => {
 export const getTeacherSubstitutes = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const data = await teacherProfileService.getTeacherSubstitutes(campusId, teacherId);
 
     res.status(200).json({
@@ -111,7 +121,7 @@ export const getTeacherSubstitutes = async (req, res, next) => {
 export const getTeacherActivity = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
-    const { teacherId } = req.params;
+    const teacherId = resolveEffectiveTeacherId(req);
     const data = await teacherProfileService.getTeacherActivity(campusId, teacherId);
 
     res.status(200).json({

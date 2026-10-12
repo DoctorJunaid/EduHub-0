@@ -28,7 +28,7 @@ import { dateKey } from "@/lib/dates";
 import { qk } from "@/lib/queryKeys";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
-import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
+import { Spinner, SpinnerCustom, PageLoader } from "@/components/ui/spinner";
 import useMyClass from "@/hooks/useMyClass";
 import MyClassWidget from "@/components/classTeacher/MyClassWidget";
 import toast from "react-hot-toast";
@@ -187,6 +187,15 @@ export default function TeacherDashboard() {
     [FileText, "Pending Submissions", pendingSubmissionsCount],
     [Users, "Enrolled Students", enrolledStudentCount],
   ];
+
+  if (
+    todaySessionsQuery.isLoading &&
+    summaryQuery.isLoading &&
+    classesQuery.isLoading &&
+    !classes.length
+  ) {
+    return <PageLoader text="Loading teacher overview..." />;
+  }
 
   return (
     <main

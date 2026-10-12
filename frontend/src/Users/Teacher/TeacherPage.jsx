@@ -43,7 +43,7 @@ export default function TeacherPage() {
   if (pathname === "/teacher/assignments") return <TeacherAssignments />;
   if (pathname === "/teacher/attendance") return <TeacherAttendance />;
   if (pathname === "/teacher/diary") return <TeacherDiary />;
-  if (pathname === "/teacher/gradebook") return <TeacherGradebook />;
+  if (pathname === "/teacher/gradebook" || pathname === "/teacher/marks") return <TeacherGradebook />;
   if (pathname === "/teacher/support" || pathname === "/teacher/messages") return <SupportList />;
   const [title, description] = copy[pathname] || [
     "Teacher Portal",

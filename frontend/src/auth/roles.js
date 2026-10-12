@@ -16,8 +16,8 @@ export const ROLE_HOME_ROUTES = {
   campus_manager: "/dashboard",
   institute_admin: "/institute-admin",
   student: "/student/dashboard",
-  teacher: "/teacher",
-  faculty: "/teacher",
+  teacher: "/teacher/dashboard",
+  faculty: "/teacher/dashboard",
   accountant: "/salary-payroll",
   principal: "/salary-payroll",
 };

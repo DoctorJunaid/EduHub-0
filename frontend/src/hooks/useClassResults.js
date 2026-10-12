@@ -1,124 +1,134 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as resultApi from "@/api/result.api";
+import { qk } from "@/lib/queryKeys";
 import toast from "react-hot-toast";
 
-export function useClassResults(classId = null, examName = "Midterm Examination", term = "Midterm") {
-  const [loading, setLoading] = useState(true);
-  const [gridData, setGridData] = useState(null);
-  const [isCompiling, setIsCompiling] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+/**
+ * React Query hook for Class Results Compilation Grid
+ */
+export function useClassResults(
+  classId = null,
+  examName = "Midterm Examination",
+  term = "Midterm"
+) {
+  const queryClient = useQueryClient();
+  const queryKey = qk.teacherClassResults(classId || "active", `${examName}-${term}`);
 
-  const fetchResults = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  const {
+    data: gridData,
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
       const res = await resultApi.getClassResultsGrid({
         classId,
         examName,
         term,
       });
-      setGridData(res.data);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [classId, examName, term]);
+      return res.data || null;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    enabled: Boolean(classId),
+  });
 
-  useEffect(() => {
-    fetchResults();
-  }, [fetchResults]);
-
-  const compileResults = async () => {
-    setIsCompiling(true);
-    try {
+  const compileMutation = useMutation({
+    mutationFn: async () => {
       const targetClassId = classId || gridData?.classInfo?.classId;
-      const res = await resultApi.compileClassResults({
+      return await resultApi.compileClassResults({
         classId: targetClassId,
         examName,
         term,
       });
-      toast.success(res.message || "Class results compiled successfully!");
-      await fetchResults();
-      return res;
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Failed to compile results";
+    },
+    onSuccess: (res) => {
+      toast.success(res?.message || "Class results compiled successfully!");
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to compile results";
       toast.error(msg);
-      throw err;
-    } finally {
-      setIsCompiling(false);
-    }
-  };
+    },
+  });
 
-  const saveRemarks = async (studentId, remarks) => {
-    try {
+  const remarksMutation = useMutation({
+    mutationFn: async ({ studentId, remarks }) => {
       const targetClassId = classId || gridData?.classInfo?.classId;
-      const res = await resultApi.saveStudentRemarks(studentId, {
+      return await resultApi.saveStudentRemarks(studentId, {
         classId: targetClassId,
         examName,
         term,
         remarks,
       });
+    },
+    onSuccess: () => {
       toast.success("Remarks saved!");
-      await fetchResults();
-      return res;
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Failed to save remarks";
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to save remarks";
       toast.error(msg);
-      throw err;
-    }
-  };
+    },
+  });
 
-  const submitForApproval = async () => {
-    setIsSubmitting(true);
-    try {
+  const submitApprovalMutation = useMutation({
+    mutationFn: async () => {
       const targetClassId = classId || gridData?.classInfo?.classId;
-      const res = await resultApi.submitClassResultsForApproval({
+      return await resultApi.submitClassResultsForApproval({
         classId: targetClassId,
         examName,
         term,
       });
-      toast.success(res.message || "Results submitted to Campus Admin for approval!");
-      await fetchResults();
-      return res;
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Failed to submit results";
+    },
+    onSuccess: (res) => {
+      toast.success(
+        res?.message || "Results submitted to Campus Admin for approval!"
+      );
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to submit results";
       toast.error(msg);
-      throw err;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+  });
 
-  const remindTeacher = async (teacherId, subject) => {
-    try {
+  const remindTeacherMutation = useMutation({
+    mutationFn: async ({ teacherId, subject }) => {
       const targetClassId = classId || gridData?.classInfo?.classId;
-      const res = await resultApi.remindSubjectTeacher(teacherId, {
+      return await resultApi.remindSubjectTeacher(teacherId, {
         classId: targetClassId,
         subject,
         examName,
       });
-      toast.success(res.message || `Reminder sent for ${subject}!`);
-      return res;
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Failed to send reminder";
+    },
+    onSuccess: (res, vars) => {
+      toast.success(res?.message || `Reminder sent for ${vars.subject}!`);
+    },
+    onError: (err) => {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to send reminder";
       toast.error(msg);
-      throw err;
-    }
-  };
+    },
+  });
 
   return {
     loading,
     gridData,
-    isCompiling,
-    isSubmitting,
-    error,
-    refresh: fetchResults,
-    compileResults,
-    saveRemarks,
-    submitForApproval,
-    remindTeacher,
+    isCompiling: compileMutation.isPending,
+    isSubmitting: submitApprovalMutation.isPending,
+    error: error?.message || null,
+    refresh: refetch,
+    compileResults: compileMutation.mutateAsync,
+    saveRemarks: (studentId, remarks) =>
+      remarksMutation.mutateAsync({ studentId, remarks }),
+    submitForApproval: submitApprovalMutation.mutateAsync,
+    remindTeacher: (teacherId, subject) =>
+      remindTeacherMutation.mutateAsync({ teacherId, subject }),
   };
 }
 

@@ -7,7 +7,7 @@ export default function TeacherLayout() {
     <MainLayout
       navigation={TEACHER_NAV}
       className="teacher-shell"
-      headerProps={{ homePath: "/teacher", homeLabel: "Home" }}
+      headerProps={{ homePath: "/teacher/dashboard", homeLabel: "Home" }}
     />
   );
 }

@@ -30,6 +30,8 @@ import AssignmentStatusBadge from "../../components/AssignmentStatusBadge";
 import AssignmentSubmissionForm from "../../components/AssignmentSubmissionForm";
 import AssignmentFeedbackDialog from "../../components/AssignmentFeedbackDialog";
 import StudentDiaryEntry from "../../components/StudentDiaryEntry";
+import { PageLoader } from "@/components/ui/spinner";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentAssignments.css";
 
 function AssignmentAction({ assignment }) {
@@ -62,8 +64,9 @@ function AssignmentAction({ assignment }) {
 }
 
 export default function StudentAssignments() {
-  const assignments = useSelector(selectStudentAssignments);
-  const diaryEntries = useSelector(selectStudentDiary);
+  const { isLoading } = useStudentPortal();
+  const assignments = useSelector(selectStudentAssignments) || [];
+  const diaryEntries = useSelector(selectStudentDiary) || [];
   const student = useSelector(selectCurrentStudent);
 
   const [activeTab, setActiveTab] = useState("all"); // "all", "diary", "pending", "completed"
@@ -101,6 +104,10 @@ export default function StudentAssignments() {
   const completedCount = assignments.filter(
     (a) => a.status === "Submitted" || a.status === "Graded",
   ).length;
+
+  if (isLoading && !assignments.length && !diaryEntries.length) {
+    return <PageLoader text="Loading your assignments & tasks..." />;
+  }
 
   return (
     <section className="student-assignments">
