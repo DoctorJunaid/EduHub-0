@@ -39,8 +39,7 @@ export function useNotifications() {
       };
     },
     enabled: Boolean(token && user),
-    refetchInterval: 20000, // Poll every 20s for real-time background updates
-    staleTime: 10000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const notifications = data?.notifications || [];

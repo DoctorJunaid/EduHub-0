@@ -123,13 +123,8 @@ export default function FeeManagement() {
 
     window.addEventListener("campusContextChange", handleCampusChange);
 
-    const interval = setInterval(() => {
-      dispatch(fetchFees());
-    }, 60000);
-
     return () => {
       window.removeEventListener("campusContextChange", handleCampusChange);
-      clearInterval(interval);
     };
   }, [dispatch]);
 

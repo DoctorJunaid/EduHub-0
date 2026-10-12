@@ -142,14 +142,9 @@ export default function FacultyAttendance() {
     };
 
     fetchAttendance();
-    const interval = setInterval(fetchAttendance, 10000);
-    const onFocus = () => fetchAttendance();
-    window.addEventListener("focus", onFocus);
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
     };
   }, [date, dispatch]);
 
