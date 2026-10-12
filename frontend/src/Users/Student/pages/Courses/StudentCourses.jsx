@@ -13,10 +13,13 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/button";
 import { selectStudentCourses } from "@/store/selectors/studentCourses";
 import StudentCourseCard from "../../components/StudentCourseCard";
+import { PageLoader } from "@/components/ui/spinner";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentCourses.css";
 
 export default function StudentCourses() {
-  const courses = useSelector(selectStudentCourses);
+  const { isLoading } = useStudentPortal();
+  const courses = useSelector(selectStudentCourses) || [];
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -57,6 +60,10 @@ export default function StudentCourses() {
     if (!rates.length) return 92;
     return Math.round(rates.reduce((a, b) => a + b, 0) / rates.length);
   }, [courses]);
+
+  if (isLoading && !courses.length) {
+    return <PageLoader text="Loading your subjects & courses..." />;
+  }
 
   return (
     <section className="student-courses-page w-full">

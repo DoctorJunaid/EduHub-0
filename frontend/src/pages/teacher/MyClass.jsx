@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/Badge";
-import { Spinner } from "@/components/ui/spinner";
+import { Spinner, PageLoader } from "@/components/ui/spinner";
 import {
   GraduationCap,
   Users,
@@ -53,12 +53,7 @@ export default function MyClass() {
   } = useClassResults(classInfo?.classId || classInfo?._id);
 
   if (classLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-slate-400">
-        <Spinner size="lg" />
-        <p className="text-sm font-medium">Loading your class workspace...</p>
-      </div>
-    );
+    return <PageLoader text="Loading your class workspace..." />;
   }
 
   if (!isClassTeacher || !classInfo) {

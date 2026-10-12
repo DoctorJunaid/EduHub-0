@@ -26,8 +26,7 @@ import StudentChallanDialog from "../../components/StudentChallanDialog";
 import SubmitPaymentDialog from "./SubmitPaymentDialog";
 import PaymentReceiptDialog from "@/Admins/Campus Admin/Fees/PaymentReceiptDialog";
 import TableSkeleton from "@/components/shared/TableSkeleton";
-import axiosInstance from "@/api/axiosInstance";
-import toast from "react-hot-toast";
+import useStudentFees from "@/hooks/useStudentFees";
 import "./StudentFees.css";
 
 function PrintChallan({ voucher, student, demo }) {
@@ -53,54 +52,26 @@ function PrintChallan({ voucher, student, demo }) {
 }
 
 export default function StudentFees() {
-  const [portalData, setPortalData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    student,
+    vouchers,
+    payments,
+    summary,
+    isLoading: loading,
+    submitPayment,
+  } = useStudentFees();
+
   const [paymentVoucher, setPaymentVoucher] = useState(null);
   const [receiptVoucher, setReceiptVoucher] = useState(null);
   const [activeTab, setActiveTab] = useState("vouchers"); // "vouchers" | "payments"
 
-  const fetchStudentFees = async () => {
-    try {
-      setLoading(true);
-      const res = await axiosInstance.get("/student/fees");
-      if (res.data?.success) {
-        setPortalData(res.data.data);
-      }
-    } catch (err) {
-      console.error("Failed to load student fees:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStudentFees();
-  }, []);
-
-  const student = portalData?.student;
-  const vouchers = portalData?.vouchers || [];
-  const payments = portalData?.payments || [];
-  const summary = portalData?.summary || {
-    totalPaid: 0,
-    totalOutstanding: 0,
-    totalOverdue: 0,
-    totalWaiver: 0,
-  };
-
   const handleSubmitPayment = async (data) => {
     try {
       const voucherId = paymentVoucher._id || paymentVoucher.id;
-      await axiosInstance.post(
-        `/student/fees/${voucherId}/submit-payment`,
-        data,
-      );
-      toast.success(
-        "Payment submitted successfully! Awaiting finance verification.",
-      );
+      await submitPayment({ voucherId, data });
       setPaymentVoucher(null);
-      fetchStudentFees();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to submit payment.");
+    } catch {
+      // Handled in mutation toast
     }
   };
 

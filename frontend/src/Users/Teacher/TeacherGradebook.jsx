@@ -846,11 +846,12 @@ export default function TeacherGradebook() {
       {/* Delete Confirmation Dialog */}
       <TeacherConfirmDialog
         open={Boolean(deleteTarget)}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onCancel={() => setDeleteTarget(null)}
         title="Delete Gradebook Record"
         description={`Are you sure you want to permanently delete the marks record for "${deleteTarget?.student?.name || 'this student'}" in "${deleteTarget?.examName}"?`}
         confirmText="Delete Record"
         onConfirm={handleDeleteMarks}
+        loading={deleteMutation.isPending}
       />
     </main>
   );

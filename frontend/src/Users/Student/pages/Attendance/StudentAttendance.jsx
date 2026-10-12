@@ -22,6 +22,8 @@ import SummaryCard from "@/components/common/SummaryCard";
 import Progress from "@/components/common/Progress";
 import AttendanceStatusBadge from "@/components/common/AttendanceStatusBadge";
 import { selectStudentAttendancePage } from "@/store/selectors/studentAttendance";
+import { PageLoader } from "@/components/ui/spinner";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentAttendance.css";
 
 const percentage = (rate) => `${Number(rate.toFixed(1))}%`;
@@ -78,11 +80,16 @@ function AttendancePagination({
 }
 
 export default function StudentAttendance() {
+  const { isLoading } = useStudentPortal();
   const { student, attendance, courses, rows, absent, late, leave } =
     useSelector(selectStudentAttendancePage);
 
   const [coursePage, setCoursePage] = useState(1);
   const [logPage, setLogPage] = useState(1);
+
+  if (isLoading && !student) {
+    return <PageLoader text="Loading your attendance record..." />;
+  }
 
   const totalCourseItems = (courses || []).length;
   const totalCoursePages = Math.max(1, Math.ceil(totalCourseItems / ITEMS_PER_PAGE));

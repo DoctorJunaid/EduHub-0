@@ -8,7 +8,7 @@ import {
 } from "@/store/selectors/studentDashboard";
 import { getStudentNav } from "./navigation";
 import { useInstitution } from "@/context/InstitutionContext";
-import axiosInstance from "@/api/axiosInstance";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import { studentsLoaded } from "@/store/Slices/studentsSlice";
 import { schedulesLoaded } from "@/store/Slices/timetableSlice";
 import { studentAttendanceLoaded } from "@/store/Slices/studentAttendanceSlice";
@@ -69,35 +69,8 @@ export default function StudentLayout() {
       focusSummary();
   }, [location]);
 
-  useEffect(() => {
-    if (
-      !localStorage.getItem("eduHubToken") ||
-      profile?.id?.startsWith("demo:")
-    )
-      return undefined;
-    let active = true;
-    axiosInstance
-      .get("/student/portal")
-      .then(({ data }) => {
-        if (!active) return;
-        const portal = data.data || {};
-        dispatch(studentsLoaded(portal.student));
-        dispatch(schedulesLoaded(portal.schedules));
-        dispatch(studentAttendanceLoaded(portal.attendance));
-        dispatch(feesLoaded(portal.fees));
-        dispatch(resultsLoaded(portal.results));
-        if (portal.exams) dispatch(examsLoaded(portal.exams));
-        dispatch(facultyLoaded(portal.faculty));
-        dispatch(assignmentsLoaded(portal.assignments));
-        dispatch(submissionsLoaded(portal.submissions));
-        dispatch(diaryLoaded(portal.diary));
-        dispatch(conversationsLoaded(portal.conversations));
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [dispatch, profile?.id]);
+  // Primary data query with caching via React Query
+  useStudentPortal();
 
 
   return (

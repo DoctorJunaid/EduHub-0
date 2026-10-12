@@ -33,15 +33,18 @@ import { selectStudentDashboard } from "@/store/selectors/studentDashboard";
 import { dateKey, parseDate } from "@/lib/dates";
 import { timeLabel, dayLabel } from "@/lib/schedule";
 import { useInstitution } from "@/context/InstitutionContext";
+import { PageLoader } from "@/components/ui/spinner";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const { isSchool } = useInstitution();
-  const { student, courses, timetable, attendance } = useSelector(
+  const { isLoading } = useStudentPortal();
+  const { student, courses = [], timetable = [], attendance } = useSelector(
     selectStudentDashboard,
   );
-  const diary = useSelector(selectStudentDiary);
-  const assignments = useSelector(selectStudentAssignments);
+  const diary = useSelector(selectStudentDiary) || [];
+  const assignments = useSelector(selectStudentAssignments) || [];
   const [today, setToday] = useState(() => dateKey(new Date()));
   useEffect(() => {
     let timer;
@@ -63,12 +66,17 @@ export default function StudentDashboard() {
       document.removeEventListener("visibilitychange", refreshDay);
     };
   }, []);
-  const todaysClasses = timetable.filter((session) =>
-    session.days.includes(parseDate(today).getDay()),
+
+  if (isLoading && !student) {
+    return <PageLoader text="Loading student dashboard..." />;
+  }
+
+  const todaysClasses = (timetable || []).filter((session) =>
+    session?.days?.includes(parseDate(today).getDay()),
   );
-  const displayedClasses = todaysClasses.length > 0 ? todaysClasses : timetable;
+  const displayedClasses = todaysClasses.length > 0 ? todaysClasses : (timetable || []);
   const isShowingAllClasses =
-    todaysClasses.length === 0 && timetable.length > 0;
+    todaysClasses.length === 0 && (timetable || []).length > 0;
 
   const stats = [
     {

@@ -21,15 +21,23 @@ import {
 import SummaryCard from "@/components/common/SummaryCard";
 import { printElement } from "@/lib/print";
 import { selectStudentGrades } from "@/store/selectors/studentGrades";
+import { PageLoader } from "@/components/ui/spinner";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentGrades.css";
 
 export default function StudentGrades() {
-  const { student, periods } = useSelector(selectStudentGrades);
+  const { isLoading } = useStudentPortal();
+  const { student, periods = [] } = useSelector(selectStudentGrades);
   const [selected, setSelected] = useState("");
+
+  if (isLoading && !student) {
+    return <PageLoader text="Loading progress report & marks..." />;
+  }
+
   const period =
-    periods.find((item) => item.key === selected) ??
-    periods.find((item) => item.semester === student?.semester) ??
-    periods[0];
+    (periods || []).find((item) => item.key === selected) ??
+    (periods || []).find((item) => item.semester === student?.semester) ??
+    (periods || [])[0];
   const sheet = useRef(null);
   const totalMarks =
     period?.rows.reduce((sum, row) => sum + (Number(row.totalMarks) || 0), 0) ||

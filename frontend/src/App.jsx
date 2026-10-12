@@ -123,6 +123,7 @@ const App = () => {
 
         <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
           <Route element={<StudentLayout />}>
+            <Route path="student" element={<Navigate to="/student/dashboard" replace />} />
             <Route path="student/dashboard" element={<StudentDashboard />} />
             <Route path="student/courses" element={<StudentCourses />} />
             <Route
@@ -135,9 +136,11 @@ const App = () => {
             />
             <Route
               path="student/diary"
-              element={<Navigate to="/student/assignments" replace />}
+              element={<StudentDiary />}
             />
             <Route path="student/grades" element={<StudentGrades />} />
+            <Route path="student/results" element={<StudentGrades />} />
+            <Route path="student/exams" element={<StudentCourses />} />
             <Route path="student/fees" element={<StudentFees />} />
             <Route path="student/support" element={<SupportList />} />
             <Route path="student/support/:id" element={<SupportTicketDetail />} />
@@ -261,6 +264,7 @@ const App = () => {
         >
           <Route element={<TeacherLayout />}>
             <Route path="teacher" element={<TeacherDashboard />} />
+            <Route path="teacher/dashboard" element={<TeacherDashboard />} />
             <Route path="teacher/my-class" element={<MyClass />} />
             <Route path="teacher/my-class/attendance" element={<ClassAttendance />} />
             <Route path="teacher/my-class/results" element={<MyClassResults />} />
@@ -270,11 +274,14 @@ const App = () => {
             <Route path="teacher/attendance" element={<TeacherPage />} />
             <Route path="teacher/diary" element={<TeacherPage />} />
             <Route path="teacher/gradebook" element={<TeacherPage />} />
+            <Route path="teacher/marks" element={<TeacherPage />} />
             <Route path="teacher/support" element={<SupportList />} />
             <Route path="teacher/support/:id" element={<SupportTicketDetail />} />
             <Route path="teacher/messages" element={<SupportList />} />
             <Route path="my-payslips" element={<MyPayslips />} />
+            <Route path="teacher/payslips" element={<MyPayslips />} />
             <Route path="my-salary" element={<MySalary />} />
+            <Route path="teacher/salary" element={<MySalary />} />
           </Route>
         </Route>
 
