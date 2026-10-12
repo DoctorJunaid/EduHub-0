@@ -40,12 +40,23 @@ export default function CampusOverview() {
   const activityLogs = useSelector(selectActivityLogs);
 
   React.useEffect(() => {
-    if (!rawStudents || rawStudents.length === 0) dispatch(fetchStudents());
-    if (!rawFaculty || rawFaculty.length === 0) dispatch(fetchFaculty());
-    if (!rawTimetable || rawTimetable.length === 0) dispatch(fetchSchedules());
-    dispatch(fetchExams());
-    dispatch(fetchFees());
-    dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
+    // Tier 1: Core campus operational records
+    if (!rawStudents || rawStudents.length === 0) {
+      dispatch(fetchStudents());
+    }
+    if (!rawFaculty || rawFaculty.length === 0) {
+      dispatch(fetchFaculty());
+    }
+    if (!rawTimetable || rawTimetable.length === 0) {
+      dispatch(fetchSchedules());
+    }
+
+    // Tier 2: Staggered non-critical records (500ms delay) to keep initial paint fast
+    const tier2Timer = setTimeout(() => {
+      dispatch(fetchExams());
+      dispatch(fetchFees());
+      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
+    }, 500);
 
     const handleCampusChange = () => {
       dispatch(fetchStudents());
@@ -57,8 +68,11 @@ export default function CampusOverview() {
     };
 
     window.addEventListener("campusContextChange", handleCampusChange);
-    return () => window.removeEventListener("campusContextChange", handleCampusChange);
-  }, [dispatch, rawStudents, rawFaculty, rawTimetable]);
+    return () => {
+      clearTimeout(tier2Timer);
+      window.removeEventListener("campusContextChange", handleCampusChange);
+    };
+  }, [dispatch]);
 
   // Strictly use real API records - no mock fallbacks
   const students = useMemo(() => rawStudents || [], [rawStudents]);

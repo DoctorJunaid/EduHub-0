@@ -13,12 +13,15 @@ import { InstitutionProvider } from "./context/InstitutionContext.jsx";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes cache retention
-      refetchOnWindowFocus: false, // Disable refetch on tab switch
-      refetchOnMount: false, // Don't refetch on remount if data is fresh
-      refetchOnReconnect: false, // Don't refetch on network reconnect
-      retry: 1, // Only retry failed requests once
+      staleTime: 5 * 60 * 1000, // 5 min — data stays fresh, no re-fetch
+      gcTime: 30 * 60 * 1000, // 30 min — cache retention
+      refetchOnWindowFocus: false, // don't re-fetch on tab switch
+      refetchOnMount: false, // don't re-fetch on remount if fresh
+      refetchOnReconnect: false, // don't re-fetch on network reconnect
+      retry: 1, // only one retry on failure
+    },
+    mutations: {
+      retry: 0, // no retry on mutations
     },
   },
 });

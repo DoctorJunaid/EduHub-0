@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 /**
  * React Query hook for Teacher Class Workspace
  */
-export function useMyClass() {
+export function useMyClass(options = {}) {
   const queryClient = useQueryClient();
   const user = useSelector(selectCurrentUser);
   const teacherId = user?.id || user?._id;
@@ -55,7 +55,8 @@ export function useMyClass() {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: Boolean(teacherId),
+    ...options,
+    enabled: Boolean(teacherId) && (options.enabled !== undefined ? options.enabled : true),
   });
 
   const saveAttendanceMutation = useMutation({

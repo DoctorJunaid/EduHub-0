@@ -66,7 +66,8 @@ export const qk = {
   // Shared & System
   campusOverview: (params) => ["campus-overview", params],
   stats: (role) => (role ? ["stats", role] : ["stats"]),
-  supportBadge: () => ["support", "badge"],
+  supportBadge: () => ["support-stats"],
+  supportStats: () => ["support-stats"],
   notifications: () => ["notifications"],
 };
 

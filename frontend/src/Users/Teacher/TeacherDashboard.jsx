@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,7 +45,15 @@ const initials = (name = "") =>
 
 export default function TeacherDashboard() {
   const queryClient = useQueryClient();
-  const { isClassTeacher, classInfo, attendance, loading: myClassLoading } = useMyClass();
+
+  // Tier 2 loading delay (500ms) to ensure instant initial paint and prevent network flooding on login
+  const [showTier2, setShowTier2] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTier2(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { isClassTeacher, classInfo, attendance, loading: myClassLoading } = useMyClass({ enabled: showTier2 });
   const reduxClasses = useSelector(selectAssignedTeacherClasses);
   const teacher = useSelector(selectTeacherIdentity);
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
@@ -64,10 +72,9 @@ export default function TeacherDashboard() {
     setCurrentPage(1);
   };
 
-
   const currentMonthKey = dateKey(new Date()).slice(0, 7);
 
-  // 1. Parallel React Query Fetches with 5 min staleTime
+  // Tier 1: Critical Queries - immediate fetch on mount with 5 min staleTime
   const todaySessionsQuery = useQuery({
     queryKey: qk.teacherTodayClasses(),
     queryFn: async () => {
@@ -86,12 +93,14 @@ export default function TeacherDashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Tier 2: Secondary Queries - delayed by 500ms
   const assignmentsQuery = useQuery({
     queryKey: qk.teacherAssignments(),
     queryFn: async () => {
       const res = await getTeacherAssignments();
       return res.data?.data || [];
     },
+    enabled: showTier2,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -101,6 +110,7 @@ export default function TeacherDashboard() {
       const res = await getTeacherClasses();
       return res.data?.data || [];
     },
+    enabled: showTier2,
     staleTime: 5 * 60 * 1000,
   });
 
