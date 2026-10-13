@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:manager": "node src/scripts/seedCampusManager.js",
-    "seed:db": "node src/scripts/seedDatabaseDirect.js"
+    "seed:db": "node src/scripts/seedDatabaseDirect.js",
+    "seed:test-data": "node scripts/seedEssentialTestingData.js"
   },
   "keywords": [
     "eduhub",
