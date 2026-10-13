@@ -953,3 +953,182 @@
     width: 100% !important;
   }
 }
+
+/* Institute Admin support page: keep its table and metric cards aligned to the admin shell. */
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support {
+  width: 100%;
+  max-width: none;
+  padding: 12px 32px 48px;
+  gap: 12px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stats {
+  gap: 14px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stat-card {
+  min-height: 88px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stat-label {
+  margin-bottom: 6px;
+  font-size: 10px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stat-value {
+  font-size: 22px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stat-row {
+  margin-bottom: 5px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stat-sub {
+  font-size: 11px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-panel {
+  border-radius: 13px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.035);
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-toolbar {
+  padding: 8px 14px;
+  gap: 8px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-toolbar-grid,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-toolbar-actions {
+  gap: 8px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-search-input,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-select-trigger,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-new-btn {
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 8px !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-search-wrapper {
+  min-width: 220px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-panel {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-panel-body {
+  min-height: 140px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-table-wrapper {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table {
+  width: 100%;
+  min-width: 1170px;
+  table-layout: fixed;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td {
+  padding: 9px 10px;
+  vertical-align: middle;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th {
+  font-size: 10px;
+  letter-spacing: 0.045em;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table tbody tr {
+  height: 48px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:first-child,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:first-child {
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  text-align: center !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:first-child input[type="checkbox"],
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:first-child input[type="checkbox"] {
+  display: block;
+  margin: 0 auto !important;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(1),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(1) { width: 52px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(2),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(2) { width: 150px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(4),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(4) { width: 175px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(5),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(5) { width: 150px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(6),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) { width: 120px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(7),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(7) { width: 140px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(8),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(8) { width: 170px; }
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(9),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(9) {
+  width: 140px;
+  text-align: right;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table th:nth-child(3),
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(3) {
+  min-width: 180px;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(3) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(5) > span,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(6) > span,
+.dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support .isu-ticket-table td:nth-child(7) > span {
+  min-height: 26px;
+  padding: 0 8px !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 999px !important;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support {
+    padding: 16px 24px 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-shell:has(.sidebar-nav a[href="/institute-admin/support"]) .institute-support {
+    padding: 12px 16px 40px;
+  }
+}

@@ -176,7 +176,9 @@
   color: #09090b;
   font-size: 13px;
   box-sizing: border-box;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .activity-form-field select {
@@ -221,7 +223,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .activity-submit-btn:hover:not(:disabled) {
@@ -270,19 +274,19 @@
 
 /* Faculty Directory's full-page teacher form */
 .full-page-activity.faculty-form-page {
-  padding: 28px 36px 64px;
+  padding: 8px 16px 20px;
   background: #fafafa;
 }
 
 .faculty-form-page .activity-container {
-  max-width: 1040px !important;
+  max-width: 1360px !important;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 }
 
 .faculty-form-page .activity-header {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .faculty-form-page .activity-back-btn,
@@ -291,8 +295,8 @@
 }
 
 .faculty-form-page .activity-content-card {
-  padding: 32px 36px;
-  border-radius: 14px;
+  padding: 18px 24px;
+  border-radius: 10px;
   background: #ffffff;
   border: 1px solid #e4e4e7;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -301,11 +305,11 @@
 .faculty-form-page .activity-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 18px 20px;
+  gap: 12px 18px;
 }
 
 .faculty-form-page .activity-section-title {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: #09090b;
   margin: 0 0 2px;
@@ -319,13 +323,13 @@
 .faculty-section-divider {
   grid-column: span 2;
   border-top: 1px solid #e4e4e7;
-  margin: 10px 0 6px;
+  margin: 4px 0 2px;
 }
 
 .faculty-form-page .activity-form-field {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
 }
 
 .faculty-form-page .activity-form-field label {
@@ -339,13 +343,29 @@
 }
 
 .faculty-form-page .activity-form-actions {
-  margin-top: 32px;
-  padding-top: 24px;
+  margin-top: 16px;
+  padding-top: 14px;
   border-top: 1px solid #e4e4e7;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.faculty-form-page .activity-form-actions > button {
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding-inline: 18px;
+  white-space: nowrap;
+}
+
+.faculty-form-page .activity-form-actions > button:first-child {
+  min-width: 90px;
+}
+
+.faculty-form-page .activity-form-actions > button:last-child {
+  min-width: 200px;
 }
 
 /* Student Directory uses the same compact full-width form treatment. */
@@ -673,19 +693,19 @@
 
 @media (max-width: 900px) {
   .full-page-activity.faculty-form-page {
-    padding: 20px 24px;
+    padding: 12px 18px 24px;
   }
   .faculty-form-page .activity-content-card {
-    padding: 24px 20px;
+    padding: 18px 20px;
   }
 }
 
 @media (max-width: 640px) {
   .full-page-activity.faculty-form-page {
-    padding: 16px;
+    padding: 10px 12px 20px;
   }
   .faculty-form-page .activity-content-card {
-    padding: 20px 16px;
+    padding: 16px 14px;
   }
   .faculty-form-page .activity-form-grid {
     grid-template-columns: 1fr;
@@ -702,6 +722,8 @@
   }
   .faculty-form-page .activity-form-actions > button {
     width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
     justify-content: center;
   }
 }

@@ -181,25 +181,9 @@ export default function ReceiptModal({
                   <Badge
                     variant="secondary"
                     style={{
-                      background:
-                        status === "CONFIRMED" || status === "PAID"
-                          ? "#ecfdf5"
-                          : status === "PARTIALLY_PAID"
-                            ? "#fef3c7"
-                            : "#fef2f2",
-                      color:
-                        status === "CONFIRMED" || status === "PAID"
-                          ? "#065f46"
-                          : status === "PARTIALLY_PAID"
-                            ? "#92400e"
-                            : "#991b1b",
-                      border: `1px solid ${
-                        status === "CONFIRMED" || status === "PAID"
-                          ? "#a7f3d0"
-                          : status === "PARTIALLY_PAID"
-                            ? "#fde68a"
-                            : "#fecaca"
-                      }`,
+                      background: "#f4f4f5",
+                      color: "#27272a",
+                      border: "1px solid #e4e4e7",
                       fontWeight: 700,
                     }}
                   >
@@ -251,7 +235,7 @@ export default function ReceiptModal({
                   </tr>
                 ))}
                 {feeRecord.discount?.amount > 0 && (
-                  <tr style={{ color: "#7c3aed" }}>
+                  <tr className="rm-adjustment-row">
                     <td>
                       Special Discount (
                       {feeRecord.discount.reason || "Fee Concession"})
@@ -260,7 +244,7 @@ export default function ReceiptModal({
                   </tr>
                 )}
                 {feeRecord.waiver?.amount > 0 && (
-                  <tr style={{ color: "#7c3aed" }}>
+                  <tr className="rm-adjustment-row">
                     <td>
                       Fee Waiver / Scholarship (
                       {feeRecord.waiver.reason || "Approved Waiver"})
@@ -269,7 +253,7 @@ export default function ReceiptModal({
                   </tr>
                 )}
                 {feeRecord.lateFine?.amount > 0 && (
-                  <tr style={{ color: "#b45309" }}>
+                  <tr className="rm-adjustment-row">
                     <td>Late Payment Fine</td>
                     <td>+ Rs. {feeRecord.lateFine.amount.toLocaleString()}</td>
                   </tr>

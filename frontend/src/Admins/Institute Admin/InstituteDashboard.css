@@ -1,6 +1,12 @@
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .institute-dashboard {
@@ -72,17 +78,39 @@
   text-align: left;
   min-height: 96px;
   box-sizing: border-box;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   opacity: 0;
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.institute-stat:nth-child(1) { animation-delay: 0.05s; }
-.institute-stat:nth-child(2) { animation-delay: 0.1s; }
-.institute-stat:nth-child(3) { animation-delay: 0.15s; }
-.institute-stat:nth-child(4) { animation-delay: 0.2s; }
-.institute-stat:nth-child(5) { animation-delay: 0.25s; }
-.institute-stat:nth-child(6) { animation-delay: 0.3s; }
+.institute-admin-shell .institute-dashboard .edu-stat-card.institute-stat {
+  height: 82px !important;
+  min-height: 82px !important;
+  padding: 10px 14px !important;
+  border-radius: 9px !important;
+}
+
+.institute-stat:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.institute-stat:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.institute-stat:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.institute-stat:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.institute-stat:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.institute-stat:nth-child(6) {
+  animation-delay: 0.3s;
+}
 
 .institute-dashboard .institute-stat:hover {
   transform: translateY(-2px);
@@ -119,6 +147,15 @@
   flex-shrink: 0;
 }
 
+.institute-admin-shell
+  .institute-dashboard
+  .edu-stat-card.institute-stat
+  .edu-stat-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+}
+
 .institute-dashboard .institute-stat .edu-stat-icon svg {
   width: 16px;
   height: 16px;
@@ -137,14 +174,26 @@
   text-overflow: ellipsis;
 }
 
+.institute-admin-shell
+  .institute-dashboard
+  .edu-stat-card.institute-stat
+  .edu-stat-value {
+  margin-top: 4px !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
 .institute-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .institute-actions button {
-  height: 40px;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
   border: 1px dashed #d4d4d8;
   border-radius: 8px;
   background: #ffffff;
@@ -159,11 +208,17 @@
   transition: all 0.2s ease;
 }
 
+@media (max-width: 1024px) {
+  .institute-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .institute-actions button:hover {
   background: #fafafa;
   border-color: #09090b;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .institute-actions button:active {
@@ -175,7 +230,7 @@
   gap: 0;
   border: 1px solid #e4e4e7;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   background: #ffffff;
   overflow: hidden;
   opacity: 0;

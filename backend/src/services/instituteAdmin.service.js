@@ -31,7 +31,9 @@ const resolveFrontendUrl = (clientOrigin) => {
       // Ignore URL parse error
     }
   }
-  return (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  return (
+    process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app"
+  ).replace(/\/+$/, "");
 };
 
 /**
@@ -51,11 +53,19 @@ export const getInstituteStats = async (instituteId) => {
   ] = await Promise.all([
     Campus.countDocuments({ instituteId }),
     Campus.countDocuments({ instituteId, status: "Active" }),
-    User.countDocuments({ instituteId, role: { $in: ["campus_manager", "campus_admin"] } }),
+    User.countDocuments({
+      instituteId,
+      role: { $in: ["campus_manager", "campus_admin"] },
+    }),
     User.countDocuments({ instituteId, role: "teacher" }),
     User.countDocuments({ instituteId, role: "student" }),
     FeeRecord.aggregate([
-      { $match: { campusId: { $in: campusIds }, "omitted.isOmitted": { $ne: true } } },
+      {
+        $match: {
+          campusId: { $in: campusIds },
+          "omitted.isOmitted": { $ne: true },
+        },
+      },
       {
         $group: {
           _id: null,
@@ -68,7 +78,10 @@ export const getInstituteStats = async (instituteId) => {
 
   const totalBilled = revenueAgg[0]?.totalBilled || 0;
   const totalCollected = revenueAgg[0]?.totalCollected || 0;
-  const collectionRate = totalBilled > 0 ? Number(((totalCollected / totalBilled) * 100).toFixed(1)) : 0;
+  const collectionRate =
+    totalBilled > 0
+      ? Number(((totalCollected / totalBilled) * 100).toFixed(1))
+      : 0;
 
   return {
     instituteId,
@@ -99,7 +112,7 @@ export const getInstituteStats = async (instituteId) => {
 export const getInstituteProfile = async (instituteId) => {
   const institute = await Institute.findById(instituteId).populate(
     "adminId",
-    "name email phone avatar isActive"
+    "name email phone avatar isActive",
   );
 
   if (!institute) {
@@ -154,7 +167,7 @@ export const createCampus = async (instituteId, campusData) => {
 
   return await Campus.findById(campus._id).populate(
     "managerId",
-    "name email phone avatar isActive status createdAt"
+    "name email phone avatar isActive status createdAt",
   );
 };
 
@@ -164,7 +177,7 @@ export const createCampus = async (instituteId, campusData) => {
 export const getCampusById = async (instituteId, campusId) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId }).populate(
     "managerId",
-    "name email phone avatar isActive status createdAt"
+    "name email phone avatar isActive status createdAt",
   );
 
   if (!campus) {
@@ -195,7 +208,7 @@ export const updateCampus = async (instituteId, campusId, updateData) => {
   const campus = await Campus.findOneAndUpdate(
     { _id: campusId, instituteId },
     updateData,
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   ).populate("managerId", "name email phone avatar isActive status createdAt");
 
   if (!campus) {
@@ -222,7 +235,16 @@ export const deleteCampus = async (instituteId, campusId) => {
   // Unlink students/teachers belonging to this campus
   await User.updateMany({ campusId }, { $set: { campusId: null } });
 
-  return { message: "Campus deleted successfully" };
+  return {
+    message: "Campus deleted successfully",
+    deleted: {
+      _id: campus._id,
+      name: campus.name,
+      code: campus.code || "",
+      city: campus.city || "",
+      status: campus.status || "",
+    },
+  };
 };
 
 /**
@@ -232,7 +254,7 @@ export const assignCampusManager = async (
   instituteId,
   campusId,
   { userId, email, name, phone, sendEmail = true },
-  clientOrigin = null
+  clientOrigin = null,
 ) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId });
   if (!campus) {
@@ -286,13 +308,18 @@ export const assignCampusManager = async (
   }
 
   if (!managerUser) {
-    const error = new Error("Please provide email or userId of the manager to assign");
+    const error = new Error(
+      "Please provide email or userId of the manager to assign",
+    );
     error.statusCode = 400;
     throw error;
   }
 
   // Clear any existing campus manager reference if appointing a different user
-  if (campus.managerId && campus.managerId.toString() !== managerUser._id.toString()) {
+  if (
+    campus.managerId &&
+    campus.managerId.toString() !== managerUser._id.toString()
+  ) {
     await User.findByIdAndUpdate(campus.managerId, { campusId: null });
   }
 
@@ -301,7 +328,12 @@ export const assignCampusManager = async (
   await campus.save();
 
   // Generate setup link and dispatch strictly via email
-  const token = generateToken({ id: managerUser._id, role: managerUser.role, pv: managerUser.passwordVersion || 0, reset: true });
+  const token = generateToken({
+    id: managerUser._id,
+    role: managerUser.role,
+    pv: managerUser.passwordVersion || 0,
+    reset: true,
+  });
   const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
 
@@ -312,27 +344,40 @@ export const assignCampusManager = async (
         managerUser.email,
         "Set up your EduHub Campus Manager Account",
         "Welcome to EduHub! Please click the link to set up your password.",
-        resetLink
+        resetLink,
       );
       emailSent = true;
     } catch (err) {
-      console.warn("Failed to send setup email during campus manager assignment:", err.message);
+      console.warn(
+        "Failed to send setup email during campus manager assignment:",
+        err.message,
+      );
     }
   }
 
   const userObj = managerUser.toObject();
   delete userObj.passwordHash;
 
-  return { campus, manager: userObj, resetLink, emailSent, message: "Campus manager assigned successfully." };
+  return {
+    campus,
+    manager: userObj,
+    resetLink,
+    emailSent,
+    message: "Campus manager assigned successfully.",
+  };
 };
 
 /**
  * Resend setup invite email to Campus Manager with fail-safe SMTP handling
  */
-export const resendCampusManagerInvite = async (instituteId, campusId, clientOrigin = null) => {
+export const resendCampusManagerInvite = async (
+  instituteId,
+  campusId,
+  clientOrigin = null,
+) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId }).populate(
     "managerId",
-    "name email phone role status passwordVersion"
+    "name email phone role status passwordVersion",
   );
   if (!campus) {
     const error = new Error("Campus not found under your institute");
@@ -340,13 +385,20 @@ export const resendCampusManagerInvite = async (instituteId, campusId, clientOri
     throw error;
   }
   if (!campus.managerId) {
-    const error = new Error("No manager is currently appointed for this campus");
+    const error = new Error(
+      "No manager is currently appointed for this campus",
+    );
     error.statusCode = 400;
     throw error;
   }
 
   const manager = campus.managerId;
-  const token = generateToken({ id: manager._id, role: manager.role || "campus_manager", pv: manager.passwordVersion || 0, reset: true });
+  const token = generateToken({
+    id: manager._id,
+    role: manager.role || "campus_manager",
+    pv: manager.passwordVersion || 0,
+    reset: true,
+  });
   const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
 
@@ -358,11 +410,14 @@ export const resendCampusManagerInvite = async (instituteId, campusId, clientOri
       manager.email,
       "Set up your EduHub Campus Manager Account",
       "Welcome to EduHub! Please click the link to set up your password.",
-      resetLink
+      resetLink,
     );
     emailSent = true;
   } catch (err) {
-    console.warn(`[INSTITUTE_ADMIN] Setup email dispatch failed for ${manager.email}:`, err.message);
+    console.warn(
+      `[INSTITUTE_ADMIN] Setup email dispatch failed for ${manager.email}:`,
+      err.message,
+    );
     emailError = err.message;
   }
 
@@ -380,7 +435,11 @@ export const resendCampusManagerInvite = async (instituteId, campusId, clientOri
 /**
  * Update Campus Manager Details
  */
-export const updateCampusManager = async (instituteId, campusId, updateData) => {
+export const updateCampusManager = async (
+  instituteId,
+  campusId,
+  updateData,
+) => {
   const campus = await Campus.findOne({ _id: campusId, instituteId });
   if (!campus) {
     const error = new Error("Campus not found under your institute");
@@ -395,12 +454,17 @@ export const updateCampusManager = async (instituteId, campusId, updateData) => 
 
   const allowedUpdates = {};
   if (updateData.name) allowedUpdates.name = updateData.name.trim();
-  if (updateData.phone !== undefined) allowedUpdates.phone = updateData.phone.trim();
+  if (updateData.phone !== undefined)
+    allowedUpdates.phone = updateData.phone.trim();
   if (updateData.status) allowedUpdates.status = updateData.status;
-  if (updateData.isActive !== undefined) allowedUpdates.isActive = updateData.isActive;
+  if (updateData.isActive !== undefined)
+    allowedUpdates.isActive = updateData.isActive;
   if (updateData.email) {
     const email = updateData.email.toLowerCase().trim();
-    const existing = await User.findOne({ email, _id: { $ne: campus.managerId } });
+    const existing = await User.findOne({
+      email,
+      _id: { $ne: campus.managerId },
+    });
     if (existing) {
       const error = new Error("Email is already registered by another user");
       error.statusCode = 409;
@@ -412,7 +476,7 @@ export const updateCampusManager = async (instituteId, campusId, updateData) => 
   const updatedManager = await User.findByIdAndUpdate(
     campus.managerId,
     allowedUpdates,
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   ).select("-passwordHash");
 
   return updatedManager;
@@ -457,7 +521,7 @@ export const getCampusManagers = async (instituteId) => {
 export const createCampusManager = async (
   instituteId,
   { name, email, campusId, phone },
-  clientOrigin = null
+  clientOrigin = null,
 ) => {
   if (!name || !email || !campusId) {
     const error = new Error("Name, email, and campusId are required");
@@ -467,7 +531,9 @@ export const createCampusManager = async (
 
   const campus = await Campus.findOne({ _id: campusId, instituteId });
   if (!campus) {
-    const error = new Error("Target campus does not exist under your institute");
+    const error = new Error(
+      "Target campus does not exist under your institute",
+    );
     error.statusCode = 404;
     throw error;
   }
@@ -497,16 +563,21 @@ export const createCampusManager = async (
     await campus.save();
   }
 
-  const token = generateToken({ id: manager._id, role: manager.role, pv: manager.passwordVersion || 0, reset: true });
+  const token = generateToken({
+    id: manager._id,
+    role: manager.role,
+    pv: manager.passwordVersion || 0,
+    reset: true,
+  });
   const frontendUrl = resolveFrontendUrl(clientOrigin);
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
-  
+
   try {
     await sendMail(
       manager.email,
       "Set up your EduHub Campus Manager Account",
       "Welcome to EduHub! Please click the link to set up your password.",
-      resetLink
+      resetLink,
     );
   } catch (err) {
     console.error("Failed to send setup email:", err);
@@ -538,7 +609,7 @@ export const getStaff = async (instituteId) => {
  */
 export const createStaff = async (
   instituteId,
-  { name, email, role = "teacher", campusId, phone }
+  { name, email, role = "teacher", campusId, phone },
 ) => {
   if (!name || !email || !campusId) {
     const error = new Error("Name, email, and campus are required");
@@ -576,16 +647,23 @@ export const createStaff = async (
     phone: phone ? phone.trim() : "",
   });
 
-  const token = generateToken({ id: staff._id, role: staff.role, pv: staff.passwordVersion || 0, reset: true });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const token = generateToken({
+    id: staff._id,
+    role: staff.role,
+    pv: staff.passwordVersion || 0,
+    reset: true,
+  });
+  const frontendUrl = (
+    process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app"
+  ).replace(/\/+$/, "");
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
-  
+
   try {
     await sendMail(
       staff.email,
       "Set up your EduHub Staff Account",
       "Welcome to EduHub! Please click the link to set up your password.",
-      resetLink
+      resetLink,
     );
   } catch (err) {
     console.error("Failed to send setup email:", err);
@@ -612,7 +690,18 @@ export const deleteStaff = async (instituteId, staffId) => {
     throw error;
   }
 
-  return { message: "Staff member deleted successfully" };
+  return {
+    message: "Staff member deleted successfully",
+    campusId: staff.campusId || null,
+    deleted: {
+      _id: staff._id,
+      name: staff.name,
+      email: staff.email,
+      role: staff.role,
+      department: staff.department || "",
+      designation: staff.designation || "",
+    },
+  };
 };
 
 /**
@@ -635,7 +724,7 @@ export const getStudents = async (instituteId) => {
  */
 export const createStudent = async (
   instituteId,
-  { name, email, campusId, phone }
+  { name, email, campusId, phone },
 ) => {
   if (!name || !email || !campusId) {
     const error = new Error("Name, email, and campus are required");
@@ -669,16 +758,23 @@ export const createStudent = async (
     phone: phone ? phone.trim() : "",
   });
 
-  const token = generateToken({ id: student._id, role: student.role, pv: student.passwordVersion || 0, reset: true });
-  const frontendUrl = (process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app").replace(/\/+$/, "");
+  const token = generateToken({
+    id: student._id,
+    role: student.role,
+    pv: student.passwordVersion || 0,
+    reset: true,
+  });
+  const frontendUrl = (
+    process.env.FRONTEND_URL || "https://edu-hub0-frontend.vercel.app"
+  ).replace(/\/+$/, "");
   const resetLink = `${frontendUrl}/set-password?token=${token}`;
-  
+
   try {
     await sendMail(
       student.email,
       "Set up your EduHub Student Account",
       "Welcome to EduHub! Please click the link to set up your password.",
-      resetLink
+      resetLink,
     );
   } catch (err) {
     console.error("Failed to send setup email:", err);
@@ -699,7 +795,7 @@ export const updateStudent = async (instituteId, studentId, updateData) => {
   const student = await User.findOneAndUpdate(
     { _id: studentId, instituteId, role: "student" },
     updateData,
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
     .select("-passwordHash")
     .populate("campusId", "name status");
@@ -729,7 +825,20 @@ export const deleteStudent = async (instituteId, studentId) => {
     throw error;
   }
 
-  return { message: "Student deleted successfully" };
+  return {
+    message: "Student deleted successfully",
+    campusId: student.campusId || null,
+    deleted: {
+      _id: student._id,
+      name: student.name,
+      email: student.email,
+      role: student.role,
+      admissionNo: student.admissionNo || "",
+      roll: student.roll || "",
+      gradeOrClass: student.gradeOrClass || "",
+      section: student.section || "",
+    },
+  };
 };
 
 /**
@@ -750,7 +859,7 @@ export const getAlerts = async (instituteId) => {
 export const createAlert = async (
   instituteId,
   { audience, severity, title, message, campusId },
-  userId
+  userId,
 ) => {
   if (!message || !message.trim()) {
     const error = new Error("Alert message is required");
@@ -784,18 +893,27 @@ export const getInstituteSubscription = async (instituteId) => {
 
   let plan = institute.planId;
   if (!plan) {
-    plan = (await Plan.findOne({ tier: institute.planTier || "free" })) || (await Plan.findOne());
+    plan =
+      (await Plan.findOne({ tier: institute.planTier || "free" })) ||
+      (await Plan.findOne());
   }
 
   const [campusCount, studentCount, staffCount] = await Promise.all([
     Campus.countDocuments({ instituteId }),
     User.countDocuments({ instituteId, role: "student" }),
-    User.countDocuments({ instituteId, role: { $in: ["teacher", "staff", "campus_admin", "campus_manager"] } }),
+    User.countDocuments({
+      instituteId,
+      role: { $in: ["teacher", "staff", "campus_admin", "campus_manager"] },
+    }),
   ]);
 
   const now = new Date();
-  const endDate = institute.subscriptionEndDate ? new Date(institute.subscriptionEndDate) : null;
-  const daysRemaining = endDate ? Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))) : null;
+  const endDate = institute.subscriptionEndDate
+    ? new Date(institute.subscriptionEndDate)
+    : null;
+  const daysRemaining = endDate
+    ? Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)))
+    : null;
   const isExpired = endDate ? endDate < now : false;
 
   const maxCampuses = plan?.maxCampuses ?? 1;
@@ -807,7 +925,11 @@ export const getInstituteSubscription = async (instituteId) => {
     instituteName: institute.name,
     plan: {
       id: plan?._id,
-      name: plan?.name ?? (institute.planTier ? institute.planTier.toUpperCase() : "Free Community Tier"),
+      name:
+        plan?.name ??
+        (institute.planTier
+          ? institute.planTier.toUpperCase()
+          : "Free Community Tier"),
       tier: plan?.tier ?? institute.planTier ?? "free",
       description: plan?.description ?? "",
       priceMonthly: plan?.priceMonthly ?? 0,
@@ -830,12 +952,18 @@ export const getInstituteSubscription = async (instituteId) => {
       campuses: {
         current: campusCount,
         max: maxCampuses,
-        percentage: Math.min(100, Math.round((campusCount / maxCampuses) * 100)),
+        percentage: Math.min(
+          100,
+          Math.round((campusCount / maxCampuses) * 100),
+        ),
       },
       students: {
         current: studentCount,
         max: maxStudents,
-        percentage: Math.min(100, Math.round((studentCount / maxStudents) * 100)),
+        percentage: Math.min(
+          100,
+          Math.round((studentCount / maxStudents) * 100),
+        ),
       },
       staff: {
         current: staffCount,
@@ -867,10 +995,7 @@ export const getInstituteAuditLogs = async (instituteId, query = {}) => {
     andConditions.push({ campusId: query.campusId });
   } else {
     andConditions.push({
-      $or: [
-        { instituteId },
-        { campusId: { $in: campusIds } },
-      ],
+      $or: [{ instituteId }, { campusId: { $in: campusIds } }],
     });
   }
 
@@ -942,7 +1067,9 @@ export const getInstituteAuditLogs = async (instituteId, query = {}) => {
     }),
     AuditLog.countDocuments({
       $or: [{ instituteId }, { campusId: { $in: campusIds } }],
-      action: { $in: ["deleted", "rejected", "waived", "deactivated", "cancelled"] },
+      action: {
+        $in: ["deleted", "rejected", "waived", "deactivated", "cancelled"],
+      },
     }),
   ]);
 
@@ -994,7 +1121,9 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
   let targetCampusIds = allCampusIds;
   let isFilteredCampus = false;
   if (query.campusId && query.campusId !== "all") {
-    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some(
+      (id) => id.toString() === query.campusId.toString(),
+    );
     if (valid) {
       targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
       isFilteredCampus = true;
@@ -1067,10 +1196,32 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
             },
           },
           count: { $sum: 1 },
-          paidCount: { $sum: { $cond: [{ $in: ["$status", ["PAID", "paid"]] }, 1, 0] } },
-          partialCount: { $sum: { $cond: [{ $in: ["$status", ["PARTIALLY_PAID", "partially_paid"]] }, 1, 0] } },
-          unpaidCount: { $sum: { $cond: [{ $in: ["$status", ["UNPAID", "unpaid", "GENERATED"]] }, 1, 0] } },
-          overdueCount: { $sum: { $cond: [{ $in: ["$status", ["OVERDUE", "overdue"]] }, 1, 0] } },
+          paidCount: {
+            $sum: { $cond: [{ $in: ["$status", ["PAID", "paid"]] }, 1, 0] },
+          },
+          partialCount: {
+            $sum: {
+              $cond: [
+                { $in: ["$status", ["PARTIALLY_PAID", "partially_paid"]] },
+                1,
+                0,
+              ],
+            },
+          },
+          unpaidCount: {
+            $sum: {
+              $cond: [
+                { $in: ["$status", ["UNPAID", "unpaid", "GENERATED"]] },
+                1,
+                0,
+              ],
+            },
+          },
+          overdueCount: {
+            $sum: {
+              $cond: [{ $in: ["$status", ["OVERDUE", "overdue"]] }, 1, 0],
+            },
+          },
         },
       },
     ]),
@@ -1092,7 +1243,13 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
           paymentDate: { $gte: startOfToday },
         },
       },
-      { $group: { _id: null, todayTotal: { $sum: "$amount" }, count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: null,
+          todayTotal: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
     ]),
     PaymentTransaction.aggregate([
       {
@@ -1102,12 +1259,23 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
           paymentDate: { $gte: startOfMonth },
         },
       },
-      { $group: { _id: null, monthTotal: { $sum: "$amount" }, count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: null,
+          monthTotal: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
     ]),
     FeeRecord.distinct("studentId", feeMatch),
     // Multi-campus comparison aggregation across all campuses
     FeeRecord.aggregate([
-      { $match: { campusId: { $in: allCampusIds }, "omitted.isOmitted": { $ne: true } } },
+      {
+        $match: {
+          campusId: { $in: allCampusIds },
+          "omitted.isOmitted": { $ne: true },
+        },
+      },
       {
         $group: {
           _id: "$campusId",
@@ -1122,10 +1290,32 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
             },
           },
           vouchersCount: { $sum: 1 },
-          paidCount: { $sum: { $cond: [{ $in: ["$status", ["PAID", "paid"]] }, 1, 0] } },
-          partialCount: { $sum: { $cond: [{ $in: ["$status", ["PARTIALLY_PAID", "partially_paid"]] }, 1, 0] } },
-          unpaidCount: { $sum: { $cond: [{ $in: ["$status", ["UNPAID", "unpaid", "GENERATED"]] }, 1, 0] } },
-          overdueCount: { $sum: { $cond: [{ $in: ["$status", ["OVERDUE", "overdue"]] }, 1, 0] } },
+          paidCount: {
+            $sum: { $cond: [{ $in: ["$status", ["PAID", "paid"]] }, 1, 0] },
+          },
+          partialCount: {
+            $sum: {
+              $cond: [
+                { $in: ["$status", ["PARTIALLY_PAID", "partially_paid"]] },
+                1,
+                0,
+              ],
+            },
+          },
+          unpaidCount: {
+            $sum: {
+              $cond: [
+                { $in: ["$status", ["UNPAID", "unpaid", "GENERATED"]] },
+                1,
+                0,
+              ],
+            },
+          },
+          overdueCount: {
+            $sum: {
+              $cond: [{ $in: ["$status", ["OVERDUE", "overdue"]] }, 1, 0],
+            },
+          },
         },
       },
     ]),
@@ -1181,13 +1371,19 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
   ]);
 
   const totalBilled = feeStats[0]?.totalBilled || 0;
-  const totalCollected = feeStats[0]?.totalCollected || paymentStats[0]?.totalPaymentsVolume || 0;
+  const totalCollected =
+    feeStats[0]?.totalCollected || paymentStats[0]?.totalPaymentsVolume || 0;
   const totalOutstanding = Math.max(0, totalBilled - totalCollected);
-  const collectionRate = totalBilled > 0 ? Number(((totalCollected / totalBilled) * 100).toFixed(1)) : 0;
+  const collectionRate =
+    totalBilled > 0
+      ? Number(((totalCollected / totalBilled) * 100).toFixed(1))
+      : 0;
   const totalWaived = feeStats[0]?.totalWaivers || 0;
 
   // Map student counts and campus breakdown
-  const studentCountMap = new Map(studentCounts.map((s) => [s._id.toString(), s.count]));
+  const studentCountMap = new Map(
+    studentCounts.map((s) => [s._id.toString(), s.count]),
+  );
   const campusAggMap = new Map(campusAgg.map((a) => [a._id.toString(), a]));
 
   const campusBreakdown = allCampuses.map((c) => {
@@ -1196,15 +1392,20 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
     const cBilled = aggData.totalBilled || 0;
     const cCollected = aggData.totalCollected || 0;
     const cOutstanding = Math.max(0, cBilled - cCollected);
-    const cRate = cBilled > 0 ? Number(((cCollected / cBilled) * 100).toFixed(1)) : 0;
+    const cRate =
+      cBilled > 0 ? Number(((cCollected / cBilled) * 100).toFixed(1)) : 0;
 
     return {
       id: cIdStr,
       _id: cIdStr,
       name: c.name,
       code: c.code || "",
-      city: typeof c.address === "object" ? c.address?.city || "" : c.city || "",
-      address: typeof c.address === "object" ? c.address?.street || c.address?.city || "" : c.address || "",
+      city:
+        typeof c.address === "object" ? c.address?.city || "" : c.city || "",
+      address:
+        typeof c.address === "object"
+          ? c.address?.street || c.address?.city || ""
+          : c.address || "",
       manager: c.managerId
         ? {
             name: c.managerId.name,
@@ -1262,21 +1463,28 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
       feeType: f._id || "Tuition Fee",
       billed: f.totalBilled || 0,
       collected: f.totalCollected || 0,
-      percentage: totalBilled > 0 ? Number(((f.totalBilled / totalBilled) * 100).toFixed(1)) : 0,
+      percentage:
+        totalBilled > 0
+          ? Number(((f.totalBilled / totalBilled) * 100).toFixed(1))
+          : 0,
       count: f.count || 0,
     })),
     paymentMethodBreakdown: paymentMethodAgg.map((p) => ({
       method: p._id || "Cash",
       totalAmount: p.totalAmount || 0,
       count: p.count || 0,
-      percentage: totalCollected > 0 ? Number(((p.totalAmount / totalCollected) * 100).toFixed(1)) : 0,
+      percentage:
+        totalCollected > 0
+          ? Number(((p.totalAmount / totalCollected) * 100).toFixed(1))
+          : 0,
     })),
     campuses: allCampuses.map((c) => ({
       id: c._id.toString(),
       _id: c._id.toString(),
       name: c.name,
       code: c.code || "",
-      city: typeof c.address === "object" ? c.address?.city || "" : c.city || "",
+      city:
+        typeof c.address === "object" ? c.address?.city || "" : c.city || "",
     })),
     selectedCampusId: isFilteredCampus ? query.campusId : "all",
   };
@@ -1285,13 +1493,20 @@ export const getInstituteRevenueAnalytics = async (instituteId, query = {}) => {
 /**
  * Paginated Payment Transactions Ledger across campuses
  */
-export const getInstituteRevenueTransactions = async (instituteId, query = {}) => {
-  const allCampuses = await Campus.find({ instituteId }).select("_id name code").lean();
+export const getInstituteRevenueTransactions = async (
+  instituteId,
+  query = {},
+) => {
+  const allCampuses = await Campus.find({ instituteId })
+    .select("_id name code")
+    .lean();
   const allCampusIds = allCampuses.map((c) => c._id);
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some(
+      (id) => id.toString() === query.campusId.toString(),
+    );
     if (valid) {
       targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
     } else {
@@ -1311,7 +1526,10 @@ export const getInstituteRevenueTransactions = async (instituteId, query = {}) =
     matchFilter.status = query.status.toUpperCase();
   }
   if (query.paymentMethod && query.paymentMethod !== "all") {
-    matchFilter.paymentMethod = { $regex: `^${escapeRegex(query.paymentMethod)}$`, $options: "i" };
+    matchFilter.paymentMethod = {
+      $regex: `^${escapeRegex(query.paymentMethod)}$`,
+      $options: "i",
+    };
   }
   if (query.startDate || query.endDate) {
     matchFilter.paymentDate = {};
@@ -1366,7 +1584,10 @@ export const getInstituteRevenueTransactions = async (instituteId, query = {}) =
       .limit(limit)
       .populate("studentId", "name email roll rollNo gradeOrClass avatar phone")
       .populate("campusId", "name code address")
-      .populate("feeRecordId", "challanNo feeType month dueDate amount paidAmount totalPayable status breakdown discount waiver")
+      .populate(
+        "feeRecordId",
+        "challanNo feeType month dueDate amount paidAmount totalPayable status breakdown discount waiver",
+      )
       .populate("confirmedBy", "name email")
       .lean(),
     PaymentTransaction.countDocuments(matchFilter),
@@ -1376,7 +1597,9 @@ export const getInstituteRevenueTransactions = async (instituteId, query = {}) =
         $group: {
           _id: null,
           totalAmount: { $sum: "$amount" },
-          confirmedAmount: { $sum: { $cond: [{ $eq: ["$status", "CONFIRMED"] }, "$amount", 0] } },
+          confirmedAmount: {
+            $sum: { $cond: [{ $eq: ["$status", "CONFIRMED"] }, "$amount", 0] },
+          },
         },
       },
     ]),
@@ -1400,12 +1623,16 @@ export const getInstituteRevenueTransactions = async (instituteId, query = {}) =
  * Paginated Student Fee Records / Invoices across campuses
  */
 export const getInstituteFeeRecords = async (instituteId, query = {}) => {
-  const allCampuses = await Campus.find({ instituteId }).select("_id name code").lean();
+  const allCampuses = await Campus.find({ instituteId })
+    .select("_id name code")
+    .lean();
   const allCampusIds = allCampuses.map((c) => c._id);
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some(
+      (id) => id.toString() === query.campusId.toString(),
+    );
     if (valid) {
       targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
     } else {
@@ -1423,10 +1650,16 @@ export const getInstituteFeeRecords = async (instituteId, query = {}) => {
   };
 
   if (query.status && query.status !== "all") {
-    matchFilter.status = { $regex: `^${escapeRegex(query.status)}$`, $options: "i" };
+    matchFilter.status = {
+      $regex: `^${escapeRegex(query.status)}$`,
+      $options: "i",
+    };
   }
   if (query.feeType && query.feeType !== "all") {
-    matchFilter.feeType = { $regex: `^${escapeRegex(query.feeType)}$`, $options: "i" };
+    matchFilter.feeType = {
+      $regex: `^${escapeRegex(query.feeType)}$`,
+      $options: "i",
+    };
   }
   if (query.gradeOrClass && query.gradeOrClass !== "all") {
     matchFilter.gradeOrClass = query.gradeOrClass;
@@ -1499,12 +1732,16 @@ export const getInstituteFeeRecords = async (instituteId, query = {}) => {
  * Fee Structures oversight across all campuses
  */
 export const getInstituteFeeStructures = async (instituteId, query = {}) => {
-  const allCampuses = await Campus.find({ instituteId }).select("_id name code city").lean();
+  const allCampuses = await Campus.find({ instituteId })
+    .select("_id name code city")
+    .lean();
   const allCampusIds = allCampuses.map((c) => c._id);
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some(
+      (id) => id.toString() === query.campusId.toString(),
+    );
     if (valid) {
       targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
     } else {
@@ -1526,12 +1763,16 @@ export const getInstituteFeeStructures = async (instituteId, query = {}) => {
  * Export full revenue dataset for financial reporting
  */
 export const exportInstituteRevenueData = async (instituteId, query = {}) => {
-  const allCampuses = await Campus.find({ instituteId }).select("_id name code").lean();
+  const allCampuses = await Campus.find({ instituteId })
+    .select("_id name code")
+    .lean();
   const allCampusIds = allCampuses.map((c) => c._id);
 
   let targetCampusIds = allCampusIds;
   if (query.campusId && query.campusId !== "all") {
-    const valid = allCampusIds.some((id) => id.toString() === query.campusId.toString());
+    const valid = allCampusIds.some(
+      (id) => id.toString() === query.campusId.toString(),
+    );
     if (valid) {
       targetCampusIds = [new mongoose.Types.ObjectId(query.campusId)];
     } else {
@@ -1565,7 +1806,9 @@ export const exportInstituteRevenueData = async (instituteId, query = {}) => {
   return transactions.map((t) => ({
     receiptNo: t.receiptNo || "—",
     challanNo: t.feeRecordId?.challanNo || "—",
-    date: t.paymentDate ? new Date(t.paymentDate).toISOString().split("T")[0] : "",
+    date: t.paymentDate
+      ? new Date(t.paymentDate).toISOString().split("T")[0]
+      : "",
     studentName: t.studentId?.name || "Student",
     studentRoll: t.studentId?.roll || t.studentId?.rollNo || "—",
     gradeOrClass: t.studentId?.gradeOrClass || "—",
