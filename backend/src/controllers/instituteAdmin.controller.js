@@ -19,7 +19,9 @@ export const getStats = asyncHandler(async (req, res) => {
 
 // --- Institute Profile ---
 export const getProfile = asyncHandler(async (req, res) => {
-  const institute = await instituteAdminService.getInstituteProfile(req.instituteId);
+  const institute = await instituteAdminService.getInstituteProfile(
+    req.instituteId,
+  );
   res.status(200).json({
     success: true,
     message: "Institute profile retrieved successfully.",
@@ -39,7 +41,10 @@ export const getCampuses = asyncHandler(async (req, res) => {
 });
 
 export const createCampus = asyncHandler(async (req, res) => {
-  const campus = await instituteAdminService.createCampus(req.instituteId, req.body);
+  const campus = await instituteAdminService.createCampus(
+    req.instituteId,
+    req.body,
+  );
 
   await logAuditEvent(req, {
     entityType: "Campus",
@@ -47,7 +52,9 @@ export const createCampus = asyncHandler(async (req, res) => {
     instituteId: req.instituteId,
     campusId: campus._id,
     action: "created",
-    changes: { after: { name: campus.name, code: campus.code, city: campus.city } },
+    changes: {
+      after: { name: campus.name, code: campus.code, city: campus.city },
+    },
     reason: `Created branch campus "${campus.name}"`,
   });
 
@@ -59,7 +66,10 @@ export const createCampus = asyncHandler(async (req, res) => {
 });
 
 export const getCampusById = asyncHandler(async (req, res) => {
-  const campus = await instituteAdminService.getCampusById(req.instituteId, req.params.id);
+  const campus = await instituteAdminService.getCampusById(
+    req.instituteId,
+    req.params.id,
+  );
   res.status(200).json({
     success: true,
     message: "Campus details retrieved successfully.",
@@ -71,7 +81,7 @@ export const updateCampus = asyncHandler(async (req, res) => {
   const campus = await instituteAdminService.updateCampus(
     req.instituteId,
     req.params.id,
-    req.body
+    req.body,
   );
 
   await logAuditEvent(req, {
@@ -92,14 +102,19 @@ export const updateCampus = asyncHandler(async (req, res) => {
 });
 
 export const deleteCampus = asyncHandler(async (req, res) => {
-  const result = await instituteAdminService.deleteCampus(req.instituteId, req.params.id);
+  const result = await instituteAdminService.deleteCampus(
+    req.instituteId,
+    req.params.id,
+  );
 
   await logAuditEvent(req, {
     entityType: "Campus",
-    entityId: req.params.id,
+    entityId: result.deleted._id,
     instituteId: req.instituteId,
+    campusId: req.params.id,
     action: "deleted",
-    reason: `Deleted branch campus ID ${req.params.id}`,
+    changes: { before: result.deleted },
+    reason: `Deleted branch campus "${result.deleted.name}"`,
   });
 
   res.status(200).json({
@@ -114,15 +129,24 @@ export const assignCampusManager = asyncHandler(async (req, res) => {
     req.instituteId,
     req.params.id,
     req.body,
-    clientOrigin
+    clientOrigin,
   );
 
   await logAuditEvent(req, {
     entityType: "User",
     entityId: result.manager?._id || req.params.id,
     instituteId: req.instituteId,
+    campusId: req.params.id,
     action: "assigned",
-    reason: `Appointed campus manager for campus ID ${req.params.id}`,
+    changes: {
+      after: {
+        managerName: result.manager?.name || "",
+        managerEmail: result.manager?.email || "",
+        role: result.manager?.role || "campus_manager",
+        campus: result.campus?.name || "",
+      },
+    },
+    reason: `Appointed ${result.manager?.name || "a manager"} to campus "${result.campus?.name || req.params.id}"`,
   });
 
   res.status(200).json({
@@ -137,7 +161,7 @@ export const resendCampusManagerInvite = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.resendCampusManagerInvite(
     req.instituteId,
     req.params.id,
-    clientOrigin
+    clientOrigin,
   );
   res.status(200).json({
     success: true,
@@ -150,7 +174,7 @@ export const updateCampusManager = asyncHandler(async (req, res) => {
   const updatedManager = await instituteAdminService.updateCampusManager(
     req.instituteId,
     req.params.id,
-    req.body
+    req.body,
   );
   res.status(200).json({
     success: true,
@@ -162,7 +186,7 @@ export const updateCampusManager = asyncHandler(async (req, res) => {
 export const unassignCampusManager = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.unassignCampusManager(
     req.instituteId,
-    req.params.id
+    req.params.id,
   );
   res.status(200).json({
     success: true,
@@ -172,7 +196,9 @@ export const unassignCampusManager = asyncHandler(async (req, res) => {
 
 // --- Campus Managers Management ---
 export const getManagers = asyncHandler(async (req, res) => {
-  const managers = await instituteAdminService.getCampusManagers(req.instituteId);
+  const managers = await instituteAdminService.getCampusManagers(
+    req.instituteId,
+  );
   res.status(200).json({
     success: true,
     message: "Campus Managers retrieved successfully.",
@@ -183,7 +209,11 @@ export const getManagers = asyncHandler(async (req, res) => {
 
 export const createManager = asyncHandler(async (req, res) => {
   const clientOrigin = req.headers.origin || req.headers.referer;
-  const manager = await instituteAdminService.createCampusManager(req.instituteId, req.body, clientOrigin);
+  const manager = await instituteAdminService.createCampusManager(
+    req.instituteId,
+    req.body,
+    clientOrigin,
+  );
   res.status(201).json({
     success: true,
     message: "Campus Manager appointed successfully.",
@@ -203,7 +233,10 @@ export const getStaff = asyncHandler(async (req, res) => {
 });
 
 export const createStaff = asyncHandler(async (req, res) => {
-  const staff = await instituteAdminService.createStaff(req.instituteId, req.body);
+  const staff = await instituteAdminService.createStaff(
+    req.instituteId,
+    req.body,
+  );
 
   await logAuditEvent(req, {
     entityType: "User",
@@ -211,7 +244,9 @@ export const createStaff = asyncHandler(async (req, res) => {
     instituteId: req.instituteId,
     campusId: staff.campusId,
     action: "created",
-    changes: { after: { name: staff.name, email: staff.email, role: staff.role } },
+    changes: {
+      after: { name: staff.name, email: staff.email, role: staff.role },
+    },
     reason: `Added staff member ${staff.name} (${staff.role})`,
   });
 
@@ -223,14 +258,19 @@ export const createStaff = asyncHandler(async (req, res) => {
 });
 
 export const deleteStaff = asyncHandler(async (req, res) => {
-  const result = await instituteAdminService.deleteStaff(req.instituteId, req.params.id);
+  const result = await instituteAdminService.deleteStaff(
+    req.instituteId,
+    req.params.id,
+  );
 
   await logAuditEvent(req, {
     entityType: "User",
-    entityId: req.params.id,
+    entityId: result.deleted._id,
     instituteId: req.instituteId,
+    campusId: result.campusId,
     action: "deleted",
-    reason: `Removed staff member ID ${req.params.id}`,
+    changes: { before: result.deleted },
+    reason: `Removed staff member "${result.deleted.name}" (${result.deleted.role})`,
   });
 
   res.status(200).json({
@@ -251,7 +291,10 @@ export const getStudents = asyncHandler(async (req, res) => {
 });
 
 export const createStudent = asyncHandler(async (req, res) => {
-  const student = await instituteAdminService.createStudent(req.instituteId, req.body);
+  const student = await instituteAdminService.createStudent(
+    req.instituteId,
+    req.body,
+  );
 
   await logAuditEvent(req, {
     entityType: "User",
@@ -259,7 +302,9 @@ export const createStudent = asyncHandler(async (req, res) => {
     instituteId: req.instituteId,
     campusId: student.campusId,
     action: "created",
-    changes: { after: { name: student.name, email: student.email, role: "student" } },
+    changes: {
+      after: { name: student.name, email: student.email, role: "student" },
+    },
     reason: `Enrolled new student "${student.name}"`,
   });
 
@@ -274,7 +319,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
   const student = await instituteAdminService.updateStudent(
     req.instituteId,
     req.params.id,
-    req.body
+    req.body,
   );
 
   await logAuditEvent(req, {
@@ -295,14 +340,19 @@ export const updateStudent = asyncHandler(async (req, res) => {
 });
 
 export const deleteStudent = asyncHandler(async (req, res) => {
-  const result = await instituteAdminService.deleteStudent(req.instituteId, req.params.id);
+  const result = await instituteAdminService.deleteStudent(
+    req.instituteId,
+    req.params.id,
+  );
 
   await logAuditEvent(req, {
     entityType: "User",
-    entityId: req.params.id,
+    entityId: result.deleted._id,
     instituteId: req.instituteId,
+    campusId: result.campusId,
     action: "deleted",
-    reason: `Removed student record ID ${req.params.id}`,
+    changes: { before: result.deleted },
+    reason: `Removed student record "${result.deleted.name}"`,
   });
 
   res.status(200).json({
@@ -326,7 +376,7 @@ export const createAlert = asyncHandler(async (req, res) => {
   const alert = await instituteAdminService.createAlert(
     req.instituteId,
     req.body,
-    req.user?._id
+    req.user?._id,
   );
 
   await logAuditEvent(req, {
@@ -335,7 +385,14 @@ export const createAlert = asyncHandler(async (req, res) => {
     instituteId: req.instituteId,
     campusId: alert.campusId || null,
     action: "broadcasted",
-    changes: { after: { title: alert.title, message: alert.message, severity: alert.severity } },
+    changes: {
+      after: {
+        title: alert.title,
+        message: alert.message,
+        severity: alert.severity,
+        audience: alert.audience,
+      },
+    },
     reason: `Dispatched broadcast notice "${alert.title}"`,
   });
 
@@ -348,7 +405,9 @@ export const createAlert = asyncHandler(async (req, res) => {
 
 // --- SaaS Subscription View ---
 export const getSubscription = asyncHandler(async (req, res) => {
-  const result = await instituteAdminService.getInstituteSubscription(req.instituteId);
+  const result = await instituteAdminService.getInstituteSubscription(
+    req.instituteId,
+  );
   res.status(200).json({
     success: true,
     message: "Institute subscription and quota usage retrieved successfully.",
@@ -360,7 +419,7 @@ export const getSubscription = asyncHandler(async (req, res) => {
 export const getAuditLogs = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.getInstituteAuditLogs(
     req.instituteId,
-    req.query
+    req.query,
   );
   res.status(200).json({
     success: true,
@@ -378,7 +437,7 @@ export const getAuditLogs = asyncHandler(async (req, res) => {
 export const getRevenueAnalytics = asyncHandler(async (req, res) => {
   const analytics = await instituteAdminService.getInstituteRevenueAnalytics(
     req.instituteId,
-    req.query
+    req.query,
   );
   res.status(200).json({
     success: true,
@@ -390,7 +449,7 @@ export const getRevenueAnalytics = asyncHandler(async (req, res) => {
 export const getRevenueTransactions = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.getInstituteRevenueTransactions(
     req.instituteId,
-    req.query
+    req.query,
   );
   res.status(200).json({
     success: true,
@@ -407,7 +466,7 @@ export const getRevenueTransactions = asyncHandler(async (req, res) => {
 export const getFeeRecords = asyncHandler(async (req, res) => {
   const result = await instituteAdminService.getInstituteFeeRecords(
     req.instituteId,
-    req.query
+    req.query,
   );
   res.status(200).json({
     success: true,
@@ -424,7 +483,7 @@ export const getFeeRecords = asyncHandler(async (req, res) => {
 export const getFeeStructures = asyncHandler(async (req, res) => {
   const structures = await instituteAdminService.getInstituteFeeStructures(
     req.instituteId,
-    req.query
+    req.query,
   );
   res.status(200).json({
     success: true,
@@ -437,7 +496,7 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
 export const exportRevenueData = asyncHandler(async (req, res) => {
   const records = await instituteAdminService.exportInstituteRevenueData(
     req.instituteId,
-    req.query
+    req.query,
   );
   res.status(200).json({
     success: true,

@@ -6,8 +6,6 @@ import {
   RefreshCw,
   Eye,
   X,
-  Copy,
-  Check,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -97,6 +95,71 @@ function formatRelativeTime(dateString) {
   });
 }
 
+function compactAuditValue(value) {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (Array.isArray(value)) {
+    const items = value
+      .map(compactAuditValue)
+      .filter((item) => item !== undefined);
+    return items.length ? items : undefined;
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value)
+      .map(([key, item]) => [key, compactAuditValue(item)])
+      .filter(([, item]) => item !== undefined);
+    return entries.length ? Object.fromEntries(entries) : undefined;
+  }
+  return value;
+}
+
+function formatAuditLabel(value) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\bid\b/gi, "ID")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function AuditPayloadValue({ value }) {
+  if (Array.isArray(value)) {
+    return (
+      <ul className="audit-payload-list">
+        {value.map((item, index) => (
+          <li key={index}>
+            <AuditPayloadValue value={item} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (value && typeof value === "object") {
+    return (
+      <dl className="audit-payload-nested">
+        {Object.entries(value).map(([key, item]) => (
+          <div key={key}>
+            <dt>{formatAuditLabel(key)}</dt>
+            <dd>
+              <AuditPayloadValue value={item} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+
+  const displayValue =
+    typeof value === "boolean"
+      ? value
+        ? "Yes"
+        : "No"
+      : typeof value === "number"
+        ? value.toLocaleString()
+        : String(value);
+
+  return <span className="audit-payload-value">{displayValue}</span>;
+}
+
 export default function InstituteAuditLogs() {
   const [logs, setLogs] = useState([]);
   const [campuses, setCampuses] = useState([]);
@@ -117,7 +180,31 @@ export default function InstituteAuditLogs() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
   const [selectedLog, setSelectedLog] = useState(null);
-  const [copied, setCopied] = useState(false);
+  const auditPayload = selectedLog
+    ? compactAuditValue({
+        changes: selectedLog.changes,
+        metadata: selectedLog.metadata,
+      }) || {}
+    : {};
+  const auditPayloadGroups = Object.entries(auditPayload).flatMap(
+    ([key, value]) => {
+      if (
+        key === "changes" &&
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        ("before" in value || "after" in value)
+      ) {
+        return Object.entries(value).map(([state, data]) => ({
+          key: `${key}-${state}`,
+          label: formatAuditLabel(state),
+          value: data,
+        }));
+      }
+
+      return [{ key, label: formatAuditLabel(key), value }];
+    },
+  );
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -162,13 +249,6 @@ export default function InstituteAuditLogs() {
     setStartDate("");
     setEndDate("");
     setPage(1);
-  };
-
-  const handleCopyJson = (data) => {
-    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-    setCopied(true);
-    toast.success("JSON copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const exportToCsv = () => {
@@ -526,7 +606,10 @@ export default function InstituteAuditLogs() {
                 </tr>
               ) : (
                 logs.map((log) => {
-                  const campusName = log.campusId?.name || "Institute Root";
+                  const campusName =
+                    log.campusId?.name ||
+                    log.changes?.before?.name ||
+                    "Institute Root";
                   const actorName = log.performedBy?.name || "System";
                   const actorRole = log.performedBy?.role || "system";
                   const actorEmail = log.performedBy?.email || "";
@@ -652,123 +735,127 @@ export default function InstituteAuditLogs() {
 
       {/* Log Details Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 bg-neutral-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-200 text-neutral-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-neutral-100 text-neutral-700 border border-neutral-200">
-                  <ShieldCheck size={20} />
-                </div>
+        <div
+          className="audit-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSelectedLog(null);
+          }}
+        >
+          <section
+            className="audit-event-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="audit-modal-title"
+          >
+            <header className="audit-modal-header">
+              <div className="audit-modal-heading">
+                <span className="audit-modal-icon">
+                  <ShieldCheck size={19} aria-hidden="true" />
+                </span>
                 <div>
-                  <h3 className="font-bold text-base text-neutral-900">
-                    Audit Event Details
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="audit-modal-eyebrow">Audit event</p>
+                  <h2 id="audit-modal-title">Audit Event Details</h2>
+                  <p className="audit-modal-timestamp">
                     {new Date(selectedLog.timestamp).toLocaleString()}
                   </p>
                 </div>
               </div>
-
               <button
+                type="button"
                 onClick={() => setSelectedLog(null)}
-                className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors cursor-pointer"
+                className="audit-modal-close"
+                aria-label="Close audit event details"
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
+            </header>
+
+            <div className="audit-modal-body">
+              <div className="audit-modal-details">
+                <div className="audit-modal-field">
+                  <span>Campus branch</span>
+                  <strong>
+                    {selectedLog.campusId?.name ||
+                      selectedLog.changes?.before?.name ||
+                      "Institute Root"}
+                  </strong>
+                </div>
+                <div className="audit-modal-field">
+                  <span>Action &amp; target</span>
+                  <strong className="capitalize">
+                    {selectedLog.action} {selectedLog.entityType}
+                  </strong>
+                </div>
+                <div className="audit-modal-field">
+                  <span>Executed by</span>
+                  <strong>{selectedLog.performedBy?.name || "System"}</strong>
+                  <small>
+                    {selectedLog.performedBy?.role?.replace(/_/g, " ") ||
+                      "System"}
+                    {selectedLog.performedBy?.email
+                      ? ` · ${selectedLog.performedBy.email}`
+                      : ""}
+                  </small>
+                </div>
+              </div>
+
+              {(selectedLog.ipAddress || selectedLog.userAgent) && (
+                <details className="audit-modal-technical">
+                  <summary>Technical details</summary>
+                  <div className="audit-modal-technical-content">
+                    {selectedLog.ipAddress && (
+                      <div>
+                        <span>IP address</span>
+                        <strong>{selectedLog.ipAddress}</strong>
+                      </div>
+                    )}
+                    {selectedLog.userAgent && (
+                      <div>
+                        <span>Client</span>
+                        <strong>{selectedLog.userAgent}</strong>
+                      </div>
+                    )}
+                  </div>
+                </details>
+              )}
+
+              {selectedLog.reason && (
+                <section className="audit-modal-reason">
+                  <h3>Reason / note</h3>
+                  <p>{selectedLog.reason}</p>
+                </section>
+              )}
+
+              {Object.keys(auditPayload).length > 0 && (
+                <section className="audit-modal-payload">
+                  <div className="audit-modal-payload-heading">
+                    <div>
+                      <h3>Payload &amp; state changes</h3>
+                      <p>Relevant fields recorded for this event</p>
+                    </div>
+                  </div>
+                  <div className="audit-payload-grid">
+                    {auditPayloadGroups.map((group) => (
+                      <section className="audit-payload-group" key={group.key}>
+                        <h4>{group.label}</h4>
+                        <AuditPayloadValue value={group.value} />
+                      </section>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">
-                  Campus Branch:
-                </span>
-                <span className="font-semibold text-neutral-900 mt-0.5 block">
-                  {selectedLog.campusId?.name || "Institute Root"}
-                </span>
-              </div>
-              <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">
-                  Action &amp; Target:
-                </span>
-                <span className="font-semibold text-neutral-900 mt-0.5 block capitalize">
-                  {selectedLog.action} {selectedLog.entityType}
-                </span>
-              </div>
-              <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">
-                  Executed By:
-                </span>
-                <span className="font-semibold text-neutral-900 mt-0.5 block">
-                  {selectedLog.performedBy?.name} (
-                  {selectedLog.performedBy?.role})
-                </span>
-                <span className="text-muted-foreground text-[10px]">
-                  {selectedLog.performedBy?.email || "No email"}
-                </span>
-              </div>
-              <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                <span className="text-muted-foreground font-medium block">
-                  IP &amp; Client:
-                </span>
-                <span className="font-mono text-neutral-800 mt-0.5 block truncate">
-                  {selectedLog.ipAddress || "Internal Server"}
-                </span>
-                <span className="text-muted-foreground text-[10px] truncate block">
-                  {selectedLog.userAgent || "Browser Client"}
-                </span>
-              </div>
-            </div>
-
-            {selectedLog.reason && (
-              <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200 text-xs">
-                <span className="text-muted-foreground font-medium block mb-1">
-                  Reason / Note:
-                </span>
-                <p className="text-neutral-800">{selectedLog.reason}</p>
-              </div>
-            )}
-
-            {/* Changes JSON payload */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium text-neutral-800">
-                  Payload &amp; State Changes:
-                </span>
-                <button
-                  onClick={() =>
-                    handleCopyJson(selectedLog.changes || selectedLog.metadata)
-                  }
-                  className="flex items-center gap-1 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
-                >
-                  {copied ? (
-                    <Check size={13} className="text-emerald-600" />
-                  ) : (
-                    <Copy size={13} />
-                  )}
-                  <span>{copied ? "Copied" : "Copy JSON"}</span>
-                </button>
-              </div>
-              <pre className="bg-neutral-950 p-4 rounded-xl text-xs font-mono text-emerald-400 overflow-x-auto max-h-48 border border-neutral-800 custom-scrollbar">
-                {JSON.stringify(
-                  {
-                    changes: selectedLog.changes,
-                    metadata: selectedLog.metadata,
-                  },
-                  null,
-                  2,
-                )}
-              </pre>
-            </div>
-
-            <div className="pt-3 border-t border-neutral-200 flex justify-end">
+            <footer className="audit-modal-footer">
               <Button
+                type="button"
                 onClick={() => setSelectedLog(null)}
-                className="bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-semibold px-5 h-9 cursor-pointer"
+                className="audit-modal-done"
               >
-                Close View
+                Close
               </Button>
-            </div>
-          </div>
+            </footer>
+          </section>
         </div>
       )}
     </div>

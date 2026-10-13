@@ -1,354 +1,297 @@
 .inst-subscription-page {
-  padding: 20px 24px 28px;
-  max-width: 1200px;
+  display: flex;
+  width: 100%;
+  max-width: 1500px;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 18px 28px;
   margin: 0 auto;
+  color: #09090b;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .inst-sub-refresh-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  background: #ffffff;
+  height: 28px;
+  padding: 0 10px;
   border: 1px solid #e4e4e7;
+  border-radius: 5px;
+  background: #ffffff;
   color: #52525b;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .inst-sub-refresh-btn:hover {
   background: #f4f4f5;
   color: #09090b;
 }
-
 .dark .inst-sub-refresh-btn {
   background: #18181b;
-  border-color: #27272a;
+  border-color: #3f3f46;
   color: #d4d4d8;
 }
-
 .dark .inst-sub-refresh-btn:hover {
   background: #27272a;
   color: #ffffff;
 }
 
-/* Hero Plan Card */
 .inst-hero-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 24px 28px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
-  margin-bottom: 28px;
-  position: relative;
+  gap: 10px;
+  padding: 8px 12px;
   overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .inst-hero-left {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  min-width: 0;
   max-width: 680px;
+  flex-direction: column;
+  gap: 2px;
 }
-
 .inst-plan-tier-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
-
 .inst-tier-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: #09090b;
+  padding: 2px 7px;
   color: #ffffff;
-  letter-spacing: 0.05em;
+  background: #09090b;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
 }
-
 .inst-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  padding: 2px 7px;
+  color: #27272a;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 4px;
+  font-size: 9px;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
 }
-
-.inst-status-badge.active {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.inst-status-badge.trial {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-
-.inst-status-badge.suspended {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.inst-status-badge.expired {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
 .inst-plan-name {
-  font-size: 26px;
-  font-weight: 800;
+  margin: 0;
   color: #09090b;
-  margin: 0;
-  letter-spacing: -0.02em;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
 }
-
 .inst-plan-desc {
-  font-size: 14px;
-  color: #64748b;
   margin: 0;
-  line-height: 1.5;
+  color: #71717a;
+  font-size: 11px;
+  line-height: 1.3;
 }
-
 .inst-plan-meta-row {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 10px;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
 }
-
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  color: #475569;
+  gap: 4px;
+  color: #52525b;
+  font-size: 10px;
 }
-
 .meta-icon {
-  color: #64748b;
+  color: #71717a;
 }
-
 .meta-item.countdown {
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
   font-weight: 600;
-  font-size: 11.5px;
 }
-
-.meta-item.countdown.ok {
-  background: #f0fdf4;
-  color: #166534;
-}
-
-.meta-item.countdown.warning {
-  background: #fffbeb;
-  color: #b45309;
-}
-
-.meta-item.countdown.expired {
-  background: #fee2e2;
-  color: #b91c1c;
+.meta-item.countdown:is(.ok, .warning, .expired) {
+  color: #27272a;
+  background: #f4f4f5;
 }
 
 .inst-hero-right {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: flex-end;
+  gap: 3px;
   text-align: right;
-  flex-shrink: 0;
-  gap: 16px;
 }
-
 .inst-pricing-group {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   text-align: right;
 }
-
 .inst-pricing-display {
   display: flex;
   align-items: baseline;
   gap: 2px;
 }
-
 .price-tag {
-  font-size: 32px;
-  font-weight: 800;
-  color: #0f172a;
+  color: #09090b;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.1;
 }
-
 .price-unit {
-  font-size: 13px;
+  color: #71717a;
+  font-size: 10px;
   font-weight: 500;
-  color: #64748b;
 }
-
 .price-note {
-  font-size: 11.5px;
-  color: #94a3b8;
-  margin-top: 4px;
+  margin-top: 2px;
+  color: #71717a;
+  font-size: 9px;
 }
 
-/* Quotas Section */
 .inst-quotas-section {
-  margin-bottom: 32px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #09090b;
-  margin: 0 0 14px 0;
-  letter-spacing: -0.01em;
-}
-
-.inst-quotas-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-
-@media (max-width: 800px) {
-  .inst-quotas-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.quota-card {
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-}
-
-.quota-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.quota-icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.quota-icon-wrap.campus {
-  background: #eef2ff;
-  color: #4f46e5;
-}
-
-.quota-icon-wrap.student {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.quota-icon-wrap.staff {
-  background: #fdf2f8;
-  color: #db2777;
-}
-
-.quota-card-title h4 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #09090b;
   margin: 0;
 }
-
-.quota-card-title span {
-  font-size: 11px;
-  color: #71717a;
+.section-title {
+  margin: 0 0 6px;
+  color: #09090b;
+  font-size: 13px;
+  font-weight: 700;
 }
-
+.inst-quotas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.quota-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "header values" "progress progress" "sub sub";
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+  padding: 7px 9px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+}
+.quota-card-header {
+  grid-area: header;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+.quota-icon-wrap {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #27272a;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 5px;
+}
+.quota-icon-wrap svg {
+  width: 14px;
+  height: 14px;
+}
+.quota-card-title {
+  min-width: 0;
+}
+.quota-card-title h4 {
+  margin: 0;
+  overflow: hidden;
+  color: #09090b;
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quota-card-title span {
+  display: block;
+  overflow: hidden;
+  color: #71717a;
+  font-size: 9px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .quota-values-row {
+  grid-area: values;
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 3px;
 }
-
 .quota-big-val {
-  font-size: 26px;
-  font-weight: 800;
   color: #09090b;
-  letter-spacing: -0.02em;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
 }
-
 .quota-max-val {
-  font-size: 14px;
-  font-weight: 600;
   color: #71717a;
+  font-size: 9px;
+  font-weight: 600;
 }
-
 .quota-progress-track {
+  grid-area: progress;
   width: 100%;
-  height: 6px;
+  height: 3px;
+  overflow: hidden;
   background: #e4e4e7;
   border-radius: 3px;
-  overflow: hidden;
 }
-
-.quota-progress-bar {
+.quota-progress-bar,
+.quota-progress-bar.warning,
+.quota-progress-bar.full {
   height: 100%;
   background: #09090b;
   border-radius: 3px;
   transition: width 0.3s ease;
 }
-
-.quota-progress-bar.warning {
-  background: #d97706;
-}
-
-.quota-progress-bar.full {
-  background: #dc2626;
-}
-
 .quota-progress-sub {
+  grid-area: sub;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 11.5px;
+  justify-content: space-between;
+  gap: 8px;
   color: #71717a;
+  font-size: 9px;
   font-weight: 500;
-}
-
-/* Features Grid */
-.inst-features-section {
-  margin-bottom: 30px;
+  line-height: 1.2;
 }
 
 .features-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .quota-card.highlight {
-  border-color: #cbd5e1;
-  background: #fdfefe;
+  border-color: #e4e4e7;
+  background: #ffffff;
 }
 
 .section-subtitle {
@@ -359,8 +302,11 @@
 }
 
 .features-count-pill.all-enabled {
-  background: #dcfce7;
-  color: #15803d;
+  padding: 4px 8px;
+  background: #f4f4f5;
+  color: #27272a;
+  border: 1px solid #e4e4e7;
+  border-radius: 5px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -368,8 +314,8 @@
 
 .inst-features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
 }
 
 @media (max-width: 900px) {
@@ -387,8 +333,8 @@
 .inst-feature-card {
   background: #ffffff;
   border: 1px solid #e4e4e7;
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 7px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -396,7 +342,7 @@
 }
 
 .inst-feature-card.enabled {
-  border-color: #e2e8f0;
+  border-color: #e4e4e7;
 }
 
 .inst-feature-card.disabled {
@@ -405,9 +351,9 @@
 }
 
 .feature-status-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -415,13 +361,13 @@
 }
 
 .feature-status-dot.on {
-  background: #dcfce7;
-  color: #16a34a;
+  background: #f4f4f5;
+  color: #27272a;
 }
 
 .feature-status-dot.off {
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: #f4f4f5;
+  color: #a1a1aa;
 }
 
 .feature-card-content {
@@ -431,7 +377,7 @@
 }
 
 .feat-name {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #09090b;
 }
@@ -445,22 +391,22 @@
 
 /* Support banner */
 .inst-support-banner {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 18px 22px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .banner-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e4e4e7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -482,7 +428,7 @@
 
 .banner-content p {
   font-size: 12.5px;
-  color: #64748b;
+  color: #71717a;
   margin: 0;
   line-height: 1.45;
 }
@@ -493,7 +439,7 @@
   gap: 6px;
   height: 36px;
   padding: 0 16px;
-  border-radius: 6px;
+  border-radius: 5px;
   background: #09090b;
   color: #ffffff;
   font-size: 12.5px;
@@ -535,7 +481,7 @@
 }
 
 .dark .inst-hero-card {
-  background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
+  background: #18181b;
   border-color: #27272a;
 }
 
@@ -546,14 +492,14 @@
 
 @media (max-width: 768px) {
   .inst-subscription-page {
-    padding: 16px;
+    padding: 12px 14px 24px;
   }
 
   .inst-hero-card {
     flex-direction: column;
     align-items: stretch;
-    padding: 20px 18px;
-    gap: 18px;
+    padding: 12px;
+    gap: 10px;
   }
 
   .inst-hero-left {
@@ -565,15 +511,15 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 16px;
+    border-top: 1px solid #e4e4e7;
+    padding-top: 9px;
     text-align: left;
     gap: 12px;
     flex-wrap: wrap;
   }
 
   .dark .inst-hero-right {
-    border-top-color: #27272a;
+    border-top-color: #3f3f46;
   }
 
   .inst-pricing-group {
@@ -587,6 +533,23 @@
 }
 
 @media (max-width: 480px) {
+  .inst-subscription-page {
+    padding: 10px 10px 20px;
+  }
+  .inst-hero-card {
+    border-radius: 7px;
+  }
+  .inst-plan-name {
+    font-size: 21px;
+  }
+  .price-tag {
+    font-size: 24px;
+  }
+  .features-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
   .inst-hero-right {
     flex-direction: column-reverse;
     align-items: flex-start;
