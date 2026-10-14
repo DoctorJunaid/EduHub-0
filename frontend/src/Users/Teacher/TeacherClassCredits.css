@@ -7,8 +7,6 @@
   min-width: 0;
   min-height: 100%;
   background: #ffffff;
-  gap: 24px;
-  padding-bottom: 36px;
 }
 
 /* Header Toolbar & KPI Strip Group */
@@ -50,7 +48,7 @@
 }
 
 .teacher-credits-month:focus {
-  border-color: #2563eb !important;
+  border-color: #737373 !important;
 }
 
 .teacher-credits-sync {
@@ -109,29 +107,13 @@
   flex-shrink: 0;
 }
 
-.teacher-credits-kpi .kpi-icon.blue {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.teacher-credits-kpi .kpi-icon.emerald {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.teacher-credits-kpi .kpi-icon.amber {
-  background: #fffbeb;
-  color: #d97706;
-}
-
-.teacher-credits-kpi .kpi-icon.rose {
-  background: #fff1f2;
-  color: #e11d48;
-}
-
+.teacher-credits-kpi .kpi-icon.blue,
+.teacher-credits-kpi .kpi-icon.emerald,
+.teacher-credits-kpi .kpi-icon.amber,
+.teacher-credits-kpi .kpi-icon.rose,
 .teacher-credits-kpi .kpi-icon.neutral {
-  background: #f4f4f5;
-  color: #52525b;
+  background: #f5f5f5;
+  color: #525252;
 }
 
 .teacher-credits-kpi .kpi-info {
@@ -211,9 +193,9 @@
 }
 
 .teacher-credits-tab.is-active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
-  font-weight: 700;
+  color: #171717;
+  border-bottom-color: #171717;
+  font-weight: 600;
 }
 
 /* 4. Filters Bar (History Tab) */
