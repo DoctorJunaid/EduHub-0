@@ -6,6 +6,8 @@ import {
   TeacherAssignment,
 } from "../models/academic.model.js";
 import User from "../models/user.model.js";
+import Campus from "../models/campus.model.js";
+import { TeacherProfile } from "../models/profile.model.js";
 
 // GRADES
 export const getGrades = async (req, res) => {
@@ -220,21 +222,34 @@ export const getTeacherAssignments = async (req, res) => {
 export const createTeacherAssignment = async (req, res) => {
   try {
     const { teacherId, gradeId, sectionId, subjectId } = req.body;
+    let campusId = req.user.campusId;
+    let instituteId = req.user.instituteId;
+
+    if (!instituteId && campusId) {
+      const camp = await Campus.findById(campusId).select("instituteId");
+      if (camp) instituteId = camp.instituteId;
+    }
+
     const existing = await TeacherAssignment.findOne({
       teacherId,
       gradeId,
       sectionId,
       subjectId,
-      campusId: req.user.campusId,
+      campusId,
     });
     if (existing) {
-      return res.status(400).json({ message: "Assignment already exists" });
+      return res.status(400).json({ message: "Teacher is already assigned to this class and subject" });
     }
     
-    // Validate subject is part of grade
-    const gradeSubject = await GradeSubject.findOne({ gradeId, subjectId });
+    // Auto-link GradeSubject if not already configured
+    let gradeSubject = await GradeSubject.findOne({ gradeId, subjectId, campusId });
     if (!gradeSubject) {
-        return res.status(400).json({ message: "This subject is not configured for this grade." });
+      gradeSubject = await GradeSubject.create({
+        gradeId,
+        subjectId,
+        campusId,
+        instituteId: instituteId || null,
+      });
     }
 
     const assignment = await TeacherAssignment.create({
@@ -242,9 +257,27 @@ export const createTeacherAssignment = async (req, res) => {
       gradeId,
       sectionId,
       subjectId,
-      campusId: req.user.campusId,
-      instituteId: req.user.instituteId,
+      campusId,
+      instituteId: instituteId || null,
     });
+
+    // Synchronize subject name with TeacherProfile & User
+    const subjectDoc = await Subject.findById(subjectId);
+    if (subjectDoc) {
+      await TeacherProfile.findOneAndUpdate(
+        { user: teacherId },
+        { $addToSet: { subjectsTaught: subjectDoc.name } }
+      );
+      const user = await User.findById(teacherId);
+      if (user) {
+        const currentSubs = (user.subjects || "").split(",").map(s => s.trim()).filter(Boolean);
+        if (!currentSubs.includes(subjectDoc.name)) {
+          currentSubs.push(subjectDoc.name);
+          await User.findByIdAndUpdate(teacherId, { subjects: currentSubs.join(", ") });
+        }
+      }
+    }
+
     const populated = await TeacherAssignment.findById(assignment._id)
       .populate("teacherId", "name email")
       .populate("gradeId", "name")
@@ -252,17 +285,32 @@ export const createTeacherAssignment = async (req, res) => {
       .populate("subjectId", "name code");
     res.status(201).json(populated);
   } catch (error) {
-    res.status(500).json({ message: "Server error creating assignment", error });
+    res.status(500).json({ message: "Server error creating assignment", error: error.message });
   }
 };
 
 export const deleteTeacherAssignment = async (req, res) => {
   try {
     const { id } = req.params;
-    await TeacherAssignment.findOneAndDelete({ _id: id, campusId: req.user.campusId });
-    res.status(200).json({ message: "Assignment removed" });
+    const assignment = await TeacherAssignment.findOneAndDelete({ _id: id, campusId: req.user.campusId });
+    if (assignment) {
+      const subjectDoc = await Subject.findById(assignment.subjectId);
+      if (subjectDoc) {
+        const remaining = await TeacherAssignment.countDocuments({
+          teacherId: assignment.teacherId,
+          subjectId: assignment.subjectId,
+        });
+        if (remaining === 0) {
+          await TeacherProfile.findOneAndUpdate(
+            { user: assignment.teacherId },
+            { $pull: { subjectsTaught: subjectDoc.name } }
+          );
+        }
+      }
+    }
+    res.status(200).json({ message: "Assignment removed successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error removing assignment", error });
+    res.status(500).json({ message: "Server error removing assignment", error: error.message });
   }
 };
 

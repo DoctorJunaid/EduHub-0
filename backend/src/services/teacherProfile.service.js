@@ -6,7 +6,8 @@
 import mongoose from "mongoose";
 import { TeacherProfile, ClassSchedule } from "../models/profile.model.js";
 import User from "../models/user.model.js";
-import { Grade, Section, Subject, TeacherAssignment } from "../models/academic.model.js";
+import Campus from "../models/campus.model.js";
+import { Grade, Section, Subject, TeacherAssignment, GradeSubject } from "../models/academic.model.js";
 import TeacherAttendance from "../models/teacherAttendance.model.js";
 import TeacherSalaryProfile from "../models/teacherSalaryProfile.model.js";
 import MonthlyPayroll from "../models/monthlyPayroll.model.js";
@@ -227,24 +228,51 @@ export const getTeacherClasses = async (campusId, teacherId) => {
     .populate("subjectId", "name code")
     .lean();
 
-  const formatted = assignments.map((a) => {
-    const isClassTeacher =
-      a.sectionId?.classTeacherId &&
-      String(a.sectionId.classTeacherId) === String(teacherUserId);
+  const formatted = await Promise.all(
+    assignments.map(async (a) => {
+      const isClassTeacher =
+        a.sectionId?.classTeacherId &&
+        String(a.sectionId.classTeacherId) === String(teacherUserId);
 
-    return {
-      assignmentId: a._id,
-      classId: a.sectionId?._id || a.gradeId?._id || a._id,
-      className: `${a.gradeId?.name || "Class"} - ${a.sectionId?.name || "A"}`,
-      gradeLevel: a.gradeId?.name || "Grade 1",
-      section: a.sectionId?.name || "A",
-      subject: a.subjectId?.name || "Subject",
-      subjectCode: a.subjectId?.code || "",
-      periodsPerWeek: 6,
-      isClassTeacher: Boolean(isClassTeacher),
-      studentCount: a.sectionId?.capacity || 25,
-    };
-  });
+      // Count actual enrolled students in this grade & section
+      let studentCount = 0;
+      if (a.gradeId?._id) {
+        studentCount = await User.countDocuments({
+          campusId,
+          role: "student",
+          $or: [
+            { gradeId: a.gradeId._id },
+            { gradeOrClass: a.gradeId.name },
+            { program: a.gradeId.name },
+          ],
+          ...(a.sectionId?._id
+            ? {
+                $or: [
+                  { sectionId: a.sectionId._id },
+                  { section: a.sectionId.name },
+                ],
+              }
+            : {}),
+        });
+      }
+
+      return {
+        assignmentId: a._id,
+        classId: a.sectionId?._id || a.gradeId?._id || a._id,
+        className: `${a.gradeId?.name || "Class"} - ${a.sectionId?.name || "A"}`,
+        gradeLevel: a.gradeId?.name || "Grade 1",
+        gradeId: a.gradeId?._id || null,
+        sectionId: a.sectionId?._id || null,
+        subjectId: a.subjectId?._id || null,
+        section: a.sectionId?.name || "A",
+        subject: a.subjectId?.name || "Subject",
+        subjectCode: a.subjectId?.code || "",
+        periodsPerWeek: 6,
+        isClassTeacher: Boolean(isClassTeacher),
+        studentCount: studentCount || a.sectionId?.capacity || 25,
+      };
+    })
+  );
 
   return {
     count: formatted.length,
@@ -493,6 +521,12 @@ export const assignTeacherClass = async (campusId, teacherId, data, actorUserId)
     throw error;
   }
 
+  let instituteId = profile.user?.instituteId;
+  if (!instituteId && campusId) {
+    const camp = await Campus.findById(campusId).select("instituteId");
+    if (camp) instituteId = camp.instituteId;
+  }
+
   const existing = await TeacherAssignment.findOne({
     teacherId: teacherUserId,
     gradeId,
@@ -507,13 +541,42 @@ export const assignTeacherClass = async (campusId, teacherId, data, actorUserId)
     throw error;
   }
 
+  // Auto-link GradeSubject if not linked
+  let gradeSubject = await GradeSubject.findOne({ gradeId, subjectId, campusId });
+  if (!gradeSubject) {
+    gradeSubject = await GradeSubject.create({
+      gradeId,
+      subjectId,
+      campusId,
+      instituteId: instituteId || null,
+    });
+  }
+
   const assignment = await TeacherAssignment.create({
     teacherId: teacherUserId,
     gradeId,
     sectionId,
     subjectId,
     campusId,
+    instituteId: instituteId || null,
   });
+
+  // Synchronize subject name with TeacherProfile & User
+  const subjectDoc = await Subject.findById(subjectId);
+  if (subjectDoc) {
+    await TeacherProfile.findOneAndUpdate(
+      { user: teacherUserId },
+      { $addToSet: { subjectsTaught: subjectDoc.name } }
+    );
+    const user = await User.findById(teacherUserId);
+    if (user) {
+      const currentSubs = (user.subjects || "").split(",").map(s => s.trim()).filter(Boolean);
+      if (!currentSubs.includes(subjectDoc.name)) {
+        currentSubs.push(subjectDoc.name);
+        await User.findByIdAndUpdate(teacherUserId, { subjects: currentSubs.join(", ") });
+      }
+    }
+  }
 
   logActivity({
     campus: campusId,
@@ -545,6 +608,22 @@ export const unassignTeacherClass = async (campusId, teacherId, assignmentId, ac
     const error = new Error("Class assignment record not found");
     error.statusCode = 404;
     throw error;
+  }
+
+  if (assignment.subjectId) {
+    const subjectDoc = await Subject.findById(assignment.subjectId);
+    if (subjectDoc) {
+      const remaining = await TeacherAssignment.countDocuments({
+        teacherId: assignment.teacherId,
+        subjectId: assignment.subjectId,
+      });
+      if (remaining === 0) {
+        await TeacherProfile.findOneAndUpdate(
+          { user: assignment.teacherId },
+          { $pull: { subjectsTaught: subjectDoc.name } }
+        );
+      }
+    }
   }
 
   logActivity({

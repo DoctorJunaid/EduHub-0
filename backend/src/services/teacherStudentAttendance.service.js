@@ -38,14 +38,19 @@ export async function getClassStudentRosterWithAttendance(campusId, teacherUserI
   let targetClassName = className || "";
   let targetSection = section || "";
 
-  if (!targetClassName && classId) {
+  let targetGradeId = null;
+  let targetSectionId = null;
+
+  if (classId) {
     const assignedClasses = await getTeacherAssignedClasses(campusId, teacherUserId);
     const matched = assignedClasses.find(
       (c) => String(c.id || c._id || c.classId) === String(classId)
     );
     if (matched) {
-      targetClassName = matched.className || matched.gradeOrClass || "";
-      targetSection = matched.section || "";
+      targetClassName = targetClassName || matched.className || matched.gradeOrClass || "";
+      targetSection = targetSection || matched.section || "";
+      targetGradeId = matched.gradeId || null;
+      targetSectionId = matched.sectionId || null;
     }
   }
 
@@ -55,17 +60,41 @@ export async function getClassStudentRosterWithAttendance(campusId, teacherUserI
     role: "student",
   };
 
+  const gradeMatchers = [];
+  if (targetGradeId) gradeMatchers.push({ gradeId: targetGradeId });
   if (targetClassName) {
-    studentQuery.$or = [
+    const baseClassName = targetClassName.split(" - ")[0].trim();
+    gradeMatchers.push(
       { gradeOrClass: targetClassName },
       { program: targetClassName },
-      { gradeOrClass: new RegExp(`^${targetClassName}$`, "i") },
-      { program: new RegExp(`^${targetClassName}$`, "i") },
-    ];
+      { gradeOrClass: baseClassName },
+      { program: baseClassName },
+      { gradeOrClass: new RegExp(`^${baseClassName}$`, "i") },
+      { program: new RegExp(`^${baseClassName}$`, "i") }
+    );
+  }
+  if (gradeMatchers.length > 0) {
+    studentQuery.$or = gradeMatchers;
   }
 
   if (targetSection && targetSection !== "All" && targetSection !== "All sections") {
-    studentQuery.section = { $in: [targetSection, `Section ${targetSection}`, targetSection.toUpperCase(), targetSection.toLowerCase()] };
+    const secMatchers = [
+      targetSection,
+      `Section ${targetSection}`,
+      targetSection.toUpperCase(),
+      targetSection.toLowerCase(),
+    ];
+    if (targetSectionId) {
+      studentQuery.$and = studentQuery.$and || [];
+      studentQuery.$and.push({
+        $or: [
+          { sectionId: targetSectionId },
+          { section: { $in: secMatchers } },
+        ],
+      });
+    } else {
+      studentQuery.section = { $in: secMatchers };
+    }
   }
 
   let students = await User.find(studentQuery)

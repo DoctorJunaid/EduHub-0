@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/Badge";
-import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit } from "lucide-react";
+import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit, Search, Users, ClipboardList } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "@/components/shared/TableSkeleton";
 import axiosInstance from "@/api/axiosInstance";
@@ -19,6 +19,8 @@ export default function AcademicsConfig() {
   const [subjects, setSubjects] = useState([]);
   const [gradeSubjects, setGradeSubjects] = useState([]);
   const [classTeachers, setClassTeachers] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [teacherAssignments, setTeacherAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState(null);
@@ -31,22 +33,33 @@ export default function AcademicsConfig() {
   const [newSection, setNewSection] = useState({ name: "", gradeId: "" });
   const [newSubject, setNewSubject] = useState({ name: "", code: "", description: "" });
   const [newGradeSubject, setNewGradeSubject] = useState({ gradeId: "", subjectId: "" });
+  const [newTeacherAssignment, setNewTeacherAssignment] = useState({
+    teacherId: "",
+    gradeId: "",
+    sectionId: "",
+    subjectId: "",
+  });
+  const [assignmentSearch, setAssignmentSearch] = useState("");
+  const [assignmentTeacherFilter, setAssignmentTeacherFilter] = useState("");
+  const [assignmentGradeFilter, setAssignmentGradeFilter] = useState("");
 
   const fetchData = async () => {
     setLoadError("");
     setLoading(true);
     try {
-      const [gRes, secRes, subRes, gsRes, ctRes] = await Promise.allSettled([
+      const [gRes, secRes, subRes, gsRes, ctRes, taRes, tRes] = await Promise.allSettled([
           axiosInstance.get("/academic/grades", { timeout: 12000 }),
           axiosInstance.get("/academic/sections", { timeout: 12000 }),
           axiosInstance.get("/academic/subjects", { timeout: 12000 }),
           axiosInstance.get("/academic/grade-subjects", { timeout: 12000 }),
           classTeacherApi.getAllClassTeachers(),
+          axiosInstance.get("/academic/teacher-assignments", { timeout: 12000 }),
+          axiosInstance.get("/campus-admin/faculty", { timeout: 12000 }),
       ]);
       const failures = [];
-      const applyResult = (result, label, setter) => {
+      const applyResult = (result, label, setter, normalizer = (d) => d) => {
         if (result.status === "fulfilled") {
-          setter(result.value.data?.data || result.value.data || []);
+          setter(normalizer(result.value.data?.data || result.value.data || []));
           return;
         }
         const reason = result.reason;
@@ -59,6 +72,8 @@ export default function AcademicsConfig() {
       applyResult(secRes, "Sections", setSections);
       applyResult(subRes, "Subjects", setSubjects);
       applyResult(gsRes, "Class subjects", setGradeSubjects);
+      applyResult(taRes, "Teacher assignments", setTeacherAssignments);
+      applyResult(tRes, "Teachers", setTeachers, (d) => Array.isArray(d?.data) ? d.data : (Array.isArray(d) ? d : []));
       if (ctRes.status === "fulfilled") {
         setClassTeachers(ctRes.value.data || []);
       }
@@ -247,6 +262,7 @@ export default function AcademicsConfig() {
           <TabsTrigger value="class_teachers" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-indigo-600 data-[state=active]:text-white sm:px-4 sm:text-sm font-semibold flex items-center gap-1.5">🎓 Class Teachers</TabsTrigger>
           <TabsTrigger value="subjects" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Subjects Master</TabsTrigger>
           <TabsTrigger value="class_subjects" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Class Subjects</TabsTrigger>
+          <TabsTrigger value="teacher_assignments" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm font-semibold flex items-center gap-1.5">👨‍🏫 Teacher Assignments ({teacherAssignments.length})</TabsTrigger>
         </TabsList>
 
         {/* GRADES TAB */}
@@ -708,6 +724,286 @@ export default function AcademicsConfig() {
           </Card>
         </TabsContent>
 
+        {/* TEACHER ASSIGNMENTS TAB */}
+        <TabsContent value="teacher_assignments" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assign Teachers to Class Subjects</CardTitle>
+              <CardDescription>
+                Assign faculty members to teach subjects in specific grade sections. All assignments flow instantly to teacher rosters, timetables, and student portals.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Assignment Creation Form */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newTeacherAssignment.teacherId || !newTeacherAssignment.gradeId || !newTeacherAssignment.sectionId || !newTeacherAssignment.subjectId) {
+                    toast.error("Please select a Teacher, Grade, Section, and Subject");
+                    return;
+                  }
+                  try {
+                    setIsSubmitting(true);
+                    const res = await axiosInstance.post("/academic/teacher-assignments", newTeacherAssignment);
+                    setTeacherAssignments([...teacherAssignments, res.data]);
+                    setNewTeacherAssignment({ teacherId: "", gradeId: "", sectionId: "", subjectId: "" });
+                    toast.success("Teacher assigned to class & subject successfully!");
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || "Failed to create teacher assignment");
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end mb-6 p-4 rounded-xl border border-zinc-200 bg-zinc-50/70"
+              >
+                <div className="grid items-center gap-1.5">
+                  <Label htmlFor="taTeacher">Teacher *</Label>
+                  <select
+                    id="taTeacher"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    value={newTeacherAssignment.teacherId}
+                    onChange={(e) => setNewTeacherAssignment({ ...newTeacherAssignment, teacherId: e.target.value })}
+                    required
+                  >
+                    <option value="" disabled>Select Teacher</option>
+                    {teachers.map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.name} ({t.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid items-center gap-1.5">
+                  <Label htmlFor="taGrade">Grade / Class *</Label>
+                  <select
+                    id="taGrade"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    value={newTeacherAssignment.gradeId}
+                    onChange={(e) => {
+                      const gId = e.target.value;
+                      setNewTeacherAssignment({
+                        ...newTeacherAssignment,
+                        gradeId: gId,
+                        sectionId: "",
+                        subjectId: "",
+                      });
+                    }}
+                    required
+                  >
+                    <option value="" disabled>Select Grade</option>
+                    {grades.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid items-center gap-1.5">
+                  <Label htmlFor="taSection">Section *</Label>
+                  <select
+                    id="taSection"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+                    value={newTeacherAssignment.sectionId}
+                    onChange={(e) => setNewTeacherAssignment({ ...newTeacherAssignment, sectionId: e.target.value })}
+                    required
+                    disabled={!newTeacherAssignment.gradeId}
+                  >
+                    <option value="" disabled>Select Section</option>
+                    {sections
+                      .filter((s) => (s.gradeId?._id || s.gradeId) === newTeacherAssignment.gradeId)
+                      .map((s) => (
+                        <option key={s._id} value={s._id}>
+                          {s.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="grid items-center gap-1.5">
+                  <Label htmlFor="taSubject">Subject *</Label>
+                  <select
+                    id="taSubject"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+                    value={newTeacherAssignment.subjectId}
+                    onChange={(e) => setNewTeacherAssignment({ ...newTeacherAssignment, subjectId: e.target.value })}
+                    required
+                    disabled={!newTeacherAssignment.gradeId}
+                  >
+                    <option value="" disabled>Select Subject</option>
+                    {(() => {
+                      const gradeSubs = gradeSubjects
+                        .filter((gs) => (gs.gradeId?._id || gs.gradeId) === newTeacherAssignment.gradeId)
+                        .map((gs) => gs.subjectId)
+                        .filter(Boolean);
+                      const listToUse = gradeSubs.length > 0 ? gradeSubs : subjects;
+                      return listToUse.map((s) => (
+                        <option key={s._id} value={s._id}>
+                          {s.name} {s.code ? `(${s.code})` : ""}
+                        </option>
+                      ));
+                    })()}
+                  </select>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !newTeacherAssignment.teacherId ||
+                    !newTeacherAssignment.gradeId ||
+                    !newTeacherAssignment.sectionId ||
+                    !newTeacherAssignment.subjectId
+                  }
+                  className="h-10 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                >
+                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Assign Teacher
+                </Button>
+              </form>
+
+              {/* Filters Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 mb-4 items-center justify-between">
+                <div className="relative w-full sm:max-w-xs">
+                  <Search className="absolute left-3 top-2.5 size-4 text-zinc-400" />
+                  <Input
+                    placeholder="Search by teacher, class, subject..."
+                    value={assignmentSearch}
+                    onChange={(e) => setAssignmentSearch(e.target.value)}
+                    className="pl-9 h-9 text-xs"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  <select
+                    className="h-9 rounded-md border border-input bg-background px-2.5 text-xs ring-offset-background"
+                    value={assignmentTeacherFilter}
+                    onChange={(e) => setAssignmentTeacherFilter(e.target.value)}
+                  >
+                    <option value="">All Teachers</option>
+                    {teachers.map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="h-9 rounded-md border border-input bg-background px-2.5 text-xs ring-offset-background"
+                    value={assignmentGradeFilter}
+                    onChange={(e) => setAssignmentGradeFilter(e.target.value)}
+                  >
+                    <option value="">All Classes</option>
+                    {grades.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Assignments Table */}
+              <div className="rounded-md border overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-muted text-xs font-semibold text-zinc-700">
+                    <tr>
+                      <th className="px-4 py-3">Teacher</th>
+                      <th className="px-4 py-3">Grade / Class</th>
+                      <th className="px-4 py-3">Section</th>
+                      <th className="px-4 py-3">Assigned Subject</th>
+                      <th className="px-4 py-3 w-24 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading && teacherAssignments.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="p-0">
+                          <TableSkeleton rows={4} columns={5} />
+                        </td>
+                      </tr>
+                    ) : (() => {
+                      const filtered = teacherAssignments.filter((a) => {
+                        const tName = a.teacherId?.name || "";
+                        const tEmail = a.teacherId?.email || "";
+                        const gName = a.gradeId?.name || "";
+                        const sName = a.sectionId?.name || "";
+                        const subName = a.subjectId?.name || "";
+                        const matchesSearch =
+                          !assignmentSearch ||
+                          `${tName} ${tEmail} ${gName} ${sName} ${subName}`
+                            .toLowerCase()
+                            .includes(assignmentSearch.toLowerCase());
+                        const matchesTeacher =
+                          !assignmentTeacherFilter ||
+                          String(a.teacherId?._id || a.teacherId) === String(assignmentTeacherFilter);
+                        const matchesGrade =
+                          !assignmentGradeFilter ||
+                          String(a.gradeId?._id || a.gradeId) === String(assignmentGradeFilter);
+                        return matchesSearch && matchesTeacher && matchesGrade;
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={5} className="p-6 text-center text-zinc-500 text-sm">
+                              No teacher assignments found. Use the form above to assign teachers to class subjects.
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return filtered.map((a) => (
+                        <tr key={a._id} className="border-b last:border-0 hover:bg-zinc-50/70 transition-colors">
+                          <td className="px-4 py-3 font-medium text-zinc-900">
+                            <div>{a.teacherId?.name || "Teacher"}</div>
+                            <div className="text-xs text-zinc-500">{a.teacherId?.email || ""}</div>
+                          </td>
+                          <td className="px-4 py-3 text-zinc-800 font-medium">{a.gradeId?.name || "Class"}</td>
+                          <td className="px-4 py-3 text-zinc-700">Section {a.sectionId?.name || "A"}</td>
+                          <td className="px-4 py-3 text-zinc-900 font-semibold">
+                            {a.subjectId?.name || "Subject"}
+                            {a.subjectId?.code && (
+                              <span className="ml-1.5 text-xs text-zinc-500 font-normal">
+                                ({a.subjectId.code})
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={isDeletingId === a._id}
+                              onClick={async () => {
+                                if (!window.confirm("Remove this teacher assignment?")) return;
+                                try {
+                                  setIsDeletingId(a._id);
+                                  await axiosInstance.delete(`/academic/teacher-assignments/${a._id}`);
+                                  setTeacherAssignments(teacherAssignments.filter((item) => item._id !== a._id));
+                                  toast.success("Assignment removed");
+                                } catch (err) {
+                                  toast.error("Failed to remove assignment");
+                                } finally {
+                                  setIsDeletingId(null);
+                                }
+                              }}
+                              className="size-8 rounded-full text-zinc-400 hover:text-red-600 hover:bg-red-50"
+                              title="Remove Assignment"
+                            >
+                              {isDeletingId === a._id ? (
+                                <Spinner className="size-4 text-destructive" />
+                              ) : (
+                                <Trash2 className="size-4" />
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <AssignClassTeacherDialog

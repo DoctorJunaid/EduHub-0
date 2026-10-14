@@ -99,6 +99,18 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    gradeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Grade",
+      default: null,
+      index: true,
+    },
+    sectionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Section",
+      default: null,
+      index: true,
+    },
     admissionNo: {
       type: String,
       trim: true,

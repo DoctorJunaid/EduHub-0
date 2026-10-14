@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { UserCheck, BookOpen, Building, ShieldCheck, GraduationCap, School, Coins, Clock } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { UserCheck, BookOpen, Building, ShieldCheck, GraduationCap, School, Coins, Clock, User, CheckCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -13,6 +13,7 @@ export default function StudentProfileDialog({ student, onClose }) {
   const { isSchool } = useInstitution();
   const [fees, setFees] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [teacherAssignments, setTeacherAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,17 +21,69 @@ export default function StudentProfileDialog({ student, onClose }) {
       const studentId = student._id || student.id;
       setLoading(true);
       Promise.all([
-        axiosInstance.get(`/campus-admin/fees?studentId=${studentId}`),
-        axiosInstance.get(`/campus-admin/students/${studentId}/payments`)
+        axiosInstance.get(`/campus-admin/fees?studentId=${studentId}`).catch(() => ({ data: { data: [] } })),
+        axiosInstance.get(`/campus-admin/students/${studentId}/payments`).catch(() => ({ data: { data: [] } }))
       ])
-        .then(([feesRes, paymentsRes]) => {
-          setFees(feesRes.data.data || []);
-          setPayments(paymentsRes.data.data || []);
+        .then(async ([feesRes, paymentsRes]) => {
+          setFees(feesRes.data?.data || []);
+          setPayments(paymentsRes.data?.data || []);
+
+          // Load teacher assignments for student's grade/section
+          try {
+            let targetGradeId = student.gradeId?._id || student.gradeId;
+            if (!targetGradeId && (student.gradeOrClass || student.program)) {
+              const gName = (student.gradeOrClass || student.program).toLowerCase();
+              const gradesRes = await axiosInstance.get("/academic/grades");
+              const gList = Array.isArray(gradesRes.data) ? gradesRes.data : [];
+              const match = gList.find((g) => g.name.toLowerCase() === gName);
+              if (match) targetGradeId = match._id;
+            }
+
+            if (targetGradeId) {
+              const taRes = await axiosInstance.get("/academic/teacher-assignments", {
+                params: { gradeId: targetGradeId },
+              });
+              setTeacherAssignments(Array.isArray(taRes.data) ? taRes.data : []);
+            }
+          } catch (taErr) {
+            console.warn("Could not fetch teacher assignments:", taErr.message);
+          }
         })
         .catch((error) => console.error("Error fetching financial data:", error))
         .finally(() => setLoading(false));
     }
   }, [student]);
+
+  const parsedSubjects = useMemo(() => {
+    const raw = student?.subjects || "";
+    const list = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (list.length === 0 && teacherAssignments.length > 0) {
+      return teacherAssignments.map((ta) => ({
+        name: ta.subjectId?.name || "Subject",
+        code: ta.subjectId?.code || "",
+        teacher: ta.teacherId?.name || null,
+        teacherEmail: ta.teacherId?.email || null,
+        section: ta.sectionId?.name || null,
+      }));
+    }
+
+    return list.map((subName) => {
+      const matchingAssignment = teacherAssignments.find(
+        (ta) => ta.subjectId?.name?.toLowerCase() === subName.toLowerCase()
+      );
+      return {
+        name: subName,
+        code: matchingAssignment?.subjectId?.code || "",
+        teacher: matchingAssignment?.teacherId?.name || null,
+        teacherEmail: matchingAssignment?.teacherId?.email || null,
+        section: matchingAssignment?.sectionId?.name || null,
+      };
+    });
+  }, [student, teacherAssignments]);
 
   if (!student) return null;
 
@@ -119,16 +172,79 @@ export default function StudentProfileDialog({ student, onClose }) {
               </div>
             </div>
 
-            {/* Subjects Card */}
-            <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
-              <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "6px" }}>
-                {isSchool ? "Enrolled School Subjects" : "Enrolled Subjects"}
-              </span>
-              <p style={{ fontSize: "13px", color: "#09090b", lineHeight: 1.6, margin: 0 }}>
-                {isSchool
-                  ? (student.subjects || "Mathematics, Physics / General Science, English Language, Urdu, Social Studies / Pak Studies, Computer Science, Islamiat")
-                  : (student.subjects || "No courses recorded for this student.")}
-              </p>
+            {/* Subjects and Assigned Faculty Card */}
+            <div style={{ padding: "14px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", color: "#71717a", letterSpacing: "0.05em" }}>
+                  {isSchool ? "Enrolled School Subjects & Assigned Teachers" : "Enrolled Subjects & Faculty"}
+                </span>
+                <span style={{ fontSize: "11px", fontWeight: "600", color: "#0284c7", background: "#f0f9ff", border: "1px solid #bae6fd", padding: "2px 8px", borderRadius: "6px" }}>
+                  {parsedSubjects.length} {parsedSubjects.length === 1 ? "Subject" : "Subjects"} Enrolled
+                </span>
+              </div>
+
+              {parsedSubjects.length === 0 ? (
+                <p style={{ fontSize: "13px", color: "#71717a", margin: 0 }}>
+                  No subjects currently recorded for this student.
+                </p>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
+                  {parsedSubjects.map((sub, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: "10px 12px",
+                        border: "1px solid #f1f5f9",
+                        borderRadius: "8px",
+                        background: "#fafafa",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <strong style={{ fontSize: "13px", color: "#0f172a", display: "block" }}>
+                            {sub.name}
+                          </strong>
+                          {sub.code && (
+                            <span style={{ fontSize: "10px", fontWeight: 600, color: "#64748b" }}>
+                              {sub.code}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            background: sub.teacher ? "#ecfdf5" : "#fefce8",
+                            color: sub.teacher ? "#047857" : "#a16207",
+                            border: sub.teacher ? "1px solid #a7f3d0" : "1px solid #fef08a",
+                          }}
+                        >
+                          {sub.teacher ? "Faculty Assigned" : "Teacher Pending"}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#475569", marginTop: "2px" }}>
+                        <User size={12} className={sub.teacher ? "text-emerald-600" : "text-amber-500"} />
+                        <span>
+                          {sub.teacher ? (
+                            <>
+                              <strong>{sub.teacher}</strong>
+                              {sub.teacherEmail && <span style={{ color: "#94a3b8", marginLeft: "4px" }}>({sub.teacherEmail})</span>}
+                            </>
+                          ) : (
+                            <em style={{ color: "#94a3b8" }}>Faculty to be assigned</em>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Academic Performance and Guardian Details */}
