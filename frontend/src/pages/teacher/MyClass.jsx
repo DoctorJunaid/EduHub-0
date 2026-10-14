@@ -62,30 +62,55 @@ export default function MyClass() {
 
   if (!isClassTeacher || !classInfo) {
     return (
-      <div className="w-full min-h-[calc(100vh-140px)] flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white border border-neutral-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center">
-          {/* Icon Wrapper */}
-          <div className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center mb-5 shrink-0">
+      <div
+        className="w-full min-h-[calc(100vh-140px)] flex items-center justify-center p-6"
+        style={{ padding: "24px" }}
+      >
+        <div
+          className="w-full max-w-lg bg-white border border-neutral-200 rounded-2xl shadow-sm flex flex-col items-center text-center"
+          style={{
+            padding: "40px 32px",
+            height: "auto",
+            minHeight: "fit-content",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Icon Circle */}
+          <div
+            className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center shrink-0"
+            style={{ marginBottom: "20px", width: "56px", height: "56px" }}
+          >
             <GraduationCap className="w-7 h-7 text-neutral-600 stroke-[1.75]" />
           </div>
 
           {/* Heading */}
-          <h2 className="text-xl font-bold text-neutral-900 tracking-tight mb-2">
+          <h2
+            className="text-2xl font-bold text-neutral-900 tracking-tight"
+            style={{ marginBottom: "10px" }}
+          >
             No Class Assigned
           </h2>
 
-          {/* Description */}
-          <p className="text-sm text-neutral-500 leading-relaxed max-w-sm mb-6">
+          {/* Description Paragraph */}
+          <p
+            className="text-sm text-neutral-500 leading-relaxed max-w-md"
+            style={{ marginBottom: "28px", lineHeight: "1.6" }}
+          >
             You are not currently assigned as the designated Class Teacher for a
             class section. If you believe this is an error, please contact your
             Campus Administrator.
           </p>
 
-          {/* Primary Action Button */}
+          {/* Primary Button */}
           <button
             type="button"
             onClick={handleReturnDashboard}
-            className="h-10 px-5 text-sm font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors inline-flex items-center justify-center whitespace-nowrap shadow-sm cursor-pointer"
+            className="bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors inline-flex items-center justify-center whitespace-nowrap shadow-sm cursor-pointer"
+            style={{
+              padding: "10px 24px",
+              height: "auto",
+              minHeight: "40px",
+            }}
           >
             Return to Teacher Dashboard
           </button>
