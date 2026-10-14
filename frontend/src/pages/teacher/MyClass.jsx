@@ -1,19 +1,16 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/Badge";
-import { Spinner, PageLoader } from "@/components/ui/spinner";
+import { PageLoader } from "@/components/ui/spinner";
 import {
   GraduationCap,
   Users,
-  CheckCircle2,
   Calendar,
   Award,
-  FileSpreadsheet,
   Clock,
-  ShieldCheck,
   Search,
   Phone,
   Mail,
@@ -25,6 +22,7 @@ import useMyClass from "@/hooks/useMyClass";
 import useClassResults from "@/hooks/useClassResults";
 
 export default function MyClass() {
+  const navigate = useNavigate();
   const {
     loading: classLoading,
     isClassTeacher,
@@ -36,12 +34,14 @@ export default function MyClass() {
   } = useMyClass();
 
   const [savingAttendance, setSavingAttendance] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [activeTab, setActiveTab] = useState("attendance");
   const [studentSearch, setStudentSearch] = useState("");
 
   const {
-    loading: resultsLoading,
+    loading: _resultsLoading,
     gridData,
     isCompiling,
     isSubmitting,
@@ -56,21 +56,65 @@ export default function MyClass() {
     return <PageLoader text="Loading your class workspace..." />;
   }
 
+  const handleReturnDashboard = () => {
+    navigate("/teacher");
+  };
+
   if (!isClassTeacher || !classInfo) {
     return (
-      <div className="max-w-3xl mx-auto py-16 px-6 text-center">
-        <div className="w-16 h-16 rounded-3xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
-          <GraduationCap size={32} />
-        </div>
-        <h2 className="text-2xl font-black text-white">No Class Assigned</h2>
-        <p className="text-sm text-slate-400 max-w-md mx-auto mt-2 mb-6">
-          You are not currently assigned as the designated Class Teacher for a class section. If you believe this is an error, please contact your Campus Administrator.
-        </p>
-        <Link to="/teacher">
-          <Button className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl">
+      <div
+        className="w-full min-h-[calc(100vh-140px)] flex items-center justify-center p-6"
+        style={{ padding: "24px" }}
+      >
+        <div
+          className="w-full max-w-lg bg-white border border-neutral-200 rounded-2xl shadow-sm flex flex-col items-center text-center"
+          style={{
+            padding: "40px 32px",
+            height: "auto",
+            minHeight: "fit-content",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Icon Circle */}
+          <div
+            className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center shrink-0"
+            style={{ marginBottom: "20px", width: "56px", height: "56px" }}
+          >
+            <GraduationCap className="w-7 h-7 text-neutral-600 stroke-[1.75]" />
+          </div>
+
+          {/* Heading */}
+          <h2
+            className="text-2xl font-bold text-neutral-900 tracking-tight"
+            style={{ marginBottom: "10px" }}
+          >
+            No Class Assigned
+          </h2>
+
+          {/* Description Paragraph */}
+          <p
+            className="text-sm text-neutral-500 leading-relaxed max-w-md"
+            style={{ marginBottom: "28px", lineHeight: "1.6" }}
+          >
+            You are not currently assigned as the designated Class Teacher for a
+            class section. If you believe this is an error, please contact your
+            Campus Administrator.
+          </p>
+
+          {/* Primary Button */}
+          <button
+            type="button"
+            onClick={handleReturnDashboard}
+            className="bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors inline-flex items-center justify-center whitespace-nowrap shadow-sm cursor-pointer"
+            style={{
+              padding: "10px 24px",
+              height: "auto",
+              minHeight: "40px",
+            }}
+          >
             Return to Teacher Dashboard
-          </Button>
-        </Link>
+          </button>
+        </div>
       </div>
     );
   }
@@ -86,7 +130,10 @@ export default function MyClass() {
 
   const filteredStudents = students.filter((s) => {
     const q = studentSearch.toLowerCase();
-    return (s.name || "").toLowerCase().includes(q) || (s.rollNo || "").toLowerCase().includes(q);
+    return (
+      (s.name || "").toLowerCase().includes(q) ||
+      (s.rollNo || "").toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -109,7 +156,8 @@ export default function MyClass() {
               </div>
               <p className="text-xs sm:text-sm text-slate-300 mt-1 flex flex-wrap items-center gap-3">
                 <span className="flex items-center gap-1 font-medium">
-                  <Users size={15} className="text-indigo-400" /> {students.length} Enrolled Students
+                  <Users size={15} className="text-indigo-400" />{" "}
+                  {students.length} Enrolled Students
                 </span>
                 <span>•</span>
                 <span>Session 2026–2027</span>
@@ -136,7 +184,11 @@ export default function MyClass() {
       </div>
 
       {/* Main Tabbed Interface */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-2xl flex flex-wrap gap-2 max-w-fit">
           <TabsTrigger
             value="attendance"
@@ -167,7 +219,8 @@ export default function MyClass() {
                 Mark Daily Attendance
               </h3>
               <p className="text-xs text-slate-400">
-                Mark attendance every morning for your class. Records update live on student & parent portals.
+                Mark attendance every morning for your class. Records update
+                live on student & parent portals.
               </p>
             </div>
 
@@ -218,7 +271,10 @@ export default function MyClass() {
             </div>
 
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-2.5 text-slate-400" size={15} />
+              <Search
+                className="absolute left-3 top-2.5 text-slate-400"
+                size={15}
+              />
               <input
                 type="text"
                 placeholder="Search students..."
@@ -239,7 +295,11 @@ export default function MyClass() {
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-lg shadow-md shadow-indigo-600/20">
                       {s.avatar ? (
-                        <img src={s.avatar} alt={s.name} className="w-full h-full rounded-2xl object-cover" />
+                        <img
+                          src={s.avatar}
+                          alt={s.name}
+                          className="w-full h-full rounded-2xl object-cover"
+                        />
                       ) : (
                         (s.name || "S").charAt(0).toUpperCase()
                       )}
@@ -265,16 +325,17 @@ export default function MyClass() {
                       </span>
                     </div>
                   )}
-                  {s.guardianDetails?.phone && s.guardianDetails.phone !== "—" && (
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <Phone size={12} /> Contact:
-                      </span>
-                      <span className="text-slate-200 font-mono">
-                        {s.guardianDetails.phone}
-                      </span>
-                    </div>
-                  )}
+                  {s.guardianDetails?.phone &&
+                    s.guardianDetails.phone !== "—" && (
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Phone size={12} /> Contact:
+                        </span>
+                        <span className="text-slate-200 font-mono">
+                          {s.guardianDetails.phone}
+                        </span>
+                      </div>
+                    )}
                   {s.email && (
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
