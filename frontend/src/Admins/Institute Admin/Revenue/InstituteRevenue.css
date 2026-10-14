@@ -1,12 +1,14 @@
 /* Multi-Campus Revenue & Collections Stylesheet */
 
 .ir-container {
-  padding: 24px;
-  max-width: 1440px;
+  width: 100%;
+  min-width: 0;
+  padding: 18px 20px;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   animation: irFadeIn 0.25s ease-out;
 }
 
@@ -25,8 +27,8 @@
 .ir-page-header {
   background: #ffffff;
   border: 1px solid #e4e4e7;
-  border-radius: 14px;
-  padding: 18px 24px;
+  border-radius: 10px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -40,10 +42,10 @@
 }
 
 .ir-icon-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #09090b 0%, #27272a 100%);
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #09090b;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -70,8 +72,8 @@
 .ir-toolbar-card {
   background: #ffffff;
   border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 12px 18px;
+  border-radius: 10px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -83,14 +85,14 @@
 .ir-toolbar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .ir-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   flex-wrap: wrap;
 }
 
@@ -158,35 +160,44 @@
   opacity: 0.9;
 }
 
-/* KPI Cards Grid - Strict 5-col (Desktop), 3-col (Tablet), 2-col (Mobile) */
+/* Keep all summary metrics together on wide screens. */
 .ir-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   width: 100%;
 }
 
 @media (min-width: 768px) {
   .ir-kpi-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1024px) {
   .ir-kpi-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .ir-kpi-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
 .ir-kpi-card {
+  box-sizing: border-box;
   background: #ffffff;
   border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px;
+  height: 78px;
+  min-height: 78px;
+  max-height: 78px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 116px;
+  justify-content: flex-start;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
@@ -206,11 +217,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  min-height: 24px;
+  margin-bottom: 3px;
 }
 
 .ir-kpi-label {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   color: #71717a;
@@ -218,9 +230,9 @@
 }
 
 .ir-kpi-icon-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background: #f4f4f5;
   color: #52525b;
   display: flex;
@@ -230,18 +242,18 @@
 }
 
 .ir-kpi-val {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: #09090b;
   margin: 0;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .ir-kpi-sub {
-  font-size: 12px;
+  font-size: 9px;
   color: #71717a;
-  margin: 6px 0 0 0;
+  margin: 2px 0 0 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -251,9 +263,9 @@
 .ir-kpi-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 6px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
   font-weight: 600;
   background: #f4f4f5;
   color: #3f3f46;
@@ -770,8 +782,8 @@
 
 @media (max-width: 480px) {
   .ir-container {
-    padding: 16px;
-    gap: 16px;
+    padding: 12px;
+    gap: 12px;
   }
 
   .ir-kpi-grid {
@@ -780,8 +792,9 @@
   }
 
   .ir-kpi-card {
-    padding: 12px;
-    min-height: auto;
+    height: auto;
+    min-height: 82px;
+    padding: 9px 10px;
   }
 
   .ir-kpi-val {

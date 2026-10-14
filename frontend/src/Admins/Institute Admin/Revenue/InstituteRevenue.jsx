@@ -36,7 +36,7 @@ import ReceiptModal from "./ReceiptModal";
 import toast from "react-hot-toast";
 import "./InstituteRevenue.css";
 
-const NEUTRAL_PALETTE = ["#09090b", "#475569", "#64748b", "#94a3b8", "#cbd5e1"];
+const NEUTRAL_PALETTE = ["#09090b", "#27272a", "#52525b", "#71717a", "#a1a1aa"];
 
 export default function InstituteRevenue() {
   const [activeTab, setActiveTab] = useState("overview"); // overview | transactions | invoices | structures
@@ -288,7 +288,7 @@ export default function InstituteRevenue() {
   return (
     <div className="ir-container">
       {/* ── 1. SUMMARY KPI METRIC CARDS (UNIFIED 5-CARD GRID DIRECTLY AT TOP) ── */}
-      <section className="ir-kpi-grid grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 w-full" aria-label="Revenue KPIs">
+      <section className="ir-kpi-grid" aria-label="Revenue KPIs">
         {/* Total Collected */}
         <div className="ir-kpi-card">
           <div className="ir-kpi-top">
@@ -586,8 +586,6 @@ export default function InstituteRevenue() {
           <div className="ir-campus-grid">
             {campusBreakdown.map((campus) => {
               const rate = campus.collectionRate || 0;
-              const _rateClass =
-                rate >= 75 ? "high" : rate >= 40 ? "mid" : "low";
 
               return (
                 <div key={campus.id} className="ir-campus-card">
@@ -913,7 +911,7 @@ export default function InstituteRevenue() {
                         </td>
                         <td>{fr.feeType || "Tuition Fee"}</td>
                         <td>
-                          <strong style={{ color: "#059669" }}>
+                          <strong style={{ color: "#09090b" }}>
                             Rs. {(t.amount || 0).toLocaleString()}
                           </strong>
                         </td>
@@ -941,14 +939,9 @@ export default function InstituteRevenue() {
                           <Badge
                             variant="secondary"
                             style={{
-                              background:
-                                t.status === "CONFIRMED"
-                                  ? "#ecfdf5"
-                                  : "#fef3c7",
-                              color:
-                                t.status === "CONFIRMED"
-                                  ? "#065f46"
-                                  : "#92400e",
+                              background: "#f4f4f5",
+                              color: "#27272a",
+                              border: "1px solid #e4e4e7",
                               fontWeight: 700,
                             }}
                           >
@@ -1096,14 +1089,12 @@ export default function InstituteRevenue() {
                         <td>{inv.month || "Current"}</td>
                         <td>Rs. {billed.toLocaleString()}</td>
                         <td>
-                          <strong style={{ color: "#059669" }}>
+                          <strong style={{ color: "#09090b" }}>
                             Rs. {paid.toLocaleString()}
                           </strong>
                         </td>
                         <td>
-                          <strong
-                            style={{ color: due > 0 ? "#b45309" : "#71717a" }}
-                          >
+                          <strong style={{ color: "#09090b" }}>
                             Rs. {due.toLocaleString()}
                           </strong>
                         </td>
@@ -1123,22 +1114,9 @@ export default function InstituteRevenue() {
                           <Badge
                             variant="secondary"
                             style={{
-                              background:
-                                inv.status === "PAID"
-                                  ? "#ecfdf5"
-                                  : inv.status === "PARTIALLY_PAID"
-                                    ? "#fef3c7"
-                                    : inv.status === "OVERDUE"
-                                      ? "#fef2f2"
-                                      : "#f4f4f5",
-                              color:
-                                inv.status === "PAID"
-                                  ? "#065f46"
-                                  : inv.status === "PARTIALLY_PAID"
-                                    ? "#92400e"
-                                    : inv.status === "OVERDUE"
-                                      ? "#991b1b"
-                                      : "#3f3f46",
+                              background: "#f4f4f5",
+                              color: "#27272a",
+                              border: "1px solid #e4e4e7",
                               fontWeight: 700,
                             }}
                           >
@@ -1245,7 +1223,7 @@ export default function InstituteRevenue() {
                         </Badge>
                       </td>
                       <td>
-                        <strong style={{ color: "#059669" }}>
+                        <strong style={{ color: "#09090b" }}>
                           Rs. {(fs.tuitionFee || 0).toLocaleString()}
                         </strong>
                       </td>
@@ -1257,8 +1235,9 @@ export default function InstituteRevenue() {
                         <Badge
                           variant="secondary"
                           style={{
-                            background: fs.isActive ? "#ecfdf5" : "#f4f4f5",
-                            color: fs.isActive ? "#065f46" : "#71717a",
+                            background: "#f4f4f5",
+                            color: "#27272a",
+                            border: "1px solid #e4e4e7",
                             fontWeight: 700,
                           }}
                         >
