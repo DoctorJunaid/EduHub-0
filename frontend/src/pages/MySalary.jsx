@@ -78,192 +78,250 @@ export default function MySalary() {
   const dailySalary = gross / 26;
 
   return (
-    <div className="salary-profiles-page campus-tab-page">
-      <div
-        className="p-6 max-w-4xl mx-auto space-y-6 w-full"
-        style={{ width: "100%", maxWidth: "none" }}
-      >
-        {/* Main Contract Card */}
-        <div className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-          {/* Card Header with Employee Info & Payslips Action */}
-          <div className="bg-neutral-50/50 border-b border-neutral-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-neutral-100 text-neutral-800 border border-neutral-200 flex items-center justify-center font-bold text-base flex-shrink-0">
-                {(teacher.user?.name || "T").charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <strong className="block text-neutral-900 text-sm font-semibold">
-                  {teacher.user?.name || "Faculty Member"}
+    <div
+      className="w-full flex flex-col"
+      style={{ padding: "24px", gap: "24px", boxSizing: "border-box" }}
+    >
+      {/* Main Contract Card */}
+      <div className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
+        {/* Top Profile Header Bar */}
+        <div
+          className="w-full flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 bg-neutral-50/40"
+          style={{ padding: "20px 24px", gap: "16px", boxSizing: "border-box" }}
+        >
+          {/* Left: Avatar + Name & Role */}
+          <div className="flex items-center" style={{ gap: "14px" }}>
+            <div
+              className="rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center font-bold text-neutral-800 text-base shrink-0"
+              style={{ width: "44px", height: "44px" }}
+            >
+              {(teacher.user?.name || "T").charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col" style={{ gap: "2px" }}>
+              <h2 className="text-base font-bold text-neutral-900 leading-snug">
+                {teacher.user?.name || "Faculty Member"}
+              </h2>
+              <p className="text-xs text-neutral-500">
+                {teacher.designation || "Teacher"} •{" "}
+                {teacher.department || "Academic Department"}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Active Contract Badge + Payslips Button */}
+          <div className="flex items-center shrink-0" style={{ gap: "10px" }}>
+            <span
+              className="inline-flex items-center rounded-full bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-medium whitespace-nowrap"
+              style={{ padding: "5px 12px" }}
+            >
+              {profile.isActive ? "Active Contract" : "Inactive Contract"}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate("/my-payslips")}
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-800 transition-colors shadow-xs whitespace-nowrap cursor-pointer"
+              style={{ height: "34px", padding: "0 14px", gap: "6px" }}
+            >
+              <FileText className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Go to My Payslips</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main Card Body Container */}
+        <div
+          className="w-full flex flex-col"
+          style={{ padding: "24px", gap: "24px", boxSizing: "border-box" }}
+        >
+          {/* 3-Column Summary Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200 border border-neutral-200 rounded-xl bg-neutral-50/30 w-full overflow-hidden">
+            {/* Column 1: Base Salary */}
+            <div
+              className="flex items-center justify-between"
+              style={{ padding: "16px 20px" }}
+            >
+              <div className="flex flex-col" style={{ gap: "4px" }}>
+                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+                  Base Salary
+                </span>
+                <strong className="text-xl font-bold text-neutral-900 tracking-tight">
+                  {formatPKR(profile.baseSalary)}
                 </strong>
-                <span className="text-xs text-neutral-500">
-                  {teacher.designation || "Teacher"} •{" "}
-                  {teacher.department || "Academic Department"}
+                <span className="text-[11px] text-neutral-500">
+                  Fixed monthly base pay
+                </span>
+              </div>
+              <div
+                className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+                style={{ width: "36px", height: "36px" }}
+              >
+                <Banknote className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+              </div>
+            </div>
+
+            {/* Column 2: Allowances */}
+            <div
+              className="flex items-center justify-between"
+              style={{ padding: "16px 20px" }}
+            >
+              <div className="flex flex-col" style={{ gap: "4px" }}>
+                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+                  Allowances
+                </span>
+                <strong className="text-xl font-bold text-neutral-900 tracking-tight">
+                  +{formatPKR(totalAllowances)}
+                </strong>
+                <span className="text-[11px] text-neutral-500">
+                  {profile.allowances?.length || 0} allowance items
+                </span>
+              </div>
+              <div
+                className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+                style={{ width: "36px", height: "36px" }}
+              >
+                <Wallet className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+              </div>
+            </div>
+
+            {/* Column 3: Gross Monthly Pay */}
+            <div
+              className="flex items-center justify-between"
+              style={{ padding: "16px 20px" }}
+            >
+              <div className="flex flex-col" style={{ gap: "4px" }}>
+                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+                  Gross Monthly Pay
+                </span>
+                <strong className="text-xl font-bold text-neutral-900 tracking-tight">
+                  {formatPKR(gross)}
+                </strong>
+                <span className="text-[11px] text-neutral-500">
+                  ~{formatPKR(dailySalary)}/day rate
+                </span>
+              </div>
+              <div
+                className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+                style={{ width: "36px", height: "36px" }}
+              >
+                <ShieldCheck className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+              </div>
+            </div>
+          </div>
+
+          {/* Contract Allowances Breakdown */}
+          <div className="flex flex-col" style={{ gap: "12px" }}>
+            <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider block">
+              Contract Allowances Breakdown
+            </span>
+            {!profile.allowances || profile.allowances.length === 0 ? (
+              <p className="text-xs text-neutral-500 italic">
+                No extra allowances configured.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {profile.allowances.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between items-center rounded-lg border border-neutral-200 bg-neutral-50/60 text-xs"
+                    style={{ padding: "12px 16px" }}
+                  >
+                    <span className="font-semibold text-neutral-700">
+                      {item.name}
+                    </span>
+                    <strong className="text-neutral-900 font-semibold">
+                      +{formatPKR(item.amount)}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Deductions & Estimated Monthly Net */}
+          <div className="flex flex-col" style={{ gap: "12px" }}>
+            <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider block">
+              Deductions &amp; Estimated Monthly Net
+            </span>
+            <div
+              className="grid grid-cols-1 md:grid-cols-3 w-full"
+              style={{ gap: "16px" }}
+            >
+              <div
+                className="rounded-xl border border-neutral-200 bg-neutral-50/50 flex flex-col justify-center"
+                style={{ padding: "16px 20px", gap: "6px" }}
+              >
+                <span className="text-xs font-medium text-neutral-500">
+                  Income Tax Deduction
+                </span>
+                <span className="text-lg font-bold text-neutral-900">
+                  -{formatPKR(profile.taxDeduction)}
+                </span>
+              </div>
+              <div
+                className="rounded-xl border border-neutral-200 bg-neutral-50/50 flex flex-col justify-center"
+                style={{ padding: "16px 20px", gap: "6px" }}
+              >
+                <span className="text-xs font-medium text-neutral-500">
+                  Other Deductions
+                </span>
+                <span className="text-lg font-bold text-neutral-900">
+                  -{formatPKR(profile.otherDeduction)}
+                </span>
+              </div>
+              <div
+                className="rounded-xl border border-neutral-300 bg-neutral-100/70 flex flex-col justify-center"
+                style={{ padding: "16px 20px", gap: "6px" }}
+              >
+                <span className="text-xs font-medium text-neutral-600">
+                  Est. Net Contract
+                </span>
+                <span className="text-lg font-bold text-neutral-900">
+                  {formatPKR(estimatedNet)}
                 </span>
               </div>
             </div>
-
-            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-              <span
-                className={`payroll-status ${
-                  profile.isActive
-                    ? "payroll-status-paid"
-                    : "payroll-status-default"
-                }`}
-              >
-                {profile.isActive ? "Active Contract" : "Inactive Contract"}
-              </span>
-              <button
-                type="button"
-                onClick={() => navigate("/my-payslips")}
-                className="toolbar-btn toolbar-btn-outline flex items-center gap-1.5"
-              >
-                <FileText size={14} /> Go to My Payslips
-              </button>
-            </div>
           </div>
 
-          <div className="p-6 space-y-6">
-            {/* 3 Summary Box */}
-            <div className="campus-kpi-track">
-              <div className="campus-kpi-card">
-                <div className="kpi-wrap">
-                  <div className="kpi-icon text-neutral-600">
-                    <Banknote size={16} />
+          {/* Recorded Bank Account */}
+          {profile.bankAccount &&
+            (profile.bankAccount.bankName ||
+              profile.bankAccount.accountNumber) && (
+              <div className="flex flex-col" style={{ gap: "12px" }}>
+                <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <CreditCard size={14} className="text-neutral-600" /> Recorded
+                  Bank Account
+                </span>
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-neutral-50/60 rounded-xl border border-neutral-200"
+                  style={{ padding: "16px 20px" }}
+                >
+                  <div>
+                    <span className="text-neutral-500 block text-[11px]">
+                      Bank Name
+                    </span>
+                    <strong className="text-neutral-800">
+                      {profile.bankAccount.bankName || "—"}
+                    </strong>
                   </div>
-                  <div className="kpi-info">
-                    <span className="kpi-label text-neutral-500">Base Salary</span>
-                    <strong className="kpi-value text-neutral-900">{formatPKR(profile.baseSalary)}</strong>
-                    <span className="text-[11px] text-neutral-500 block mt-0.5">Fixed monthly base pay</span>
+                  <div>
+                    <span className="text-neutral-500 block text-[11px]">
+                      Account Number
+                    </span>
+                    <strong className="text-neutral-800">
+                      {profile.bankAccount.accountNumber || "—"}
+                    </strong>
                   </div>
-                </div>
-              </div>
-
-              <div className="campus-kpi-card">
-                <div className="kpi-wrap">
-                  <div className="kpi-icon text-neutral-600">
-                    <Wallet size={16} />
-                  </div>
-                  <div className="kpi-info">
-                    <span className="kpi-label text-neutral-500">Allowances</span>
-                    <strong className="kpi-value text-neutral-900">+{formatPKR(totalAllowances)}</strong>
-                    <span className="text-[11px] text-neutral-500 block mt-0.5">{profile.allowances?.length || 0} allowance items</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="campus-kpi-card">
-                <div className="kpi-wrap">
-                  <div className="kpi-icon text-neutral-600">
-                    <ShieldCheck size={16} />
-                  </div>
-                  <div className="kpi-info">
-                    <span className="kpi-label text-neutral-500">Gross Monthly Pay</span>
-                    <strong className="kpi-value text-neutral-900">{formatPKR(gross)}</strong>
-                    <span className="text-[11px] text-neutral-500 block mt-0.5">~{formatPKR(dailySalary)}/day rate</span>
+                  <div>
+                    <span className="text-neutral-500 block text-[11px]">
+                      IBAN
+                    </span>
+                    <strong className="text-neutral-800">
+                      {profile.bankAccount.iban || "—"}
+                    </strong>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Allowances */}
-            <div className="pt-2 border-t border-neutral-100">
-              <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider block mb-3">
-                Contract Allowances Breakdown
-              </span>
-              {!profile.allowances || profile.allowances.length === 0 ? (
-                <p className="text-xs text-neutral-500 italic">
-                  No extra allowances configured.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {profile.allowances.map((item, i) => (
-                    <div
-                      key={i}
-                      className="flex justify-between items-center p-3 rounded-lg border border-neutral-200 bg-neutral-50/60 text-xs"
-                    >
-                      <span className="font-semibold text-neutral-700">
-                        {item.name}
-                      </span>
-                      <strong className="text-neutral-900 font-semibold">
-                        +{formatPKR(item.amount)}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Deductions & Est Net */}
-            <div className="pt-2 border-t border-neutral-100">
-              <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider block mb-3">
-                Deductions & Estimated Monthly Net
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-neutral-50/60 border border-neutral-200">
-                  <span className="text-neutral-500 block text-[11px]">
-                    Income Tax Deduction
-                  </span>
-                  <strong className="text-neutral-900 font-bold">
-                    -{formatPKR(profile.taxDeduction)}
-                  </strong>
-                </div>
-                <div className="p-3 rounded-lg bg-neutral-50/60 border border-neutral-200">
-                  <span className="text-neutral-500 block text-[11px]">
-                    Other Deductions
-                  </span>
-                  <strong className="text-neutral-900 font-bold">
-                    -{formatPKR(profile.otherDeduction)}
-                  </strong>
-                </div>
-                <div className="p-3 rounded-lg bg-neutral-100/80 border border-neutral-200">
-                  <span className="text-neutral-600 block text-[11px]">
-                    Est. Net Contract
-                  </span>
-                  <strong className="text-neutral-900 font-bold text-sm">
-                    {formatPKR(estimatedNet)}
-                  </strong>
-                </div>
-              </div>
-            </div>
-
-            {/* Bank details */}
-            {profile.bankAccount &&
-              (profile.bankAccount.bankName ||
-                profile.bankAccount.accountNumber) && (
-                <div className="pt-2 border-t border-neutral-100">
-                  <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                    <CreditCard size={14} className="text-neutral-600" /> Recorded
-                    Bank Account
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-neutral-50/60 p-3 rounded-lg border border-neutral-200">
-                    <div>
-                      <span className="text-neutral-500 block text-[11px]">
-                        Bank Name
-                      </span>
-                      <strong className="text-neutral-800">
-                        {profile.bankAccount.bankName || "—"}
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500 block text-[11px]">
-                        Account Number
-                      </span>
-                      <strong className="text-neutral-800">
-                        {profile.bankAccount.accountNumber || "—"}
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500 block text-[11px]">
-                        IBAN
-                      </span>
-                      <strong className="text-neutral-800">
-                        {profile.bankAccount.iban || "—"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              )}
-          </div>
+            )}
         </div>
       </div>
     </div>
