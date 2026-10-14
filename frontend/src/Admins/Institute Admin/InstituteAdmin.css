@@ -1,8 +1,10 @@
 /* Density is scoped to the Institute layout; other roles keep their defaults. */
 .institute-admin-shell .main-area { height: 100dvh; }
 .institute-admin-shell .header { height: 54px; padding: 0 20px; }
-.institute-admin-shell .content-area { padding: 14px 20px; }
+.institute-admin-shell .content-area,
+.institute-admin-shell .content-area.content-area-flush { padding: 14px 16px !important; }
 .institute-admin-shell .content-area > section { display: flex; flex-direction: column; min-width: 0; gap: 12px; }
+.institute-admin-shell .content-area > :is(.institute-dashboard, .salary-policies-container, .inst-subscription-page, .institute-audit-logs-page, .institute-support, .ir-container, .manage-campus-page) { padding-left: 0 !important; padding-right: 0 !important; }
 .institute-admin-shell .settings-heading { display: none !important; }
 .institute-admin-shell :is(.institute-heading, .campuses-heading, .ist-heading, .isd-heading, .iba-heading) { gap: 4px; margin: 0; }
 .institute-admin-shell :is(.institute-heading, .campuses-heading, .ist-heading, .isd-heading, .iba-heading) h1 { font-size: 22px; line-height: 1.2; margin: 0; flex-basis: auto; overflow-wrap: anywhere; }
@@ -124,7 +126,8 @@ body:has(.institute-admin-shell) .student-profile-avatar [data-slot="avatar-fall
 
 @media (max-width: 1100px) { .institute-admin-shell :is(.ist-toolbar, .isd-toolbar) { flex-wrap: wrap; } }
 @media (max-width: 768px) {
-  .institute-admin-shell .content-area { padding: 20px 16px; }
+  .institute-admin-shell .content-area,
+  .institute-admin-shell .content-area.content-area-flush { padding: 16px 12px !important; }
   .institute-admin-shell .header-search { display: none; }
   .institute-admin-shell .breadcrumbs { max-width: none; min-width: 0; flex: 1; }
   .institute-admin-shell .header { gap: 12px; }
