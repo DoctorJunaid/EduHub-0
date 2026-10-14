@@ -70,21 +70,37 @@ export async function resolveStudentSubjects(student, campusId) {
   let gradeName = student.gradeOrClass || student.program || "";
   let sectionName = student.section || "";
 
+  // Direct Grade and Section document resolution if student has IDs
+  let gradeDoc = null;
+  let sectionDoc = null;
+
+  if (student.gradeId) {
+    gradeDoc = await Grade.findOne({ _id: student.gradeId, campusId }).lean();
+    if (gradeDoc && !gradeName) gradeName = gradeDoc.name;
+  }
+  if (student.sectionId && gradeDoc) {
+    sectionDoc = await Section.findOne({ _id: student.sectionId, campusId }).lean();
+    if (sectionDoc && !sectionName) sectionName = sectionDoc.name;
+  }
+
   // If grade or section missing, inspect StudentProfile
   let profile = null;
-  if (!gradeName || !sectionName) {
+  if (!gradeDoc || !sectionDoc) {
     profile = await StudentProfile.findOne({ user: student._id }).populate("gradeId sectionId").lean();
     if (profile) {
-      if (!gradeName && profile.gradeId) gradeName = profile.gradeId.name;
-      if (!sectionName && profile.sectionId) sectionName = profile.sectionId.name;
+      if (!gradeDoc && profile.gradeId) {
+        gradeDoc = profile.gradeId;
+        gradeName = gradeDoc.name;
+      }
+      if (!sectionDoc && profile.sectionId) {
+        sectionDoc = profile.sectionId;
+        sectionName = sectionDoc.name;
+      }
     }
   }
 
-  // Find Grade document
-  let gradeDoc = null;
-  if (profile?.gradeId?._id) {
-    gradeDoc = profile.gradeId;
-  } else if (gradeName) {
+  // Find Grade document by name if still not found
+  if (!gradeDoc && gradeName) {
     gradeDoc = await Grade.findOne({
       campusId,
       name: { $regex: new RegExp(`^${gradeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
@@ -98,20 +114,21 @@ export async function resolveStudentSubjects(student, campusId) {
     if (gradeDoc && !gradeName) gradeName = gradeDoc.name;
   }
 
-  // Find Section document
-  let sectionDoc = null;
-  if (profile?.sectionId?._id) {
-    sectionDoc = profile.sectionId;
-  } else if (gradeDoc && sectionName) {
-    sectionDoc = await Section.findOne({
-      campusId,
-      gradeId: gradeDoc._id,
-      name: { $regex: new RegExp(`^${sectionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
-    }).lean();
-  }
-  if (!sectionDoc && gradeDoc) {
-    sectionDoc = await Section.findOne({ campusId, gradeId: gradeDoc._id }).lean();
-    if (sectionDoc && !sectionName) sectionName = sectionDoc.name;
+  // Find Section document if not already resolved
+  if (!sectionDoc) {
+    if (profile?.sectionId?._id) {
+      sectionDoc = profile.sectionId;
+    } else if (gradeDoc && sectionName) {
+      sectionDoc = await Section.findOne({
+        campusId,
+        gradeId: gradeDoc._id,
+        name: { $regex: new RegExp(`^${sectionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      }).lean();
+    }
+    if (!sectionDoc && gradeDoc) {
+      sectionDoc = await Section.findOne({ campusId, gradeId: gradeDoc._id }).lean();
+      if (sectionDoc && !sectionName) sectionName = sectionDoc.name;
+    }
   }
 
   // Fetch all GradeSubjects mapped for this Grade

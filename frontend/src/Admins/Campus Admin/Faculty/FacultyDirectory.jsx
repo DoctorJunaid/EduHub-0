@@ -13,7 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  BookOpen,
 } from "lucide-react";
+import AssignTeacherClassesDialog from "./AssignTeacherClassesDialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -72,6 +74,7 @@ export default function FacultyDirectory() {
   const [viewingTeacher, setViewingTeacher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [assigningTeacher, setAssigningTeacher] = useState(null);
 
   const options = useMemo(() => {
     const campusList = [
@@ -370,6 +373,17 @@ export default function FacultyDirectory() {
                         <button
                           type="button"
                           className="table-icon-btn"
+                          title="Assign Classes & Subjects"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAssigningTeacher(teacher);
+                          }}
+                        >
+                          <BookOpen size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          className="table-icon-btn"
                           title="View Full Profile"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -436,6 +450,17 @@ export default function FacultyDirectory() {
         <FacultyProfileDialog
           teacher={viewingTeacher}
           onClose={() => setViewingTeacher(null)}
+        />
+      )}
+
+      {assigningTeacher && (
+        <AssignTeacherClassesDialog
+          open={Boolean(assigningTeacher)}
+          onClose={() => setAssigningTeacher(null)}
+          teacher={assigningTeacher}
+          onAssignmentsUpdated={() => {
+            dispatch(fetchFaculty());
+          }}
         />
       )}
 

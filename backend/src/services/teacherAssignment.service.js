@@ -305,15 +305,37 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // Attach student count for each class
   for (const cls of result) {
+    const gradeMatches = [
+      { gradeOrClass: cls.className },
+      { program: cls.className },
+    ];
+    if (cls.gradeId) {
+      gradeMatches.push({ gradeId: cls.gradeId });
+    }
+
+    const sectionMatches = [];
+    if (cls.section) {
+      sectionMatches.push(
+        { section: cls.section },
+        { section: `Section ${cls.section}` },
+        { section: cls.section.toLowerCase() },
+        { section: cls.section.toUpperCase() }
+      );
+    }
+    if (cls.sectionId) {
+      sectionMatches.push({ sectionId: cls.sectionId });
+    }
+
     const count = await User.countDocuments({
       campusId,
       role: "student",
-      $or: [
-        { gradeOrClass: cls.className, section: cls.section },
-        { program: cls.className, section: cls.section },
+      $and: [
+        { $or: gradeMatches },
+        ...(sectionMatches.length > 0 ? [{ $or: sectionMatches }] : []),
       ],
     });
     cls.enrolledStudentsCount = count || 0;
+    cls.studentCount = count || 0;
   }
 
   return result;

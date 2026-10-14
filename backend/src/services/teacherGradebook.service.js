@@ -34,14 +34,19 @@ export async function getGradebookStudents(campusId, teacherUserId, { classId, c
   let targetClassName = className || "";
   let targetSection = section || "";
 
-  if (!targetClassName && classId) {
+  let targetGradeId = null;
+  let targetSectionId = null;
+
+  if (classId) {
     const assignedClasses = await getTeacherAssignedClasses(campusId, teacherUserId);
     const matched = assignedClasses.find(
       (c) => String(c.id || c._id || c.classId) === String(classId)
     );
     if (matched) {
-      targetClassName = matched.className || matched.gradeOrClass || "";
-      targetSection = matched.section || "";
+      targetClassName = targetClassName || matched.className || matched.gradeOrClass || "";
+      targetSection = targetSection || matched.section || "";
+      targetGradeId = matched.gradeId || null;
+      targetSectionId = matched.sectionId || null;
     }
   }
 
@@ -50,17 +55,23 @@ export async function getGradebookStudents(campusId, teacherUserId, { classId, c
   // 1. Query User collection by gradeOrClass / program and section
   const userQuery = { campusId, role: "student" };
 
+  const gradeMatches = [];
+  if (targetGradeId) gradeMatches.push({ gradeId: targetGradeId });
   if (targetClassName) {
-    const cleanNum = targetClassName.replace(/[^0-9]/g, "");
+    const baseClassName = targetClassName.split(" - ")[0].trim();
+    const cleanNum = baseClassName.replace(/[^0-9]/g, "");
     const classRegexes = [
       new RegExp(`^${targetClassName}$`, "i"),
-      new RegExp(`^Class\\s*${cleanNum}$`, "i"),
-      new RegExp(`^Grade\\s*${cleanNum}$`, "i"),
+      new RegExp(`^${baseClassName}$`, "i"),
+      ...(cleanNum ? [new RegExp(`^Class\\s*${cleanNum}$`, "i"), new RegExp(`^Grade\\s*${cleanNum}$`, "i")] : []),
     ];
-    userQuery.$or = [
+    gradeMatches.push(
       { gradeOrClass: { $in: classRegexes } },
-      { program: { $in: classRegexes } },
-    ];
+      { program: { $in: classRegexes } }
+    );
+  }
+  if (gradeMatches.length > 0) {
+    userQuery.$or = gradeMatches;
   }
 
   if (targetSection && targetSection !== "All" && targetSection !== "All sections") {

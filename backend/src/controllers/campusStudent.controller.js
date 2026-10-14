@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
 import Institute from "../models/institute.model.js";
 import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
+import { Grade, Section, Subject, GradeSubject } from "../models/academic.model.js";
 import { logActivity } from "../models/activityLog.model.js";
 import feeService from "../services/fee.service.js";
 
@@ -37,6 +38,8 @@ export const getCampusStudents = async (req, res) => {
       .select("-passwordHash")
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")
+      .populate("gradeId", "name code")
+      .populate("sectionId", "name code")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -44,6 +47,8 @@ export const getCampusStudents = async (req, res) => {
       ...s,
       campus: s.campusId?.name || s.campus || "",
       institute: s.instituteId?.name || s.institute || "",
+      gradeOrClass: s.gradeId?.name || s.gradeOrClass || "",
+      section: s.sectionId?.name || s.section || "",
     }));
 
     return res.status(200).json({
@@ -183,12 +188,14 @@ export const createStudentForCampus = async (req, res) => {
       if (campus) instituteId = campus.instituteId;
     }
 
-    const {
+    let {
       name,
       email,
       roll,
       program,
       gradeOrClass,
+      gradeId,
+      sectionId,
       admissionNo,
       section,
       semester,
@@ -216,6 +223,64 @@ export const createStudentForCampus = async (req, res) => {
       });
     }
 
+    // Resolve Grade and Section dynamically for full academic centralization
+    let resolvedGradeDoc = null;
+    if (gradeId) {
+      resolvedGradeDoc = await Grade.findOne({ _id: gradeId, campusId });
+    }
+    if (!resolvedGradeDoc && (gradeOrClass || program)) {
+      const gName = (gradeOrClass || program).trim();
+      resolvedGradeDoc = await Grade.findOne({
+        campusId,
+        name: { $regex: new RegExp(`^${gName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      });
+    }
+    if (resolvedGradeDoc) {
+      gradeId = resolvedGradeDoc._id;
+      gradeOrClass = resolvedGradeDoc.name;
+    }
+
+    let resolvedSectionDoc = null;
+    if (sectionId) {
+      resolvedSectionDoc = await Section.findOne({ _id: sectionId, campusId });
+    }
+    if (!resolvedSectionDoc && resolvedGradeDoc && section) {
+      const sName = section.trim();
+      resolvedSectionDoc = await Section.findOne({
+        campusId,
+        gradeId: resolvedGradeDoc._id,
+        name: { $regex: new RegExp(`^${sName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      });
+    }
+    // Auto-create default section if grade exists but no section found
+    if (!resolvedSectionDoc && resolvedGradeDoc) {
+      const sName = (section && section.trim()) || "A";
+      resolvedSectionDoc = await Section.findOne({ campusId, gradeId: resolvedGradeDoc._id, name: sName });
+      if (!resolvedSectionDoc) {
+        resolvedSectionDoc = await Section.create({
+          name: sName,
+          gradeId: resolvedGradeDoc._id,
+          campusId,
+          instituteId: instituteId || null,
+        });
+      }
+    }
+    if (resolvedSectionDoc) {
+      sectionId = resolvedSectionDoc._id;
+      section = resolvedSectionDoc.name;
+    }
+
+    // Auto-enroll student into grade's configured subjects if none provided
+    if (!subjects && resolvedGradeDoc) {
+      const gradeSubjects = await GradeSubject.find({ campusId, gradeId: resolvedGradeDoc._id })
+        .populate("subjectId", "name")
+        .lean();
+      const subjectNames = gradeSubjects.map((gs) => gs.subjectId?.name).filter(Boolean);
+      if (subjectNames.length > 0) {
+        subjects = subjectNames.join(", ");
+      }
+    }
+
     const student = await User.create({
       name: name.trim(),
       email: cleanEmail,
@@ -227,6 +292,8 @@ export const createStudentForCampus = async (req, res) => {
         : `ROLL-${Math.floor(1000 + Math.random() * 9000)}`,
       program: program ? program.trim() : (gradeOrClass ? gradeOrClass.trim() : "Unassigned"),
       gradeOrClass: gradeOrClass ? gradeOrClass.trim() : "",
+      gradeId: gradeId || null,
+      sectionId: sectionId || null,
       admissionNo: admissionNo ? admissionNo.trim() : "",
       section: section ? section.trim() : "",
       semester: semester ? semester.trim() : "",
@@ -242,26 +309,32 @@ export const createStudentForCampus = async (req, res) => {
     await student.populate([
       { path: "campusId", select: "name location code" },
       { path: "instituteId", select: "name type board" },
+      { path: "gradeId", select: "name code" },
+      { path: "sectionId", select: "name code" },
     ]);
 
     const studentResponse = student.toObject();
     delete studentResponse.passwordHash;
     studentResponse.campus = student.campusId?.name || "";
     studentResponse.institute = student.instituteId?.name || "";
+    studentResponse.gradeOrClass = student.gradeId?.name || student.gradeOrClass || "";
+    studentResponse.section = student.sectionId?.name || student.section || "";
 
-    // Sync StudentProfile so downstream services (attendance, fees, payroll) find the profile
+    // Sync StudentProfile so downstream services (attendance, fees, payroll, exams) find the profile
     try {
       await StudentProfile.findOneAndUpdate(
         { user: student._id },
         {
           user: student._id,
           studentId: student.roll || String(student._id),
-          gradeOrClass: student.gradeOrClass || student.program || "Grade 10",
+          gradeId: student.gradeId || null,
+          sectionId: student.sectionId || null,
+          gradeOrClass: student.gradeOrClass || student.program || "Class 9",
           section: student.section || "A",
           rollNumber: student.roll || "1",
           guardianDetails: {
             name: student.guardian || "Guardian",
-            phone: student.guardianPhone || student.phone || "N/A",
+            phone: student.guardianPhone || student.phone || "",
             relation: "Parent",
           },
           isActive: student.status !== "Inactive",
@@ -557,6 +630,8 @@ export const updateStudentInCampus = async (req, res) => {
       "roll",
       "program",
       "gradeOrClass",
+      "gradeId",
+      "sectionId",
       "admissionNo",
       "section",
       "semester",
@@ -579,6 +654,30 @@ export const updateStudentInCampus = async (req, res) => {
       updateData.phone = updateData.studentPhone;
     }
 
+    // Resolve Grade and Section dynamically if modified
+    if (updateData.gradeId) {
+      const gDoc = await Grade.findOne({ _id: updateData.gradeId, campusId });
+      if (gDoc) updateData.gradeOrClass = gDoc.name;
+    } else if (updateData.gradeOrClass) {
+      const gDoc = await Grade.findOne({
+        campusId,
+        name: { $regex: new RegExp(`^${updateData.gradeOrClass.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      });
+      if (gDoc) updateData.gradeId = gDoc._id;
+    }
+
+    if (updateData.sectionId) {
+      const sDoc = await Section.findOne({ _id: updateData.sectionId, campusId });
+      if (sDoc) updateData.section = sDoc.name;
+    } else if (updateData.section && updateData.gradeId) {
+      const sDoc = await Section.findOne({
+        campusId,
+        gradeId: updateData.gradeId,
+        name: { $regex: new RegExp(`^${updateData.section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      });
+      if (sDoc) updateData.sectionId = sDoc._id;
+    }
+
     // Automatically synchronize isActive when student status changes
     if (updateData.status) {
       if (["Inactive", "Withdrawn", "Graduated", "Suspended"].includes(updateData.status)) {
@@ -595,12 +694,39 @@ export const updateStudentInCampus = async (req, res) => {
     )
       .select("-passwordHash")
       .populate("campusId", "name location code")
-      .populate("instituteId", "name type board");
+      .populate("instituteId", "name type board")
+      .populate("gradeId", "name code")
+      .populate("sectionId", "name code");
 
     if (!student) {
       return res
         .status(404)
         .json({ success: false, message: "Student not found in this campus" });
+    }
+
+    // Sync StudentProfile so downstream services stay updated
+    try {
+      await StudentProfile.findOneAndUpdate(
+        { user: student._id },
+        {
+          user: student._id,
+          studentId: student.roll || String(student._id),
+          gradeId: student.gradeId || null,
+          sectionId: student.sectionId || null,
+          gradeOrClass: student.gradeOrClass || student.program || "Class 9",
+          section: student.section || "A",
+          rollNumber: student.roll || "1",
+          guardianDetails: {
+            name: student.guardian || "Guardian",
+            phone: student.guardianPhone || student.phone || "",
+            relation: "Parent",
+          },
+          isActive: student.status !== "Inactive",
+        },
+        { upsert: true, new: true }
+      );
+    } catch (profileErr) {
+      console.warn("Could not sync StudentProfile:", profileErr.message);
     }
 
     logActivity({
@@ -618,6 +744,8 @@ export const updateStudentInCampus = async (req, res) => {
     const studentResponse = student.toObject();
     studentResponse.campus = student.campusId?.name || "";
     studentResponse.institute = student.instituteId?.name || "";
+    studentResponse.gradeOrClass = student.gradeId?.name || student.gradeOrClass || "";
+    studentResponse.section = student.sectionId?.name || student.section || "";
 
     return res.status(200).json({ success: true, data: studentResponse });
   } catch (error) {

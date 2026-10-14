@@ -24,7 +24,7 @@ import {
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("campus_admin", "campus_manager", "principal"));
+router.use(authorize("super_admin", "institute_admin", "campus_admin", "campus_manager", "principal"));
 
 // Peshawar Board Presets
 router.get("/preset-peshawar", getPeshawarPresetPreview);
