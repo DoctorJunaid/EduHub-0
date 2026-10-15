@@ -23,8 +23,13 @@ const timetableSchema = new mongoose.Schema(
       required: [true, "Institution type is required"],
       trim: true,
       enum: INSTITUTION_TYPES,
+      default: "School",
     },
     gradeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Grade",
+    },
+    classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Grade",
     },
@@ -45,7 +50,17 @@ const timetableSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    className: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     section: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    sectionName: {
       type: String,
       trim: true,
       default: "",
@@ -55,10 +70,49 @@ const timetableSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    subjectName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     instructor: {
       type: String,
       trim: true,
       default: "",
+    },
+    teacherName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    targetAudience: {
+      type: String,
+      enum: ["both", "student", "teacher"],
+      default: "both",
+      trim: true,
+    },
+    visibleTo: {
+      type: String,
+      enum: ["both", "student", "teacher"],
+      trim: true,
+    },
+    slotType: {
+      type: String,
+      enum: ["period", "break"],
+      default: "period",
+    },
+    dayOfWeek: {
+      type: String,
+      enum: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      default: "Monday",
     },
     days: {
       type: [Number],
@@ -79,6 +133,21 @@ const timetableSchema = new mongoose.Schema(
       type: String,
       required: [true, "End time is required"],
       trim: true,
+    },
+    room: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    roomNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
     },
     isBreak: {
       type: Boolean,
@@ -131,6 +200,62 @@ timetableSchema.pre("validate", function validateTimetable() {
     this.invalidate("endTime", "End time must be after start time.");
   }
 
+  // Synchronize targetAudience and visibleTo
+  if (this.targetAudience && !this.visibleTo) {
+    this.visibleTo = this.targetAudience;
+  } else if (this.visibleTo && !this.targetAudience) {
+    this.targetAudience = this.visibleTo;
+  }
+  if (!this.targetAudience) {
+    this.targetAudience = "both";
+    this.visibleTo = "both";
+  }
+
+  // Synchronize slotType and isBreak
+  if (this.isBreak) {
+    this.slotType = "break";
+  } else {
+    this.slotType = this.slotType || "period";
+  }
+
+  // Synchronize days and dayOfWeek
+  if (Array.isArray(this.days) && this.days.length > 0) {
+    const firstDay = this.days[0];
+    if (typeof firstDay === "number" && firstDay >= 1 && firstDay <= 7) {
+      this.dayOfWeek = WEEKDAYS[firstDay - 1];
+    }
+  } else if (this.dayOfWeek) {
+    const dayIndex = WEEKDAYS.indexOf(this.dayOfWeek);
+    if (dayIndex !== -1) {
+      this.days = [dayIndex + 1];
+    }
+  }
+
+  // Synchronize string and ID aliases
+  if (this.program && !this.className) this.className = this.program;
+  if (this.className && !this.program) this.program = this.className;
+
+  if (this.section && !this.sectionName) this.sectionName = this.section;
+  if (this.sectionName && !this.section) this.section = this.sectionName;
+
+  if (this.subject && !this.subjectName) this.subjectName = this.subject;
+  if (this.subjectName && !this.subject) this.subject = this.subjectName;
+
+  if (this.instructor && !this.teacherName) this.teacherName = this.instructor;
+  if (this.teacherName && !this.instructor) this.instructor = this.teacherName;
+
+  if (this.gradeId && !this.classId) this.classId = this.gradeId;
+  if (this.classId && !this.gradeId) this.gradeId = this.classId;
+
+  if (this.room && !this.roomNumber) this.roomNumber = this.room;
+  if (this.roomNumber && !this.room) this.room = this.roomNumber;
+
+  if (this.targetAudience && !this.visibleTo) this.visibleTo = this.targetAudience;
+  if (this.visibleTo && !this.targetAudience) this.targetAudience = this.visibleTo;
+  if (this.targetAudience && this.visibleTo && this.targetAudience !== this.visibleTo) {
+    this.visibleTo = this.targetAudience;
+  }
+
   if (this.isBreak) {
     if (!this.breakTitle && !this.subjectId && !this.subject) {
       this.invalidate(
@@ -162,6 +287,7 @@ timetableSchema.index({
   gradeId: 1,
   sectionId: 1,
 });
+timetableSchema.index({ campusId: 1, targetAudience: 1 });
 
 const Timetable =
   mongoose.models.Timetable || mongoose.model("Timetable", timetableSchema);

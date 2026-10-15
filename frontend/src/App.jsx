@@ -57,6 +57,7 @@ import {
   StudentGrades,
   StudentFees,
   StudentMessages,
+  StudentTimetable,
 } from "./Users/Student";
 
 import { useEffect } from "react";
@@ -67,6 +68,7 @@ import NotFound from "./components/common/NotFound";
 import MyPayslips from "./pages/MyPayslips";
 import TeacherLayout from "./Users/Teacher/TeacherLayout";
 import TeacherDashboard from "./Users/Teacher/TeacherDashboard";
+import TeacherTimetable from "./Users/Teacher/TeacherTimetable";
 import TeacherPage from "./Users/Teacher/TeacherPage";
 import TeacherClassCredits from "./Users/Teacher/TeacherClassCredits";
 import MyClass from "./pages/teacher/MyClass";
@@ -142,6 +144,8 @@ const App = () => {
             <Route path="student/results" element={<StudentGrades />} />
             <Route path="student/exams" element={<StudentCourses />} />
             <Route path="student/fees" element={<StudentFees />} />
+            <Route path="student/timetable" element={<StudentTimetable />} />
+            <Route path="student/schedule" element={<StudentTimetable />} />
             <Route path="student/support" element={<SupportList />} />
             <Route path="student/support/:id" element={<SupportTicketDetail />} />
             <Route path="student/messages" element={<SupportList />} />
@@ -269,6 +273,8 @@ const App = () => {
             <Route path="teacher/my-class/attendance" element={<ClassAttendance />} />
             <Route path="teacher/my-class/results" element={<MyClassResults />} />
             <Route path="teacher/credits" element={<TeacherClassCredits />} />
+            <Route path="teacher/timetable" element={<TeacherTimetable />} />
+            <Route path="teacher/schedule" element={<TeacherTimetable />} />
             <Route path="teacher/classes" element={<TeacherPage />} />
             <Route path="teacher/assignments" element={<TeacherPage />} />
             <Route path="teacher/attendance" element={<TeacherPage />} />

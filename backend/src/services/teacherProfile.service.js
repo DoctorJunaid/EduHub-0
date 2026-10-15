@@ -13,6 +13,7 @@ import TeacherSalaryProfile from "../models/teacherSalaryProfile.model.js";
 import MonthlyPayroll from "../models/monthlyPayroll.model.js";
 import SubstituteAssignment from "../models/substituteAssignment.model.js";
 import ActivityLog, { logActivity } from "../models/activityLog.model.js";
+import Timetable from "../models/timetable.model.js";
 
 /**
  * Helper to safely resolve a teacher profile by TeacherProfile._id, User._id, or employeeId.
@@ -283,19 +284,94 @@ export const getTeacherClasses = async (campusId, teacherId) => {
 /**
  * 3. GET Weekly Timetable
  */
-export const getTeacherTimetable = async (campusId, teacherId) => {
+export const getTeacherTimetable = async (campusId, teacherId, query = {}) => {
   const profile = await resolveTeacher(campusId, teacherId);
+  const teacherUserId = profile.user?._id;
   const teacherProfileId = profile._id;
   const teacherName = profile.user?.name || "";
 
-  const schedules = await ClassSchedule.find({
-    $or: [
-      { teacherProfileId },
-      { teacherName },
-      { instructor: teacherName },
-    ],
+  // Check if teacher is designated Class Teacher for any section
+  const classTeacherAssignment = await TeacherAssignment.findOne({
     campusId,
-  }).lean();
+    teacherId: teacherUserId,
+    isClassTeacher: true,
+  }).populate("gradeId sectionId").lean();
+
+  let classTeacherOf = null;
+  if (classTeacherAssignment && classTeacherAssignment.gradeId && classTeacherAssignment.sectionId) {
+    classTeacherOf = {
+      gradeId: classTeacherAssignment.gradeId._id,
+      gradeName: classTeacherAssignment.gradeId.name,
+      sectionId: classTeacherAssignment.sectionId._id,
+      sectionName: classTeacherAssignment.sectionId.name,
+    };
+  }
+
+  // Determine query scope
+  // If ?view=class_routine and teacher is class teacher, show that class routine
+  let timetableQuery = {
+    campusId,
+    status: { $ne: "Cancelled" },
+  };
+
+  if (query.view === "class_routine" && classTeacherOf) {
+    timetableQuery.$and = [
+      {
+        $or: [
+          { gradeId: classTeacherOf.gradeId },
+          { program: classTeacherOf.gradeName },
+          { isBreak: true },
+        ],
+      },
+      {
+        $or: [
+          { sectionId: classTeacherOf.sectionId },
+          { section: classTeacherOf.sectionName },
+          { section: "All sections" },
+          { section: "" },
+          { isBreak: true },
+        ],
+      },
+      {
+        targetAudience: { $nin: ["student"] },
+      },
+    ];
+  } else {
+    // Standard teacher-scoped schedule: periods where this teacher is assigned OR campus break
+    timetableQuery.$or = [
+      {
+        $and: [
+          { $or: [{ teacherId: teacherUserId }, { instructor: teacherName }, { teacherName: teacherName }] },
+          { targetAudience: { $nin: ["student"] } },
+        ],
+      },
+      { isBreak: true },
+    ];
+  }
+
+  let records = await Timetable.find(timetableQuery)
+    .populate("gradeId", "name")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name code")
+    .populate("teacherId", "name email phone avatar designation department")
+    .sort({ days: 1, startTime: 1 });
+
+  records = records.map((r) => {
+    const doc = r.toObject();
+    if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
+    if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
+    if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+    if (doc.isBreak && !doc.subject) doc.subject = doc.breakTitle || "Break";
+    if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+    doc.targetAudience = doc.targetAudience || doc.visibleTo || "both";
+    doc.visibleTo = doc.targetAudience;
+    doc.slotType = doc.isBreak ? "break" : (doc.slotType || "period");
+    doc.className = doc.program || (doc.gradeId?.name || "");
+    doc.sectionName = doc.section || (doc.sectionId?.name || "");
+    doc.subjectName = doc.subject || (doc.subjectId?.name || "");
+    doc.teacherName = doc.instructor || (doc.teacherId?.name || "");
+    return doc;
+  });
 
   const standardPeriods = [
     { period: 1, startTime: "08:00", endTime: "08:45" },
@@ -309,13 +385,14 @@ export const getTeacherTimetable = async (campusId, teacherId) => {
     { period: 7, startTime: "13:15", endTime: "14:00" },
   ];
 
-  const slots = schedules.map((s) => ({
+  const abbrDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const slots = records.filter(r => !r.isBreak).map((s) => ({
     _id: s._id,
-    day: s.dayOfWeek || "Monday",
+    day: s.dayOfWeek || (Array.isArray(s.days) && s.days[0] ? abbrDays[s.days[0] - 1] : "Monday"),
     period: s.periodIndex || 1,
-    class: `${s.gradeOrClass || s.className || "Grade 1"} - ${s.section || "A"}`,
-    subject: s.subject || "Mathematics",
-    room: s.room || "Room 101",
+    class: `${s.className || s.program || "Class"} • Sec ${s.sectionName || s.section || "A"}`,
+    subject: s.subjectName || s.subject || "Subject",
+    room: s.room || s.roomNumber || "Room 101",
     startTime: s.startTime || "08:00",
     endTime: s.endTime || "08:45",
   }));
@@ -324,6 +401,14 @@ export const getTeacherTimetable = async (campusId, teacherId) => {
     days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     periods: standardPeriods,
     slots,
+    data: records,
+    count: records.length,
+    teacher: {
+      id: teacherUserId,
+      name: teacherName,
+      isClassTeacher: Boolean(classTeacherOf),
+      classTeacherSection: classTeacherOf,
+    },
   };
 };
 

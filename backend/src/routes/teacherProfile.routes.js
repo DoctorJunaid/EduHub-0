@@ -17,6 +17,9 @@ const viewRoles = [...adminRoles, "teacher", "faculty"];
 // All routes require authentication
 router.use(protect);
 
+// Teacher Timetable (Direct endpoint)
+router.get("/timetable", restrictTo(...viewRoles), controller.getTeacherTimetable);
+
 // Teacher Profile Endpoints (Admins and Teachers can view)
 router.get("/:teacherId", restrictTo(...viewRoles), controller.getTeacherProfile);
 router.get("/:teacherId/classes", restrictTo(...viewRoles), controller.getTeacherClasses);

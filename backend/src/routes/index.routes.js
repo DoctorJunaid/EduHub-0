@@ -80,6 +80,14 @@ router.use("/campus/diary", teacherDiaryRoutes);
 router.use("/teacher/gradebook", teacherGradebookRoutes);
 router.use("/campus/gradebook", teacherGradebookRoutes);
 
+router.use("/teacher/timetable", (req, res, next) => {
+  req.url = "/timetable" + (req.url === "/" ? "" : req.url);
+  teacherProfileRoutes(req, res, next);
+});
+router.use("/teacher/schedule", (req, res, next) => {
+  req.url = "/timetable" + (req.url === "/" ? "" : req.url);
+  teacherProfileRoutes(req, res, next);
+});
 router.use("/campus/teachers", teacherProfileRoutes);
 router.use("/campus-admin/teachers", teacherProfileRoutes);
 

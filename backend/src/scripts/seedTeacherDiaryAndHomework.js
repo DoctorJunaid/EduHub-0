@@ -31,7 +31,7 @@ export async function seedTeacherDiaryAndHomework() {
     const tMap = new Map(timetables.map((t) => [String(t.subjectId), t]));
     const csMap = new Map(classSchedules.map((cs) => [cs.subject, cs]));
 
-    const defaultTeacher = teachers[0] || { _id: new mongoose.Types.ObjectId(), name: "Dr. Tariq Mansoor" };
+    const defaultTeacher = teachers[0] || { _id: new mongoose.Types.ObjectId(), name: "Sir Muhammad Usman" };
     const getTeacherForSub = (subName) => {
       const match = teachers.find(
         (t) =>

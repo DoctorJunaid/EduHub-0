@@ -795,3 +795,143 @@ export const submitFeePayment = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * GET /api/v1/student/timetable
+ * Read-only, strictly section-scoped timetable for authenticated student.
+ */
+export const getStudentTimetable = async (req, res) => {
+  try {
+    const student = req.user;
+    const campusId = student.campusId;
+
+    let gradeName = student.gradeOrClass || student.program || "";
+    let sectionName = student.section || "";
+    let gradeDoc = null;
+    let sectionDoc = null;
+
+    if (student.gradeId) {
+      gradeDoc = await Grade.findOne({ _id: student.gradeId, campusId }).lean();
+      if (gradeDoc && !gradeName) gradeName = gradeDoc.name;
+    }
+    if (student.sectionId && gradeDoc) {
+      sectionDoc = await Section.findOne({ _id: student.sectionId, campusId }).lean();
+      if (sectionDoc && !sectionName) sectionName = sectionDoc.name;
+    }
+
+    if (!gradeDoc || !sectionDoc) {
+      const profile = await StudentProfile.findOne({ user: student._id }).populate("gradeId sectionId").lean();
+      if (profile) {
+        if (!gradeDoc && profile.gradeId) {
+          gradeDoc = profile.gradeId;
+          gradeName = gradeDoc.name;
+        }
+        if (!sectionDoc && profile.sectionId) {
+          sectionDoc = profile.sectionId;
+          sectionName = sectionDoc.name;
+        }
+      }
+    }
+
+    if (!gradeDoc && gradeName) {
+      gradeDoc = await Grade.findOne({
+        campusId,
+        name: { $regex: new RegExp(`^${gradeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      }).lean();
+    }
+    if (!gradeDoc) {
+      gradeDoc = (await Grade.findOne({ campusId }).sort({ createdAt: 1 }).lean()) || null;
+      if (gradeDoc && !gradeName) gradeName = gradeDoc.name;
+    }
+
+    if (!sectionDoc) {
+      if (gradeDoc && sectionName) {
+        sectionDoc = await Section.findOne({
+          campusId,
+          gradeId: gradeDoc._id,
+          name: { $regex: new RegExp(`^${sectionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+        }).lean();
+      }
+      if (!sectionDoc && gradeDoc) {
+        sectionDoc = await Section.findOne({ campusId, gradeId: gradeDoc._id }).lean();
+        if (sectionDoc && !sectionName) sectionName = sectionDoc.name;
+      }
+    }
+
+    // Build strictly isolated query for student
+    const query = {
+      campusId,
+      status: { $ne: "Cancelled" },
+      targetAudience: { $nin: ["teacher"] },
+    };
+
+    const conditions = [];
+
+    // Grade condition
+    const gradeOrs = [];
+    if (gradeDoc) gradeOrs.push({ gradeId: gradeDoc._id });
+    if (gradeName) {
+      gradeOrs.push({ program: gradeName });
+      gradeOrs.push({ className: gradeName });
+      gradeOrs.push({ gradeOrClass: gradeName });
+      gradeOrs.push({ program: { $regex: new RegExp(`^${gradeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } });
+    }
+    gradeOrs.push({ isBreak: true });
+    conditions.push({ $or: gradeOrs });
+
+    // Section condition
+    const secOrs = [];
+    if (sectionDoc) secOrs.push({ sectionId: sectionDoc._id });
+    if (sectionName) {
+      secOrs.push({ section: sectionName });
+      secOrs.push({ sectionName: sectionName });
+      secOrs.push({ section: `Section ${sectionName}` });
+      secOrs.push({ section: { $regex: new RegExp(`^${sectionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } });
+    }
+    secOrs.push({ section: "All sections" });
+    secOrs.push({ section: "" });
+    secOrs.push({ section: null });
+    secOrs.push({ isBreak: true });
+    conditions.push({ $or: secOrs });
+
+    query.$and = conditions;
+
+    let records = await Timetable.find(query)
+      .populate("gradeId", "name")
+      .populate("sectionId", "name")
+      .populate("subjectId", "name code")
+      .populate("teacherId", "name email phone avatar designation department")
+      .sort({ days: 1, startTime: 1 });
+
+    records = records.map((r) => {
+      const doc = r.toObject();
+      if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
+      if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
+      if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
+      if (doc.isBreak && !doc.subject) doc.subject = doc.breakTitle || "Break";
+      if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      doc.targetAudience = doc.targetAudience || doc.visibleTo || "both";
+      doc.visibleTo = doc.targetAudience;
+      doc.slotType = doc.isBreak ? "break" : (doc.slotType || "period");
+      doc.className = doc.program || (doc.gradeId?.name || gradeName);
+      doc.sectionName = doc.section || (doc.sectionId?.name || sectionName);
+      doc.subjectName = doc.subject || (doc.subjectId?.name || "");
+      doc.teacherName = doc.instructor || (doc.teacherId?.name || "");
+      return doc;
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: records.length,
+      data: records,
+      studentScope: {
+        className: gradeName || gradeDoc?.name || "Class 9",
+        sectionName: sectionName || sectionDoc?.name || "Section A",
+        gradeId: gradeDoc?._id || null,
+        sectionId: sectionDoc?._id || null,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

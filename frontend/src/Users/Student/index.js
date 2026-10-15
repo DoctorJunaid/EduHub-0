@@ -13,3 +13,4 @@ export { default as StudentGrades } from './pages/Grades/StudentGrades';
 export { default as StudentFees } from './pages/Fees/StudentFees';
 
 export { default as StudentMessages } from './pages/Messages/StudentMessages';
+export { default as StudentTimetable } from './pages/Timetable/StudentTimetable';
