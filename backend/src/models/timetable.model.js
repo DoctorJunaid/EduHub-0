@@ -40,7 +40,22 @@ const timetableSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    room: {
+    program: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    section: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    subject: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    instructor: {
       type: String,
       trim: true,
       default: "",
@@ -117,31 +132,29 @@ timetableSchema.pre("validate", function validateTimetable() {
   }
 
   if (this.isBreak) {
-    if (!this.breakTitle && !this.subjectId) {
+    if (!this.breakTitle && !this.subjectId && !this.subject) {
       this.invalidate(
         "breakTitle",
-        "Break slots require breakTitle or subjectId.",
+        "Break slots require a break title or subject.",
       );
     }
   } else {
-    const requiredFields = [
-      ["gradeId", "Grade/Program is required for class slots."],
-      ["sectionId", "Section is required for class slots."],
-      ["subjectId", "Subject is required for class slots."],
-      ["teacherId", "Teacher is required for class slots."],
-      ["room", "Room is required for class slots."],
-    ];
-    for (const [field, message] of requiredFields) {
-      const val = this[field];
-      if (!val || (typeof val === "string" && !val.trim())) {
-        this.invalidate(field, message);
-      }
+    if (!this.gradeId && (!this.program || !this.program.trim())) {
+      this.invalidate("gradeId", "Class/Grade is required for class slots.");
+    }
+    if (!this.sectionId && (!this.section || !this.section.trim())) {
+      this.invalidate("sectionId", "Section is required for class slots.");
+    }
+    if (!this.subjectId && (!this.subject || !this.subject.trim())) {
+      this.invalidate("subjectId", "Subject is required for class slots.");
+    }
+    if (!this.teacherId && (!this.instructor || !this.instructor.trim())) {
+      this.invalidate("teacherId", "Teacher is required for class slots.");
     }
   }
 });
 
 timetableSchema.index({ campusId: 1, institutionType: 1, days: 1 });
-timetableSchema.index({ campusId: 1, days: 1, room: 1 });
 timetableSchema.index({ campusId: 1, days: 1, teacherId: 1 });
 timetableSchema.index({
   campusId: 1,

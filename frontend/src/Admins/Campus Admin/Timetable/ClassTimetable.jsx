@@ -328,24 +328,6 @@ export default function ClassTimetable() {
           .filter(Boolean),
       ),
     ];
-    const roomNames = [
-      ...new Set(
-        records
-          .map((r) => r.room || r.roomNumber)
-          .concat(
-            isSchool
-              ? [
-                  "Room 101",
-                  "Room 102",
-                  "Room 103",
-                  "Science Lab",
-                  "Computer Lab",
-                ]
-              : ["Hall A", "Hall B", "Lab 3", "Auditorium"],
-          )
-          .filter(Boolean),
-      ),
-    ];
 
     return {
       program: availableClasses,
@@ -353,7 +335,6 @@ export default function ClassTimetable() {
       instructor: teacherNames.length
         ? teacherNames
         : [isSchool ? "Ms. Ayesha Khan" : "Dr. Usman Khan"],
-      room: roomNames,
     };
   }, [faculty, records, availableClasses, availableSections, isSchool]);
 
@@ -637,7 +618,6 @@ export default function ClassTimetable() {
           subject: record.subject || record.subjectId?.name,
           instructor:
             record.instructor || record.teacherName || record.teacherId?.name,
-          room: record.room || record.roomNumber,
           isBreak: Boolean(record.isBreak),
           institutionType: educationType,
           status: record.status || "Active",
@@ -681,8 +661,11 @@ export default function ClassTimetable() {
       .map((r) => r.instructor || r.teacherName)
       .filter(Boolean),
   ).size;
-  const activeRoomsForClass = new Set(
-    classRoutineRecords.map((r) => r.room || r.roomNumber).filter(Boolean),
+  const activeSubjectsForClass = new Set(
+    classRoutineRecords
+      .filter((r) => !r.isBreak)
+      .map((r) => (r.subject || "").trim().toLowerCase())
+      .filter(Boolean),
   ).size;
   const totalWeeklySlots = useMemo(() => {
     return classRoutineRecords.reduce((acc, r) => {
@@ -802,13 +785,13 @@ export default function ClassTimetable() {
         <div className="campus-kpi-card">
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Building size={14} />
+              <BookOpen size={14} />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">
-                {isSchool ? "Allocated Rooms" : "Rooms Used"}
+                {isSchool ? "Configured Subjects" : "Unique Courses"}
               </span>
-              <span className="kpi-value">{activeRoomsForClass}</span>
+              <span className="kpi-value">{activeSubjectsForClass}</span>
             </div>
           </div>
         </div>

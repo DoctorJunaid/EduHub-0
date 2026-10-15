@@ -5,11 +5,11 @@ import {
   Calendar,
   BookOpen,
   User,
-  Building,
   Zap,
   Coffee,
   GraduationCap,
   AlertCircle,
+  AlertTriangle,
   ExternalLink,
 } from "lucide-react";
 import { minutes } from "../../../lib/schedule.js";
@@ -103,7 +103,6 @@ export default function QuickScheduleModal({
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [subjectText, setSubjectText] = useState("");
-  const [room, setRoom] = useState("");
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
   const [days, setDays] = useState([initialDay]);
@@ -167,7 +166,6 @@ export default function QuickScheduleModal({
       setSelectedSubjectId(subId);
       setSelectedTeacherId(tId);
       setSubjectText(editRecord.subject || editRecord.breakTitle || "");
-      setRoom(editRecord.room || editRecord.roomNumber || (isSchool ? "Room 101" : "Hall 1"));
       setStartTime(editRecord.startTime || "08:00");
       setEndTime(editRecord.endTime || "08:50");
       const recordDays = Array.isArray(editRecord.days) && editRecord.days.length ? editRecord.days : [1];
@@ -187,7 +185,6 @@ export default function QuickScheduleModal({
       setSelectedSubjectId("");
       setSelectedTeacherId("");
       setSubjectText(isBreak ? "Lunch & Prayer Break" : "");
-      setRoom(isBreak ? "Campus Grounds / Cafeteria" : (options?.room?.[0] || (isSchool ? "Room 101" : "Hall 1")));
       setStartTime(initialStartTime);
       setEndTime(initialEndTime);
       setDays([initialDay || 1]);
@@ -296,7 +293,6 @@ export default function QuickScheduleModal({
     if (preset.type === "break") {
       setMode("break");
       setSubjectText(preset.name.split(" (")[0]);
-      setRoom("Campus Grounds / Cafeteria");
     } else {
       setMode("class");
     }
@@ -393,7 +389,6 @@ export default function QuickScheduleModal({
         breakTitle: isBreak ? subjectText.trim() : "",
         isBreak,
         instructor: resolvedInstructor,
-        room: room.trim() || (isSchool ? "Room 101" : "Hall 1"),
         startTime,
         endTime,
         days,
@@ -403,7 +398,8 @@ export default function QuickScheduleModal({
 
       onClose();
     } catch (err) {
-      setError(typeof err === "string" ? err : err?.message || "Failed to schedule class");
+      const msg = typeof err === "string" ? err : err?.message || "Failed to schedule class";
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -617,86 +613,62 @@ export default function QuickScheduleModal({
                   </select>
                 </div>
 
-                {/* Predefined Dynamic Dropdown: Teacher & Classroom */}
-                <div className="qs-row-2col">
-                  <div>
-                    <label htmlFor="qs-teacher" className="qs-label">
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                        <User size={13} style={{ color: "#64748b" }} /> Subject Teacher *
-                      </span>
-                    </label>
-                    <select
-                      id="qs-teacher"
-                      required
-                      value={selectedTeacherId}
-                      onChange={(e) => setSelectedTeacherId(e.target.value)}
-                      disabled={!selectedSubjectId}
-                      className="qs-input"
-                    >
-                      <option value="">
-                        {!selectedSubjectId
-                          ? "-- Select Subject First --"
-                          : dbAssignedTeachers.length > 0
-                          ? "-- Select Assigned Teacher --"
-                          : "-- Select Campus Teacher --"}
+                {/* Predefined Dynamic Dropdown: Teacher */}
+                <div>
+                  <label htmlFor="qs-teacher" className="qs-label">
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      <User size={13} style={{ color: "#64748b" }} /> Subject Teacher *
+                    </span>
+                  </label>
+                  <select
+                    id="qs-teacher"
+                    required
+                    value={selectedTeacherId}
+                    onChange={(e) => setSelectedTeacherId(e.target.value)}
+                    disabled={!selectedSubjectId}
+                    className="qs-input"
+                    style={{ height: "44px", fontSize: "14px" }}
+                  >
+                    <option value="">
+                      {!selectedSubjectId
+                        ? "-- Select Subject First --"
+                        : dbAssignedTeachers.length > 0
+                        ? "-- Select Assigned Teacher --"
+                        : "-- Select Campus Teacher --"}
+                    </option>
+                    {dbAssignedTeachers.length > 0 && (
+                      <optgroup label="✓ Assigned to This Subject">
+                        {dbAssignedTeachers.map((t) => (
+                          <option key={t._id} value={t._id}>
+                            {t.name} (Assigned)
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {displayFaculty.length > 0 && (
+                      <optgroup label={dbAssignedTeachers.length > 0 ? "Other Faculty" : "Campus Faculty"}>
+                        {displayFaculty.map((f) => (
+                          <option key={f._id || f.id} value={f._id || f.id}>
+                            {f.name} ({f.department || "Faculty"})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {dbAssignedTeachers.length === 0 && displayFaculty.length === 0 && Array.isArray(options?.instructor) && options.instructor.length > 0 && (
+                      <optgroup label="Available Faculty">
+                        {options.instructor.map((inst, idx) => (
+                          <option key={`opt-inst-${idx}`} value={inst}>
+                            {inst}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {dbAssignedTeachers.length === 0 && displayFaculty.length === 0 && (!options?.instructor || options.instructor.length === 0) && (
+                      <option value="" disabled>
+                        No teachers registered yet
                       </option>
-                      {dbAssignedTeachers.length > 0 && (
-                        <optgroup label="✓ Assigned to This Subject">
-                          {dbAssignedTeachers.map((t) => (
-                            <option key={t._id} value={t._id}>
-                              {t.name} (Assigned)
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      {displayFaculty.length > 0 && (
-                        <optgroup label={dbAssignedTeachers.length > 0 ? "Other Faculty" : "Campus Faculty"}>
-                          {displayFaculty.map((f) => (
-                            <option key={f._id || f.id} value={f._id || f.id}>
-                              {f.name} ({f.department || "Faculty"})
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      {dbAssignedTeachers.length === 0 && displayFaculty.length === 0 && Array.isArray(options?.instructor) && options.instructor.length > 0 && (
-                        <optgroup label="Available Faculty">
-                          {options.instructor.map((inst, idx) => (
-                            <option key={`opt-inst-${idx}`} value={inst}>
-                              {inst}
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      {dbAssignedTeachers.length === 0 && displayFaculty.length === 0 && (!options?.instructor || options.instructor.length === 0) && (
-                        <option value="" disabled>
-                          No teachers registered yet
-                        </option>
-                      )}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="qs-room" className="qs-label">
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                        <Building size={13} style={{ color: "#64748b" }} /> Classroom / Lab *
-                      </span>
-                    </label>
-                    <input
-                      id="qs-room"
-                      list="qs-room-suggestions"
-                      type="text"
-                      required
-                      placeholder="e.g. Room 101, Science Lab"
-                      value={room}
-                      onChange={(e) => setRoom(e.target.value)}
-                      className="qs-input"
-                    />
-                    <datalist id="qs-room-suggestions">
-                      {(options?.room || ["Room 101", "Room 102", "Room 103", "Science Lab", "Computer Lab"]).map((r) => (
-                        <option key={r} value={r} />
-                      ))}
-                    </datalist>
-                  </div>
+                    )}
+                  </select>
                 </div>
               </>
             ) : (

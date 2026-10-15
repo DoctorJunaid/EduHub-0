@@ -30,7 +30,6 @@ export default function ScheduleClassForm({
     sectionId: record?.sectionId || defaults?.sectionId || "",
     subjectId: record?.subjectId || defaults?.subjectId || "",
     teacherId: record?.teacherId || defaults?.teacherId || "",
-    room: record?.room || defaults?.room || options?.room?.[0] || (isSchool ? "Room 101" : "Hall 1"),
     days: record?.days || defaults?.days || (isSchool ? [1, 2, 3, 4, 5] : []),
     startTime: record?.startTime || defaults?.startTime || (isSchool ? "08:30" : "09:00"),
     endTime: record?.endTime || defaults?.endTime || (isSchool ? "09:20" : "10:00"),
@@ -112,10 +111,10 @@ export default function ScheduleClassForm({
         isSchool
           ? record
             ? `Editing period schedule for this subject.`
-            : "Define period timings, teacher incharge, grade & section, and classroom allocation."
+            : "Define period timings, teacher incharge, and grade & section allocation."
           : record
             ? `Editing schedule for this course.`
-            : "Define lecture timings, recurring weekdays, and room allocation for this class."
+            : "Define lecture timings and recurring weekdays for this class."
       }
       parentName={isSchool ? "Class Routine & Timetable" : "Class Timetable"}
       icon={isSchool ? <School size={22} /> : <Calendar size={22} />}
@@ -177,7 +176,7 @@ export default function ScheduleClassForm({
             </select>
           </div>
 
-          <div className="activity-form-field">
+          <div className="activity-form-field span-2">
             <div className="flex justify-between items-center mb-1.5">
               <Label htmlFor="tt-instructor">{isSchool ? "Assigned Teacher *" : "Assigned Instructor *"}</Label>
               <Link to="/teacher-assignments" className="text-xs text-muted-foreground hover:text-primary hover:underline">
@@ -197,21 +196,6 @@ export default function ScheduleClassForm({
               {teachers.map((inst) => inst ? (
                 <option key={inst._id} value={inst._id}>{inst.name}</option>
               ) : null)}
-            </select>
-          </div>
-
-          <div className="activity-form-field">
-            <Label htmlFor="tt-room">{isSchool ? "Classroom / Laboratory *" : "Lecture Hall / Lab *"}</Label>
-            <select
-              id="tt-room"
-              value={values.room}
-              onChange={(e) => change("room", e.target.value)}
-            >
-              {(options?.room || ["Room 101", "Room 102", "Science Lab", "IT Lab", "Art Studio"]).map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
             </select>
           </div>
 

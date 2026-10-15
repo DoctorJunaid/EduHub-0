@@ -55,10 +55,9 @@ export default function ScheduledClasses({
         <TableHeader>
           <TableRow>
             {[
-              { label: "Subject & Section", width: "26%" },
-              { label: "Days & Time", width: "22%" },
-              { label: "Room / Lab", width: "14%" },
-              { label: "Assigned Instructor", width: "18%" },
+              { label: "Subject & Section", width: "32%" },
+              { label: "Days & Time", width: "26%" },
+              { label: "Assigned Instructor", width: "22%" },
               { label: "Status", width: "10%" },
               { label: "Actions", width: "10%" },
             ].map(({ label, width }) => (
@@ -139,7 +138,6 @@ export default function ScheduledClasses({
                   </div>
                 </TableCell>
 
-                <TableCell>{record.room || record.roomNumber || "—"}</TableCell>
 
                 <TableCell>
                   {isBreak ? (

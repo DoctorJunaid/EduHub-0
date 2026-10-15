@@ -247,45 +247,43 @@ class CampusAdminService {
         .join(", ");
 
       // 1. Break vs Class conflict
+      const isRecordCampusBreak = record.isBreak && (!record.gradeId && (!record.program || ["all", "all sections", ""].includes(record.program.trim().toLowerCase())));
+      const isPayloadCampusBreak = payload.isBreak && (!payload.gradeId && (!payload.program || ["all", "all sections", ""].includes((payload.program || "").trim().toLowerCase())));
+
+      const isSameGradeForBreak =
+        (payload.gradeId && record.gradeId && String(payload.gradeId) === String(record.gradeId)) ||
+        (payload.program && record.program && payload.program.trim().toLowerCase() === record.program.trim().toLowerCase());
+
       if (!payload.isBreak && record.isBreak) {
-        throw new Error(
-          `Cannot schedule class during designated break period '${record.subject || record.breakTitle || "Break"}' on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
-        );
+        if (isRecordCampusBreak || isSameGradeForBreak) {
+          throw new Error(
+            `Cannot schedule class during designated break period '${record.subject || record.breakTitle || "Break"}' on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+          );
+        }
       }
       if (payload.isBreak && !record.isBreak) {
-        throw new Error(
-          `Cannot schedule break period during existing class '${record.subject}' on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
-        );
+        if (isPayloadCampusBreak || isSameGradeForBreak) {
+          throw new Error(
+            `Cannot schedule break period over existing class '${record.subject}' for ${record.program || "Class"} ${record.section || ""} on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+          );
+        }
       }
       if (payload.isBreak && record.isBreak) {
-        throw new Error(
-          `Another break '${record.subject || record.breakTitle}' is already scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
-        );
+        if (isRecordCampusBreak || isPayloadCampusBreak || isSameGradeForBreak) {
+          throw new Error(
+            `Another break '${record.subject || record.breakTitle}' is already scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+          );
+        }
       }
 
-      // 2. Room conflict (only between regular classes, ignore generic rooms)
-      const ignoredRooms = [
-        "",
-        "tbd",
-        "n/a",
-        "cafeteria / grounds",
-        "campus grounds / cafeteria",
-        "campus cafeteria / ground",
-        "break area",
-        "school grounds",
-      ];
-      const pRoom = (payload.room || "").trim().toLowerCase();
-      const rRoom = (record.room || "").trim().toLowerCase();
-      if (pRoom && rRoom && pRoom === rRoom && !ignoredRooms.includes(pRoom)) {
-        throw new Error(
-          `Room '${payload.room}' is already occupied on ${conflictingDayStr} by ${record.subject} (${record.startTime} - ${record.endTime}).`
-        );
-      }
+      // 2. Room conflict check removed — room concept is not used in this application
 
-      // 3. Instructor conflict (both by teacherId and instructor string)
+      // 3. Instructor conflict (across any class or section in the whole campus)
       if (payload.teacherId && record.teacherId && String(payload.teacherId) === String(record.teacherId)) {
+        const teacherName = record.instructor || "Assigned Teacher";
+        const conflictTarget = record.program ? `${record.program} Sec ${record.section || "A"}` : "another class";
         throw new Error(
-          `Instructor is already assigned on ${conflictingDayStr} to '${record.subject || "another class"}' (${record.startTime} - ${record.endTime}).`
+          `Instructor '${teacherName}' is already teaching '${record.subject || "a class"}' for ${conflictTarget} on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
         );
       }
       const ignoredInstructors = [
@@ -300,31 +298,23 @@ class CampusAdminService {
       const pInst = (payload.instructor || "").trim().toLowerCase();
       const rInst = (record.instructor || "").trim().toLowerCase();
       if (pInst && rInst && pInst === rInst && !ignoredInstructors.includes(pInst)) {
+        const conflictTarget = record.program ? `${record.program} Sec ${record.section || "A"}` : "another class";
         throw new Error(
-          `Instructor '${payload.instructor}' is already assigned on ${conflictingDayStr} to ${record.subject} (${record.startTime} - ${record.endTime}).`
+          `Instructor '${payload.instructor}' is already teaching '${record.subject || "a class"}' for ${conflictTarget} on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
         );
       }
 
-      // 4. Class & Section conflict (both by gradeId+sectionId and program+section string)
-      if (
-        payload.gradeId &&
-        record.gradeId &&
-        String(payload.gradeId) === String(record.gradeId) &&
-        payload.sectionId &&
-        record.sectionId &&
-        String(payload.sectionId) === String(record.sectionId)
-      ) {
+      // 4. Class & Section conflict (the same class section cannot have 2 classes at once)
+      const sameGrade =
+        (payload.gradeId && record.gradeId && String(payload.gradeId) === String(record.gradeId)) ||
+        (payload.program && record.program && payload.program.trim().toLowerCase() === record.program.trim().toLowerCase());
+      const sameSection =
+        (payload.sectionId && record.sectionId && String(payload.sectionId) === String(record.sectionId)) ||
+        (payload.section && record.section && payload.section.trim().toLowerCase() === record.section.trim().toLowerCase());
+
+      if (sameGrade && sameSection && !payload.isBreak && !record.isBreak) {
         throw new Error(
-          `This Class and Section already has '${record.subject}' scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
-        );
-      }
-      const pProg = (payload.program || "").trim().toLowerCase();
-      const rProg = (record.program || "").trim().toLowerCase();
-      const pSec = (payload.section || "").trim().toLowerCase();
-      const rSec = (record.section || "").trim().toLowerCase();
-      if (pProg && rProg && pProg === rProg && pSec && rSec && pSec === rSec) {
-        throw new Error(
-          `Class ${payload.program} Section ${payload.section} already has '${record.subject}' scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
+          `Class ${payload.program || "Class"} Section ${payload.section || "A"} already has '${record.subject}' scheduled on ${conflictingDayStr} (${record.startTime} - ${record.endTime}).`
         );
       }
     }
@@ -370,7 +360,7 @@ class CampusAdminService {
       sectionId: data.sectionId || null,
       subjectId: data.subjectId || null,
       teacherId: data.teacherId || null,
-      room: data.room || data.roomNumber || (data.isBreak ? "Cafeteria / Grounds" : "Room 101"),
+      room: data.room || data.roomNumber || "",
       startTime,
       endTime,
       status: data.status || "Active",

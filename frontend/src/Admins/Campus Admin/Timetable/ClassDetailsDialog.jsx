@@ -41,9 +41,9 @@ export default function ClassDetailsDialog({ record, onClose }) {
 
           <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
             <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
-              Room / Laboratory
+              Routine Status
             </span>
-            <strong style={{ fontSize: "15px", color: "#09090b" }}>{record.room}</strong>
+            <strong style={{ fontSize: "15px", color: record.status === "Active" ? "#16a34a" : "#09090b" }}>{record.status || "Active"}</strong>
           </div>
 
           <div style={{ padding: "16px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>
