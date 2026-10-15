@@ -33,6 +33,7 @@ export default function ScheduleClassForm({
     days: record?.days || defaults?.days || (isSchool ? [1, 2, 3, 4, 5] : []),
     startTime: record?.startTime || defaults?.startTime || (isSchool ? "08:30" : "09:00"),
     endTime: record?.endTime || defaults?.endTime || (isSchool ? "09:20" : "10:00"),
+    targetAudience: record?.targetAudience || defaults?.targetAudience || "both",
     status: record?.status || defaults?.status || "Active",
   }));
   const [error, setError] = useState("");
@@ -274,6 +275,19 @@ export default function ScheduleClassForm({
                   {s}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor="tt-visibility">Visibility / Show Timetable To</Label>
+            <select
+              id="tt-visibility"
+              value={values.targetAudience}
+              onChange={(e) => change("targetAudience", e.target.value)}
+            >
+              <option value="both">Both Teacher & Students</option>
+              <option value="student">Students Only (Grade/Section)</option>
+              <option value="teacher">Teacher Only</option>
             </select>
           </div>
         </div>

@@ -6,6 +6,7 @@ import {
   Award,
   WalletCards,
   Headset,
+  Calendar,
 } from "lucide-react";
 
 export const getStudentNav = (isSchool) => [
@@ -14,6 +15,11 @@ export const getStudentNav = (isSchool) => [
     path: "/student/dashboard",
     exact: true,
     icon: <LayoutGrid size={20} />,
+  },
+  {
+    label: isSchool ? "Class Routine & Timetable" : "Timetable",
+    path: "/student/timetable",
+    icon: <Calendar size={20} />,
   },
   {
     label: isSchool ? "My Subjects" : "My Courses",

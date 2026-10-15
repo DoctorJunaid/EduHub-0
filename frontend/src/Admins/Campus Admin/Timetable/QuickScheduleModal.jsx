@@ -11,6 +11,7 @@ import {
   AlertCircle,
   AlertTriangle,
   ExternalLink,
+  Eye,
 } from "lucide-react";
 import { minutes } from "../../../lib/schedule.js";
 import axiosInstance from "@/api/axiosInstance.js";
@@ -102,12 +103,19 @@ export default function QuickScheduleModal({
   const [selectedSectionId, setSelectedSectionId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
+  const [targetAudience, setTargetAudience] = useState(editRecord?.targetAudience || "both");
   const [subjectText, setSubjectText] = useState("");
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
   const [days, setDays] = useState([initialDay]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (editRecord?.targetAudience) {
+      setTargetAudience(editRecord.targetAudience);
+    }
+  }, [editRecord]);
 
   // 1. Fetch initial grades and campus faculty once when modal is open
   useEffect(() => {
@@ -392,6 +400,8 @@ export default function QuickScheduleModal({
         startTime,
         endTime,
         days,
+        targetAudience: isBreak ? "both" : targetAudience,
+        visibleTo: isBreak ? "both" : targetAudience,
         institutionType: isSchool ? "School" : "College",
         status: "Active",
       });
@@ -669,6 +679,29 @@ export default function QuickScheduleModal({
                       </option>
                     )}
                   </select>
+                </div>
+
+                {/* Target Audience / Timetable Visibility */}
+                <div>
+                  <label htmlFor="qs-visibility" className="qs-label">
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      <Eye size={13} style={{ color: "#64748b" }} /> Visibility / Show Timetable To *
+                    </span>
+                  </label>
+                  <select
+                    id="qs-visibility"
+                    value={targetAudience}
+                    onChange={(e) => setTargetAudience(e.target.value)}
+                    className="qs-input"
+                    style={{ height: "44px", fontSize: "14px" }}
+                  >
+                    <option value="both">Both Teacher & Students (Grade Section & Teacher)</option>
+                    <option value="student">Students Only (Grade/Section)</option>
+                    <option value="teacher">Teacher Only (Assigned Teacher)</option>
+                  </select>
+                  <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 0" }}>
+                    Defaults to Both so periods automatically appear for the assigned class and teacher.
+                  </p>
                 </div>
               </>
             ) : (

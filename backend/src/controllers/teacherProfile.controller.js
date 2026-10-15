@@ -61,11 +61,13 @@ export const getTeacherTimetable = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
     const teacherId = resolveEffectiveTeacherId(req);
-    const data = await teacherProfileService.getTeacherTimetable(campusId, teacherId);
+    const result = await teacherProfileService.getTeacherTimetable(campusId, teacherId, req.query);
 
     res.status(200).json({
       success: true,
-      data,
+      count: result.count ?? (result.data?.length || 0),
+      data: result.data || result,
+      ...result,
     });
   } catch (error) {
     next(error);

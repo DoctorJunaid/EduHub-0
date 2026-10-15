@@ -345,6 +345,7 @@ class CampusAdminService {
     const startTime = normalizeTimeString(data.startTime) || data.startTime || "08:30";
     const endTime = normalizeTimeString(data.endTime) || data.endTime || "09:20";
 
+    const targetAudience = data.targetAudience || data.visibleTo || "both";
     const payload = {
       ...data,
       campusId: campusId || data.campusId,
@@ -352,15 +353,25 @@ class CampusAdminService {
         typeof maybeInstituteId === "string" ? maybeInstituteId : null,
       days,
       institutionType: data.institutionType || "School",
-      program: data.program || "",
-      section: data.section || "",
-      subject: data.subject || "",
-      instructor: data.instructor || "",
-      gradeId: data.gradeId || null,
+      program: data.program || data.className || "",
+      className: data.className || data.program || "",
+      section: data.section || data.sectionName || "",
+      sectionName: data.sectionName || data.section || "",
+      subject: data.subject || data.subjectName || "",
+      subjectName: data.subjectName || data.subject || "",
+      instructor: data.instructor || data.teacherName || "",
+      teacherName: data.teacherName || data.instructor || "",
+      gradeId: data.gradeId || data.classId || null,
+      classId: data.classId || data.gradeId || null,
       sectionId: data.sectionId || null,
       subjectId: data.subjectId || null,
       teacherId: data.teacherId || null,
       room: data.room || data.roomNumber || "",
+      roomNumber: data.roomNumber || data.room || "",
+      notes: data.notes || "",
+      targetAudience,
+      visibleTo: targetAudience,
+      slotType: Boolean(data.isBreak) ? "break" : (data.slotType || "period"),
       startTime,
       endTime,
       status: data.status || "Active",
@@ -458,6 +469,13 @@ class CampusAdminService {
       if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
       if (doc.isBreak && !doc.subject) doc.subject = doc.breakTitle || "Break";
       if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      doc.targetAudience = doc.targetAudience || doc.visibleTo || "both";
+      doc.visibleTo = doc.targetAudience;
+      doc.slotType = doc.isBreak ? "break" : (doc.slotType || "period");
+      doc.className = doc.program || (doc.gradeId?.name || "");
+      doc.sectionName = doc.section || (doc.sectionId?.name || "");
+      doc.subjectName = doc.subject || (doc.subjectId?.name || "");
+      doc.teacherName = doc.instructor || (doc.teacherId?.name || "");
       return doc;
     });
 

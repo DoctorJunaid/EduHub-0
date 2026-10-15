@@ -188,6 +188,11 @@ export const TEACHER_NAV = [
     icon: <Award size={20} />,
   },
   {
+    label: "Timetable",
+    path: "/teacher/timetable",
+    icon: <Calendar size={20} />,
+  },
+  {
     label: "My Salary",
     path: "/my-salary",
     icon: <Wallet size={20} />,
@@ -229,6 +234,11 @@ export const STUDENT_NAV = [
     label: "Dashboard",
     path: "/student/dashboard",
     icon: <LayoutDashboard size={20} />,
+  },
+  {
+    label: "Timetable",
+    path: "/student/timetable",
+    icon: <Calendar size={20} />,
   },
   { label: "My Courses", path: "/student/courses", icon: <BookOpen size={20} /> },
   {

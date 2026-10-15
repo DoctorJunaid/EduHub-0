@@ -8,6 +8,7 @@ import {
   submitAssignment,
   sendConversationMessage,
   submitFeePayment,
+  getStudentTimetable,
 } from "../controllers/studentPortal.controller.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.use(protect, authorize("student"));
 router.get("/portal", getStudentPortal);
 router.get("/subjects", getStudentSubjects);
 router.get("/fees", getStudentFees);
+router.get("/timetable", getStudentTimetable);
 router.post("/assignments/:id/submission", submitAssignment);
 router.post("/conversations/:id/messages", sendConversationMessage);
 router.post("/fees/:id/submit-payment", submitFeePayment);
