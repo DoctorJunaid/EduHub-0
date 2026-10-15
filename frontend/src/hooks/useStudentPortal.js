@@ -61,6 +61,8 @@ export function useStudentPortal() {
     ...query,
     portal,
     student: portal?.student || null,
+    classTeacher: portal?.classTeacher || null,
+    subjects: portal?.subjects || [],
     schedules: portal?.schedules || [],
     attendance: portal?.attendance || null,
     fees: portal?.fees || [],

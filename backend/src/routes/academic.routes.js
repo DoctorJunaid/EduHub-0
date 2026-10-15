@@ -17,6 +17,7 @@ import {
   getTeacherAssignments,
   createTeacherAssignment,
   deleteTeacherAssignment,
+  checkTeacherAssignmentConflict,
   getPeshawarPresetPreview,
   seedPeshawarBoardPreset,
 } from "../controllers/academic.controller.js";
@@ -59,6 +60,10 @@ router.route("/grade-subjects/:id")
   .delete(removeSubjectFromGrade);
 
 // Teacher Assignments
+router.route("/teacher-assignments/check-conflict")
+  .get(checkTeacherAssignmentConflict)
+  .post(checkTeacherAssignmentConflict);
+
 router.route("/teacher-assignments")
   .get(getTeacherAssignments)
   .post(createTeacherAssignment);

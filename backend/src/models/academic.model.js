@@ -159,6 +159,34 @@ const teacherAssignmentSchema = new mongoose.Schema(
       ref: "Subject",
       required: true,
     },
+    timeSlot: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    roomNumber: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    isForceConfirmed: {
+      type: Boolean,
+      default: false,
+    },
+    overrideReason: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    forceConfirmedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    forceConfirmedAt: {
+      type: Date,
+      default: null,
+    },
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Institute",
