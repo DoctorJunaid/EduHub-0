@@ -15,6 +15,12 @@ export const getMySessions = (params = {}) =>
 export const getMySummary = (params = {}) =>
   api.get("/campus/class-sessions/my-summary", { params });
 
+export const getTeacherWorkload = (params = {}) =>
+  api.get("/campus/class-sessions/workload", { params });
+
+export const sweepSessions = (payload = {}) =>
+  api.post("/campus/class-sessions/sweep", payload);
+
 export const markSessionStatus = (id, payload) =>
   api.patch(`/campus/class-sessions/${id}/status`, payload);
 

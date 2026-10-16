@@ -73,6 +73,29 @@ export const generatePayroll = async (campusId, userId, { month }) => {
     return { generated: 0, skipped: 0, total: 0, message: "No active salary profiles found" };
   }
 
+  // Auto-sweep any past unconducted sessions in target month
+  try {
+    const sweepCutoff = endDate < new Date() ? endDate : new Date();
+    await TeacherClassSession.updateMany(
+      {
+        campusId,
+        date: { $gte: startDate, $lte: sweepCutoff },
+        status: "Scheduled",
+      },
+      {
+        $set: {
+          status: "Missed",
+          attendanceStatus: "Absent",
+          creditValue: 0,
+          deductionValue: 500,
+          remarks: "Expired period swept during payroll calculation",
+        },
+      }
+    );
+  } catch (err) {
+    console.error("[generatePayroll] Session sweep notice:", err.message);
+  }
+
   // Pre-fetch all supporting data in bulk to eliminate N*9 query bottle-necks
   const [
     existingPayrolls,

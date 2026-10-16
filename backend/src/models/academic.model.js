@@ -104,6 +104,16 @@ const subjectSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    completedLectureHours: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    targetLectureHours: {
+      type: Number,
+      default: 60,
+      min: 1,
+    },
   },
   { timestamps: true }
 );

@@ -190,7 +190,13 @@ export default function TeacherDashboard() {
   const pendingSubmissionsCount = pending.length;
   const enrolledStudentCount = classes.reduce((sum, c) => sum + (c.enrolledStudentsCount || 0), 0) || enrolledStudents.length;
 
+  const todayScheduledCount = todaySessions.length;
+  const todayConductedCount = todaySessions.filter((s) => s.status === "Completed").length;
+  const todayWorkloadLabel =
+    todayScheduledCount > 0 ? `${todayConductedCount}/${todayScheduledCount} Done` : "0 Scheduled";
+
   const metric = [
+    [CalendarCheck, "Today's Lectures", todayWorkloadLabel],
     [Award, "Monthly Credits", creditSummary?.totalCredits ?? "—"],
     [Coins, "Bonus Earned", `PKR ${(creditSummary?.totalBonusEarned || 0).toLocaleString()}`],
     [BookOpen, "Assigned Courses", assignedCourseCount],

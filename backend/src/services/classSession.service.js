@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import moment from "moment";
-import "../models/academic.model.js";
+import { Subject } from "../models/academic.model.js";
 import TeacherClassSession from "../models/teacherClassSession.model.js";
 import TeachingCreditConfig from "../models/teachingCreditConfig.model.js";
 import Timetable from "../models/timetable.model.js";
@@ -515,6 +515,294 @@ export async function markSessionStatus(sessionId, campusId, actor, { status, re
   });
 
   return session;
+}
+
+/**
+ * Automatically records a class session as "Completed" when a teacher marks student attendance
+ * or publishes a class diary entry. Fully synchronized with TeacherClassSession, Teaching Credits,
+ * and Course progress.
+ */
+export async function recordClassConducted(campusId, teacherUserId, payload = {}) {
+  const { date, classId, className, section, subject, remarks = "", source = "attendance" } = payload;
+  const targetDate = normalizeSessionDate(date || new Date());
+  const resolved = await resolveTeacherUser(teacherUserId);
+  const uId = resolved?._id || teacherUserId;
+
+  // 1. Ensure daily sessions exist for this date
+  try {
+    await generateDailySessions(campusId, targetDate);
+  } catch (err) {
+    console.error("[recordClassConducted] generateDailySessions notice:", err.message);
+  }
+
+  const startOfDay = targetDate;
+  const endOfDay = moment.utc(targetDate).endOf("day").toDate();
+
+  // 2. Build flexible session matching query
+  const sessionQuery = {
+    campusId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+  };
+
+  const matchConditions = [];
+  if (classId && mongoose.isValidObjectId(classId)) {
+    matchConditions.push({ timetableId: classId }, { sectionId: classId }, { _id: classId });
+  }
+  if (className) {
+    const cleanClass = String(className).split(" - ")[0].trim();
+    if (section) {
+      matchConditions.push({
+        $or: [
+          { className: new RegExp(`^${cleanClass}$`, "i") },
+          { className: new RegExp(`^${className}$`, "i") },
+        ],
+        section: new RegExp(`^${section}$`, "i"),
+      });
+    } else {
+      matchConditions.push({
+        $or: [
+          { className: new RegExp(`^${cleanClass}$`, "i") },
+          { className: new RegExp(`^${className}$`, "i") },
+        ],
+      });
+    }
+  }
+
+  if (matchConditions.length > 0) {
+    sessionQuery.$or = matchConditions;
+  }
+
+  // Find candidate sessions for this class on this day
+  const candidateSessions = await TeacherClassSession.find(sessionQuery).sort({ period: 1 });
+
+  // Prioritize session assigned to this teacher, then uncompleted sessions
+  let session = candidateSessions.find(
+    (s) =>
+      (String(s.originalTeacherId) === String(uId) || String(s.actualTeacherId) === String(uId)) &&
+      s.status !== "Completed"
+  );
+
+  if (!session) {
+    session = candidateSessions.find((s) => s.status !== "Completed");
+  }
+
+  if (!session && candidateSessions.length > 0) {
+    session = candidateSessions[0];
+  }
+
+  const config = await getEffectiveTeachingConfig(campusId);
+
+  if (session) {
+    const isSub = String(session.originalTeacherId) !== String(uId);
+    session.status = "Completed";
+    session.attendanceStatus = "Present";
+    session.actualTeacherId = uId;
+    session.isSubstituted = isSub;
+    session.markedBy = uId;
+    session.markedAt = new Date();
+    session.creditValue = isSub ? config.creditForSubstitution : config.creditPerCompletedPeriod;
+    session.deductionValue = 0;
+    session.remarks = remarks || `Conducted via ${source} by ${resolved?.name || "Teacher"}`;
+    if (session.adjustmentReview) {
+      session.adjustmentReview.status = "None";
+      session.adjustmentReview.proposedDeduction = 0;
+    }
+    await session.save();
+
+    // Increment completed lecture hours on Subject if linked
+    if (session.subjectId) {
+      try {
+        await Subject.findByIdAndUpdate(session.subjectId, {
+          $inc: { completedLectureHours: 1 },
+        });
+      } catch {
+        // non-blocking
+      }
+    }
+
+    return session;
+  }
+
+  // Fallback: If no pre-scheduled timetable session existed, create an ad-hoc completed session so teacher gets credit
+  try {
+    const adHoc = await TeacherClassSession.create({
+      campusId,
+      date: targetDate,
+      dayOfWeek: WEEKDAYS[moment.utc(targetDate).isoWeekday() - 1] || "Monday",
+      period: 1,
+      startTime: "09:00",
+      endTime: "10:00",
+      className: className || "Class 10",
+      section: section || "A",
+      subject: subject || "General",
+      originalTeacherId: uId,
+      actualTeacherId: uId,
+      isSubstituted: false,
+      status: "Completed",
+      attendanceStatus: "Present",
+      creditValue: config.creditPerCompletedPeriod || 1.0,
+      markedBy: uId,
+      markedAt: new Date(),
+      remarks: `Conducted class logged via ${source}`,
+    });
+    return adHoc;
+  } catch (err) {
+    console.error("[recordClassConducted] Ad-hoc creation fallback error:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Automatically sweeps scheduled sessions on a given date to identify and flag missed or absent classes.
+ * Grace period: 15 minutes past scheduled endTime.
+ */
+export async function sweepMissedSessions(campusId, dateInput) {
+  const targetDate = normalizeSessionDate(dateInput || new Date());
+  const now = moment();
+  const isToday = moment.utc(targetDate).isSame(now, "day");
+  const isPast = moment.utc(targetDate).isBefore(now, "day");
+
+  if (!isToday && !isPast) {
+    return { swept: 0, missed: 0 };
+  }
+
+  const endOfDay = moment.utc(targetDate).endOf("day").toDate();
+  const scheduledSessions = await TeacherClassSession.find({
+    campusId,
+    date: { $gte: targetDate, $lte: endOfDay },
+    status: "Scheduled",
+  });
+
+  if (!scheduledSessions.length) return { swept: 0, missed: 0 };
+
+  const config = await getEffectiveTeachingConfig(campusId);
+  const currentTimeStr = now.format("HH:mm");
+
+  const attendances = await TeacherAttendance.find({
+    campusId,
+    date: { $gte: targetDate, $lte: endOfDay },
+  }).lean();
+  const attendanceMap = new Map();
+  attendances.forEach((att) => {
+    attendanceMap.set(String(att.teacherProfileId), att.status?.toLowerCase());
+  });
+
+  let missedCount = 0;
+  for (const sess of scheduledSessions) {
+    let shouldFlag = isPast;
+    if (isToday && sess.endTime) {
+      const parsedEnd = moment(sess.endTime, ["HH:mm", "hh:mm A", "H:mm", "h:mm A"]);
+      if (parsedEnd.isValid()) {
+        const graceEnd = parsedEnd.add(15, "minutes");
+        if (moment().isAfter(graceEnd)) {
+          shouldFlag = true;
+        }
+      }
+    }
+
+    if (shouldFlag) {
+      const teacherAtt = attendanceMap.get(String(sess.originalTeacherId));
+      const deduction = await calculatePeriodDeduction(campusId, sess.originalTeacherId, config);
+
+      if (teacherAtt === "absent") {
+        sess.status = "Absent";
+        sess.attendanceStatus = "Absent";
+      } else {
+        sess.status = "Missed";
+        sess.attendanceStatus = "Absent";
+      }
+
+      sess.creditValue = 0;
+      sess.deductionValue = deduction;
+      sess.adjustmentReview = {
+        status: config.requireApprovalForMissedDeduction ? "Pending Review" : "Approved",
+        proposedDeduction: deduction,
+        proposedBonus: 0,
+        reviewRemark: `Automatically flagged: Period ended without attendance or diary submission`,
+      };
+      sess.remarks = "Period expired without class conduction proof";
+      await sess.save();
+      missedCount++;
+    }
+  }
+
+  return { swept: scheduledSessions.length, missed: missedCount };
+}
+
+/**
+ * Real-time daily workload counter for a teacher:
+ * Scheduled vs Taken vs Missed vs Substituted vs Credits.
+ */
+export async function getTeacherDailyWorkload(campusId, teacherUserId, dateInput) {
+  const targetDate = normalizeSessionDate(dateInput || new Date());
+  const resolved = await resolveTeacherUser(teacherUserId);
+  const uId = resolved?._id || teacherUserId;
+
+  // Auto-sweep any expired sessions first so numbers are real-time accurate
+  try {
+    await sweepMissedSessions(campusId, targetDate);
+  } catch (err) {
+    console.error("[getTeacherDailyWorkload] sweep error:", err.message);
+  }
+
+  // Ensure sessions exist
+  await generateDailySessions(campusId, targetDate);
+
+  const endOfDay = moment.utc(targetDate).endOf("day").toDate();
+  const sessions = await TeacherClassSession.find({
+    campusId,
+    date: { $gte: targetDate, $lte: endOfDay },
+    $or: [{ originalTeacherId: uId }, { actualTeacherId: uId }],
+  })
+    .populate("gradeId", "name")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name code")
+    .sort({ period: 1 })
+    .lean();
+
+  const scheduled = sessions.filter(
+    (s) => String(s.originalTeacherId) === String(uId) && s.status !== "Cancelled"
+  );
+  const taken = sessions.filter(
+    (s) => String(s.actualTeacherId) === String(uId) && s.status === "Completed"
+  );
+  const missed = sessions.filter(
+    (s) =>
+      String(s.originalTeacherId) === String(uId) &&
+      ["Missed", "Absent"].includes(s.status) &&
+      !s.isSubstituted
+  );
+  const substitutedIn = sessions.filter(
+    (s) =>
+      String(s.actualTeacherId) === String(uId) &&
+      String(s.originalTeacherId) !== String(uId) &&
+      s.status === "Completed"
+  );
+  const substitutedOut = sessions.filter(
+    (s) =>
+      String(s.originalTeacherId) === String(uId) &&
+      String(s.actualTeacherId) !== String(uId) &&
+      s.isSubstituted
+  );
+
+  const totalCredits = taken.reduce((sum, s) => sum + (s.creditValue || 1.0), 0);
+  const totalDeductions = missed.reduce((sum, s) => sum + (s.deductionValue || 0), 0);
+
+  return {
+    date: moment.utc(targetDate).format("YYYY-MM-DD"),
+    dayOfWeek: WEEKDAYS[moment.utc(targetDate).isoWeekday() - 1] || "Monday",
+    teacherId: uId,
+    teacherName: resolved?.name || "Teacher",
+    totalScheduled: scheduled.length,
+    totalTaken: taken.length,
+    totalMissed: missed.length,
+    substitutedInCount: substitutedIn.length,
+    substitutedOutCount: substitutedOut.length,
+    totalCredits,
+    totalDeductions,
+    completionRate: scheduled.length ? Math.round((taken.length / scheduled.length) * 100) : 100,
+    sessions,
+  };
 }
 
 /**
@@ -1184,6 +1472,9 @@ const classSessionService = {
   generateDailySessions,
   listTeacherSessions,
   markSessionStatus,
+  recordClassConducted,
+  sweepMissedSessions,
+  getTeacherDailyWorkload,
   requestDispute,
   resolveDispute,
   reviewSessionAdjustment,

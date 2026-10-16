@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { StudentAttendance, StudentProfile } from "../models/profile.model.js";
 import User from "../models/user.model.js";
 import { getTeacherAssignedClasses, resolveTeacherUser } from "./teacherAssignment.service.js";
+import { recordClassConducted } from "./classSession.service.js";
 
 /**
  * Normalize date into dateStr (YYYY-MM-DD) and UTC midnight Date object.
@@ -247,6 +248,21 @@ export async function saveClassAttendance(campusId, teacherUserId, payload) {
 
   if (bulkOperations.length > 0) {
     await StudentAttendance.bulkWrite(bulkOperations, { ordered: false });
+  }
+
+  // Auto-sync class conduction event to TeacherClassSession, credit config, and course hours
+  try {
+    await recordClassConducted(campusId, teacherUserId, {
+      date: dateStr,
+      classId,
+      className,
+      section,
+      subject,
+      source: "student_attendance",
+      remarks: "Class attendance recorded",
+    });
+  } catch (err) {
+    console.error("[saveClassAttendance] Notice: failed to auto-sync TeacherClassSession:", err.message);
   }
 
   // Return fresh roster and updated KPI counts

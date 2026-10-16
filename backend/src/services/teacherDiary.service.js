@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Diary from "../models/diary.model.js";
 import { StudentDiary } from "../models/studentPortal.model.js";
 import { getTeacherAssignedClasses, resolveTeacherUser } from "./teacherAssignment.service.js";
+import { recordClassConducted } from "./classSession.service.js";
 
 /**
  * 1. Get assigned classes for the diary dropdown.
@@ -145,6 +146,21 @@ export async function createDiaryEntry(campusId, teacherUserId, data) {
   } catch (err) {
     // non-fatal
     console.warn("StudentDiary sync notice:", err.message);
+  }
+
+  // Auto-sync class conduction event to TeacherClassSession, credit config, and course hours
+  try {
+    await recordClassConducted(campusId, teacherUserId, {
+      date,
+      classId: data.classId,
+      className,
+      section,
+      subject,
+      source: "class_diary",
+      remarks: `Lecture delivered: ${title}`,
+    });
+  } catch (err) {
+    console.error("[createDiaryEntry] Notice: failed to auto-sync TeacherClassSession:", err.message);
   }
 
   return { ...created.toObject(), id: created._id.toString() };

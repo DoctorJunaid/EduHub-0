@@ -30,6 +30,12 @@ router.get(
   ctrl.getTeacherSummary
 );
 
+router.get(
+  "/workload",
+  restrictTo(...staffRoles),
+  ctrl.getTeacherWorkload
+);
+
 router.patch(
   "/:id/status",
   restrictTo(...staffRoles),
@@ -55,6 +61,12 @@ router.post(
   "/generate",
   restrictTo(...managerRoles),
   ctrl.generateSessions
+);
+
+router.post(
+  "/sweep",
+  restrictTo(...managerRoles),
+  ctrl.sweepSessions
 );
 
 router.get(
