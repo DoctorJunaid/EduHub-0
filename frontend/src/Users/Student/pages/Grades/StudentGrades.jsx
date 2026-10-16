@@ -26,7 +26,7 @@ import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentGrades.css";
 
 export default function StudentGrades() {
-  const { isLoading } = useStudentPortal();
+  const { isLoading, classTeacher } = useStudentPortal();
   const { student, periods = [] } = useSelector(selectStudentGrades);
   const [selected, setSelected] = useState("");
 
@@ -215,7 +215,16 @@ export default function StudentGrades() {
             <span>{resultStatus || "Not published"}</span>
           </div>
           <div className="sg-signatures">
-            <span>Class Teacher Signature</span>
+            <span className="sg-sig-box">
+              {classTeacher?.name ? (
+                <>
+                  <div className="text-xs font-semibold text-foreground">{classTeacher.name}</div>
+                  <div className="text-[11px] text-emerald-600 font-medium">Class Teacher (Signed)</div>
+                </>
+              ) : (
+                "Class Teacher Signature"
+              )}
+            </span>
             <span>Principal Signature</span>
           </div>
         </div>

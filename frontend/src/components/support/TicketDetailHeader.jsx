@@ -2,13 +2,18 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/store/Slices/authSlice";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicketStatusBadge } from "./TicketStatusBadge";
 import { TicketPriorityBadge } from "./TicketPriorityBadge";
 import { getSupportBasePath } from "@/utils/supportRouting";
 
-export const TicketDetailHeader = ({ ticket = {}, isAdmin = false }) => {
+export const TicketDetailHeader = ({
+  ticket = {},
+  isAdmin = false,
+  onRefresh,
+  isRefreshing = false,
+}) => {
   const navigate = useNavigate();
   const auth = useSelector(selectAuth);
   const role = auth?.user?.role;
@@ -44,7 +49,25 @@ export const TicketDetailHeader = ({ ticket = {}, isAdmin = false }) => {
         </div>
       </div>
 
-      <div className="ticket-detail-header__badges">
+      <div className="ticket-detail-header__badges flex items-center gap-2">
+        {onRefresh && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="h-8 px-2.5 rounded-lg border-zinc-200 text-zinc-600 hover:text-zinc-900 gap-1.5 text-xs font-medium cursor-pointer"
+            title="Refresh conversation"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-zinc-900" : ""}`}
+            />
+            <span className="hidden sm:inline">
+              {isRefreshing ? "Refreshing..." : "Refresh"}
+            </span>
+          </Button>
+        )}
         {isAdmin && ticket.priority && (
           <TicketPriorityBadge priority={ticket.priority} showSla={true} />
         )}
@@ -55,3 +78,4 @@ export const TicketDetailHeader = ({ ticket = {}, isAdmin = false }) => {
 };
 
 export default TicketDetailHeader;
+

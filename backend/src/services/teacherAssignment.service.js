@@ -186,6 +186,81 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
     }
   }
 
+  // 4.5. Fetch Sections where this teacher is assigned as Section Class Teacher
+  const teacherProfile = await TeacherProfile.findOne({
+    $or: [{ user: uId }, { _id: teacherUserId }],
+  }).lean();
+  const teacherProfileId = teacherProfile?._id;
+
+  const classTeacherSections = await Section.find({
+    campusId,
+    $or: [
+      ...(teacherProfileId ? [{ classTeacherId: teacherProfileId }] : []),
+      { classTeacherId: uId },
+    ],
+    status: { $ne: "archived" },
+  })
+    .populate("gradeId", "name")
+    .lean();
+
+  for (const sec of classTeacherSections) {
+    const className = sec.gradeId?.name || "Class 10";
+    const sectionName = sec.name || "A";
+
+    let matchedExisting = false;
+    for (const [, val] of classMap.entries()) {
+      const matchGrade =
+        (val.gradeId && sec.gradeId?._id && String(val.gradeId) === String(sec.gradeId._id)) ||
+        String(val.className).toLowerCase() === String(className).toLowerCase();
+      const matchSec =
+        (val.sectionId && String(val.sectionId) === String(sec._id)) ||
+        String(val.section).toLowerCase() === String(sectionName).toLowerCase();
+
+      if (matchGrade && matchSec) {
+        val.isClassTeacher = true;
+        if (!val.sectionId) val.sectionId = sec._id;
+        if (!val.gradeId && sec.gradeId?._id) val.gradeId = sec.gradeId._id;
+        matchedExisting = true;
+      }
+    }
+
+    if (!matchedExisting) {
+      const gradeSubjects = sec.gradeId?._id
+        ? await Subject.find({ campusId, gradeId: sec.gradeId._id, status: { $ne: "archived" } }).lean()
+        : [];
+      const subjectsToRegister =
+        gradeSubjects.length > 0 ? gradeSubjects : [{ _id: null, name: "General", code: "" }];
+
+      for (const sub of subjectsToRegister) {
+        const key = `${className}_${sectionName}_${sub.name}`.toLowerCase();
+        if (!classMap.has(key)) {
+          classMap.set(key, {
+            _id: sec._id,
+            id: sec._id.toString(),
+            classId: sec._id.toString(),
+            gradeId: sec.gradeId?._id || null,
+            sectionId: sec._id,
+            subjectId: sub._id || null,
+            className,
+            gradeOrClass: className,
+            program: className,
+            section: sectionName,
+            subject: sub.name,
+            subjectCode: sub.code || "",
+            room: sec.roomNumber || "Classroom",
+            days: [1, 2, 3, 4, 5],
+            startTime: "09:00",
+            endTime: "10:00",
+            teacherId: uId,
+            teacherName: resolved?.name || "Teacher",
+            isClassTeacher: true,
+            source: "class_teacher_section",
+          });
+        }
+      }
+    }
+  }
+
   // 5. Fallback: query distinct grades and sections from Grade model or Student Users
   if (classMap.size === 0) {
     const grades = await Grade.find({ campusId }).lean();

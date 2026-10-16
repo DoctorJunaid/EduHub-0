@@ -5,6 +5,7 @@ import {
   FeeRecord,
   Performance,
   StudentProfile,
+  TeacherProfile,
 } from "../models/profile.model.js";
 import User from "../models/user.model.js";
 import {
@@ -364,11 +365,36 @@ export async function resolveStudentSubjects(student, campusId) {
     }
   }
 
+  // Resolve Class Teacher for Section
+  let classTeacher = null;
+  if (sectionDoc && sectionDoc.classTeacherId) {
+    const ctProfile = await TeacherProfile.findById(sectionDoc.classTeacherId)
+      .populate("user", "name email phone avatar designation department")
+      .lean();
+    if (ctProfile && ctProfile.user) {
+      classTeacher = {
+        _id: ctProfile._id.toString(),
+        profileId: ctProfile._id.toString(),
+        userId: ctProfile.user._id.toString(),
+        name: ctProfile.user.name || "Teacher",
+        email: ctProfile.user.email || "",
+        phone: ctProfile.user.phone || "",
+        avatar: ctProfile.user.avatar || "",
+        department: ctProfile.department || ctProfile.user.department || "",
+        designation: ctProfile.designation || ctProfile.user.designation || "Class Teacher",
+        assignedAt: sectionDoc.classTeacherAssignedAt || null,
+        note: sectionDoc.classTeacherNote || "",
+      };
+    }
+  }
+
   const resultList = Array.from(subjectsMap.values());
   return {
     gradeName,
     sectionName,
     subjects: resultList,
+    classTeacher,
+    sectionDoc,
   };
 }
 
@@ -390,7 +416,7 @@ export const getStudentPortal = async (req, res) => {
     }
 
     const campusId = student.campusId;
-    const { gradeName, sectionName, subjects } = await resolveStudentSubjects(student, campusId);
+    const { gradeName, sectionName, subjects, classTeacher } = await resolveStudentSubjects(student, campusId);
 
     const className = gradeName || student.gradeOrClass || student.program || "Class 9";
     const section = sectionName || student.section || "Section A";
@@ -578,7 +604,9 @@ export const getStudentPortal = async (req, res) => {
           program: className,
           section,
           subjects: subjects.map((s) => s.name).join(", "),
+          classTeacher,
         },
+        classTeacher,
         subjects,
         schedules: formattedSchedules,
         exams: exams.map((row) => ({ ...row, id: id(row._id), _id: id(row._id) })),

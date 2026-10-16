@@ -279,6 +279,7 @@ export async function getAllClassTeachers(campusId) {
       campusId,
       role: "student",
       $or: [
+        { sectionId: s._id },
         {
           $and: [
             {
@@ -389,6 +390,7 @@ export async function getMyClassAssignment(campusId, teacherUserId) {
     campusId,
     role: "student",
     $or: [
+      { sectionId: sectionDoc._id },
       {
         $and: [
           {
@@ -443,6 +445,7 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
     campusId,
     role: "student",
     $or: [
+      ...(classId ? [{ sectionId: classId }] : []),
       {
         $and: [
           {
@@ -665,6 +668,7 @@ export async function getMyClassAttendance(
     campusId,
     role: "student",
     $or: [
+      ...(classId ? [{ sectionId: classId }] : []),
       {
         $and: [
           {

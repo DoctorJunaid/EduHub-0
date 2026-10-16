@@ -100,9 +100,14 @@ export const SupportTicketDetail = () => {
   const currentUser = auth?.user;
   const currentUserId = currentUser?._id || currentUser?.id;
   const role = currentUser?.role || "student";
-  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(
-    role,
-  );
+  const isAdmin = [
+    "super_admin",
+    "institute_admin",
+    "campus_admin",
+    "campus_manager",
+    "principal",
+  ].includes(role);
+  const isStaff = isAdmin || role === "accountant";
 
   // Modals state
   const [isAssignOpen, setIsAssignOpen] = useState(false);
@@ -111,7 +116,7 @@ export const SupportTicketDetail = () => {
   const [isRatingOpen, setIsRatingOpen] = useState(false);
 
   // Queries and mutations
-  const { data, isLoading, error } = useSupportTicket(id);
+  const { data, isLoading, isFetching, error, refetch } = useSupportTicket(id);
   const replyMutation = useReplyToTicket();
   const assignMutation = useAssignTicket();
   const changeStatusMutation = useChangeTicketStatus();
@@ -120,7 +125,7 @@ export const SupportTicketDetail = () => {
   const rateMutation = useRateTicket();
 
   if (isLoading) {
-    return <TicketDetailLoadingShell role={role} isAdmin={isAdmin} />;
+    return <TicketDetailLoadingShell role={role} isAdmin={isStaff} />;
   }
 
   if (error || !data?.ticket) {
@@ -171,11 +176,16 @@ export const SupportTicketDetail = () => {
   return (
     <section className={`support-ticket-detail support-ticket-detail--${role}`}>
       {/* 1. Header (Sticky at top, px-6 py-4, with status badge) */}
-      <TicketDetailHeader ticket={ticket} isAdmin={isAdmin} />
+      <TicketDetailHeader
+        ticket={ticket}
+        isAdmin={isStaff}
+        onRefresh={() => refetch()}
+        isRefreshing={isFetching}
+      />
 
       {/* 2. Main Content Body */}
       <div
-        className={`support-ticket-workspace${isAdmin ? " support-ticket-workspace--admin" : ""}`}
+        className={`support-ticket-workspace${isStaff ? " support-ticket-workspace--admin" : ""}`}
       >
         {/* Chat thread + Reply box column */}
         <main className="support-ticket-conversation">
@@ -199,7 +209,7 @@ export const SupportTicketDetail = () => {
           <MessageThread
             messages={messages}
             currentUserId={currentUserId}
-            isAdmin={isAdmin}
+            isAdmin={isStaff}
           />
 
           {/* Reply Box (Pinned to bottom, px-6 py-4, border-t) */}
@@ -207,23 +217,23 @@ export const SupportTicketDetail = () => {
             onSend={handleSendReply}
             isSending={replyMutation.isPending}
             isClosed={isClosed}
-            isAdmin={isAdmin}
+            isAdmin={isStaff}
             canSolve={canSolve}
             onSolve={() => setIsCloseOpen(true)}
             isSolving={closeMutation.isPending}
           />
         </main>
 
-        {/* Right Sidebar for Admins only */}
-        {isAdmin && (
+        {/* Right Sidebar for Admins & Staff */}
+        {isStaff && (
           <aside
             className="support-ticket-sidebar"
             aria-label="Ticket details and controls"
           >
             <TicketSidebar
               ticket={ticket}
-              onOpenAssign={() => setIsAssignOpen(true)}
-              onOpenEscalate={() => setIsEscalateOpen(true)}
+              onOpenAssign={isAdmin ? () => setIsAssignOpen(true) : null}
+              onOpenEscalate={isAdmin ? () => setIsEscalateOpen(true) : null}
               onOpenClose={() => setIsCloseOpen(true)}
               onChangeStatus={(status) =>
                 changeStatusMutation.mutateAsync({

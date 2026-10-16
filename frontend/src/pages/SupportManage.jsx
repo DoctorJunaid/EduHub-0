@@ -65,7 +65,13 @@ export const SupportManage = () => {
   const auth = useSelector(selectAuth);
   const currentUser = auth?.user;
   const role = currentUser?.role || "student";
-  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(role);
+  const isAdmin = [
+    "super_admin",
+    "institute_admin",
+    "campus_admin",
+    "campus_manager",
+    "principal",
+  ].includes(role);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -104,7 +110,7 @@ export const SupportManage = () => {
     ...(filters.endDate ? { endDate: filters.endDate } : {}),
   };
 
-  const { data, isLoading, error: ticketsError, refetch: refetchTickets } = useSupportTickets(queryParams);
+  const { data, isLoading, isFetching, error: ticketsError, refetch: refetchTickets } = useSupportTickets(queryParams);
   const createMutation = useCreateTicket();
   const assignMutation = useAssignTicket();
   const closeMutation = useCloseTicket();
@@ -258,6 +264,8 @@ export const SupportManage = () => {
           categories={categories}
           isAdmin={true}
           onNewTicket={() => setIsNewDialogOpen(true)}
+          onRefresh={() => refetchTickets()}
+          isRefreshing={isFetching}
         />
 
         {/* Table Content */}

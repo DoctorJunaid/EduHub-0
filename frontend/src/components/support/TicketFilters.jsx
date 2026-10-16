@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, X, Plus, Layers } from "lucide-react";
+import { Search, X, Plus, Layers, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -19,6 +19,8 @@ export const TicketFilters = ({
   categories = [],
   isAdmin = false,
   onNewTicket,
+  onRefresh,
+  isRefreshing = false,
 }) => {
   const hasActiveFilters = Boolean(
     filters.search ||
@@ -174,8 +176,22 @@ export const TicketFilters = ({
         )}
       </div>
 
-      {/* Right side: Reset filter button and New Ticket action */}
+      {/* Right side: Reset filter button, Refresh, and New Ticket action */}
       <div className="isu-toolbar-actions">
+        {onRefresh && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="isu-reset-btn"
+            title="Refresh tickets queue"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>
+          </button>
+        )}
         {hasActiveFilters && (
           <button
             type="button"

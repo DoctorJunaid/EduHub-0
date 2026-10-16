@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/store/Slices/authSlice";
-import { Plus, SlidersHorizontal, Search, X } from "lucide-react";
+import { Plus, SlidersHorizontal, Search, X, RefreshCw } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import DataPagination from "@/components/shared/DataPagination";
 import {
@@ -27,11 +27,15 @@ import "./StudentSupport.css";
 export const SupportList = () => {
   const navigate = useNavigate();
   const auth = useSelector(selectAuth);
-  const currentUser = auth?.user;
-  const role = currentUser?.role || "student";
-  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(
-    role,
-  );
+  const role = auth?.user?.role || "student";
+  const isAdmin = [
+    "super_admin",
+    "institute_admin",
+    "campus_admin",
+    "campus_manager",
+    "principal",
+  ].includes(role);
+  const isStaff = isAdmin || role === "accountant";
   const isTeacherPortal = ["teacher", "faculty"].includes(role);
 
   // Filter and pagination states
@@ -58,7 +62,7 @@ export const SupportList = () => {
     ...(filters.search ? { search: filters.search } : {}),
   };
 
-  const { data, isLoading } = useSupportTickets(queryParams);
+  const { data, isLoading, isFetching, refetch } = useSupportTickets(queryParams);
   const createTicketMutation = useCreateTicket();
 
   const handleFilterChange = (key, value) => {
@@ -90,7 +94,7 @@ export const SupportList = () => {
     (stats.answered || 0) +
     (stats.done || 0);
 
-  const tabs = isAdmin
+  const tabs = isStaff
     ? [
         { id: "all", label: "All Tickets", count: stats.total || totalCount },
         { id: "Open", label: "Open", count: stats.open || stats.waiting || 0 },
@@ -171,10 +175,10 @@ export const SupportList = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-xl font-bold tracking-tight text-zinc-900">
-                {isAdmin ? "Manage Support Tickets" : "Manage Conversations"}
+                {isStaff ? "Manage Support Tickets" : "Manage Conversations"}
               </CardTitle>
               <CardDescription className="text-sm text-zinc-500 mt-1">
-                {isAdmin
+                {isStaff
                   ? "Triage, assign, escalate, and resolve institutional support requests."
                   : isTeacherPortal
                     ? "Ask questions, submit requests regarding schedules, classes, or account support, and track replies."
@@ -205,11 +209,27 @@ export const SupportList = () => {
 
               <Button
                 type="button"
+                variant="outline"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="h-10 rounded-lg border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs sm:text-sm font-medium gap-1.5 cursor-pointer"
+                title="Refresh list"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isFetching ? "animate-spin text-zinc-900" : ""}`}
+                />
+                <span className="hidden sm:inline">
+                  {isFetching ? "Refreshing..." : "Refresh"}
+                </span>
+              </Button>
+
+              <Button
+                type="button"
                 onClick={() => setIsNewDialogOpen(true)}
                 className="h-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs sm:text-sm font-medium shadow-sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {isAdmin ? "New Ticket" : "Ask for Help"}
+                {isStaff ? "New Ticket" : "Ask for Help"}
               </Button>
             </div>
           </div>
@@ -225,7 +245,7 @@ export const SupportList = () => {
                 <input
                   type="text"
                   placeholder={
-                    isAdmin
+                    isStaff
                       ? "Search tickets by #, subject, or creator..."
                       : "Search conversations..."
                   }
@@ -250,7 +270,7 @@ export const SupportList = () => {
                 ))}
               </select>
 
-              {isAdmin && (
+              {isStaff && (
                 <>
                   <select
                     value={filters.priority || "all"}
@@ -290,7 +310,7 @@ export const SupportList = () => {
                 Loading conversations...
               </p>
             </div>
-          ) : isAdmin ? (
+          ) : isStaff ? (
             <TicketListTable
               tickets={tickets}
               onNewTicket={() => setIsNewDialogOpen(true)}

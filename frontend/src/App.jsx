@@ -209,6 +209,7 @@ const App = () => {
                 "campus_manager",
                 "institute_admin",
                 "principal",
+                "accountant",
                 "super_admin",
               ]}
             />

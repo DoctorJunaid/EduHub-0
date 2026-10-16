@@ -11,10 +11,10 @@ export const normalizeRole = (role = "") => {
     r === "campusadmin" ||
     r === "campus_admin" ||
     r === "campus_manager" ||
-    r === "principal" ||
-    r === "accountant"
+    r === "principal"
   )
     return "campus_admin";
+  if (r === "accountant") return "accountant";
   if (r === "teacher" || r === "faculty") return "teacher";
   if (r === "student") return "student";
   if (r === "parent") return "parent";
@@ -48,11 +48,15 @@ export const canViewTicket = (user, ticket) => {
     return String(ticket.campusId) === String(user.campusId);
   }
 
-  // Teachers see only tickets they created OR tickets explicitly assigned to them
-  if (role === "teacher") {
+  // Teachers and Accountants: see tickets they created, tickets assigned to them, or campus finance tickets
+  if (role === "teacher" || role === "accountant") {
     const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(user._id);
     const isAssignee = ticket.assignedTo && String(ticket.assignedTo?._id || ticket.assignedTo) === String(user._id);
-    return isCreator || isAssignee;
+    const isFinance =
+      role === "accountant" &&
+      (ticket.category === "Fees & Payments" || ticket.category === "Payroll") &&
+      String(ticket.campusId) === String(user.campusId);
+    return isCreator || isAssignee || isFinance;
   }
 
   // Students and parents see only tickets they created
@@ -99,6 +103,26 @@ export const canAssignTicket = (user, ticket) => {
 };
 
 /**
+ * 3b. Can Modify Status (Admin, Assignee, or Campus Accountant for Finance tickets)
+ */
+export const canModifyStatus = (user, ticket) => {
+  if (!user || !ticket) return false;
+  const role = normalizeRole(user.role);
+  if (isAdminRole(role)) return canAssignTicket(user, ticket);
+
+  const isAssignee =
+    ticket.assignedTo &&
+    String(ticket.assignedTo?._id || ticket.assignedTo) === String(user._id);
+
+  const isFinance =
+    role === "accountant" &&
+    (ticket.category === "Fees & Payments" || ticket.category === "Payroll") &&
+    String(ticket.campusId) === String(user.campusId);
+
+  return Boolean(isAssignee || isFinance);
+};
+
+/**
  * 4. Can Escalate Ticket (Admin only, Level 1 -> 2 -> 3)
  */
 export const canEscalateTicket = (user, ticket) => {
@@ -112,7 +136,7 @@ export const canEscalateTicket = (user, ticket) => {
 };
 
 /**
- * 5. Can Close Ticket (Creator or Admin)
+ * 5. Can Close Ticket (Creator, Admin, Assignee, or Campus Accountant)
  */
 export const canCloseTicket = (user, ticket) => {
   if (!user || !ticket) return false;
@@ -121,7 +145,7 @@ export const canCloseTicket = (user, ticket) => {
   const isCreator = String(ticket.createdBy?._id || ticket.createdBy) === String(user._id);
   if (isCreator) return true;
 
-  return canAssignTicket(user, ticket);
+  return canModifyStatus(user, ticket);
 };
 
 /**
@@ -151,6 +175,14 @@ export const canMessageUser = (sender, recipient) => {
 
   if (sRole === "campus_admin") {
     if (rRole === "super_admin" || rRole === "institute_admin") return true;
+    if (sender.campusId && recipient.campusId) {
+      return String(sender.campusId) === String(recipient.campusId);
+    }
+    return true;
+  }
+
+  if (sRole === "accountant") {
+    if (rRole === "super_admin" || rRole === "institute_admin" || rRole === "campus_admin") return true;
     if (sender.campusId && recipient.campusId) {
       return String(sender.campusId) === String(recipient.campusId);
     }
@@ -199,6 +231,7 @@ export default {
   canViewTicket,
   canReplyToTicket,
   canAssignTicket,
+  canModifyStatus,
   canEscalateTicket,
   canCloseTicket,
   canMessageUser,
