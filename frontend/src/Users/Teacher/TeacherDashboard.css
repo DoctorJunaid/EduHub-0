@@ -10,10 +10,10 @@
   background: #ffffff;
 }
 
-/* 1. KPI STRIP (5 Columns, ~90px Visual Height) */
+/* 1. KPI STRIP (6 Columns, ~90px Visual Height) */
 .teacher-metrics.campus-kpi-track {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   width: 100%;
   background: #ffffff;
   border-bottom: 1px solid #e4e4e7;
@@ -22,7 +22,7 @@
 .teacher-metric.campus-kpi-card {
   background: #ffffff;
   border-right: 1px solid #e4e4e7;
-  padding: 18px 20px;
+  padding: 16px 14px;
   min-height: 84px;
   display: flex;
   align-items: center;
@@ -42,7 +42,7 @@
 .teacher-metric .kpi-wrap {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
   min-width: 0;
 }
@@ -81,10 +81,10 @@
 }
 
 .teacher-metric .kpi-value {
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: #09090b;
   white-space: nowrap;
   overflow: hidden;
@@ -377,7 +377,7 @@
 /* 6. RESPONSIVE BREAKPOINTS */
 @media (max-width: 1200px) {
   .teacher-metrics.campus-kpi-track {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
   .teacher-metric.campus-kpi-card:nth-child(3) {
     border-right: none;
@@ -389,7 +389,7 @@
 
 @media (max-width: 900px) {
   .teacher-metrics.campus-kpi-track {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
   .teacher-metric.campus-kpi-card {
     border-right: 1px solid #e4e4e7 !important;
@@ -401,7 +401,6 @@
     border-bottom: 1px solid #e4e4e7;
   }
   .teacher-metric.campus-kpi-card:last-child {
-    grid-column: 1 / -1;
     border-right: none !important;
   }
   .teacher-quick-actions {
@@ -414,7 +413,7 @@
 
 @media (max-width: 600px) {
   .teacher-metrics.campus-kpi-track {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
   .teacher-metric.campus-kpi-card {
     border-right: none !important;

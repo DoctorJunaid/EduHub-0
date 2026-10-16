@@ -24,16 +24,35 @@ export async function resolveTeacherUser(id) {
  * Get all classes/courses assigned to a teacher.
  * Merges Timetable slots, ClassSchedule, and TeacherAssignment records.
  */
-export async function getTeacherAssignedClasses(campusId, teacherUserId) {
+export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUserId) {
+  let campusId = campusIdOrUserId;
+  let teacherUserId = maybeTeacherUserId;
+
+  if (!maybeTeacherUserId && campusIdOrUserId) {
+    teacherUserId = campusIdOrUserId;
+    campusId = null;
+  }
+
   const resolved = await resolveTeacherUser(teacherUserId);
   const uId = resolved?._id || teacherUserId;
+  const teacherName = resolved?.name || "";
+
+  // Also resolve TeacherProfile ID
+  const prof = await TeacherProfile.findOne({
+    $or: [{ user: uId }, { _id: teacherUserId }],
+  }).lean();
+  const possibleTeacherIds = [uId, prof?._id, teacherUserId].filter(Boolean);
+  const effectiveCampusId = campusId || resolved?.campusId || prof?.campusId;
 
   // 1. Fetch from Timetable
   const timetables = await Timetable.find({
-    campusId,
-    teacherId: uId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     status: { $ne: "Cancelled" },
     isBreak: false,
+    $or: [
+      { teacherId: { $in: possibleTeacherIds } },
+      ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }, { teacherName: new RegExp(`^${teacherName}$`, "i") }] : []),
+    ],
   })
     .populate("gradeId", "name")
     .populate("sectionId", "name")
@@ -42,8 +61,8 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // 2. Fetch from Academic TeacherAssignment
   const academicAssignments = await TeacherAssignment.find({
-    campusId,
-    teacherId: uId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    teacherId: { $in: possibleTeacherIds },
   })
     .populate("gradeId", "name")
     .populate("sectionId", "name")
@@ -52,8 +71,11 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // 3. Fetch from ClassSchedule (legacy)
   const legacySchedules = await ClassSchedule.find({
-    campusId,
-    $or: [{ teacherId: uId }, { instructor: resolved?.name }],
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    $or: [
+      { teacherId: { $in: possibleTeacherIds } },
+      ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }] : []),
+    ],
     isBreak: false,
   }).lean();
 
@@ -154,7 +176,7 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // 4. Fetch from TeacherClassSession
   const sessions = await TeacherClassSession.find({
-    campusId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     $or: [{ originalTeacherId: uId }, { actualTeacherId: uId }],
   }).lean();
 
@@ -187,18 +209,12 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
   }
 
   // 4.5. Fetch Sections where this teacher is assigned as Section Class Teacher
-  const teacherProfile = await TeacherProfile.findOne({
-    $or: [{ user: uId }, { _id: teacherUserId }],
-  }).lean();
-  const teacherProfileId = teacherProfile?._id;
-
   const classTeacherSections = await Section.find({
-    campusId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     $or: [
-      ...(teacherProfileId ? [{ classTeacherId: teacherProfileId }] : []),
-      { classTeacherId: uId },
+      { classTeacherId: { $in: possibleTeacherIds } },
+      ...(prof?.classTeacherOf ? [{ _id: prof.classTeacherOf }] : []),
     ],
-    status: { $ne: "archived" },
   })
     .populate("gradeId", "name")
     .lean();
@@ -226,7 +242,11 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
     if (!matchedExisting) {
       const gradeSubjects = sec.gradeId?._id
-        ? await Subject.find({ campusId, gradeId: sec.gradeId._id, status: { $ne: "archived" } }).lean()
+        ? await Subject.find({
+            ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+            gradeId: sec.gradeId._id,
+            status: { $ne: "archived" },
+          }).lean()
         : [];
       const subjectsToRegister =
         gradeSubjects.length > 0 ? gradeSubjects : [{ _id: null, name: "General", code: "" }];

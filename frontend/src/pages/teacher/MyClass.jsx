@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
 import { PageLoader } from "@/components/ui/spinner";
 import {
   GraduationCap,
@@ -139,30 +138,39 @@ export default function MyClass() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden backdrop-blur-md">
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div
+        className="bg-white border border-neutral-200 rounded-xl shadow-xs"
+        style={{ padding: "20px 24px", boxSizing: "border-box" }}
+      >
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-600/40 border border-indigo-400/30">
-              <GraduationCap size={32} />
+            <div
+              className="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-800 flex items-center justify-center shrink-0"
+              style={{ width: "48px", height: "48px" }}
+            >
+              <GraduationCap size={24} />
             </div>
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight m-0">
                   My Class — {classInfo.className}
                 </h1>
-                <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 font-bold px-3 py-1 text-xs">
+                <span
+                  className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-semibold"
+                  style={{ padding: "4px 10px" }}
+                >
                   Class Teacher Role
-                </Badge>
+                </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1 flex flex-wrap items-center gap-3">
-                <span className="flex items-center gap-1 font-medium">
-                  <Users size={15} className="text-indigo-400" />{" "}
+              <p className="text-xs sm:text-sm text-neutral-500 mt-1 flex flex-wrap items-center gap-2.5">
+                <span className="flex items-center gap-1 font-medium text-neutral-700">
+                  <Users size={14} className="text-neutral-500" />{" "}
                   {students.length} Enrolled Students
                 </span>
                 <span>•</span>
-                <span>Session 2026–2027</span>
+                <span>Academic Session 2026–2027</span>
                 <span>•</span>
-                <span>Primary Class Owner & Evaluator</span>
+                <span>Designated Class Teacher</span>
               </p>
             </div>
           </div>
@@ -175,7 +183,7 @@ export default function MyClass() {
                 refreshClass();
                 refreshResults();
               }}
-              className="border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs flex items-center gap-1.5"
+              className="border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs flex items-center gap-1.5"
             >
               <RefreshCw size={13} /> Refresh
             </Button>
@@ -189,48 +197,50 @@ export default function MyClass() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-2xl flex flex-wrap gap-2 max-w-fit">
+        <TabsList className="bg-neutral-100 border border-neutral-200 p-1 rounded-xl flex flex-wrap gap-1.5 max-w-fit">
           <TabsTrigger
             value="attendance"
-            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-xl text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5 text-slate-400"
+            className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
           >
-            <Clock size={15} /> Daily Attendance
+            <Clock size={14} /> Daily Attendance
           </TabsTrigger>
           <TabsTrigger
             value="results"
-            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-xl text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5 text-slate-400"
+            className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
           >
-            <Award size={15} /> Class Results & Reports
+            <Award size={14} /> Class Results & Reports
           </TabsTrigger>
           <TabsTrigger
             value="students"
-            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-xl text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5 text-slate-400"
+            className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
           >
-            <Users size={15} /> Students Directory ({students.length})
+            <Users size={14} /> Students Directory ({students.length})
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Daily Attendance */}
         <TabsContent value="attendance" className="space-y-4 m-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+          <div
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
+            style={{ padding: "16px 20px", boxSizing: "border-box" }}
+          >
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Calendar size={18} className="text-indigo-400" />
+              <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2 m-0">
+                <Calendar size={16} className="text-neutral-600" />
                 Mark Daily Attendance
               </h3>
-              <p className="text-xs text-slate-400">
-                Mark attendance every morning for your class. Records update
-                live on student & parent portals.
+              <p className="text-xs text-neutral-500 mt-0.5 m-0">
+                Mark attendance every morning for your class. Records update live on student & parent portals.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-medium">Date:</span>
+              <span className="text-xs text-neutral-600 font-medium">Date:</span>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-1.5 text-xs focus:border-indigo-500"
+                className="bg-white border border-neutral-300 text-neutral-900 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-neutral-500"
               />
             </div>
           </div>
@@ -260,67 +270,74 @@ export default function MyClass() {
 
         {/* Tab 3: Students Directory */}
         <TabsContent value="students" className="space-y-4 m-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+          <div
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
+            style={{ padding: "16px 20px", boxSizing: "border-box" }}
+          >
             <div>
-              <h3 className="text-base font-bold text-white">
+              <h3 className="text-sm font-bold text-neutral-900 m-0">
                 Students Enrolled in {classInfo.className}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-neutral-500 mt-0.5 m-0">
                 Primary student roster with guardian contact information.
               </p>
             </div>
 
             <div className="relative w-full sm:w-64">
               <Search
-                className="absolute left-3 top-2.5 text-slate-400"
-                size={15}
+                className="absolute left-3 top-2.5 text-neutral-400"
+                size={14}
               />
               <input
                 type="text"
                 placeholder="Search students..."
                 value={studentSearch}
                 onChange={(e) => setStudentSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs placeholder:text-slate-500"
+                className="w-full pl-9 pr-3 py-1.5 bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs placeholder:text-neutral-400 focus:outline-none focus:border-neutral-500"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gap: "16px" }}>
             {filteredStudents.map((s, idx) => (
               <Card
                 key={s._id || idx}
-                className="bg-slate-900/90 border border-slate-800 text-white rounded-2xl p-5 hover:border-slate-700 transition-all shadow-lg"
+                className="bg-white border border-neutral-200 text-neutral-900 rounded-xl shadow-xs hover:border-neutral-300 transition-colors"
+                style={{ padding: "16px 20px", boxSizing: "border-box" }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-lg shadow-md shadow-indigo-600/20">
+                    <div className="w-10 h-10 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-800 font-bold flex items-center justify-center text-sm shrink-0">
                       {s.avatar ? (
                         <img
                           src={s.avatar}
                           alt={s.name}
-                          className="w-full h-full rounded-2xl object-cover"
+                          className="w-full h-full rounded-lg object-cover"
                         />
                       ) : (
                         (s.name || "S").charAt(0).toUpperCase()
                       )}
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-sm">{s.name}</h4>
-                      <p className="text-xs text-indigo-300 font-mono font-medium">
+                      <h4 className="font-bold text-neutral-900 text-sm m-0 leading-tight">{s.name}</h4>
+                      <p className="text-xs text-neutral-500 font-mono font-medium mt-0.5 m-0">
                         Roll No: {s.rollNo}
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">
+                  <span
+                    className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+                    style={{ padding: "4px 10px" }}
+                  >
                     Enrolled
-                  </Badge>
+                  </span>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-1.5 text-xs text-slate-400">
+                <div className="mt-4 pt-3 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-500">
                   {s.guardianDetails && (
                     <div className="flex items-center justify-between">
                       <span>Guardian:</span>
-                      <span className="text-slate-200 font-medium">
+                      <span className="text-neutral-800 font-medium">
                         {s.guardianDetails.name} ({s.guardianDetails.relation})
                       </span>
                     </div>
@@ -329,9 +346,9 @@ export default function MyClass() {
                     s.guardianDetails.phone !== "—" && (
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1">
-                          <Phone size={12} /> Contact:
+                          <Phone size={12} className="text-neutral-400" /> Contact:
                         </span>
-                        <span className="text-slate-200 font-mono">
+                        <span className="text-neutral-800 font-mono font-medium">
                           {s.guardianDetails.phone}
                         </span>
                       </div>
@@ -339,9 +356,9 @@ export default function MyClass() {
                   {s.email && (
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Mail size={12} /> Email:
+                        <Mail size={12} className="text-neutral-400" /> Email:
                       </span>
-                      <span className="text-slate-200 truncate max-w-[150px]">
+                      <span className="text-neutral-800 truncate max-w-[150px]">
                         {s.email}
                       </span>
                     </div>

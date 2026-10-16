@@ -379,6 +379,22 @@ class CampusAdminService {
       breakTitle: data.breakTitle || (data.isBreak ? (data.subject || "Lunch & Prayer Break") : ""),
     };
 
+    if (payload.teacherId && mongoose.isValidObjectId(payload.teacherId)) {
+      const u = await User.findById(payload.teacherId).select("name email").lean();
+      if (u) {
+        payload.teacherId = u._id;
+        if (!payload.instructor) payload.instructor = u.name;
+        if (!payload.teacherName) payload.teacherName = u.name;
+      } else {
+        const p = await TeacherProfile.findById(payload.teacherId).populate("user", "name email").lean();
+        if (p?.user) {
+          payload.teacherId = p.user._id;
+          if (!payload.instructor) payload.instructor = p.user.name;
+          if (!payload.teacherName) payload.teacherName = p.user.name;
+        }
+      }
+    }
+
     await this.validateScheduleConflicts(payload.campusId, payload);
 
     const created = await Timetable.create(payload);
@@ -540,6 +556,22 @@ class CampusAdminService {
         campusId: campusId || existing.campusId,
       };
       if (updateData.days) mergedPayload.days = updateData.days;
+
+      if (updateData && updateData.teacherId && mongoose.isValidObjectId(updateData.teacherId)) {
+        const u = await User.findById(updateData.teacherId).select("name email").lean();
+        if (u) {
+          updateData.teacherId = u._id;
+          if (!updateData.instructor) updateData.instructor = u.name;
+          if (!updateData.teacherName) updateData.teacherName = u.name;
+        } else {
+          const p = await TeacherProfile.findById(updateData.teacherId).populate("user", "name email").lean();
+          if (p?.user) {
+            updateData.teacherId = p.user._id;
+            if (!updateData.instructor) updateData.instructor = p.user.name;
+            if (!updateData.teacherName) updateData.teacherName = p.user.name;
+          }
+        }
+      }
 
       await this.validateScheduleConflicts(mergedPayload.campusId, mergedPayload, id);
 

@@ -232,16 +232,28 @@ export default function TeacherDashboard() {
       )}
 
       {/* 1. KPI Cards Strip */}
-      <section className="teacher-metrics campus-kpi-track" aria-label="Teaching summary">
+      <section
+        className="teacher-metrics campus-kpi-track grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full bg-white border-b border-neutral-200"
+        style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", width: "100%", boxSizing: "border-box" }}
+        aria-label="Teaching summary"
+      >
         {metric.map(([Icon, label, value]) => (
-          <article className="teacher-metric campus-kpi-card" key={label}>
-            <div className="kpi-wrap">
-              <div className="kpi-icon">
+          <article
+            className="teacher-metric campus-kpi-card min-w-0"
+            key={label}
+            style={{ padding: "16px 14px", boxSizing: "border-box" }}
+          >
+            <div className="kpi-wrap min-w-0 flex items-center gap-2.5">
+              <div className="kpi-icon shrink-0">
                 <Icon size={18} aria-hidden="true" />
               </div>
-              <div className="kpi-info">
-                <span className="kpi-label">{label}</span>
-                <strong className="kpi-value">{value}</strong>
+              <div className="kpi-info min-w-0 flex flex-col overflow-hidden">
+                <span className="kpi-label text-[10.5px] font-semibold text-neutral-500 uppercase tracking-wider truncate">
+                  {label}
+                </span>
+                <strong className="kpi-value whitespace-nowrap text-lg xl:text-xl font-bold text-neutral-900 truncate">
+                  {value}
+                </strong>
               </div>
             </div>
           </article>
