@@ -18,7 +18,13 @@ import Timetable from "../models/timetable.model.js";
 /**
  * Helper to safely resolve a teacher profile by TeacherProfile._id, User._id, or employeeId.
  */
-export const resolveTeacher = async (campusId, teacherId) => {
+export const resolveTeacher = async (campusIdOrTeacherId, maybeTeacherId) => {
+  let campusId = campusIdOrTeacherId;
+  let teacherId = maybeTeacherId;
+  if (!maybeTeacherId && campusIdOrTeacherId) {
+    teacherId = campusIdOrTeacherId;
+    campusId = null;
+  }
   let profile = null;
 
   if (mongoose.Types.ObjectId.isValid(teacherId)) {
@@ -216,13 +222,22 @@ export const getTeacherFullProfile = async (campusId, teacherId) => {
 /**
  * 2. GET Classes Assigned
  */
-export const getTeacherClasses = async (campusId, teacherId) => {
+export const getTeacherClasses = async (campusIdOrTeacherId, maybeTeacherId) => {
+  let campusId = campusIdOrTeacherId;
+  let teacherId = maybeTeacherId;
+  if (!maybeTeacherId && campusIdOrTeacherId) {
+    teacherId = campusIdOrTeacherId;
+    campusId = null;
+  }
   const profile = await resolveTeacher(campusId, teacherId);
   const teacherUserId = profile.user?._id;
+  const teacherProfileId = profile._id;
+  const possibleTeacherIds = [teacherUserId, teacherProfileId].filter(Boolean);
+  const effectiveCampusId = campusId || profile.user?.campusId || profile.campusId;
 
   const assignments = await TeacherAssignment.find({
-    teacherId: teacherUserId,
-    campusId,
+    teacherId: { $in: possibleTeacherIds },
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
   })
     .populate("gradeId", "name code")
     .populate("sectionId", "name capacity classTeacherId")
@@ -233,13 +248,13 @@ export const getTeacherClasses = async (campusId, teacherId) => {
     assignments.map(async (a) => {
       const isClassTeacher =
         a.sectionId?.classTeacherId &&
-        String(a.sectionId.classTeacherId) === String(teacherUserId);
+        possibleTeacherIds.some((pid) => String(a.sectionId.classTeacherId) === String(pid));
 
       // Count actual enrolled students in this grade & section
       let studentCount = 0;
       if (a.gradeId?._id) {
         studentCount = await User.countDocuments({
-          campusId,
+          ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
           role: "student",
           $or: [
             { gradeId: a.gradeId._id },
@@ -284,33 +299,56 @@ export const getTeacherClasses = async (campusId, teacherId) => {
 /**
  * 3. GET Weekly Timetable
  */
-export const getTeacherTimetable = async (campusId, teacherId, query = {}) => {
+export const getTeacherTimetable = async (campusIdOrTeacherId, maybeTeacherId, maybeQuery = {}) => {
+  let campusId = campusIdOrTeacherId;
+  let teacherId = maybeTeacherId;
+  let query = maybeQuery;
+
+  if (!maybeTeacherId && campusIdOrTeacherId) {
+    teacherId = campusIdOrTeacherId;
+    campusId = null;
+    query = {};
+  }
   const profile = await resolveTeacher(campusId, teacherId);
   const teacherUserId = profile.user?._id;
   const teacherProfileId = profile._id;
   const teacherName = profile.user?.name || "";
+  const possibleTeacherIds = [teacherUserId, teacherProfileId].filter(Boolean);
+  const effectiveCampusId = campusId || profile.user?.campusId || profile.campusId;
 
   // Check if teacher is designated Class Teacher for any section
-  const classTeacherAssignment = await TeacherAssignment.findOne({
-    campusId,
-    teacherId: teacherUserId,
-    isClassTeacher: true,
-  }).populate("gradeId sectionId").lean();
-
   let classTeacherOf = null;
-  if (classTeacherAssignment && classTeacherAssignment.gradeId && classTeacherAssignment.sectionId) {
+  let isClassTeacher = false;
+
+  let sec = await Section.findOne({
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    classTeacherId: { $in: possibleTeacherIds },
+  }).populate("gradeId", "name").lean();
+
+  if (!sec && profile.classTeacherOf) {
+    sec = await Section.findById(profile.classTeacherOf).populate("gradeId", "name").lean();
+  }
+  if (!sec) {
+    sec = await Section.findOne({
+      classTeacherId: { $in: possibleTeacherIds },
+    }).populate("gradeId", "name").lean();
+  }
+
+  if (sec) {
+    isClassTeacher = true;
     classTeacherOf = {
-      gradeId: classTeacherAssignment.gradeId._id,
-      gradeName: classTeacherAssignment.gradeId.name,
-      sectionId: classTeacherAssignment.sectionId._id,
-      sectionName: classTeacherAssignment.sectionId.name,
+      gradeId: sec.gradeId?._id,
+      gradeName: sec.gradeId?.name,
+      sectionId: sec._id,
+      sectionName: sec.name,
+      className: `${sec.gradeId?.name || "Class"} • Section ${sec.name}`,
     };
   }
 
   // Determine query scope
   // If ?view=class_routine and teacher is class teacher, show that class routine
   let timetableQuery = {
-    campusId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     status: { $ne: "Cancelled" },
   };
 
@@ -320,6 +358,7 @@ export const getTeacherTimetable = async (campusId, teacherId, query = {}) => {
         $or: [
           { gradeId: classTeacherOf.gradeId },
           { program: classTeacherOf.gradeName },
+          { className: classTeacherOf.gradeName },
           { isBreak: true },
         ],
       },
@@ -327,6 +366,7 @@ export const getTeacherTimetable = async (campusId, teacherId, query = {}) => {
         $or: [
           { sectionId: classTeacherOf.sectionId },
           { section: classTeacherOf.sectionName },
+          { sectionName: classTeacherOf.sectionName },
           { section: "All sections" },
           { section: "" },
           { isBreak: true },
@@ -341,7 +381,12 @@ export const getTeacherTimetable = async (campusId, teacherId, query = {}) => {
     timetableQuery.$or = [
       {
         $and: [
-          { $or: [{ teacherId: teacherUserId }, { instructor: teacherName }, { teacherName: teacherName }] },
+          {
+            $or: [
+              { teacherId: { $in: possibleTeacherIds } },
+              ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }, { teacherName: new RegExp(`^${teacherName}$`, "i") }] : []),
+            ],
+          },
           { targetAudience: { $nin: ["student"] } },
         ],
       },

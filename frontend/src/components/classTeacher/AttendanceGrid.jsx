@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
 import {
   CheckCircle2,
   XCircle,
@@ -19,8 +18,8 @@ export default function AttendanceGrid({
   initialAttendance = [],
   onSave,
   saving = false,
-  dateStr,
-  className,
+  _dateStr,
+  _className,
 }) {
   const [attendanceState, setAttendanceState] = useState({});
   const [remarksState, setRemarksState] = useState({});
@@ -116,54 +115,57 @@ export default function AttendanceGrid({
   return (
     <div className="space-y-4">
       {/* Top action bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+      <div
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
+        style={{ padding: "16px 20px", boxSizing: "border-box" }}
+      >
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             size="sm"
             onClick={handleMarkAllPresent}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
+            className="bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs"
           >
-            <CheckCheck size={15} /> Mark All Present
+            <CheckCheck size={14} /> Mark All Present
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={handleReset}
-            className="border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs flex items-center gap-1.5"
+            className="border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg text-xs flex items-center gap-1.5"
           >
             <RotateCcw size={14} /> Reset
           </Button>
         </div>
 
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+          <Search className="absolute left-3 top-2.5 text-neutral-400" size={15} />
           <Input
             placeholder="Search student or roll no..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500 rounded-xl text-xs h-9"
+            className="pl-9 bg-white border-neutral-300 text-neutral-900 placeholder:text-neutral-400 rounded-lg text-xs h-9"
           />
         </div>
       </div>
 
       {/* Attendance Table / Grid */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-800/60 text-slate-400 text-xs uppercase tracking-wider font-semibold border-b border-slate-800">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-neutral-50/50 text-neutral-500 text-[10.5px] uppercase tracking-wider font-bold border-b border-neutral-200">
               <tr>
-                <th className="px-5 py-3.5 w-16">#</th>
-                <th className="px-5 py-3.5">Student Details</th>
-                <th className="px-5 py-3.5">Roll No</th>
-                <th className="px-5 py-3.5 text-center">Attendance Status</th>
-                <th className="px-5 py-3.5">Remarks (Optional)</th>
+                <th style={{ padding: "12px 16px" }} className="w-12 text-center">#</th>
+                <th style={{ padding: "12px 16px" }}>Student Details</th>
+                <th style={{ padding: "12px 16px" }}>Roll No</th>
+                <th style={{ padding: "12px 16px" }} className="text-center">Attendance Status</th>
+                <th style={{ padding: "12px 16px" }}>Remarks (Optional)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-neutral-100">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-slate-400">
-                    No students found.
+                  <td colSpan={5} style={{ padding: "32px 16px" }} className="text-center text-neutral-400 text-xs">
+                    No students found in this roster.
                   </td>
                 </tr>
               ) : (
@@ -175,100 +177,100 @@ export default function AttendanceGrid({
                   return (
                     <tr
                       key={sId}
-                      className="hover:bg-slate-800/30 transition-colors"
+                      className="hover:bg-neutral-50/70 transition-colors"
                     >
-                      <td className="px-5 py-3 text-slate-500 font-mono text-xs">
+                      <td style={{ padding: "12px 16px" }} className="text-neutral-400 font-mono text-center text-xs">
                         {idx + 1}
                       </td>
-                      <td className="px-5 py-3">
+                      <td style={{ padding: "12px 16px" }}>
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 flex items-center justify-center font-bold text-xs">
+                          <div className="w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-800 flex items-center justify-center font-bold text-xs shrink-0">
                             {student.avatar ? (
                               <img
                                 src={student.avatar}
                                 alt={student.name}
-                                className="w-full h-full rounded-full object-cover"
+                                className="w-full h-full rounded-lg object-cover"
                               />
                             ) : (
                               (student.name || "S").charAt(0).toUpperCase()
                             )}
                           </div>
                           <div>
-                            <div className="font-semibold text-white text-sm">
+                            <div className="font-semibold text-neutral-900 text-xs">
                               {student.name || "Student"}
                             </div>
                             {student.email && (
-                              <div className="text-xs text-slate-400">
+                              <div className="text-[11px] text-neutral-500">
                                 {student.email}
                               </div>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3 font-mono text-xs text-indigo-300 font-semibold">
+                      <td style={{ padding: "12px 16px" }} className="font-mono text-xs text-neutral-700 font-medium">
                         {student.rollNo || student.rollNumber || "—"}
                       </td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center justify-center gap-1.5 bg-slate-800/60 p-1 rounded-xl border border-slate-700/60 max-w-fit mx-auto">
+                      <td style={{ padding: "12px 16px" }}>
+                        <div className="flex items-center justify-center gap-1 bg-neutral-100 p-1 rounded-lg border border-neutral-200 max-w-fit mx-auto">
                           {/* Present */}
                           <button
                             type="button"
                             onClick={() => handleStatusChange(sId, "Present")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all flex items-center gap-1 ${
                               currentStatus === "Present"
-                                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                                : "text-slate-400 hover:text-emerald-400 hover:bg-slate-700/50"
+                                ? "bg-neutral-900 text-white shadow-2xs"
+                                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60"
                             }`}
                           >
-                            <CheckCircle2 size={13} /> Present
+                            <CheckCircle2 size={12} /> Present
                           </button>
 
                           {/* Absent */}
                           <button
                             type="button"
                             onClick={() => handleStatusChange(sId, "Absent")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all flex items-center gap-1 ${
                               currentStatus === "Absent"
-                                ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"
-                                : "text-slate-400 hover:text-rose-400 hover:bg-slate-700/50"
+                                ? "bg-neutral-700 text-white shadow-2xs"
+                                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60"
                             }`}
                           >
-                            <XCircle size={13} /> Absent
+                            <XCircle size={12} /> Absent
                           </button>
 
                           {/* Late */}
                           <button
                             type="button"
                             onClick={() => handleStatusChange(sId, "Late")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all flex items-center gap-1 ${
                               currentStatus === "Late"
-                                ? "bg-amber-600 text-white shadow-md shadow-amber-600/30"
-                                : "text-slate-400 hover:text-amber-400 hover:bg-slate-700/50"
+                                ? "bg-neutral-600 text-white shadow-2xs"
+                                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60"
                             }`}
                           >
-                            <Clock size={13} /> Late
+                            <Clock size={12} /> Late
                           </button>
 
                           {/* Excused */}
                           <button
                             type="button"
                             onClick={() => handleStatusChange(sId, "Excused")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all flex items-center gap-1 ${
                               currentStatus === "Excused" || currentStatus === "On Leave"
-                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                : "text-slate-400 hover:text-sky-400 hover:bg-slate-700/50"
+                                ? "bg-neutral-500 text-white shadow-2xs"
+                                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60"
                             }`}
                           >
-                            <HelpCircle size={13} /> Excused
+                            <HelpCircle size={12} /> Excused
                           </button>
                         </div>
                       </td>
-                      <td className="px-5 py-3">
+                      <td style={{ padding: "12px 16px" }}>
                         <Input
-                          placeholder="e.g. Doctor appointment"
+                          placeholder="e.g. Leave or medical reason"
                           value={currentRemark}
                           onChange={(e) => handleRemarkChange(sId, e.target.value)}
-                          className="bg-slate-800/70 border-slate-700/80 text-white text-xs rounded-lg h-8 placeholder:text-slate-500"
+                          className="bg-white border-neutral-300 text-neutral-900 text-xs rounded-lg h-8 placeholder:text-neutral-400"
                         />
                       </td>
                     </tr>
@@ -280,30 +282,45 @@ export default function AttendanceGrid({
         </div>
 
         {/* Bottom Floating/Fixed Summary Bar */}
-        <div className="bg-slate-900 border-t border-slate-800 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <span className="text-slate-400 font-medium">Summary:</span>
-            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-2.5 py-1">
-              ✅ {present} Present
-            </Badge>
-            <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 px-2.5 py-1">
-              ❌ {absent} Absent
-            </Badge>
-            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 px-2.5 py-1">
-              🟡 {late} Late
-            </Badge>
-            <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/30 px-2.5 py-1">
-              🔵 {excused} Excused
-            </Badge>
-            <span className="text-slate-400">
-              Overall Rate: <strong className="text-white">{percentage}%</strong>
+        <div
+          className="bg-neutral-50 border-t border-neutral-200 flex flex-col md:flex-row items-center justify-between gap-4"
+          style={{ padding: "14px 20px" }}
+        >
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-neutral-500 font-semibold uppercase text-[10.5px] tracking-wider">Summary:</span>
+            <span
+              className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-medium text-xs"
+              style={{ padding: "4px 10px" }}
+            >
+              {present} Present
+            </span>
+            <span
+              className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-medium text-xs"
+              style={{ padding: "4px 10px" }}
+            >
+              {absent} Absent
+            </span>
+            <span
+              className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-medium text-xs"
+              style={{ padding: "4px 10px" }}
+            >
+              {late} Late
+            </span>
+            <span
+              className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-medium text-xs"
+              style={{ padding: "4px 10px" }}
+            >
+              {excused} Excused
+            </span>
+            <span className="text-neutral-600 font-medium ml-1">
+              Attendance Rate: <strong className="text-neutral-900">{percentage}%</strong>
             </span>
           </div>
 
           <Button
             onClick={handleSave}
             disabled={saving || students.length === 0}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-2 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2"
+            className="bg-neutral-900 hover:bg-neutral-800 text-white font-semibold px-5 py-2 rounded-lg text-xs shadow-xs flex items-center gap-2"
           >
             {saving ? (
               <>
@@ -311,7 +328,7 @@ export default function AttendanceGrid({
               </>
             ) : (
               <>
-                <Save size={16} /> Save Attendance
+                <Save size={14} /> Save Attendance
               </>
             )}
           </Button>

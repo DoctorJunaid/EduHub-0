@@ -206,7 +206,20 @@ export const getTeacherAssignments = async (req, res) => {
     if (gradeId) query.gradeId = gradeId;
     if (sectionId) query.sectionId = sectionId;
     if (subjectId) query.subjectId = subjectId;
-    if (teacherId) query.teacherId = teacherId;
+    if (teacherId) {
+      const possibleIds = [teacherId];
+      if (mongoose.isValidObjectId(teacherId)) {
+        const u = await User.findById(teacherId);
+        if (u) {
+          const p = await TeacherProfile.findOne({ user: u._id });
+          if (p) possibleIds.push(p._id);
+        } else {
+          const p = await TeacherProfile.findById(teacherId);
+          if (p?.user) possibleIds.push(p.user);
+        }
+      }
+      query.teacherId = { $in: possibleIds };
+    }
 
     const assignments = await TeacherAssignment.find(query)
       .populate("teacherId", "name email")
@@ -230,8 +243,29 @@ export const createTeacherAssignment = async (req, res) => {
       if (camp) instituteId = camp.instituteId;
     }
 
+    // Resolve canonical user and profile IDs
+    let resolvedUserId = teacherId;
+    let resolvedProfileId = null;
+
+    if (mongoose.isValidObjectId(teacherId)) {
+      const u = await User.findById(teacherId);
+      if (u) {
+        resolvedUserId = u._id;
+        const p = await TeacherProfile.findOne({ user: u._id });
+        resolvedProfileId = p?._id || null;
+      } else {
+        const p = await TeacherProfile.findById(teacherId);
+        if (p && p.user) {
+          resolvedUserId = p.user;
+          resolvedProfileId = p._id;
+        }
+      }
+    }
+
+    const checkTeacherIds = [resolvedUserId, resolvedProfileId].filter(Boolean);
+
     const existing = await TeacherAssignment.findOne({
-      teacherId,
+      teacherId: { $in: checkTeacherIds },
       gradeId,
       sectionId,
       subjectId,
@@ -253,7 +287,7 @@ export const createTeacherAssignment = async (req, res) => {
     }
 
     const assignment = await TeacherAssignment.create({
-      teacherId,
+      teacherId: resolvedUserId,
       gradeId,
       sectionId,
       subjectId,
@@ -265,15 +299,15 @@ export const createTeacherAssignment = async (req, res) => {
     const subjectDoc = await Subject.findById(subjectId);
     if (subjectDoc) {
       await TeacherProfile.findOneAndUpdate(
-        { user: teacherId },
+        { $or: [{ user: resolvedUserId }, ...(resolvedProfileId ? [{ _id: resolvedProfileId }] : [])] },
         { $addToSet: { subjectsTaught: subjectDoc.name } }
       );
-      const user = await User.findById(teacherId);
+      const user = await User.findById(resolvedUserId);
       if (user) {
         const currentSubs = (user.subjects || "").split(",").map(s => s.trim()).filter(Boolean);
         if (!currentSubs.includes(subjectDoc.name)) {
           currentSubs.push(subjectDoc.name);
-          await User.findByIdAndUpdate(teacherId, { subjects: currentSubs.join(", ") });
+          await User.findByIdAndUpdate(resolvedUserId, { subjects: currentSubs.join(", ") });
         }
       }
     }

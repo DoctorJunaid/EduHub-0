@@ -149,17 +149,70 @@ export async function resolveStudentSubjects(student, campusId) {
         .lean()
     : [];
 
+  // Resolve any teacherId that was stored as TeacherProfile instead of User
+  for (const ta of teacherAssignments) {
+    if (ta.teacherId && !ta.teacherId.name && mongoose.isValidObjectId(ta.teacherId)) {
+      const u = await User.findById(ta.teacherId).select("name email phone avatar designation department").lean();
+      if (u) {
+        ta.teacherId = u;
+      } else {
+        const p = await TeacherProfile.findById(ta.teacherId).populate("user", "name email phone avatar designation department").lean();
+        if (p?.user) {
+          ta.teacherId = {
+            ...p.user,
+            designation: p.designation || p.user.designation || "Course Instructor",
+            department: p.department || p.user.department || "",
+          };
+        }
+      }
+    }
+  }
+
   // Fetch Timetable entries for this Grade and Section
   const timetables = gradeDoc
     ? await Timetable.find({
         campusId,
-        gradeId: gradeDoc._id,
-        ...(sectionDoc ? { sectionId: sectionDoc._id } : {}),
+        $or: [
+          { gradeId: gradeDoc._id },
+          ...(gradeName ? [{ program: gradeName }, { className: gradeName }] : []),
+        ],
+        ...(sectionDoc
+          ? {
+              $or: [
+                { sectionId: sectionDoc._id },
+                { section: sectionDoc.name },
+                { sectionName: sectionDoc.name },
+                { section: `Section ${sectionDoc.name}` },
+                { section: "All sections" },
+                { section: "" },
+                { section: null },
+              ],
+            }
+          : {}),
+        status: { $ne: "Cancelled" },
       })
         .populate("teacherId", "name email phone avatar designation department")
         .populate("subjectId", "name code description")
         .lean()
     : [];
+
+  for (const tt of timetables) {
+    if (tt.teacherId && !tt.teacherId.name && mongoose.isValidObjectId(tt.teacherId)) {
+      const u = await User.findById(tt.teacherId).select("name email phone avatar designation department").lean();
+      if (u) {
+        tt.teacherId = u;
+      } else {
+        const p = await TeacherProfile.findById(tt.teacherId).populate("user", "name email phone avatar designation department").lean();
+        if (p?.user) {
+          tt.teacherId = {
+            ...p.user,
+            designation: p.designation || p.user.designation || "Instructor",
+            department: p.department || p.user.department || "",
+          };
+        }
+      }
+    }
+  }
 
   // Fetch ClassSchedules for this class
   const classSchedules = await ClassSchedule.find({
@@ -279,31 +332,51 @@ export async function resolveStudentSubjects(student, campusId) {
 
   // 5. Attach Timetable routines and schedules
   for (const tt of timetables) {
-    if (tt.subjectId && tt.subjectId.name) {
-      const key = normalize(tt.subjectId.name);
-      const sub = subjectsMap.get(key);
-      if (sub) {
-        const teacherName = tt.teacherId?.name || sub.instructor?.name || "Assigned Faculty";
-        if (!sub.instructor && tt.teacherId) {
-          sub.instructor = {
-            name: tt.teacherId.name,
-            email: tt.teacherId.email,
-            phone: tt.teacherId.phone || "",
-            designation: tt.teacherId.designation || "Instructor",
-            department: tt.teacherId.department || "",
-            avatar: tt.teacherId.avatar || "",
-          };
-        }
-        sub.routines.push({
-          id: id(tt._id),
-          schedule: formatScheduleDays(tt.days, tt.startTime, tt.endTime),
-          room: tt.room || "Room 101",
-          instructor: teacherName,
-          days: tt.days || [1, 2, 3, 4, 5],
-          startTime: tt.startTime,
-          endTime: tt.endTime,
-        });
+    const subName = tt.subjectId?.name || tt.subjectName || tt.subject;
+    if (subName) {
+      const key = normalize(subName);
+      let sub = subjectsMap.get(key);
+      if (!sub) {
+        sub = {
+          _id: id(tt.subjectId?._id) || `sub-${key}`,
+          id: id(tt.subjectId?._id) || `sub-${key}`,
+          name: subName,
+          code: tt.subjectId?.code || "",
+          description: "Scheduled Subject Period",
+          gradeName: gradeName || gradeDoc?.name || "Class 9",
+          sectionName: sectionName || sectionDoc?.name || "Section A",
+          category: "General",
+          totalMarks: 75,
+          creditHours: 3,
+          instructor: null,
+          routines: [],
+          attendance: { present: 0, marked: 0, rate: null, policyPending: false, risk: false },
+          diaryCount: 0,
+          pendingAssignmentsCount: 0,
+        };
+        subjectsMap.set(key, sub);
       }
+
+      const teacherName = tt.teacherId?.name || tt.instructor || tt.teacherName || sub.instructor?.name || "Assigned Faculty";
+      if (!sub.instructor && (tt.teacherId || tt.instructor || tt.teacherName)) {
+        sub.instructor = {
+          name: tt.teacherId?.name || tt.instructor || tt.teacherName || "Assigned Faculty",
+          email: tt.teacherId?.email || "",
+          phone: tt.teacherId?.phone || "",
+          designation: tt.teacherId?.designation || "Course Instructor",
+          department: tt.teacherId?.department || "",
+          avatar: tt.teacherId?.avatar || "",
+        };
+      }
+      sub.routines.push({
+        id: id(tt._id),
+        schedule: formatScheduleDays(tt.days, tt.startTime, tt.endTime),
+        room: tt.room || tt.roomNumber || "Room 101",
+        instructor: teacherName,
+        days: tt.days || [1, 2, 3, 4, 5],
+        startTime: tt.startTime,
+        endTime: tt.endTime,
+      });
     }
   }
 
@@ -368,9 +441,14 @@ export async function resolveStudentSubjects(student, campusId) {
   // Resolve Class Teacher for Section
   let classTeacher = null;
   if (sectionDoc && sectionDoc.classTeacherId) {
-    const ctProfile = await TeacherProfile.findById(sectionDoc.classTeacherId)
+    let ctProfile = await TeacherProfile.findById(sectionDoc.classTeacherId)
       .populate("user", "name email phone avatar designation department")
       .lean();
+    if (!ctProfile) {
+      ctProfile = await TeacherProfile.findOne({ user: sectionDoc.classTeacherId })
+        .populate("user", "name email phone avatar designation department")
+        .lean();
+    }
     if (ctProfile && ctProfile.user) {
       classTeacher = {
         _id: ctProfile._id.toString(),
@@ -385,6 +463,25 @@ export async function resolveStudentSubjects(student, campusId) {
         assignedAt: sectionDoc.classTeacherAssignedAt || null,
         note: sectionDoc.classTeacherNote || "",
       };
+    } else {
+      const u = await User.findById(sectionDoc.classTeacherId)
+        .select("name email phone avatar designation department")
+        .lean();
+      if (u) {
+        classTeacher = {
+          _id: u._id.toString(),
+          profileId: u._id.toString(),
+          userId: u._id.toString(),
+          name: u.name || "Teacher",
+          email: u.email || "",
+          phone: u.phone || "",
+          avatar: u.avatar || "",
+          department: u.department || "",
+          designation: u.designation || "Class Teacher",
+          assignedAt: sectionDoc.classTeacherAssignedAt || null,
+          note: sectionDoc.classTeacherNote || "",
+        };
+      }
     }
   }
 
@@ -929,22 +1026,45 @@ export const getStudentTimetable = async (req, res) => {
       .populate("sectionId", "name")
       .populate("subjectId", "name code")
       .populate("teacherId", "name email phone avatar designation department")
-      .sort({ days: 1, startTime: 1 });
+      .sort({ days: 1, startTime: 1 })
+      .lean();
+
+    // Ensure teacher profiles / users are resolved
+    for (const r of records) {
+      if (r.teacherId && !r.teacherId.name && mongoose.isValidObjectId(r.teacherId)) {
+        const u = await User.findById(r.teacherId).select("name email phone avatar designation department").lean();
+        if (u) {
+          r.teacherId = u;
+        } else {
+          const p = await TeacherProfile.findById(r.teacherId).populate("user", "name email phone avatar designation department").lean();
+          if (p?.user) {
+            r.teacherId = {
+              ...p.user,
+              designation: p.designation || p.user.designation || "Lecturer",
+              department: p.department || p.user.department || "",
+            };
+          }
+        }
+      }
+    }
 
     records = records.map((r) => {
-      const doc = r.toObject();
+      const doc = { ...r };
       if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
       if (doc.sectionId && !doc.section) doc.section = doc.sectionId.name;
       if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
       if (doc.isBreak && !doc.subject) doc.subject = doc.breakTitle || "Break";
-      if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      const resolvedInstructor = doc.teacherId?.name || doc.instructor || doc.teacherName || "";
+      if (resolvedInstructor) {
+        doc.instructor = resolvedInstructor;
+        doc.teacherName = resolvedInstructor;
+      }
       doc.targetAudience = doc.targetAudience || doc.visibleTo || "both";
       doc.visibleTo = doc.targetAudience;
       doc.slotType = doc.isBreak ? "break" : (doc.slotType || "period");
       doc.className = doc.program || (doc.gradeId?.name || gradeName);
       doc.sectionName = doc.section || (doc.sectionId?.name || sectionName);
       doc.subjectName = doc.subject || (doc.subjectId?.name || "");
-      doc.teacherName = doc.instructor || (doc.teacherId?.name || "");
       return doc;
     });
 

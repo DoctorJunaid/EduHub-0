@@ -99,7 +99,7 @@ export const selectStudentCourses = createSelector(
           instructor:
             teachers.length === 1
               ? teachers[0].name
-              : session.instructor || "Assigned Faculty",
+              : session.instructor || session.teacherName || "Assigned Faculty",
           teacherObj: teachers.length === 1 ? teachers[0] : null,
         };
       });
@@ -123,7 +123,7 @@ export const selectStudentCourses = createSelector(
         curriculum: "BISE Peshawar Board Standard",
         routines,
         attendance,
-        instructor: routines[0]?.instructor || primaryTeacher?.name || "Assigned Faculty",
+        instructor: routines.find((r) => r.instructor && r.instructor !== "Assigned Faculty")?.instructor || routines[0]?.instructor || primaryTeacher?.name || "Assigned Faculty",
         instructorObj: primaryTeacher,
       };
     });
