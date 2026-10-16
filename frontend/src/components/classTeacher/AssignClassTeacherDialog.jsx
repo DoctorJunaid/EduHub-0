@@ -59,9 +59,14 @@ export default function AssignClassTeacherDialog({
     setSubmitting(true);
     try {
       const classId = classSection?.classId || classSection?._id;
+      const targetTeacher = teachers.find(
+        (t) => (t._id || t.id) === selectedTeacherId || t.profileId === selectedTeacherId
+      );
+      const profileId = targetTeacher?.profileId || targetTeacher?.teacherProfileId || selectedTeacherId;
+
       const res = await classTeacherApi.assignClassTeacher(
         classId,
-        selectedTeacherId,
+        profileId,
         note
       );
       toast.success(res.message || "Class Teacher assigned successfully!");

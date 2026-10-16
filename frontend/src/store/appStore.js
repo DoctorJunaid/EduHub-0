@@ -68,6 +68,11 @@ export function createAppStore({
     reducer: (state, action) =>
       preferRealStudentData(preserveDemoEdits(state, reducers(state, action))),
     preloadedState: preferRealStudentData(initial),
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        immutableCheck: { warnAfter: 200 },
+        serializableCheck: { warnAfter: 200 },
+      }),
   });
   persistDemoState(store, storage);
   return store;

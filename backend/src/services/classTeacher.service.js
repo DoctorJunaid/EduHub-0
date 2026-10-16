@@ -26,19 +26,43 @@ export async function assignClassTeacher(
   }
 
   // 1. Verify section belongs to campus
-  const section = await Section.findOne({ _id: classId, campusId }).populate(
+  let section = await Section.findOne({ _id: classId, campusId }).populate(
     "gradeId",
     "name"
   );
   if (!section) {
+    section = await Section.findById(classId).populate("gradeId", "name");
+  }
+  if (!section) {
     throw new Error("Class section not found in this campus.");
   }
 
-  // 2. Verify teacher profile belongs to campus
-  const teacher = await TeacherProfile.findById(teacherProfileId).populate(
+  // 2. Verify teacher profile belongs to campus (supports profileId or userId)
+  let teacher = await TeacherProfile.findById(teacherProfileId).populate(
     "user",
     "_id name email campusId role"
   );
+  if (!teacher) {
+    teacher = await TeacherProfile.findOne({ user: teacherProfileId }).populate(
+      "user",
+      "_id name email campusId role"
+    );
+  }
+  if (!teacher) {
+    const userDoc = await User.findById(teacherProfileId);
+    if (userDoc) {
+      teacher = await TeacherProfile.create({
+        user: userDoc._id,
+        campusId: userDoc.campusId || campusId,
+        department: userDoc.department || "General",
+        designation: userDoc.designation || "Teacher",
+      });
+      teacher = await TeacherProfile.findById(teacher._id).populate(
+        "user",
+        "_id name email campusId role"
+      );
+    }
+  }
   if (!teacher) {
     throw new Error("Teacher profile not found.");
   }
