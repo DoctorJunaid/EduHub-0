@@ -409,6 +409,7 @@
 .rule-table-scroll {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid #e4e4e7;
   border-radius: 6px;
   margin-bottom: 8px;
@@ -416,9 +417,8 @@
 
 .rule-table {
   width: 100%;
-  min-width: 680px;
+  min-width: 750px;
   border-collapse: collapse;
-  table-layout: fixed;
 }
 
 .rule-table th {
@@ -446,18 +446,22 @@
 .rule-table th:nth-child(1),
 .rule-table th:nth-child(4) {
   width: 20%;
+  min-width: 140px;
 }
 
 .rule-table th:nth-child(2) {
   width: 27%;
+  min-width: 180px;
 }
 
 .rule-table th:nth-child(3) {
   width: 26%;
+  min-width: 180px;
 }
 
 .rule-table .rule-actions-column {
   width: 48px;
+  min-width: 48px;
 }
 
 .rule-input[data-slot="input"],

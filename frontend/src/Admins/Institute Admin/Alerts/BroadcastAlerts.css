@@ -202,10 +202,12 @@
 .iba-table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .iba-recent-card table {
   width: 100%;
+  min-width: 700px;
   table-layout: auto;
   border-collapse: collapse;
 }

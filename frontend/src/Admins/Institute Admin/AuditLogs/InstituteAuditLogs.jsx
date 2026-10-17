@@ -297,13 +297,13 @@ export default function InstituteAuditLogs() {
   return (
     <div className="institute-audit-logs-page flex flex-col gap-5 pb-12">
       {/* ── 1. SUMMARY KPI METRICS CARD ROW (DIRECTLY BENEATH HEADER / BREADCRUMBS) ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium block">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between min-w-0">
+          <div className="space-y-1 min-w-0 flex-1 mr-2">
+            <span className="text-xs text-muted-foreground font-medium block truncate">
               Total Audit Records
             </span>
-            <span className="text-2xl font-bold text-neutral-900 block tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 block tracking-tight truncate">
               {stats.totalLogs || totalLogs || 0}
             </span>
           </div>
@@ -312,12 +312,12 @@ export default function InstituteAuditLogs() {
           </div>
         </div>
 
-        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium block">
+        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between min-w-0">
+          <div className="space-y-1 min-w-0 flex-1 mr-2">
+            <span className="text-xs text-muted-foreground font-medium block truncate">
               Today's Activities
             </span>
-            <span className="text-2xl font-bold text-neutral-900 block tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 block tracking-tight truncate">
               {stats.todayLogs || 0}
             </span>
           </div>
@@ -326,12 +326,12 @@ export default function InstituteAuditLogs() {
           </div>
         </div>
 
-        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium block">
+        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between min-w-0">
+          <div className="space-y-1 min-w-0 flex-1 mr-2">
+            <span className="text-xs text-muted-foreground font-medium block truncate">
               Campuses Tracked
             </span>
-            <span className="text-2xl font-bold text-neutral-900 block tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 block tracking-tight truncate">
               {campuses.length || stats.totalCampuses || 0}
             </span>
           </div>
@@ -340,13 +340,13 @@ export default function InstituteAuditLogs() {
           </div>
         </div>
 
-        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium block">
+        <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between min-w-0">
+          <div className="space-y-1 min-w-0 flex-1 mr-2">
+            <span className="text-xs text-muted-foreground font-medium block truncate">
               Critical Operations
             </span>
             <span
-              className={`text-2xl font-bold block tracking-tight ${
+              className={`text-2xl font-bold block tracking-tight truncate ${
                 stats.criticalEvents > 0 ? "text-rose-600" : "text-neutral-900"
               }`}
             >
@@ -557,8 +557,8 @@ export default function InstituteAuditLogs() {
 
       {/* Audit Log Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto min-w-[950px]">
-          <table className="w-full text-left text-xs text-neutral-600 institute-audit-table border-collapse">
+        <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full min-w-[950px] text-left text-xs text-neutral-600 institute-audit-table border-collapse">
             <thead className="bg-neutral-50/80 text-neutral-500 font-bold uppercase tracking-wider text-[11px] border-b border-neutral-200">
               <tr>
                 <th className="px-5 py-3.5 whitespace-nowrap">Timestamp</th>

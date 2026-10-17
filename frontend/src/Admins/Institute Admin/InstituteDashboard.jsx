@@ -185,16 +185,16 @@ export default function InstituteDashboard() {
         </h1>
       </header>
 
-      <div className={`edu-stats-grid institute-stats grid grid-cols-2 sm:grid-cols-3 ${stats.length === 5 ? "xl:grid-cols-5" : "xl:grid-cols-6"} gap-3.5 lg:gap-4 w-full`}>
+      <div className={`edu-stats-grid institute-stats grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${stats.length === 5 ? "xl:grid-cols-5" : "xl:grid-cols-6"} w-full`} style={{ gap: "16px" }}>
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <article
-              className="edu-stat-card institute-stat p-3.5 lg:p-4 rounded-xl border border-neutral-200 bg-white"
+              className="edu-stat-card institute-stat p-3.5 lg:p-4 rounded-xl border border-neutral-200 bg-white min-w-0"
               key={stat.label}
             >
-              <div className="edu-stat-head flex items-center justify-between w-full">
-                <span className="edu-stat-label text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+              <div className="edu-stat-head flex items-center justify-between w-full min-w-0">
+                <span className="edu-stat-label text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
                   {stat.label}
                 </span>
                 <span className="edu-stat-icon w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-900 flex items-center justify-center shrink-0">
@@ -202,7 +202,7 @@ export default function InstituteDashboard() {
                 </span>
               </div>
               <div
-                className="edu-stat-value text-xl lg:text-2xl font-bold text-neutral-900 tracking-tight mt-2.5 truncate"
+                className="edu-stat-value text-xl lg:text-2xl font-bold text-neutral-900 tracking-tight mt-2.5 truncate whitespace-nowrap"
                 title={String(stat.value)}
               >
                 {stat.value}
@@ -212,7 +212,7 @@ export default function InstituteDashboard() {
         })}
       </div>
 
-      <div className="institute-actions">
+      <div className="institute-actions grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "10px" }}>
         {[
           [Plus, "Add New Campus", "/institute-admin/campuses?add=1"],
           [Coins, "Revenue & Collections Hub", "/institute-admin/revenue"],
@@ -223,6 +223,8 @@ export default function InstituteDashboard() {
             key={label}
             variant="outline"
             onClick={() => navigate(destination)}
+            className="whitespace-nowrap shrink-0 w-full"
+            style={{ height: "38px", minWidth: "fit-content" }}
           >
             <Icon size={18} />
             {label}
@@ -276,8 +278,8 @@ export default function InstituteDashboard() {
           </div>
         )}
 
-        <div className="institute-table-container">
-          <Table aria-label="Registered Students">
+        <div className="institute-table-container w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <Table aria-label="Registered Students" className="w-full min-w-[750px] border-collapse">
             <TableHeader>
               <TableRow>
                 {[

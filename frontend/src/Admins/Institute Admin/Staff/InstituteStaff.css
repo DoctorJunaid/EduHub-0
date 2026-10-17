@@ -144,10 +144,12 @@
 .ist-table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ist-card table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
@@ -626,5 +628,28 @@
     .activity-form-actions
     > button {
     width: 100%;
+  }
+
+  .ist-toolbar {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .ist-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .ist-search-input-wrapper {
+    width: 100%;
+  }
+  .ist-add-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .ist-card th,
+  .ist-card td {
+    padding: 10px 14px;
   }
 }

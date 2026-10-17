@@ -288,7 +288,7 @@ export default function InstituteRevenue() {
   return (
     <div className="ir-container">
       {/* ── 1. SUMMARY KPI METRIC CARDS (UNIFIED 5-CARD GRID DIRECTLY AT TOP) ── */}
-      <section className="ir-kpi-grid" aria-label="Revenue KPIs">
+      <section className="ir-kpi-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 w-full" style={{ gap: "10px" }} aria-label="Revenue KPIs">
         {/* Total Collected */}
         <div className="ir-kpi-card">
           <div className="ir-kpi-top">
@@ -850,14 +850,14 @@ export default function InstituteRevenue() {
             </div>
           </div>
 
-          <div className="ir-table-wrapper">
+          <div className="ir-table-wrapper w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             {txLoading ? (
               <PageLoader
                 message="Loading transaction records..."
                 className="py-12"
               />
             ) : transactions.length > 0 ? (
-              <table className="ir-data-table">
+              <table className="ir-data-table w-full min-w-[900px] border-collapse">
                 <thead>
                   <tr>
                     <th>Receipt #</th>
@@ -1024,14 +1024,14 @@ export default function InstituteRevenue() {
             </div>
           </div>
 
-          <div className="ir-table-wrapper">
+          <div className="ir-table-wrapper w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             {invLoading ? (
               <PageLoader
                 message="Loading student invoices..."
                 className="py-12"
               />
             ) : invoices.length > 0 ? (
-              <table className="ir-data-table">
+              <table className="ir-data-table w-full min-w-[900px] border-collapse">
                 <thead>
                   <tr>
                     <th>Challan #</th>
@@ -1186,8 +1186,8 @@ export default function InstituteRevenue() {
           {structuresLoading ? (
             <PageLoader message="Loading fee structures..." className="py-12" />
           ) : structures.length > 0 ? (
-            <div className="ir-table-wrapper">
-              <table className="ir-data-table">
+            <div className="ir-table-wrapper w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+              <table className="ir-data-table w-full min-w-[900px] border-collapse">
                 <thead>
                   <tr>
                     <th>Campus Branch</th>

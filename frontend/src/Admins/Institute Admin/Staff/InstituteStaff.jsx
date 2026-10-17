@@ -175,9 +175,9 @@ export default function InstituteStaff() {
       aria-label="Faculty and staff directory"
     >
       <Card className="ist-card">
-        <div className="ist-toolbar">
-          <div className="ist-toolbar-left">
-            <div className="ist-search-input-wrapper">
+        <div className="ist-toolbar flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
+          <div className="ist-toolbar-left flex flex-col sm:flex-row sm:items-center w-full sm:w-auto" style={{ gap: "12px" }}>
+            <div className="ist-search-input-wrapper relative w-full sm:w-80 shrink-0">
               <Search size={16} className="ist-search-icon" aria-hidden="true" />
               <Input
                 type="search"
@@ -187,7 +187,7 @@ export default function InstituteStaff() {
                 onChange={handleSearchChange}
               />
             </div>
-            <span className="ist-count">
+            <span className="ist-count whitespace-nowrap">
               {staffList.length} faculty{" "}
               {staffList.length === 1 ? "member" : "members"} registered
             </span>
@@ -200,15 +200,16 @@ export default function InstituteStaff() {
                 : undefined
             }
             onClick={() => setModal({ type: "add" })}
-            className="ist-add-btn"
+            className="ist-add-btn whitespace-nowrap shrink-0 w-full sm:w-auto"
+            style={{ padding: "8px 16px", height: "38px", width: "auto", minWidth: "fit-content", gap: "8px" }}
           >
             <Plus size={18} aria-hidden="true" />
             Add New Teacher
           </Button>
         </div>
 
-        <div className="ist-table-container">
-          <Table aria-label="Faculty and staff directory">
+        <div className="ist-table-container w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <Table aria-label="Faculty and staff directory" className="w-full min-w-[900px] border-collapse">
             <TableHeader>
               <TableRow>
                 {[
