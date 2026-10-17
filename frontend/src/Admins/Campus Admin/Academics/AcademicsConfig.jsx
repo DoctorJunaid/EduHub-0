@@ -726,6 +726,7 @@ export default function AcademicsConfig() {
         </TabsContent>
 
         {/* TEACHER ASSIGNMENTS TAB */}
+        <TabsContent value="teacher_assignments" className="space-y-4 mt-4">
           <TeacherAssignmentTab
             grades={grades}
             sections={sections}
