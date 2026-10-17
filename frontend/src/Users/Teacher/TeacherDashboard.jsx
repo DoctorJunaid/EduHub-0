@@ -231,6 +231,41 @@ export default function TeacherDashboard() {
         </div>
       )}
 
+      {/* Teacher Workload Summary Banner */}
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-xl flex items-center justify-center shrink-0 ${classes.length < 5 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
+              <BookOpen size={22} />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900">Faculty Workload Allocation</h2>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${classes.length < 5 ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"}`}>
+                  {classes.length}/5 Classes Assigned
+                </span>
+                {classes.length < 5 ? (
+                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                    ⚠️ Under-assigned ({5 - classes.length} more needed)
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    ✓ Optimal Daily Requirement Met
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Campus standard requirement is 5 classes/day. Full class routine and assigned periods are synchronized below.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shrink-0">
+            <Clock3 size={14} className="text-slate-400" />
+            <span>Target: <strong>5 Periods/Day</strong></span>
+          </div>
+        </div>
+      </section>
+
       {/* 1. KPI Cards Strip */}
       <section
         className="teacher-metrics campus-kpi-track grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full bg-white border-b border-neutral-200"
@@ -452,45 +487,65 @@ export default function TeacherDashboard() {
               <th>Section / Batch</th>
               <th>Day &amp; Time Routine</th>
               <th>Room / Lab</th>
+              <th>Your Role</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {visibleClasses.map((item, idx) => (
-              <tr key={item.id ? `${item.id}-${classStartIndex + idx}` : (item._id ? `${item._id}-${classStartIndex + idx}` : `class-${classStartIndex + idx}`)}>
-                <td className="font-bold text-slate-900">
-                  {item.title || item.subject || "Untitled class"}
-                </td>
-                <td className="font-medium text-slate-800">
-                  {item.section || item.className || item.program || "—"}
-                </td>
-                <td>
-                  <span className="flex items-center gap-1.5 text-slate-700">
-                    <Clock3 size={14} className="text-slate-400" />
-                    {(item.days || [item.dayOfWeek]).filter(Boolean).join(", ")}{" "}
-                    {item.startTime ? `${item.startTime} – ${item.endTime || ""}` : ""}
-                  </span>
-                </td>
-                <td className="text-slate-600">{item.room || item.roomNumber || "—"}</td>
-                <td>
-                  <div className="teacher-table-actions">
-                    <Link
-                      to={`/teacher/attendance?classId=${encodeURIComponent(item.id || item._id)}`}
-                      className="teacher-action-link"
-                    >
-                      Attendance
-                    </Link>
-                    <span className="text-slate-300">•</span>
-                    <Link
-                      to={`/teacher/diary?classId=${encodeURIComponent(item.id || item._id)}`}
-                      className="teacher-action-link"
-                    >
-                      Diary
-                    </Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {visibleClasses.map((item, idx) => {
+              const isCT = Boolean(item.isClassTeacher || item.role === "Class Teacher");
+              return (
+                <tr key={item.id ? `${item.id}-${classStartIndex + idx}` : (item._id ? `${item._id}-${classStartIndex + idx}` : `class-${classStartIndex + idx}`)}>
+                  <td className="font-bold text-slate-900">
+                    <div>{item.title || item.subject || "Untitled class"}</div>
+                    {item.subjectCode && (
+                      <span className="text-[11px] font-mono text-slate-500 font-normal">
+                        Code: {item.subjectCode}
+                      </span>
+                    )}
+                  </td>
+                  <td className="font-medium text-slate-800">
+                    {item.section || item.className || item.program || "—"}
+                  </td>
+                  <td>
+                    <span className="flex items-center gap-1.5 text-slate-700">
+                      <Clock3 size={14} className="text-slate-400" />
+                      {(item.days || [item.dayOfWeek]).filter(Boolean).join(", ")}{" "}
+                      {item.startTime ? `${item.startTime} – ${item.endTime || ""}` : ""}
+                    </span>
+                  </td>
+                  <td className="text-slate-600">{item.room || item.roomNumber || "—"}</td>
+                  <td>
+                    {isCT ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        👑 Class Teacher
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        📘 Subject Teacher
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="teacher-table-actions">
+                      <Link
+                        to={`/teacher/attendance?classId=${encodeURIComponent(item.id || item._id)}`}
+                        className="teacher-action-link"
+                      >
+                        Attendance
+                      </Link>
+                      <span className="text-slate-300">•</span>
+                      <Link
+                        to={`/teacher/diary?classId=${encodeURIComponent(item.id || item._id)}`}
+                        className="teacher-action-link"
+                      >
+                        Diary
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {!totalClassItems && (

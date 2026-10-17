@@ -201,6 +201,52 @@ export async function saveClassAttendance(campusId, teacherUserId, payload) {
   const resolved = await resolveTeacherUser(teacherUserId);
   const markedBy = resolved?._id || teacherUserId;
 
+  // Strict RBAC: If requester is a teacher, verify they are the appointed Class Teacher for this class
+  const userDoc = await User.findById(teacherUserId).select("role").lean();
+  if (userDoc?.role === "teacher") {
+    const { TeacherProfile } = await import("../models/profile.model.js");
+    const { Section } = await import("../models/academic.model.js");
+    const prof = await TeacherProfile.findOne({ user: teacherUserId }).lean();
+
+    let isClassTeacher = false;
+    if (prof) {
+      if (prof.isClassTeacher) {
+        if (prof.classTeacherOf) {
+          if (classId && String(prof.classTeacherOf) === String(classId)) {
+            isClassTeacher = true;
+          } else {
+            const sec = await Section.findById(prof.classTeacherOf).populate("gradeId", "name").lean();
+            if (sec) {
+              const secGrade = sec.gradeId?.name || "";
+              const secName = sec.name || "";
+              if (
+                (!className || className.toLowerCase().includes(secGrade.toLowerCase())) &&
+                (!section || section.toLowerCase() === secName.toLowerCase())
+              ) {
+                isClassTeacher = true;
+              }
+            }
+          }
+        } else {
+          isClassTeacher = true;
+        }
+      }
+
+      if (!isClassTeacher && classId) {
+        const sec = await Section.findById(classId).lean();
+        if (sec && String(sec.classTeacherId) === String(prof._id)) {
+          isClassTeacher = true;
+        }
+      }
+    }
+
+    if (!isClassTeacher) {
+      const err = new Error("Access Denied: As a Subject Teacher, you cannot mark attendance. Only the appointed Class Teacher has full control to record daily attendance for this class.");
+      err.statusCode = 403;
+      throw err;
+    }
+  }
+
   if (!Array.isArray(records) || records.length === 0) {
     throw new Error("No attendance records provided to save.");
   }
