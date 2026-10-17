@@ -12,13 +12,25 @@ export const loggedOutState = {
 import { roleHome } from '../../auth/roles.js';
 
 export function validSession(user) {
-  return Boolean(user && typeof user.id === 'string' && user.id && typeof user.name === 'string' && user.name.trim() && typeof user.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) && roleHome(user.role));
+  const userId = user?.id || user?._id;
+  return Boolean(
+    user &&
+    userId &&
+    (typeof userId === 'string' || typeof userId === 'object') &&
+    String(userId).trim() &&
+    typeof user.name === 'string' &&
+    user.name.trim() &&
+    typeof user.email === 'string' &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) &&
+    roleHome(user.role)
+  );
 }
 
 export function sessionState(user) {
   if (!validSession(user)) return { ...loggedOutState };
-  const { id, name, email, role } = user;
-  return { isAuthenticated: true, user: { id, name, email, role }, selectedRole: role, isInitializing: false };
+  const id = String(user.id || user._id);
+  const { name, email, role } = user;
+  return { isAuthenticated: true, user: { ...user, id, _id: id, name, email, role }, selectedRole: role, isInitializing: false };
 }
 
 // Async thunk for login
@@ -27,6 +39,9 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
     const response = await axiosInstance.post('/auth/login', credentials);
     // Backend returns { success: true, message: "...", data: { token, user } }
     const { token, user } = response.data.data;
+    if (user && !user.id && user._id) {
+      user.id = String(user._id);
+    }
     localStorage.setItem('eduHubToken', token);
     return user;
   } catch (error) {
@@ -38,7 +53,11 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
 export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.get('/auth/me');
-    return response.data.data;
+    const user = response.data.data;
+    if (user && !user.id && user._id) {
+      user.id = String(user._id);
+    }
+    return user;
   } catch {
     return rejectWithValue('Session expired or invalid');
   }
@@ -49,7 +68,11 @@ const getCachedUser = () => {
   try {
     if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem('eduHubUser');
-    return raw ? JSON.parse(raw) : null;
+    const user = raw ? JSON.parse(raw) : null;
+    if (user && !user.id && user._id) {
+      user.id = String(user._id);
+    }
+    return user;
   } catch {
     return null;
   }

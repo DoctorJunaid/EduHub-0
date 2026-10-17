@@ -12,19 +12,6 @@ const configureMongoDns = () => {
 
   if (configuredServers?.length) {
     dns.setServers(configuredServers);
-    return;
-  }
-
-  // Node's SRV resolver can fail when a local DNS proxy refuses SRV queries.
-  // In that case, use public resolvers for this process only.
-  const activeServers = dns.getServers();
-  const localResolverOnly = activeServers.length > 0 && activeServers.every(
-    (server) => server === "::1" || server.startsWith("127.")
-  );
-
-  if (localResolverOnly) {
-    dns.setServers(["1.1.1.1", "8.8.8.8"]);
-    console.warn("Local DNS proxy detected; using fallback DNS for MongoDB Atlas SRV lookup.");
   }
 };
 
@@ -44,6 +31,11 @@ const connectDB = async () => {
     return conn;
   } catch (error) {
     console.error(`Database Connection Error: ${error.message}`);
+    if (error.message?.includes("queryTxt") || error.message?.includes("querySrv")) {
+      console.error(
+        "Tip: Your network / ISP is timing out on DNS SRV/TXT lookups. Use a direct replica-set MongoDB URI or specify MONGO_DNS_SERVERS in .env"
+      );
+    }
     // Only exit process in non-serverless local development
     if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
       process.exit(1);

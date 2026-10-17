@@ -92,8 +92,8 @@ export async function createDiaryEntry(campusId, teacherUserId, data) {
   const uId = resolved?._id || teacherUserId;
   const teacherName = resolved?.name || data.teacherName || "Teacher";
 
-  const title = (data.title || "").trim();
-  const recap = (data.recap || "").trim();
+  const title = (data.title || data.topic || "").trim();
+  const recap = (data.recap || data.notes || data.summary || "").trim();
   const date = data.date ? String(data.date).slice(0, 10) : new Date().toISOString().split("T")[0];
 
   if (!title) throw new Error("Lecture topic / title is required.");

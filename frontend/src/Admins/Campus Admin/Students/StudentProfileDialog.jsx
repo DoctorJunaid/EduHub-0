@@ -63,7 +63,7 @@ export default function StudentProfileDialog({ student, onClose }) {
 
     if (list.length === 0 && teacherAssignments.length > 0) {
       return teacherAssignments.map((ta) => ({
-        name: ta.subjectId?.name || "Subject",
+        name: ta.subjectId?.name || "All Subjects (Class Teacher)",
         code: ta.subjectId?.code || "",
         teacher: ta.teacherId?.name || null,
         teacherEmail: ta.teacherId?.email || null,
@@ -72,9 +72,10 @@ export default function StudentProfileDialog({ student, onClose }) {
     }
 
     return list.map((subName) => {
-      const matchingAssignment = teacherAssignments.find(
-        (ta) => ta.subjectId?.name?.toLowerCase() === subName.toLowerCase()
-      );
+      const matchingAssignment =
+        teacherAssignments.find(
+          (ta) => ta.subjectId?.name?.toLowerCase() === subName.toLowerCase()
+        ) || teacherAssignments.find((ta) => !ta.subjectId);
       return {
         name: subName,
         code: matchingAssignment?.subjectId?.code || "",

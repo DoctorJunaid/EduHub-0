@@ -1,5 +1,4 @@
 import { mondayOf, shiftDays, minutes } from '../../../lib/schedule.js';
-import { facultyRecords } from '../Faculty/facultyData.js';
 
 export const examTypes = ['Midterm', 'Final', 'Test', 'Quiz', 'Practical', 'Assessment'];
 export const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

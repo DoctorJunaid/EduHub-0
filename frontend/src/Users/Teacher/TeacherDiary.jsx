@@ -173,6 +173,10 @@ export default function TeacherDiary() {
       toast.success(vars.id ? "Diary entry updated successfully!" : "New diary entry published!");
       setFormEntry(null);
       queryClient.invalidateQueries({ queryKey: qk.teacherDiaryEntries() });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "todayClasses"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "credits"] });
+      queryClient.invalidateQueries({ queryKey: ["campus", "class-sessions"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to save diary entry.");

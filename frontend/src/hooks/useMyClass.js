@@ -45,17 +45,18 @@ export function useMyClass(options = {}) {
         classInfo,
         students:
           studentsRes.status === "fulfilled"
-            ? studentsRes.value.data?.students || []
+            ? (studentsRes.value?.data?.students || (Array.isArray(studentsRes.value?.data) ? studentsRes.value?.data : []) || studentsRes.value?.students || [])
             : [],
         attendance:
-          attendanceRes.status === "fulfilled" ? attendanceRes.value.data : null,
+          attendanceRes.status === "fulfilled" ? (attendanceRes.value?.data ?? attendanceRes.value) : null,
         stats:
-          statsRes.status === "fulfilled" ? statsRes.value.data : null,
+          statsRes.status === "fulfilled" ? (statsRes.value?.data ?? statsRes.value) : null,
       };
     },
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000,
-    refetchOnMount: "always",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     ...options,
     enabled: Boolean(teacherId) && (options.enabled !== undefined ? options.enabled : true),
   });

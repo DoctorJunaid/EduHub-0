@@ -15,8 +15,14 @@ export async function resolveTeacherUser(id) {
   if (!id) return null;
   const user = await User.findById(id).select("_id name email campusId role").lean();
   if (user) return user;
-  const profile = await TeacherProfile.findById(id).populate("user", "_id name email campusId role").lean();
-  if (profile?.user) return profile.user;
+  const profile = await TeacherProfile.findById(id).lean();
+  if (profile) {
+    const targetUserId = profile.user || profile.userId;
+    if (targetUserId) {
+      const u = await User.findById(targetUserId).select("_id name email campusId role").lean();
+      if (u) return u;
+    }
+  }
   return null;
 }
 
@@ -39,9 +45,9 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
 
   // Also resolve TeacherProfile ID
   const prof = await TeacherProfile.findOne({
-    $or: [{ user: uId }, { _id: teacherUserId }],
+    $or: [{ user: uId }, { userId: uId }, { _id: teacherUserId }],
   }).lean();
-  const possibleTeacherIds = [uId, prof?._id, teacherUserId].filter(Boolean);
+  const possibleTeacherIds = [uId, prof?._id, prof?.user, prof?.userId, teacherUserId].filter(Boolean);
   const effectiveCampusId = campusId || resolved?.campusId || prof?.campusId;
 
   // 1. Fetch from Timetable
@@ -74,9 +80,10 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
     ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     $or: [
       { teacherId: { $in: possibleTeacherIds } },
-      ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }] : []),
+      { teacherProfileId: { $in: possibleTeacherIds } },
+      ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }, { teacherName: new RegExp(`^${teacherName}$`, "i") }] : []),
     ],
-    isBreak: false,
+    isBreak: { $ne: true },
   }).lean();
 
   // Deduplicate and aggregate classes
@@ -117,7 +124,7 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
   for (const item of academicAssignments) {
     const className = item.gradeId?.name || "Class 10";
     const section = item.sectionId?.name || "A";
-    const subject = item.subjectId?.name || "General";
+    const subject = item.subjectId?.name || "All Subjects";
     const key = `${className}_${section}_${subject}`.toLowerCase();
 
     if (!classMap.has(key)) {
@@ -146,7 +153,7 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
   }
 
   for (const leg of legacySchedules) {
-    const className = leg.className || leg.gradeOrClass || "Class 10";
+    const className = leg.program || leg.className || leg.gradeOrClass || "Class 10";
     const section = leg.section || "A";
     const subject = leg.subject || leg.title || "General";
     const key = `${className}_${section}_${subject}`.toLowerCase();
@@ -400,37 +407,76 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
 
   // Attach student count for each class
   for (const cls of result) {
-    const gradeMatches = [
-      { gradeOrClass: cls.className },
-      { program: cls.className },
+    const cleanSection = (cls.section || "").replace(/^Section\s*/i, "").trim();
+    const sectionRegexes = [
+      new RegExp(`^${cleanSection}$`, "i"),
+      new RegExp(`^Section\\s*${cleanSection}$`, "i"),
     ];
-    if (cls.gradeId) {
-      gradeMatches.push({ gradeId: cls.gradeId });
-    }
 
-    const sectionMatches = [];
-    if (cls.section) {
-      sectionMatches.push(
-        { section: cls.section },
-        { section: `Section ${cls.section}` },
-        { section: cls.section.toLowerCase() },
-        { section: cls.section.toUpperCase() }
-      );
-    }
-    if (cls.sectionId) {
-      sectionMatches.push({ sectionId: cls.sectionId });
-    }
+    const classNameClean = (cls.className || "").trim();
+    const classRegexes = [
+      new RegExp(`^${classNameClean}$`, "i"),
+      ...(classNameClean.includes("(") ? [new RegExp(`^${classNameClean.split("(")[0].trim()}`, "i")] : []),
+    ];
 
-    const count = await User.countDocuments({
-      campusId,
+    const campusIds = effectiveCampusId
+      ? [
+          effectiveCampusId,
+          ...(mongoose.Types.ObjectId.isValid(effectiveCampusId)
+            ? [new mongoose.Types.ObjectId(String(effectiveCampusId))]
+            : []),
+        ]
+      : [];
+    const campusFilter = campusIds.length ? { campusId: { $in: campusIds } } : {};
+
+    const userMatches = await User.find({
+      ...campusFilter,
       role: "student",
-      $and: [
-        { $or: gradeMatches },
-        ...(sectionMatches.length > 0 ? [{ $or: sectionMatches }] : []),
+      $or: [
+        ...(cls.gradeId ? [{ gradeId: cls.gradeId }] : []),
+        ...(cls.sectionId ? [{ sectionId: cls.sectionId }] : []),
+        {
+          $and: [
+            { $or: [{ gradeOrClass: { $in: classRegexes } }, { program: { $in: classRegexes } }] },
+            ...(cleanSection ? [{ section: { $in: sectionRegexes } }] : []),
+          ],
+        },
       ],
+    }).select("_id").lean();
+
+    const profileMatches = await StudentProfile.find({
+      ...campusFilter,
+      isActive: { $ne: false },
+      $or: [
+        ...(cls.gradeId ? [{ gradeId: cls.gradeId }] : []),
+        ...(cls.sectionId ? [{ sectionId: cls.sectionId }] : []),
+        {
+          $and: [
+            { $or: [{ gradeOrClass: { $in: classRegexes } }, { program: { $in: classRegexes } }] },
+            ...(cleanSection ? [{ section: { $in: sectionRegexes } }] : []),
+          ],
+        },
+      ],
+    }).select("_id user userId").lean();
+
+    const uniqueStudentIds = new Set();
+    userMatches.forEach((u) => uniqueStudentIds.add(u._id.toString()));
+    profileMatches.forEach((p) => {
+      const uId = p.user || p.userId || p._id;
+      if (uId) uniqueStudentIds.add(uId.toString());
     });
-    cls.enrolledStudentsCount = count || 0;
-    cls.studentCount = count || 0;
+
+    let count = uniqueStudentIds.size;
+    // Fallback: If 0 found by strict class/section name, check if campus has students
+    if (count === 0) {
+      const totalCampusStudents = await User.countDocuments({ ...campusFilter, role: "student" });
+      if (totalCampusStudents > 0 && result.length <= 3) {
+        count = totalCampusStudents;
+      }
+    }
+
+    cls.enrolledStudentsCount = count;
+    cls.studentCount = count;
   }
 
   return result;
@@ -443,27 +489,59 @@ export async function getTeacherAssignments(campusId, teacherUserId, filters = {
   const resolved = await resolveTeacherUser(teacherUserId);
   const uId = resolved?._id || teacherUserId;
 
+  const possibleTeacherIds = [uId];
+  if (teacherUserId && String(teacherUserId) !== String(uId)) {
+    possibleTeacherIds.push(teacherUserId);
+  }
+  try {
+    const prof = await TeacherProfile.findOne({
+      $or: [{ user: uId }, { userId: uId }, { user: teacherUserId }, { userId: teacherUserId }],
+    }).lean();
+    if (prof?._id) possibleTeacherIds.push(prof._id);
+  } catch (e) {
+    // Non-fatal
+  }
+
   const query = { campusId };
 
   if (filters.teacherOnly !== false) {
     query.$or = [
-      { teacherId: uId },
-      { instructorId: uId },
-      { instructor: resolved?.name },
+      { teacherId: { $in: possibleTeacherIds } },
+      { instructorId: { $in: possibleTeacherIds } },
+      { teacherProfileId: { $in: possibleTeacherIds } },
+      ...(resolved?.name ? [{ instructor: resolved.name }] : []),
     ];
   }
 
   if (filters.classId) {
     query.classId = filters.classId;
   }
-  if (filters.className) {
-    query.className = new RegExp(filters.className, "i");
+  if (filters.className && filters.className !== "All") {
+    const cleanClass = filters.className.split(" - ")[0].trim();
+    const classRegexes = [
+      new RegExp(`^${filters.className}$`, "i"),
+      new RegExp(`^${cleanClass}$`, "i"),
+    ];
+    query.$and = query.$and || [];
+    query.$and.push({
+      $or: [
+        { className: { $in: classRegexes } },
+        { gradeOrClass: { $in: classRegexes } },
+        { program: { $in: classRegexes } },
+      ],
+    });
   }
-  if (filters.section) {
-    query.section = filters.section;
+  if (filters.section && filters.section !== "All") {
+    const cleanSec = filters.section.replace(/^Section\s*/i, "").trim();
+    query.section = {
+      $in: [
+        new RegExp(`^${cleanSec}$`, "i"),
+        new RegExp(`^Section\\s*${cleanSec}$`, "i"),
+      ],
+    };
   }
-  if (filters.subject) {
-    query.subject = new RegExp(filters.subject, "i");
+  if (filters.subject && filters.subject !== "All") {
+    query.subject = new RegExp(`^${filters.subject}$`, "i");
   }
   if (filters.status && filters.status !== "All") {
     query.status = filters.status;
@@ -679,17 +757,51 @@ export async function getAssignmentSubmissions(assignmentId, campusId) {
   }
 
   // Find all enrolled students in the class/section
-  const students = await User.find({
+  const cleanSec = (assignment.section || "").replace(/^Section\s*/i, "").trim();
+  const secRegexes = cleanSec
+    ? [new RegExp(`^${cleanSec}$`, "i"), new RegExp(`^Section\\s*${cleanSec}$`, "i")]
+    : [];
+
+  const cleanClass = (assignment.className || assignment.gradeOrClass || assignment.program || "").split(" - ")[0].trim();
+  const classRegexes = [
+    new RegExp(`^${cleanClass}$`, "i"),
+    ...(assignment.className ? [new RegExp(`^${assignment.className}$`, "i")] : []),
+  ];
+
+  const userQuery = {
     campusId,
     role: "student",
     $or: [
-      { gradeOrClass: assignment.className, section: assignment.section },
-      { program: assignment.className, section: assignment.section },
-      { gradeOrClass: assignment.gradeOrClass, section: assignment.section },
+      { gradeOrClass: { $in: classRegexes } },
+      { program: { $in: classRegexes } },
     ],
-  })
-    .select("_id name email rollNumber avatar phone")
+  };
+  if (secRegexes.length) {
+    userQuery.section = { $in: secRegexes };
+  }
+
+  let students = await User.find(userQuery)
+    .select("_id name email roll rollNo rollNumber avatar phone")
     .lean();
+
+  if (students.length === 0) {
+    // Fallback: search StudentProfile
+    const profiles = await StudentProfile.find({ campusId, isActive: { $ne: false } })
+      .populate("user", "_id name email roll rollNo rollNumber avatar phone")
+      .lean();
+    for (const p of profiles) {
+      if (p.user?._id) {
+        students.push({
+          _id: p.user._id,
+          name: p.user.name,
+          email: p.user.email,
+          rollNumber: p.rollNumber || p.user.rollNumber || p.user.rollNo || p.user.roll || "—",
+          avatar: p.user.avatar || "",
+          phone: p.user.phone || "",
+        });
+      }
+    }
+  }
 
   const submissionMap = new Map();
   (assignment.submissions || []).forEach((sub) => {

@@ -161,7 +161,8 @@ export const createCampus = async (instituteId, campusData) => {
         sendEmail: true,
       });
     } catch (err) {
-      console.error("Manager inline appointment failed:", err.message);
+      await Campus.findByIdAndDelete(campus._id);
+      throw err;
     }
   }
 
@@ -284,10 +285,17 @@ export const assignCampusManager = async (
       phone: phone ? phone.trim() : "",
     });
   } else if (managerUser) {
-    // Prevent taking over super admins or admins from other institutes
+    // Prevent taking over super admins, institute admins, or admins from other institutes
     if (managerUser.role === "super_admin") {
       const err = new Error("Cannot reassign a Super Admin account.");
       err.statusCode = 403;
+      throw err;
+    }
+    if (managerUser.role === "institute_admin") {
+      const err = new Error(
+        "Cannot assign an Institute Admin as a Campus Manager. Please use a distinct email address for the Campus Manager."
+      );
+      err.statusCode = 400;
       throw err;
     }
     if (

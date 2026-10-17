@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Grade, Section } from "../models/academic.model.js";
+import { Grade, Section, TeacherAssignment } from "../models/academic.model.js";
 import {
   TeacherProfile,
   StudentProfile,
@@ -430,8 +430,12 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
   let teacherProfile = null;
   if (mongoose.isValidObjectId(teacherUserId)) {
     teacherProfile = await TeacherProfile.findOne({
-      $or: [{ user: teacherUserId }, { _id: teacherUserId }],
+      $or: [{ user: teacherUserId }, { userId: teacherUserId }, { _id: teacherUserId }],
     }).populate("user", "name email phone avatar");
+
+    if (teacherProfile && !teacherProfile.user) {
+      teacherProfile.user = await User.findById(teacherProfile.userId || teacherProfile.user).select("name email phone avatar").lean();
+    }
   }
 
   if (!teacherProfile && mongoose.isValidObjectId(teacherUserId)) {
@@ -439,9 +443,11 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
     if (userDoc && ["teacher", "faculty", "class_teacher"].includes(userDoc.role)) {
       teacherProfile = await TeacherProfile.create({
         user: userDoc._id,
+        userId: userDoc._id,
         campusId: userDoc.campusId || campusId,
         department: userDoc.department || "General Academics",
         designation: userDoc.designation || "Teacher",
+        qualification: "Ph.D. / M.Phil / Master's",
         employeeId: `EMP-${userDoc._id.toString().slice(-4).toUpperCase()}`,
         isActive: true,
       });
@@ -490,14 +496,47 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
       .lean();
   }
 
-  // Synchronize teacherProfile if section found
-  if (sectionDoc && (!teacherProfile.isClassTeacher || String(teacherProfile.classTeacherOf) !== String(sectionDoc._id))) {
-    await TeacherProfile.findByIdAndUpdate(teacherProfile._id, {
-      isClassTeacher: true,
-      classTeacherOf: sectionDoc._id,
-    });
-    teacherProfile.isClassTeacher = true;
-    teacherProfile.classTeacherOf = sectionDoc._id;
+  // 4. Fallback: Check if teacher has a TeacherAssignment (prioritize All Subjects / subjectId: null)
+  if (!sectionDoc) {
+    const possibleTeacherIds = [canonicalUserId, teacherProfile._id, teacherUserId].filter(Boolean);
+    const ta = await TeacherAssignment.findOne({
+      teacherId: { $in: possibleTeacherIds },
+      ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    })
+      .sort({ subjectId: 1, createdAt: -1 })
+      .lean();
+
+    if (ta && ta.sectionId) {
+      sectionDoc = await Section.findById(ta.sectionId)
+        .populate("gradeId", "name")
+        .lean();
+    }
+  }
+
+  // Synchronize teacherProfile, Section, and User if section found
+  if (sectionDoc) {
+    if (!teacherProfile.isClassTeacher || String(teacherProfile.classTeacherOf) !== String(sectionDoc._id)) {
+      await TeacherProfile.findByIdAndUpdate(teacherProfile._id, {
+        isClassTeacher: true,
+        classTeacherOf: sectionDoc._id,
+      });
+      teacherProfile.isClassTeacher = true;
+      teacherProfile.classTeacherOf = sectionDoc._id;
+    }
+    if (!sectionDoc.classTeacherId || (String(sectionDoc.classTeacherId) !== String(teacherProfile._id) && String(sectionDoc.classTeacherId) !== String(canonicalUserId))) {
+      await Section.findByIdAndUpdate(sectionDoc._id, {
+        classTeacherId: teacherProfile._id,
+        classTeacherAssignedAt: sectionDoc.classTeacherAssignedAt || new Date(),
+      });
+    }
+    if (canonicalUserId) {
+      await User.findByIdAndUpdate(canonicalUserId, {
+        gradeId: sectionDoc.gradeId?._id || sectionDoc.gradeId,
+        sectionId: sectionDoc._id,
+        gradeOrClass: sectionDoc.gradeId?.name || "",
+        section: sectionDoc.name,
+      });
+    }
   }
 
   if (!sectionDoc) {
@@ -512,9 +551,19 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
   const sectionName = sectionDoc.name || "A";
   const className = `${gradeName} - ${sectionName}`;
 
+  const campusIds = effectiveCampusId
+    ? [
+        effectiveCampusId,
+        ...(mongoose.Types.ObjectId.isValid(effectiveCampusId)
+          ? [new mongoose.Types.ObjectId(String(effectiveCampusId))]
+          : []),
+      ]
+    : [];
+  const campusFilter = campusIds.length ? { campusId: { $in: campusIds } } : {};
+
   // Count enrolled students
   const studentCount = await User.countDocuments({
-    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    ...campusFilter,
     role: "student",
     $or: [
       { sectionId: sectionDoc._id },
@@ -571,8 +620,20 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
 
   const { gradeName, sectionName, className, classId } = myClass.classInfo;
 
+  const effectiveCampusId = campusId || myClass.classInfo?.campusId;
+  const studentCampusFilter = effectiveCampusId
+    ? {
+        $or: [
+          { campusId: effectiveCampusId },
+          ...(mongoose.Types.ObjectId.isValid(effectiveCampusId)
+            ? [{ campusId: new mongoose.Types.ObjectId(String(effectiveCampusId)) }]
+            : []),
+        ],
+      }
+    : {};
+
   const users = await User.find({
-    campusId,
+    ...studentCampusFilter,
     role: "student",
     $or: [
       ...(classId ? [{ sectionId: classId }] : []),

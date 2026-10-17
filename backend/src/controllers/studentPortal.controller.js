@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
   ClassSchedule,
   ExamSchedule,
@@ -553,14 +554,21 @@ export const getStudentPortal = async (req, res) => {
       }).lean(),
       Diary.find({
         campusId,
-        $or: [
-          { className: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
-          { gradeOrClass: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
-          { classId: { $in: scheduleIds } },
-        ],
-        $or: [
-          { publicationStatus: "Published" },
-          { publicationStatus: { $exists: false } },
+        $and: [
+          {
+            $or: [
+              { className: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+              { gradeOrClass: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+              { classId: { $in: scheduleIds } },
+            ],
+          },
+          {
+            $or: [
+              { publicationStatus: "Published" },
+              { publicationStatus: { $exists: false } },
+              { status: "Published" },
+            ],
+          },
         ],
       }).lean(),
       StudentAssignment.find({
@@ -573,17 +581,23 @@ export const getStudentPortal = async (req, res) => {
       }).lean(),
       Assignment.find({
         campusId,
-        $or: [
-          { className: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
-          { gradeOrClass: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
-          { program: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
-          { classId: { $in: scheduleIds } },
-        ],
-        $or: [
-          { status: "Active" },
-          { status: "Published" },
-          { publicationStatus: "Published" },
-          { publicationStatus: { $exists: false } },
+        $and: [
+          {
+            $or: [
+              { className: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+              { gradeOrClass: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+              { program: { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+              { classId: { $in: scheduleIds } },
+            ],
+          },
+          {
+            $or: [
+              { status: "Active" },
+              { status: "Published" },
+              { publicationStatus: "Published" },
+              { publicationStatus: { $exists: false } },
+            ],
+          },
         ],
       }).lean(),
       StudentConversation.find({ campusId, participantIds: student._id }).lean(),

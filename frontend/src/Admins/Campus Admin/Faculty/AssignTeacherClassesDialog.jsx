@@ -75,8 +75,8 @@ export default function AssignTeacherClassesDialog({
 
   const handleAssign = async (e) => {
     e.preventDefault();
-    if (!form.gradeId || !form.sectionId || !form.subjectId) {
-      toast.error("Please select a Grade, Section, and Subject");
+    if (!form.gradeId || !form.sectionId) {
+      toast.error("Please select a Grade and Section");
       return;
     }
 
@@ -190,15 +190,14 @@ export default function AssignTeacherClassesDialog({
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-zinc-700">Subject *</Label>
+                  <Label className="text-xs font-medium text-zinc-700">Subject (Optional)</Label>
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-white px-2.5 py-1.5 text-xs ring-offset-background disabled:opacity-50"
                     value={form.subjectId}
                     onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-                    required
                     disabled={!form.gradeId}
                   >
-                    <option value="" disabled>Select Subject</option>
+                    <option value="">All Subjects (Class Teacher / General)</option>
                     {availableSubjects.map((s) => (
                       <option key={s._id} value={s._id}>
                         {s.name} {s.code ? `(${s.code})` : ""}
@@ -212,11 +211,11 @@ export default function AssignTeacherClassesDialog({
                 <Button
                   type="submit"
                   size="sm"
-                  disabled={submitting || !form.gradeId || !form.sectionId || !form.subjectId}
+                  disabled={submitting || !form.gradeId || !form.sectionId}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-9 px-4 rounded-lg shadow-xs"
                 >
                   {submitting ? <Spinner className="size-3.5 mr-1.5" /> : <Plus className="size-3.5 mr-1.5" />}
-                  Assign Subject
+                  Assign Duty
                 </Button>
               </div>
             </form>
@@ -265,10 +264,18 @@ export default function AssignTeacherClassesDialog({
                           Section {a.sectionId?.name || "A"}
                         </td>
                         <td className="px-3.5 py-3 font-medium text-indigo-700">
-                          {a.subjectId?.name || "Subject"}
-                          {a.subjectId?.code && (
-                            <span className="ml-1 text-[11px] text-zinc-500 font-normal">
-                              ({a.subjectId.code})
+                          {a.subjectId?.name ? (
+                            <>
+                              {a.subjectId.name}
+                              {a.subjectId?.code && (
+                                <span className="ml-1 text-[11px] text-zinc-500 font-normal">
+                                  ({a.subjectId.code})
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              All Subjects (Class Teacher)
                             </span>
                           )}
                         </td>

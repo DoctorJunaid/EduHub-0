@@ -3,6 +3,7 @@
  * Verifies JWT access tokens and enforces role-based permissions.
  */
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/user.model.js";
 
 /**
@@ -49,6 +50,24 @@ export const protect = async (req, res, next) => {
         success: false,
         message: "Your account has been deactivated. Please contact an administrator.",
       });
+    }
+
+    if (!currentUser.campusId) {
+      try {
+        const TeacherProfile = mongoose.model("TeacherProfile");
+        const prof = await TeacherProfile.findOne({
+          $or: [{ user: currentUser._id }, { userId: currentUser._id }],
+        }).select("campusId").lean();
+        if (prof?.campusId) {
+          currentUser.campusId = prof.campusId;
+        } else {
+          const Campus = mongoose.model("Campus");
+          const defaultCampus = (await Campus.findOne({ status: "Active" }).select("_id").lean()) || (await Campus.findOne({}).select("_id").lean());
+          if (defaultCampus?._id) currentUser.campusId = defaultCampus._id;
+        }
+      } catch {
+        // non-fatal
+      }
     }
 
     req.user = currentUser;

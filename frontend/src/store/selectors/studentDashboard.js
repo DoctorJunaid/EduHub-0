@@ -7,18 +7,19 @@ import { selectResults } from "../Slices/resultsSlice.js";
 import { studentAttendanceSummary } from "../../Admins/Campus Admin/Attendance/Students/studentAttendanceData.js";
 import { isDemoRecord } from "../demoProvenance.js";
 
-export function matchCurrentStudent(user, students) {
+export function matchCurrentStudent(user, students = []) {
   if (user?.role !== "student") return null;
-  const byId = students.find(
-    (student) => String(student.id || student._id) === String(user.id),
+  const userId = user.id || user._id;
+  const byId = (students || []).find(
+    (student) => String(student.id || student._id) === String(userId),
   );
   if (byId) return byId;
   const email = user.email?.trim().toLowerCase();
-  if (!email) return null;
-  const matches = students.filter(
+  if (!email) return user;
+  const match = (students || []).find(
     (student) => student.email?.trim().toLowerCase() === email,
   );
-  return matches.length === 1 ? matches[0] : null;
+  return match || user;
 }
 
 export const selectCurrentStudent = createSelector(
@@ -80,6 +81,7 @@ export const selectStudentDashboard = createSelector(
         cgpa: null,
         results: [],
       };
+    const className = student.gradeOrClass || student.program || student.className || "";
     const hasExplicitSubjects = student.subjects !== undefined && student.subjects !== null && String(student.subjects).trim().length > 0;
     const rawSubjects = Array.isArray(student.subjects)
       ? student.subjects

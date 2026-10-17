@@ -167,7 +167,7 @@ const teacherAssignmentSchema = new mongoose.Schema(
     subjectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subject",
-      required: true,
+      default: null,
     },
     instituteId: {
       type: mongoose.Schema.Types.ObjectId,

@@ -738,8 +738,8 @@ export default function AcademicsConfig() {
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  if (!newTeacherAssignment.teacherId || !newTeacherAssignment.gradeId || !newTeacherAssignment.sectionId || !newTeacherAssignment.subjectId) {
-                    toast.error("Please select a Teacher, Grade, Section, and Subject");
+                  if (!newTeacherAssignment.teacherId || !newTeacherAssignment.gradeId || !newTeacherAssignment.sectionId) {
+                    toast.error("Please select a Teacher, Grade, and Section");
                     return;
                   }
                   try {
@@ -822,16 +822,15 @@ export default function AcademicsConfig() {
                 </div>
 
                 <div className="grid items-center gap-1.5">
-                  <Label htmlFor="taSubject">Subject *</Label>
+                  <Label htmlFor="taSubject">Subject (Optional)</Label>
                   <select
                     id="taSubject"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
                     value={newTeacherAssignment.subjectId}
                     onChange={(e) => setNewTeacherAssignment({ ...newTeacherAssignment, subjectId: e.target.value })}
-                    required
                     disabled={!newTeacherAssignment.gradeId}
                   >
-                    <option value="" disabled>Select Subject</option>
+                    <option value="">All Subjects (Class Teacher / General)</option>
                     {(() => {
                       const gradeSubs = gradeSubjects
                         .filter((gs) => (gs.gradeId?._id || gs.gradeId) === newTeacherAssignment.gradeId)
@@ -853,8 +852,7 @@ export default function AcademicsConfig() {
                     isSubmitting ||
                     !newTeacherAssignment.teacherId ||
                     !newTeacherAssignment.gradeId ||
-                    !newTeacherAssignment.sectionId ||
-                    !newTeacherAssignment.subjectId
+                    !newTeacherAssignment.sectionId
                   }
                   className="h-10 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
                 >
@@ -926,7 +924,7 @@ export default function AcademicsConfig() {
                         const tEmail = a.teacherId?.email || "";
                         const gName = a.gradeId?.name || "";
                         const sName = a.sectionId?.name || "";
-                        const subName = a.subjectId?.name || "";
+                        const subName = a.subjectId?.name || "All Subjects";
                         const matchesSearch =
                           !assignmentSearch ||
                           `${tName} ${tEmail} ${gName} ${sName} ${subName}`
@@ -960,10 +958,18 @@ export default function AcademicsConfig() {
                           <td className="px-4 py-3 text-zinc-800 font-medium">{a.gradeId?.name || "Class"}</td>
                           <td className="px-4 py-3 text-zinc-700">Section {a.sectionId?.name || "A"}</td>
                           <td className="px-4 py-3 text-zinc-900 font-semibold">
-                            {a.subjectId?.name || "Subject"}
-                            {a.subjectId?.code && (
-                              <span className="ml-1.5 text-xs text-zinc-500 font-normal">
-                                ({a.subjectId.code})
+                            {a.subjectId?.name ? (
+                              <>
+                                {a.subjectId.name}
+                                {a.subjectId?.code && (
+                                  <span className="ml-1.5 text-xs text-zinc-500 font-normal">
+                                    ({a.subjectId.code})
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                All Subjects (Class Teacher)
                               </span>
                             )}
                           </td>

@@ -72,14 +72,20 @@ export default function TeacherAttendance() {
   useEffect(() => {
     if (classes.length > 0 && !selectedClassId) {
       const requestedClassId = params.get("classId");
-      const found = classes.find(
-        (c) => String(c.id || c._id || c.classId) === requestedClassId
-      );
-      setSelectedClassId(
-        found
-          ? String(found.id || found._id || found.classId)
-          : String(classes[0].id || classes[0]._id || classes[0].classId)
-      );
+      const found = requestedClassId
+        ? classes.find((c) => String(c.id || c._id || c.classId) === requestedClassId)
+        : null;
+
+      if (found) {
+        setSelectedClassId(String(found.id || found._id || found.classId));
+      } else {
+        const preferred =
+          classes.find((c) => c.isClassTeacher && (c.enrolledStudentsCount || c.studentCount) > 0) ||
+          classes.find((c) => (c.enrolledStudentsCount || c.studentCount) > 0) ||
+          classes.find((c) => c.isClassTeacher) ||
+          classes[0];
+        setSelectedClassId(String(preferred.id || preferred._id || preferred.classId));
+      }
     }
   }, [classes, selectedClassId, params]);
 
@@ -127,9 +133,9 @@ export default function TeacherAttendance() {
 
   // Reset draft on class/date switch if roster changes
   useEffect(() => {
-    if (roster.length > 0) {
+    if (rosterQuery.data && rosterQuery.data.length > 0) {
       const initialDraft = {};
-      roster.forEach((s) => {
+      rosterQuery.data.forEach((s) => {
         if (s.status) {
           initialDraft[s._id || s.id] = s.status;
         }
@@ -138,7 +144,7 @@ export default function TeacherAttendance() {
     } else {
       setDraft({});
     }
-  }, [roster]);
+  }, [rosterQuery.data]);
 
   // Helper to get effective status for a student
   const getStatus = (student) => {
@@ -166,9 +172,12 @@ export default function TeacherAttendance() {
     mutationFn: (payload) => saveTeacherStudentAttendance(payload),
     onSuccess: (res, vars) => {
       toast.success(res.data?.message || `Saved attendance for ${vars.records.length} students!`);
-      queryClient.invalidateQueries({
-        queryKey: ["teacher", "attendance", "roster"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "todayClasses"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "credits"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "myClass"] });
+      queryClient.invalidateQueries({ queryKey: ["campus", "class-sessions"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to save attendance records.");

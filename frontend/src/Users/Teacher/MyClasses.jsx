@@ -55,9 +55,10 @@ export default function MyClasses() {
       const res = await getTeacherClasses();
       return res.data?.data || [];
     },
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000,
-    refetchOnMount: "always",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const classes = liveClasses.length > 0 ? liveClasses : reduxClasses;

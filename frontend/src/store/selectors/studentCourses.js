@@ -76,9 +76,11 @@ export const selectStudentCourses = createSelector(
         (session) => normalized(session.subject) === normalized(title),
       );
       const classIds = new Set(sessions.map((session) => session.id));
+      const sId = String(dashboard.student.id || dashboard.student._id || "");
       const attendanceRows = attendanceHistory.filter(
         ({ student, session }) =>
-          student.id === dashboard.student.id && classIds.has(session.id),
+          String(student.id || student._id || "") === sId &&
+          (classIds.has(session.id) || !session.id || classIds.size === 0 || normalized(session.subject) === normalized(title)),
       );
 
       const category = getSubjectCategory(title);

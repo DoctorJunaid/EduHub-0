@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
   Grade,
   Section,
@@ -205,7 +206,9 @@ export const getTeacherAssignments = async (req, res) => {
     const query = { campusId: req.user.campusId };
     if (gradeId) query.gradeId = gradeId;
     if (sectionId) query.sectionId = sectionId;
-    if (subjectId) query.subjectId = subjectId;
+    if (subjectId) {
+      query.$or = [{ subjectId: subjectId }, { subjectId: null }];
+    }
     if (teacherId) {
       const possibleIds = [teacherId];
       if (mongoose.isValidObjectId(teacherId)) {
@@ -238,6 +241,10 @@ export const createTeacherAssignment = async (req, res) => {
     let campusId = req.user.campusId;
     let instituteId = req.user.instituteId;
 
+    if (!teacherId || !gradeId || !sectionId) {
+      return res.status(400).json({ message: "Teacher, Grade, and Section are required" });
+    }
+
     if (!instituteId && campusId) {
       const camp = await Campus.findById(campusId).select("instituteId");
       if (camp) instituteId = camp.instituteId;
@@ -263,52 +270,68 @@ export const createTeacherAssignment = async (req, res) => {
     }
 
     const checkTeacherIds = [resolvedUserId, resolvedProfileId].filter(Boolean);
+    const normalizedSubjectId = subjectId || null;
 
     const existing = await TeacherAssignment.findOne({
       teacherId: { $in: checkTeacherIds },
       gradeId,
       sectionId,
-      subjectId,
+      subjectId: normalizedSubjectId,
       campusId,
     });
     if (existing) {
-      return res.status(400).json({ message: "Teacher is already assigned to this class and subject" });
+      return res.status(400).json({
+        message: normalizedSubjectId
+          ? "Teacher is already assigned to this class and subject"
+          : "Teacher is already assigned to this class (All Subjects)",
+      });
     }
     
-    // Auto-link GradeSubject if not already configured
-    let gradeSubject = await GradeSubject.findOne({ gradeId, subjectId, campusId });
-    if (!gradeSubject) {
-      gradeSubject = await GradeSubject.create({
-        gradeId,
-        subjectId,
-        campusId,
-        instituteId: instituteId || null,
-      });
+    // Auto-link GradeSubject if subjectId is provided
+    if (normalizedSubjectId) {
+      let gradeSubject = await GradeSubject.findOne({ gradeId, subjectId: normalizedSubjectId, campusId });
+      if (!gradeSubject) {
+        gradeSubject = await GradeSubject.create({
+          gradeId,
+          subjectId: normalizedSubjectId,
+          campusId,
+          instituteId: instituteId || null,
+        });
+      }
     }
 
     const assignment = await TeacherAssignment.create({
       teacherId: resolvedUserId,
       gradeId,
       sectionId,
-      subjectId,
+      subjectId: normalizedSubjectId,
       campusId,
       instituteId: instituteId || null,
     });
 
-    // Synchronize subject name with TeacherProfile & User
-    const subjectDoc = await Subject.findById(subjectId);
-    if (subjectDoc) {
-      await TeacherProfile.findOneAndUpdate(
-        { $or: [{ user: resolvedUserId }, ...(resolvedProfileId ? [{ _id: resolvedProfileId }] : [])] },
-        { $addToSet: { subjectsTaught: subjectDoc.name } }
-      );
-      const user = await User.findById(resolvedUserId);
-      if (user) {
-        const currentSubs = (user.subjects || "").split(",").map(s => s.trim()).filter(Boolean);
-        if (!currentSubs.includes(subjectDoc.name)) {
-          currentSubs.push(subjectDoc.name);
-          await User.findByIdAndUpdate(resolvedUserId, { subjects: currentSubs.join(", ") });
-        }
+    // If assigned without a specific subject (All Subjects / Class Teacher), synchronize as Section Class Teacher
+    if (!normalizedSubjectId) {
+      const pId = resolvedProfileId || (await TeacherProfile.findOne({ user: resolvedUserId }))?._id;
+      if (pId) {
+        await TeacherProfile.findByIdAndUpdate(pId, {
+          isClassTeacher: true,
+          classTeacherOf: sectionId,
+        });
+      }
+      await Section.findByIdAndUpdate(sectionId, {
+        classTeacherId: pId || resolvedUserId,
+        classTeacherAssignedAt: new Date(),
+        classTeacherAssignedBy: req.user?._id || null,
+        classTeacherNote: "Assigned as Class Teacher (All Subjects)",
+      });
+      const sectionObj = await Section.findById(sectionId).populate("gradeId", "name");
+      if (sectionObj) {
+        await User.findByIdAndUpdate(resolvedUserId, {
+          gradeId: sectionObj.gradeId?._id || sectionObj.gradeId,
+          sectionId: sectionObj._id,
+          gradeOrClass: sectionObj.gradeId?.name || "",
+          section: sectionObj.name,
+        });
       }
     }
 
@@ -327,7 +350,7 @@ export const deleteTeacherAssignment = async (req, res) => {
   try {
     const { id } = req.params;
     const assignment = await TeacherAssignment.findOneAndDelete({ _id: id, campusId: req.user.campusId });
-    if (assignment) {
+    if (assignment && assignment.subjectId) {
       const subjectDoc = await Subject.findById(assignment.subjectId);
       if (subjectDoc) {
         const remaining = await TeacherAssignment.countDocuments({

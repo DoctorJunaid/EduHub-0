@@ -30,7 +30,6 @@ import {
 import {
   facultyStatuses,
   filterFaculty,
-  facultyRecords as defaultFacultyRecords,
 } from "./facultyData";
 import {
   selectFaculty,
@@ -67,8 +66,7 @@ export default function FacultyDirectory() {
 
   const rawFaculty = useSelector(selectFaculty);
   const facultyRecords = useMemo(() => {
-    if (rawFaculty && rawFaculty.length > 0) return rawFaculty;
-    return defaultFacultyRecords || [];
+    return Array.isArray(rawFaculty) ? rawFaculty : [];
   }, [rawFaculty]);
 
   const [form, setForm] = useState(null);
@@ -427,7 +425,9 @@ export default function FacultyDirectory() {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} style={{ textAlign: "center", padding: "48px 16px", color: "#71717a" }}>
-                  No faculty members match your search criteria.
+                  {filters.search || filters.department || filters.designation || filters.status
+                    ? "No faculty members match your filter criteria."
+                    : "No faculty members appointed for this campus yet. Click '+ Add New Teacher' to get started."}
                 </TableCell>
               </TableRow>
             )}

@@ -250,14 +250,26 @@ export async function getGradebookResults(campusId, teacherUserId, filters = {})
   const query = { campusId };
 
   if (filters.className && filters.className !== "All") {
+    const cleanClass = filters.className.split(" - ")[0].trim();
+    const classRegexes = [
+      new RegExp(`^${filters.className}$`, "i"),
+      new RegExp(`^${cleanClass}$`, "i"),
+    ];
     query.$or = [
-      { className: new RegExp(`^${filters.className}$`, "i") },
-      { gradeOrClass: new RegExp(`^${filters.className}$`, "i") },
+      { className: { $in: classRegexes } },
+      { gradeOrClass: { $in: classRegexes } },
+      { program: { $in: classRegexes } },
     ];
   }
 
   if (filters.section && filters.section !== "All") {
-    query.section = new RegExp(`^${filters.section}$`, "i");
+    const cleanSec = filters.section.replace(/^Section\s*/i, "").trim();
+    query.section = {
+      $in: [
+        new RegExp(`^${cleanSec}$`, "i"),
+        new RegExp(`^Section\\s*${cleanSec}$`, "i"),
+      ],
+    };
   }
 
   if (filters.subject && filters.subject !== "All") {

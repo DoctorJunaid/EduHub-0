@@ -5,14 +5,12 @@ export const studentAttendanceKey = ({ studentId, classId, date }) =>
   JSON.stringify([String(studentId || ''), String(classId || 'default'), String(date || '')]);
 
 export function validStudentAttendance(record) {
+  const studentId = recordId(record?.studentId);
   return Boolean(
     record &&
-    typeof record.studentId === 'string' &&
-    record.studentId.trim() &&
-    typeof record.classId === 'string' &&
-    record.classId.trim() &&
-    validDate(record.date) &&
-    attendanceStatuses.includes(record.status)
+    studentId &&
+    validDate(record.date || record.dateStr) &&
+    (!record.status || attendanceStatuses.includes(record.status))
   );
 }
 
@@ -103,13 +101,30 @@ export function filterStudentAttendance(rows, filters) {
 export function recordedStudentRows(records, students, classes) {
   return (records || [])
     .map((record) => {
-      const student = studentFor(students, recordId(record.studentId));
-      const session = classFor(classes, recordId(record.classId));
-      if (!student || !session) return null;
+      const sId = recordId(record.studentId);
+      const student =
+        studentFor(students, sId) ||
+        (students && students.find((s) => recordId(s) === sId)) ||
+        (students && students.length === 1 ? students[0] : null) ||
+        { id: sId, _id: sId, name: record.studentName || 'Student', roll: record.roll || 'R-101' };
+
+      let session = classFor(classes, recordId(record.classId));
+      if (!session) {
+        session = (classes || []).find(
+          (c) =>
+            (record.subject && (c.subject === record.subject || c.title === record.subject)) ||
+            (record.className && (c.className === record.className || c.program === record.className))
+        ) || (classes && classes[0]) || {
+          id: record.classId || 'general',
+          subject: record.subject || 'Mathematics',
+          className: record.className || record.gradeOrClass || 'Class 10',
+          section: record.section || 'A',
+        };
+      }
       return rowFor(student, session, record, dateFor(record));
     })
     .filter(Boolean)
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 }
 
 export function dailyStudentRows(records, students, classes, date, matchTimetable) {

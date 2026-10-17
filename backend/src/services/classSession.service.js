@@ -71,8 +71,14 @@ export async function resolveTeacherUser(id) {
   const user = await User.findById(id).select("_id name email campusId role").lean();
   if (user) return user;
 
-  const profile = await TeacherProfile.findById(id).populate("user", "_id name email campusId role").lean();
-  if (profile?.user) return profile.user;
+  const profile = await TeacherProfile.findById(id).lean();
+  if (profile) {
+    const targetUserId = profile.user || profile.userId;
+    if (targetUserId) {
+      const u = await User.findById(targetUserId).select("_id name email campusId role").lean();
+      if (u) return u;
+    }
+  }
 
   return null;
 }
@@ -135,8 +141,11 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
   if (!timetableSlots.length) {
     const legacySchedules = await ClassSchedule.find({
       campusId,
-      dayOfWeek: dayOfWeekName,
-      isBreak: false,
+      $or: [
+        { days: dayOfWeekIndex },
+        { dayOfWeek: dayOfWeekName },
+      ],
+      isBreak: { $ne: true },
     })
       .populate("teacherId", "name email")
       .sort({ startTime: 1 })
@@ -150,11 +159,11 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
         days: [dayOfWeekIndex],
         startTime: leg.startTime,
         endTime: leg.endTime,
-        program: leg.className || leg.gradeOrClass || "Class",
+        program: leg.program || leg.className || leg.gradeOrClass || "Class",
         section: leg.section || "A",
         subject: leg.subject || leg.title || "Subject",
         room: leg.roomNumber || leg.room || "Room 101",
-        teacherId: leg.teacherId?._id ? leg.teacherId : leg.teacherProfileId,
+        teacherId: leg.teacherId?._id ? leg.teacherId : (leg.teacherId || leg.teacherProfileId),
       }));
     }
   }
@@ -364,9 +373,17 @@ export async function generateDailySessions(campusId, dateInput, options = {}) {
  * List daily class sessions for a teacher (as original or substitute) with filters.
  */
 export async function listTeacherSessions(campusId, teacherUserId, filters = {}) {
+  const prof = await TeacherProfile.findOne({
+    $or: [{ user: teacherUserId }, { userId: teacherUserId }, { _id: teacherUserId }],
+  }).lean();
+  const possibleTeacherIds = [teacherUserId, prof?._id, prof?.user, prof?.userId].filter(Boolean);
+
   const query = {
     campusId,
-    $or: [{ originalTeacherId: teacherUserId }, { actualTeacherId: teacherUserId }],
+    $or: [
+      { originalTeacherId: { $in: possibleTeacherIds } },
+      { actualTeacherId: { $in: possibleTeacherIds } },
+    ],
   };
 
   if (filters.date) {

@@ -97,18 +97,18 @@ export default function TeacherGradebook() {
 
   // Sync selected class id on load or param
   useEffect(() => {
-    if (classes.length > 0 && !selectedClassId) {
+    if (classesQuery.data && classesQuery.data.length > 0 && !selectedClassId) {
       const requestedClassId = params.get("classId");
-      const found = classes.find(
+      const found = classesQuery.data.find(
         (c) => String(c.id || c._id || c.classId) === requestedClassId
       );
       setSelectedClassId(
         found
           ? String(found.id || found._id || found.classId)
-          : String(classes[0].id || classes[0]._id || classes[0].classId)
+          : String(classesQuery.data[0].id || classesQuery.data[0]._id || classesQuery.data[0].classId)
       );
     }
-  }, [classes, selectedClassId, params]);
+  }, [classesQuery.data, selectedClassId, params]);
 
   const selectedClass = useMemo(() => {
     return (
@@ -216,7 +216,8 @@ export default function TeacherGradebook() {
           : "Student marks recorded successfully!"
       );
       setEditingResult(null);
-      queryClient.invalidateQueries({ queryKey: ["teacher", "gradebook", "results"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "gradebook"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "myClass"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to record student marks.");
@@ -229,7 +230,8 @@ export default function TeacherGradebook() {
     onSuccess: () => {
       toast.success("Marks record deleted successfully.");
       setDeleteTarget(null);
-      queryClient.invalidateQueries({ queryKey: ["teacher", "gradebook", "results"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "gradebook"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "myClass"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to delete record.");

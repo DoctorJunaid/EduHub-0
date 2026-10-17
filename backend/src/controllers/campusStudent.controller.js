@@ -326,6 +326,8 @@ export const createStudentForCampus = async (req, res) => {
         { user: student._id },
         {
           user: student._id,
+          userId: student._id,
+          campusId: student.campusId?._id || student.campusId || campusId,
           studentId: student.roll || String(student._id),
           gradeId: student.gradeId || null,
           sectionId: student.sectionId || null,
@@ -531,6 +533,8 @@ export const createFacultyForCampus = async (req, res) => {
         { user: faculty._id },
         {
           user: faculty._id,
+          userId: faculty._id,
+          campusId: faculty.campusId?._id || faculty.campusId || campusId,
           employeeId: empId,
           department: faculty.department || "General",
           subjectsTaught: faculty.subjects

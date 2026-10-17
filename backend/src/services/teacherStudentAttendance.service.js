@@ -56,8 +56,18 @@ export async function getClassStudentRosterWithAttendance(campusId, teacherUserI
   }
 
   // Query students matching campus and class/section
+  const campusIds = campusId
+    ? [
+        campusId,
+        ...(mongoose.Types.ObjectId.isValid(campusId)
+          ? [new mongoose.Types.ObjectId(String(campusId))]
+          : []),
+      ]
+    : [];
+  const campusFilter = campusIds.length ? { campusId: { $in: campusIds } } : {};
+
   const studentQuery = {
-    campusId,
+    ...campusFilter,
     role: "student",
   };
 
@@ -98,14 +108,52 @@ export async function getClassStudentRosterWithAttendance(campusId, teacherUserI
     }
   }
 
+  const cleanSec = (targetSection || "").replace(/^Section\s*/i, "").trim();
+  const secRegexes = cleanSec
+    ? [new RegExp(`^${cleanSec}$`, "i"), new RegExp(`^Section\\s*${cleanSec}$`, "i")]
+    : [];
+
   let students = await User.find(studentQuery)
     .select("_id name email roll rollNo rollNumber gradeOrClass program section avatar phone isActive")
     .sort({ rollNumber: 1, roll: 1, name: 1 })
     .lean();
 
+  // Also query StudentProfile to ensure all enrolled students are included
+  const profileQuery = {
+    ...campusFilter,
+    isActive: { $ne: false },
+  };
+  if (targetGradeId) profileQuery.gradeId = targetGradeId;
+  if (targetSectionId) profileQuery.sectionId = targetSectionId;
+  if (targetClassName) {
+    const baseClassName = targetClassName.split(" - ")[0].trim();
+    profileQuery.$or = [
+      { gradeOrClass: new RegExp(`^${baseClassName}$`, "i") },
+      { program: new RegExp(`^${baseClassName}$`, "i") },
+    ];
+  }
+  if (secRegexes.length > 0 && !targetSectionId) {
+    profileQuery.section = { $in: secRegexes };
+  }
+
+  const profiles = await StudentProfile.find(profileQuery).lean();
+  const profileUserIds = profiles.map((p) => p.user || p.userId).filter(Boolean);
+  if (profileUserIds.length > 0) {
+    const profileUsers = await User.find({ _id: { $in: profileUserIds } })
+      .select("_id name email roll rollNo rollNumber gradeOrClass program section avatar phone isActive")
+      .lean();
+    const existingIds = new Set(students.map((s) => String(s._id)));
+    for (const pu of profileUsers) {
+      if (!existingIds.has(String(pu._id))) {
+        students.push(pu);
+        existingIds.add(String(pu._id));
+      }
+    }
+  }
+
   // If no students matched the specific class/section filter, fallback to all active campus students
   if (!students.length) {
-    students = await User.find({ campusId, role: "student" })
+    students = await User.find({ ...campusFilter, role: "student" })
       .select("_id name email roll rollNo rollNumber gradeOrClass program section avatar phone isActive")
       .sort({ name: 1 })
       .limit(50)
@@ -113,20 +161,39 @@ export async function getClassStudentRosterWithAttendance(campusId, teacherUserI
   }
 
   const studentIds = students.map((s) => s._id);
+  const studentProfileIds = profiles.map((p) => p._id);
+  const allLookupIds = [...studentIds, ...studentProfileIds];
 
   // Query existing attendance records for these students on this date
   const existingAttendance = await StudentAttendance.find({
     campusId,
-    studentId: { $in: studentIds },
-    $or: [
-      { dateStr },
-      { date: { $gte: startOfDay, $lte: endOfDay } },
+    $and: [
+      {
+        $or: [
+          { studentId: { $in: studentIds } },
+          { studentProfileId: { $in: allLookupIds } },
+        ],
+      },
+      {
+        $or: [
+          { dateStr },
+          { date: { $gte: startOfDay, $lte: endOfDay } },
+        ],
+      },
     ],
   }).lean();
 
   const attendanceMap = new Map();
   for (const record of existingAttendance) {
-    attendanceMap.set(String(record.studentId), record);
+    if (record.studentId) attendanceMap.set(String(record.studentId), record);
+    if (record.studentProfileId) {
+      attendanceMap.set(String(record.studentProfileId), record);
+      // Map to corresponding user ID if matched
+      const prof = profiles.find((p) => String(p._id) === String(record.studentProfileId));
+      if (prof && (prof.user || prof.userId)) {
+        attendanceMap.set(String(prof.user || prof.userId), record);
+      }
+    }
   }
 
   let presentCount = 0;

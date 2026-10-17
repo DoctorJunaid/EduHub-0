@@ -182,20 +182,19 @@ export default function TeacherAssignments() {
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label>Subject</Label>
+              <Label>Subject (Optional)</Label>
               <select 
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
                 value={newAssignment.subjectId} 
                 onChange={(e) => setNewAssignment({ ...newAssignment, subjectId: e.target.value })}
-                required
                 disabled={!newAssignment.gradeId}
               >
-                <option value="" disabled>Select Subject</option>
+                <option value="">All Subjects (Class Teacher / General)</option>
                 {availableSubjects.map(s => s ? <option key={s._id} value={s._id}>{s.name}</option> : null)}
               </select>
             </div>
 
-            <Button type="submit" disabled={isSubmitting || !newAssignment.gradeId || !newAssignment.sectionId || !newAssignment.subjectId || !newAssignment.teacherId}>
+            <Button type="submit" disabled={isSubmitting || !newAssignment.gradeId || !newAssignment.sectionId || !newAssignment.teacherId}>
               {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Assign
             </Button>
           </form>
@@ -226,7 +225,15 @@ export default function TeacherAssignments() {
                       <td className="font-medium">{a.teacherId?.name || "Unknown"}</td>
                       <td>{a.gradeId?.name || "Unknown"}</td>
                       <td>{a.sectionId?.name || "Unknown"}</td>
-                      <td>{a.subjectId?.name || "Unknown"}</td>
+                      <td>
+                        {a.subjectId?.name ? (
+                          <span>{a.subjectId.name}</span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                            All Subjects (Class Teacher)
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <Button 
                           variant="ghost" 

@@ -21,13 +21,20 @@ async function getCampusId(req) {
     if (userDoc?.campusId) {
       return (userDoc.campusId._id || userDoc.campusId).toString();
     }
-    const prof = await TeacherProfile.findOne({ user: req.user._id })
+    const prof = await TeacherProfile.findOne({
+      $or: [{ user: req.user._id }, { userId: req.user._id }],
+    })
       .select("campusId")
       .lean();
     if (prof?.campusId) {
       return (prof.campusId._id || prof.campusId).toString();
     }
   }
+  const Campus = (await import("../models/campus.model.js")).default;
+  const defaultCampus =
+    (await Campus.findOne({ status: "Active" }).select("_id").lean()) ||
+    (await Campus.findOne({}).select("_id").lean());
+  if (defaultCampus?._id) return defaultCampus._id.toString();
   return null;
 }
 

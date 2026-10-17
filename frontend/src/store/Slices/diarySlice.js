@@ -2,15 +2,13 @@ import { createSlice, nanoid } from "@reduxjs/toolkit";
 import { validDate } from "../../lib/dates.js";
 
 export function validDiaryEntry(entry) {
+  const id = entry?.id || entry?._id;
   return Boolean(
     entry &&
-    ["id", "classId", "title"].every(
-      (field) => typeof entry[field] === "string" && entry[field].trim(),
-    ) &&
-    validDate(entry.date) &&
-    ["recap", "homework", "resources", "assignmentId"].every(
-      (field) => entry[field] === undefined || typeof entry[field] === "string",
-    ),
+    id &&
+    typeof entry.title === "string" &&
+    entry.title.trim() &&
+    validDate(entry.date)
   );
 }
 

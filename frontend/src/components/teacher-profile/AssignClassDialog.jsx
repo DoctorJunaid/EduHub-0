@@ -58,8 +58,8 @@ export default function AssignClassDialog({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.gradeId || !form.sectionId || !form.subjectId) {
-      toast.error("Please select a Grade, Section, and Subject");
+    if (!form.gradeId || !form.sectionId) {
+      toast.error("Please select a Grade and Section");
       return;
     }
 
@@ -144,7 +144,7 @@ export default function AssignClassDialog({
             {/* Subject Select */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-zinc-700">
-                Subject *
+                Subject (Optional)
               </Label>
               <select
                 className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -152,9 +152,8 @@ export default function AssignClassDialog({
                 onChange={(e) =>
                   setForm({ ...form, subjectId: e.target.value })
                 }
-                required
               >
-                <option value="">Select Subject</option>
+                <option value="">All Subjects (Class Teacher / General)</option>
                 {subjects.map((s) => (
                   <option key={s._id || s.id} value={s._id || s.id}>
                     {s.name} ({s.code || "Code"})

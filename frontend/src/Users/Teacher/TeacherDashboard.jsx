@@ -46,14 +46,7 @@ const initials = (name = "") =>
 export default function TeacherDashboard() {
   const queryClient = useQueryClient();
 
-  // Tier 2 loading delay (500ms) to ensure instant initial paint and prevent network flooding on login
-  const [showTier2, setShowTier2] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setShowTier2(true), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const { isClassTeacher, classInfo, attendance, loading: myClassLoading } = useMyClass({ enabled: showTier2 });
+  const { isClassTeacher, classInfo, attendance, loading: myClassLoading } = useMyClass();
   const reduxClasses = useSelector(selectAssignedTeacherClasses);
   const teacher = useSelector(selectTeacherIdentity);
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
@@ -74,7 +67,7 @@ export default function TeacherDashboard() {
 
   const currentMonthKey = dateKey(new Date()).slice(0, 7);
 
-  // Tier 1: Critical Queries - immediate fetch on mount with 5 min staleTime
+  // Synchronized Queries with unified 5min stale cache
   const todaySessionsQuery = useQuery({
     queryKey: qk.teacherTodayClasses(),
     queryFn: async () => {
@@ -93,14 +86,12 @@ export default function TeacherDashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Tier 2: Secondary Queries - delayed by 500ms
   const assignmentsQuery = useQuery({
     queryKey: qk.teacherAssignments(),
     queryFn: async () => {
       const res = await getTeacherAssignments();
       return res.data?.data || [];
     },
-    enabled: showTier2,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -110,7 +101,6 @@ export default function TeacherDashboard() {
       const res = await getTeacherClasses();
       return res.data?.data || [];
     },
-    enabled: showTier2,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -121,6 +111,8 @@ export default function TeacherDashboard() {
       toast.success("Teaching credit recorded!");
       queryClient.invalidateQueries({ queryKey: qk.teacherTodayClasses() });
       queryClient.invalidateQueries({ queryKey: qk.teacherSummary({ month: currentMonthKey }) });
+      queryClient.invalidateQueries({ queryKey: ["teacher"] });
+      queryClient.invalidateQueries({ queryKey: ["campus", "class-sessions"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to mark class completed.");
@@ -188,7 +180,11 @@ export default function TeacherDashboard() {
   );
 
   const pendingSubmissionsCount = pending.length;
-  const enrolledStudentCount = classes.reduce((sum, c) => sum + (c.enrolledStudentsCount || 0), 0) || enrolledStudents.length;
+  const enrolledStudentCount = (() => {
+    const maxSection = classes.reduce((max, c) => Math.max(max, c.enrolledStudentsCount || c.studentCount || 0), 0);
+    const totalAcrossClasses = classes.reduce((sum, c) => sum + (c.enrolledStudentsCount || c.studentCount || 0), 0);
+    return maxSection || totalAcrossClasses || classInfo?.studentCount || enrolledStudents.length || 0;
+  })();
 
   const todayScheduledCount = todaySessions.length;
   const todayConductedCount = todaySessions.filter((s) => s.status === "Completed").length;
@@ -197,7 +193,7 @@ export default function TeacherDashboard() {
 
   const metric = [
     [CalendarCheck, "Today's Lectures", todayWorkloadLabel],
-    [Award, "Monthly Credits", creditSummary?.totalCredits ?? "—"],
+    [Award, "Monthly Credits", creditSummary?.totalCredits !== undefined && creditSummary?.totalCredits !== null ? creditSummary.totalCredits : "0"],
     [Coins, "Bonus Earned", `PKR ${(creditSummary?.totalBonusEarned || 0).toLocaleString()}`],
     [BookOpen, "Assigned Courses", assignedCourseCount],
     [FileText, "Pending Submissions", pendingSubmissionsCount],

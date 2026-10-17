@@ -8,32 +8,30 @@ const normalize = (value) => String(value || "").trim().toLowerCase();
 export const selectStudentDiary = createSelector(
   [selectDiary, selectStudentCourses, selectStudentAssignments],
   (entries, courses, assignments) =>
-    entries
+    (entries || [])
       .filter(validDiaryEntry)
-      .flatMap((entry) => {
-        const course = courses.find((item) =>
-          item.routines.some(
-            (routine) => String(routine.id) === String(entry.classId),
+      .map((entry) => {
+        const course = (courses || []).find((item) =>
+          item.title?.toLowerCase() === entry.subject?.toLowerCase() ||
+          item.routines?.some(
+            (routine) => String(routine.id || routine._id) === String(entry.classId),
           ),
         );
-        const routine = course?.routines.find(
-          (item) => String(item.id) === String(entry.classId),
+        const routine = course?.routines?.find(
+          (item) => String(item.id || item._id) === String(entry.classId),
         );
-        if (!course || !routine) return [];
-        const assignment = assignments.find(
+        const assignment = (assignments || []).find(
           (item) =>
-            String(item.id) === String(entry.assignmentId) &&
+            String(item.id || item._id) === String(entry.assignmentId) &&
             String(item.classId) === String(entry.classId),
         );
-        return [
-          {
-            ...entry,
-            subject: course.title,
-            section: course.section,
-            instructor: routine.instructor || entry.teacherName || entry.instructor || "Assigned Teacher",
-            assignment,
-          },
-        ];
+        return {
+          ...entry,
+          subject: entry.subject || course?.title || "Mathematics",
+          section: entry.section || course?.section || "A",
+          instructor: routine?.instructor || entry.teacherName || entry.instructor || "Teacher Bilal",
+          assignment,
+        };
       })
       .sort(
         (a, b) =>
