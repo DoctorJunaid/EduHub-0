@@ -1,4 +1,4 @@
-/* ─── HeroFanDeck Stylesheet ─── */
+/* â”€â”€â”€ HeroFanDeck Stylesheet â”€â”€â”€ */
 
 .hero-scroll-wrapper {
   position: relative;
@@ -619,6 +619,10 @@ xc  c
     margin-top: -105px;
     border-radius: 18px;
   }
+  .hero-card-anchor {
+    width: 145px;
+    height: 210px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -629,16 +633,61 @@ xc  c
   .hero-deck-stage {
     height: 280px;
     margin-bottom: 25px;
+    padding-inline: 12px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hero-deck-stage::-webkit-scrollbar { display: none; }
+  .hero-deck-wrapper {
+    width: max-content;
+    flex: 0 0 max-content;
+    justify-content: flex-start;
+    gap: 12px;
   }
   .hero-card {
     width: 125px;
     height: 180px;
-    margin-left: -62px;
-    margin-top: -90px;
+    margin: 0;
     border-radius: 16px;
+  }
+  .hero-card-anchor {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 125px;
+    height: 180px;
+    flex: 0 0 125px;
+    scroll-snap-align: start;
   }
   .hero-speech-badge {
     padding: 6px 12px;
     font-size: 0.78rem;
+  }
+
+  .hero-subtitle {
+    width: 100%;
+    padding-inline: 4px;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 360px);
+    gap: 10px;
+  }
+
+  .hero-actions .hero-btn-primary,
+  .hero-actions .hero-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-actions .hero-btn-replay {
+    justify-self: center;
   }
 }

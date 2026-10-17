@@ -816,3 +816,113 @@
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.8);
 }
+
+@media (max-width: 640px) {
+  .marquee-track {
+    gap: 22px;
+  }
+
+  .xcard-alumni {
+    width: 280px;
+    height: 380px;
+  }
+
+  .xcard-alumni-content {
+    padding: 30px 24px 24px;
+  }
+}
+
+@media (max-width: 380px) {
+  .xcard-alumni {
+    width: 260px;
+    height: 350px;
+  }
+
+  .xcard-alumni-content {
+    padding: 26px 20px 20px;
+  }
+}
+
+@media (max-width: 639px) {
+  .landing-page :is(h1, h2, h3, h4, p),
+  .institute-public-page :is(h1, h2, h3, h4, p, span, a, td, th) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .landing-page .grid > *,
+  .landing-page .flex > *,
+  .institute-public-page .grid > *,
+  .institute-public-page .flex > * {
+    min-width: 0;
+  }
+
+  .institute-public-page section {
+    padding-left: 16px;
+    padding-right: 16px;
+    scroll-margin-top: 88px;
+  }
+
+  .institute-public-page .institute-hero-banner {
+    height: 32rem;
+  }
+
+  .institute-public-page .overflow-x-auto {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .institute-public-page table {
+    min-width: 600px;
+  }
+
+  .partner-registration-dialog {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .institute-apply-dialog {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ai-chat-section {
+    padding: 56px 12px 60px;
+  }
+
+  .ai-section-header {
+    margin-bottom: 32px;
+  }
+
+  .ai-window-chrome {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .ai-window-title {
+    gap: 6px;
+    font-size: 0.72rem;
+  }
+
+  .ai-window-badge {
+    padding-inline: 7px;
+    font-size: 0.58rem;
+  }
+
+  .ai-messages-area {
+    min-height: 280px;
+    max-height: 55vh;
+    padding: 18px 12px;
+  }
+
+  .ai-message {
+    max-width: 100%;
+  }
+
+  .institute-public-page footer > div:first-child {
+    gap: 32px;
+    padding-bottom: 48px;
+  }
+}
