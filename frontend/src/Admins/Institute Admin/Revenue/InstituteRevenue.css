@@ -624,10 +624,13 @@
 
 .ir-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .ir-data-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
@@ -787,7 +790,7 @@
   }
 
   .ir-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 

@@ -485,7 +485,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                       <h4 style={{ margin: "0 0 16px 0", fontSize: "15px", fontWeight: 700 }}>
                         Edit Manager Profile
                       </h4>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 w-full" style={{ gap: "12px", marginBottom: "16px" }}>
                         <div>
                           <Label style={{ display: "block", marginBottom: "6px" }}>Full Name</Label>
                           <Input
@@ -592,7 +592,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                     An invitation email will be dispatched containing the secure password setup link.
                   </p>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 w-full" style={{ gap: "12px", marginBottom: "16px" }}>
                     <div>
                       <Label style={{ display: "block", marginBottom: "6px" }}>Manager Full Name</Label>
                       <Input
@@ -612,7 +612,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                         required
                       />
                     </div>
-                    <div style={{ gridColumn: "span 2" }}>
+                    <div className="sm:col-span-2">
                       <Label style={{ display: "block", marginBottom: "6px" }}>Phone (Optional)</Label>
                       <Input
                         placeholder="+92 300 0000000"
@@ -643,7 +643,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
             /* Branch Overview Tab */
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {/* Stat Cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 w-full" style={{ gap: "14px" }}>
                 <div style={{ background: "#f9fafb", padding: "16px", borderRadius: "10px", border: "1px solid #e4e4e7" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#71717a", fontSize: "13px", fontWeight: 600 }}>
                     <Users size={16} /> Enrolled Students
@@ -668,7 +668,7 @@ export default function ManageCampusModal({ campus, open, onClose, onCampusUpdat
                 <h4 style={{ margin: "0 0 16px 0", fontSize: "15px", fontWeight: 700 }}>
                   Facility & Location Information
                 </h4>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 w-full" style={{ gap: "14px" }}>
                   <div>
                     <span style={{ fontSize: "11px", fontWeight: 700, color: "#71717a", textTransform: "uppercase" }}>
                       Branch Status

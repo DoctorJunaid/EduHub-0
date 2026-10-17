@@ -15,7 +15,7 @@ import InstituteStudents from "./Admins/Institute Admin/Students/InstituteStuden
 import InstituteStaff from "./Admins/Institute Admin/Staff/InstituteStaff";
 import InstituteAuditLogs from "./Admins/Institute Admin/AuditLogs/InstituteAuditLogs";
 import "./Admins/Institute Admin/InstituteAdmin.css";
-import { instituteNavigation } from "./Admins/Institute Admin/navigation";
+import InstituteAdminLayout from "./Admins/Institute Admin/InstituteAdminLayout";
 import SalaryPolicies from "./Admins/Institute Admin/Payroll/SalaryPolicies";
 import Settings from "./components/Settings/Settings";
 import SalaryProfiles from "./pages/SalaryProfiles";
@@ -154,14 +154,7 @@ const App = () => {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["institute_admin"]} />}>
-          <Route
-            element={
-              <MainLayout
-                navigation={instituteNavigation}
-                className="institute-admin-shell"
-              />
-            }
-          >
+          <Route element={<InstituteAdminLayout />}>
             <Route path="institute-admin" element={<InstituteDashboard />} />
             <Route
               path="institute-admin/revenue"

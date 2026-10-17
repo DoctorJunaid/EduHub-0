@@ -290,3 +290,43 @@
   justify-content: center;
   margin: 0 auto 12px;
 }
+
+@media (max-width: 640px) {
+  .mcm-overlay {
+    padding: 10px;
+  }
+  .mcm-modal {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 12px;
+  }
+  .mcm-header {
+    padding: 14px 16px;
+  }
+  .mcm-tabs {
+    padding: 0 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mcm-tab {
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .mcm-body {
+    padding: 16px 14px;
+  }
+  .mcm-cred-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .mcm-actions-bar {
+    flex-direction: column;
+  }
+  .mcm-btn-primary,
+  .mcm-btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+}

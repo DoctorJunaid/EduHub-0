@@ -279,8 +279,8 @@ export default function BroadcastAlerts() {
           <h2>Recent Broadcasts</h2>
         </div>
 
-        <div className="iba-table-container">
-          <Table aria-label="Recent broadcast notices">
+        <div className="iba-table-container w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <Table aria-label="Recent broadcast notices" className="w-full min-w-[700px] border-collapse">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[110px]">Severity</TableHead>

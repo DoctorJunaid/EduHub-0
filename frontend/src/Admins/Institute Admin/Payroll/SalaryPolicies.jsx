@@ -431,8 +431,8 @@ export default function SalaryPolicies() {
         {rules.length > 0 ? (
           visibleRules.length > 0 ? (
             <>
-              <div className="rule-table-scroll">
-                <table className="rule-table">
+              <div className="rule-table-scroll w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+                <table className="rule-table w-full min-w-[700px] border-collapse">
                   <thead>
                     <tr>
                       <th>Min (Count)</th>
@@ -638,7 +638,7 @@ export default function SalaryPolicies() {
       </header>
 
       {/* Toolbar: Search, Campus Selector & Relocated Save Action */}
-      <div className="salary-policies-toolbar">
+      <div className="salary-policies-toolbar flex flex-col lg:flex-row lg:items-center justify-between w-full" style={{ gap: "12px" }}>
         <div className="salary-policy-search">
           <Search
             size={15}

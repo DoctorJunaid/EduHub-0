@@ -122,38 +122,43 @@
 .campuses-table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .campuses-card table {
   width: 100%;
-  min-width: 900px;
-  table-layout: fixed;
+  min-width: 950px;
   border-collapse: collapse;
 }
 
 .campuses-card th:nth-child(1),
 .campuses-card td:nth-child(1) {
-  width: 23%;
+  width: 26%;
+  min-width: 260px;
 }
 
 .campuses-card th:nth-child(2),
 .campuses-card td:nth-child(2) {
-  width: 25%;
+  width: 24%;
+  min-width: 220px;
 }
 
 .campuses-card th:nth-child(3),
 .campuses-card td:nth-child(3) {
   width: 22%;
+  min-width: 200px;
 }
 
 .campuses-card th:nth-child(4),
 .campuses-card td:nth-child(4) {
-  width: 10%;
+  width: 12%;
+  min-width: 110px;
 }
 
 .campuses-card th:nth-child(5),
 .campuses-card td:nth-child(5) {
-  width: 20%;
+  width: 16%;
+  min-width: 140px;
 }
 
 .campuses-card th {

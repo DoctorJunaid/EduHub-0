@@ -82,8 +82,8 @@ export default function CampusBranches() {
   return (
     <section className="campus-branches" aria-label="Campus branches">
       <Card className="campuses-card">
-        <div className="campuses-search-bar">
-          <div className="campuses-search-input-wrapper">
+        <div className="campuses-search-bar flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
+          <div className="campuses-search-input-wrapper relative w-full sm:w-80 shrink-0">
             <Search size={16} className="campuses-search-icon" aria-hidden="true" />
             <Input
               type="search"
@@ -95,26 +95,23 @@ export default function CampusBranches() {
           </div>
           <Button
             onClick={() => navigate("/institute-admin/campuses/new")}
-            className="campuses-add-btn"
+            className="campuses-add-btn whitespace-nowrap shrink-0 w-full sm:w-auto"
+            style={{ padding: "8px 16px", height: "38px", width: "auto", minWidth: "fit-content", gap: "8px" }}
           >
             <Plus size={18} />
             Add Campus
           </Button>
         </div>
 
-        <div className="campuses-table-container">
-          <Table aria-label="Campus branches">
+        <div className="campuses-table-container w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <Table aria-label="Campus branches" className="w-full min-w-[950px] border-collapse">
             <TableHeader>
               <TableRow>
-                {[
-                  "Campus Name",
-                  "Address",
-                  "Campus Manager",
-                  "Status",
-                  "Actions",
-                ].map((label) => (
-                  <TableHead key={label}>{label}</TableHead>
-                ))}
+                <TableHead className="min-w-[260px] whitespace-nowrap">Campus Name</TableHead>
+                <TableHead className="min-w-[220px] whitespace-nowrap">Address</TableHead>
+                <TableHead className="min-w-[200px] whitespace-nowrap">Campus Manager</TableHead>
+                <TableHead className="min-w-[110px] whitespace-nowrap">Status</TableHead>
+                <TableHead className="min-w-[140px] text-right whitespace-nowrap">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -136,7 +133,7 @@ export default function CampusBranches() {
 
                   return (
                     <TableRow key={campus.id}>
-                      <TableCell>
+                      <TableCell className="min-w-[260px]">
                         <div className="campus-name">
                           <span className="campus-building">
                             <Building2 size={20} />
@@ -147,10 +144,10 @@ export default function CampusBranches() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="campus-address">
+                      <TableCell className="campus-address min-w-[220px]">
                         {addressDisplay}
                       </TableCell>
-                      <TableCell className="campus-manager-cell">
+                      <TableCell className="campus-manager-cell min-w-[200px]">
                         {hasManager ? (
                           <div className="manager-info">
                             <div className="manager-name-row">
@@ -187,7 +184,7 @@ export default function CampusBranches() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[110px]">
                         <Badge
                           variant="secondary"
                           className={`campus-status-badge ${
@@ -200,7 +197,7 @@ export default function CampusBranches() {
                           {campus.status || "Active"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right min-w-[140px]">
                         <div className="campus-actions">
                           <Button
                             variant="outline"

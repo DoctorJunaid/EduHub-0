@@ -262,9 +262,9 @@ export default function InstituteStudents() {
       aria-label="Students Directory & Records"
     >
       <Card className="isd-card">
-        <div className="isd-toolbar">
-          <div className="isd-toolbar-left">
-            <div className="isd-search-input-wrapper">
+        <div className="isd-toolbar flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
+          <div className="isd-toolbar-left flex flex-col sm:flex-row sm:items-center w-full sm:w-auto" style={{ gap: "12px" }}>
+            <div className="isd-search-input-wrapper relative w-full sm:w-80 shrink-0">
               <Search
                 size={16}
                 className="isd-search-icon"
@@ -278,7 +278,7 @@ export default function InstituteStudents() {
                 onChange={handleSearchChange}
               />
             </div>
-            <span className="isd-count">
+            <span className="isd-count whitespace-nowrap">
               {studentsList.length}{" "}
               {studentsList.length === 1 ? "student" : "students"} enrolled
             </span>
@@ -293,15 +293,16 @@ export default function InstituteStudents() {
             onClick={() => {
               setModal({ type: "add" });
             }}
-            className="isd-add-btn"
+            className="isd-add-btn whitespace-nowrap shrink-0 w-full sm:w-auto"
+            style={{ padding: "8px 16px", height: "38px", width: "auto", minWidth: "fit-content", gap: "8px" }}
           >
             <Plus size={18} />
             Add New Student
           </Button>
         </div>
 
-        <div className="isd-table-container">
-          <Table aria-label="Institute students directory">
+        <div className="isd-table-container w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <Table aria-label="Institute students directory" className="w-full min-w-[900px] border-collapse">
             <TableHeader>
               <TableRow className="h-11">
                 <TableHead className="min-w-[190px]">Student &amp; Roll No</TableHead>
