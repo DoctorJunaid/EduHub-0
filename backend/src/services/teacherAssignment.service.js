@@ -24,16 +24,35 @@ export async function resolveTeacherUser(id) {
  * Get all classes/courses assigned to a teacher.
  * Merges Timetable slots, ClassSchedule, and TeacherAssignment records.
  */
-export async function getTeacherAssignedClasses(campusId, teacherUserId) {
+export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUserId) {
+  let campusId = campusIdOrUserId;
+  let teacherUserId = maybeTeacherUserId;
+
+  if (!maybeTeacherUserId && campusIdOrUserId) {
+    teacherUserId = campusIdOrUserId;
+    campusId = null;
+  }
+
   const resolved = await resolveTeacherUser(teacherUserId);
   const uId = resolved?._id || teacherUserId;
+  const teacherName = resolved?.name || "";
+
+  // Also resolve TeacherProfile ID
+  const prof = await TeacherProfile.findOne({
+    $or: [{ user: uId }, { _id: teacherUserId }],
+  }).lean();
+  const possibleTeacherIds = [uId, prof?._id, teacherUserId].filter(Boolean);
+  const effectiveCampusId = campusId || resolved?.campusId || prof?.campusId;
 
   // 1. Fetch from Timetable
   const timetables = await Timetable.find({
-    campusId,
-    teacherId: uId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     status: { $ne: "Cancelled" },
     isBreak: false,
+    $or: [
+      { teacherId: { $in: possibleTeacherIds } },
+      ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }, { teacherName: new RegExp(`^${teacherName}$`, "i") }] : []),
+    ],
   })
     .populate("gradeId", "name")
     .populate("sectionId", "name")
@@ -42,8 +61,8 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // 2. Fetch from Academic TeacherAssignment
   const academicAssignments = await TeacherAssignment.find({
-    campusId,
-    teacherId: uId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    teacherId: { $in: possibleTeacherIds },
   })
     .populate("gradeId", "name")
     .populate("sectionId", "name")
@@ -52,8 +71,11 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // 3. Fetch from ClassSchedule (legacy)
   const legacySchedules = await ClassSchedule.find({
-    campusId,
-    $or: [{ teacherId: uId }, { instructor: resolved?.name }],
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    $or: [
+      { teacherId: { $in: possibleTeacherIds } },
+      ...(teacherName ? [{ instructor: new RegExp(`^${teacherName}$`, "i") }] : []),
+    ],
     isBreak: false,
   }).lean();
 
@@ -168,7 +190,7 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
 
   // 4. Fetch from TeacherClassSession
   const sessions = await TeacherClassSession.find({
-    campusId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     $or: [{ originalTeacherId: uId }, { actualTeacherId: uId }],
   }).lean();
 
@@ -197,6 +219,79 @@ export async function getTeacherAssignedClasses(campusId, teacherUserId) {
         teacherName: resolved?.name || "Teacher",
         source: "session",
       });
+    }
+  }
+
+  // 4.5. Fetch Sections where this teacher is assigned as Section Class Teacher
+  const classTeacherSections = await Section.find({
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+    $or: [
+      { classTeacherId: { $in: possibleTeacherIds } },
+      ...(prof?.classTeacherOf ? [{ _id: prof.classTeacherOf }] : []),
+    ],
+  })
+    .populate("gradeId", "name")
+    .lean();
+
+  for (const sec of classTeacherSections) {
+    const className = sec.gradeId?.name || "Class 10";
+    const sectionName = sec.name || "A";
+
+    let matchedExisting = false;
+    for (const [, val] of classMap.entries()) {
+      const matchGrade =
+        (val.gradeId && sec.gradeId?._id && String(val.gradeId) === String(sec.gradeId._id)) ||
+        String(val.className).toLowerCase() === String(className).toLowerCase();
+      const matchSec =
+        (val.sectionId && String(val.sectionId) === String(sec._id)) ||
+        String(val.section).toLowerCase() === String(sectionName).toLowerCase();
+
+      if (matchGrade && matchSec) {
+        val.isClassTeacher = true;
+        if (!val.sectionId) val.sectionId = sec._id;
+        if (!val.gradeId && sec.gradeId?._id) val.gradeId = sec.gradeId._id;
+        matchedExisting = true;
+      }
+    }
+
+    if (!matchedExisting) {
+      const gradeSubjects = sec.gradeId?._id
+        ? await Subject.find({
+            ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
+            gradeId: sec.gradeId._id,
+            status: { $ne: "archived" },
+          }).lean()
+        : [];
+      const subjectsToRegister =
+        gradeSubjects.length > 0 ? gradeSubjects : [{ _id: null, name: "General", code: "" }];
+
+      for (const sub of subjectsToRegister) {
+        const key = `${className}_${sectionName}_${sub.name}`.toLowerCase();
+        if (!classMap.has(key)) {
+          classMap.set(key, {
+            _id: sec._id,
+            id: sec._id.toString(),
+            classId: sec._id.toString(),
+            gradeId: sec.gradeId?._id || null,
+            sectionId: sec._id,
+            subjectId: sub._id || null,
+            className,
+            gradeOrClass: className,
+            program: className,
+            section: sectionName,
+            subject: sub.name,
+            subjectCode: sub.code || "",
+            room: sec.roomNumber || "Classroom",
+            days: [1, 2, 3, 4, 5],
+            startTime: "09:00",
+            endTime: "10:00",
+            teacherId: uId,
+            teacherName: resolved?.name || "Teacher",
+            isClassTeacher: true,
+            source: "class_teacher_section",
+          });
+        }
+      }
     }
   }
 

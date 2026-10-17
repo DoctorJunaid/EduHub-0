@@ -29,7 +29,9 @@ export function useSupportTickets(params = {}, options = {}) {
         pageCount: res.pageCount || 1,
       };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
+    refetchInterval: false,
     ...options,
   });
 }
@@ -43,7 +45,9 @@ export function useSupportTicket(id, options = {}) {
       return res.data; // { ticket, messages }
     },
     enabled: Boolean(id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 1000,
+    refetchOnWindowFocus: true,
+    refetchInterval: false,
     ...options,
   });
 }
@@ -75,6 +79,8 @@ export function useReplyToTicket() {
       queryClient.invalidateQueries({ queryKey: qk.supportTicket(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ["support-tickets"] });
       queryClient.invalidateQueries({ queryKey: qk.supportStats() });
+      queryClient.invalidateQueries({ queryKey: ["support-messages", variables.ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-messages", variables.ticketId] });
     },
     onError: (err) => {
       const msg = err.response?.data?.message || err.message || "Failed to send message";

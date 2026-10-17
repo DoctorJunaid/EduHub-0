@@ -52,9 +52,14 @@ export const FloatingHelpWidget = () => {
 
   const openCount = stats?.badgeCount || 0;
   const recentConversations = ticketsData?.tickets || [];
-  const isAdmin = ["super_admin", "institute_admin", "campus_admin"].includes(
-    currentUser?.role
-  );
+  const isAdmin = [
+    "super_admin",
+    "institute_admin",
+    "campus_admin",
+    "campus_manager",
+    "principal",
+  ].includes(currentUser?.role);
+  const isStaff = isAdmin || currentUser?.role === "accountant";
 
   const handleOpenConversation = (id) => {
     setIsOpen(false);
@@ -108,13 +113,13 @@ export const FloatingHelpWidget = () => {
                 className="fhw-cta-btn"
               >
                 <Plus className="w-4 h-4" />
-                <span>{isAdmin ? "Create New Ticket" : "Ask for Help"}</span>
+                <span>{isStaff ? "Create New Ticket" : "Ask for Help"}</span>
               </button>
 
               {/* Recent Conversations Section */}
               <div className="fhw-section-header">
                 <span className="fhw-section-title">
-                  {isAdmin ? "Recent Tickets" : "Recent Conversations"}
+                  {isStaff ? "Recent Tickets" : "Recent Conversations"}
                 </span>
                 {recentConversations.length > 0 && (
                   <button
@@ -158,7 +163,7 @@ export const FloatingHelpWidget = () => {
                           </div>
                         </div>
                         <div className="shrink-0">
-                          <TicketStatusBadge status={c.status} isAdmin={isAdmin} />
+                          <TicketStatusBadge status={c.status} isAdmin={isStaff} />
                         </div>
                       </div>
                     );
@@ -210,7 +215,7 @@ export const FloatingHelpWidget = () => {
         onOpenChange={setIsNewDialogOpen}
         onCreate={(payload) => createTicketMutation.mutateAsync(payload)}
         isPending={createTicketMutation.isPending}
-        isAdmin={isAdmin}
+        isAdmin={isStaff}
       />
     </>
   );

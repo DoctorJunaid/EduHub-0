@@ -33,8 +33,9 @@ export function useStudentPortal() {
       const res = await getStudentPortalApi();
       return res.data || {};
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
     enabled: Boolean(studentId && !String(studentId).startsWith("demo:")),
   });
 
@@ -61,7 +62,7 @@ export function useStudentPortal() {
     ...query,
     portal,
     student: portal?.student || null,
-    classTeacher: portal?.classTeacher || null,
+    classTeacher: portal?.classTeacher || portal?.student?.classTeacher || null,
     subjects: portal?.subjects || [],
     schedules: portal?.schedules || [],
     attendance: portal?.attendance || null,

@@ -2,12 +2,27 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 
-export function Spinner({ className, ...props }) {
+export function Spinner({ className, size, ...props }) {
+  const sizeClass =
+    typeof size === "string"
+      ? {
+          xs: "size-3",
+          sm: "size-3.5",
+          md: "size-4",
+          default: "size-4",
+          lg: "size-6",
+          xl: "size-8",
+        }[size] || "size-4"
+      : undefined;
+
+  const numericSize = typeof size === "number" ? size : undefined;
+
   return (
     <LoaderIcon
       role="status"
       aria-label="Loading"
-      className={cn("size-4 animate-spin text-zinc-900", className)}
+      size={numericSize}
+      className={cn("size-4 animate-spin text-zinc-900", sizeClass, className)}
       {...props}
     />
   );

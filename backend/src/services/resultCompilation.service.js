@@ -50,6 +50,7 @@ export async function getClassResultsGrid(
     campusId,
     role: "student",
     $or: [
+      ...(targetClassId ? [{ sectionId: targetClassId }] : []),
       {
         $and: [
           {
@@ -153,13 +154,19 @@ export async function getClassResultsGrid(
   // 3. Fetch all marks entered for this exam & class (from Performance and StudentResult)
   const performanceRecords = await Performance.find({
     campusId,
-    $or: [
-      { className: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
-      { gradeOrClass: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
-    ],
-    $or: [
-      { examName: new RegExp(`^${examName}$`, "i") },
-      { term: new RegExp(`^${term}$`, "i") },
+    $and: [
+      {
+        $or: [
+          { className: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
+          { gradeOrClass: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
+        ],
+      },
+      {
+        $or: [
+          { examName: new RegExp(`^${examName}$`, "i") },
+          { term: new RegExp(`^${term}$`, "i") },
+        ],
+      },
     ],
   })
     .populate("markedBy", "name email")

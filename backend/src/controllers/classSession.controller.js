@@ -32,6 +32,11 @@ export const generateSessions = async (req, res) => {
     }
     const dateInput = req.body?.date || req.query?.date || new Date();
     const sessions = await classSessionService.generateDailySessions(campusId, dateInput);
+    try {
+      await classSessionService.sweepMissedSessions(campusId, dateInput);
+    } catch {
+      // non-blocking sweep
+    }
     res.status(200).json({ success: true, count: sessions.length, data: sessions });
   } catch (err) {
     res.status(err.statusCode || 500).json({ success: false, message: err.message });
@@ -319,6 +324,42 @@ export const updateConfig = async (req, res) => {
       message: "Teaching credit configuration updated successfully.",
       data: updated,
     });
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+};
+
+export const getTeacherWorkload = async (req, res) => {
+  try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ success: false, message: "Campus ID is required." });
+    }
+
+    let teacherUserId = req.user._id;
+    if (["campus_admin", "campus_manager", "principal", "institute_admin", "super_admin"].includes(req.user.role)) {
+      if (req.query.teacherId) teacherUserId = req.query.teacherId;
+      else if (req.params.teacherId) teacherUserId = req.params.teacherId;
+    }
+
+    const date = req.query.date || new Date();
+    const workload = await classSessionService.getTeacherDailyWorkload(campusId, teacherUserId, date);
+    res.status(200).json({ success: true, data: workload });
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+};
+
+export const sweepSessions = async (req, res) => {
+  try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ success: false, message: "Campus ID is required." });
+    }
+
+    const date = req.body?.date || req.query?.date || new Date();
+    const result = await classSessionService.sweepMissedSessions(campusId, date);
+    res.status(200).json({ success: true, message: "Sessions sweep complete.", data: result });
   } catch (err) {
     res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }

@@ -116,7 +116,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl">
+      <DialogContent className="partner-registration-dialog max-w-xl p-0 overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl">
         <div className="relative">
           {/* Top Emerald Accent Bar */}
           <div className="h-2 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600" />
@@ -289,11 +289,11 @@ export default function GetStartedModal({ isOpen, onClose }) {
                       </div>
                     </div>
 
-                    <div className="pt-4 flex items-center justify-end gap-3">
-                      <Button type="button" variant="ghost" disabled={isSubmitting} onClick={handleClose}>
+            <div className="pt-4 flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-3">
+              <Button type="button" variant="ghost" disabled={isSubmitting} onClick={handleClose} className="w-full sm:w-auto">
                         Cancel
                       </Button>
-                      <Button type="submit" variant="glow" disabled={isSubmitting} className="gap-2">
+              <Button type="submit" variant="glow" disabled={isSubmitting} className="w-full sm:w-auto gap-2">
                         {isSubmitting ? (
                           <>
                             <SpinnerGap size={16} className="animate-spin" />

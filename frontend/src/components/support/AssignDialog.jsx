@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UserCheck, Search, User } from "lucide-react";
+import { UserCheck, Search } from "lucide-react";
 import Spinner from "@/components/ui/spinner";
 import { useSupportContacts } from "@/hooks/useSupportContacts";
 

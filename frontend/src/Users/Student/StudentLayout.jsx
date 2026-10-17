@@ -53,6 +53,8 @@ export default function StudentLayout() {
     "/student/grades": isSchool ? "Progress Report Card" : "Results",
     "/student/fees": isSchool ? "School Fee Challan" : "Fees",
     "/student/messages": "Messages",
+    "/student/timetable": isSchool ? "Class Routine & Timetable" : "Timetable",
+    "/student/schedule": isSchool ? "Class Routine & Timetable" : "Timetable",
   }[location.pathname];
 
   const focusSummary = () => {

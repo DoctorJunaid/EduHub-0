@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import SupportTicket from "../models/supportTicket.model.js";
 import SupportMessage from "../models/supportMessage.model.js";
 import User from "../models/user.model.js";
+import { Section } from "../models/academic.model.js";
+import { TeacherProfile } from "../models/profile.model.js";
 import generateTicketNumber from "../utils/ticketNumber.js";
 import { createNotification } from "./notification.service.js";
 import {
@@ -14,6 +16,7 @@ import {
   canViewTicket,
   canReplyToTicket,
   canAssignTicket,
+  canModifyStatus,
   canEscalateTicket,
   canCloseTicket,
   canMessageUser,
@@ -27,18 +30,27 @@ const SLA_HOURS = {
   Low: 72,
 };
 
+export const getTicketUrlForRole = (role, ticketId) => {
+  const norm = normalizeRole(role);
+  if (norm === "student") return `/student/support/${ticketId}`;
+  if (norm === "teacher") return `/teacher/support/${ticketId}`;
+  if (norm === "institute_admin") return `/institute-admin/support/${ticketId}`;
+  if (norm === "super_admin") return `/super-admin/support/${ticketId}`;
+  return `/support/${ticketId}`;
+};
+
 const CATEGORY_MAP = [
-  { id: "Academic", label: "Homework or subject", icon: "📚", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Attendance", label: "Attendance", icon: "📅", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Fees & Payments", label: "Fees or payment", icon: "💰", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Library", label: "Library", icon: "📖", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Transport", label: "Transport", icon: "🚌", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Technical Issue", label: "My account", icon: "👤", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Discipline", label: "Discipline", icon: "⚠️", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Payroll", label: "Salary", icon: "💵", roles: ["teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Other", label: "Something else", icon: "❓", roles: ["student", "parent", "teacher", "campus_admin", "institute_admin", "super_admin"] },
-  { id: "Platform Bug", label: "Platform Bug", icon: "🐛", roles: ["campus_admin", "institute_admin", "super_admin"] },
-  { id: "Feature Request", label: "Feature Request", icon: "💡", roles: ["campus_admin", "institute_admin", "super_admin"] },
+  { id: "Academic", label: "Homework or subject", icon: "📚", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Attendance", label: "Attendance", icon: "📅", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Fees & Payments", label: "Fees or payment", icon: "💰", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Library", label: "Library", icon: "📖", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Transport", label: "Transport", icon: "🚌", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Technical Issue", label: "My account", icon: "👤", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Discipline", label: "Discipline", icon: "⚠️", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Payroll", label: "Salary", icon: "💵", roles: ["teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Other", label: "Something else", icon: "❓", roles: ["student", "parent", "teacher", "accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Platform Bug", label: "Platform Bug", icon: "🐛", roles: ["accountant", "campus_admin", "institute_admin", "super_admin"] },
+  { id: "Feature Request", label: "Feature Request", icon: "💡", roles: ["accountant", "campus_admin", "institute_admin", "super_admin"] },
 ];
 
 /**
@@ -79,7 +91,7 @@ export const autoAssign = async (ticketData, user) => {
     const campusAdmin = await User.findOne({
       campusId,
       role: { $in: ["campus_admin", "campus_manager", "principal"] },
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
     return campusAdmin;
   }
@@ -87,19 +99,55 @@ export const autoAssign = async (ticketData, user) => {
   if (category === "Platform Bug" || category === "Feature Request") {
     const superAdmin = await User.findOne({
       role: "super_admin",
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
     return superAdmin;
   }
 
-  if (category === "Academic" && role === "student") {
-    // Assign to student's teacher in same campus
+  if ((category === "Academic" || category === "Attendance") && role === "student") {
+    // 1. Route directly to student's assigned Section Class Teacher
+    let sectionDoc = null;
+    if (user.sectionId) {
+      sectionDoc = await Section.findById(user.sectionId).lean();
+    }
+    if (!sectionDoc && campusId && (user.section || user.gradeOrClass)) {
+      sectionDoc = await Section.findOne({
+        campusId,
+        $or: [
+          { name: new RegExp(`^${user.section}$`, "i") },
+          { name: user.section },
+        ],
+      }).lean();
+    }
+
+    if (sectionDoc?.classTeacherId) {
+      const teacherProfile = await TeacherProfile.findById(sectionDoc.classTeacherId).populate("user").lean();
+      if (teacherProfile?.user && teacherProfile.user.isActive !== false) {
+        return teacherProfile.user;
+      }
+      const directTeacherUser = await User.findOne({
+        _id: sectionDoc.classTeacherId,
+        isActive: { $ne: false },
+      }).lean();
+      if (directTeacherUser) return directTeacherUser;
+    }
+
+    // Fallback: Assign to any active teacher in same campus
     const teacher = await User.findOne({
       campusId,
       role: { $in: ["teacher", "faculty"] },
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
     if (teacher) return teacher;
+  }
+
+  if (category === "Fees & Payments" && campusId) {
+    const accountant = await User.findOne({
+      campusId,
+      role: "accountant",
+      isActive: { $ne: false },
+    }).lean();
+    if (accountant) return accountant;
   }
 
   // Fallback: Campus admin or Institute admin
@@ -107,7 +155,7 @@ export const autoAssign = async (ticketData, user) => {
     const campusAdmin = await User.findOne({
       campusId,
       role: { $in: ["campus_admin", "campus_manager", "principal"] },
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
     if (campusAdmin) return campusAdmin;
   }
@@ -116,14 +164,14 @@ export const autoAssign = async (ticketData, user) => {
     const instAdmin = await User.findOne({
       instituteId,
       role: "institute_admin",
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
     if (instAdmin) return instAdmin;
   }
 
   const superAdmin = await User.findOne({
     role: "super_admin",
-    isActive: true,
+    isActive: { $ne: false },
   }).lean();
   return superAdmin;
 };
@@ -163,8 +211,8 @@ export const createTicket = async (user, payload) => {
     }
   }
 
-  // Validate Payroll category for teacher only or admin
-  if (category === "Payroll" && role !== "teacher" && !isAdminRole(role)) {
+  // Validate Payroll category for teacher or accountant or admin
+  if (category === "Payroll" && role !== "teacher" && role !== "accountant" && !isAdminRole(role)) {
     const error = new Error("Salary inquiries are only available for staff members");
     error.statusCode = 400;
     throw error;
@@ -231,7 +279,7 @@ export const createTicket = async (user, payload) => {
       message: `${user.name || "A user"} opened a ${priority} ticket: "${subject.trim()}".`,
       type: "ticket_created",
       severity: priority === "Urgent" || priority === "High" ? "high" : "info",
-      link: assignedUser.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+      link: getTicketUrlForRole(assignedUser.role, ticket._id),
       ticketId: ticket._id,
       metadata: {
         ticketNumber,
@@ -274,6 +322,15 @@ export const listTickets = async (user, filters = {}) => {
     if (filters.campusId) andConditions.push({ campusId: filters.campusId });
   } else if (role === "campus_admin") {
     andConditions.push({ campusId: user.campusId });
+  } else if (role === "accountant") {
+    andConditions.push({
+      campusId: user.campusId,
+      $or: [
+        { createdBy: user._id },
+        { assignedTo: user._id },
+        { category: { $in: ["Fees & Payments", "Payroll"] } },
+      ],
+    });
   } else if (role === "teacher") {
     andConditions.push({
       $or: [
@@ -312,15 +369,17 @@ export const listTickets = async (user, filters = {}) => {
   }
 
   if (filters.search) {
-    const s = filters.search.trim();
-    andConditions.push({
-      $or: [
-        { ticketNumber: { $regex: s, $options: "i" } },
-        { subject: { $regex: s, $options: "i" } },
-        { description: { $regex: s, $options: "i" } },
-        { "createdBySnapshot.name": { $regex: s, $options: "i" } },
-      ],
-    });
+    const s = String(filters.search).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (s) {
+      andConditions.push({
+        $or: [
+          { ticketNumber: { $regex: s, $options: "i" } },
+          { subject: { $regex: s, $options: "i" } },
+          { description: { $regex: s, $options: "i" } },
+          { "createdBySnapshot.name": { $regex: s, $options: "i" } },
+        ],
+      });
+    }
   }
 
   if (andConditions.length > 0) {
@@ -395,7 +454,7 @@ export const getTicket = async (user, ticketId) => {
   }
 
   const role = normalizeRole(user.role);
-  const isStaff = isAdminRole(role) || role === "teacher";
+  const isStaff = isAdminRole(role) || role === "teacher" || role === "accountant";
 
   // Message query (hide internal notes from regular creators/users)
   const messageQuery = { ticketId: ticket._id };
@@ -501,7 +560,7 @@ export const assignTicket = async (user, ticketId, assigneeId) => {
       message: `${user.name} assigned ticket "${ticket.subject}" to you.`,
       type: "ticket_assigned",
       severity: ticket.priority === "Urgent" ? "critical" : "info",
-      link: assignee.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+      link: getTicketUrlForRole(assignee.role, ticket._id),
       ticketId: ticket._id,
       metadata: {
         ticketNumber: ticket.ticketNumber,
@@ -527,7 +586,7 @@ export const changeStatus = async (user, ticketId, newStatus) => {
     throw error;
   }
 
-  if (!canAssignTicket(user, ticket)) {
+  if (!canModifyStatus(user, ticket)) {
     const error = new Error("You do not have permission to modify this ticket status");
     error.statusCode = 403;
     throw error;
@@ -574,7 +633,7 @@ export const changeStatus = async (user, ticketId, newStatus) => {
       message: `Your support ticket has been marked as "${newStatus}" by ${user.name}.`,
       type: "ticket_status",
       severity: newStatus === "Resolved" || newStatus === "Closed" ? "success" : "info",
-      link: `/support/${ticket._id}`,
+      link: getTicketUrlForRole(ticket.createdBySnapshot?.role, ticket._id),
       ticketId: ticket._id,
       metadata: {
         ticketNumber: ticket.ticketNumber,
@@ -619,12 +678,12 @@ export const escalateTicket = async (user, ticketId, reason = "") => {
     newAssignee = await User.findOne({
       instituteId: ticket.instituteId,
       role: "institute_admin",
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
   } else if (nextLevel === 3) {
     newAssignee = await User.findOne({
       role: "super_admin",
-      isActive: true,
+      isActive: { $ne: false },
     }).lean();
   }
 
@@ -670,7 +729,7 @@ export const escalateTicket = async (user, ticketId, reason = "") => {
       message: `${user.name} escalated ticket "${ticket.subject}". Reason: ${reason || "Immediate review required"}`,
       type: "ticket_escalated",
       severity: "critical",
-      link: newAssignee.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+      link: getTicketUrlForRole(newAssignee.role, ticket._id),
       ticketId: ticket._id,
       metadata: {
         ticketNumber: ticket.ticketNumber,
@@ -717,7 +776,7 @@ export const replyToTicket = async (user, ticketId, payload) => {
   }
 
   const role = normalizeRole(user.role);
-  const isStaff = isAdminRole(role) || role === "teacher";
+  const isStaff = isAdminRole(role) || role === "teacher" || role === "accountant";
 
   // Only staff can mark messages as internal notes
   const effectiveInternal = isStaff && Boolean(isInternal);
@@ -760,6 +819,12 @@ export const replyToTicket = async (user, ticketId, payload) => {
 
   // Push & Email Notifications for Replies (Non-Internal only)
   if (!effectiveInternal) {
+    const msgPreview = message
+      ? message.length > 80
+        ? message.substring(0, 77) + "..."
+        : message
+      : "Sent an attachment";
+
     if (!isCreator) {
       // Staff replied -> Notify creator
       createNotification({
@@ -768,7 +833,7 @@ export const replyToTicket = async (user, ticketId, payload) => {
         message: `${user.name || "Support Staff"} replied: "${msgPreview}"`,
         type: "ticket_reply",
         severity: "info",
-        link: `/support/${ticket._id}`,
+        link: getTicketUrlForRole(ticket.createdBySnapshot?.role, ticket._id),
         ticketId: ticket._id,
         metadata: {
           ticketNumber: ticket.ticketNumber,
@@ -785,7 +850,7 @@ export const replyToTicket = async (user, ticketId, payload) => {
         message: `${user.name || "Customer"} replied: "${msgPreview}"`,
         type: "ticket_reply",
         severity: "info",
-        link: ticket.assignedToSnapshot?.role === "super_admin" ? `/super-admin/support/${ticket._id}` : `/support/${ticket._id}`,
+        link: getTicketUrlForRole(ticket.assignedToSnapshot?.role, ticket._id),
         ticketId: ticket._id,
         metadata: {
           ticketNumber: ticket.ticketNumber,
@@ -842,7 +907,7 @@ export const closeTicket = async (user, ticketId) => {
       message: `Your conversation has been closed and resolved. Thank you for contacting EduHub Support.`,
       type: "ticket_status",
       severity: "success",
-      link: `/support/${ticket._id}`,
+      link: getTicketUrlForRole(ticket.createdBySnapshot?.role, ticket._id),
       ticketId: ticket._id,
       metadata: {
         ticketNumber: ticket.ticketNumber,
@@ -908,6 +973,13 @@ export const getStats = async (user) => {
     query.instituteId = user.instituteId;
   } else if (role === "campus_admin") {
     query.campusId = user.campusId;
+  } else if (role === "accountant") {
+    query.campusId = user.campusId;
+    query.$or = [
+      { createdBy: user._id },
+      { assignedTo: user._id },
+      { category: { $in: ["Fees & Payments", "Payroll"] } },
+    ];
   } else if (role === "teacher") {
     query.$or = [
       { createdBy: user._id },
@@ -1003,7 +1075,7 @@ export const getCategoriesForRole = (role) => {
  */
 export const getContacts = async (user) => {
   const role = normalizeRole(user.role);
-  const query = { isActive: true, _id: { $ne: user._id } };
+  const query = { isActive: { $ne: false }, _id: { $ne: user._id } };
 
   if (role === "super_admin") {
     // all
@@ -1014,6 +1086,11 @@ export const getContacts = async (user) => {
       { role: "super_admin" },
       { role: "institute_admin", instituteId: user.instituteId },
       { campusId: user.campusId },
+    ];
+  } else if (role === "accountant") {
+    query.$or = [
+      { campusId: user.campusId, role: { $in: ["campus_admin", "campus_manager", "principal", "teacher"] } },
+      { campusId: user.campusId, role: { $in: ["student", "parent"] } },
     ];
   } else if (role === "teacher") {
     query.$or = [
@@ -1032,7 +1109,37 @@ export const getContacts = async (user) => {
     .limit(50)
     .lean();
 
-  return contacts.filter((c) => canMessageUser(user, c));
+  let filtered = contacts.filter((c) => canMessageUser(user, c));
+
+  // If student, prioritize their designated Class Teacher to top of contacts list
+  if (role === "student" && (user.sectionId || user.section)) {
+    try {
+      let sec = user.sectionId ? await Section.findById(user.sectionId).lean() : null;
+      if (!sec && user.section && user.campusId) {
+        sec = await Section.findOne({ campusId: user.campusId, name: user.section }).lean();
+      }
+      if (sec?.classTeacherId) {
+        let ctUserId = null;
+        const tp = await TeacherProfile.findById(sec.classTeacherId).lean();
+        if (tp?.user) ctUserId = String(tp.user);
+        else ctUserId = String(sec.classTeacherId);
+
+        if (ctUserId) {
+          filtered = filtered.map((c) => {
+            if (String(c._id) === ctUserId) {
+              return { ...c, isClassTeacher: true, designation: c.designation || "Class Teacher" };
+            }
+            return c;
+          });
+          filtered.sort((a, b) => (b.isClassTeacher ? 1 : 0) - (a.isClassTeacher ? 1 : 0));
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+  }
+
+  return filtered;
 };
 
 /**

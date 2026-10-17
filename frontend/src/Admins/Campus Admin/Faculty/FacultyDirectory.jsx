@@ -16,6 +16,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import AssignTeacherClassesDialog from "./AssignTeacherClassesDialog";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {

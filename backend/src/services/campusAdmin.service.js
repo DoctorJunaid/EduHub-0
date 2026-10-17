@@ -345,6 +345,7 @@ class CampusAdminService {
     const startTime = normalizeTimeString(data.startTime) || data.startTime || "08:30";
     const endTime = normalizeTimeString(data.endTime) || data.endTime || "09:20";
 
+    const targetAudience = data.targetAudience || data.visibleTo || "both";
     const payload = {
       ...data,
       campusId: campusId || data.campusId,
@@ -352,21 +353,47 @@ class CampusAdminService {
         typeof maybeInstituteId === "string" ? maybeInstituteId : null,
       days,
       institutionType: data.institutionType || "School",
-      program: data.program || "",
-      section: data.section || "",
-      subject: data.subject || "",
-      instructor: data.instructor || "",
-      gradeId: data.gradeId || null,
+      program: data.program || data.className || "",
+      className: data.className || data.program || "",
+      section: data.section || data.sectionName || "",
+      sectionName: data.sectionName || data.section || "",
+      subject: data.subject || data.subjectName || "",
+      subjectName: data.subjectName || data.subject || "",
+      instructor: data.instructor || data.teacherName || "",
+      teacherName: data.teacherName || data.instructor || "",
+      gradeId: data.gradeId || data.classId || null,
+      classId: data.classId || data.gradeId || null,
       sectionId: data.sectionId || null,
       subjectId: data.subjectId || null,
       teacherId: data.teacherId || null,
       room: data.room || data.roomNumber || "",
+      roomNumber: data.roomNumber || data.room || "",
+      notes: data.notes || "",
+      targetAudience,
+      visibleTo: targetAudience,
+      slotType: Boolean(data.isBreak) ? "break" : (data.slotType || "period"),
       startTime,
       endTime,
       status: data.status || "Active",
       isBreak: Boolean(data.isBreak),
       breakTitle: data.breakTitle || (data.isBreak ? (data.subject || "Lunch & Prayer Break") : ""),
     };
+
+    if (payload.teacherId && mongoose.isValidObjectId(payload.teacherId)) {
+      const u = await User.findById(payload.teacherId).select("name email").lean();
+      if (u) {
+        payload.teacherId = u._id;
+        if (!payload.instructor) payload.instructor = u.name;
+        if (!payload.teacherName) payload.teacherName = u.name;
+      } else {
+        const p = await TeacherProfile.findById(payload.teacherId).populate("user", "name email").lean();
+        if (p?.user) {
+          payload.teacherId = p.user._id;
+          if (!payload.instructor) payload.instructor = p.user.name;
+          if (!payload.teacherName) payload.teacherName = p.user.name;
+        }
+      }
+    }
 
     await this.validateScheduleConflicts(payload.campusId, payload);
 
@@ -458,6 +485,13 @@ class CampusAdminService {
       if (doc.subjectId && !doc.subject) doc.subject = doc.subjectId.name;
       if (doc.isBreak && !doc.subject) doc.subject = doc.breakTitle || "Break";
       if (doc.teacherId && !doc.instructor) doc.instructor = doc.teacherId.name;
+      doc.targetAudience = doc.targetAudience || doc.visibleTo || "both";
+      doc.visibleTo = doc.targetAudience;
+      doc.slotType = doc.isBreak ? "break" : (doc.slotType || "period");
+      doc.className = doc.program || (doc.gradeId?.name || "");
+      doc.sectionName = doc.section || (doc.sectionId?.name || "");
+      doc.subjectName = doc.subject || (doc.subjectId?.name || "");
+      doc.teacherName = doc.instructor || (doc.teacherId?.name || "");
       return doc;
     });
 
@@ -522,6 +556,22 @@ class CampusAdminService {
         campusId: campusId || existing.campusId,
       };
       if (updateData.days) mergedPayload.days = updateData.days;
+
+      if (updateData && updateData.teacherId && mongoose.isValidObjectId(updateData.teacherId)) {
+        const u = await User.findById(updateData.teacherId).select("name email").lean();
+        if (u) {
+          updateData.teacherId = u._id;
+          if (!updateData.instructor) updateData.instructor = u.name;
+          if (!updateData.teacherName) updateData.teacherName = u.name;
+        } else {
+          const p = await TeacherProfile.findById(updateData.teacherId).populate("user", "name email").lean();
+          if (p?.user) {
+            updateData.teacherId = p.user._id;
+            if (!updateData.instructor) updateData.instructor = p.user.name;
+            if (!updateData.teacherName) updateData.teacherName = p.user.name;
+          }
+        }
+      }
 
       await this.validateScheduleConflicts(mergedPayload.campusId, mergedPayload, id);
 

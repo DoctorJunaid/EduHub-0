@@ -13,7 +13,6 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { dayLabel, timeLabel, weekdays } from "@/lib/schedule";
 import TeacherPagination from "./TeacherPagination";
 import { Button } from "@/components/ui/button";
-import { SpinnerCustom } from "@/components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,13 +49,15 @@ export default function MyClasses() {
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
-  const { data: liveClasses = [], isLoading } = useQuery({
+  const { data: liveClasses = [], isLoading: _isLoading } = useQuery({
     queryKey: qk.teacherClasses(),
     queryFn: async () => {
       const res = await getTeacherClasses();
       return res.data?.data || [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
 
   const classes = liveClasses.length > 0 ? liveClasses : reduxClasses;

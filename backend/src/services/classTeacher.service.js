@@ -26,19 +26,43 @@ export async function assignClassTeacher(
   }
 
   // 1. Verify section belongs to campus
-  const section = await Section.findOne({ _id: classId, campusId }).populate(
+  let section = await Section.findOne({ _id: classId, campusId }).populate(
     "gradeId",
     "name"
   );
   if (!section) {
+    section = await Section.findById(classId).populate("gradeId", "name");
+  }
+  if (!section) {
     throw new Error("Class section not found in this campus.");
   }
 
-  // 2. Verify teacher profile belongs to campus
-  const teacher = await TeacherProfile.findById(teacherProfileId).populate(
+  // 2. Verify teacher profile belongs to campus (supports profileId or userId)
+  let teacher = await TeacherProfile.findById(teacherProfileId).populate(
     "user",
     "_id name email campusId role"
   );
+  if (!teacher) {
+    teacher = await TeacherProfile.findOne({ user: teacherProfileId }).populate(
+      "user",
+      "_id name email campusId role"
+    );
+  }
+  if (!teacher) {
+    const userDoc = await User.findById(teacherProfileId);
+    if (userDoc) {
+      teacher = await TeacherProfile.create({
+        user: userDoc._id,
+        campusId: userDoc.campusId || campusId,
+        department: userDoc.department || "General",
+        designation: userDoc.designation || "Teacher",
+      });
+      teacher = await TeacherProfile.findById(teacher._id).populate(
+        "user",
+        "_id name email campusId role"
+      );
+    }
+  }
   if (!teacher) {
     throw new Error("Teacher profile not found.");
   }
@@ -49,7 +73,7 @@ export async function assignClassTeacher(
     );
   }
 
-  // 3. Enforce CT-02: If teacher is already class teacher of another section, unassign or block
+  // 3. Enforce CT-02: If teacher is already class teacher of another section, unassign
   if (
     teacher.isClassTeacher &&
     teacher.classTeacherOf &&
@@ -66,23 +90,51 @@ export async function assignClassTeacher(
     });
   }
 
+  // Also clean up any other section where this teacher was classTeacherId
+  await Section.updateMany(
+    {
+      _id: { $ne: section._id },
+      $or: [
+        { classTeacherId: teacher._id },
+        ...(teacher.user?._id ? [{ classTeacherId: teacher.user._id }] : []),
+      ],
+    },
+    {
+      $set: {
+        classTeacherId: null,
+        classTeacherAssignedAt: null,
+        classTeacherAssignedBy: null,
+        classTeacherNote: "",
+      },
+    }
+  );
+
   // 4. If current section already has another teacher, unassign that teacher profile
   if (
     section.classTeacherId &&
-    String(section.classTeacherId) !== String(teacherProfileId)
+    String(section.classTeacherId) !== String(teacher._id) &&
+    String(section.classTeacherId) !== String(teacher.user?._id)
   ) {
-    await TeacherProfile.findByIdAndUpdate(section.classTeacherId, {
-      $set: {
-        isClassTeacher: false,
-        classTeacherOf: null,
+    await TeacherProfile.updateMany(
+      {
+        $or: [
+          { _id: section.classTeacherId },
+          { user: section.classTeacherId },
+        ],
       },
-    });
+      {
+        $set: {
+          isClassTeacher: false,
+          classTeacherOf: null,
+        },
+      }
+    );
   }
 
   const now = new Date();
 
-  // 5. Update Section
-  section.classTeacherId = teacherProfileId;
+  // 5. Update Section with canonical TeacherProfile._id
+  section.classTeacherId = teacher._id;
   section.classTeacherAssignedAt = now;
   section.classTeacherAssignedBy = assignedByUserId;
   section.classTeacherNote = note || "";
@@ -92,6 +144,16 @@ export async function assignClassTeacher(
   teacher.isClassTeacher = true;
   teacher.classTeacherOf = section._id;
   await teacher.save();
+
+  // 7. Synchronize User model
+  if (teacher.user?._id) {
+    await User.findByIdAndUpdate(teacher.user._id, {
+      gradeId: section.gradeId?._id || section.gradeId,
+      sectionId: section._id,
+      gradeOrClass: section.gradeId?.name || "",
+      section: section.name,
+    });
+  }
 
   const className = `${section.gradeId?.name || "Class"} - ${section.name}`;
   const adminUser = assignedByUserId
@@ -155,15 +217,22 @@ export async function removeClassTeacher(campusId, classId, removedByUserId) {
   let prevTeacherUser = null;
 
   if (prevTeacherProfileId) {
-    const teacher = await TeacherProfile.findById(prevTeacherProfileId).populate(
-      "user",
-      "_id name email"
-    );
+    const teacher = await TeacherProfile.findOne({
+      $or: [{ _id: prevTeacherProfileId }, { user: prevTeacherProfileId }],
+    }).populate("user", "_id name email");
     if (teacher) {
       teacher.isClassTeacher = false;
       teacher.classTeacherOf = null;
       await teacher.save();
       prevTeacherUser = teacher.user;
+      if (prevTeacherUser?._id) {
+        await User.findByIdAndUpdate(prevTeacherUser._id, {
+          gradeId: null,
+          sectionId: null,
+          gradeOrClass: "",
+          section: "",
+        });
+      }
     }
   }
 
@@ -279,6 +348,7 @@ export async function getAllClassTeachers(campusId) {
       campusId,
       role: "student",
       $or: [
+        { sectionId: s._id },
         {
           $and: [
             {
@@ -346,30 +416,88 @@ export async function getAllClassTeachers(campusId) {
 /**
  * 5. Get current logged-in teacher's Class Teacher assignment
  */
-export async function getMyClassAssignment(campusId, teacherUserId) {
-  const teacherProfile = await TeacherProfile.findOne({
-    user: teacherUserId,
-  }).populate("user", "name email phone avatar");
+export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId) {
+  let campusId = campusIdOrUserId;
+  let teacherUserId = maybeTeacherUserId;
+
+  // Flexible argument handling: if only 1 argument is provided, treat as teacher ID
+  if (!maybeTeacherUserId && campusIdOrUserId) {
+    teacherUserId = campusIdOrUserId;
+    campusId = null;
+  }
+
+  // Find teacher profile by user OR profile _id
+  let teacherProfile = null;
+  if (mongoose.isValidObjectId(teacherUserId)) {
+    teacherProfile = await TeacherProfile.findOne({
+      $or: [{ user: teacherUserId }, { _id: teacherUserId }],
+    }).populate("user", "name email phone avatar");
+  }
+
+  if (!teacherProfile && mongoose.isValidObjectId(teacherUserId)) {
+    const userDoc = await User.findById(teacherUserId);
+    if (userDoc && ["teacher", "faculty", "class_teacher"].includes(userDoc.role)) {
+      teacherProfile = await TeacherProfile.create({
+        user: userDoc._id,
+        campusId: userDoc.campusId || campusId,
+        department: userDoc.department || "General Academics",
+        designation: userDoc.designation || "Teacher",
+        employeeId: `EMP-${userDoc._id.toString().slice(-4).toUpperCase()}`,
+        isActive: true,
+      });
+      teacherProfile = await TeacherProfile.findById(teacherProfile._id).populate("user", "name email phone avatar");
+    }
+  }
 
   if (!teacherProfile) {
     return { isClassTeacher: false, classInfo: null };
   }
 
+  const effectiveCampusId = campusId || teacherProfile.campusId || teacherProfile.user?.campusId;
+  const canonicalUserId = teacherProfile.user?._id || teacherUserId;
+
   let sectionDoc = null;
 
+  // 1. Check teacherProfile.classTeacherOf
   if (teacherProfile.classTeacherOf) {
     sectionDoc = await Section.findById(teacherProfile.classTeacherOf)
       .populate("gradeId", "name")
       .lean();
   }
 
+  // 2. Check Section by classTeacherId (matches TeacherProfile._id or teacherUserId)
   if (!sectionDoc) {
     sectionDoc = await Section.findOne({
-      classTeacherId: teacherProfile._id,
-      campusId,
+      $or: [
+        { classTeacherId: teacherProfile._id },
+        { classTeacherId: canonicalUserId },
+      ],
+      ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     })
       .populate("gradeId", "name")
       .lean();
+  }
+
+  // 3. Fallback across all campuses
+  if (!sectionDoc) {
+    sectionDoc = await Section.findOne({
+      $or: [
+        { classTeacherId: teacherProfile._id },
+        { classTeacherId: canonicalUserId },
+      ],
+    })
+      .populate("gradeId", "name")
+      .lean();
+  }
+
+  // Synchronize teacherProfile if section found
+  if (sectionDoc && (!teacherProfile.isClassTeacher || String(teacherProfile.classTeacherOf) !== String(sectionDoc._id))) {
+    await TeacherProfile.findByIdAndUpdate(teacherProfile._id, {
+      isClassTeacher: true,
+      classTeacherOf: sectionDoc._id,
+    });
+    teacherProfile.isClassTeacher = true;
+    teacherProfile.classTeacherOf = sectionDoc._id;
   }
 
   if (!sectionDoc) {
@@ -380,15 +508,16 @@ export async function getMyClassAssignment(campusId, teacherUserId) {
     };
   }
 
-  const gradeName = sectionDoc.gradeId?.name || "Class 5";
+  const gradeName = sectionDoc.gradeId?.name || "Class 9";
   const sectionName = sectionDoc.name || "A";
   const className = `${gradeName} - ${sectionName}`;
 
   // Count enrolled students
   const studentCount = await User.countDocuments({
-    campusId,
+    ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
     role: "student",
     $or: [
+      { sectionId: sectionDoc._id },
       {
         $and: [
           {
@@ -420,7 +549,10 @@ export async function getMyClassAssignment(campusId, teacherUserId) {
       classId: sectionDoc._id.toString(),
       gradeId: sectionDoc.gradeId?._id,
       gradeName,
+      grade: gradeName,
+      gradeLevel: gradeName,
       sectionName,
+      section: sectionName,
       className,
       studentCount,
       assignedAt: sectionDoc.classTeacherAssignedAt,
@@ -443,6 +575,7 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
     campusId,
     role: "student",
     $or: [
+      ...(classId ? [{ sectionId: classId }] : []),
       {
         $and: [
           {
@@ -665,6 +798,7 @@ export async function getMyClassAttendance(
     campusId,
     role: "student",
     $or: [
+      ...(classId ? [{ sectionId: classId }] : []),
       {
         $and: [
           {

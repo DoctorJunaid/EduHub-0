@@ -194,8 +194,8 @@ async function runPresentationSeed() {
 
   const facultyData = [
     {
-      name: "Dr. Tariq Mansoor",
-      email: "tariq.mansoor@eduhub.com",
+      name: "Sir Hamza Tariq",
+      email: "hamza.tariq@eduhub.com",
       department: "Mathematics",
       designation: "Senior Lecturer & HOD",
       qualification: "Ph.D. in Applied Mathematics",
@@ -205,7 +205,7 @@ async function runPresentationSeed() {
       primarySubject: "Mathematics",
     },
     {
-      name: "Prof. Ayesha Siddiqui",
+      name: "Madam Ayesha Siddiqui",
       email: "ayesha.siddiqui@eduhub.com",
       department: "Physics",
       designation: "Associate Professor",
@@ -216,8 +216,8 @@ async function runPresentationSeed() {
       primarySubject: "Physics",
     },
     {
-      name: "Sir Hamza Farooq",
-      email: "hamza.farooq@eduhub.com",
+      name: "Sir Muhammad Usman",
+      email: "muhammad.usman@eduhub.com",
       department: "Computer Science",
       designation: "Assistant Professor",
       qualification: "MS in Computer Science",
@@ -227,8 +227,8 @@ async function runPresentationSeed() {
       primarySubject: "Computer Science",
     },
     {
-      name: "Dr. Fatima Zahra",
-      email: "fatima.zahra@eduhub.com",
+      name: "Sir Abdul Rehman",
+      email: "abdul.rehman@eduhub.com",
       department: "Chemistry",
       designation: "Lecturer",
       qualification: "Ph.D. in Chemistry",
@@ -238,8 +238,8 @@ async function runPresentationSeed() {
       primarySubject: "Chemistry",
     },
     {
-      name: "Mr. Usman Bilal",
-      email: "usman.bilal@eduhub.com",
+      name: "Sir Farhan Ali",
+      email: "farhan.ali@eduhub.com",
       department: "English",
       designation: "Senior Instructor",
       qualification: "M.A. English Literature",
@@ -398,7 +398,7 @@ async function runPresentationSeed() {
 
   // Create standard schedule matrix
   const timetableMatrix = [
-    // Period 1: Class 10-A Math (Dr. Tariq Mansoor, Room 101)
+    // Period 1: Class 10-A Math (Sir Hamza Tariq, Room 101)
     {
       institutionType: "School",
       gradeId: class10._id,
@@ -411,7 +411,7 @@ async function runPresentationSeed() {
       endTime: "08:45",
       status: "Active",
     },
-    // Period 2: Class 9-A Math (Dr. Tariq Mansoor, Room 102)
+    // Period 2: Class 9-A Math (Sir Hamza Tariq, Room 102)
     {
       institutionType: "School",
       gradeId: class9._id,
@@ -424,7 +424,7 @@ async function runPresentationSeed() {
       endTime: "09:30",
       status: "Active",
     },
-    // Period 3: Class 10-B Math (Dr. Tariq Mansoor, Room 103)
+    // Period 3: Class 10-B Math (Sir Hamza Tariq, Room 103)
     {
       institutionType: "School",
       gradeId: class10._id,
@@ -437,7 +437,7 @@ async function runPresentationSeed() {
       endTime: "10:30",
       status: "Active",
     },
-    // Period 1: Class 10-B Physics (Prof. Ayesha Siddiqui, Lab 1)
+    // Period 1: Class 10-B Physics (Madam Ayesha Siddiqui, Lab 1)
     {
       institutionType: "School",
       gradeId: class10._id,
@@ -463,7 +463,7 @@ async function runPresentationSeed() {
       endTime: "11:15",
       status: "Active",
     },
-    // Period 2: Class 10-A CS (Sir Hamza Farooq, CS Lab)
+    // Period 2: Class 10-A CS (Sir Muhammad Usman, CS Lab)
     {
       institutionType: "School",
       gradeId: class10._id,
@@ -476,7 +476,7 @@ async function runPresentationSeed() {
       endTime: "09:30",
       status: "Active",
     },
-    // Period 5: Class 9-A CS (Sir Hamza Farooq, CS Lab)
+    // Period 5: Class 9-A CS (Sir Muhammad Usman, CS Lab)
     {
       institutionType: "School",
       gradeId: class9._id,
@@ -489,7 +489,7 @@ async function runPresentationSeed() {
       endTime: "12:15",
       status: "Active",
     },
-    // Period 3: Class 10-A Chemistry (Dr. Fatima Zahra, Science Lab)
+    // Period 3: Class 10-A Chemistry (Sir Abdul Rehman, Science Lab)
     {
       institutionType: "School",
       gradeId: class10._id,
@@ -502,7 +502,7 @@ async function runPresentationSeed() {
       endTime: "10:30",
       status: "Active",
     },
-    // Period 4: Class 9-A English (Mr. Usman Bilal, Room 102)
+    // Period 4: Class 9-A English (Sir Farhan Ali, Room 102)
     {
       institutionType: "School",
       gradeId: class9._id,
@@ -631,7 +631,7 @@ async function runPresentationSeed() {
   }
 
   // TODAY SESSIONS:
-  // Dr. Tariq Mansoor (3 classes today):
+  // Sir Hamza Tariq (3 classes today):
   // 1. Period 1: Completed (+1.0 credit)
   await createSession({
     timetableId: createdSlots[0]._id,
@@ -696,7 +696,7 @@ async function runPresentationSeed() {
     },
   });
 
-  // Mr. Zeeshan Ali (Substituted today for Dr. Fatima Zahra in Chemistry):
+  // Mr. Zeeshan Ali (Substituted today for Sir Abdul Rehman in Chemistry):
   // Bonus PKR 800 Pending Manager Review
   await createSession({
     timetableId: createdSlots[7]._id,
@@ -706,7 +706,7 @@ async function runPresentationSeed() {
     className: "Class 10",
     section: "Section A",
     subject: "Chemistry",
-    originalTeacherId: teachers[3].user._id, // Dr. Fatima Zahra (Original)
+    originalTeacherId: teachers[3].user._id, // Sir Abdul Rehman (Original)
     actualTeacherId: teachers[5].user._id,    // Mr. Zeeshan Ali (Substitute)
     date: today,
     period: 3,
@@ -724,7 +724,7 @@ async function runPresentationSeed() {
     },
   });
 
-  // Sir Hamza Farooq (CS - Period 2 Completed today)
+  // Sir Muhammad Usman (CS - Period 2 Completed today)
   await createSession({
     timetableId: createdSlots[5]._id,
     gradeId: class10._id,
@@ -745,7 +745,7 @@ async function runPresentationSeed() {
   });
 
   // HISTORICAL SESSIONS (PAST 7 DAYS):
-  // 1. A PENDING DISPUTE for Dr. Tariq Mansoor (ready for live resolution demo!)
+  // 1. A PENDING DISPUTE for Sir Hamza Tariq (ready for live resolution demo!)
   const disputeDate = new Date(today);
   disputeDate.setDate(disputeDate.getDate() - 2);
 
@@ -781,7 +781,7 @@ async function runPresentationSeed() {
     },
   });
 
-  // 2. A RESOLVED DISPUTE from last week for Mr. Usman Bilal
+  // 2. A RESOLVED DISPUTE from last week for Sir Farhan Ali
   const resolvedDate = new Date(today);
   resolvedDate.setDate(resolvedDate.getDate() - 5);
 
@@ -858,7 +858,7 @@ async function runPresentationSeed() {
     pastDay.setDate(pastDay.getDate() - dayOffset);
     if (pastDay.getDay() === 0 || pastDay.getDay() === 6) continue; // Skip weekends
 
-    // Dr. Tariq Math
+    // Sir Hamza Tariq Math
     await createSession({
       timetableId: createdSlots[0]._id,
       gradeId: class10._id,
@@ -940,7 +940,7 @@ async function runPresentationSeed() {
       let checkOut = "14:10";
       let remarks = "On duty";
 
-      if (t.name === "Dr. Fatima Zahra" && i === 0) {
+      if (t.name === "Sir Abdul Rehman" && i === 0) {
         status = "On Leave";
         checkIn = "";
         checkOut = "";
@@ -992,8 +992,8 @@ async function runPresentationSeed() {
       allowancesTotal += 800;
     }
 
-    // Dr. Tariq Mansoor has an approved deduction
-    if (t.name === "Dr. Tariq Mansoor") {
+    // Sir Hamza Tariq has an approved deduction
+    if (t.name === "Sir Hamza Tariq") {
       deductions.push({
         reason: "Unexcused absence on Period 3 class slot",
         category: "Absent",
@@ -1047,16 +1047,16 @@ async function runPresentationSeed() {
   console.log("   Campus:   Islamabad Main Campus");
   console.log("\n2. Teacher Portals (Any Faculty Member):");
   console.log("   Password for ALL teachers: teacher123");
-  console.log("   - Dr. Tariq Mansoor (HOD Math):     tariq.mansoor@eduhub.com  (Has Today classes, 1 scheduled, 1 pending dispute!)");
-  console.log("   - Prof. Ayesha Siddiqui (Physics):   ayesha.siddiqui@eduhub.com");
-  console.log("   - Sir Hamza Farooq (Computer Sci):   hamza.farooq@eduhub.com");
+  console.log("   - Sir Hamza Tariq (HOD Math):        hamza.tariq@eduhub.com  (Has Today classes, 1 scheduled, 1 pending dispute!)");
+  console.log("   - Madam Ayesha Siddiqui (Physics):   ayesha.siddiqui@eduhub.com");
+  console.log("   - Sir Muhammad Usman (Computer Sci): muhammad.usman@eduhub.com");
   console.log("   - Mr. Zeeshan Ali (Substitute Hero): zeeshan.ali@eduhub.com    (Has PKR 800 pending substitute bonus!)");
   console.log("\n3. Live Demo Scenarios Ready in Campus Manager:");
   console.log("   - Teaching Performance: /teaching-performance (Faculty cards, credits, substitute assigner)");
   console.log("   - Salary Review Center: /salary-review-center");
-  console.log("     * Tab 1: Pending Deductions (Dr. Tariq Mansoor PKR 500)");
+  console.log("     * Tab 1: Pending Deductions (Sir Hamza Tariq PKR 500)");
   console.log("     * Tab 2: Pending Bonuses (Mr. Zeeshan Ali PKR 800 substitute bonus)");
-  console.log("     * Tab 3: Disputes (Dr. Tariq Mansoor classroom relocation dispute ready to approve live!)");
+  console.log("     * Tab 3: Disputes (Sir Hamza Tariq classroom relocation dispute ready to approve live!)");
   console.log("   - Salary & Payroll:     /payroll/generate (September 2026 payslips with allowances & deductions)");
   console.log("------------------------------------------------------------------\n");
 

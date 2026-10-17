@@ -46,7 +46,7 @@ export const NewTicketDialog = ({
       ? categories
       : CANONICAL_SUPPORT_CATEGORIES;
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
@@ -55,19 +55,30 @@ export const NewTicketDialog = ({
       return;
     }
 
+    const readAsDataURL = (file) =>
+      new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(file);
+      });
+
     const newAttachments = [...attachments];
     for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`File "${file.name}" exceeds 5MB limit`);
+      if (file.size > 3 * 1024 * 1024) {
+        toast.error(`File "${file.name}" exceeds 3MB limit`);
         continue;
       }
-      newAttachments.push({
-        name: file.name,
-        size: file.size,
-        url: URL.createObjectURL(file),
-      });
+      const dataUrl = await readAsDataURL(file);
+      if (dataUrl) {
+        newAttachments.push({
+          name: file.name,
+          size: file.size,
+          url: dataUrl,
+        });
+      }
     }
-    setAttachments(newAttachments);
+    setAttachments(newAttachments.slice(0, 3));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 

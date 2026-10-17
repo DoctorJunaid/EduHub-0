@@ -98,8 +98,11 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
   const [isFanned, setIsFanned] = useState(false);
   const [isIntroComplete, setIsIntroComplete] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [selectedCard, setSelectedCard] = useState(null);
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === 'undefined' ? 1024 : window.innerWidth
+  );
   const stageRef = useRef(null);
   const hoverTimerRef = useRef(null);
 
@@ -120,6 +123,12 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
     };
   }, []);
 
+  useEffect(() => {
+    const updateViewportWidth = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', updateViewportWidth);
+    return () => window.removeEventListener('resize', updateViewportWidth);
+  }, []);
+
   const handleCardHover = (index) => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
@@ -128,22 +137,16 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
     if (index !== null) {
       setHoveredIndex(index);
     } else {
-      hoverTimerRef.current = setTimeout(() => {
-        setHoveredIndex(null);
-      }, 75);
+      hoverTimerRef.current = setTimeout(() => setHoveredIndex(null), 75);
     }
   };
 
-  // 3D Parallax tilt on mouse movement
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (event) => {
     if (!stageRef.current) return;
     const rect = stageRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 to 1
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2; // -1 to 1
-    setMouseTilt({
-      x: x * 5, // subtle rotateY
-      y: -y * 3.5  // subtle rotateX
-    });
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    setMouseTilt({ x: x * 5, y: -y * 3.5 });
   };
 
   const handleMouseLeave = () => {
@@ -189,34 +192,35 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
       </motion.h1>
 
       {/* ─── The Grand Fan Deck Stage (0.6s – 1.6s bloom) ─── */}
-      <div 
+      <div
         className="hero-deck-stage"
         ref={stageRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        <motion.div 
+        <motion.div
           className="hero-deck-wrapper"
           animate={{
-            rotateY: mouseTilt.x,
-            rotateX: mouseTilt.y
+            rotateY: viewportWidth <= 640 ? 0 : mouseTilt.x,
+            rotateX: viewportWidth <= 640 ? 0 : mouseTilt.y,
           }}
           transition={{ type: 'spring', stiffness: 200, damping: 25 }}
         >
-          {/* ─── 7-Card Fan Arc Deck ─── */}
-          {HERO_CARDS.map((card, index) => (
-            <HeroCard
-              key={card.id}
-              card={card}
-              index={index}
-              totalCards={HERO_CARDS.length}
-              isFanned={isFanned}
-              isIntroComplete={isIntroComplete}
-              hoveredIndex={hoveredIndex}
-              onHover={handleCardHover}
-              onSelect={handleCardClick}
-            />
-          ))}
+            {/* ─── 7-Card Fan Arc Deck ─── */}
+            {HERO_CARDS.map((card, index) => (
+              <HeroCard
+                key={card.id}
+                card={card}
+                index={index}
+                totalCards={HERO_CARDS.length}
+                isFanned={isFanned}
+                isIntroComplete={isIntroComplete}
+                hoveredIndex={hoveredIndex}
+                onHover={handleCardHover}
+                mobileLayout={viewportWidth <= 640}
+                onSelect={handleCardClick}
+              />
+            ))}
         </motion.div>
       </div>
 

@@ -84,21 +84,43 @@ export const selectStudentDashboard = createSelector(
     const rawSubjects = Array.isArray(student.subjects)
       ? student.subjects
       : String(student.subjects || "").split(",");
-    const className = student.program || student.gradeOrClass;
-    const courses = hasExplicitSubjects
-      ? [
-          ...new Set(
-            rawSubjects
-              .map((subject) =>
-                typeof subject === "object"
-                  ? subject.name || subject.title || subject.subject || ""
-                  : subject,
-              )
-              .map((subject) => String(subject).trim())
-              .filter(Boolean),
-          ),
-        ]
-      : [];
+    const sectionTimetable =
+      className && student.section
+        ? timetable.filter(
+            (session) =>
+              (session.program === className ||
+                session.gradeOrClass === className ||
+                session.className === className) &&
+              (session.section === student.section ||
+                session.section === `Section ${student.section}` ||
+                !session.section ||
+                session.section === "All sections") &&
+              !session.isBreak &&
+              session.slotType !== "break",
+          )
+        : [];
+
+    const courses =
+      hasExplicitSubjects && rawSubjects.filter(Boolean).length > 0
+        ? [
+            ...new Set(
+              rawSubjects
+                .map((subject) =>
+                  typeof subject === "object"
+                    ? subject.name || subject.title || subject.subject || ""
+                    : subject,
+                )
+                .map((subject) => String(subject).trim())
+                .filter(Boolean),
+            ),
+          ]
+        : [
+            ...new Set(
+              sectionTimetable
+                .map((s) => (s.subject || s.subjectName || "").trim())
+                .filter(Boolean),
+            ),
+          ];
 
     // Match the existing program/section relationship; never include other sections to fill the reference.
     const classes =
@@ -109,12 +131,16 @@ export const selectStudentDashboard = createSelector(
                 (session.program === className ||
                   session.gradeOrClass === className ||
                   session.className === className) &&
-                session.section === student.section &&
-                courses.some(
-                  (course) =>
-                    course.toLowerCase() ===
-                    (session.subject || "").trim().toLowerCase(),
-                ),
+                (session.section === student.section ||
+                  session.section === `Section ${student.section}` ||
+                  !session.section ||
+                  session.section === "All sections") &&
+                (courses.length === 0 ||
+                  courses.some(
+                    (course) =>
+                      course.toLowerCase() ===
+                      (session.subject || "").trim().toLowerCase(),
+                  )),
             )
             .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""))
         : [];

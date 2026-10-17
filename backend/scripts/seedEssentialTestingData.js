@@ -5,7 +5,7 @@
  * - Super Admin (junaid.aurangzeb5@gmail.com / 12345678)
  * - Institute Admin (khan109299@gmail.com / 123456)
  * - Campus Manager (manager@eduhub.com / manager123)
- * - Faculty / Teacher (tariq.mansoor@eduhub.com / teacher123)
+ * - Faculty / Teacher (hamza.tariq@eduhub.com / teacher123)
  * - Student (muhammad.ali1@eduhub.com / student123)
  * 
  * Note: Keeps data size strictly controlled ("not too many data") while ensuring
@@ -652,7 +652,7 @@ async function runSeed() {
     {
       userId: sampleStudent._id,
       title: "New Assignment Posted: Mathematics Ex 5.2",
-      message: "Dr. Tariq Mansoor assigned 'Quadratic Equations Problem Set'. Due date is October 18, 2026.",
+      message: "Sir Hamza Tariq assigned 'Quadratic Equations Problem Set'. Due date is October 18, 2026.",
       type: "broadcast",
       severity: "info",
       isRead: false,
@@ -800,7 +800,7 @@ async function runSeed() {
   console.log("1. Super Admin:      junaid.aurangzeb5@gmail.com  / 12345678");
   console.log("2. Institute Admin:  khan109299@gmail.com          / 123456");
   console.log("3. Campus Manager:   manager@eduhub.com            / manager123");
-  console.log("4. Teacher / Faculty: tariq.mansoor@eduhub.com     / teacher123");
+  console.log("4. Teacher / Faculty: hamza.tariq@eduhub.com     / teacher123");
   console.log("5. Student:          muhammad.ali1@eduhub.com      / student123");
   console.log("========================================================\n");
 

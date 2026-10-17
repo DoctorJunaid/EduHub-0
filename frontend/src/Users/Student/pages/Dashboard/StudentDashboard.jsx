@@ -17,6 +17,8 @@ import {
   Clock3,
   ArrowRight,
   Users,
+  GraduationCap,
+  MessageSquare,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -126,6 +128,41 @@ export default function StudentDashboard() {
 
   return (
     <section className="student-dashboard" aria-label="Student dashboard">
+      {classTeacher?.name && (
+        <Card className="sd-teacher-banner p-3 flex flex-row items-center justify-between gap-3 border-emerald-200/80 bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 dark:from-emerald-950/25 dark:via-background dark:to-emerald-950/10">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+              {classTeacher.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Class Teacher
+                </span>
+                {classTeacher.sectionName && (
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-emerald-300 font-medium">
+                    Section {classTeacher.sectionName}
+                  </Badge>
+                )}
+              </div>
+              <h3 className="text-sm font-bold text-foreground leading-snug truncate">{classTeacher.name}</h3>
+              <p className="text-xs text-muted-foreground truncate">
+                {classTeacher.department || classTeacher.designation || "Class Mentor"}
+                {classTeacher.email && ` · ${classTeacher.email}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300">
+              <Link to="/student/support?category=Academic">
+                <MessageSquare className="w-3.5 h-3.5" />
+                Ask Teacher
+              </Link>
+            </Button>
+          </div>
+        </Card>
+      )}
       <div className="sd-stats">
         {stats.map((stat) => (
           <SummaryCard key={stat.label} {...stat} className="sd-stat" />

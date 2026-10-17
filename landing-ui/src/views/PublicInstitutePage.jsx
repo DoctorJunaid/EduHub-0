@@ -181,7 +181,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
   const otherInstitutes = institutes.filter(i => (i.id !== inst.id && i._id !== inst.id))
 
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
+    <div className="institute-public-page relative w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
 
       {/* Floating Dynamic Navbar */}
       <Navbar
@@ -220,7 +220,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
           <div className="rounded-3xl overflow-hidden bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7)]">
             
             {/* Campus Panoramic Image Banner */}
-            <div className="relative h-72 sm:h-96 w-full overflow-hidden">
+            <div className="institute-hero-banner relative h-[32rem] sm:h-96 w-full overflow-hidden">
               <img 
                 src={inst.image} 
                 alt={inst.name} 
@@ -230,7 +230,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
 
               {/* Minimal Clean Top Meta Bar */}
-              <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
+              <div className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-6 flex items-center justify-between gap-2 z-20">
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-md bg-slate-950/80 backdrop-blur-md border border-white/20 text-white font-mono text-xs font-bold">
                     {inst.nationalRank || `#0${inst.rank} National Rank`}
@@ -248,7 +248,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
               </div>
 
               {/* Hero Bottom Information */}
-              <div className="absolute bottom-6 left-6 right-6 z-20 text-white flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 z-20 text-white flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
                 <div className="flex items-start sm:items-center gap-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 border border-white/30 shadow-xl">
                     <img 
@@ -258,15 +258,15 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
                       className="w-full h-full object-contain" 
                     />
                   </div>
-                  <div>
-                    <h1 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-white leading-tight">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-4xl font-black font-display tracking-tight text-white leading-tight break-words">
                       {inst.fullName || inst.name}
                     </h1>
                     <p className="text-xs sm:text-sm text-white/80 font-medium mt-1">
                       {inst.motto}
                     </p>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-white/70 mt-2">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-4 text-xs text-white/70 mt-2">
+                      <span className="flex items-center gap-1 break-words">
                         <MapPin size={14} /> {inst.address}
                       </span>
                       <span>•</span>
@@ -274,7 +274,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
                         <Phone size={14} /> {inst.phone}
                       </span>
                       <span>•</span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 break-all">
                         <Envelope size={14} /> {inst.email}
                       </span>
                     </div>
@@ -282,17 +282,17 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
                 </div>
 
                 {/* Primary CTAs */}
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3 md:shrink-0">
                   <button
                     onClick={() => handleOpenApply()}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
+                    className="w-full sm:w-auto justify-center sm:justify-start px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
                   >
                     <GraduationCap size={16} weight="bold" />
                     <span>Apply for Admission</span>
                   </button>
                   <button
                     onClick={handleDownloadProspectus}
-                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm border border-white/30 transition-all flex items-center gap-1.5"
+                    className="w-full sm:w-auto justify-center sm:justify-start px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm border border-white/30 transition-all flex items-center gap-1.5"
                   >
                     <DownloadSimple size={15} />
                     <span>Prospectus</span>
@@ -355,7 +355,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
 
         {/* ─── TOP SECTION: TOP ALUMNI OF THIS INSTITUTION ─── */}
         {inst.alumniList && inst.alumniList.length > 0 && (
-          <section id="alumni" className="max-w-7xl mx-auto px-6 mb-20">
+          <section id="alumni" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
                 <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
@@ -456,7 +456,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
         )}
 
         {/* ─── SECTION 2: ACADEMIC PROGRAMS & CURRICULA ─── */}
-        <section id="programs" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+        <section id="programs" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
               <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
@@ -536,7 +536,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
 
         {/* ─── SECTION 3: FACULTY & DEANS ─── */}
         {inst.facultyList && inst.facultyList.length > 0 && (
-          <section id="faculty" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+          <section id="faculty" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
             <div className="mb-10">
               <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
                 Faculty Directory
@@ -599,7 +599,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
 
         {/* ─── SECTION 4: CAMPUS FACILITIES & INFRASTRUCTURE ─── */}
         {inst.facilitiesList && inst.facilitiesList.length > 0 && (
-          <section id="facilities" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+          <section id="facilities" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
             <div className="mb-10">
               <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
                 Campus Infrastructure
@@ -650,7 +650,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
         )}
 
         {/* ─── SECTION 5: ADMISSIONS PROCESS & FEE STRUCTURE ─── */}
-        <section id="admissions" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+        <section id="admissions" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
           <div className="mb-10">
             <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
               Admissions Guide
@@ -738,7 +738,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
 
         {/* ─── SECTION 6: AFFILIATED CAMPUSES ─── */}
         {inst.branches && inst.branches.length > 0 && (
-          <section id="campuses" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+          <section id="campuses" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
             <div className="mb-8">
               <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
                 Campus Locations
@@ -768,7 +768,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
 
         {/* ─── SECTION 7: CAMPUS ARCHITECTURE & RESEARCH SPACES ─── */}
         {inst.gallery && inst.gallery.length > 0 && (
-          <section id="gallery" className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+          <section id="gallery" className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
               <div>
                 <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
@@ -805,7 +805,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
         )}
 
         {/* ─── SECTION 8: OTHER MEMBER INSTITUTIONS ─── */}
-        <section className="max-w-7xl mx-auto px-6 mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-16">
+        <section className="max-w-7xl mx-auto px-6 mb-12 sm:mb-20 border-t border-slate-200/60 dark:border-slate-800/60 pt-10 sm:pt-16">
           <div className="flex items-center justify-between gap-4 mb-8">
             <div>
               <p className="text-xs font-mono font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase mb-1">
@@ -871,7 +871,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6"
+              className="institute-apply-dialog relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6"
             >
               <button
                 onClick={() => setIsApplyModalOpen(false)}
