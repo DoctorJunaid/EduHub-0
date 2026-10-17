@@ -10,7 +10,7 @@
 /* ── Two-Column Layout ── */
 .super-broadcasts-layout {
   display: grid;
-  grid-template-columns: minmax(360px, 420px) 1fr;
+  grid-template-columns: minmax(0, 420px) 1fr;
   gap: 24px;
   align-items: start;
 }

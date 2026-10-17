@@ -224,7 +224,7 @@ export default function PlansManagement() {
       </div>
 
       {/* Plan Cards Grid / Skeletons / Empty */}
-      <div className="plans-grid">
+      <div className="plans-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 w-full" style={{ gap: "20px" }}>
         {loading && !hasLoaded ? (
           <>
             <PlanSkeletonCard />
@@ -373,8 +373,8 @@ export default function PlansManagement() {
 
       {/* ── CREATE / EDIT MODAL ── */}
       {modalOpen && (
-        <div className="plans-modal-backdrop" onClick={() => !saving && setModalOpen(false)}>
-          <div className="plans-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="plans-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => !saving && setModalOpen(false)}>
+          <div className="plans-modal w-full max-w-[calc(100vw-24px)] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="plans-modal-header">
               <div className="modal-title-wrap">
                 <Layers size={20} className="modal-title-icon" />
@@ -580,8 +580,8 @@ export default function PlansManagement() {
 
       {/* ── DELETE MODAL ── */}
       {deleteModalOpen && planToDelete && (
-        <div className="plans-modal-backdrop" onClick={() => !deleting && setDeleteModalOpen(false)}>
-          <div className="plans-modal delete-confirm" onClick={(e) => e.stopPropagation()}>
+        <div className="plans-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => !deleting && setDeleteModalOpen(false)}>
+          <div className="plans-modal delete-confirm w-full max-w-[calc(100vw-24px)] sm:max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="delete-modal-content">
               <div className="delete-icon-wrap">
                 <AlertTriangle size={32} />
