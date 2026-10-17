@@ -513,7 +513,7 @@ export const getStudentPortal = async (req, res) => {
     }
 
     const campusId = student.campusId;
-    const { gradeName, sectionName, subjects, classTeacher } = await resolveStudentSubjects(student, campusId);
+    let { gradeName, sectionName, subjects, classTeacher } = await resolveStudentSubjects(student, campusId);
 
     const className = gradeName || student.gradeOrClass || student.program || "Class 9";
     const section = sectionName || student.section || "Section A";
@@ -688,48 +688,49 @@ export const getStudentPortal = async (req, res) => {
         });
       }
     }
-    // Resolve Class Teacher for this student's class and section
-    let classTeacher = null;
-    try {
-      const cleanClassName = className.split(" - ")[0].trim();
-      const cleanSectionName = (section || "A").replace(/^Section\s*/i, "").trim();
+    // Resolve Class Teacher for this student's class and section if not already found
+    if (!classTeacher) {
+      try {
+        const cleanClassName = className.split(" - ")[0].trim();
+        const cleanSectionName = (section || "A").replace(/^Section\s*/i, "").trim();
 
-      const gradeDoc = await Grade.findOne({
-        campusId,
-        name: { $regex: new RegExp(`^${cleanClassName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
-      }).lean();
-
-      if (gradeDoc) {
-        const secDoc = await Section.findOne({
+        const gradeDoc = await Grade.findOne({
           campusId,
-          gradeId: gradeDoc._id,
-          name: { $regex: new RegExp(`^${cleanSectionName}$`, "i") },
-        })
-          .populate({
-            path: "classTeacherId",
-            populate: {
-              path: "user",
-              select: "name email phone avatar designation department",
-            },
-          })
-          .lean();
+          name: { $regex: new RegExp(`^${cleanClassName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+        }).lean();
 
-        if (secDoc?.classTeacherId) {
-          const ct = secDoc.classTeacherId;
-          classTeacher = {
-            name: ct.user?.name || "Assigned Class Teacher",
-            email: ct.user?.email || "",
-            phone: ct.user?.phone || "",
-            avatar: ct.user?.avatar || "",
-            designation: ct.designation || "Class Teacher",
-            department: ct.department || "",
-            note: secDoc.classTeacherNote || "",
-            assignedAt: secDoc.classTeacherAssignedAt,
-          };
+        if (gradeDoc) {
+          const secDoc = await Section.findOne({
+            campusId,
+            gradeId: gradeDoc._id,
+            name: { $regex: new RegExp(`^${cleanSectionName}$`, "i") },
+          })
+            .populate({
+              path: "classTeacherId",
+              populate: {
+                path: "user",
+                select: "name email phone avatar designation department",
+              },
+            })
+            .lean();
+
+          if (secDoc?.classTeacherId) {
+            const ct = secDoc.classTeacherId;
+            classTeacher = {
+              name: ct.user?.name || "Assigned Class Teacher",
+              email: ct.user?.email || "",
+              phone: ct.user?.phone || "",
+              avatar: ct.user?.avatar || "",
+              designation: ct.designation || "Class Teacher",
+              department: ct.department || "",
+              note: secDoc.classTeacherNote || "",
+              assignedAt: secDoc.classTeacherAssignedAt,
+            };
+          }
         }
+      } catch (e) {
+        console.warn("Failed to resolve classTeacher for student:", e.message);
       }
-    } catch (e) {
-      console.warn("Failed to resolve classTeacher for student:", e.message);
     }
 
     return res.json({
