@@ -10,24 +10,19 @@ export default function HeroCard({
   isIntroComplete = false,
   hoveredIndex,
   onHover,
+  mobileLayout = false,
   onSelect
 }) {
-  const centerIndex = Math.floor(totalCards / 2); // index 3 is center
-  const diff = index - centerIndex; // -3, -2, -1, 0, 1, 2, 3
+  const centerIndex = Math.floor(totalCards / 2);
+  const diff = index - centerIndex;
   const isHovered = hoveredIndex === index;
   const hasAnyHover = hoveredIndex !== null;
 
-  // Base Arc Calculations
-  // Rotation progresses outwards: -13.8deg to +13.8deg
   const baseRotation = diff * 4.6;
-  // Horizontal spread: ~70px step
   const baseTranslateX = diff * 70;
-  // Parabolic convex dip: outer cards are slightly lower
   const baseTranslateY = Math.pow(Math.abs(diff), 1.8) * 4.2;
-  // Stacking z-index: center is highest when unhovered
   const baseZIndex = 20 + (totalCards - Math.abs(diff)) * 4;
 
-  // Compute dynamic transform offsets when any card is hovered
   let dynamicX = baseTranslateX;
   let dynamicY = baseTranslateY;
   let dynamicRotate = baseRotation;
@@ -36,25 +31,18 @@ export default function HeroCard({
   let dynamicOpacity = 1;
 
   if (isFanned) {
-    if (isHovered) {
+    if (isHovered && !mobileLayout) {
       dynamicRotate = 0;
       dynamicY = baseTranslateY - 32;
       dynamicScale = 1.18;
       dynamicZIndex = 120;
-    } else if (hasAnyHover) {
-      // Adjacent parting physics - smooth and controlled
-      if (index < hoveredIndex) {
-        dynamicX = baseTranslateX - 12;
-        dynamicRotate = baseRotation - 1.2;
-      } else {
-        dynamicX = baseTranslateX + 12;
-        dynamicRotate = baseRotation + 1.2;
-      }
+    } else if (hasAnyHover && !mobileLayout) {
+      dynamicX += index < hoveredIndex ? -12 : 12;
+      dynamicRotate += index < hoveredIndex ? -1.2 : 1.2;
       dynamicScale = 0.97;
       dynamicOpacity = 0.9;
     }
   } else {
-    // Collapsed deck state (before bloom or on collapse)
     dynamicX = diff * 5;
     dynamicY = 120 + diff * 2;
     dynamicRotate = diff * 2;
@@ -64,32 +52,27 @@ export default function HeroCard({
   return (
     <motion.div
       className="hero-card-anchor"
-      style={{
-        zIndex: dynamicZIndex,
-      }}
-      initial={{
-        x: diff * 40,
-        y: 350,
-        rotate: diff * 30,
-        scale: 0.1,
-        opacity: 0
+      style={{ zIndex: dynamicZIndex }}
+      initial={mobileLayout ? { x: 0, y: 24, rotate: 0, scale: 1, opacity: 0 } : {
+        x: diff * 40, y: 350, rotate: diff * 30, scale: 0.1, opacity: 0
       }}
       animate={{
-        x: isFanned ? dynamicX : 0,
-        y: isFanned ? dynamicY : 80,
-        rotate: isFanned ? dynamicRotate : 0,
-        scale: isFanned ? dynamicScale : 0.85,
-        opacity: isFanned ? dynamicOpacity : 1
+        x: mobileLayout ? 0 : (isFanned ? dynamicX : 0),
+        y: mobileLayout ? (isFanned ? 0 : 24) : (isFanned ? dynamicY : 80),
+        rotate: mobileLayout ? 0 : (isFanned ? dynamicRotate : 0),
+        scale: mobileLayout ? 1 : (isFanned ? dynamicScale : 0.85),
+        opacity: mobileLayout ? (isFanned ? 1 : 0) : (isFanned ? dynamicOpacity : 1),
       }}
       transition={{
-        type: 'spring',
+        type: mobileLayout ? 'tween' : 'spring',
+        duration: mobileLayout ? 0.35 : undefined,
         stiffness: isHovered ? 260 : 130,
         damping: isHovered ? 22 : 17,
         mass: 0.85,
-        delay: isFanned && !isIntroComplete ? 0.35 + Math.abs(diff) * 0.05 : 0
+        delay: isFanned && !isIntroComplete ? (mobileLayout ? index * 0.06 : 0.35 + Math.abs(diff) * 0.05) : 0,
       }}
-      onMouseEnter={() => onHover(index)}
-      onMouseLeave={() => onHover(null)}
+      onMouseEnter={() => !mobileLayout && onHover(index)}
+      onMouseLeave={() => !mobileLayout && onHover(null)}
       onClick={() => onSelect(card)}
     >
       <div 

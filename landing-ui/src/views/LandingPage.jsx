@@ -69,7 +69,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
   }
 
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen bg-transparent text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
+    <div className="landing-page relative w-full overflow-x-hidden min-h-screen bg-transparent text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
       {/* 3D WebGL Particle Background */}
       <WebGLBackground isDark={isDark} />
 
@@ -85,9 +85,9 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
         <HeroFanDeck onGetStarted={handleOpenGetStarted} navigate={navigate} />
 
         {/* ─── Top Alumni List (Success Stories) ─── */}
-        <section id="alumni" className="py-24 bg-transparent">
+        <section id="alumni" className="py-16 sm:py-24 bg-transparent">
           <motion.div
-            className="text-center max-w-2xl mx-auto px-6 mb-14"
+            className="text-center max-w-2xl mx-auto px-6 mb-10 sm:mb-14"
             initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
@@ -383,7 +383,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
         </section>
 
         {/* ─── Upcoming Events (Interactive Layout) ─── */}
-        <section className="py-28 px-6 bg-transparent border-b border-slate-200/60 dark:border-slate-800/60">
+        <section className="py-16 sm:py-28 px-6 bg-transparent border-b border-slate-200/60 dark:border-slate-800/60">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
               <div>
@@ -446,7 +446,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
         <DeviceShowcase onGetStarted={handleOpenGetStarted} navigate={navigate} />
 
         {/* ─── Platform Capabilities: Bento Grid ─── */}
-        <section id="roles" className="py-24 px-6 max-w-7xl mx-auto">
+        <section id="roles" className="py-16 sm:py-24 px-6 max-w-7xl mx-auto">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16"
             initial={{ opacity: 0, y: 25 }}
@@ -777,7 +777,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
         </section>
 
         {/* ─── Closing CTA ─── */}
-        <section className="py-28 px-6 bg-transparent border-t border-slate-200/60 dark:border-slate-800/60">
+        <section className="py-16 sm:py-28 px-6 bg-transparent border-t border-slate-200/60 dark:border-slate-800/60">
           <motion.div
             className="max-w-3xl mx-auto text-center"
             initial={{ opacity: 0, y: 30 }}
