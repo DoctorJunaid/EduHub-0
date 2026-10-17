@@ -54,7 +54,7 @@ export default function CampusOperationsHub({
     let isMounted = true;
     Promise.allSettled([
       axiosInstance.get('/academic/teacher-assignments'),
-      axiosInstance.get('/class-teachers'),
+      axiosInstance.get('/campus/classes/all-class-teachers'),
     ]).then(([taRes, ctRes]) => {
       if (!isMounted) return;
       if (taRes.status === 'fulfilled') {

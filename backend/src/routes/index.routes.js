@@ -110,6 +110,13 @@ router.use("/teacher", resultCompilationRoutes);
 router.use("/results", resultCompilationRoutes);
 router.use("/student", resultCompilationRoutes);
 
+// Compatibility aliases for class teachers
+router.get("/class-teachers", (req, res, next) => {
+  req.url = "/classes/all-class-teachers";
+  classTeacherRoutes(req, res, next);
+});
+router.use("/class-teachers", classTeacherRoutes);
+
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);
 
