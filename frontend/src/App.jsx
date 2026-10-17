@@ -46,6 +46,7 @@ import PlansManagement from "./Admins/Super Admin/Plans/PlansManagement";
 import SubscriptionsManagement from "./Admins/Super Admin/Subscriptions/SubscriptionsManagement";
 import InstituteSubscription from "./Admins/Institute Admin/Subscription/InstituteSubscription";
 import AuditLogs from "./Admins/Super Admin/AuditLogs/AuditLogs";
+import SuperAdminLayout from "./Admins/Super Admin/SuperAdminLayout";
 import { ADMIN_NAV } from "./constants/navigation";
 import {
   StudentLayout,
@@ -293,7 +294,7 @@ const App = () => {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
-          <Route element={<MainLayout navigation={ADMIN_NAV} />}>
+          <Route element={<SuperAdminLayout />}>
             <Route path="super-admin" element={<SuperAdminDashboard />} />
             <Route path="institutes" element={<Institutes />} />
             <Route path="institutes/new" element={<ManageInstitutePage />} />

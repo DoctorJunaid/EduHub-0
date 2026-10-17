@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUser } from "@/store/Slices/authSlice";
 import { roleHome } from "./roles";
@@ -164,14 +164,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          {/* Footer links */}
-          <div className="lp-footer">
-            <p>
-              New student? <Link to="/signup">Sign up</Link>
-            </p>
-            <span style={{ cursor: "pointer" }}>Forgot Password?</span>
-          </div>
         </div>
       </div>
 

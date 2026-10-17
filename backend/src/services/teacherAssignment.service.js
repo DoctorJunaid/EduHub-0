@@ -127,6 +127,16 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
     const subject = item.subjectId?.name || "All Subjects";
     const key = `${className}_${section}_${subject}`.toLowerCase();
 
+    let startTime = "09:00";
+    let endTime = "10:00";
+    if (item.timeSlot) {
+      const parts = item.timeSlot.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*[–-]\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
+      if (parts) {
+        startTime = parts[1];
+        endTime = parts[2];
+      }
+    }
+
     if (!classMap.has(key)) {
       classMap.set(key, {
         _id: item._id,
@@ -141,10 +151,14 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
         section,
         subject,
         subjectCode: item.subjectId?.code || "",
-        room: "Classroom",
+        room: item.roomNumber || "Classroom 101",
+        roomNumber: item.roomNumber || "Room 101",
+        timeSlot: item.timeSlot || "",
+        isForceConfirmed: Boolean(item.isForceConfirmed),
+        overrideReason: item.overrideReason || "",
         days: [1, 2, 3, 4, 5],
-        startTime: "09:00",
-        endTime: "10:00",
+        startTime,
+        endTime,
         teacherId: uId,
         teacherName: resolved?.name || "Teacher",
         source: "academic",
@@ -477,6 +491,30 @@ export async function getTeacherAssignedClasses(campusIdOrUserId, maybeTeacherUs
 
     cls.enrolledStudentsCount = count;
     cls.studentCount = count;
+  }
+
+  // Resolve TeacherProfile to tag "Class Teacher" vs "Subject Teacher"
+  const teacherProfile = await TeacherProfile.findOne({
+    $or: [{ user: uId }, { _id: teacherUserId }],
+  }).lean();
+
+  for (const cls of result) {
+    let isClassTeacher = false;
+    if (teacherProfile?.classTeacherOf && cls.sectionId) {
+      isClassTeacher = String(teacherProfile.classTeacherOf) === String(cls.sectionId);
+    }
+    if (!isClassTeacher && cls.sectionId) {
+      const secDoc = await Section.findById(cls.sectionId).select("classTeacherId").lean();
+      if (secDoc?.classTeacherId && teacherProfile && String(secDoc.classTeacherId) === String(teacherProfile._id)) {
+        isClassTeacher = true;
+      }
+    }
+    if (!isClassTeacher && teacherProfile?.isClassTeacher && !teacherProfile?.classTeacherOf) {
+      isClassTeacher = true;
+    }
+    cls.isClassTeacher = Boolean(isClassTeacher);
+    cls.role = isClassTeacher ? "Class Teacher" : "Subject Teacher";
+    cls.roleBadge = isClassTeacher ? "Class Teacher (Full Control)" : "Subject Teacher (Limited Access)";
   }
 
   return result;

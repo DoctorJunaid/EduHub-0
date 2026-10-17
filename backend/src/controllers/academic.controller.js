@@ -200,6 +200,113 @@ export const removeSubjectFromGrade = async (req, res) => {
 };
 
 // TEACHER ASSIGNMENTS
+export const checkTeacherAssignmentConflict = async (req, res) => {
+  try {
+    const campusId = req.user.campusId;
+    const { teacherId, gradeId, sectionId, subjectId, timeSlot } = {
+      ...req.query,
+      ...req.body,
+    };
+
+    if (!campusId) {
+      return res.status(400).json({ success: false, message: "Campus context required" });
+    }
+
+    let timeConflict = null;
+    let subjectConflict = null;
+
+    // 1. Check Time Conflict (if teacher and timeSlot provided)
+    if (teacherId && timeSlot && timeSlot.trim()) {
+      const existingTeacherSlots = await TeacherAssignment.find({
+        campusId,
+        teacherId,
+        timeSlot: { $exists: true, $ne: "" },
+      })
+        .populate("gradeId", "name")
+        .populate("sectionId", "name")
+        .populate("subjectId", "name code")
+        .lean();
+
+      timeConflict = existingTeacherSlots.find((ea) => {
+        const isSameClassAndSubject =
+          String(ea.gradeId?._id || ea.gradeId) === String(gradeId) &&
+          String(ea.sectionId?._id || ea.sectionId) === String(sectionId) &&
+          String(ea.subjectId?._id || ea.subjectId) === String(subjectId);
+        if (isSameClassAndSubject) return false;
+
+        const eaSlot = (ea.timeSlot || "").trim().toLowerCase();
+        const currentSlot = timeSlot.trim().toLowerCase();
+        return eaSlot === currentSlot;
+      });
+    }
+
+    // 2. Check Subject Already Assigned Conflict
+    if (gradeId && sectionId && subjectId) {
+      const query = {
+        campusId,
+        gradeId,
+        sectionId,
+        subjectId,
+      };
+      if (teacherId) {
+        query.teacherId = { $ne: teacherId };
+      }
+      subjectConflict = await TeacherAssignment.findOne(query)
+        .populate("teacherId", "name email")
+        .populate("subjectId", "name code")
+        .lean();
+    }
+
+    if (timeConflict || subjectConflict) {
+      const conflictType = timeConflict && subjectConflict 
+        ? "BOTH_CONFLICTS"
+        : timeConflict 
+          ? "TIME_CONFLICT" 
+          : "SUBJECT_CONFLICT";
+
+      let message = "";
+      if (timeConflict && subjectConflict) {
+        message = `Double Conflict: Teacher is already scheduled during "${timeSlot}" AND this subject is already assigned to ${subjectConflict.teacherId?.name || "another teacher"}.`;
+      } else if (timeConflict) {
+        const otherClass = `${timeConflict.gradeId?.name || "Class"} - Section ${timeConflict.sectionId?.name || ""}`;
+        const otherSub = timeConflict.subjectId?.name || "Subject";
+        message = `Scheduling Conflict: Teacher is already teaching ${otherClass} (${otherSub}) during "${timeSlot}".`;
+      } else {
+        const existingTeacherName = subjectConflict.teacherId?.name || "Another teacher";
+        message = `Subject Conflict: This class subject is already assigned to ${existingTeacherName}.`;
+      }
+
+      return res.status(200).json({
+        success: true,
+        hasConflict: true,
+        conflictType,
+        message,
+        details: {
+          timeConflict: timeConflict ? {
+            class: `${timeConflict.gradeId?.name || "Class"} - ${timeConflict.sectionId?.name || "Section"}`,
+            subject: timeConflict.subjectId?.name || "",
+            timeSlot: timeConflict.timeSlot,
+          } : null,
+          subjectConflict: subjectConflict ? {
+            teacherName: subjectConflict.teacherId?.name || "Assigned Teacher",
+            teacherEmail: subjectConflict.teacherId?.email || "",
+            subjectName: subjectConflict.subjectId?.name || "",
+            existingAssignmentId: subjectConflict._id,
+          } : null,
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      hasConflict: false,
+      message: "No scheduling or subject conflicts detected.",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getTeacherAssignments = async (req, res) => {
   try {
     const { gradeId, sectionId, subjectId, teacherId } = req.query;
@@ -225,19 +332,52 @@ export const getTeacherAssignments = async (req, res) => {
     }
 
     const assignments = await TeacherAssignment.find(query)
-      .populate("teacherId", "name email")
+      .populate("teacherId", "name email phone avatar designation department")
       .populate("gradeId", "name")
-      .populate("sectionId", "name")
-      .populate("subjectId", "name code");
-    res.status(200).json(assignments);
+      .populate("sectionId", "name classTeacherId")
+      .populate("subjectId", "name code")
+      .populate("forceConfirmedBy", "name email")
+      .sort({ createdAt: -1 });
+
+    // Calculate total classes assigned per teacher in this campus for workload visibility
+    const allCampusAssignments = await TeacherAssignment.find({ campusId: req.user.campusId }).select("teacherId").lean();
+    const teacherWorkloadCounts = {};
+    for (const a of allCampusAssignments) {
+      const tId = String(a.teacherId?._id || a.teacherId);
+      if (tId) {
+        teacherWorkloadCounts[tId] = (teacherWorkloadCounts[tId] || 0) + 1;
+      }
+    }
+
+    const enriched = assignments.map((a) => {
+      const tId = String(a.teacherId?._id || a.teacherId);
+      const isClassTeacher = a.sectionId?.classTeacherId && String(a.sectionId.classTeacherId) === tId;
+      return {
+        ...a.toObject(),
+        totalClassesAssigned: teacherWorkloadCounts[tId] || 1,
+        isClassTeacher: Boolean(isClassTeacher),
+      };
+    });
+
+    res.status(200).json(enriched);
   } catch (error) {
-    res.status(500).json({ message: "Server error fetching assignments", error });
+    res.status(500).json({ message: "Server error fetching assignments", error: error.message });
   }
 };
 
 export const createTeacherAssignment = async (req, res) => {
   try {
-    const { teacherId, gradeId, sectionId, subjectId } = req.body;
+    const {
+      teacherId,
+      gradeId,
+      sectionId,
+      subjectId,
+      timeSlot = "",
+      roomNumber = "",
+      forceConfirm = false,
+      overrideReason = "",
+    } = req.body;
+
     let campusId = req.user.campusId;
     let instituteId = req.user.instituteId;
 
@@ -272,22 +412,115 @@ export const createTeacherAssignment = async (req, res) => {
     const checkTeacherIds = [resolvedUserId, resolvedProfileId].filter(Boolean);
     const normalizedSubjectId = subjectId || null;
 
-    const existing = await TeacherAssignment.findOne({
+    // 1. Check for exact duplicate of this teacher in this class & subject
+    const exactExisting = await TeacherAssignment.findOne({
       teacherId: { $in: checkTeacherIds },
       gradeId,
       sectionId,
       subjectId: normalizedSubjectId,
       campusId,
     });
-    if (existing) {
+    if (exactExisting) {
+      // If updating timeSlot or roomNumber
+      if (timeSlot || roomNumber) {
+        exactExisting.timeSlot = timeSlot || exactExisting.timeSlot;
+        exactExisting.roomNumber = roomNumber || exactExisting.roomNumber;
+        await exactExisting.save();
+        const updated = await TeacherAssignment.findById(exactExisting._id)
+          .populate("teacherId", "name email phone avatar")
+          .populate("gradeId", "name")
+          .populate("sectionId", "name")
+          .populate("subjectId", "name code");
+        return res.status(200).json(updated);
+      }
       return res.status(400).json({
         message: normalizedSubjectId
           ? "Teacher is already assigned to this class and subject"
           : "Teacher is already assigned to this class (All Subjects)",
       });
     }
-    
-    // Auto-link GradeSubject if subjectId is provided
+
+    // 2. Check Conflicts:
+    // A. Time Slot conflict: teacher already has another class during the same time slot
+    let timeConflict = null;
+    if (timeSlot && timeSlot.trim()) {
+      const teacherSlots = await TeacherAssignment.find({
+        campusId,
+        teacherId: { $in: checkTeacherIds },
+        timeSlot: { $exists: true, $ne: "" },
+      })
+        .populate("gradeId", "name")
+        .populate("sectionId", "name")
+        .populate("subjectId", "name code")
+        .lean();
+
+      timeConflict = teacherSlots.find((ea) => {
+        const isSameClassAndSubject =
+          String(ea.gradeId?._id || ea.gradeId) === String(gradeId) &&
+          String(ea.sectionId?._id || ea.sectionId) === String(sectionId) &&
+          String(ea.subjectId?._id || ea.subjectId) === String(normalizedSubjectId);
+        if (isSameClassAndSubject) return false;
+        return (ea.timeSlot || "").trim().toLowerCase() === timeSlot.trim().toLowerCase();
+      });
+    }
+
+    // B. Subject Conflict: subject already assigned to another teacher in this section
+    const subjectConflict = normalizedSubjectId ? await TeacherAssignment.findOne({
+      campusId,
+      gradeId,
+      sectionId,
+      subjectId: normalizedSubjectId,
+      teacherId: { $nin: checkTeacherIds },
+    })
+      .populate("teacherId", "name email")
+      .populate("subjectId", "name code") : null;
+
+    // 3. If Conflict Exists and NOT Force Confirmed -> Return 409 Conflict
+    if ((timeConflict || subjectConflict) && !forceConfirm) {
+      let conflictType = "";
+      let message = "";
+      if (timeConflict && subjectConflict) {
+        conflictType = "BOTH_CONFLICTS";
+        message = `Scheduling & Subject Conflict: Teacher is already busy during "${timeSlot}", and this subject is already assigned to ${subjectConflict.teacherId?.name || "another teacher"}.`;
+      } else if (timeConflict) {
+        conflictType = "TIME_CONFLICT";
+        const otherClass = `${timeConflict.gradeId?.name || "Class"} - Section ${timeConflict.sectionId?.name || ""}`;
+        const otherSub = timeConflict.subjectId?.name || "Subject";
+        message = `Scheduling Conflict: Teacher is already teaching ${otherClass} (${otherSub}) during "${timeSlot}".`;
+      } else {
+        conflictType = "SUBJECT_CONFLICT";
+        const existingTeacherName = subjectConflict.teacherId?.name || "Another teacher";
+        message = `Subject Conflict: This class subject is already assigned to ${existingTeacherName}.`;
+      }
+
+      return res.status(409).json({
+        success: false,
+        conflict: true,
+        conflictType,
+        message,
+        details: {
+          timeConflict: timeConflict ? {
+            class: `${timeConflict.gradeId?.name || "Class"} - ${timeConflict.sectionId?.name || "Section"}`,
+            subject: timeConflict.subjectId?.name || "",
+            timeSlot: timeConflict.timeSlot,
+          } : null,
+          subjectConflict: subjectConflict ? {
+            teacherName: subjectConflict.teacherId?.name || "Assigned Teacher",
+            teacherEmail: subjectConflict.teacherId?.email || "",
+            subjectName: subjectConflict.subjectId?.name || "",
+            existingAssignmentId: subjectConflict._id,
+          } : null,
+        },
+      });
+    }
+
+    // 4. If Force Confirmed and subject conflict exists:
+    // Remove the previous assignment to prevent orphaned duplicate subject assignments
+    if (subjectConflict && forceConfirm) {
+      await TeacherAssignment.findByIdAndDelete(subjectConflict._id);
+    }
+
+    // Auto-link GradeSubject if not already configured
     if (normalizedSubjectId) {
       let gradeSubject = await GradeSubject.findOne({ gradeId, subjectId: normalizedSubjectId, campusId });
       if (!gradeSubject) {
@@ -300,11 +533,20 @@ export const createTeacherAssignment = async (req, res) => {
       }
     }
 
+    const hasConflict = Boolean(timeConflict || subjectConflict);
     const assignment = await TeacherAssignment.create({
       teacherId: resolvedUserId,
       gradeId,
       sectionId,
       subjectId: normalizedSubjectId,
+      timeSlot: timeSlot ? timeSlot.trim() : "",
+      roomNumber: roomNumber ? roomNumber.trim() : "",
+      isForceConfirmed: Boolean(hasConflict && forceConfirm),
+      overrideReason: hasConflict && forceConfirm
+        ? (overrideReason || (timeConflict ? `Override time conflict at ${timeSlot}` : "Reassigned subject override"))
+        : "",
+      forceConfirmedBy: hasConflict && forceConfirm ? req.user._id : null,
+      forceConfirmedAt: hasConflict && forceConfirm ? new Date() : null,
       campusId,
       instituteId: instituteId || null,
     });
@@ -336,10 +578,12 @@ export const createTeacherAssignment = async (req, res) => {
     }
 
     const populated = await TeacherAssignment.findById(assignment._id)
-      .populate("teacherId", "name email")
+      .populate("teacherId", "name email phone avatar designation department")
       .populate("gradeId", "name")
       .populate("sectionId", "name")
-      .populate("subjectId", "name code");
+      .populate("subjectId", "name code")
+      .populate("forceConfirmedBy", "name email");
+
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: "Server error creating assignment", error: error.message });

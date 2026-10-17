@@ -64,6 +64,7 @@ export function useStudentPortal() {
     portal,
     student: portal?.student || null,
     classTeacher: portal?.classTeacher || portal?.student?.classTeacher || null,
+    subjects: portal?.subjects || [],
     schedules: portal?.schedules || [],
     attendance: portal?.attendance || null,
     fees: portal?.fees || [],

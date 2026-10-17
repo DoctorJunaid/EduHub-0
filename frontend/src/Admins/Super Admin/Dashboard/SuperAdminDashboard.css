@@ -95,12 +95,23 @@
   animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* ── KPI STATS GRID ── */
 .super-admin-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin: 0 0 20px;
+}
+
+@media (max-width: 1279px) and (min-width: 640px) {
+  .super-admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .super-admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .super-admin-stat-card {
@@ -204,12 +215,12 @@
 }
 
 .super-admin-panel-title-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  border: 1px solid #e4e4e7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1117,8 +1128,9 @@
   }
 
   .super-admin-header-btn {
-    flex: 1;
-    min-width: 0;
+    width: auto;
+    min-width: fit-content;
+    flex-shrink: 0;
   }
 
   .super-admin-add-button {
@@ -1261,12 +1273,12 @@
 }
 
 .super-admin-inquiry-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  border: 1px solid #e4e4e7;
   display: flex;
   align-items: center;
   justify-content: center;

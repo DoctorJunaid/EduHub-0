@@ -150,10 +150,10 @@ export default function SuperAdminBroadcasts() {
   };
 
   return (
-    <div className="super-broadcasts-page">
-      <div className="super-broadcasts-layout">
+    <div className="super-broadcasts-page w-full min-w-0">
+      <div className="super-broadcasts-layout grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_1fr] w-full" style={{ gap: "24px" }}>
         {/* Left Column: Composer */}
-        <div className="super-broadcasts-compose-card">
+        <div className="super-broadcasts-compose-card min-w-0">
           <div className="card-header">
             <div className="compose-icon-wrap">
               <Radio size={16} />
@@ -176,7 +176,7 @@ export default function SuperAdminBroadcasts() {
               />
             </div>
 
-            <div className="form-grid">
+            <div className="form-grid grid grid-cols-1 sm:grid-cols-2" style={{ gap: "12px" }}>
               <div className="form-group">
                 <label>Target Audience</label>
                 <select

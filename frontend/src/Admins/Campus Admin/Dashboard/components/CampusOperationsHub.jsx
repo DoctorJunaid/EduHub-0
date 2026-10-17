@@ -11,6 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  AlertTriangle,
+  UserCheck,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +26,7 @@ import {
 } from '@/components/ui/Table';
 import { useInstitution } from '@/context/InstitutionContext';
 import DataPagination from '@/components/shared/DataPagination';
+import axiosInstance from '@/api/axiosInstance';
 
 export default function CampusOperationsHub({
   students = [],
@@ -43,6 +47,27 @@ export default function CampusOperationsHub({
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [academicAssignments, setAcademicAssignments] = useState([]);
+  const [campusClassTeachers, setCampusClassTeachers] = useState([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    Promise.allSettled([
+      axiosInstance.get('/academic/teacher-assignments'),
+      axiosInstance.get('/campus/classes/all-class-teachers'),
+    ]).then(([taRes, ctRes]) => {
+      if (!isMounted) return;
+      if (taRes.status === 'fulfilled') {
+        setAcademicAssignments(taRes.value.data?.data || taRes.value.data || []);
+      }
+      if (ctRes.status === 'fulfilled') {
+        setCampusClassTeachers(ctRes.value.data?.data || ctRes.value.data || []);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     setSearchQuery('');
@@ -51,7 +76,7 @@ export default function CampusOperationsHub({
     setPage(1);
   }, [currentTab]);
 
-  // Dynamically derive classes & sections from students and timetable
+  // Dynamically derive classes & sections from students and timetable with staffing synchronization
   const schoolClasses = useMemo(() => {
     const gradesMap = new Map();
     for (const s of students) {
@@ -61,7 +86,7 @@ export default function CampusOperationsHub({
           id: `cls-${String(g).replace(/\s+/g, '-').toLowerCase()}`,
           grade: g,
           sections: new Set(),
-          classTeacher: 'Assigned Teacher',
+          classTeacher: null,
           enrolledCount: 0,
           room: s.room || 'Classroom',
           wing: 'Academic Block',
@@ -81,7 +106,7 @@ export default function CampusOperationsHub({
             id: `cls-${String(g).replace(/\s+/g, '-').toLowerCase()}`,
             grade: g,
             sections: new Set(),
-            classTeacher: t.instructor || t.teacherName || 'Assigned Teacher',
+            classTeacher: null,
             enrolledCount: 0,
             room: t.room || 'Classroom',
             wing: 'Academic Block',
@@ -92,15 +117,40 @@ export default function CampusOperationsHub({
         const item = gradesMap.get(g);
         item.subjectsCount++;
         if (t.section) item.sections.add(t.section);
-        if (t.instructor && item.classTeacher === 'Assigned Teacher') item.classTeacher = t.instructor;
         if (t.room && item.room === 'Classroom') item.room = t.room;
       }
     }
-    return Array.from(gradesMap.values()).map((c) => ({
-      ...c,
-      sections: c.sections.size > 0 ? Array.from(c.sections).sort().join(', ') : 'Section A',
-    }));
-  }, [students, timetable]);
+    return Array.from(gradesMap.values()).map((c) => {
+      // Find Class Teacher from real database
+      const matchedCT = campusClassTeachers.find(
+        (ct) =>
+          (ct.className || "").toLowerCase().includes(c.grade.toLowerCase()) ||
+          (ct.gradeName || "").toLowerCase() === c.grade.toLowerCase()
+      );
+      const classTeacherName = matchedCT?.classTeacher?.name || null;
+
+      // Find Subject Teachers allocated to this class
+      const matchedAssignments = academicAssignments.filter(
+        (a) => (a.gradeId?.name || "").toLowerCase() === c.grade.toLowerCase()
+      );
+
+      const isFullyStaffed = Boolean(classTeacherName && matchedAssignments.length > 0);
+      const staffingLabel = isFullyStaffed
+        ? "Fully Staffed"
+        : !classTeacherName
+        ? "Missing Class Teacher"
+        : "Missing Subject Teachers";
+
+      return {
+        ...c,
+        classTeacher: classTeacherName,
+        subjectAssignments: matchedAssignments,
+        isFullyStaffed,
+        staffingLabel,
+        sections: c.sections.size > 0 ? Array.from(c.sections).sort().join(', ') : 'Section A',
+      };
+    });
+  }, [students, timetable, campusClassTeachers, academicAssignments]);
 
   // Dynamically derive degree programs from students for university mode
   const academicPrograms = useMemo(() => {
@@ -657,17 +707,17 @@ export default function CampusOperationsHub({
           </Table>
         )}
 
-        {/* 5. Classes & Sections View (School Mode) */}
+        {/* 5. Classes & Sections View (School Mode with Staffing Visibility) */}
         {currentTab === 'classes' && (
           <Table className="hub-programs-table">
             <TableHeader>
               <TableRow>
                 <TableHead>Class / Grade</TableHead>
-                <TableHead>Sections Available</TableHead>
-                <TableHead className="text-center">Class Incharge / Homeroom</TableHead>
-                <TableHead className="text-center">Enrolled Strength</TableHead>
-                <TableHead className="text-center">Classroom & Wing</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead>Sections</TableHead>
+                <TableHead>Class Teacher (Incharge)</TableHead>
+                <TableHead>Subject Teachers Staffed</TableHead>
+                <TableHead className="text-center">Staffing Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -675,27 +725,59 @@ export default function CampusOperationsHub({
                 <TableRow key={cls.id}>
                   <TableCell>
                     <div className="hub-cell-stack">
-                      <strong>{cls.grade}</strong>
-                      <small>{cls.wing}</small>
+                      <strong className="text-sm text-slate-900">{cls.grade}</strong>
+                      <small className="text-slate-500">{cls.enrolledCount} Students Enrolled</small>
                     </div>
                   </TableCell>
                   <TableCell>
                     <span className="hub-badge-neutral font-semibold">{cls.sections}</span>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <strong>{cls.classTeacher}</strong>
+                  <TableCell>
+                    {cls.classTeacher ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="text-emerald-500">👑</span> {cls.classTeacher}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                        <AlertTriangle size={12} className="text-rose-500" /> Missing Class Teacher
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {cls.subjectAssignments && cls.subjectAssignments.length > 0 ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-semibold text-slate-800">
+                          {cls.subjectAssignments.length} Subject {cls.subjectAssignments.length === 1 ? 'Teacher' : 'Teachers'}
+                        </span>
+                        <span className="text-[11px] text-slate-500 truncate max-w-[200px]" title={cls.subjectAssignments.map(a => `${a.subjectId?.name}: ${a.teacherId?.name}`).join(', ')}>
+                          {cls.subjectAssignments.slice(0, 2).map(a => `${a.subjectId?.name || 'Sub'}`).join(', ')}
+                          {cls.subjectAssignments.length > 2 ? ` +${cls.subjectAssignments.length - 2} more` : ''}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
+                        <AlertTriangle size={12} /> No subjects assigned
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className="hub-badge-neutral font-semibold">{cls.enrolledCount} Students</span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span>{cls.room}</span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="hub-status-pill is-active">
+                    <span
+                      className={`hub-status-pill ${
+                        cls.isFullyStaffed ? 'is-active' : 'is-absent'
+                      }`}
+                    >
                       <span className="dot" />
-                      {cls.status}
+                      {cls.staffingLabel || (cls.isFullyStaffed ? 'Fully Staffed' : 'Missing Teacher')}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/campus-admin/academics')}
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+                    >
+                      Staff Class &rarr;
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}

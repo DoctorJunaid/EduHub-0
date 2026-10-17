@@ -335,8 +335,8 @@ export default function Institutes() {
           </div>
         )}
 
-        <div className="institutes-table-wrap">
-          <table className="institutes-table">
+        <div className="institutes-table-wrap w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="institutes-table w-full min-w-[800px] border-collapse">
             <thead>
               <tr>
                 <th className="col-name">Institute Name</th>

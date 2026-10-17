@@ -256,23 +256,23 @@ export default function SuperAdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="super-admin-stats-grid">
+          <div className="super-admin-stats-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
             {statsArray.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <article className="super-admin-stat-card" key={index}>
-                  <div className="super-admin-stat-head">
-                    <span className="super-admin-stat-label">{stat.label}</span>
-                    <div className="super-admin-stat-icon" aria-hidden="true">
+                <article className="super-admin-stat-card min-w-0" key={index}>
+                  <div className="super-admin-stat-head flex items-center justify-between min-w-0" style={{ gap: "8px" }}>
+                    <span className="super-admin-stat-label min-w-0 flex-1 whitespace-nowrap truncate">{stat.label}</span>
+                    <div className="super-admin-stat-icon shrink-0" aria-hidden="true">
                       <Icon size={16} />
                     </div>
                   </div>
                   {statsLoading ? (
                     <div className="super-admin-stat-skeleton" />
                   ) : statsStatus === "failed" && !globalStats ? (
-                    <div className="super-admin-stat-value" aria-label="Unavailable">—</div>
+                    <div className="super-admin-stat-value whitespace-nowrap" aria-label="Unavailable">—</div>
                   ) : (
-                    <div className="super-admin-stat-value">{stat.value ?? 0}</div>
+                    <div className="super-admin-stat-value whitespace-nowrap">{stat.value ?? 0}</div>
                   )}
                   <div className="super-admin-stat-detail">{stat.detail}</div>
                 </article>
@@ -285,43 +285,64 @@ export default function SuperAdminDashboard() {
             <div className="super-admin-panel-head">
               <div className="super-admin-panel-titles">
                 <div className="super-admin-panel-title-row">
-                  <div className="super-admin-panel-title-icon">
-                    <Inbox size={15} />
+                  <div
+                    className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+                    style={{ width: "38px", height: "38px" }}
+                  >
+                    <Inbox size={18} />
                   </div>
                   <h2>Landing Page Inquiries & Registrations</h2>
                 </div>
                 <p>Live partner registrations submitted from the public landing page</p>
               </div>
 
-              <div className="super-admin-panel-actions">
-                <Button
+              <div
+                className="flex flex-wrap items-center w-full sm:w-auto"
+                style={{ gap: "10px", marginTop: "4px" }}
+              >
+                {/* Refresh Button */}
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={fetchInquiries}
-                  className="super-admin-header-btn super-admin-refresh-btn"
+                  className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-700 transition-colors shadow-xs whitespace-nowrap shrink-0"
+                  style={{
+                    padding: "8px 14px",
+                    height: "36px",
+                    width: "auto",
+                    minWidth: "fit-content",
+                    gap: "6px",
+                    boxSizing: "border-box",
+                  }}
                   title="Refresh leads"
                 >
-                  <RefreshCw size={13} className={inquiriesLoading ? "animate-spin" : ""} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-neutral-600 shrink-0 ${inquiriesLoading ? "animate-spin" : ""}`} />
                   <span>Refresh</span>
-                </Button>
-                <Button
+                </button>
+
+                {/* View All Inquiries Button */}
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => navigate("/super-admin/inquiries")}
-                  className="super-admin-header-btn super-admin-view-all-btn"
+                  className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-800 transition-colors shadow-xs whitespace-nowrap shrink-0"
+                  style={{
+                    padding: "8px 14px",
+                    height: "36px",
+                    width: "auto",
+                    minWidth: "fit-content",
+                    gap: "6px",
+                    boxSizing: "border-box",
+                  }}
                 >
                   <span>View All Inquiries ({inquiries.length})</span>
-                  <ArrowRight size={13} />
-                </Button>
+                  <ArrowRight className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+                </button>
               </div>
             </div>
 
             <div className="super-admin-inquiry-list" style={{ marginTop: "16px" }}>
               {inquiriesLoading ? (
                 <div style={{ padding: "20px 0", textAlign: "center" }}>
-                  <Spinner size={24} className="mx-auto text-emerald-600" />
+                  <Spinner size={24} className="mx-auto text-neutral-700" />
                   <p style={{ fontSize: "13px", color: "#71717a", marginTop: "8px" }}>Loading incoming inquiries...</p>
                 </div>
               ) : inquiries.length === 0 ? (
@@ -344,7 +365,10 @@ export default function SuperAdminDashboard() {
                   return (
                     <article className="super-admin-inquiry-row" key={inquiry._id}>
                       <div className="super-admin-inquiry-main">
-                        <div className="super-admin-inquiry-icon">
+                        <div
+                          className="rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+                          style={{ width: "42px", height: "42px" }}
+                        >
                           <Building2 size={20} />
                         </div>
                         <div className="super-admin-inquiry-info">

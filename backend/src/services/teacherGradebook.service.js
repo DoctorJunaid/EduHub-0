@@ -394,6 +394,63 @@ export async function saveGradebookResult(campusId, teacherUserId, data) {
   const className = data.className || studentUser?.gradeOrClass || studentUser?.program || "Class 10";
   const section = data.section || studentUser?.section || "A";
 
+  // Strict RBAC: Check Teacher permissions (Class Teacher vs Subject Teacher)
+  const userDoc = await User.findById(teacherUserId).select("role").lean();
+  if (userDoc?.role === "teacher") {
+    const { TeacherProfile } = await import("../models/profile.model.js");
+    const { Section, TeacherAssignment } = await import("../models/academic.model.js");
+    const prof = await TeacherProfile.findOne({ user: teacherUserId }).lean();
+
+    let isClassTeacher = false;
+    if (prof?.isClassTeacher) {
+      if (prof.classTeacherOf) {
+        const sec = await Section.findById(prof.classTeacherOf).populate("gradeId", "name").lean();
+        if (sec) {
+          const secGrade = sec.gradeId?.name || "";
+          const secName = sec.name || "";
+          if (
+            (!className || className.toLowerCase().includes(secGrade.toLowerCase())) &&
+            (!section || section.toLowerCase() === secName.toLowerCase())
+          ) {
+            isClassTeacher = true;
+          }
+        }
+      } else {
+        isClassTeacher = true;
+      }
+    }
+
+    // If not class teacher, verify teacher is assigned to this specific subject
+    if (!isClassTeacher) {
+      const uId = resolved?._id || teacherUserId;
+      const allTeacherAssignments = await TeacherAssignment.find({
+        campusId,
+        teacherId: uId,
+      }).populate("subjectId", "name code").lean();
+
+      const assignedSubjectNames = allTeacherAssignments
+        .map((a) => a.subjectId?.name?.toLowerCase())
+        .filter(Boolean);
+
+      const targetSubLower = subject.toLowerCase();
+      const hasSubjectPermission = assignedSubjectNames.some((sn) =>
+        targetSubLower.includes(sn) || sn.includes(targetSubLower)
+      );
+
+      if (!hasSubjectPermission && assignedSubjectNames.length > 0) {
+        const readableList = allTeacherAssignments
+          .map((a) => a.subjectId?.name)
+          .filter(Boolean)
+          .join(", ");
+        const err = new Error(
+          `Access Denied: As a Subject Teacher, you only have permission to enter marks for your assigned subject (${readableList}). You cannot record marks for "${subject}".`
+        );
+        err.statusCode = 403;
+        throw err;
+      }
+    }
+  }
+
   const payload = {
     campusId,
     studentId,
