@@ -210,21 +210,21 @@ export default function AuditLogs() {
 
   return (
     <div
-      className="w-full flex flex-col"
+      className="w-full max-w-full flex flex-col min-w-0"
       style={{ padding: "24px", gap: "20px", boxSizing: "border-box" }}
     >
       {/* 3 Summary KPI Metric Cards */}
       <div
-        className="grid grid-cols-1 md:grid-cols-3 w-full"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full"
         style={{ gap: "16px" }}
       >
         {/* Card 1: Total Logged Events */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
           <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               TOTAL LOGGED EVENTS
             </span>
             <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
@@ -241,14 +241,14 @@ export default function AuditLogs() {
 
         {/* Card 2: Active Filter Scope */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
           <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               ACTIVE FILTER SCOPE
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight truncate">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight truncate whitespace-nowrap">
               {selectedEntity === "all" ? "All Entities" : selectedEntity}
             </span>
           </div>
@@ -262,11 +262,11 @@ export default function AuditLogs() {
 
         {/* Card 3: Current Page */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
           <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               CURRENT PAGE
             </span>
             <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
@@ -284,11 +284,11 @@ export default function AuditLogs() {
 
       {/* Control Bar: Filters & Search */}
       <div
-        className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between"
+        className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col lg:flex-row lg:items-center justify-between"
         style={{ padding: "14px 18px", gap: "12px", boxSizing: "border-box" }}
       >
         {/* Search Input on the Left */}
-        <div className="relative flex-1 min-w-[280px]">
+        <div className="relative w-full lg:w-80 xl:w-96 shrink-0">
           <Search
             size={16}
             className="text-neutral-400 pointer-events-none absolute"
@@ -320,7 +320,7 @@ export default function AuditLogs() {
         </div>
 
         {/* Filters & Refresh Button on the Right */}
-        <div className="flex items-center flex-wrap" style={{ gap: "10px" }}>
+        <div className="flex flex-wrap items-center w-full lg:w-auto" style={{ gap: "10px" }}>
           {/* Entity Filter */}
           <div className="flex items-center shrink-0" style={{ gap: "6px" }}>
             <label htmlFor="entityTypeFilter" className="text-xs font-medium text-neutral-500 whitespace-nowrap">
@@ -418,8 +418,8 @@ export default function AuditLogs() {
             )}
           </div>
         ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="w-full border-collapse text-xs">
+          <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="w-full min-w-[900px] border-collapse text-xs">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50/50">
                   <th className="text-left text-[11px] font-semibold text-neutral-500 uppercase tracking-wider" style={{ padding: "12px 16px" }}>Timestamp</th>
@@ -543,10 +543,10 @@ export default function AuditLogs() {
         {/* Pagination Footer */}
         {totalPages > 1 && (
           <div
-            className="flex items-center justify-between border-t border-neutral-200 bg-white"
-            style={{ padding: "12px 18px" }}
+            className="flex flex-col sm:flex-row items-center justify-between border-t border-neutral-200 bg-white"
+            style={{ padding: "12px 18px", gap: "12px" }}
           >
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-500 text-center sm:text-left">
               Showing page <strong className="text-neutral-800 font-semibold">{page}</strong> of{" "}
               <strong className="text-neutral-800 font-semibold">{totalPages}</strong> ({total} total logs)
             </span>
@@ -579,8 +579,8 @@ export default function AuditLogs() {
 
       {/* ── INSPECT LOG MODAL ── */}
       {inspectModalOpen && activeLog && (
-        <div className="audit-modal-backdrop" onClick={() => setInspectModalOpen(false)}>
-          <div className="audit-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="audit-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setInspectModalOpen(false)}>
+          <div className="audit-modal w-full max-w-[calc(100vw-24px)] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="audit-modal-header">
               <div className="modal-title-row">
                 <FileText size={18} className="modal-header-icon" />

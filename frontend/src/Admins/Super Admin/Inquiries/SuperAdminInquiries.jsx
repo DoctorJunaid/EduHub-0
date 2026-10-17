@@ -147,52 +147,52 @@ export default function SuperAdminInquiries() {
   return (
     <div className="super-inquiries-page">
       {/* KPI Cards: Stable 4-Column Grid */}
-      <div className="inquiries-metrics-grid">
-        <div className="inquiry-stat-card">
-          <span className="stat-label">Total Leads</span>
+      <div className="inquiries-metrics-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+        <div className="inquiry-stat-card min-w-0">
+          <span className="stat-label min-w-0 whitespace-nowrap truncate">Total Leads</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
           ) : error && inquiries.length === 0 ? (
-            <span className="stat-value" aria-label="Unavailable">—</span>
+            <span className="stat-value whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-value">{counts.total}</span>
+            <span className="stat-value whitespace-nowrap">{counts.total}</span>
           )}
         </div>
-        <div className="inquiry-stat-card">
-          <span className="stat-label">New Submissions</span>
+        <div className="inquiry-stat-card min-w-0">
+          <span className="stat-label min-w-0 whitespace-nowrap truncate">New Submissions</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
           ) : error && inquiries.length === 0 ? (
-            <span className="stat-value" aria-label="Unavailable">—</span>
+            <span className="stat-value whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-value">{counts.new}</span>
+            <span className="stat-value whitespace-nowrap">{counts.new}</span>
           )}
         </div>
-        <div className="inquiry-stat-card">
-          <span className="stat-label">In Discussion</span>
+        <div className="inquiry-stat-card min-w-0">
+          <span className="stat-label min-w-0 whitespace-nowrap truncate">In Discussion</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
           ) : error && inquiries.length === 0 ? (
-            <span className="stat-value" aria-label="Unavailable">—</span>
+            <span className="stat-value whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-value">{counts.contacted}</span>
+            <span className="stat-value whitespace-nowrap">{counts.contacted}</span>
           )}
         </div>
-        <div className="inquiry-stat-card">
-          <span className="stat-label">Converted Institutes</span>
+        <div className="inquiry-stat-card min-w-0">
+          <span className="stat-label min-w-0 whitespace-nowrap truncate">Converted Institutes</span>
           {initialLoading ? (
             <div className="stat-value-skeleton" />
           ) : error && inquiries.length === 0 ? (
-            <span className="stat-value" aria-label="Unavailable">—</span>
+            <span className="stat-value whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-value">{counts.converted}</span>
+            <span className="stat-value whitespace-nowrap">{counts.converted}</span>
           )}
         </div>
       </div>
 
       {/* Filters Bar: Stays in place during loading */}
-      <div className="inquiries-filters-bar">
-        <div className="search-wrap">
+      <div className="inquiries-filters-bar flex flex-col lg:flex-row lg:items-center justify-between w-full" style={{ gap: "12px", marginBottom: "16px" }}>
+        <div className="search-wrap relative w-full lg:w-80 xl:w-96 shrink-0">
           <Search size={16} className="search-icon" />
           <input
             type="text"
@@ -202,7 +202,7 @@ export default function SuperAdminInquiries() {
           />
         </div>
 
-        <div className="filters-wrap">
+        <div className="filters-wrap flex flex-wrap items-center w-full lg:w-auto" style={{ gap: "10px" }}>
           <select
             className="filter-select"
             value={statusFilter}

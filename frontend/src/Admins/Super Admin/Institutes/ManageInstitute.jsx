@@ -675,7 +675,7 @@ export default function ManageInstitute({ institute, onClose }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {campuses.map((campus) => (
-                <div key={campus._id || campus.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7" }}>
+                <div key={campus._id || campus.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderRadius: "10px", border: "1px solid #e4e4e7", flexWrap: "wrap", gap: "8px" }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "13px", color: "#09090b" }}>{campus.name}</div>
                     {(campus.location || campus.address?.city || campus.address?.street) && (

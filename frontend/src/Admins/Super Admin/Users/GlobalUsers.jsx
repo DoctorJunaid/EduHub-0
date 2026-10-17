@@ -177,54 +177,54 @@ export default function GlobalUsers() {
   return (
     <div className="global-users-page">
       {/* Mini Stats Banner */}
-      <div className="global-users-stats-grid">
-        <div className="global-users-stat-card">
+      <div className="global-users-stats-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+        <div className="global-users-stat-card min-w-0">
           {loading && users.length === 0 ? (
             <div className="user-skel-stat-val" />
           ) : loadError && users.length === 0 ? (
-            <span className="stat-num" aria-label="Unavailable">—</span>
+            <span className="stat-num whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-num">{stats.total}</span>
+            <span className="stat-num whitespace-nowrap">{stats.total}</span>
           )}
-          <span className="stat-lbl">Total Registered</span>
+          <span className="stat-lbl min-w-0 whitespace-nowrap truncate">Total Registered</span>
         </div>
-        <div className="global-users-stat-card">
+        <div className="global-users-stat-card min-w-0">
           {loading && users.length === 0 ? (
             <div className="user-skel-stat-val" />
           ) : loadError && users.length === 0 ? (
-            <span className="stat-num" aria-label="Unavailable">—</span>
+            <span className="stat-num whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-num">{stats.active}</span>
+            <span className="stat-num whitespace-nowrap">{stats.active}</span>
           )}
-          <span className="stat-lbl">Active Users</span>
+          <span className="stat-lbl min-w-0 whitespace-nowrap truncate">Active Users</span>
         </div>
-        <div className="global-users-stat-card">
+        <div className="global-users-stat-card min-w-0">
           {loading && users.length === 0 ? (
             <div className="user-skel-stat-val" />
           ) : loadError && users.length === 0 ? (
-            <span className="stat-num" aria-label="Unavailable">—</span>
+            <span className="stat-num whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-num">{stats.admins}</span>
+            <span className="stat-num whitespace-nowrap">{stats.admins}</span>
           )}
-          <span className="stat-lbl">Platform Admins</span>
+          <span className="stat-lbl min-w-0 whitespace-nowrap truncate">Platform Admins</span>
         </div>
-        <div className="global-users-stat-card">
+        <div className="global-users-stat-card min-w-0">
           {loading && users.length === 0 ? (
             <div className="user-skel-stat-val" />
           ) : loadError && users.length === 0 ? (
-            <span className="stat-num" aria-label="Unavailable">—</span>
+            <span className="stat-num whitespace-nowrap" aria-label="Unavailable">—</span>
           ) : (
-            <span className="stat-num">{stats.students}</span>
+            <span className="stat-num whitespace-nowrap">{stats.students}</span>
           )}
-          <span className="stat-lbl">Students</span>
+          <span className="stat-lbl min-w-0 whitespace-nowrap truncate">Students</span>
         </div>
       </div>
 
       {/* Main Global Users Management Panel */}
       <div className="global-users-panel">
         {/* Filters & Search Toolbar */}
-        <div className="global-users-toolbar">
-          <div className="global-users-search-wrap">
+        <div className="global-users-toolbar flex flex-col lg:flex-row lg:items-center justify-between w-full" style={{ gap: "12px" }}>
+          <div className="global-users-search-wrap relative w-full lg:w-80 xl:w-96 shrink-0">
             <Search size={16} className="search-icon" />
             <input
               type="search"
@@ -300,8 +300,8 @@ export default function GlobalUsers() {
         </div>
 
         {/* Users Table */}
-        <div className="table-responsive">
-          <table className="global-users-table">
+        <div className="table-responsive w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="global-users-table w-full min-w-[900px] border-collapse">
             <thead>
               <tr>
                 <th>User</th>
@@ -431,7 +431,7 @@ export default function GlobalUsers() {
         </div>
 
         {/* Server-side Pagination controls */}
-        <div className="global-users-pagination">
+        <div className="global-users-pagination flex flex-col sm:flex-row items-center justify-between" style={{ padding: "12px 18px", gap: "12px" }}>
           <span className="pagination-info">
             Showing {users.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, totalUsers)} of {totalUsers} total users
           </span>

@@ -287,75 +287,75 @@ export default function SubscriptionsManagement() {
   return (
     <div className="subscriptions-page-container">
       {/* Metrics Row: 4 Equal Columns */}
-      <div className="subs-metrics-grid">
-        <div className="metric-card">
-          <div className="metric-icon-wrap">
+      <div className="subs-metrics-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+        <div className="metric-card min-w-0">
+          <div className="metric-icon-wrap shrink-0">
             <Building2 size={18} />
           </div>
-          <div className="metric-info">
-            <span className="metric-label">Total Institutions</span>
+          <div className="metric-info min-w-0 flex-1">
+            <span className="metric-label whitespace-nowrap truncate">Total Institutions</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
             ) : error && subscriptions.length === 0 ? (
-              <span className="metric-value" aria-label="Unavailable">—</span>
+              <span className="metric-value whitespace-nowrap" aria-label="Unavailable">—</span>
             ) : (
-              <span className="metric-value">{metrics.total}</span>
+              <span className="metric-value whitespace-nowrap">{metrics.total}</span>
             )}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon-wrap">
+        <div className="metric-card min-w-0">
+          <div className="metric-icon-wrap shrink-0">
             <CheckCircle2 size={18} />
           </div>
-          <div className="metric-info">
-            <span className="metric-label">Active Subscriptions</span>
+          <div className="metric-info min-w-0 flex-1">
+            <span className="metric-label whitespace-nowrap truncate">Active Subscriptions</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
             ) : error && subscriptions.length === 0 ? (
-              <span className="metric-value" aria-label="Unavailable">—</span>
+              <span className="metric-value whitespace-nowrap" aria-label="Unavailable">—</span>
             ) : (
-              <span className="metric-value">{metrics.active}</span>
+              <span className="metric-value whitespace-nowrap">{metrics.active}</span>
             )}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon-wrap">
+        <div className="metric-card min-w-0">
+          <div className="metric-icon-wrap shrink-0">
             <Clock size={18} />
           </div>
-          <div className="metric-info">
-            <span className="metric-label">Active Trials</span>
+          <div className="metric-info min-w-0 flex-1">
+            <span className="metric-label whitespace-nowrap truncate">Active Trials</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
             ) : error && subscriptions.length === 0 ? (
-              <span className="metric-value" aria-label="Unavailable">—</span>
+              <span className="metric-value whitespace-nowrap" aria-label="Unavailable">—</span>
             ) : (
-              <span className="metric-value">{metrics.trial}</span>
+              <span className="metric-value whitespace-nowrap">{metrics.trial}</span>
             )}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon-wrap">
+        <div className="metric-card min-w-0">
+          <div className="metric-icon-wrap shrink-0">
             <ShieldAlert size={18} />
           </div>
-          <div className="metric-info">
-            <span className="metric-label">Suspended / Expired</span>
+          <div className="metric-info min-w-0 flex-1">
+            <span className="metric-label whitespace-nowrap truncate">Suspended / Expired</span>
             {initialLoading ? (
               <div className="metric-value-skeleton" />
             ) : error && subscriptions.length === 0 ? (
-              <span className="metric-value" aria-label="Unavailable">—</span>
+              <span className="metric-value whitespace-nowrap" aria-label="Unavailable">—</span>
             ) : (
-              <span className="metric-value">{metrics.suspendedOrExpired}</span>
+              <span className="metric-value whitespace-nowrap">{metrics.suspendedOrExpired}</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Controls & Filter Bar */}
-      <div className="subs-controls-bar">
-        <div className="subs-search-box">
+      <div className="subs-controls-bar flex flex-col lg:flex-row lg:items-center justify-between w-full" style={{ gap: "12px" }}>
+        <div className="subs-search-box relative w-full lg:w-80 xl:w-96 shrink-0">
           <Search size={16} className="search-icon" />
           <input
             type="text"
@@ -370,7 +370,7 @@ export default function SubscriptionsManagement() {
           )}
         </div>
 
-        <div className="subs-controls-right">
+        <div className="subs-controls-right flex flex-wrap items-center w-full lg:w-auto" style={{ gap: "10px" }}>
           <div className="subs-filter-tabs">
             {[
               { id: "all", label: "All" },
@@ -405,8 +405,8 @@ export default function SubscriptionsManagement() {
 
       {/* Main Table: Persistent Shell Across All States */}
       <div className="subs-table-card">
-        <div className="subs-table-wrap">
-          <table className="subs-table">
+        <div className="subs-table-wrap w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="subs-table w-full min-w-[900px] border-collapse">
             <thead>
               <tr>
                 <th style={{ width: "30%" }}>Institution</th>
@@ -578,8 +578,8 @@ export default function SubscriptionsManagement() {
 
       {/* ── ASSIGN / CHANGE PLAN MODAL ── */}
       {assignModalOpen && selectedInstitute && (
-        <div className="subs-modal-backdrop" onClick={() => !assigning && setAssignModalOpen(false)}>
-          <div className="subs-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="subs-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => !assigning && setAssignModalOpen(false)}>
+          <div className="subs-modal w-full max-w-[calc(100vw-24px)] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="subs-modal-header">
               <div className="modal-title-wrap">
                 <Layers size={20} />
@@ -714,8 +714,8 @@ export default function SubscriptionsManagement() {
 
       {/* ── EXTEND MODAL ── */}
       {extendModalOpen && selectedInstitute && (
-        <div className="subs-modal-backdrop" onClick={() => !extending && setExtendModalOpen(false)}>
-          <div className="subs-modal modal-compact" onClick={(e) => e.stopPropagation()}>
+        <div className="subs-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => !extending && setExtendModalOpen(false)}>
+          <div className="subs-modal modal-compact w-full max-w-[calc(100vw-24px)] sm:max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="subs-modal-header">
               <div className="modal-title-wrap">
                 <CalendarPlus size={20} />
@@ -805,8 +805,8 @@ export default function SubscriptionsManagement() {
 
       {/* ── STATUS CHANGE MODAL ── */}
       {statusModalOpen && selectedInstitute && (
-        <div className="subs-modal-backdrop" onClick={() => !updatingStatus && setStatusModalOpen(false)}>
-          <div className="subs-modal modal-compact" onClick={(e) => e.stopPropagation()}>
+        <div className="subs-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => !updatingStatus && setStatusModalOpen(false)}>
+          <div className="subs-modal modal-compact w-full max-w-[calc(100vw-24px)] sm:max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="subs-modal-header">
               <div className="modal-title-wrap">
                 <ShieldAlert size={20} />
@@ -879,8 +879,8 @@ export default function SubscriptionsManagement() {
 
       {/* ── HISTORY MODAL ── */}
       {historyModalOpen && selectedInstitute && (
-        <div className="subs-modal-backdrop" onClick={() => setHistoryModalOpen(false)}>
-          <div className="subs-modal modal-history" onClick={(e) => e.stopPropagation()}>
+        <div className="subs-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setHistoryModalOpen(false)}>
+          <div className="subs-modal modal-history w-full max-w-[calc(100vw-24px)] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="subs-modal-header">
               <div className="modal-title-wrap">
                 <History size={20} />
