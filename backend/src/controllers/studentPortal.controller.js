@@ -702,6 +702,8 @@ export const getStudentPortal = async (req, res) => {
         });
       }
     }
+    const assignments = Array.from(combinedAssignmentsMap.values());
+
     // Resolve Class Teacher for this student's class and section if not already found
     if (!classTeacher) {
       try {
