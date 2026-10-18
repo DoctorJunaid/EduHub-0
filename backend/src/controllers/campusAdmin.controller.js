@@ -855,6 +855,16 @@ export const omitFeeRecord = async (req, res) => {
   }
 };
 
+export const applyFeeDiscount = async (req, res) => {
+  try {
+    const { campusId } = getContext(req);
+    const record = await feeService.applyDiscountOrScholarship(req.params.id, campusId, req.user, req.body);
+    res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    handleError(res, error, 400);
+  }
+};
+
 // --- Payment Processing Controllers ---
 export const getPendingPayments = async (req, res) => {
   try {

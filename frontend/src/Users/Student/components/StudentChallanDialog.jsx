@@ -96,8 +96,20 @@ export default function StudentChallanDialog({ voucher, student, demo = false })
                     ))}
                     {voucher.waiver?.amount > 0 && (
                       <tr className="text-purple-700 font-medium">
-                        <td className="p-1.5">Waiver / Scholarship</td>
+                        <td className="p-1.5">Waiver / Fee Relief</td>
                         <td className="p-1.5 text-right">-{formatPKR(voucher.waiver.amount)}</td>
+                      </tr>
+                    )}
+                    {voucher.scholarshipDiscount > 0 && (
+                      <tr className="text-emerald-700 font-medium">
+                        <td className="p-1.5">Scholarship Grant</td>
+                        <td className="p-1.5 text-right">-{formatPKR(voucher.scholarshipDiscount)}</td>
+                      </tr>
+                    )}
+                    {voucher.concessionAmount > 0 && (
+                      <tr className="text-emerald-700 font-medium">
+                        <td className="p-1.5">Special Concession</td>
+                        <td className="p-1.5 text-right">-{formatPKR(voucher.concessionAmount)}</td>
                       </tr>
                     )}
                   </tbody>

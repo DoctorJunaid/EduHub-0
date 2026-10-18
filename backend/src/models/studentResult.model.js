@@ -119,6 +119,21 @@ const studentResultSchema = new mongoose.Schema(
       trim: true,
       default: "Midterm",
     },
+    academicTerm: {
+      type: String,
+      enum: [
+        "Midterm",
+        "Final",
+        "Term 1",
+        "Term 2",
+        "Term 3",
+        "Annual",
+        "Semester 1",
+        "Semester 2",
+      ],
+      default: "Midterm",
+      trim: true,
+    },
     examId: {
       type: String,
       default: "",
@@ -241,7 +256,20 @@ const studentResultSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+studentResultSchema.pre("validate", function() {
+  if (!this.academicTerm && this.term) {
+    if (/final|annual/i.test(this.term)) this.academicTerm = "Final";
+    else if (/term\s*1|first/i.test(this.term)) this.academicTerm = "Term 1";
+    else if (/term\s*2|second/i.test(this.term)) this.academicTerm = "Term 2";
+    else if (/term\s*3|third/i.test(this.term)) this.academicTerm = "Term 3";
+    else if (/semester\s*1/i.test(this.term)) this.academicTerm = "Semester 1";
+    else if (/semester\s*2/i.test(this.term)) this.academicTerm = "Semester 2";
+    else this.academicTerm = "Midterm";
+  }
+});
+
 studentResultSchema.index({ campusId: 1, classId: 1, term: 1, examName: 1 });
+studentResultSchema.index({ campusId: 1, classId: 1, academicTerm: 1, examName: 1 });
 studentResultSchema.index(
   { campusId: 1, studentId: 1, term: 1, examName: 1 },
   { unique: true }

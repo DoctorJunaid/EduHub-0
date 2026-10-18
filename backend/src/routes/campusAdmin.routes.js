@@ -60,6 +60,7 @@ import {
   getFinancialLedger,
   waiveFeeRecord,
   omitFeeRecord,
+  applyFeeDiscount,
   createPerformanceRecord,
   getPerformanceRecords,
   getPerformanceRecordById,
@@ -187,6 +188,7 @@ router.route("/fees/:id")
   .delete(deleteFeeRecord);
 router.post("/fees/:id/waive", waiveFeeRecord);
 router.post("/fees/:id/omit", omitFeeRecord);
+router.post("/fees/:id/discount", applyFeeDiscount);
 router.get("/fees/payments/pending", getPendingPayments);
 router.route("/fees/:id/payments").get(getFeePayments).post(recordPayment);
 router.post("/fees/payments/:paymentId/confirm", confirmPayment);

@@ -21,13 +21,15 @@ export const selectStudentGrades = createSelector(
     const groups = new Map();
     for (const row of rows) {
       const year = row.academicYear || "2026-2027";
-      const sem = row.semester || row.term || "Midterm";
+      const sem = row.academicTerm || row.term || row.semester || "Midterm";
       const key = JSON.stringify([year, sem]);
       if (!groups.has(key))
         groups.set(key, {
           key,
           academicYear: year,
+          academicTerm: sem,
           semester: sem,
+          term: sem,
           rows: [],
         });
       groups.get(key).rows.push({

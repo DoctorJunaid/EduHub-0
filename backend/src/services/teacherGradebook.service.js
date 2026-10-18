@@ -451,12 +451,26 @@ export async function saveGradebookResult(campusId, teacherUserId, data) {
     }
   }
 
+  const resolvedTerm = term || data.academicTerm || "Midterm";
+  let resolvedAcademicTerm = data.academicTerm;
+  if (!resolvedAcademicTerm) {
+    if (/final|annual/i.test(resolvedTerm)) resolvedAcademicTerm = "Final";
+    else if (/term\s*1|first/i.test(resolvedTerm)) resolvedAcademicTerm = "Term 1";
+    else if (/term\s*2|second/i.test(resolvedTerm)) resolvedAcademicTerm = "Term 2";
+    else if (/term\s*3|third/i.test(resolvedTerm)) resolvedAcademicTerm = "Term 3";
+    else if (/semester\s*1/i.test(resolvedTerm)) resolvedAcademicTerm = "Semester 1";
+    else if (/semester\s*2/i.test(resolvedTerm)) resolvedAcademicTerm = "Semester 2";
+    else resolvedAcademicTerm = "Midterm";
+  }
+
   const payload = {
     campusId,
     studentId,
     examName,
     subject,
-    term,
+    term: resolvedTerm,
+    academicTerm: resolvedAcademicTerm,
+    academicYear: data.academicYear || "2026-2027",
     className,
     gradeOrClass: className,
     section,

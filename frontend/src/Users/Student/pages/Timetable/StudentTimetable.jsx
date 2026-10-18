@@ -755,11 +755,22 @@ export default function StudentTimetable() {
                               {formatCardTime(record.startTime, record.endTime)}
                             </span>
 
-                            {/* 3. Assigned Teacher Name */}
-                            {(record.teacherName || record.instructor) && (
-                              <span className="text-[11px] text-neutral-600 mt-1 truncate block font-medium">
-                                {record.teacherName || record.instructor}
-                              </span>
+                            {/* 3. Assigned Teacher / Substitute Teacher Badge */}
+                            {record.isSubstituted ? (
+                              <div className="mt-1 flex items-center gap-1">
+                                <span
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-200"
+                                  title={`Substitute Teacher assigned: ${record.substituteTeacherName || "Covering Teacher"}${record.substituteReason ? ` (${record.substituteReason})` : ""}`}
+                                >
+                                  <Users size={10} /> Sub: {record.substituteTeacherName || "Covering Teacher"}
+                                </span>
+                              </div>
+                            ) : (
+                              (record.teacherName || record.instructor) && (
+                                <span className="text-[11px] text-neutral-600 mt-1 truncate block font-medium">
+                                  {record.teacherName || record.instructor}
+                                </span>
+                              )
                             )}
                           </div>
                         );
@@ -815,7 +826,23 @@ export default function StudentTimetable() {
                           </span>
                         </td>
                         <td style={{ padding: "12px 16px" }} className="text-neutral-600">
-                          {isB ? "—" : item.teacherName || item.instructor || "Assigned Faculty"}
+                          {isB ? (
+                            "—"
+                          ) : item.isSubstituted ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="line-through text-neutral-400 text-[11px]">
+                                {item.teacherName || item.instructor || "Assigned Faculty"}
+                              </span>
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-200"
+                                title={`Substitute Teacher: ${item.substituteTeacherName || "Covering Teacher"}${item.substituteReason ? ` (${item.substituteReason})` : ""}`}
+                              >
+                                <Users size={10} /> Sub: {item.substituteTeacherName || "Covering Teacher"}
+                              </span>
+                            </div>
+                          ) : (
+                            item.teacherName || item.instructor || "Assigned Faculty"
+                          )}
                         </td>
                         <td style={{ padding: "12px 16px" }} className="text-neutral-500">
                           {item.room || item.roomNumber || "Main Classroom"}

@@ -262,6 +262,8 @@ const feeRecordSchema = new mongoose.Schema(
     },
     amount: { type: Number, required: true, min: 0 },
     paidAmount: { type: Number, default: 0, min: 0 },
+    concessionAmount: { type: Number, default: 0, min: 0 },
+    scholarshipDiscount: { type: Number, default: 0, min: 0 },
     previousArrears: { type: Number, default: 0, min: 0 },
     totalPayable: { type: Number, default: 0, min: 0 },
     dueDate: { type: Date, required: true },
@@ -296,6 +298,9 @@ const feeRecordSchema = new mongoose.Schema(
       {
         title: { type: String, default: "" },
         amount: { type: Number, default: 0 },
+        isDiscount: { type: Boolean, default: false },
+        concessionAmount: { type: Number, default: 0 },
+        scholarshipDiscount: { type: Number, default: 0 },
       },
     ],
     discount: {
@@ -345,6 +350,15 @@ const feeRecordSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+feeRecordSchema.pre("validate", function() {
+  const gross = (this.amount || 0) + (this.previousArrears || 0) + (this.lateFine?.applied ? (this.lateFine?.amount || 0) : 0);
+  const discounts = (this.concessionAmount || 0) + (this.scholarshipDiscount || 0) + (this.discount?.amount || 0) + (this.waiver?.amount || 0);
+  // Guarantee non-negative totalPayable to eliminate negative balance adjustments
+  if (this.totalPayable === undefined || this.totalPayable === null || this.isModified("amount") || this.isModified("concessionAmount") || this.isModified("scholarshipDiscount") || this.isModified("previousArrears")) {
+    this.totalPayable = Math.max(0, gross - discounts);
+  }
+});
+
 feeRecordSchema.index({ campusId: 1, status: 1 });
 feeRecordSchema.index({ campusId: 1, month: 1, studentId: 1, feeType: 1 });
 feeRecordSchema.index({ campusId: 1, studentId: 1, status: 1 });
@@ -361,6 +375,26 @@ const performanceSchema = new mongoose.Schema(
     examName: { type: String, required: true, trim: true },
     subject: { type: String, required: true, trim: true },
     term: { type: String, required: true, trim: true },
+    academicTerm: {
+      type: String,
+      enum: [
+        "Midterm",
+        "Final",
+        "Term 1",
+        "Term 2",
+        "Term 3",
+        "Annual",
+        "Semester 1",
+        "Semester 2",
+      ],
+      default: "Midterm",
+      trim: true,
+    },
+    academicYear: {
+      type: String,
+      default: "2026-2027",
+      trim: true,
+    },
     className: { type: String, default: "" },
     gradeOrClass: { type: String, default: "" },
     section: { type: String, default: "" },
@@ -392,8 +426,21 @@ const performanceSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+performanceSchema.pre("validate", function() {
+  if (!this.academicTerm && this.term) {
+    if (/final|annual/i.test(this.term)) this.academicTerm = "Final";
+    else if (/term\s*1|first/i.test(this.term)) this.academicTerm = "Term 1";
+    else if (/term\s*2|second/i.test(this.term)) this.academicTerm = "Term 2";
+    else if (/term\s*3|third/i.test(this.term)) this.academicTerm = "Term 3";
+    else if (/semester\s*1/i.test(this.term)) this.academicTerm = "Semester 1";
+    else if (/semester\s*2/i.test(this.term)) this.academicTerm = "Semester 2";
+    else this.academicTerm = "Midterm";
+  }
+});
+
 performanceSchema.index({ campusId: 1, studentId: 1 });
 performanceSchema.index({ campusId: 1, className: 1, section: 1, term: 1 });
+performanceSchema.index({ campusId: 1, academicTerm: 1, academicYear: 1 });
 performanceSchema.index({ campusId: 1, examName: 1 });
 
 export const TeacherProfile = mongoose.model(

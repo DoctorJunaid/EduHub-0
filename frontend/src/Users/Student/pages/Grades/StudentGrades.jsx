@@ -68,10 +68,12 @@ export default function StudentGrades() {
     null;
   const resultStatus = period?.resultStatus || student?.resultStatus || null;
   const termLabel = (item) => {
-    const source = item?.term || item?.semester || "Exam Term";
+    const source = item?.academicTerm || item?.term || item?.semester || "Exam Term";
     if (/midterm/i.test(source)) return "Mid-Term";
     if (/final|annual/i.test(source)) return "Final Exam";
-    if (/first|1st/i.test(source)) return "1st Term";
+    if (/first|1st|term\s*1/i.test(source)) return "1st Term";
+    if (/second|2nd|term\s*2/i.test(source)) return "2nd Term";
+    if (/third|3rd|term\s*3/i.test(source)) return "3rd Term";
     return source;
   };
   const stats = [

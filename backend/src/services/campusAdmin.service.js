@@ -1162,6 +1162,11 @@ class CampusAdminService {
       : (data.paymentDate ? new Date(data.paymentDate) : null);
     const dueDate = data.dueDate ? new Date(data.dueDate) : new Date();
 
+    const concessionAmount = Math.max(0, Number(data.concessionAmount || 0));
+    const scholarshipDiscount = Math.max(0, Number(data.scholarshipDiscount || 0));
+    const grossAmount = amount;
+    const netTotalPayable = Math.max(0, grossAmount - concessionAmount - scholarshipDiscount);
+
     const payload = {
       ...data,
       campusId,
@@ -1173,8 +1178,11 @@ class CampusAdminService {
       description: data.description || data.notes || "",
       notes: data.description || data.notes || "",
       breakdown: Array.isArray(data.breakdown) ? data.breakdown : [],
-      amount,
+      amount: grossAmount,
       paidAmount,
+      concessionAmount,
+      scholarshipDiscount,
+      totalPayable: netTotalPayable,
       dueDate,
       paymentDate,
       status,

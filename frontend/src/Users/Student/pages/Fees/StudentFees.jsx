@@ -221,9 +221,19 @@ export default function StudentFees() {
                           </span>
                         )}
                         {voucher.waiver?.amount > 0 && (
-                          <span className="sf-fee-note block text-[11px] font-medium">
-                            (Waiver concession:{" "}
+                          <span className="sf-fee-note block text-[11px] font-medium text-purple-700">
+                            (Waiver relief:{" "}
                             {formatPKR(voucher.waiver.amount)})
+                          </span>
+                        )}
+                        {voucher.scholarshipDiscount > 0 && (
+                          <span className="sf-fee-note block text-[11px] font-medium text-emerald-700">
+                            (Scholarship grant: -{formatPKR(voucher.scholarshipDiscount)})
+                          </span>
+                        )}
+                        {voucher.concessionAmount > 0 && (
+                          <span className="sf-fee-note block text-[11px] font-medium text-emerald-700">
+                            (Special concession: -{formatPKR(voucher.concessionAmount)})
                           </span>
                         )}
                       </TableCell>

@@ -52,10 +52,29 @@ export default function VoucherDetails({ voucher, onClose, onPrint }) {
 
           <div className="p-4 border border-border rounded-lg bg-muted/30">
             <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">
-              Total Amount
+              Gross Amount
             </span>
             <strong className="text-lg text-foreground">{formatPKR(voucher.amount)}</strong>
           </div>
+
+          {(voucher.concessionAmount > 0 || voucher.scholarshipDiscount > 0) && (
+            <div className="p-4 border border-emerald-200 rounded-lg bg-emerald-50/50 col-span-2">
+              <span className="text-[11px] font-semibold uppercase text-emerald-800 block mb-1">
+                Concession & Scholarship Grants Applied (Non-Negative Balance Guaranteed)
+              </span>
+              <div className="flex gap-4 text-xs font-medium text-emerald-900 mt-1 flex-wrap">
+                {voucher.concessionAmount > 0 && (
+                  <span>Special Concession: -{formatPKR(voucher.concessionAmount)}</span>
+                )}
+                {voucher.scholarshipDiscount > 0 && (
+                  <span>Scholarship Grant: -{formatPKR(voucher.scholarshipDiscount)}</span>
+                )}
+                <span className="font-bold ml-auto text-emerald-950">
+                  Net Amount: {formatPKR(Math.max(0, (voucher.amount || 0) - (voucher.concessionAmount || 0) - (voucher.scholarshipDiscount || 0)))}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="p-4 border border-border rounded-lg bg-muted/30">
             <span className="text-[11px] font-semibold uppercase text-muted-foreground block mb-1">

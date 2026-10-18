@@ -30,6 +30,8 @@ export default function FeeVoucherForm({
       ? record.breakdown
       : [],
     amount: record?.amount ?? "",
+    concessionAmount: record?.concessionAmount ?? "",
+    scholarshipDiscount: record?.scholarshipDiscount ?? "",
     dueDate: record?.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
     paymentStatus: record?.paymentStatus ?? "Pending",
     paymentDate: record?.paymentDate ?? "",
@@ -99,6 +101,8 @@ export default function FeeVoucherForm({
       ]),
     );
     payload.amount = Number(payload.amount);
+    payload.concessionAmount = Math.max(0, Number(payload.concessionAmount) || 0);
+    payload.scholarshipDiscount = Math.max(0, Number(payload.scholarshipDiscount) || 0);
     payload.breakdown = values.breakdown
       .filter((item) => item.title && Number(item.amount) > 0)
       .map((item) => ({ title: item.title.trim(), amount: Number(item.amount) }));
@@ -198,7 +202,7 @@ export default function FeeVoucherForm({
           </div>
 
           <div className="activity-form-field">
-            <Label htmlFor="voucher-amount">Amount (PKR) *</Label>
+            <Label htmlFor="voucher-amount">Gross Amount (PKR) *</Label>
             <input
               id="voucher-amount"
               type="number"
@@ -208,6 +212,43 @@ export default function FeeVoucherForm({
               value={values.amount}
               onChange={(e) => change("amount", e.target.value)}
             />
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor="voucher-concession">Special Concession (PKR)</Label>
+            <input
+              id="voucher-concession"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="e.g. 5000"
+              value={values.concessionAmount}
+              onChange={(e) => change("concessionAmount", e.target.value)}
+            />
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor="voucher-scholarship">Scholarship Discount (PKR)</Label>
+            <input
+              id="voucher-scholarship"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="e.g. 10000"
+              value={values.scholarshipDiscount}
+              onChange={(e) => change("scholarshipDiscount", e.target.value)}
+            />
+          </div>
+
+          <div className="activity-form-field span-2" style={{ background: "#f8fafc", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>
+                Net Payable Amount (Avoids Negative Balance Adjustments):
+              </span>
+              <strong style={{ fontSize: "15px", color: "#0f172a" }}>
+                PKR {Math.max(0, (Number(values.amount) || 0) - (Number(values.concessionAmount) || 0) - (Number(values.scholarshipDiscount) || 0)).toLocaleString()}
+              </strong>
+            </div>
           </div>
 
           <div className="activity-form-field span-2">

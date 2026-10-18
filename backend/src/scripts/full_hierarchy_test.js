@@ -340,7 +340,10 @@ async function run() {
 
     // 5. Gradebook
     console.log("Checking /teacher/gradebook...");
-    await safeGoto(page, `${BASE_URL}/teacher/gradebook`);
+    const gbLink = await page.$('a[href="/teacher/gradebook"]');
+    if (gbLink) await gbLink.click();
+    else await safeGoto(page, `${BASE_URL}/teacher/gradebook`);
+    await sleep(2500);
     await page.screenshot({ path: path.join(ARTIFACT_DIR, "stage3_teacher_gradebook.png") });
     const gradeText = await page.evaluate(() => document.body.innerText);
     if (gradeText.includes("Tahir Khan") || gradeText.includes("88") || gradeText.includes("Midterm")) {

@@ -25,6 +25,7 @@ import {
 import Diary from "../models/diary.model.js";
 import Assignment from "../models/assignment.model.js";
 import PaymentTransaction from "../models/paymentTransaction.model.js";
+import SubstituteAssignment from "../models/substituteAssignment.model.js";
 import feeService from "../services/fee.service.js";
 
 const id = (value) => (value ? String(value) : "");
@@ -1107,6 +1108,26 @@ export const getStudentTimetable = async (req, res) => {
       }
     }
 
+    // Query active substitute assignments for this campus
+    let activeSubs = [];
+    try {
+      activeSubs = await SubstituteAssignment.find({
+        campusId,
+        status: { $in: ["Assigned", "Completed"] },
+      })
+        .populate({
+          path: "substituteTeacherId",
+          populate: { path: "user", select: "name email avatar phone designation" },
+        })
+        .populate({
+          path: "originalTeacherId",
+          populate: { path: "user", select: "name email avatar" },
+        })
+        .lean();
+    } catch (subErr) {
+      console.warn("[WARN] Could not fetch substitute assignments for student timetable:", subErr.message);
+    }
+
     records = records.map((r) => {
       const doc = { ...r };
       if (doc.gradeId && !doc.program) doc.program = doc.gradeId.name;
@@ -1124,6 +1145,40 @@ export const getStudentTimetable = async (req, res) => {
       doc.className = doc.program || (doc.gradeId?.name || gradeName);
       doc.sectionName = doc.section || (doc.sectionId?.name || sectionName);
       doc.subjectName = doc.subject || (doc.subjectId?.name || "");
+
+      // Check for active substitute teacher assignment
+      if (!doc.isBreak && doc.slotType !== "break" && activeSubs.length > 0) {
+        const matchedSub = activeSubs.find((sub) => {
+          const subClass = (sub.className || "").trim().toLowerCase();
+          const docClass = (doc.className || doc.program || "").trim().toLowerCase();
+          const classMatch = !subClass || docClass.includes(subClass) || subClass.includes(docClass);
+
+          const subSec = (sub.section || "").trim().toLowerCase().replace(/^section\s*/i, "");
+          const docSec = (doc.sectionName || doc.section || "").trim().toLowerCase().replace(/^section\s*/i, "");
+          const secMatch = !subSec || subSec === "all" || subSec === docSec;
+
+          const subSubj = (sub.subject || "").trim().toLowerCase();
+          const docSubj = (doc.subjectName || doc.subject || "").trim().toLowerCase();
+          const subjMatch = !subSubj || docSubj.includes(subSubj) || subSubj.includes(docSubj);
+
+          const timeMatch = (!sub.startTime || sub.startTime === doc.startTime) && (!sub.endTime || sub.endTime === doc.endTime);
+
+          return classMatch && secMatch && (subjMatch || timeMatch);
+        });
+
+        if (matchedSub) {
+          const subTeacherUser = matchedSub.substituteTeacherId?.user || matchedSub.substituteTeacherId;
+          const subTeacherName = subTeacherUser?.name || "Substitute Teacher";
+          doc.isSubstituted = true;
+          doc.substituteTeacherId = matchedSub.substituteTeacherId?._id || matchedSub.substituteTeacherId;
+          doc.substituteTeacherName = subTeacherName;
+          doc.substituteReason = matchedSub.reason || "Teacher Absent";
+          doc.substituteNotes = matchedSub.notes || "";
+          doc.substituteDate = matchedSub.date;
+          doc.substituteStatus = matchedSub.status;
+        }
+      }
+
       return doc;
     });
 

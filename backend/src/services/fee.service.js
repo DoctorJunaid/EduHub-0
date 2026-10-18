@@ -154,8 +154,10 @@ class FeeService {
         }
       }
 
+      const studentConcession = Math.max(0, Number(student.concessionAmount || 0));
+      const studentScholarship = Math.max(0, Number(student.scholarshipDiscount || 0));
       const arrears = arrearsMap.get(studentIdStr) || 0;
-      const totalPayable = amount + arrears;
+      const totalPayable = Math.max(0, amount + arrears - studentConcession - studentScholarship);
       const challanNo = this.generateChallanNo("VCH");
       const semester = student.gradeOrClass || student.program || month;
 
@@ -171,6 +173,8 @@ class FeeService {
         academicSession: options.academicSession || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
         amount,
         paidAmount: 0,
+        concessionAmount: studentConcession,
+        scholarshipDiscount: studentScholarship,
         previousArrears: arrears,
         totalPayable,
         dueDate,
@@ -644,6 +648,67 @@ class FeeService {
       performedBy: adminUser._id,
     }).catch((err) => console.warn("ActivityLog write warning:", err.message));
 
+    return feeRecord;
+  }
+
+  /**
+   * Apply Structured Concession or Scholarship Discount
+   * Eliminates negative balance adjustments by enforcing non-negative clamping.
+   */
+  async applyDiscountOrScholarship(id, campusId, adminUser, data = {}) {
+    const feeRecord = await FeeRecord.findOne({ _id: id, campusId });
+    if (!feeRecord) throw new Error("Fee record not found.");
+
+    const concessionAmount = Math.max(0, Number(data.concessionAmount || 0));
+    const scholarshipDiscount = Math.max(0, Number(data.scholarshipDiscount || 0));
+    const reason = (data.reason || data.category || "Merit / Special assistance").trim();
+
+    feeRecord.concessionAmount = concessionAmount;
+    feeRecord.scholarshipDiscount = scholarshipDiscount;
+
+    // Filter out previous concession/scholarship lines in breakdown
+    feeRecord.breakdown = (feeRecord.breakdown || []).filter(
+      (b) => !b.isDiscount && !b.title.toLowerCase().includes("scholarship") && !b.title.toLowerCase().includes("concession")
+    );
+
+    if (concessionAmount > 0) {
+      feeRecord.breakdown.push({
+        title: `Special Concession (${reason})`,
+        amount: -concessionAmount,
+        isDiscount: true,
+        concessionAmount,
+        scholarshipDiscount: 0,
+      });
+    }
+
+    if (scholarshipDiscount > 0) {
+      feeRecord.breakdown.push({
+        title: `Scholarship Grant (${reason})`,
+        amount: -scholarshipDiscount,
+        isDiscount: true,
+        concessionAmount: 0,
+        scholarshipDiscount,
+      });
+    }
+
+    const gross = (feeRecord.amount || 0) + (feeRecord.previousArrears || 0) + (feeRecord.lateFine?.applied ? (feeRecord.lateFine?.amount || 0) : 0);
+    const totalDiscounts = concessionAmount + scholarshipDiscount + (feeRecord.discount?.amount || 0) + (feeRecord.waiver?.amount || 0);
+    feeRecord.totalPayable = Math.max(0, gross - totalDiscounts);
+
+    if (feeRecord.paidAmount >= feeRecord.totalPayable && feeRecord.totalPayable > 0) {
+      feeRecord.status = "PAID";
+    } else if (feeRecord.totalPayable === 0 && feeRecord.paidAmount === 0) {
+      feeRecord.status = "WAIVED";
+    }
+
+    feeRecord.auditTrail.push({
+      action: "concession_applied",
+      performedBy: adminUser?._id || null,
+      timestamp: new Date(),
+      details: `Special concession of Rs ${concessionAmount} and scholarship grant of Rs ${scholarshipDiscount} applied. Reason: ${reason}. New total payable: Rs ${feeRecord.totalPayable}.`,
+    });
+
+    await feeRecord.save();
     return feeRecord;
   }
 
