@@ -84,6 +84,7 @@ export default function GlobalSearchBar({
   placeholder = "Search students, teachers, classes, subjects...",
   userRole = "super_admin",
   onSearchSubmit,
+  autoFocus = false,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -153,6 +154,14 @@ export default function GlobalSearchBar({
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
+
+  // Handle autoFocus prop
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+      setIsOpen(true);
+    }
+  }, [autoFocus]);
 
   // Handle global ⌘K or Ctrl+K shortcut
   useEffect(() => {
@@ -508,6 +517,7 @@ export default function GlobalSearchBar({
           aria-label="Global Search"
           autoComplete="off"
           spellCheck="false"
+          autoFocus={autoFocus}
           style={{
             border: "none",
             outline: "none",

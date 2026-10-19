@@ -555,14 +555,97 @@
   font-weight: 600;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .campus-kpi-track {
-    grid-template-columns: repeat(2, 1fr);
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .campus-kpi-card {
+    border-right: 1px solid #e4e4e7 !important;
+    border-bottom: 1px solid #e4e4e7 !important;
+    padding: 10px 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .campus-kpi-card:nth-child(2n) {
+    border-right: none !important;
+    padding-right: 14px !important;
+  }
+
+  .campus-kpi-card:nth-child(3),
+  .campus-kpi-card:nth-child(4) {
+    border-bottom: none !important;
   }
 }
 
-@media (max-width: 600px) {
-  .campus-kpi-track {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  .campus-toolbar {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 10px 14px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .toolbar-left {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .toolbar-search {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .toolbar-right,
+  .toolbar-actions {
+    width: 100% !important;
+    display: flex !important;
+    margin-left: 0 !important;
+    margin-top: 2px !important;
+  }
+
+  .toolbar-right .toolbar-btn,
+  .toolbar-actions .toolbar-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .campus-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .campus-table-container table {
+    min-width: 620px !important;
+    table-layout: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .campus-kpi-card {
+    padding: 8px 8px !important;
+    min-height: 48px !important;
+  }
+
+  .kpi-wrap {
+    gap: 7px !important;
+    justify-content: flex-start !important;
+    padding-left: 4px !important;
+    width: 100% !important;
+  }
+
+  .kpi-label {
+    font-size: 8.5px !important;
+  }
+
+  .kpi-value {
+    font-size: 13.5px !important;
   }
 }
