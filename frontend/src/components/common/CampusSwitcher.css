@@ -179,3 +179,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+@media (max-width: 640px) {
+  .campus-badge-text {
+    max-width: 80px;
+  }
+  .campus-switcher-name {
+    max-width: 80px;
+  }
+  .campus-switcher-sub {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .campus-badge-text {
+    max-width: 55px;
+    font-size: 11px;
+  }
+  .campus-badge-fixed {
+    padding: 3px 6px;
+    gap: 4px;
+    height: 30px;
+  }
+}

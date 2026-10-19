@@ -24,21 +24,21 @@ export default function UnmarkedAttendanceBanner({ userRole }) {
   if (dismissed || !unmarkedData || unmarkedData.unmarkedCount === 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/10 border border-amber-500/40 rounded-2xl p-4 mb-6 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-amber-950/20 backdrop-blur-md">
+    <div className="bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-500/40 rounded-2xl p-4 mb-6 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm backdrop-blur-md">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-amber-500/30 text-amber-300 border border-amber-500/40 shrink-0">
+        <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/30 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 shrink-0">
           <ShieldAlert size={22} />
         </div>
         <div>
-          <h4 className="font-bold text-white text-sm flex items-center gap-2">
+          <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
             Morning Attendance Alert
-            <span className="bg-amber-500/30 text-amber-300 text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="bg-amber-200/80 dark:bg-amber-500/30 text-amber-900 dark:text-amber-300 text-xs px-2 py-0.5 rounded-full font-bold">
               {unmarkedData.unmarkedCount} {unmarkedData.unmarkedCount === 1 ? "Class" : "Classes"} Pending
             </span>
           </h4>
-          <p className="text-xs text-amber-200/90 mt-0.5">
+          <p className="text-xs text-amber-900/90 dark:text-amber-200/90 mt-0.5">
             The following class sections have not recorded student attendance for today:{" "}
-            <span className="font-medium text-white">
+            <span className="font-semibold text-slate-900 dark:text-white">
               {unmarkedData.unmarkedClasses?.map((c) => c.className).join(", ")}
             </span>
           </p>
