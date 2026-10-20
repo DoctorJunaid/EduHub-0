@@ -80,10 +80,6 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
 
   return (
     <div className={`dashboard-shell ${className}`}>
-      {!sidebarCollapsed && (
-        <div
-          className="sidebar-mobile-backdrop md:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-40 transition-opacity"
-          onClick={() => setSidebarCollapsed(true)}
       {/* ── Mobile Slide-Over Backdrop ── */}
       {drawerOpen && (
         <div
@@ -92,14 +88,6 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
           aria-hidden="true"
         />
       )}
-
-      <Sidebar
-        user={profile}
-        onSignOut={signOut}
-        items={effectiveNavigation}
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
-      />
       {/* ── Mobile Slide-Over Drawer (< 1024px) ── */}
       <div
         className={`dashboard-drawer ${drawerOpen ? "is-open" : ""}`}
