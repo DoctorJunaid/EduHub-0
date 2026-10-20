@@ -94,17 +94,56 @@ const HERO_CARDS = [
   }
 ];
 
+const MOBILE_HERO_CARDS = [
+  {
+    id: 'feature_database',
+    title: 'Unified Records Ledger',
+    subtitle: 'TAMPER-PROOF PROFILES',
+    category: 'DATABASE',
+    accent: '#f59e0b',
+    stat: 'Centralized Registry',
+    image: '/hero/records.jpg',
+    description: 'A shared institutional ledger tracking student transcripts, certified diplomas, and faculty credentials across national institutions with cryptographic validation.'
+  },
+  {
+    id: 'feature_ranking',
+    title: 'Build Tomorrow',
+    subtitle: 'STUDENT SUCCESS',
+    category: 'LEADERSHIP',
+    accent: '#3b82f6',
+    stat: 'Student Success',
+    image: '/hero/ranking.jpg',
+    description: 'Explore dynamic university and college rankings benchmarked across faculty-to-student ratios, research publications, modern lab infrastructure, and accredited degree completions.'
+  },
+  {
+    id: 'feature_discovery',
+    title: 'Explore & Grow',
+    subtitle: 'CAMPUS LIFE',
+    category: 'DISCOVER',
+    accent: '#10b981',
+    stat: 'Campus Life',
+    image: '/hero/universities.jpg',
+    description: 'Students navigate institutional selection without information deficits. EduHub aggregates HEC accreditation tiers, PEC Washington Accord alignments, and real graduate placement rates.'
+  }
+];
+
 export default function HeroFanDeck({ onGetStarted, navigate }) {
   const [isFanned, setIsFanned] = useState(false);
   const [isIntroComplete, setIsIntroComplete] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const [selectedCard, setSelectedCard] = useState(null);
+  const [activeMobileIndex, setActiveMobileIndex] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === 'undefined' ? 1024 : window.innerWidth
   );
   const stageRef = useRef(null);
   const hoverTimerRef = useRef(null);
+  const touchStartXRef = useRef(null);
+  const touchStartYRef = useRef(null);
+
+  const isMobile = viewportWidth <= 768;
+  const mobileOffset = viewportWidth < 360 ? 58 : viewportWidth < 410 ? 66 : 74;
 
   const managementLoginUrl = getManagementLoginUrl();
 
@@ -155,6 +194,28 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
     setHoveredIndex(null);
   };
 
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartXRef.current === null) return;
+    const diffX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const diffY = e.changedTouches[0].clientY - (touchStartYRef.current || 0);
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
+      if (diffX < 0) {
+        // Swiped left -> next card
+        setActiveMobileIndex((prev) => (prev + 1) % 3);
+      } else {
+        // Swiped right -> prev card
+        setActiveMobileIndex((prev) => (prev - 1 + 3) % 3);
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   // Replay animation effect
   const handleReplay = () => {
     setIsFanned(false);
@@ -191,22 +252,156 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
         <span className="headline-bold text-gradient-emerald">academic future.</span>
       </motion.h1>
 
-      {/* ─── The Grand Fan Deck Stage (0.6s – 1.6s bloom) ─── */}
-      <div
-        className="hero-deck-stage"
-        ref={stageRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <motion.div
-          className="hero-deck-wrapper"
-          animate={{
-            rotateY: viewportWidth <= 640 ? 0 : mouseTilt.x,
-            rotateX: viewportWidth <= 640 ? 0 : mouseTilt.y,
-          }}
-          transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+      {/* ─── Hero Deck Stage: 3D Stack on Mobile (<= 768px), Grand Fan Arc on Desktop ─── */}
+      {isMobile ? (
+        <>
+          <div
+            className="hero-mobile-deck-stage"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Soft Ambient Dots matching screenshot */}
+            <div className="hero-mobile-ambient-dots" aria-hidden="true">
+              <span className="ambient-dot dot-1" />
+              <span className="ambient-dot dot-2" />
+              <span className="ambient-dot dot-3" />
+              <span className="ambient-dot dot-4" />
+              <span className="ambient-dot dot-5" />
+              <span className="ambient-dot dot-6" />
+              <span className="ambient-dot dot-7" />
+            </div>
+
+            <div className="hero-mobile-deck-wrapper">
+              {MOBILE_HERO_CARDS.map((card, cardIndex) => {
+                let slot = 0;
+                if (cardIndex === activeMobileIndex) {
+                  slot = 0;
+                } else if ((cardIndex - activeMobileIndex + 3) % 3 === 1) {
+                  slot = 1;
+                } else {
+                  slot = -1;
+                }
+
+                const isCenter = slot === 0;
+                const isLeft = slot === -1;
+                const dynamicX = isCenter ? 0 : isLeft ? -mobileOffset : mobileOffset;
+                const dynamicY = isCenter ? 0 : 15;
+                const dynamicRotate = isCenter ? 0 : isLeft ? -7.5 : 7.5;
+                const dynamicScale = isCenter ? 1 : 0.85;
+                const dynamicZIndex = isCenter ? 30 : 12;
+                const dynamicOpacity = isCenter ? 1 : 0.92;
+
+                return (
+                  <motion.div
+                    key={card.id}
+                    className={`hero-mobile-card-slot ${isCenter ? 'is-center' : isLeft ? 'is-left' : 'is-right'}`}
+                    animate={{
+                      x: dynamicX,
+                      y: dynamicY,
+                      rotate: dynamicRotate,
+                      scale: dynamicScale,
+                      opacity: dynamicOpacity,
+                      zIndex: dynamicZIndex,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 280,
+                      damping: 26,
+                      mass: 0.85,
+                    }}
+                    onClick={() => {
+                      if (isCenter) {
+                        handleCardClick(card);
+                      } else {
+                        setActiveMobileIndex(cardIndex);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${card.title} - ${isCenter ? 'Active' : 'Select card'}`}
+                  >
+                    <div
+                      className={`hero-mobile-card ${isCenter ? 'is-active-card' : ''}`}
+                      style={{
+                        '--card-accent': card.accent || '#10b981',
+                      }}
+                    >
+                      {/* Artwork Image */}
+                      <img
+                        src={card.image}
+                        alt={card.title}
+                        className="hero-mobile-card-img"
+                        loading="lazy"
+                      />
+
+                      {/* Dark Gradient Overlay */}
+                      <div className="hero-mobile-card-overlay" />
+
+                      {/* Top Sheen */}
+                      <div className="hero-mobile-card-sheen" />
+
+                      {/* Card Content Overlay */}
+                      <div className="hero-mobile-card-content">
+                        <div className="hero-mobile-card-top">
+                          <span className="hero-mobile-card-tag">{card.category}</span>
+                          {isCenter && (
+                            <div className="hero-mobile-card-action-btn" title="View details">
+                              <ArrowRight size={13} weight="bold" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="hero-mobile-card-bottom">
+                          {card.subtitle && (
+                            <span className="hero-mobile-card-subtitle">{card.subtitle}</span>
+                          )}
+                          <h3 className="hero-mobile-card-title">{card.title}</h3>
+                          <div className="hero-mobile-card-stat">
+                            <span className="hero-stat-sparkle">✦</span>
+                            <span>{card.stat}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── 3 Pagination Dots Indicator (matching screenshot) ─── */}
+          <div className="hero-mobile-dots" aria-label="Hero cards pagination">
+            {[0, 1, 2].map((dotIdx) => {
+              const isActive = activeMobileIndex === dotIdx;
+              return (
+                <button
+                  key={dotIdx}
+                  type="button"
+                  className={`hero-mobile-dot ${isActive ? 'is-active' : ''}`}
+                  onClick={() => setActiveMobileIndex(dotIdx)}
+                  aria-label={`Slide ${dotIdx + 1}`}
+                  aria-current={isActive ? 'true' : undefined}
+                />
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        /* ─── The Grand Fan Deck Stage for Desktop (> 768px) ─── */
+        <div
+          className="hero-deck-stage"
+          ref={stageRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
-            {/* ─── 7-Card Fan Arc Deck ─── */}
+          <motion.div
+            className="hero-deck-wrapper"
+            animate={{
+              rotateY: mouseTilt.x,
+              rotateX: mouseTilt.y,
+            }}
+            transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+          >
             {HERO_CARDS.map((card, index) => (
               <HeroCard
                 key={card.id}
@@ -217,12 +412,13 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
                 isIntroComplete={isIntroComplete}
                 hoveredIndex={hoveredIndex}
                 onHover={handleCardHover}
-                mobileLayout={viewportWidth <= 640}
+                mobileLayout={false}
                 onSelect={handleCardClick}
               />
             ))}
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Subtitle Description */}
       <motion.p 
