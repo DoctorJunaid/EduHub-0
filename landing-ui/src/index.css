@@ -94,11 +94,24 @@
 
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
     /* Add subtle noise texture for premium feel */
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
   }
@@ -275,8 +288,8 @@
 /* ─── Alumni Card ─── */
 .xcard-alumni {
   position: relative;
-  width: 310px;
-  height: 420px;
+  width: clamp(260px, 78vw, 310px);
+  height: clamp(370px, 58vh, 420px);
   background: var(--card-bg);
   border: 1px solid var(--border-light);
   border-radius: 24px;
@@ -410,8 +423,8 @@
 /* ─── Institute Editorial Card ─── */
 .xcard-institute {
   position: relative;
-  width: 330px;
-  height: 430px;
+  width: clamp(270px, 80vw, 330px);
+  height: clamp(380px, 60vh, 430px);
   border-radius: 24px;
   overflow: hidden;
   cursor: pointer;
@@ -537,13 +550,21 @@
 /* ─── Bento Grid (Features Section) ─── */
 .xbento-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
-@media (max-width: 960px) {
+@media (min-width: 768px) {
   .xbento-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .xbento-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
   }
 }
 
@@ -576,17 +597,17 @@
 }
 
 .xbento-card.large {
-  grid-column: span 2;
+  grid-column: span 1;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
 }
 
-@media (max-width: 960px) {
+@media (min-width: 768px) {
   .xbento-card.large {
-    grid-column: span 1;
-    flex-direction: column;
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
@@ -817,33 +838,71 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* ─── Global Responsive Media, Touch Targets & Viewport Polish ─── */
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 44px minimum touch targets on mobile & touch devices */
+@media (max-width: 768px) {
+  button, 
+  a[role="button"], 
+  .btn,
+  input[type="submit"],
+  input[type="button"],
+  select,
+  .touch-target {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
+
+/* Smooth Focus Rings */
+:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Responsive Table & Scroll Containers */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 640px) {
   .marquee-track {
-    gap: 22px;
+    gap: 18px;
   }
 
   .xcard-alumni {
-    width: 280px;
-    height: 380px;
+    width: clamp(250px, 76vw, 290px);
+    height: clamp(360px, 56vh, 395px);
   }
 
   .xcard-alumni-content {
-    padding: 30px 24px 24px;
+    padding: 24px 20px 20px;
   }
 }
 
 @media (max-width: 380px) {
+  .marquee-track {
+    gap: 14px;
+  }
+
   .xcard-alumni {
-    width: 260px;
-    height: 350px;
+    width: clamp(235px, 82vw, 260px);
+    height: clamp(340px, 54vh, 370px);
   }
 
   .xcard-alumni-content {
-    padding: 26px 20px 20px;
+    padding: 20px 16px 16px;
   }
 }
 
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   .landing-page :is(h1, h2, h3, h4, p),
   .institute-public-page :is(h1, h2, h3, h4, p, span, a, td, th) {
     min-width: 0;
@@ -855,6 +914,11 @@
   .institute-public-page .grid > *,
   .institute-public-page .flex > * {
     min-width: 0;
+  }
+
+  .landing-page section {
+    padding-left: clamp(14px, 4vw, 20px);
+    padding-right: clamp(14px, 4vw, 20px);
   }
 
   .institute-public-page section {
@@ -889,11 +953,11 @@
   }
 
   .ai-chat-section {
-    padding: 56px 12px 60px;
+    padding: 48px 12px 56px;
   }
 
   .ai-section-header {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
   .ai-window-chrome {
@@ -912,9 +976,9 @@
   }
 
   .ai-messages-area {
-    min-height: 280px;
-    max-height: 55vh;
-    padding: 18px 12px;
+    min-height: 260px;
+    max-height: 52vh;
+    padding: 16px 10px;
   }
 
   .ai-message {

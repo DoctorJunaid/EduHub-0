@@ -116,12 +116,12 @@ export default function GetStartedModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
-      <DialogContent className="partner-registration-dialog max-w-xl p-0 overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl">
+      <DialogContent className="partner-registration-dialog w-[calc(100vw-1.5rem)] sm:w-full max-w-xl p-0 max-h-[92dvh] overflow-y-auto border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl">
         <div className="relative">
           {/* Top Emerald Accent Bar */}
           <div className="h-2 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600" />
 
-          <div className="p-6 md:p-8">
+          <div className="p-5 sm:p-6 md:p-8">
             <AnimatePresence mode="wait">
               {!isSubmitted ? (
                 <motion.div
@@ -131,17 +131,17 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <DialogHeader className="text-left mb-6">
+                  <DialogHeader className="text-left mb-5 sm:mb-6">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
                         <GraduationCap size={20} weight="bold" />
                       </div>
                       <Badge variant="emerald" className="text-xs">Partner Registration</Badge>
                     </div>
-                    <DialogTitle className="text-2xl md:text-3xl font-bold font-display text-slate-900 dark:text-white">
+                    <DialogTitle className="text-xl sm:text-2xl md:text-3xl font-bold font-display text-slate-900 dark:text-white leading-tight">
                       Let's empower your campus.
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+                    <DialogDescription className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                       Join Pakistan's leading academic network. Tell us about your institution to begin your digital onboarding.
                     </DialogDescription>
                   </DialogHeader>
@@ -154,9 +154,9 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   )}
 
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                       {/* Institution Name */}
-                      <div className="space-y-1 md:col-span-2">
+                      <div className="space-y-1.5 md:col-span-2">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                           <Buildings size={14} weight="duotone" className="text-emerald-600" />
                           Institution Name
@@ -168,12 +168,12 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           placeholder="e.g. National University of Sciences & Tech"
                           value={formData.instituteName}
                           onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
+                          className="h-11 rounded-xl text-sm bg-slate-50 dark:bg-slate-800/50 w-full"
                         />
                       </div>
 
                       {/* Institution Type */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           Institution Type
                         </label>
@@ -182,7 +182,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           name="instituteType"
                           value={formData.instituteType}
                           onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+                          className="w-full h-11 px-3 rounded-xl border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                         >
                           <option value="University">University</option>
                           <option value="College">College</option>
@@ -192,7 +192,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                       </div>
 
                       {/* City */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                           <MapPin size={14} weight="duotone" className="text-emerald-600" />
                           Primary City
@@ -202,7 +202,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           name="city"
                           value={formData.city}
                           onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+                          className="w-full h-11 px-3 rounded-xl border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                         >
                           <option value="Islamabad">Islamabad</option>
                           <option value="Lahore">Lahore</option>
@@ -216,7 +216,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                       </div>
 
                       {/* Contact Person Name */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                           <User size={14} weight="duotone" className="text-emerald-600" />
                           Authorized Representative
@@ -228,12 +228,12 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           placeholder="Dr. / Prof. / Mr. Name"
                           value={formData.contactName}
                           onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
+                          className="h-11 rounded-xl text-sm bg-slate-50 dark:bg-slate-800/50 w-full"
                         />
                       </div>
 
                       {/* Official Email */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                           <Envelope size={14} weight="duotone" className="text-emerald-600" />
                           Institutional Email
@@ -246,12 +246,12 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           placeholder="registrar@institution.edu.pk"
                           value={formData.email}
                           onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
+                          className="h-11 rounded-xl text-sm bg-slate-50 dark:bg-slate-800/50 w-full"
                         />
                       </div>
 
                       {/* Phone Number */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                           <Phone size={14} weight="duotone" className="text-emerald-600" />
                           Contact Phone
@@ -264,12 +264,12 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           placeholder="+92 300 1234567"
                           value={formData.phone}
                           onChange={handleChange}
-                          className="bg-slate-50 dark:bg-slate-800/50"
+                          className="h-11 rounded-xl text-sm bg-slate-50 dark:bg-slate-800/50 w-full"
                         />
                       </div>
 
                       {/* Approximate Students */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                           <Users size={14} weight="duotone" className="text-emerald-600" />
                           Student Body Size
@@ -279,7 +279,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                           name="studentCount"
                           value={formData.studentCount}
                           onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+                          className="w-full h-11 px-3 rounded-xl border border-input bg-slate-50 dark:bg-slate-800/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                         >
                           <option value="100 - 500">100 - 500 Students</option>
                           <option value="500 - 2,000">500 - 2,000 Students</option>
@@ -289,11 +289,11 @@ export default function GetStartedModal({ isOpen, onClose }) {
                       </div>
                     </div>
 
-            <div className="pt-4 flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-3">
-              <Button type="button" variant="ghost" disabled={isSubmitting} onClick={handleClose} className="w-full sm:w-auto">
+                    <div className="pt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+                      <Button type="button" variant="ghost" disabled={isSubmitting} onClick={handleClose} className="w-full sm:w-auto min-h-[44px] rounded-xl">
                         Cancel
                       </Button>
-              <Button type="submit" variant="glow" disabled={isSubmitting} className="w-full sm:w-auto gap-2">
+                      <Button type="submit" variant="glow" disabled={isSubmitting} className="w-full sm:w-auto min-h-[44px] rounded-xl gap-2 font-bold">
                         {isSubmitting ? (
                           <>
                             <SpinnerGap size={16} className="animate-spin" />

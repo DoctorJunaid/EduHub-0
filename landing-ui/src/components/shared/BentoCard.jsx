@@ -20,11 +20,11 @@ export default function BentoCard({
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      className={`group relative rounded-3xl overflow-hidden glass-card transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.7)] hover:border-emerald-500/40 flex flex-col justify-between ${
-        isLarge ? 'md:col-span-2' : ''
+      className={`group relative rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-slate-200/80 dark:border-white/[0.08] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.7)] hover:border-emerald-500/40 flex flex-col justify-between ${
+        isLarge ? 'md:col-span-2' : 'col-span-1'
       } ${className}`}
     >
-      {/* Subtle, Butter-Smooth Ambient Cursor Spotlight */}
+      {/* Ambient Cursor Spotlight */}
       <div 
         className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"
         style={{

@@ -9,7 +9,6 @@ import {
   ChartBar,
   CalendarCheck,
   UserCircle,
-  ArrowRight,
   CircleNotch,
   Star,
   MapPin,
@@ -381,7 +380,7 @@ export default function AIChatDemo() {
   };
 
   return (
-    <section className="ai-chat-section" id="ai">
+    <section className="ai-chat-section scroll-mt-20" id="ai-assistant">
       {/* Section Header */}
       <motion.div
         className="ai-section-header"
