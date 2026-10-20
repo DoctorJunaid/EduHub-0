@@ -8,6 +8,7 @@ import {
   School,
   GraduationCap,
   Menu,
+  X,
 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -41,6 +42,8 @@ const Header = ({
   showNotifications = true,
   searchPlaceholder,
   handleSearch = () => {},
+  onMenuToggle,
+  drawerOpen = false,
 }) => {
   const facultyRecords = useSelector((state) => state.faculty?.records || []);
   const {
@@ -61,6 +64,7 @@ const Header = ({
   const focusProfile = useRef(false);
   const notificationRef = useRef(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const navigate = useNavigate();
 
   const currentRole = user?.role || userRole;
@@ -98,11 +102,16 @@ const Header = ({
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         setNotificationsOpen(false);
+        setMobileSearchOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    setMobileSearchOpen(false);
+  }, [location.pathname]);
 
   const handleNotificationClick = async (item) => {
     if (!item.isRead) {
@@ -158,91 +167,131 @@ const Header = ({
           let label = segment
             .replace(/-/g, " ")
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
+      <div className="header-left">
+        {onMenuToggle && (
+          <button
+            type="button"
+            className="header-hamburger-btn"
+            onClick={onMenuToggle}
+            aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={drawerOpen}
+            title="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+        )}
 
-          if (segment.toLowerCase() === "messages" || segment.toLowerCase() === "support") {
-            label = "Help & Support";
-          }
+        <nav className="breadcrumbs" aria-label="Breadcrumb">
+          <Link to={homePath || (institute ? "/institute-admin" : "/dashboard")}>
+            {homeLabel || (institute ? "Dashboard" : "Home")}
+          </Link>
+          {(
+            breadcrumbItems ||
+            segments.filter(
+              (segment) => !institute || segment !== "institute-admin",
+            )
+          ).map((segment, index, arr) => {
+            let label = segment
+              .replace(/-/g, " ")
+              .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-          const isHexOrId =
-            /^[0-9a-fA-F]{24}$/.test(segment) ||
-            /^fac-\d+$/i.test(segment) ||
-            /^stu-\d+$/i.test(segment) ||
-            /^[0-9a-fA-F-]{36}$/.test(segment);
+            if (segment.toLowerCase() === "messages" || segment.toLowerCase() === "support") {
+              label = "Help & Support";
+            }
 
-          if (isHexOrId) {
-            if (location.state?.teacherName) {
-              label = location.state.teacherName;
-            } else if (location.state?.name) {
-              label = location.state.name;
-            } else {
-              const matched = facultyRecords.find(
-                (f) =>
-                  f.id === segment ||
-                  f._id === segment ||
-                  f.userId === segment ||
-                  f.user?._id === segment ||
-                  f.user === segment
-              );
-              if (matched?.name) {
-                label = matched.name;
+            const isHexOrId =
+              /^[0-9a-fA-F]{24}$/.test(segment) ||
+              /^fac-\d+$/i.test(segment) ||
+              /^stu-\d+$/i.test(segment) ||
+              /^[0-9a-fA-F-]{36}$/.test(segment);
+
+            if (isHexOrId) {
+              if (location.state?.teacherName) {
+                label = location.state.teacherName;
+              } else if (location.state?.name) {
+                label = location.state.name;
               } else {
-                const cachedName = typeof sessionStorage !== "undefined"
-                  ? sessionStorage.getItem(`teacherName_${segment}`)
-                  : null;
-                if (cachedName) {
-                  label = cachedName;
+                const matched = facultyRecords.find(
+                  (f) =>
+                    f.id === segment ||
+                    f._id === segment ||
+                    f.userId === segment ||
+                    f.user?._id === segment ||
+                    f.user === segment
+                );
+                if (matched?.name) {
+                  label = matched.name;
                 } else {
-                  const prevSegment = arr[index - 1]?.toLowerCase();
-                  if (
-                    prevSegment === "faculty" ||
-                    prevSegment === "teachers" ||
-                    prevSegment === "teacher" ||
-                    prevSegment === "faculty-profile"
-                  ) {
-                    label = "Teacher Profile";
-                  } else if (prevSegment === "students" || prevSegment === "student") {
-                    label = "Student Profile";
-                  } else if (prevSegment === "campuses") {
-                    label = "Campus Details";
-                  } else if (prevSegment === "institutes") {
-                    label = "Institute Details";
+                  const cachedName = typeof sessionStorage !== "undefined"
+                    ? sessionStorage.getItem(`teacherName_${segment}`)
+                    : null;
+                  if (cachedName) {
+                    label = cachedName;
                   } else {
-                    label = "Profile Details";
+                    const prevSegment = arr[index - 1]?.toLowerCase();
+                    if (
+                      prevSegment === "faculty" ||
+                      prevSegment === "teachers" ||
+                      prevSegment === "teacher" ||
+                      prevSegment === "faculty-profile"
+                    ) {
+                      label = "Teacher Profile";
+                    } else if (prevSegment === "students" || prevSegment === "student") {
+                      label = "Student Profile";
+                    } else if (prevSegment === "campuses") {
+                      label = "Campus Details";
+                    } else if (prevSegment === "institutes") {
+                      label = "Institute Details";
+                    } else {
+                      label = "Profile Details";
+                    }
                   }
                 }
               }
             }
-          }
 
-          const isLast = index === arr.length - 1;
-          const pathToSegment = `/${segments.slice(0, segments.indexOf(segment) + 1).join("/")}`;
+            const isLast = index === arr.length - 1;
+            const pathToSegment = `/${segments.slice(0, segments.indexOf(segment) + 1).join("/")}`;
 
-          return (
-            <span key={segment} className="breadcrumb-current">
-              /{" "}
-              {!isLast ? (
-                <Link
-                  to={pathToSegment}
-                  style={{ color: "inherit", textDecoration: "none" }}
-                  className="hover:underline"
-                >
-                  {label}
-                </Link>
-              ) : (
-                <span>{label}</span>
-              )}
-            </span>
-          );
-        })}
-      </nav>
+            return (
+              <span key={segment} className="breadcrumb-current">
+                /{" "}
+                {!isLast ? (
+                  <Link
+                    to={pathToSegment}
+                    style={{ color: "inherit", textDecoration: "none" }}
+                    className="hover:underline"
+                  >
+                    {label}
+                  </Link>
+                ) : (
+                  <span>{label}</span>
+                )}
+              </span>
+            );
+          })}
+        </nav>
+      </div>
 
-      <GlobalSearchBar
-        placeholder={effectiveSearchPlaceholder}
-        userRole={currentRole}
-        onSearchSubmit={handleSearch}
-      />
+      <div className="header-search-wrap">
+        <GlobalSearchBar
+          placeholder={effectiveSearchPlaceholder}
+          userRole={currentRole}
+          onSearchSubmit={handleSearch}
+        />
+      </div>
 
       <div className="header-actions">
+        <button
+          type="button"
+          className="header-icon-btn mobile-search-toggle-btn"
+          onClick={() => setMobileSearchOpen(true)}
+          aria-label="Open search"
+          title="Search"
+        >
+          <Search size={18} />
+        </button>
+
         {currentRole !== "super_admin" && <CampusSwitcher />}
 
         {showNotifications && (
@@ -409,6 +458,31 @@ const Header = ({
           )
         )}
       </div>
+
+      {mobileSearchOpen && (
+        <div className="header-mobile-search-overlay" role="search">
+          <div className="header-mobile-search-inner">
+            <GlobalSearchBar
+              placeholder={effectiveSearchPlaceholder}
+              userRole={currentRole}
+              onSearchSubmit={(val) => {
+                handleSearch(val);
+                setMobileSearchOpen(false);
+              }}
+              autoFocus={true}
+            />
+          </div>
+          <button
+            type="button"
+            className="header-mobile-search-close-btn"
+            onClick={() => setMobileSearchOpen(false)}
+            aria-label="Close search"
+            title="Close search"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
     </header>
   );
 };

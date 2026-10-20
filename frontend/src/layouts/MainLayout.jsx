@@ -26,19 +26,50 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
   };
   const signOut = () => { dispatch(loggedOut()); navigate('/login', { replace: true }); };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
-    window.matchMedia('(max-width: 768px)').matches
+    typeof window !== "undefined" ? window.innerWidth < 1200 : false
   );
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const isFlushPage = true; // Unified edge-to-edge flush layout for all campus admin tabs
 
+  // Close mobile drawer on route navigation
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 768px)');
-    const collapseOnSmallScreen = (event) => {
-      if (event.matches) setSidebarCollapsed(true);
+    setDrawerOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile drawer when pressing Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && drawerOpen) {
+        setDrawerOpen(false);
+      }
     };
-    media.addEventListener('change', collapseOnSmallScreen);
-    return () => media.removeEventListener('change', collapseOnSmallScreen);
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen]);
+
+  // Automatically close drawer if resized to desktop breakpoint (>= 1024px)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024 && drawerOpen) {
+        setDrawerOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [drawerOpen]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
 
   // Automatically collapse sidebar on mobile when navigating routes
   useEffect(() => {
@@ -53,6 +84,11 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
         <div
           className="sidebar-mobile-backdrop md:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-40 transition-opacity"
           onClick={() => setSidebarCollapsed(true)}
+      {/* ── Mobile Slide-Over Backdrop ── */}
+      {drawerOpen && (
+        <div
+          className="dashboard-drawer-backdrop"
+          onClick={() => setDrawerOpen(false)}
           aria-hidden="true"
         />
       )}
@@ -64,6 +100,40 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
       />
+      {/* ── Mobile Slide-Over Drawer (< 1024px) ── */}
+      <div
+        className={`dashboard-drawer ${drawerOpen ? "is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation drawer"
+        onClick={(e) => {
+          if (e.target.closest("a") || e.target.closest(".sidebar-signout")) {
+            setDrawerOpen(false);
+          }
+        }}
+      >
+        <Sidebar
+          user={profile}
+          onSignOut={() => {
+            setDrawerOpen(false);
+            signOut();
+          }}
+          items={effectiveNavigation}
+          collapsed={false}
+          onToggle={() => setDrawerOpen(false)}
+        />
+      </div>
+
+      {/* ── Desktop Static Sidebar (lg: 1024px+) ── */}
+      <div className="dashboard-desktop-sidebar">
+        <Sidebar
+          user={profile}
+          onSignOut={signOut}
+          items={effectiveNavigation}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
+        />
+      </div>
 
       <div className="main-area">
         <Header
@@ -73,6 +143,8 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
           onSignOut={signOut}
           homePath={isSuperAdmin ? "/super-admin" : undefined}
           homeLabel={isSuperAdmin ? "Super Admin Master Console" : undefined}
+          onMenuToggle={() => setDrawerOpen((prev) => !prev)}
+          drawerOpen={drawerOpen}
         />
         <main className={`content-area ${isFlushPage ? 'content-area-flush' : ''}`}>
           <Outlet />
