@@ -71,8 +71,19 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
     };
   }, [drawerOpen]);
 
+  // Automatically collapse sidebar on mobile when navigating routes
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      setSidebarCollapsed(true);
+    }
+  }, [location.pathname]);
+
   return (
     <div className={`dashboard-shell ${className}`}>
+      {!sidebarCollapsed && (
+        <div
+          className="sidebar-mobile-backdrop md:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-40 transition-opacity"
+          onClick={() => setSidebarCollapsed(true)}
       {/* ── Mobile Slide-Over Backdrop ── */}
       {drawerOpen && (
         <div
@@ -82,6 +93,13 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
         />
       )}
 
+      <Sidebar
+        user={profile}
+        onSignOut={signOut}
+        items={effectiveNavigation}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
+      />
       {/* ── Mobile Slide-Over Drawer (< 1024px) ── */}
       <div
         className={`dashboard-drawer ${drawerOpen ? "is-open" : ""}`}
@@ -120,6 +138,7 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
       <div className="main-area">
         <Header
           user={profile}
+          onToggleSidebar={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
           {...headerProps}
           onSignOut={signOut}
           homePath={isSuperAdmin ? "/super-admin" : undefined}

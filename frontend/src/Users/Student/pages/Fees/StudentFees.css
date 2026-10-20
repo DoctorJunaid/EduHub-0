@@ -380,10 +380,16 @@
   border-radius: var(--radius-lg);
 }
 
+.sf-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
   .student-fees-page {
-    padding: 12px 14px;
-    gap: 12px;
+    padding: 10px 6px;
+    gap: 10px;
   }
 
   .sf-stats {
@@ -404,10 +410,20 @@
 
   .sf-tabs-wrap {
     width: 100%;
+    display: flex;
+  }
+
+  .sf-tab-btn {
+    flex: 1;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
+  .student-fees-page {
+    padding: 6px 2px;
+  }
+
   .sf-stats {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -417,6 +433,7 @@
     justify-content: flex-start;
     border-right: 0;
     border-bottom: 1px solid #e4e4e7;
+    padding: 10px 12px;
   }
 
   .student-fees-page .sf-stat-card:last-child {
@@ -425,6 +442,10 @@
 
   .dark .student-fees-page .sf-stat-card {
     border-bottom-color: #3f3f46;
+  }
+
+  .student-fees-page .sf-history {
+    padding: 12px 10px;
   }
 
   .sf-history-heading {
@@ -437,6 +458,11 @@
   }
 
   .sf-btn-group {
-    min-width: 210px;
+    width: 100%;
+  }
+
+  .sf-btn-group > * {
+    flex: 1;
+    justify-content: center;
   }
 }

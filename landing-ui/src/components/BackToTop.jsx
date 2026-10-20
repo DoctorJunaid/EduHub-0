@@ -42,7 +42,7 @@ export default function BackToTop() {
           onClick={scrollToTop}
           aria-label="Back to top"
           title="Scroll back to top"
-          className="fixed bottom-6 right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] flex items-center justify-center transition-colors group cursor-pointer"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] flex items-center justify-center transition-colors group cursor-pointer"
         >
           <ArrowUp 
             size={18} 

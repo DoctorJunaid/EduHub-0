@@ -59,7 +59,7 @@ export default function DeviceShowcase() {
             </div>
 
             {/* Mobile Phone Frame (Covering lower right portion of desktop view) */}
-            <div className="absolute -bottom-4 -right-1 sm:-right-4 md:-right-6 w-[170px] sm:w-[210px] md:w-[240px] rounded-[34px] sm:rounded-[42px] border-[5px] sm:border-[6px] border-slate-900 dark:border-slate-700 bg-black shadow-[0_25px_60px_-10px_rgba(0,0,0,0.85)] overflow-hidden z-20 transition-transform duration-300 hover:scale-105 hover:-translate-y-1">
+            <div className="absolute -bottom-3 sm:-bottom-4 -right-1 sm:-right-4 md:-right-6 w-[140px] min-[400px]:w-[170px] sm:w-[210px] md:w-[240px] rounded-[26px] min-[400px]:rounded-[34px] sm:rounded-[42px] border-[4px] sm:border-[6px] border-slate-900 dark:border-slate-700 bg-black shadow-[0_25px_60px_-10px_rgba(0,0,0,0.85)] overflow-hidden z-20 transition-transform duration-300 hover:scale-105 hover:-translate-y-1">
 
               {/* Dynamic Island Notch */}
               <div className="h-5 sm:h-6 bg-black w-full flex items-center justify-center pt-1 select-none">

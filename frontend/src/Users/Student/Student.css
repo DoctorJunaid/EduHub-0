@@ -129,8 +129,10 @@
 .student-shell .content-area:has(.student-messages-page),
 .student-shell .content-area:has(.student-help-support),
 .student-shell .content-area:has(.student-courses),
+.student-shell .content-area:has(.student-courses-page),
 .student-shell .content-area:has(.student-assignments),
-.student-shell .content-area:has(.student-diary-page) {
+.student-shell .content-area:has(.student-diary-page),
+.student-shell .content-area:has(.student-timetable-page) {
   padding: 0;
 }
 
@@ -145,7 +147,8 @@
     .student-help-support,
     .student-courses-page,
     .student-assignments,
-    .student-diary-page
+    .student-diary-page,
+    .student-timetable-page
   ) {
   padding-inline: 24px !important;
 }
@@ -210,8 +213,27 @@
 }
 
 @media (max-width: 768px) {
+  .student-shell .sidebar:not(.is-collapsed) {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 260px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+  }
+
+  .student-shell .sidebar.is-collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border-right: none !important;
+    overflow: hidden !important;
+    display: none !important;
+  }
+
   .student-shell .content-area {
-    padding: 20px 16px;
+    padding: 12px 10px;
   }
 
   .student-shell
@@ -225,14 +247,16 @@
       .student-help-support,
       .student-courses-page,
       .student-assignments,
-      .student-diary-page
+      .student-diary-page,
+      .student-timetable-page
     ) {
-    padding-inline: 16px !important;
+    padding-inline: 10px !important;
   }
 
   .student-shell .header {
-    gap: 12px;
-    padding-inline: 16px;
+    gap: 10px;
+    padding-inline: 12px;
+    height: 52px;
   }
 
   .student-shell .header-search {
@@ -243,6 +267,38 @@
     flex: 1;
     min-width: 0;
     max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-shell .content-area {
+    padding: 8px 6px;
+  }
+
+  .student-shell
+    .content-area
+    > :is(
+      .student-dashboard,
+      .student-attendance-page,
+      .student-grades-page,
+      .student-fees-page,
+      .student-messages-page,
+      .student-help-support,
+      .student-courses-page,
+      .student-assignments,
+      .student-diary-page,
+      .student-timetable-page
+    ) {
+    padding-inline: 6px !important;
+  }
+
+  .student-shell .header {
+    padding-inline: 8px;
+    gap: 6px;
   }
 }
 
@@ -308,7 +364,8 @@
 .sd-assignment-list strong {
   display: block;
   font-size: 13px;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .sd-assignment-list small {
@@ -318,8 +375,33 @@
   margin-top: 4px;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 640px) {
   .sd-assignment-list > a {
-    flex-wrap: wrap;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .sd-assignment-list > a > svg {
+    display: none;
+  }
+
+  .sd-assignment-list > a > div {
+    width: 100%;
+  }
+
+  .sd-assignment-list strong {
+    font-size: 13px;
+    line-height: 1.4;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .sd-assignment-list > a .student-assignment-status {
+    align-self: flex-start;
+    font-size: 11px;
+    padding: 2px 8px;
   }
 }

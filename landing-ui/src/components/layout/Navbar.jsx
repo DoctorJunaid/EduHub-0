@@ -80,7 +80,7 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
   return (
     <>
       <header 
-        className={`fixed top-4 left-0 right-0 z-50 flex justify-center px-4 transition-all duration-300 pointer-events-none ${
+        className={`fixed top-4 left-0 right-0 z-50 flex justify-center px-3 sm:px-4 transition-all duration-300 pointer-events-none ${
           isNavVisible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0'
         }`}
       >
@@ -264,7 +264,7 @@ export default function Navbar({ isDark, setIsDark, onGetStarted }) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="fixed top-20 left-4 right-4 z-40 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl md:hidden flex flex-col gap-2"
+            className="fixed top-20 left-4 right-4 z-40 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl md:hidden flex flex-col gap-2 max-h-[calc(100vh-6rem)] overflow-y-auto"
           >
             <button 
               className="text-left px-3 py-2 text-sm font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"

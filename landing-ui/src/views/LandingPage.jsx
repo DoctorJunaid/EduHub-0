@@ -138,8 +138,8 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           </div>
         </section>
 
-        {/* ─── Top Ranking Institutes: Awwwards-Caliber 100vh Editorial Showcase ─── */}
-        <section id="institutes" className="min-h-[calc(100vh-5rem)] flex flex-col justify-center py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-transparent border-t border-slate-200/60 dark:border-slate-800/60">
+        {/* ─── Top Ranking Institutes: Awwwards-Caliber Editorial Showcase ─── */}
+        <section id="institutes" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-transparent border-t border-slate-200/60 dark:border-slate-800/60">
           <motion.div
             className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -410,30 +410,30 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 return (
                   <div
                     key={ev.id}
-                    className="scroll-reveal flex items-center justify-between py-8 px-2 transition-all duration-300 hover:pl-6 cursor-pointer group flex-wrap gap-4"
+                    className="scroll-reveal flex items-center justify-between py-6 sm:py-8 px-2 sm:px-4 transition-all duration-300 hover:pl-4 sm:hover:pl-6 cursor-pointer group gap-4"
                     onClick={() => navigate('/institute/' + ev.instituteId)}
                   >
-                    <div className="flex items-center gap-6 md:gap-12 flex-wrap">
-                      <div className="w-20">
+                    <div className="flex items-center gap-4 sm:gap-8 md:gap-12 flex-1 min-w-0">
+                      <div className="w-16 sm:w-20 shrink-0">
                         <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">
                           {month}
                         </span>
-                        <span className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white leading-none">
+                        <span className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white leading-none">
                           {day}
                         </span>
                       </div>
-                      <div>
-                        <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors truncate sm:whitespace-normal">
                           {ev.title}
                         </h3>
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm md:text-base mt-2">
-                          <MapPin size={18} />
-                          <span>{inst?.name || 'EduHub Campus'}</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 dark:text-slate-400 text-xs sm:text-sm md:text-base mt-1.5 truncate">
+                          <MapPin size={16} className="shrink-0" />
+                          <span className="truncate">{inst?.name || 'EduHub Campus'}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white transition-all duration-200 shadow-sm">
-                      <CaretRight size={22} weight="bold" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white transition-all duration-200 shadow-sm shrink-0">
+                      <CaretRight size={20} weight="bold" />
                     </div>
                   </div>
                 )
@@ -476,7 +476,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
-              <div className="p-7">
+              <div className="p-5 sm:p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
                   Students &amp; Guardians
                 </h3>
@@ -496,7 +496,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
-              <div className="p-7">
+              <div className="p-5 sm:p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
                   Faculty &amp; Instructors
                 </h3>
@@ -516,7 +516,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
-              <div className="p-7">
+              <div className="p-5 sm:p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
                   Institute Admins &amp; Campus Managers
                 </h3>
@@ -526,7 +526,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </div>
             </BentoCard>
 
-            <BentoCard isLarge className="scroll-reveal p-8 md:p-10">
+            <BentoCard isLarge className="scroll-reveal p-5 sm:p-8 md:p-10">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 h-full">
                 <div className="max-w-md space-y-3">
                   <h3 className="text-2xl md:text-3xl font-extrabold font-display text-slate-900 dark:text-white tracking-tight">
@@ -577,7 +577,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
-              <div className="p-7">
+              <div className="p-5 sm:p-7">
                 <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
                   Super Administrator
                 </h3>
@@ -827,7 +827,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16 text-sm">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16 text-sm">
               <div>
                 <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Product</h4>
                 <ul className="space-y-3 text-white/80">

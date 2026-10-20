@@ -19,7 +19,8 @@ export default function HeroCard({
   const hasAnyHover = hoveredIndex !== null;
 
   const baseRotation = diff * 4.6;
-  const baseTranslateX = diff * 70;
+  const spreadFactor = mobileLayout ? 0 : (typeof window !== 'undefined' && window.innerWidth < 900 ? 50 : (typeof window !== 'undefined' && window.innerWidth < 1150 ? 60 : 70));
+  const baseTranslateX = diff * spreadFactor;
   const baseTranslateY = Math.pow(Math.abs(diff), 1.8) * 4.2;
   const baseZIndex = 20 + (totalCards - Math.abs(diff)) * 4;
 

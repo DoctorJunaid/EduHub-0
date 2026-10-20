@@ -37,6 +37,7 @@ const Header = ({
   breadcrumbItems,
   onViewProfile,
   onSignOut,
+  onToggleSidebar,
   showProfile = false,
   showNotifications = true,
   searchPlaceholder,
@@ -143,6 +144,29 @@ const Header = ({
 
   return (
     <header className="header">
+      {onToggleSidebar && (
+        <button
+          type="button"
+          className="mobile-sidebar-toggle md:hidden inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 shrink-0 mr-1.5 cursor-pointer"
+          onClick={onToggleSidebar}
+          aria-label="Toggle navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+      <nav className="breadcrumbs" aria-label="Breadcrumb">
+        <Link to={homePath || (institute ? "/institute-admin" : "/dashboard")}>
+          {homeLabel || (institute ? "Dashboard" : "Home")}
+        </Link>
+        {(
+          breadcrumbItems ||
+          segments.filter(
+            (segment) => !institute || segment !== "institute-admin",
+          )
+        ).map((segment, index, arr) => {
+          let label = segment
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (letter) => letter.toUpperCase());
       <div className="header-left">
         {onMenuToggle && (
           <button
