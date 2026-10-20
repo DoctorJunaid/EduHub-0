@@ -651,3 +651,59 @@
     transform: rotate(360deg);
   }
 }
+
+/* ─── Mobile Responsiveness ─── */
+@media (max-width: 640px) {
+  .ai-window-badge {
+    display: none;
+  }
+
+  .ai-window-chrome {
+    padding: 10px 14px;
+  }
+
+  .ai-window-title {
+    font-size: 0.74rem;
+  }
+
+  .ai-messages-area {
+    min-height: 280px;
+    max-height: 380px;
+    padding: 16px 12px;
+  }
+
+  .ai-capability-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .ai-capability-desc {
+    text-align: left;
+  }
+
+  .ai-suggestions {
+    padding: 0 12px 12px;
+    gap: 6px;
+  }
+
+  .ai-suggestion-chip {
+    padding: 5px 11px;
+    font-size: 0.72rem;
+  }
+
+  .ai-input-area {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .ai-input {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+
+  .ai-send-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

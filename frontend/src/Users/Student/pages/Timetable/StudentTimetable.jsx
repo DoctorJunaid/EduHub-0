@@ -19,6 +19,7 @@ import {
   minutes,
   timeLabel,
 } from "@/lib/schedule.js";
+import "./StudentTimetable.css";
 
 const PX_PER_HOUR = 104;
 const PX_PER_MIN = PX_PER_HOUR / 60;
@@ -295,7 +296,7 @@ export default function StudentTimetable() {
   }, [week, includeSaturday]);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="student-timetable-page">
       {error && (
         <div
           className="bg-neutral-50 border border-neutral-300 text-neutral-700 text-xs rounded-xl flex items-center justify-between"
@@ -312,89 +313,74 @@ export default function StudentTimetable() {
       )}
 
       {/* ── Top 4 Summary KPI Cards Row ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" style={{ gap: "16px" }}>
+      <div className="st-kpi-grid">
         {/* KPI 1: Weekly Class Periods */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
+        <div className="st-kpi-card">
           <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+            <span className="st-kpi-title">
               Weekly Class Periods
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="st-kpi-value">
               {loading ? "..." : kpiData.weeklyPeriods}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Total active slots / week</span>
+            <span className="st-kpi-desc">Total active slots / week</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
+          <div className="st-kpi-icon">
             <BookOpen size={18} />
           </div>
         </div>
 
         {/* KPI 2: Enrolled Subjects */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
+        <div className="st-kpi-card">
           <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+            <span className="st-kpi-title">
               Enrolled Subjects
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="st-kpi-value">
               {loading ? "..." : kpiData.enrolledSubjects}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">In your class routine</span>
+            <span className="st-kpi-desc">In your class routine</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
+          <div className="st-kpi-icon">
             <CalendarDays size={18} />
           </div>
         </div>
 
         {/* KPI 3: Subject Teachers */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
+        <div className="st-kpi-card">
           <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+            <span className="st-kpi-title">
               Subject Teachers
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="st-kpi-value">
               {loading ? "..." : kpiData.subjectTeachers}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Assigned to your section</span>
+            <span className="st-kpi-desc">Assigned to your section</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
+          <div className="st-kpi-icon">
             <Users size={18} />
           </div>
         </div>
 
         {/* KPI 4: Today's Classes */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
+        <div className="st-kpi-card">
           <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+            <span className="st-kpi-title">
               Today's Classes
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="st-kpi-value">
               {loading ? "..." : kpiData.todayClasses}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Scheduled for today</span>
+            <span className="st-kpi-desc">Scheduled for today</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
+          <div className="st-kpi-icon">
             <Clock size={18} />
           </div>
         </div>
       </div>
 
       {/* ── Read-Only Context Bar & View Switcher (NO ADMIN BUTTONS) ─────── */}
-      <div
-        className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4"
-        style={{ padding: "16px 20px", boxSizing: "border-box" }}
-      >
+      <div className="st-context-bar">
         {/* Left Side: Scope Identity */}
         <div>
           <div className="flex items-center flex-wrap" style={{ marginBottom: "8px", gap: "8px" }}>
@@ -427,13 +413,10 @@ export default function StudentTimetable() {
         </div>
 
         {/* Right Side: View Controls with Segmented Containers */}
-        <div
-          className="flex flex-wrap items-center"
-          style={{ gap: "10px" }}
-        >
+        <div className="st-controls-wrap">
           {/* Group 1: View Mode Toggle */}
           <div
-            className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100"
+            className="st-view-toggle inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800"
             style={{ padding: "4px", gap: "4px" }}
           >
             <button
@@ -441,8 +424,8 @@ export default function StudentTimetable() {
               onClick={() => setViewMode("matrix")}
               className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 viewMode === "matrix"
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
+                  ? "bg-white text-neutral-900 shadow-xs font-semibold dark:bg-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
               }`}
               style={{ padding: "6px 12px", gap: "6px" }}
             >
@@ -454,8 +437,8 @@ export default function StudentTimetable() {
               onClick={() => setViewMode("list")}
               className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 viewMode === "list"
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
+                  ? "bg-white text-neutral-900 shadow-xs font-semibold dark:bg-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
               }`}
               style={{ padding: "6px 12px", gap: "6px" }}
             >
@@ -466,7 +449,7 @@ export default function StudentTimetable() {
 
           {/* Group 2: Day Range Toggle */}
           <div
-            className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100"
+            className="st-day-toggle inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-800"
             style={{ padding: "4px", gap: "4px" }}
           >
             <button
@@ -474,8 +457,8 @@ export default function StudentTimetable() {
               onClick={() => setIncludeSaturday(false)}
               className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 !includeSaturday
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
+                  ? "bg-white text-neutral-900 shadow-xs font-semibold dark:bg-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
               }`}
               style={{ padding: "6px 12px" }}
             >
@@ -486,8 +469,8 @@ export default function StudentTimetable() {
               onClick={() => setIncludeSaturday(true)}
               className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 includeSaturday
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
+                  ? "bg-white text-neutral-900 shadow-xs font-semibold dark:bg-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
               }`}
               style={{ padding: "6px 12px" }}
             >
@@ -497,20 +480,20 @@ export default function StudentTimetable() {
 
           {/* Group 3: Week Date Navigator */}
           <div
-            className="inline-flex items-center rounded-lg border border-neutral-200 bg-white"
+            className="st-date-nav inline-flex items-center rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             style={{ padding: "4px 8px", gap: "8px", height: "36px" }}
           >
             <button
               type="button"
               onClick={() => setWeek((prev) => shiftDays(prev, -7))}
-              className="rounded hover:bg-neutral-100 text-neutral-600 inline-flex items-center justify-center cursor-pointer"
+              className="rounded hover:bg-neutral-100 text-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800 inline-flex items-center justify-center cursor-pointer"
               style={{ padding: "4px" }}
               title="Previous week"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <span
-              className="text-xs font-medium text-neutral-800 whitespace-nowrap select-none"
+              className="text-xs font-medium text-neutral-800 dark:text-neutral-200 whitespace-nowrap select-none"
               style={{ padding: "0 4px" }}
             >
               {weekLabel}
@@ -518,7 +501,7 @@ export default function StudentTimetable() {
             <button
               type="button"
               onClick={() => setWeek((prev) => shiftDays(prev, 7))}
-              className="rounded hover:bg-neutral-100 text-neutral-600 inline-flex items-center justify-center cursor-pointer"
+              className="rounded hover:bg-neutral-100 text-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800 inline-flex items-center justify-center cursor-pointer"
               style={{ padding: "4px" }}
               title="Next week"
             >
@@ -530,7 +513,7 @@ export default function StudentTimetable() {
           <button
             type="button"
             onClick={() => setWeek(mondayOf(new Date()))}
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-800 transition-colors cursor-pointer"
+            className="st-this-week-btn inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-800 transition-colors cursor-pointer dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
             style={{ padding: "0 14px", height: "36px" }}
           >
             This Week
@@ -562,17 +545,22 @@ export default function StudentTimetable() {
           </p>
         </div>
       ) : viewMode === "matrix" ? (
-        /* ── Weekly Time-Grid Matrix (Scroll-Free Full-Width Layout) ───────── */
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs"
-          style={{ height: "auto", maxHeight: "none", overflow: "visible", width: "100%", boxSizing: "border-box" }}
-        >
+        /* ── Weekly Time-Grid Matrix (Scroll-Free Full-Width on Desktop, Swipeable on Mobile) ───────── */
+        <div className="w-full">
+          <div className="md:hidden flex items-center justify-between px-1 mb-2 text-[11px] text-neutral-400 font-medium">
+            <span>Swipe horizontally for full routine</span>
+            <span>← Scroll →</span>
+          </div>
           <div
-            className="select-none"
-            style={{ height: "auto", maxHeight: "none", overflow: "visible", width: "100%" }}
+            className="st-matrix-card overflow-x-auto"
+            style={{ height: "auto", maxHeight: "none", width: "100%", boxSizing: "border-box", WebkitOverflowScrolling: "touch" }}
           >
-            <div style={{ width: "100%", height: "auto", overflow: "visible" }}>
-              {/* Matrix Header Row: Time Axis Header + Weekday Columns */}
+            <div
+              className="select-none"
+              style={{ height: "auto", maxHeight: "none", minWidth: `${TIME_COL_PX + activeDays.length * 115}px`, width: "100%" }}
+            >
+              <div style={{ width: "100%", height: "auto" }}>
+                {/* Matrix Header Row: Time Axis Header + Weekday Columns */}
               <div
                 className="grid border-b border-neutral-200 bg-neutral-50 rounded-t-xl"
                 style={{
@@ -782,11 +770,16 @@ export default function StudentTimetable() {
             </div>
           </div>
         </div>
+      </div>
       ) : (
         /* ── All Scheduled List View ─────────────────────────────────────── */
-        <div className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+        <div className="st-table-card overflow-hidden">
+          <div className="md:hidden flex items-center justify-between px-3 py-1.5 text-[11px] text-neutral-400 font-medium border-b border-neutral-100 dark:border-neutral-800">
+            <span>Swipe list horizontally</span>
+            <span>← Scroll →</span>
+          </div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="st-table w-full text-left text-xs border-collapse" style={{ minWidth: "620px" }}>
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50 text-[10.5px] font-bold text-neutral-500 uppercase tracking-wider">
                   <th style={{ padding: "12px 16px" }}>Day</th>
@@ -868,27 +861,27 @@ export default function StudentTimetable() {
       )}
 
       {/* ── Bottom Summary Table: SUBJECT & FACULTY ALLOCATION ──────────── */}
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="st-table-card">
         <div
-          className="flex items-center justify-between border-b border-neutral-200"
+          className="st-table-header flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800"
           style={{ padding: "16px 20px" }}
         >
           <div className="flex items-center" style={{ gap: "12px" }}>
             <div
-              className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+              className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300"
               style={{ width: "36px", height: "36px" }}
             >
-              <BookOpen className="w-4 h-4 text-neutral-700" />
+              <BookOpen className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
             </div>
             <div className="flex flex-col" style={{ gap: "2px" }}>
               <h3
-                className="font-bold text-neutral-900 tracking-tight uppercase m-0"
+                className="font-bold text-neutral-900 dark:text-neutral-100 tracking-tight uppercase m-0"
                 style={{ fontSize: "14px", lineHeight: "1.3" }}
               >
                 Subject &amp; Faculty Allocation
               </h3>
               <p
-                className="text-neutral-500 m-0"
+                className="text-neutral-500 dark:text-neutral-400 m-0"
                 style={{ fontSize: "12px", lineHeight: "1.3" }}
               >
                 Assigned subject teachers and weekly class sessions for your section
@@ -896,15 +889,20 @@ export default function StudentTimetable() {
             </div>
           </div>
           <span
-            className="rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-800 whitespace-nowrap"
+            className="rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-800 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200 whitespace-nowrap"
             style={{ padding: "4px 10px" }}
           >
             {subjectAllocations.length} {subjectAllocations.length === 1 ? "Subject" : "Subjects"}
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="md:hidden flex items-center justify-between px-3 py-1.5 text-[11px] text-neutral-400 font-medium border-b border-neutral-100 dark:border-neutral-800">
+          <span>Swipe allocations horizontally</span>
+          <span>← Scroll →</span>
+        </div>
+
+        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="st-table w-full text-left text-xs border-collapse" style={{ minWidth: "540px" }}>
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50/50 text-[10.5px] font-bold text-neutral-500 uppercase tracking-wider">
                 <th style={{ padding: "14px 20px" }} className="align-middle">Subject / Course</th>

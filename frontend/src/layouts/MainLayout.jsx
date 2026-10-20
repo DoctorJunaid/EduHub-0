@@ -40,8 +40,23 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
     return () => media.removeEventListener('change', collapseOnSmallScreen);
   }, []);
 
+  // Automatically collapse sidebar on mobile when navigating routes
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      setSidebarCollapsed(true);
+    }
+  }, [location.pathname]);
+
   return (
     <div className={`dashboard-shell ${className}`}>
+      {!sidebarCollapsed && (
+        <div
+          className="sidebar-mobile-backdrop md:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-40 transition-opacity"
+          onClick={() => setSidebarCollapsed(true)}
+          aria-hidden="true"
+        />
+      )}
+
       <Sidebar
         user={profile}
         onSignOut={signOut}
@@ -53,6 +68,7 @@ const MainLayout = ({ navigation, className = '', profile: suppliedProfile, head
       <div className="main-area">
         <Header
           user={profile}
+          onToggleSidebar={() => setSidebarCollapsed((isCollapsed) => !isCollapsed)}
           {...headerProps}
           onSignOut={signOut}
           homePath={isSuperAdmin ? "/super-admin" : undefined}

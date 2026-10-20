@@ -12,6 +12,12 @@ const configureMongoDns = () => {
 
   if (configuredServers?.length) {
     dns.setServers(configuredServers);
+  } else {
+    try {
+      dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+    } catch {
+      // Ignore if setServers fails in constrained environments
+    }
   }
 };
 
