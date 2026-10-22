@@ -409,7 +409,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                     className="scroll-reveal flex items-center justify-between py-6 sm:py-8 px-2 sm:px-4 transition-all duration-300 hover:pl-4 sm:hover:pl-6 cursor-pointer group gap-4 min-h-[72px]"
                     onClick={() => navigate('/institute/' + ev.instituteId)}
                   >
-                    <div className="flex items-center gap-4 sm:gap-8 md:gap-12 min-w-0 flex-1">
+                    <div className="flex items-center gap-4 sm:gap-8 md:gap-12 flex-1 min-w-0">
                       <div className="w-14 sm:w-20 shrink-0">
                         <span className="text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-0.5 sm:mb-1">
                           {month}
@@ -419,10 +419,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-base sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors truncate">
+                        <h3 className="text-base sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors truncate sm:whitespace-normal">
                           {ev.title}
                         </h3>
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 truncate">
                           <MapPin size={16} className="shrink-0" />
                           <span className="truncate">{inst?.name || 'EduHub Campus'}</span>
                         </div>
@@ -777,7 +777,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-16 text-xs sm:text-sm">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-16 text-xs sm:text-sm">
               <div>
                 <h4 className="font-bold text-white mb-3 sm:mb-4 uppercase tracking-wider text-xs">Product</h4>
                 <ul className="space-y-2.5 sm:space-y-3 text-white/80">

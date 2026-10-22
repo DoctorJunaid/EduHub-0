@@ -306,6 +306,270 @@
   text-align: center;
 }
 
+/* Class Faculty & Incharges Section */
+.student-dashboard .sd-faculty {
+  padding: 12px 14px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sd-faculty-grade-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: #f4f4f5;
+  color: #52525b;
+  border: 1px solid #e4e4e7;
+  white-space: nowrap;
+}
+
+.sd-faculty-grid {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.sd-incharge-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  gap: 10px;
+}
+
+.sd-incharge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sd-incharge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #09090b;
+  color: #ffffff;
+}
+
+.sd-incharge-role {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+}
+
+.sd-incharge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sd-incharge-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+.sd-incharge-designation {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+
+.sd-incharge-email {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  font-family: ui-monospace, monospace;
+}
+
+.sd-incharge-footer {
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #52525b;
+  line-height: 1.45;
+}
+
+.sd-incharge-footer strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.sd-subject-teachers-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-faculty-subheading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sd-faculty-subtitle {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+}
+
+.sd-faculty-subnote {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.sd-subject-teachers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.sd-subject-teacher-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+}
+
+.sd-subject-teacher-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sd-subject-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+.sd-subject-teacher-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.sd-subject-teacher-email {
+  font-size: 10px;
+  color: #a1a1aa;
+  font-family: ui-monospace, monospace;
+  margin-top: 2px;
+}
+
+.sd-subject-badge {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  padding: 1px 6px !important;
+  height: 20px !important;
+  background: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #71717a !important;
+  white-space: nowrap;
+}
+
+.sd-faculty-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 120px;
+  padding: 16px 12px;
+  border: 1px dashed #e4e4e7;
+  border-radius: 6px;
+  background: #fafafa;
+  text-align: center;
+}
+
+.sd-faculty-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  margin-bottom: 6px;
+}
+
+.sd-faculty-empty-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.sd-faculty-empty-desc {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .sd-faculty-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dark .sd-faculty-grade-pill {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-color: var(--border);
+}
+
+.dark .sd-incharge-card,
+.dark .sd-subject-teacher-item,
+.dark .sd-faculty-empty {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border);
+}
+
+.dark .sd-incharge-badge {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.dark .sd-incharge-footer,
+.dark .sd-faculty-empty-icon,
+.dark .sd-subject-badge {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--border) !important;
+  color: var(--muted-foreground) !important;
+}
+
 .sd-bottom-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -446,51 +710,163 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 1000px) {
   .sd-bottom-grid {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 650px) {
+
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 10px 4px 16px;
+    gap: 10px;
+  }
+
   .student-dashboard .sd-profile {
-    padding: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    gap: 10px;
   }
+
   .sd-profile-person {
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .sd-profile-person [data-slot="avatar"] {
-    width: 44px;
-    height: 44px;
-  }
-  .sd-profile-person [data-slot="avatar-fallback"] {
-    font-size: 18px;
-  }
-  .sd-profile-heading h1 {
-    font-size: 20px;
-  }
-  .sd-profile-heading {
-    gap: 8px;
-  }
-  .sd-quick-actions {
-    flex-wrap: wrap;
     width: 100%;
+    align-items: flex-start;
+    gap: 10px;
   }
-  .sd-quick-actions button {
-    flex: 1;
-    padding-inline: 12px;
+
+  .sd-profile-person [data-slot="avatar"] {
+    width: 36px;
+    height: 36px;
   }
+
+  .sd-profile-heading h1 {
+    font-size: 16px;
+  }
+
+  .sd-quick-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .sd-quick-actions button,
+  .sd-quick-actions a {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 120px;
+    height: 32px;
+    font-size: 11px;
+    justify-content: center;
+  }
+
   .sd-stats {
     grid-template-columns: 1fr;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
   }
-  .student-dashboard :is(.sd-timetable, .sd-bottom-card) {
-    padding: 16px;
+
+  .student-dashboard .sd-stat {
+    justify-content: flex-start;
+    border-right: none;
+    border-bottom: 1px solid #e4e4e7;
+    padding: 10px 14px;
+    min-height: 48px;
   }
+
+  .student-dashboard .sd-stat:last-child {
+    border-bottom: none;
+  }
+
+  .student-dashboard :is(.sd-timetable, .sd-bottom-card, .sd-faculty) {
+    padding: 12px 14px;
+    border-radius: 8px;
+  }
+
   .sd-section-heading {
     flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .sd-section-title h2 {
+    font-size: 15px;
+  }
+
+  /* Teacher Banner Mobile */
+  .sd-teacher-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .sd-teacher-banner > div:last-child {
+    width: 100%;
+  }
+
+  .sd-teacher-banner > div:last-child button,
+  .sd-teacher-banner > div:last-child a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Faculty Section Mobile */
+  .sd-faculty .sd-section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .sd-faculty .sd-section-title {
+    width: 100%;
+  }
+
+  .sd-faculty-grid {
+    grid-template-columns: 1fr;
     gap: 12px;
   }
-  .sd-section-title h2 {
-    font-size: 16px;
+
+  .sd-subject-teachers-grid {
+    max-height: none;
+    overflow-y: visible;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .sd-faculty-subheading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  /* Timetable Mobile */
+  .sd-timetable [data-slot="table-container"] {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .sd-timetable table {
+    min-width: 580px;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-dashboard {
+    padding: 8px 0 12px;
+    gap: 8px;
+  }
+
+  .sd-quick-actions button,
+  .sd-quick-actions a {
+    flex: 1 1 100%;
+  }
+
+  .sd-profile-details {
+    font-size: 11px;
+    gap: 2px 6px;
+  }
+
+  .sd-profile-details > :not(:first-child)::before {
+    margin-right: 6px;
   }
 }

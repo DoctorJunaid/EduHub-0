@@ -19,6 +19,7 @@ import {
   Users,
   GraduationCap,
   MessageSquare,
+  Mail,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -125,23 +126,26 @@ export default function StudentDashboard() {
   const upcomingAssignments = assignments.filter(
     (assignment) => assignment.dueDate >= today,
   );
+  const cleanSection = student?.section
+    ? student.section.replace(/^(section\s*)+/i, "").trim() || "A"
+    : "A";
 
   return (
     <section className="student-dashboard" aria-label="Student dashboard">
       {classTeacher?.name && (
-        <Card className="sd-teacher-banner p-3 flex flex-row items-center justify-between gap-3 border-emerald-200/80 bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 dark:from-emerald-950/25 dark:via-background dark:to-emerald-950/10">
+        <Card className="sd-teacher-banner p-3 flex flex-row items-center justify-between gap-3 border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/50 dark:border-zinc-800">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+            <div className="w-9 h-9 rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
               {classTeacher.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
                   <GraduationCap className="w-3.5 h-3.5" />
                   Class Teacher
                 </span>
                 {classTeacher.sectionName && (
-                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-emerald-300 font-medium">
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-zinc-300 font-medium">
                     Section {classTeacher.sectionName}
                   </Badge>
                 )}
@@ -154,7 +158,7 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300">
+            <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-zinc-200 hover:bg-zinc-100">
               <Link to="/student/support?category=Academic">
                 <MessageSquare className="w-3.5 h-3.5" />
                 Ask Teacher
@@ -186,7 +190,7 @@ export default function StudentDashboard() {
               </h2>
               <p>
                 {student?.section
-                  ? `${isSchool ? "Daily period routine" : "Weekly lecture schedule"} for Section ${student.section}`
+                  ? `${isSchool ? "Daily period routine" : "Weekly lecture schedule"} for Section ${cleanSection}`
                   : isSchool
                     ? "Your daily periods"
                     : "Your class schedule"}{" "}
@@ -215,6 +219,10 @@ export default function StudentDashboard() {
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
+        </div>
+        <div className="md:hidden flex items-center justify-between text-[11px] text-muted-foreground px-1 py-1">
+          <span>Swipe routine horizontally</span>
+          <span>← Scroll →</span>
         </div>
         <Table aria-label="Today's class timetable">
           <TableHeader>
@@ -273,97 +281,105 @@ export default function StudentDashboard() {
       </Card>
 
       {/* Class Faculty & Incharges Section */}
-      <Card className="sd-faculty-card p-5 mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="sd-section-heading mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
-          <div className="sd-section-title flex items-center gap-2.5">
-            <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-              <Users size={18} aria-hidden="true" />
+      <Card className="sd-faculty">
+        <div className="sd-section-heading">
+          <div className="sd-section-title">
+            <span className="sd-icon">
+              <Users aria-hidden="true" />
             </span>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Class Faculty &amp; Teacher Incharges</h2>
-              <p className="text-xs text-slate-500">Know your appointed Class Teacher and Subject Teachers so you know who to contact for what.</p>
+              <h2>Class Faculty &amp; Teacher Incharges</h2>
+              <p>Appointed Class Teacher and Subject Teachers for your section</p>
             </div>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-            {student?.gradeOrClass || "My Class"} - Section {student?.section || "A"}
+          <span className="sd-faculty-grade-pill">
+            {student?.gradeOrClass || "My Class"} · Section {cleanSection}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="sd-faculty-grid">
           {/* 1. Appointed Class Teacher Incharge Card */}
-          <div className="md:col-span-1 p-4 rounded-xl border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 flex flex-col justify-between">
+          <div className="sd-incharge-card">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-600 text-white shadow-sm">
-                  👑 Class Teacher
+              <div className="sd-incharge-header">
+                <span className="sd-incharge-badge">
+                  <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
+                  Class Teacher
                 </span>
-                <span className="text-[11px] font-semibold text-indigo-700">Overall Incharge</span>
+                <span className="sd-incharge-role">Overall Incharge</span>
               </div>
-              <h3 className="text-base font-bold text-slate-900 mt-1">
-                {classTeacher?.name || "Assigned Class Incharge"}
-              </h3>
-              <p className="text-xs text-slate-600 mt-0.5 font-medium">
-                {classTeacher?.designation || "Senior Faculty"}
-              </p>
-              {classTeacher?.email && (
-                <p className="text-xs text-slate-500 mt-2 font-mono break-all">
-                  ✉️ {classTeacher.email}
+
+              <div className="sd-incharge-body">
+                <h3 className="sd-incharge-name">
+                  {classTeacher?.name || "Assigned Class Incharge"}
+                </h3>
+                <p className="sd-incharge-designation">
+                  {classTeacher?.designation || classTeacher?.department || "Senior Faculty"}
                 </p>
-              )}
+                {classTeacher?.email && (
+                  <div className="sd-incharge-email">
+                    <Mail className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <span className="truncate">{classTeacher.email}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-indigo-100/80 text-[11px] text-slate-600 leading-relaxed bg-white/60 p-2.5 rounded-lg">
-              <strong>Contact For:</strong> Overall Class Attendance, Result Making &amp; Report Cards, Leave Approvals &amp; General Inquiries.
+
+            <div className="sd-incharge-footer">
+              <strong>Contact For:</strong> Overall attendance, report cards, leave requests &amp; general inquiries.
             </div>
           </div>
 
-          {/* 2. Subject Teachers Grid */}
-          <div className="md:col-span-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+          {/* 2. Subject Teachers Section */}
+          <div className="sd-subject-teachers-section">
+            <div className="sd-faculty-subheading">
+              <span className="sd-faculty-subtitle">
                 Assigned Subject Teachers
               </span>
-              <span className="text-[11px] text-slate-500">
-                Contact for subject coursework, marks &amp; homework
+              <span className="sd-faculty-subnote">
+                Coursework, marks &amp; homework
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-              {(subjects || []).length > 0 ? (
-                subjects.map((sub, idx) => {
+            {(subjects || []).length > 0 ? (
+              <div className="sd-subject-teachers-grid">
+                {subjects.map((sub, idx) => {
                   const teacherName = sub.instructor?.name || "Assigned Subject Faculty";
                   const teacherEmail = sub.instructor?.email || "";
                   return (
-                    <div
-                      key={sub.id || idx}
-                      className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between"
-                    >
-                      <div className="flex items-start justify-between gap-1">
-                        <div>
-                          <strong className="text-xs font-bold text-slate-900 block truncate">
-                            {sub.name}
-                          </strong>
-                          <span className="text-[11px] text-slate-600 block mt-0.5">
-                            👨‍🏫 {teacherName}
+                    <div key={sub.id || idx} className="sd-subject-teacher-item">
+                      <div className="sd-subject-teacher-info">
+                        <strong className="sd-subject-name truncate">
+                          {sub.name}
+                        </strong>
+                        <span className="sd-subject-teacher-name">
+                          <GraduationCap className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
+                          <span className="truncate">{teacherName}</span>
+                        </span>
+                        {teacherEmail && (
+                          <span className="sd-subject-teacher-email truncate">
+                            {teacherEmail}
                           </span>
-                        </div>
-                        <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
-                          Subject Teacher
-                        </span>
+                        )}
                       </div>
-                      {teacherEmail && (
-                        <span className="text-[10px] text-slate-400 font-mono mt-1.5 truncate">
-                          {teacherEmail}
-                        </span>
-                      )}
+                      <Badge variant="outline" className="sd-subject-badge">
+                        Subject Teacher
+                      </Badge>
                     </div>
                   );
-                })
-              ) : (
-                <div className="col-span-2 p-4 text-center text-xs text-slate-500 bg-slate-50 rounded-lg">
+                })}
+              </div>
+            ) : (
+              <div className="sd-faculty-empty">
+                <span className="sd-faculty-empty-icon">
+                  <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                </span>
+                <p className="sd-faculty-empty-title">No subject teachers allocated yet</p>
+                <p className="sd-faculty-empty-desc">
                   Subject teachers will appear here once allocated by your Campus Manager.
-                </div>
-              )}
-            </div>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </Card>

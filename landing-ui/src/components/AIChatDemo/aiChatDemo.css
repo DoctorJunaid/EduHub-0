@@ -667,13 +667,40 @@
   }
 }
 
+/* ─── Mobile Responsiveness ─── */
 @media (max-width: 640px) {
   .ai-chat-section {
     padding: clamp(40px, 8vw, 60px) 14px 50px;
   }
-  .ai-input-area {
-    padding: 10px 12px;
+
+  .ai-window-badge {
+    display: none;
   }
+
+  .ai-window-chrome {
+    padding: 10px 14px;
+  }
+
+  .ai-window-title {
+    font-size: 0.74rem;
+  }
+
+  .ai-messages-area {
+    min-height: 280px;
+    max-height: 380px;
+    padding: 16px 12px;
+  }
+
+  .ai-capability-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .ai-capability-desc {
+    text-align: left;
+  }
+
   .ai-suggestions {
     padding: 0 10px 12px;
     gap: 6px;
@@ -683,13 +710,36 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
+
   .ai-suggestions::-webkit-scrollbar {
     display: none;
   }
+
+  .ai-suggestion-chip {
+    padding: 5px 11px;
+    font-size: 0.72rem;
+  }
+
+  .ai-input-area {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .ai-input {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+
+  .ai-send-btn {
+    width: 36px;
+    height: 36px;
+  }
+
   .ai-alumni-item {
     flex-wrap: wrap;
     gap: 8px;
   }
+
   .ai-alumni-badge {
     margin-left: auto;
   }
