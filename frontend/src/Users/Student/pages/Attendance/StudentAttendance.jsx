@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
   Users,
@@ -8,8 +8,13 @@ import {
   ChartNoAxesColumnIncreasing,
   ChevronLeft,
   ChevronRight,
+  Search,
+  X,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import {
   Table,
   TableHeader,
@@ -18,7 +23,6 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import SummaryCard from "@/components/common/SummaryCard";
 import Progress from "@/components/common/Progress";
 import AttendanceStatusBadge from "@/components/common/AttendanceStatusBadge";
 import { selectStudentAttendancePage } from "@/store/selectors/studentAttendance";
@@ -27,7 +31,8 @@ import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentAttendance.css";
 
 const percentage = (rate) => `${Number(rate.toFixed(1))}%`;
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 8;
+const LOGS_PER_PAGE = 10;
 
 function AttendancePagination({
   currentPage,
@@ -35,25 +40,23 @@ function AttendancePagination({
   startIndex,
   endIndex,
   totalItems,
-  itemLabel = "subjects",
+  itemLabel = "records",
   onPageChange,
   ariaLabel,
 }) {
+  if (totalItems <= 0) return null;
   const itemWord = totalItems === 1 ? itemLabel.replace(/s$/, "") : itemLabel;
 
   return (
-    <footer
-      className="sta-pagination flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-neutral-100 dark:border-neutral-800 pt-3 px-4 pb-2 mt-3 -mx-4 -mb-4 sm:-mx-3 sm:-mb-2.5"
-      aria-label={ariaLabel}
-    >
-      <span className="sta-pagination-info text-xs text-neutral-500 dark:text-neutral-400">
+    <footer className="sta-pagination" aria-label={ariaLabel}>
+      <span className="sta-pagination-info">
         Showing <strong>{startIndex + 1} - {endIndex}</strong> of{" "}
         <strong>{totalItems}</strong> total {itemWord}
       </span>
-      <div className="sta-pagination-controls flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+      <div className="sta-pagination-controls">
         <button
           type="button"
-          className="sta-pagination-btn h-8 px-3 text-xs font-medium border border-neutral-200 dark:border-neutral-800 rounded-md inline-flex items-center gap-1.5 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed select-none"
+          className="sta-pagination-btn"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage <= 1}
           aria-label="Previous page"
@@ -61,12 +64,12 @@ function AttendancePagination({
           <ChevronLeft size={14} aria-hidden="true" />
           <span>Previous</span>
         </button>
-        <span className="sta-pagination-pages text-xs font-medium text-neutral-700 dark:text-neutral-200 px-2 select-none">
+        <span className="sta-pagination-pages">
           {currentPage} / {totalPages}
         </span>
         <button
           type="button"
-          className="sta-pagination-btn h-8 px-3 text-xs font-medium border border-neutral-200 dark:border-neutral-800 rounded-md inline-flex items-center gap-1.5 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed select-none"
+          className="sta-pagination-btn"
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage >= totalPages}
           aria-label="Next page"
@@ -81,128 +84,212 @@ function AttendancePagination({
 
 export default function StudentAttendance() {
   const { isLoading } = useStudentPortal();
-  const { student, attendance, courses, rows, absent, late, leave } =
-    useSelector(selectStudentAttendancePage);
+  const { student, attendance, courses = [], rows = [], absent = 0, late = 0, leave = 0 } =
+    useSelector(selectStudentAttendancePage) || {};
 
+  // All state hooks declared unconditionally at top level
   const [coursePage, setCoursePage] = useState(1);
   const [logPage, setLogPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // "all", "Present", "Absent", "Late", "On Leave"
+
+  // Filtered attendance rows based on search and status filter
+  const filteredRows = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return rows.filter((item) => {
+      const status = item.record?.status || "";
+      const matchesStatus =
+        statusFilter === "all" ||
+        status.toLowerCase() === statusFilter.toLowerCase();
+
+      if (!matchesStatus) return false;
+
+      const subject = item.session?.subject || "";
+      const date = item.date || "";
+      const remarks = item.record?.remarks || "";
+
+      return (
+        !q ||
+        subject.toLowerCase().includes(q) ||
+        date.toLowerCase().includes(q) ||
+        remarks.toLowerCase().includes(q)
+      );
+    });
+  }, [rows, searchQuery, statusFilter]);
+
+  // Pagination for courses
+  const totalCourseItems = courses.length;
+  const totalCoursePages = Math.max(1, Math.ceil(totalCourseItems / ITEMS_PER_PAGE));
+  const safeCoursePage = Math.min(Math.max(1, coursePage), totalCoursePages);
+  const courseStartIndex = (safeCoursePage - 1) * ITEMS_PER_PAGE;
+  const courseEndIndex = Math.min(courseStartIndex + ITEMS_PER_PAGE, totalCourseItems);
+  const visibleCourses = courses.slice(courseStartIndex, courseEndIndex);
+
+  // Pagination for logs
+  const totalLogItems = filteredRows.length;
+  const totalLogPages = Math.max(1, Math.ceil(totalLogItems / LOGS_PER_PAGE));
+  const safeLogPage = Math.min(Math.max(1, logPage), totalLogPages);
+  const logStartIndex = (safeLogPage - 1) * LOGS_PER_PAGE;
+  const logEndIndex = Math.min(logStartIndex + LOGS_PER_PAGE, totalLogItems);
+  const visibleRows = filteredRows.slice(logStartIndex, logEndIndex);
+
+  // Status counts for filter pills
+  const statusCounts = useMemo(() => {
+    return {
+      all: rows.length,
+      present: rows.filter((r) => r.record?.status === "Present").length,
+      absent: rows.filter((r) => r.record?.status === "Absent").length,
+      late: rows.filter((r) => r.record?.status === "Late").length,
+      leave: rows.filter((r) => r.record?.status === "On Leave").length,
+    };
+  }, [rows]);
 
   if (isLoading && !student) {
     return <PageLoader text="Loading your attendance record..." />;
   }
 
-  const totalCourseItems = (courses || []).length;
-  const totalCoursePages = Math.max(1, Math.ceil(totalCourseItems / ITEMS_PER_PAGE));
-  const safeCoursePage = Math.min(Math.max(1, coursePage), totalCoursePages);
-  const courseStartIndex = (safeCoursePage - 1) * ITEMS_PER_PAGE;
-  const courseEndIndex = Math.min(courseStartIndex + ITEMS_PER_PAGE, totalCourseItems);
-  const visibleCourses = (courses || []).slice(courseStartIndex, courseEndIndex);
-
-  const [prevTotalCourses, setPrevTotalCourses] = useState(totalCourseItems);
-  if (totalCourseItems !== prevTotalCourses) {
-    setPrevTotalCourses(totalCourseItems);
-    setCoursePage(1);
-  }
-
-  const totalLogItems = (rows || []).length;
-  const totalLogPages = Math.max(1, Math.ceil(totalLogItems / ITEMS_PER_PAGE));
-  const safeLogPage = Math.min(Math.max(1, logPage), totalLogPages);
-  const logStartIndex = (safeLogPage - 1) * ITEMS_PER_PAGE;
-  const logEndIndex = Math.min(logStartIndex + ITEMS_PER_PAGE, totalLogItems);
-  const visibleRows = (rows || []).slice(logStartIndex, logEndIndex);
-
-  const [prevTotalLogs, setPrevTotalLogs] = useState(totalLogItems);
-  if (totalLogItems !== prevTotalLogs) {
-    setPrevTotalLogs(totalLogItems);
-    setLogPage(1);
-  }
-
-  const stats = [
-    {
-      label: "Attendance Rate",
-      icon: Users,
-      value: attendance?.rate == null ? "—" : percentage(attendance.rate),
-      description: attendance?.risk
-        ? "Attendance risk: below 75%"
-        : "School attendance record",
-    },
-    {
-      label: "Days Present",
-      icon: BookOpen,
-      value: student ? attendance.present : "—",
-      description: "Recorded Present",
-    },
-    {
-      label: "Absences",
-      icon: CalendarDays,
-      value: student ? absent : "—",
-      description: "Recorded Absent",
-    },
-    {
-      label: "Leaves",
-      icon: Clock3,
-      value: student ? leave : "—",
-      description: student
-        ? `${leave} approved leave days${late ? ` · ${late} late arrivals` : ""}`
-        : "Student record not linked",
-    },
-  ];
+  const overallRate = attendance?.rate == null ? 100 : Number(attendance.rate);
+  const isAtRisk = overallRate < 75;
 
   return (
     <section className="student-attendance-page">
+      {/* 1. Neutral Standardized KPI Metric Cards */}
       <div className="sta-stats">
-        {stats.map((stat) => (
-          <SummaryCard key={stat.label} {...stat} className="sta-stat" />
-        ))}
+        <Card className="sta-stat">
+          <div className="sta-stat-icon-wrap">
+            <Users className="w-4 h-4" />
+          </div>
+          <div className="sta-stat-info">
+            <span className="sta-stat-label">Attendance Rate</span>
+            <span className={`sta-stat-num ${isAtRisk ? "text-amber-600 dark:text-amber-400" : ""}`}>
+              {percentage(overallRate)}
+            </span>
+            <span className="sta-stat-sub">
+              {isAtRisk ? "Warning: Below 75%" : "Minimum 75% standard"}
+            </span>
+          </div>
+        </Card>
+
+        <Card className="sta-stat">
+          <div className="sta-stat-icon-wrap text-emerald-600 dark:text-emerald-400">
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <div className="sta-stat-info">
+            <span className="sta-stat-label">Days Present</span>
+            <span className="sta-stat-num">
+              {student ? attendance?.present ?? 0 : "—"}
+            </span>
+            <span className="sta-stat-sub">Recorded Present</span>
+          </div>
+        </Card>
+
+        <Card className="sta-stat">
+          <div className="sta-stat-icon-wrap text-rose-600 dark:text-rose-400">
+            <CalendarDays className="w-4 h-4" />
+          </div>
+          <div className="sta-stat-info">
+            <span className="sta-stat-label">Absences</span>
+            <span className="sta-stat-num">
+              {student ? absent : "—"}
+            </span>
+            <span className="sta-stat-sub">Recorded Absent</span>
+          </div>
+        </Card>
+
+        <Card className="sta-stat">
+          <div className="sta-stat-icon-wrap text-amber-600 dark:text-amber-400">
+            <Clock3 className="w-4 h-4" />
+          </div>
+          <div className="sta-stat-info">
+            <span className="sta-stat-label">Leaves &amp; Late</span>
+            <span className="sta-stat-num">
+              {student ? `${leave} L / ${late} D` : "—"}
+            </span>
+            <span className="sta-stat-sub">
+              {student ? `${leave} on leave · ${late} late` : "No records"}
+            </span>
+          </div>
+        </Card>
       </div>
-      {(!student || attendance?.policyPending) && (
-        <p className="sta-notice">
-          {!student
-            ? "No student record is linked to this account. Your attendance will appear when your record is linked."
-            : "Attendance percentage is unavailable until the attendance policy for Late and On Leave is set. Recorded counts remain visible."}
-        </p>
+
+      {/* Notice Banner if Policy Pending or Risk */}
+      {isAtRisk && (
+        <div className="sta-alert-warning">
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <p>
+            <strong>Attendance Advisory:</strong> Your current attendance is {percentage(overallRate)}, which is below the required 75% board examination threshold. Please consult your academic advisor.
+          </p>
+        </div>
       )}
+
+      {/* 2. Subject-wise Progress Card */}
       <Card className="sta-card">
         <div className="sta-card-heading">
           <h2>
             <span>
               <ChartNoAxesColumnIncreasing aria-hidden="true" />
             </span>
-            Daily Attendance Progress
+            Subject Attendance Progress
           </h2>
+          <span className="sta-count-tag">{courses.length} subjects monitored</span>
         </div>
+
         <div className="sta-courses">
-          {visibleCourses.map((course) => (
-            <div className="sta-course" key={course.title}>
-              <div className="sta-course-heading">
-                <h3>{course.title}</h3>
-                <span>
-                  {course.attendance.marked
-                    ? `${course.attendance.present}/${course.attendance.marked} recorded days${course.attendance.rate == null ? " · Percentage unavailable" : ` (${percentage(course.attendance.rate)})`}`
-                    : "No attendance recorded"}
-                </span>
+          {visibleCourses.map((course) => {
+            const marked = course.attendance?.marked || 0;
+            const present = course.attendance?.present || 0;
+            const rate = course.attendance?.rate == null ? 0 : course.attendance.rate;
+            const hasRate = course.attendance?.rate != null;
+
+            return (
+              <div className="sta-course" key={course.id || course.title}>
+                <div className="sta-course-heading">
+                  <div className="sta-course-title-wrap">
+                    <h3>{course.title || course.name}</h3>
+                    {hasRate && (
+                      <span className={`sta-rate-badge ${rate >= 75 ? "rate-good" : rate >= 65 ? "rate-warn" : "rate-danger"}`}>
+                        {percentage(rate)}
+                      </span>
+                    )}
+                  </div>
+                  <span className="sta-course-days">
+                    {marked > 0 ? (
+                      <>
+                        <strong>{present}</strong> / {marked} days attended
+                      </>
+                    ) : (
+                      "No sessions recorded yet"
+                    )}
+                  </span>
+                </div>
+
+                {hasRate ? (
+                  <div className="sta-progress-wrapper">
+                    <Progress
+                      value={rate}
+                      className={rate >= 75 ? "progress-good" : rate >= 65 ? "progress-warn" : "progress-danger"}
+                      label={`${course.title} attendance: ${percentage(rate)}`}
+                    />
+                  </div>
+                ) : (
+                  <p className="sta-course-empty">
+                    Attendance data will appear as soon as daily lectures commence.
+                  </p>
+                )}
               </div>
-              {course.attendance.rate == null ? (
-                <p className="sta-course-empty">
-                  {course.attendance.policyPending
-                    ? "Attendance policy not set."
-                    : "No attendance data available for this enrolled course."}
-                </p>
-              ) : (
-                <Progress
-                  value={course.attendance.rate}
-                  label={`${course.title} attendance: ${percentage(course.attendance.rate)}`}
-                />
-              )}
+            );
+          })}
+
+          {!courses.length && (
+            <div className="sta-empty">
+              <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+              <h3>No courses enrolled yet.</h3>
+              <p>Your subject attendance will populate here once enrolled in your semester or class.</p>
             </div>
-          ))}
+          )}
         </div>
-        {!courses.length && (
-          <p className="sta-empty">
-            No attendance data available for enrolled courses.
-          </p>
-        )}
-        {totalCourseItems > 0 && (
+
+        {totalCourseItems > ITEMS_PER_PAGE && (
           <AttendancePagination
             currentPage={safeCoursePage}
             totalPages={totalCoursePages}
@@ -215,6 +302,8 @@ export default function StudentAttendance() {
           />
         )}
       </Card>
+
+      {/* 3. Daily Attendance History Log Card */}
       <Card className="sta-card">
         <div className="sta-card-heading">
           <h2>
@@ -223,47 +312,189 @@ export default function StudentAttendance() {
             </span>
             Daily Attendance Log
           </h2>
-          <p>Recent daily attendance history</p>
+          <span className="sta-count-tag">{filteredRows.length} logs found</span>
         </div>
-        <Table aria-label="Daily attendance history">
-          <TableHeader>
-            <TableRow>
-              {["Date", "Course / Subject", "Status", "Remarks"].map(
-                (heading) => (
+
+        {/* Filter Controls Row */}
+        <div className="sta-filter-row">
+          {/* Status Pills */}
+          <div className="sta-tab-pills" role="tablist" aria-label="Filter logs by status">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === "all"}
+              className={`sta-tab-btn ${statusFilter === "all" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("all");
+                setLogPage(1);
+              }}
+            >
+              All ({statusCounts.all})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === "Present"}
+              className={`sta-tab-btn ${statusFilter === "Present" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("Present");
+                setLogPage(1);
+              }}
+            >
+              Present ({statusCounts.present})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === "Absent"}
+              className={`sta-tab-btn ${statusFilter === "Absent" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("Absent");
+                setLogPage(1);
+              }}
+            >
+              Absent ({statusCounts.absent})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === "Late"}
+              className={`sta-tab-btn ${statusFilter === "Late" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("Late");
+                setLogPage(1);
+              }}
+            >
+              Late ({statusCounts.late})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === "On Leave"}
+              className={`sta-tab-btn ${statusFilter === "On Leave" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("On Leave");
+                setLogPage(1);
+              }}
+            >
+              Leave ({statusCounts.leave})
+            </button>
+          </div>
+
+          {/* Search Box */}
+          <div className="sta-search-wrap">
+            <Search className="sta-search-icon" aria-hidden="true" />
+            <Input
+              type="text"
+              placeholder="Search by subject, date, or remarks..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setLogPage(1);
+              }}
+              className="sta-search-input"
+              aria-label="Search attendance log"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setLogPage(1);
+                }}
+                className="sta-search-clear"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop & Tablet Table (>= 768px) */}
+        <div className="sta-table-container">
+          <Table aria-label="Daily attendance history">
+            <TableHeader>
+              <TableRow>
+                {["Date", "Course / Subject", "Status", "Remarks"].map((heading) => (
                   <TableHead key={heading} scope="col">
                     {heading}
                   </TableHead>
-                ),
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleRows.map(({ record, session, date }) => (
+                <TableRow key={record.id || `${date}-${session?.subject}`} className="sta-table-row">
+                  <TableCell>
+                    <span className="sta-date-cell">
+                      <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+                      <time dateTime={date}>{date}</time>
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <strong className="sta-subject-text">{session?.subject || "General"}</strong>
+                  </TableCell>
+                  <TableCell>
+                    <AttendanceStatusBadge status={record.status} />
+                  </TableCell>
+                  <TableCell>
+                    <span className="sta-remarks-text">
+                      {typeof record.remarks === "string" && record.remarks.trim()
+                        ? record.remarks
+                        : "No remarks"}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!filteredRows.length && (
+                <TableRow>
+                  <TableCell colSpan={4} className="sta-empty">
+                    <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                    <h3>No attendance records match your filter.</h3>
+                    <p>Try clearing your search query or selecting "All" statuses.</p>
+                  </TableCell>
+                </TableRow>
               )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {visibleRows.map(({ record, session, date }) => (
-              <TableRow key={record.id}>
-                <TableCell>
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Mobile Cards View (< 768px) */}
+        <div className="sta-mobile-cards">
+          {visibleRows.map(({ record, session, date }) => (
+            <div key={record.id || `${date}-${session?.subject}`} className="sta-mobile-card">
+              <div className="sta-mobile-card-top">
+                <span className="sta-mobile-date">
+                  <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
                   <time dateTime={date}>{date}</time>
-                </TableCell>
-                <TableCell>{session.subject}</TableCell>
-                <TableCell>
-                  <AttendanceStatusBadge status={record.status} />
-                </TableCell>
-                <TableCell>
-                  {typeof record.remarks === "string" && record.remarks.trim()
-                    ? record.remarks
-                    : "No remarks"}
-                </TableCell>
-              </TableRow>
-            ))}
-            {!rows.length && (
-              <TableRow>
-                <TableCell colSpan={4} className="sta-empty">
-                  No attendance records available yet.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        {totalLogItems > 0 && (
+                </span>
+                <AttendanceStatusBadge status={record.status} />
+              </div>
+
+              <div className="sta-mobile-subject">
+                <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
+                <strong>{session?.subject || "General"}</strong>
+              </div>
+
+              {typeof record.remarks === "string" && record.remarks.trim() && (
+                <div className="sta-mobile-remarks">
+                  <span>Note: {record.remarks}</span>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {!filteredRows.length && (
+            <div className="sta-empty sta-mobile-empty">
+              <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+              <h3>No attendance records match.</h3>
+              <p>Try clearing your search or status filter.</p>
+            </div>
+          )}
+        </div>
+
+        {totalLogItems > LOGS_PER_PAGE && (
           <AttendancePagination
             currentPage={safeLogPage}
             totalPages={totalLogPages}

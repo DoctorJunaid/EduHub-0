@@ -40,7 +40,7 @@ export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
             setLoading(false);
           }
         }}>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-4">
             <div className="tt-field">
               <Label htmlFor={`${id}-amount`}>Amount Paid (PKR)</Label>
               <Input
@@ -94,15 +94,15 @@ export default function SubmitPaymentDialog({ voucher, onClose, onSubmit }) {
             </div>
           </div>
 
-          <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-xs mb-5">
+          <div className="bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40 p-3 rounded-md text-xs mb-5">
             <strong>Note:</strong> Your payment status will be marked as "Pending Confirmation" until verified by the campus finance team. Keep your original receipt safe.
           </div>
 
-          <div className="tt-dialog-actions">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+          <div className="tt-dialog-actions flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading && <Spinner className="mr-2 size-4" />}
               Submit Payment
             </Button>

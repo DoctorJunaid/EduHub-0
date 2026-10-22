@@ -137,13 +137,13 @@ export default function StudentChallanDialog({ voucher, student, demo = false })
         </div>
       </div>
 
-      <DialogFooter className="flex gap-2">
+      <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 w-full mt-2">
         <DialogClose asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline" className="w-full sm:w-auto">Close</Button>
         </DialogClose>
         <Button
           onClick={() => printElement(sheet.current, `${voucher.voucherNo} - Fee Challan`)}
-          className="gap-1.5"
+          className="w-full sm:w-auto gap-1.5"
         >
           <Printer className="w-4 h-4" />
           Print 3-Copy Challan

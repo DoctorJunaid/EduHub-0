@@ -1,403 +1,929 @@
+/* StudentGrades.css - Professional & Responsive Progress Report Card Styling */
+
 .student-grades-page {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 1.25rem;
   min-width: 0;
-  padding: 18px 20px 20px;
+  width: 100%;
+  padding: 1rem 0 2rem;
   color: var(--foreground);
 }
+
+/* ==========================================================================
+   1. Standardized KPI Metric Cards
+   ========================================================================== */
+.sg-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .sg-stats {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+.sg-stat {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 4.75rem;
+  gap: 0.875rem;
+  padding: 0.875rem 1.125rem;
+  border: 0;
+  border-right: 1px solid #e4e4e7;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #09090b;
+  transition: background-color 0.15s ease;
+}
+
+.dark .sg-stat {
+  border-right-color: #27272a;
+  color: #f4f4f5;
+}
+
+.sg-stat:last-child {
+  border-right: 0;
+}
+
+.sg-stat:hover {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.dark .sg-stat:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sg-stat-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: #f4f4f5;
+  color: #09090b;
+  flex-shrink: 0;
+}
+
+.dark .sg-stat-icon-wrap {
+  background: #27272a;
+  color: #f4f4f5;
+}
+
+.sg-stat-icon-wrap svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.sg-stat-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.125rem;
+  line-height: 1.3;
+}
+
+.sg-stat-label {
+  color: #71717a;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.dark .sg-stat-label {
+  color: #a1a1aa;
+}
+
+.sg-stat-num {
+  overflow: hidden;
+  color: #09090b;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .sg-stat-num {
+  color: #f4f4f5;
+}
+
+.sg-stat-sub {
+  font-size: 0.6875rem;
+  color: #71717a;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark .sg-stat-sub {
+  color: #a1a1aa;
+}
+
+/* ==========================================================================
+   2. Controls & Actions Bar
+   ========================================================================== */
 .sg-page-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 0.75rem 1rem;
   flex-wrap: wrap;
-}
-.sg-page-heading h1 {
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 6px;
-}
-.sg-page-heading p {
-  font-size: 15px;
-  color: var(--muted-foreground);
-}
-.sg-page-heading button {
-  padding: 10px 16px;
-  min-height: 42px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--card);
-  font-size: 13px;
-  flex-shrink: 0;
-}
-.sg-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
   width: 100%;
-  background: #ffffff;
-  border-bottom: 1px solid #e4e4e7;
 }
-.student-grades-page .sg-stat,
-.student-grades-page .sg-sheet {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
-  min-width: 0;
-}
-.student-grades-page .sg-stat {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 10px 16px;
-  min-height: 56px;
-  border: none;
-  border-right: 1px solid #e4e4e7;
-  border-radius: 0;
-  box-shadow: none;
-}
-.student-grades-page .sg-stat:last-child {
-  border-right: none;
-}
-.sg-stat .summary-icon {
-  display: grid;
-  place-items: center;
-  width: auto;
-  height: auto;
-  flex-shrink: 0;
-  color: #09090b;
-  background: transparent;
-  border-radius: 0;
-}
-.sg-stat .summary-icon svg {
-  width: 16px;
-  height: 16px;
-}
-.sg-stat > div {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-.sg-stat .summary-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: #71717a;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-}
-.sg-stat strong {
-  font-size: 18px;
-  line-height: 1.1;
-  font-weight: 700;
-}
-.sg-stat:nth-child(n + 3) strong {
-  font-size: 18px;
-}
-.sg-stat small {
-  display: none;
-}
+
 .sg-period {
   display: flex;
   align-items: center;
-  align-self: center;
-  gap: 12px;
-  font-size: 13px;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--muted-foreground);
-  max-width: 100%;
+  flex: 1 1 260px;
+  min-width: 0;
 }
+
+.sg-period span {
+  white-space: nowrap;
+}
+
 .sg-period select {
   min-width: 0;
-  max-width: 100%;
-  padding: 8px 12px;
+  flex: 1;
+  max-width: 20rem;
+  height: 2.375rem;
+  padding: 0 0.75rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.5rem;
+  color: #09090b;
+  background: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.dark .sg-period select {
+  background: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+
+.sg-download-btn {
+  height: 2.375rem;
+  padding: 0 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #09090b;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.sg-download-btn:hover:not(:disabled) {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+.dark .sg-download-btn {
+  background: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+
+.dark .sg-download-btn:hover:not(:disabled) {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+/* ==========================================================================
+   3. Report Card Sheet
+   ========================================================================== */
+.sg-sheet {
+  padding: 1.5rem 1.75rem;
+  gap: 1.25rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--foreground);
+  border-radius: 0.75rem;
   background: var(--card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
-.sg-period select:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-.student-grades-page .sg-sheet {
-  padding: 16px 18px;
-  gap: 12px;
-}
+
 .sg-sheet-heading {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 1rem;
   flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
 }
+
 .sg-sheet-title {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 0.875rem;
+  min-width: 0;
 }
-.sg-sheet-title > span {
+
+.sg-sheet-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  flex-shrink: 0;
+}
+
+.dark .sg-sheet-icon-wrap {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.sg-sheet-meta {
   display: flex;
-  padding: 12px;
-  color: var(--color-success);
-  background: var(--color-success-bg);
-  border-radius: var(--radius-md);
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
 }
-.sg-sheet h2 {
-  font-size: 18px;
+
+.sg-sheet-meta h2 {
+  font-size: 1.125rem;
   font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.3;
 }
-.sg-sheet-title p {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin-top: 6px;
-}
-.sg-transcript-badge,
-.sg-grade {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--color-success);
-  background: var(--color-success-bg);
-}
-.sg-note,
-.sg-print-summary {
-  font-size: 12px;
-  line-height: 1.5;
+
+.sg-student-bio {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.625rem;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
 }
+
+.sg-bio-name {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.sg-bio-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sg-bio-item strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.sg-transcript-badge {
+  padding: 0.3125rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #f4f4f5;
+  color: #18181b;
+  border: 1px solid #e4e4e7;
+  white-space: nowrap;
+}
+
+.dark .sg-transcript-badge {
+  background: #27272a;
+  color: #f4f4f5;
+  border-color: #3f3f46;
+}
+
+/* ==========================================================================
+   4. Table View (Desktop & Tablet >= 768px)
+   ========================================================================== */
+.sg-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .sg-sheet table {
-  min-width: 1000px;
+  min-width: 720px;
   width: 100%;
   border-collapse: collapse;
 }
+
 .sg-sheet th {
-  padding: 12px 10px;
-  text-align: left;
-  font-size: 11px;
-  color: var(--muted-foreground);
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
   text-transform: uppercase;
-}
-.sg-sheet td {
-  padding: 18px 10px;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
+  letter-spacing: 0.04em;
   color: var(--muted-foreground);
-  white-space: normal;
-  overflow-wrap: anywhere;
+  text-align: left;
 }
-.sg-sheet th:first-child,
-.sg-sheet td:first-child {
-  padding-left: 0;
-  width: 23%;
+
+.sg-sheet td {
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
 }
-.sg-sheet td strong {
-  display: block;
+
+.sg-table-row:hover td {
+  background: rgba(9, 9, 11, 0.02);
+}
+
+.dark .sg-table-row:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sg-subject-name {
   color: var(--foreground);
   font-weight: 600;
+  font-size: 0.875rem;
 }
-.sg-sheet td small {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-}
-.sg-sheet td:nth-child(2),
-.sg-sheet td:nth-child(3) {
+
+.sg-score-text {
   color: var(--foreground);
-  font-weight: 600;
+  font-weight: 700;
 }
-.sg-sheet .sg-empty {
-  padding: 36px 16px;
+
+.sg-sub-pct {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.sg-remarks-text {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+/* Grade Badges */
+.sg-grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.grade-a {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.dark .grade-a {
+  background: rgba(5, 150, 105, 0.15);
+  color: #34d399;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+.grade-b {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.dark .grade-b {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.grade-c {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.dark .grade-c {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.grade-d,
+.grade-f {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.dark .grade-d,
+.dark .grade-f {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.grade-default {
+  background: #f4f4f5;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+}
+
+.dark .grade-default {
+  background: #27272a;
+  color: #a1a1aa;
+  border-color: #3f3f46;
+}
+
+/* Empty State */
+.sg-empty {
+  padding: 2.5rem 1rem !important;
   text-align: center;
 }
+
+.sg-empty h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 0.25rem;
+}
+
+.sg-empty p {
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   5. Mobile Subject Cards View (< 768px)
+   ========================================================================== */
+.sg-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .sg-table-container {
+    display: none;
+  }
+
+  .sg-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .sg-mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    box-sizing: border-box;
+  }
+
+  .dark .sg-mobile-card {
+    background: #18181b;
+  }
+
+  .sg-mobile-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .sg-mobile-subject {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+
+  .sg-mobile-marks-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    background: #fbfbfa;
+    border-radius: 0.375rem;
+    border: 1px solid #f4f4f5;
+  }
+
+  .dark .sg-mobile-marks-row {
+    background: #202023;
+    border-color: #27272a;
+  }
+
+  .sg-mobile-mark-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .sg-mobile-mark-label {
+    font-size: 0.625rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .sg-mobile-mark-val {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+
+  .sg-mobile-progress-track {
+    width: 100%;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: #e4e4e7;
+    overflow: hidden;
+  }
+
+  .dark .sg-mobile-progress-track {
+    background: #27272a;
+  }
+
+  .sg-mobile-progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+  }
+
+  .sg-mobile-progress-bar.grade-a {
+    background: #10b981;
+  }
+
+  .sg-mobile-progress-bar.grade-b {
+    background: #3b82f6;
+  }
+
+  .sg-mobile-progress-bar.grade-c {
+    background: #f59e0b;
+  }
+
+  .sg-mobile-progress-bar.grade-d,
+  .sg-mobile-progress-bar.grade-f {
+    background: #ef4444;
+  }
+
+  .sg-mobile-remarks {
+    font-size: 0.6875rem;
+    color: #71717a;
+    line-height: 1.4;
+  }
+
+  .dark .sg-mobile-remarks {
+    color: #a1a1aa;
+  }
+}
+
+/* ==========================================================================
+   6. Report Card Footer & Official Signatures
+   ========================================================================== */
 .sg-result-footer {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  padding-top: 16px;
+  gap: 1.5rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--border);
-  font-size: 13px;
-}
-.sg-result-footer > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.sg-result-footer strong {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.sg-result-footer > div:first-child span {
-  font-weight: 700;
-}
-.sg-signatures {
-  display: flex;
-  gap: 32px;
-  color: var(--muted-foreground);
-}
-.sg-signatures span {
-  min-width: 150px;
-  padding-top: 24px;
-  border-top: 1px solid var(--foreground);
-  text-align: center;
-  font-size: 12px;
-}
-.dark
-  .student-grades-page
-  :is(.summary-icon, .sg-sheet-title > span, .sg-transcript-badge, .sg-grade) {
-  color: var(--color-green-light);
+  flex-wrap: wrap;
 }
 
-.student-grades-page {
-  gap: 8px;
-  padding: 8px 12px 12px;
-}
-.sg-page-heading {
-  gap: 10px;
-}
-.sg-page-heading h1 {
-  font-size: 20px;
-  line-height: 1.2;
-  margin-bottom: 2px;
-}
-.sg-page-heading p {
-  font-size: 12px;
-}
-.sg-page-heading button {
-  padding: 6px 8px;
-  min-height: 28px;
-  font-size: 11px;
-}
-.sg-period {
-  gap: 6px;
-  font-size: 11px;
-}
-.sg-period select {
-  padding: 7px 9px;
-  font-size: 11px;
-}
-.sg-stats {
-  gap: 0;
-}
-.student-grades-page .sg-stat {
-  gap: 12px;
-  padding: 10px 16px;
-  min-height: 56px;
-  border-radius: 0;
-  box-shadow: none;
-}
-.student-grades-page .sg-sheet {
-  padding: 10px 12px;
-  gap: 8px;
-  border-radius: 8px;
-  box-shadow: none;
-}
-.sg-sheet-heading {
-  gap: 8px;
-}
-.sg-sheet-title {
-  gap: 8px;
-}
-.sg-sheet-title > span {
-  padding: 6px;
-}
-.sg-sheet h2 {
-  font-size: 15px;
-}
-.sg-sheet-title p {
-  margin-top: 2px;
-  font-size: 10px;
-}
-.sg-sheet th {
-  padding: 6px 8px;
-  font-size: 10px;
-}
-.sg-sheet td {
-  padding: 8px;
-  font-size: 11px;
-}
-.sg-result-footer {
-  align-items: stretch;
+.sg-status-box {
+  display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding-top: 12px;
-  font-size: 11px;
-}
-.sg-signatures {
-  gap: 12px;
-}
-.sg-signatures span {
+  gap: 0.25rem;
   min-width: 0;
-  flex: 1;
-  padding-top: 18px;
-  font-size: 10px;
 }
-@media (max-width: 1200px) {
+
+.sg-status-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}
+
+.sg-status-val-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.sg-status-val {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.dark .sg-status-val {
+  color: #34d399;
+}
+
+.sg-status-pill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: #f4f4f5;
+  color: #18181b;
+  border: 1px solid #e4e4e7;
+}
+
+.dark .sg-status-pill {
+  background: #27272a;
+  color: #f4f4f5;
+  border-color: #3f3f46;
+}
+
+.sg-signatures {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sg-sig-box {
+  min-width: 140px;
+  padding-top: 0.75rem;
+  border-top: 1px solid #a1a1aa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.dark .sg-sig-box {
+  border-top-color: #52525b;
+}
+
+.sg-sig-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.sg-sig-verified {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #059669;
+  display: flex;
+  align-items: center;
+}
+
+.dark .sg-sig-verified {
+  color: #34d399;
+}
+
+.sg-sig-placeholder {
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* Tablet (640px to 1023px) */
+@media (min-width: 640px) and (max-width: 1023px) {
   .sg-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .sg-page-heading {
-    align-items: flex-start;
-    flex-direction: column;
+
+  .sg-stat:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .sg-stat:nth-child(-n + 2) {
+    border-bottom: 1px solid #e4e4e7;
+  }
+
+  .dark .sg-stat:nth-child(-n + 2) {
+    border-bottom-color: #27272a;
   }
 }
-@media (max-width: 640px) {
+
+/* Mobile Devices (max-width: 639px) */
+@media (max-width: 639px) {
   .student-grades-page {
-    padding: 10px 4px 16px;
-    gap: 10px;
+    padding: 0.625rem 0 1.5rem;
+    gap: 0.875rem;
   }
+
   .sg-stats {
-    grid-template-columns: 1fr;
-    border: 1px solid #e4e4e7;
-    border-radius: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .student-grades-page .sg-stat {
-    border-right: none;
+
+  .sg-stat {
+    min-height: 4rem;
+    padding: 0.625rem 0.75rem;
+    gap: 0.625rem;
+    border-right: 1px solid #e4e4e7;
     border-bottom: 1px solid #e4e4e7;
-    justify-content: flex-start;
-    padding: 10px 14px;
-    min-height: 48px;
   }
-  .student-grades-page .sg-stat:last-child {
-    border-bottom: none;
+
+  .dark .sg-stat {
+    border-right-color: #27272a;
+    border-bottom-color: #27272a;
   }
-  .sg-page-heading h1 {
-    font-size: 20px;
+
+  .sg-stat:nth-child(2n) {
+    border-right: 0;
   }
-  .sg-page-heading button {
+
+  .sg-stat:nth-child(3),
+  .sg-stat:nth-child(4) {
+    border-bottom: 0;
+  }
+
+  .sg-stat-icon-wrap {
+    width: 1.875rem;
+    height: 1.875rem;
+  }
+
+  .sg-stat-icon-wrap svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+
+  .sg-stat-label {
+    font-size: 0.5625rem;
+    letter-spacing: 0.04em;
+  }
+
+  .sg-stat-num {
+    font-size: 1rem;
+  }
+
+  .sg-stat-sub {
+    font-size: 0.5625rem;
+  }
+
+  .sg-page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+  }
+
+  .sg-period {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .sg-period select {
+    max-width: none;
+    width: 100%;
+  }
+
+  .sg-download-btn {
     width: 100%;
     justify-content: center;
   }
-  .student-grades-page .sg-sheet {
-    padding: 12px 14px;
-    border-radius: 8px;
+
+  .sg-sheet {
+    padding: 1rem 0.875rem;
+    gap: 1rem;
   }
-  .sg-sheet [data-slot="table-container"] {
-    -webkit-overflow-scrolling: touch;
-  }
-  .sg-period {
-    align-items: flex-start;
+
+  .sg-sheet-heading {
     flex-direction: column;
-    align-self: stretch;
-    width: 100%;
+    align-items: stretch;
+    gap: 0.75rem;
   }
-  .sg-period select {
-    width: 100%;
+
+  .sg-student-bio {
+    font-size: 0.6875rem;
   }
+
+  .sg-result-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+
+  .sg-signatures {
+    width: 100%;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .sg-sig-box {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Extra-small Mobile (< 360px) */
+@media (max-width: 359px) {
+  .sg-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sg-stat {
+    border-right: 0 !important;
+    border-bottom: 1px solid #e4e4e7 !important;
+  }
+
+  .dark .sg-stat {
+    border-bottom-color: #27272a !important;
+  }
+
+  .sg-stat:last-child {
+    border-bottom: 0 !important;
+  }
+
   .sg-signatures {
     flex-direction: column;
-    gap: 16px;
+    align-items: stretch;
   }
-  .sg-signatures span {
-    min-width: 100%;
+}
+
+/* ==========================================================================
+   8. Official Print Mode Styling (@media print)
+   ========================================================================== */
+@media print {
+  [data-print-hide],
+  .sg-stats,
+  .sg-page-heading,
+  .sg-download-btn {
+    display: none !important;
+  }
+
+  .student-grades-page {
+    padding: 0;
+    gap: 0;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+
+  .sg-sheet {
+    border: 2px solid #000000 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 1.5rem !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .sg-sheet table {
+    display: table !important;
+    min-width: 100% !important;
+    color: #000000 !important;
+  }
+
+  .sg-mobile-cards {
+    display: none !important;
+  }
+
+  .sg-table-container {
+    display: block !important;
+  }
+
+  .sg-sheet th,
+  .sg-sheet td {
+    color: #000000 !important;
+    border-color: #000000 !important;
+  }
+
+  .sg-signatures {
+    gap: 3rem;
+  }
+
+  .sg-sig-box {
+    border-top: 1px solid #000000 !important;
+    color: #000000 !important;
   }
 }

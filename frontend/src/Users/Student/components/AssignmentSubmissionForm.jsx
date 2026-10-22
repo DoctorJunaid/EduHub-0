@@ -50,12 +50,12 @@ export default function AssignmentSubmissionForm({ assignment, onSaved }) {
             setNotes(event.target.value);
             setError("");
           }}
+          placeholder="Type your homework response, solution steps, or comments here..."
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "assignment-error" : "assignment-save-note"}
         />
         <p id="assignment-save-note">
-          Your submission is sent to your school. File attachments are not
-          available yet.
+          Your submission is transmitted directly to your instructor for grading.
         </p>
         {error && (
           <p id="assignment-error" role="alert">
