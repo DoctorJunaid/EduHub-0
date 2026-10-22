@@ -7,6 +7,7 @@ import {
   CalendarDays,
   AlertCircle,
   FileText,
+  X,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -14,11 +15,19 @@ import { Button } from "@/components/ui/button";
 import { selectStudentCourses } from "@/store/selectors/studentCourses";
 import { selectStudentDiary } from "@/store/selectors/studentDiary";
 import StudentDiaryEntry from "../../components/StudentDiaryEntry";
+import { PageLoader } from "@/components/ui/spinner";
+import useStudentPortal from "@/hooks/useStudentPortal";
 import "./StudentDiary.css";
 
+const EMPTY_COURSES = [];
+const EMPTY_ENTRIES = [];
+
 export default function StudentDiary() {
-  const courses = useSelector(selectStudentCourses) || [];
-  const entries = useSelector(selectStudentDiary) || [];
+  const { isLoading } = useStudentPortal();
+  const rawCourses = useSelector(selectStudentCourses);
+  const rawEntries = useSelector(selectStudentDiary);
+  const courses = rawCourses || EMPTY_COURSES;
+  const entries = rawEntries || EMPTY_ENTRIES;
 
   const [selectedSubject, setSelectedSubject] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,19 +74,23 @@ export default function StudentDiary() {
 
   const latestDate = entries[0]?.date || "Today";
 
+  if (isLoading && !entries.length) {
+    return <PageLoader text="Loading your daily diary & homework notes..." />;
+  }
+
   return (
     <section className="student-diary-page w-full">
       {/* 1. Neutral Standardized KPI Metric Cards */}
-      <div className="student-diary-metrics grid grid-cols-2 lg:grid-cols-4">
+      <div className="student-diary-metrics">
         <Card className="student-diary-metric">
           <div className="student-diary-metric-icon">
             <BookOpen className="w-4 h-4" />
           </div>
           <div className="student-diary-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+            <span className="student-diary-metric-label">
               Total Diary Logs
             </span>
-            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="student-diary-metric-value">
               {totalEntries}
             </span>
           </div>
@@ -88,10 +101,10 @@ export default function StudentDiary() {
             <Sparkles className="w-4 h-4" />
           </div>
           <div className="student-diary-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+            <span className="student-diary-metric-label">
               Homework Tasks
             </span>
-            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="student-diary-metric-value">
               {homeworkCount}
             </span>
           </div>
@@ -102,10 +115,10 @@ export default function StudentDiary() {
             <FileText className="w-4 h-4" />
           </div>
           <div className="student-diary-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+            <span className="student-diary-metric-label">
               Covered Subjects
             </span>
-            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="student-diary-metric-value">
               {distinctSubjectsCount} Subjects
             </span>
           </div>
@@ -116,10 +129,10 @@ export default function StudentDiary() {
             <CalendarDays className="w-4 h-4" />
           </div>
           <div className="student-diary-metric-copy">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block uppercase tracking-wide">
+            <span className="student-diary-metric-label">
               Latest Session
             </span>
-            <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100 truncate block">
+            <span className="student-diary-metric-value truncate">
               {latestDate}
             </span>
           </div>
@@ -127,21 +140,32 @@ export default function StudentDiary() {
       </div>
 
       {/* 2. Search & Subject Filter Bar */}
-      <div className="student-diary-filters flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-neutral-900 p-2 sm:p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
+      <div className="student-diary-filters">
         {/* Search Input */}
-        <div className="student-diary-search relative flex-1 min-w-0">
-          <Search className="student-diary-search-icon w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="student-diary-search">
+          <Search className="student-diary-search-icon" aria-hidden="true" />
           <Input
             type="text"
             placeholder="Search diary notes, lecture topics, homework tasks, or teachers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="student-diary-search-input h-10 rounded-lg border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/40 text-xs sm:text-sm placeholder:text-neutral-400 focus-visible:ring-neutral-400"
+            className="student-diary-search-input"
+            aria-label="Search diary notes and homework"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="student-diary-search-clear"
+              aria-label="Clear search query"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Subject Filter Pills */}
-        <div className="student-diary-subject-tabs flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="student-diary-subject-tabs" role="tablist" aria-label="Filter diary by subject">
           {availableSubjects.map((sub) => {
             const isActive = selectedSubject === sub;
             return (
@@ -150,12 +174,11 @@ export default function StudentDiary() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                aria-pressed={isActive}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setSelectedSubject(sub)}
-                className={`student-diary-filter-button h-9 px-3 text-xs font-medium rounded-lg shrink-0 transition-colors border ${
-                  isActive
-                    ? "bg-neutral-100 text-neutral-900 border-neutral-300 dark:bg-neutral-800 dark:text-neutral-100 dark:border-neutral-700 font-semibold shadow-2xs"
-                    : "bg-transparent text-neutral-600 dark:text-neutral-400 border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900"
+                className={`student-diary-filter-button ${
+                  isActive ? "is-active" : ""
                 }`}
               >
                 {sub}
@@ -165,16 +188,18 @@ export default function StudentDiary() {
         </div>
       </div>
 
-      {/* 3. Peshawar Board & Session Alert Notice */}
-      <div className="student-diary-alert flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40 text-xs text-neutral-600 dark:text-neutral-400">
-        <AlertCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 shrink-0" />
-        <p className="leading-relaxed">
-          <strong className="font-semibold text-neutral-900 dark:text-neutral-200 uppercase tracking-wide text-[11px] mr-1.5">
+      {/* 3. Academic Routine Synchronized Notice */}
+      <div className="student-diary-alert">
+        <AlertCircle className="student-diary-alert-icon" aria-hidden="true" />
+        <div className="student-diary-alert-text">
+          <strong className="student-diary-alert-badge">
             Daily Academic Routine Synchronized:
           </strong>
-          Faculty log class lecture key points, textbook chapter readings, and practice exercises after each period.
-          Complete assignments can be submitted directly from linked diary entries.
-        </p>
+          <span>
+            Faculty log class lecture key points, textbook chapter readings, and practice exercises after each period.
+            Complete assignments can be submitted directly from linked diary entries.
+          </span>
+        </div>
       </div>
 
       {/* 4. Diary Entries Feed */}
@@ -184,14 +209,14 @@ export default function StudentDiary() {
         ))}
 
         {!filteredEntries.length && (
-          <Card className="sdp-empty p-12 text-center rounded-xl border border-dashed border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 space-y-3">
-            <BookOpen className="w-12 h-12 text-neutral-400 mx-auto" />
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+          <Card className="sdp-empty">
+            <BookOpen className="w-12 h-12 text-neutral-400 dark:text-neutral-600 mx-auto" />
+            <h3 className="sdp-empty-title">
               {searchQuery || selectedSubject !== "All"
                 ? "No diary entries match your filter"
                 : "No diary entries available yet"}
             </h3>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
+            <p className="sdp-empty-desc">
               {searchQuery || selectedSubject !== "All"
                 ? "Try searching for another topic or clearing your selected subject filter."
                 : "Daily lecture notes and practice tasks for your enrolled classes will appear here once posted by teachers."}
@@ -205,7 +230,7 @@ export default function StudentDiary() {
                   setSearchQuery("");
                   setSelectedSubject("All");
                 }}
-                className="rounded-lg mt-2 text-xs border-neutral-200 dark:border-neutral-700"
+                className="sdp-reset-btn"
               >
                 Reset Filters
               </Button>

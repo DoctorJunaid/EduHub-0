@@ -33,12 +33,12 @@ export default function StudentDiaryEntry({ entry, compact = false }) {
         </div>
         <div className="sde-meta-pill">
           <span className="sde-meta-item">
-            <UserCheck className="w-3.5 h-3.5 text-primary" />
-            <span>{entry.instructor || entry.teacherName || "Assigned Faculty"}</span>
+            <UserCheck className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
+            <span className="truncate">{entry.instructor || entry.teacherName || "Assigned Faculty"}</span>
           </span>
-          <span className="sde-meta-divider">•</span>
+          <span className="sde-meta-divider" aria-hidden="true">•</span>
           <span className="sde-meta-item">
-            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+            <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
             <time dateTime={entry.date}>{entry.date}</time>
           </span>
         </div>
@@ -47,7 +47,7 @@ export default function StudentDiaryEntry({ entry, compact = false }) {
       <div className="sde-panels">
         <section className="sde-recap-box">
           <div className="sde-box-header">
-            <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+            <BookOpen className="w-3.5 h-3.5 text-blue-500 shrink-0" aria-hidden="true" />
             <h4>Lecture Recap &amp; Key Concepts</h4>
           </div>
           <p>{entry.recap?.trim() || "No lecture recap provided for today's session."}</p>
@@ -55,8 +55,8 @@ export default function StudentDiaryEntry({ entry, compact = false }) {
 
         <section className="sde-hw-box">
           <div className="sde-box-header justify-between">
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
               <h4>Homework &amp; Practice Tasks</h4>
             </div>
             {entry.homework && (
@@ -65,16 +65,17 @@ export default function StudentDiaryEntry({ entry, compact = false }) {
                 size="sm"
                 className="sde-copy-btn"
                 onClick={handleCopyHomework}
+                aria-label={copied ? "Homework copied to clipboard" : "Copy homework to clipboard"}
                 title="Copy homework to clipboard"
               >
                 {copied ? (
                   <>
-                    <Check className="w-3 h-3 text-emerald-600" />
+                    <Check className="w-3 h-3 text-emerald-600" aria-hidden="true" />
                     <span className="text-[11px] text-emerald-600 font-medium">Copied</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3 h-3" />
+                    <Copy className="w-3 h-3" aria-hidden="true" />
                     <span className="text-[11px]">Copy</span>
                   </>
                 )}
@@ -87,7 +88,7 @@ export default function StudentDiaryEntry({ entry, compact = false }) {
               <p className="sde-hw-text">{entry.homework || entry.assignment.title}</p>
               <Link to="/student/assignments" className="sde-assignment-link">
                 <span>View &amp; Submit Task: <strong>{entry.assignment.title}</strong></span>
-                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                <ArrowRight className="w-3.5 h-3.5 ml-1 shrink-0" aria-hidden="true" />
               </Link>
             </div>
           ) : (

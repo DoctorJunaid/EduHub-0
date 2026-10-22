@@ -1,9 +1,12 @@
+/* StudentAssignments.css - Professional & Responsive Assignments & Daily Diary Stream */
+
 .student-assignments {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1.25rem;
   min-width: 0;
-  padding: 18px 20px 24px;
+  width: 100%;
+  padding: 1rem 0 2rem;
   color: var(--foreground);
 }
 
@@ -11,169 +14,318 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: 100%;
 }
 
-/* KPI Cards Grid */
+/* ==========================================================================
+   1. KPI Cards Grid
+   ========================================================================== */
 .sa-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
   width: 100%;
-  border-bottom: 1px solid #e4e4e7;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .sa-kpi-grid {
+  background: #18181b;
+  border-color: #27272a;
 }
 
 .sa-kpi-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 0.875rem;
   min-width: 0;
-  min-height: 56px;
-  padding: 6px 12px;
+  min-height: 4.75rem;
+  padding: 0.875rem 1.125rem;
   border: 0;
   border-right: 1px solid #e4e4e7;
   border-radius: 0;
-  background: #fff;
+  background: transparent;
   box-shadow: none;
+  color: #09090b;
+  transition: background-color 0.15s ease;
+}
+
+.dark .sa-kpi-card {
+  border-right-color: #27272a;
+  color: #f4f4f5;
 }
 
 .sa-kpi-card:last-child {
   border-right: 0;
 }
 
+.sa-kpi-card:hover {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.dark .sa-kpi-card:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .sa-kpi-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: #f4f4f5;
   color: #09090b;
   flex-shrink: 0;
 }
 
+.dark .sa-kpi-icon-wrap {
+  background: #27272a;
+  color: #f4f4f5;
+}
+
 .sa-kpi-icon-wrap svg {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .sa-kpi-info {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 2px;
+  gap: 0.125rem;
+  line-height: 1.3;
 }
 
 .sa-kpi-num {
   overflow: hidden;
   color: #09090b;
-  font-size: 16px;
+  font-size: 1.25rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.dark .sa-kpi-num {
+  color: #f4f4f5;
+}
+
 .sa-kpi-label {
   color: #71717a;
-  font-size: 10px;
+  font-size: 0.6875rem;
   font-weight: 600;
   line-height: 1.2;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
 }
 
-/* Controls & Tabs */
+.dark .sa-kpi-label {
+  color: #a1a1aa;
+}
+
+/* ==========================================================================
+   2. Controls, Tabs & Search Bar
+   ========================================================================== */
 .sa-controls-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0.75rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .sa-tab-pills {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
-  background: var(--muted);
-  border-radius: 10px;
+  gap: 0.375rem;
+  padding: 0.25rem;
+  background: #f4f4f5;
+  border-radius: 0.625rem;
   overflow-x: auto;
   max-width: 100%;
+  scrollbar-width: none;
+}
+
+.sa-tab-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.dark .sa-tab-pills {
+  background: #202023;
 }
 
 .sa-tab-btn {
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 7px;
+  border-radius: 0.4375rem;
   border: none;
   background: transparent;
-  color: var(--muted-foreground);
+  color: #71717a;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease-in-out;
 }
 
+.dark .sa-tab-btn {
+  color: #a1a1aa;
+}
+
 .sa-tab-btn:hover {
-  color: var(--foreground);
+  color: #09090b;
+}
+
+.dark .sa-tab-btn:hover {
+  color: #f4f4f5;
 }
 
 .sa-tab-btn.active {
-  background: var(--card);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #09090b;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dark .sa-tab-btn.active {
+  background: #27272a;
+  color: #f4f4f5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .sa-search-wrap {
   display: flex;
   align-items: center;
   position: relative;
-  min-width: 260px;
+  flex: 1 1 260px;
+  min-width: 220px;
+  max-width: 380px;
+}
+
+.sa-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: #71717a;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dark .sa-search-icon {
+  color: #a1a1aa;
 }
 
 .sa-search-input {
-  height: 36px;
-  padding-left: 34px;
-  border-radius: 8px;
-  font-size: 13px;
+  width: 100%;
+  height: 2.375rem;
+  padding: 0.4375rem 2rem 0.4375rem 2.25rem !important;
+  border-radius: 0.5rem;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  font-size: 0.8125rem;
+  color: #09090b;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Main Cards */
+.sa-search-input:focus-visible {
+  border-color: #a1a1aa;
+  box-shadow: 0 0 0 1px #a1a1aa;
+  outline: none;
+}
+
+.dark .sa-search-input {
+  background: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+
+.dark .sa-search-input:focus-visible {
+  border-color: #52525b;
+  box-shadow: 0 0 0 1px #52525b;
+}
+
+.sa-search-clear {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  background: #e4e4e7;
+  color: #52525b;
+  border: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.dark .sa-search-clear {
+  background: #3f3f46;
+  color: #d4d4d8;
+}
+
+/* ==========================================================================
+   3. Main Cards & Data Table
+   ========================================================================== */
 .sa-card {
-  padding: 18px 20px;
-  gap: 14px;
+  padding: 1.25rem 1.375rem;
+  gap: 1rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: var(--card);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sa-card-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 0.75rem;
   flex-wrap: wrap;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .sa-card-heading h2 {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 17px;
+  gap: 0.625rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--foreground);
   margin: 0;
 }
 
 .sa-card-heading h2 span {
-  display: flex;
-  padding: 6px;
-  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.5rem;
   color: #09090b;
   background: #f4f4f5;
+  flex-shrink: 0;
+}
+
+.dark .sa-card-heading h2 span {
+  background: #27272a;
+  color: #f4f4f5;
+}
+
+.sa-card-heading h2 span svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .sa-diary-icon-bg {
@@ -181,33 +333,42 @@
   background: #f4f4f5 !important;
 }
 
-.sa-diary-icon-bg svg {
-  color: #09090b !important;
+.dark .sa-diary-icon-bg {
+  color: #f4f4f5 !important;
+  background: #27272a !important;
 }
 
 .sa-count-tag {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--muted-foreground);
-  background: var(--muted);
-  padding: 3px 10px;
-  border-radius: 6px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 0.375rem;
 }
 
+.dark .sa-count-tag {
+  background: #202023;
+  border-color: #27272a;
+}
+
+/* Data Table (Desktops & Tablets >= 768px) */
 .sa-table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sa-card table {
-  min-width: 850px;
+  min-width: 780px;
   width: 100%;
   border-collapse: collapse;
 }
 
 .sa-card th {
-  padding: 10px 12px;
-  font-size: 11px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -216,42 +377,47 @@
 }
 
 .sa-card td {
-  padding: 12px;
-  font-size: 13px;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--muted-foreground);
   border-top: 1px solid var(--border);
   vertical-align: middle;
 }
 
 .sa-table-row:hover td {
-  background: rgba(9, 9, 11, 0.025);
+  background: rgba(9, 9, 11, 0.02);
+}
+
+.dark .sa-table-row:hover td {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .sa-title-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .sa-task-title {
   color: var(--foreground);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
 .sa-subject-tag-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 0.375rem;
 }
 
 .sa-badge-sub {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: #18181b;
   background: #f4f4f5;
-  padding: 1px 8px;
-  border-radius: 4px;
+  padding: 0.0625rem 0.5rem;
+  border-radius: 0.25rem;
   border: 1px solid #e4e4e7;
 }
 
@@ -261,73 +427,24 @@
   border-color: #3f3f46;
 }
 
-.sa-card .sa-date svg {
-  color: #09090b;
-}
-
-.sa-diary-stream .sde-subject-pill {
-  background: #f4f4f5;
-  color: #18181b;
-  border-color: #d4d4d8;
-}
-
-.dark .sa-diary-stream .sde-subject-pill {
-  background: #27272a;
-  color: #e4e4e7;
-  border-color: #3f3f46;
-}
-
-.sa-diary-stream .sde-meta-item svg.text-primary,
-.sa-diary-stream .sde-recap-box .sde-box-header svg {
-  color: #09090b;
-}
-
-.sa-diary-stream .sde-recap-box {
-  border-left-color: #09090b;
-}
-
-.sa-diary-stream .sde-hw-box {
-  border-left-color: #09090b;
-}
-
-.sa-diary-stream .sde-hw-box .sde-box-header svg {
-  color: #09090b;
-}
-
-.sa-diary-stream .sde-assignment-link {
-  color: #18181b;
-  background: #f4f4f5;
-}
-
-.sa-diary-stream .sde-assignment-link:hover {
-  background: #e4e4e7;
-}
-
-.sa-diary-stream .student-diary-entry:hover {
-  border-color: #09090b;
-}
-
-.sa-diary-stream .sde-resources-bar {
-  border-color: #d4d4d8;
-}
-
 .sa-badge-sec {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 500;
   color: var(--muted-foreground);
   background: var(--muted);
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 0.25rem;
 }
 
 .sa-task-desc {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
-  margin-top: 2px;
+  margin-top: 0.125rem;
+  line-height: 1.4;
 }
 
 .sa-marks-pill {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--foreground);
 }
@@ -335,51 +452,234 @@
 .sa-date {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 0.375rem;
+  font-size: 0.75rem;
   color: var(--foreground);
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.sa-score {
+  font-weight: 600;
 }
 
 .sa-empty {
-  padding: 40px 16px !important;
+  padding: 2.5rem 1rem !important;
   text-align: center;
 }
 
 .sa-empty h3 {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--foreground);
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 }
 
 .sa-empty p {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--muted-foreground);
-}
-
-.sa-diary-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.sa-diary-empty-card {
-  padding: 32px 16px;
-  text-align: center;
-  color: var(--muted-foreground);
-  font-size: 13px;
+  max-width: 24rem;
+  margin: 0 auto;
 }
 
 .sa-action-btn {
-  height: 32px;
-  padding: 0 12px;
-  font-size: 12px;
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: 0.375rem;
+  white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+/* ==========================================================================
+   4. Mobile Cards View (< 768px)
+   ========================================================================== */
+.sa-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .sa-table-container {
+    display: none;
+  }
+
+  .sa-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .sa-mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    box-sizing: border-box;
+  }
+
+  .dark .sa-mobile-card {
+    background: #18181b;
+  }
+
+  .sa-mobile-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .sa-mobile-card-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0.25rem 0 0;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .sa-mobile-card-desc {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    line-height: 1.45;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .sa-mobile-card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.875rem;
+    padding-top: 0.375rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.75rem;
+  }
+
+  .sa-mobile-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .sa-mobile-meta-label {
+    color: var(--muted-foreground);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+  }
+
+  .sa-mobile-card-action {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.25rem;
+  }
+
+  .sa-mobile-card-action .sa-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   5. Daily Diary Stream in Assignments
+   ========================================================================== */
+.sa-diary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.sa-diary-empty-card {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+/* ==========================================================================
+   6. Assignment Submission & Feedback Dialogs
+   ========================================================================== */
+.student-assignment-dialog {
+  max-width: min(540px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  gap: 1rem;
+  border-radius: 0.75rem;
+}
+
+.student-assignment-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.student-assignment-dialog label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.student-assignment-dialog textarea {
+  min-height: 7.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  border-radius: 0.5rem;
+}
+
+#assignment-save-note {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.4;
+}
+
+#assignment-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin: 0;
+  font-weight: 500;
+}
+
+.student-assignment-feedback {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #fbfbfa;
+  border: 1px solid var(--border);
+}
+
+.dark .student-assignment-feedback {
+  background: #18181b;
+}
+
+.student-assignment-feedback dt {
+  font-weight: 600;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.student-assignment-feedback dd {
+  margin: 0;
+  color: var(--foreground);
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* Tablet (640px to 1023px) */
+@media (min-width: 640px) and (max-width: 1023px) {
   .sa-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -391,39 +691,53 @@
   .sa-kpi-card:nth-child(-n + 2) {
     border-bottom: 1px solid #e4e4e7;
   }
+
+  .dark .sa-kpi-card:nth-child(-n + 2) {
+    border-bottom-color: #27272a;
+  }
+
+  .sa-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sa-search-wrap {
+    max-width: none;
+    width: 100%;
+  }
+
+  .sa-tab-pills {
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sa-tab-btn {
+    flex: 0 0 auto;
+  }
 }
 
-@media (max-width: 768px) {
+/* Mobile Devices (max-width: 639px) */
+@media (max-width: 639px) {
   .student-assignments {
-    padding: 10px 0 16px;
-    gap: 12px;
+    padding: 0.625rem 0 1.5rem;
+    gap: 0.875rem;
   }
 
   .sa-kpi-grid {
-    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    border: 1px solid #e4e4e7;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .dark .sa-kpi-grid {
-    border-color: #27272a;
-    background: #18181b;
   }
 
   .sa-kpi-card {
-    min-height: 3.75rem;
-    padding: 0.5rem 0.625rem;
-    gap: 0.5rem;
-    justify-content: flex-start;
+    min-height: 4rem;
+    padding: 0.625rem 0.75rem;
+    gap: 0.625rem;
     border-right: 1px solid #e4e4e7;
     border-bottom: 1px solid #e4e4e7;
   }
 
   .dark .sa-kpi-card {
-    border-color: #27272a;
+    border-right-color: #27272a;
+    border-bottom-color: #27272a;
   }
 
   .sa-kpi-card:nth-child(2n) {
@@ -435,60 +749,86 @@
     border-bottom: 0;
   }
 
+  .sa-kpi-icon-wrap {
+    width: 1.875rem;
+    height: 1.875rem;
+  }
+
+  .sa-kpi-icon-wrap svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+
   .sa-kpi-label {
     font-size: 0.5625rem;
+    letter-spacing: 0.04em;
   }
 
   .sa-kpi-num {
-    font-size: 0.9375rem;
+    font-size: 1rem;
   }
 
   .sa-controls-row {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 0.5rem;
   }
 
   .sa-search-wrap {
+    max-width: none;
     width: 100%;
+  }
+
+  .sa-search-input {
+    height: 2.25rem;
+    font-size: 0.75rem;
+    padding-left: 2rem !important;
+  }
+
+  .sa-search-icon {
+    left: 0.625rem;
+    width: 0.875rem;
+    height: 0.875rem;
   }
 
   .sa-tab-pills {
     width: 100%;
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 4px;
-    gap: 4px;
-  }
-
-  .sa-tab-pills::-webkit-scrollbar {
-    display: none;
+    gap: 0.25rem;
   }
 
   .sa-tab-btn {
     flex: 0 0 auto;
-    white-space: nowrap;
-  }
-
-  .sa-table-container {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-@media (max-width: 480px) {
-  .student-assignments {
-    padding: 6px 0 12px;
-    gap: 10px;
+    font-size: 0.6875rem;
+    padding: 0.375rem 0.625rem;
   }
 
   .sa-card {
-    padding: 12px 10px;
+    padding: 0.875rem;
+    gap: 0.75rem;
   }
 
   .sa-card-heading h2 {
-    font-size: 14px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Extra-small Mobile (< 360px) */
+@media (max-width: 359px) {
+  .sa-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sa-kpi-card {
+    border-right: 0 !important;
+    border-bottom: 1px solid #e4e4e7 !important;
+  }
+
+  .dark .sa-kpi-card {
+    border-bottom-color: #27272a !important;
+  }
+
+  .sa-kpi-card:last-child {
+    border-bottom: 0 !important;
   }
 }
