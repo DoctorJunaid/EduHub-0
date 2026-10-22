@@ -287,7 +287,7 @@ export default function SubscriptionsManagement() {
   return (
     <div className="subscriptions-page-container">
       {/* Metrics Row: 4 Equal Columns */}
-      <div className="subs-metrics-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+      <div className="subs-metrics-grid grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "12px" }}>
         <div className="metric-card min-w-0">
           <div className="metric-icon-wrap shrink-0">
             <Building2 size={18} />

@@ -596,7 +596,12 @@
   }
 
   .inquiries-metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .inquiry-stat-card {
+    padding: 12px 14px;
   }
 
   .filters-wrap {

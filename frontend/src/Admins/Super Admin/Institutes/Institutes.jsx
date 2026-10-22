@@ -16,7 +16,6 @@ import {
   Plus,
   Building2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import "./Institutes.css";
 import {
@@ -222,46 +221,70 @@ export default function Institutes() {
         </div>
       ) : (
       <section className="institutes-table-panel">
-        <div className="institutes-toolbar">
-          <div className="institutes-search">
-            <Search size={16} />
+        {/* Search, Filters & Add Institute Toolbar */}
+        <div
+          className="institutes-toolbar w-full flex flex-col sm:flex-row sm:items-center justify-between"
+          style={{ gap: "12px", marginBottom: "16px", boxSizing: "border-box" }}
+        >
+          {/* Search Input */}
+          <div className="relative w-full sm:flex-1 sm:max-w-md min-w-0">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
-              type="search"
-              placeholder="Search institutes, programs, locations..."
+              type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search institutes, programs, locations..."
+              className="w-full rounded-lg border border-neutral-200 bg-white text-xs sm:text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+              style={{
+                height: "38px",
+                paddingLeft: "36px",
+                paddingRight: "12px",
+                boxSizing: "border-box",
+              }}
             />
           </div>
-          <button
-            className={`institutes-filter ${showFilters ? "active" : ""}`}
-            onClick={() => setShowFilters(!showFilters)}
-            aria-label="Toggle filters"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              height: "38px",
-              padding: "0 14px",
-              borderRadius: "8px",
-              border: showFilters ? "1px solid #09090b" : "1px solid #e4e4e7",
-              background: showFilters ? "#09090b" : "#fff",
-              color: showFilters ? "#fff" : "#09090b",
-              fontWeight: 600,
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
+
+          {/* Buttons Row: ALWAYS in a single horizontal line (50/50 on mobile, auto-width on desktop) */}
+          <div
+            className="grid grid-cols-2 sm:flex sm:flex-row items-center w-full sm:w-auto shrink-0"
+            style={{ gap: "10px" }}
           >
-            <SlidersHorizontal size={16} />
-            <span>Filters{(typeFilter !== "all" || statusFilter !== "all") ? " (Active)" : ""}</span>
-          </button>
-          <Button
-            className="institutes-add-btn"
-            onClick={() => setManageDrawer({ mode: "new" })}
-          >
-            <Plus size={16} className="mr-1.5" />
-            <span>Add Institute</span>
-          </Button>
+            {/* Filters Button */}
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              aria-label="Toggle filters"
+              className={`inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-700 transition-colors whitespace-nowrap w-full sm:w-auto cursor-pointer ${showFilters ? "active" : ""}`}
+              style={{
+                height: "38px",
+                padding: "0 14px",
+                gap: "6px",
+                boxSizing: "border-box",
+                border: showFilters ? "1px solid #09090b" : "1px solid #e4e4e7",
+                background: showFilters ? "#09090b" : "#ffffff",
+                color: showFilters ? "#ffffff" : "#09090b",
+              }}
+            >
+              <SlidersHorizontal className={`w-3.5 h-3.5 shrink-0 ${showFilters ? "text-white" : "text-neutral-600"}`} />
+              <span>Filters{(typeFilter !== "all" || statusFilter !== "all") ? " (Active)" : ""}</span>
+            </button>
+
+            {/* + Add Institute Button */}
+            <button
+              type="button"
+              onClick={() => setManageDrawer({ mode: "new" })}
+              className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-xs font-medium text-white transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto cursor-pointer"
+              style={{
+                height: "38px",
+                padding: "0 16px",
+                gap: "6px",
+                boxSizing: "border-box",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+              <span>Add Institute</span>
+            </button>
+          </div>
         </div>
 
         {/* Real Collapsible Filters Bar */}

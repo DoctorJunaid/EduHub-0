@@ -5,39 +5,38 @@
 .exam-category-legend {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 11.5px;
-  font-weight: 600;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
   color: #52525b;
 }
 
 .exam-legend-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  font-size: 11px;
+  font-weight: 500;
+  color: #3f3f46;
 }
 
 .exam-legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   flex-shrink: 0;
+  background-color: #a1a1aa;
 }
 
-.exam-legend-dot.midterm {
-  background-color: #059669;
-}
-
-.exam-legend-dot.final {
-  background-color: #dc2626;
-}
-
-.exam-legend-dot.quiz {
-  background-color: #d97706;
-}
-
+.exam-legend-dot.midterm,
+.exam-legend-dot.final,
+.exam-legend-dot.quiz,
 .exam-legend-dot.practical {
-  background-color: #7c3aed;
+  background-color: #a1a1aa;
 }
 
 /* Exam Category Selector in Modal */
@@ -203,7 +202,7 @@
 }
 
 .datesheet-day-header {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid #e4e4e7;
   display: flex;
   flex-direction: column;
@@ -212,8 +211,9 @@
 }
 
 .datesheet-day-header.is-today {
-  background: #09090b;
-  color: #ffffff;
+  background: #f4f4f5;
+  color: #18181b;
+  border-bottom: 2px solid #18181b;
 }
 
 .datesheet-day-top {
@@ -229,7 +229,7 @@
 }
 
 .datesheet-day-header.is-today .datesheet-day-title {
-  color: #ffffff;
+  color: #09090b;
 }
 
 .datesheet-day-date {
@@ -239,7 +239,7 @@
 }
 
 .datesheet-day-header.is-today .datesheet-day-date {
-  color: #a1a1aa;
+  color: #52525b;
 }
 
 /* Daily Load Status Pill in Header */
@@ -311,7 +311,7 @@
 
 /* Rich Exam Card - Class Schedule Architectural Aesthetic */
 .datesheet-card {
-  border-radius: 0 !important;
+  border-radius: 8px !important;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   padding: 8px 10px;
@@ -356,7 +356,7 @@
 /* Empty Session Slots (Dropzones & Add Buttons) */
 .datesheet-empty-slot {
   border: 1px dashed #cbd5e1;
-  border-radius: 0 !important;
+  border-radius: 8px !important;
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
@@ -411,7 +411,7 @@
   color: #475569;
   background: #ffffff;
   border: 1px dashed #94a3b8;
-  border-radius: 0 !important;
+  border-radius: 8px !important;
   cursor: pointer;
   transition: all 0.15s ease;
   margin-top: 4px;

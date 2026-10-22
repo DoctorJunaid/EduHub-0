@@ -145,10 +145,15 @@ export default function ExamGrid({
               className={`datesheet-day-col ${isToday ? "is-today" : ""}`}
             >
               {/* Day Header */}
-              <div className={`datesheet-day-header ${isToday ? "is-today" : ""}`}>
+              <div
+                className={`datesheet-day-header ${isToday ? "is-today bg-neutral-100 text-neutral-900 border-b-2 border-neutral-900 font-semibold" : "bg-neutral-50/70 border-b border-neutral-200"}`}
+                style={{ padding: "12px 14px", boxSizing: "border-box" }}
+              >
                 <div className="datesheet-day-top">
-                  <span className="datesheet-day-title">{dayName.slice(0, 3)}</span>
-                  <span className="datesheet-day-date">
+                  <span className={`datesheet-day-title font-bold ${isToday ? "text-neutral-900" : "text-neutral-800"}`} style={{ fontSize: "13px" }}>
+                    {dayName.slice(0, 3)}
+                  </span>
+                  <span className={`datesheet-day-date font-medium ${isToday ? "text-neutral-600" : "text-neutral-500"}`} style={{ fontSize: "11px" }}>
                     {dayDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </span>
                 </div>
@@ -169,7 +174,10 @@ export default function ExamGrid({
               {/* Day Body with Structured Sessions */}
               <div className="datesheet-day-body">
                 {/* 1. Morning Shift (09:00 - 12:00) */}
-                <div className="datesheet-session-slot">
+                <div
+                  className="datesheet-session-slot border border-neutral-200 rounded-lg bg-neutral-50/50"
+                  style={{ padding: "10px 12px", margin: "4px", boxSizing: "border-box" }}
+                >
                   <div className="datesheet-session-tag morning">
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       <Sun size={11} /> Morning Shift
@@ -204,7 +212,7 @@ export default function ExamGrid({
                         }}
                         className={`datesheet-card group ${isDragging ? "is-dragging" : ""}`}
                         style={{
-                          borderRadius: 0,
+                          borderRadius: "8px",
                           backgroundColor: isDragging ? "#e0e7ff" : theme.bg,
                           borderLeft: `4px solid ${theme.borderLeft}`,
                           borderBottom: "1px solid #cbd5e1",
@@ -331,7 +339,7 @@ export default function ExamGrid({
                       className={`datesheet-empty-slot ${
                         dragOverKey === `${dateStr}-morning` ? "is-drag-over" : ""
                       }`}
-                      style={{ borderRadius: 0 }}
+                      style={{ borderRadius: "8px" }}
                     >
                       <Plus size={13} />
                       <span>+ Morning Paper</span>
@@ -341,7 +349,10 @@ export default function ExamGrid({
                 </div>
 
                 {/* 2. Afternoon Shift (13:30 - 16:30) */}
-                <div className="datesheet-session-slot">
+                <div
+                  className="datesheet-session-slot border border-neutral-200 rounded-lg bg-neutral-50/50"
+                  style={{ padding: "10px 12px", margin: "4px", boxSizing: "border-box" }}
+                >
                   <div className="datesheet-session-tag afternoon">
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       <Sunset size={11} /> Afternoon Shift
@@ -376,7 +387,7 @@ export default function ExamGrid({
                         }}
                         className={`datesheet-card group ${isDragging ? "is-dragging" : ""}`}
                         style={{
-                          borderRadius: 0,
+                          borderRadius: "8px",
                           backgroundColor: isDragging ? "#e0e7ff" : theme.bg,
                           borderLeft: `4px solid ${theme.borderLeft}`,
                           borderBottom: "1px solid #cbd5e1",
@@ -503,7 +514,7 @@ export default function ExamGrid({
                       className={`datesheet-empty-slot ${
                         morningExams.length > 0 ? "rare-add" : ""
                       } ${dragOverKey === `${dateStr}-afternoon` ? "is-drag-over" : ""}`}
-                      style={{ borderRadius: 0 }}
+                      style={{ borderRadius: "8px" }}
                     >
                       <Plus size={13} />
                       <span>
@@ -518,7 +529,10 @@ export default function ExamGrid({
 
                 {/* 3. Evening / Other Exams (if any exist) */}
                 {eveningExams.length > 0 && (
-                  <div className="datesheet-session-slot">
+                  <div
+                    className="datesheet-session-slot border border-neutral-200 rounded-lg bg-neutral-50/50"
+                    style={{ padding: "10px 12px", margin: "4px", boxSizing: "border-box" }}
+                  >
                     <div className="datesheet-session-tag" style={{ color: "#7c3aed" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                         <Moon size={11} /> Evening Shift
@@ -534,7 +548,7 @@ export default function ExamGrid({
                           onClick={() => onView?.(thisId)}
                           className="datesheet-card"
                           style={{
-                            borderRadius: 0,
+                            borderRadius: "8px",
                             backgroundColor: theme.bg,
                             borderLeft: `4px solid ${theme.borderLeft}`,
                             borderBottom: "1px solid #cbd5e1",
@@ -576,7 +590,7 @@ export default function ExamGrid({
                     }
                     className="datesheet-custom-btn"
                     title="Enter custom time for this exam paper"
-                    style={{ borderRadius: 0 }}
+                    style={{ borderRadius: "8px" }}
                   >
                     <Clock size={11} />
                     <span>+ Custom Time Paper</span>
