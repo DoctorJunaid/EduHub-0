@@ -547,15 +547,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 0 20px 16px;
+  padding: 0 16px 14px;
   justify-content: center;
+  max-width: 100%;
 }
 
 .ai-suggestion-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 8px 14px;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -565,6 +566,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  min-height: 38px;
+  touch-action: manipulation;
 }
 
 .ai-suggestion-chip:hover {
@@ -584,21 +587,24 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border-top: 1px solid var(--border-light);
+  background: transparent;
 }
 
 .ai-input {
   flex: 1;
+  min-width: 0;
+  min-height: 44px;
   padding: 10px 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--border-strong);
   background: var(--border-light);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 500;
   color: var(--text-heading);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .ai-input::placeholder {
@@ -608,6 +614,7 @@
 
 .ai-input:focus {
   border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .ai-input:disabled {
@@ -615,9 +622,11 @@
 }
 
 .ai-send-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 14px;
   border: none;
   background: #10b981;
   color: white;
@@ -625,13 +634,19 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+  touch-action: manipulation;
 }
 
 .ai-send-btn:hover:not(:disabled) {
   background: #059669;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.ai-send-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .ai-send-btn:disabled {
@@ -652,58 +667,30 @@
   }
 }
 
-/* ─── Mobile Responsiveness ─── */
 @media (max-width: 640px) {
-  .ai-window-badge {
-    display: none;
+  .ai-chat-section {
+    padding: clamp(40px, 8vw, 60px) 14px 50px;
   }
-
-  .ai-window-chrome {
-    padding: 10px 14px;
-  }
-
-  .ai-window-title {
-    font-size: 0.74rem;
-  }
-
-  .ai-messages-area {
-    min-height: 280px;
-    max-height: 380px;
-    padding: 16px 12px;
-  }
-
-  .ai-capability-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .ai-capability-desc {
-    text-align: left;
-  }
-
-  .ai-suggestions {
-    padding: 0 12px 12px;
-    gap: 6px;
-  }
-
-  .ai-suggestion-chip {
-    padding: 5px 11px;
-    font-size: 0.72rem;
-  }
-
   .ai-input-area {
     padding: 10px 12px;
+  }
+  .ai-suggestions {
+    padding: 0 10px 12px;
+    gap: 6px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ai-suggestions::-webkit-scrollbar {
+    display: none;
+  }
+  .ai-alumni-item {
+    flex-wrap: wrap;
     gap: 8px;
   }
-
-  .ai-input {
-    padding: 8px 12px;
-    font-size: 0.82rem;
-  }
-
-  .ai-send-btn {
-    width: 36px;
-    height: 36px;
+  .ai-alumni-badge {
+    margin-left: auto;
   }
 }

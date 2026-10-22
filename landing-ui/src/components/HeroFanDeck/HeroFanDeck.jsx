@@ -502,44 +502,45 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%)' }} />
                 <button 
                   onClick={() => setSelectedCard(null)}
-                  style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  className="w-11 h-11 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer absolute top-3 right-3 z-20 border border-white/20"
+                  aria-label="Close card preview"
                 >
-                  <X size={16} weight="bold" />
+                  <X size={18} weight="bold" />
                 </button>
                 <div style={{ position: 'absolute', bottom: 16, left: 20, right: 20 }}>
                   <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: selectedCard.accent, fontWeight: 700 }}>
                     {selectedCard.category}
                   </span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff', margin: '4px 0 0' }}>
+                  <h3 style={{ fontSize: 'clamp(1.15rem, 3.5vw, 1.4rem)', fontWeight: 800, color: '#fff', margin: '4px 0 0' }}>
                     {selectedCard.title}
                   </h3>
                 </div>
               </div>
 
-              <div style={{ padding: '24px' }}>
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 20px' }}>
+              <div className="p-4 sm:p-6">
+                <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 18px' }}>
                   {selectedCard.description}
                 </p>
 
-                <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-heading)', background: 'var(--border-light)', padding: '6px 12px', borderRadius: 8 }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'var(--text-heading)', background: 'var(--border-light)', padding: '6px 12px', borderRadius: 10 }}>
                     <Sparkle size={14} color="var(--primary)" weight="fill" />
                     <span>{selectedCard.subtitle}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-heading)', background: 'var(--border-light)', padding: '6px 12px', borderRadius: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'var(--text-heading)', background: 'var(--border-light)', padding: '6px 12px', borderRadius: 10 }}>
                     <Star size={14} color="#f59e0b" weight="fill" />
                     <span>{selectedCard.stat}</span>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button 
-                    className="hero-btn-primary" 
-                    style={{ flex: 1, minWidth: '160px', justifyContent: 'center' }}
+                    className="hero-btn-primary w-full sm:flex-1 min-h-[44px] justify-center text-sm" 
                     onClick={() => {
+                      const card = selectedCard;
                       setSelectedCard(null);
-                      if (selectedCard.instituteId && navigate) {
-                        navigate(`/institute/${selectedCard.instituteId}`);
+                      if (card.instituteId && navigate) {
+                        navigate(`/institute/${card.instituteId}`);
                       } else {
                         onGetStarted();
                       }
@@ -551,8 +552,8 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
 
                   <a
                     href={managementLoginUrl}
-                    className="hero-btn-secondary"
-                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    className="hero-btn-secondary w-full sm:flex-1 min-h-[44px] justify-center text-sm"
+                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                     title="Open EduHub Management Portal"
                   >
                     <span>Sign In to Portal</span>
