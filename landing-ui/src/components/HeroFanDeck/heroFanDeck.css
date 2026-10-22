@@ -1,4 +1,4 @@
-/* â”€â”€â”€ HeroFanDeck Stylesheet â”€â”€â”€ */
+/* ─── HeroFanDeck Stylesheet ─── */
 
 .hero-scroll-wrapper {
   position: relative;
@@ -8,6 +8,7 @@
 .hero-fan-container {
   position: relative;
   width: 100%;
+  max-width: 100vw;
   min-height: 85vh;
   display: flex;
   flex-direction: column;
@@ -15,7 +16,7 @@
   justify-content: flex-start;
   text-align: center;
   padding: clamp(110px, 13vw, 160px) 20px 80px;
-  overflow: hidden;
+  overflow-x: hidden;
   background: transparent;
   user-select: none;
 }
@@ -98,11 +99,12 @@
   max-width: 900px;
   margin: 0 auto 36px;
   font-family: inherit;
-  font-size: clamp(2.8rem, 6.2vw, 4.8rem);
+  font-size: clamp(2.4rem, 6.2vw, 4.8rem);
   font-weight: 500;
-  line-height: 1.08;
+  line-height: 1.1;
   letter-spacing: -0.035em;
   color: var(--text-heading);
+  word-break: break-word;
 }
 
 .hero-headline .headline-light {
@@ -599,11 +601,12 @@
   position: relative;
   width: 100%;
   max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--card-bg);
   border-radius: 28px;
   border: 1px solid var(--border-strong);
   box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
   text-align: left;
 }
 
@@ -922,23 +925,88 @@
   .hero-fan-container {
     padding-top: clamp(80px, 14vw, 110px);
     padding-bottom: 40px;
+    padding-inline: 16px;
+  }
+
+  .hero-deck-stage {
+    height: 280px;
+    margin-bottom: 25px;
+    padding-inline: 12px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hero-deck-stage::-webkit-scrollbar { display: none; }
+  .hero-deck-wrapper {
+    width: max-content;
+    flex: 0 0 max-content;
+    justify-content: flex-start;
+    gap: 12px;
+    padding-inline: 8px;
+  }
+  .hero-card {
+    width: 140px;
+    height: 200px;
+    margin: 0;
+    border-radius: 18px;
+  }
+  .hero-card-anchor {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 140px;
+    height: 200px;
+    flex: 0 0 140px;
+    scroll-snap-align: start;
+    padding-top: 85px;
+    padding-bottom: 45px;
   }
 
   .hero-headline {
     font-size: clamp(1.85rem, 6vw + 0.3rem, 2.6rem) !important;
     line-height: 1.15 !important;
-    margin-bottom: 14px !important;
+    margin-bottom: 16px !important;
     padding-inline: 8px;
+    word-break: break-word;
   }
-
+  .hero-card-content {
+    padding: 12px;
+  }
+  .hero-card-title {
+    font-size: 0.92rem;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+  .hero-card-subtitle {
+    font-size: 0.65rem;
+  }
+  .hero-card-tag {
+    padding: 3px 8px;
+    font-size: 0.62rem;
+  }
+  .hero-card-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .hero-card-stat {
+    font-size: 0.68rem;
+  }
+  .hero-speech-badge {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
   .hero-subtitle {
     width: 100%;
     max-width: 520px;
     padding-inline: 8px;
     font-size: 0.92rem;
+    line-height: 1.55;
     margin-bottom: 22px;
   }
-
   .hero-actions {
     display: flex;
     flex-direction: column;
@@ -946,16 +1014,15 @@
     gap: 10px;
     margin: 0 auto;
   }
-
   .hero-actions .hero-btn-primary,
   .hero-actions .hero-btn-secondary {
     width: 100%;
     min-height: 48px;
     padding: 12px 24px;
+    font-size: 0.92rem;
     justify-content: center;
     touch-action: manipulation;
   }
-
   .hero-actions .hero-btn-replay {
     align-self: center;
     min-width: 44px;
@@ -994,5 +1061,23 @@
 
   .hero-actions {
     width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-fan-container {
+    padding-inline: 12px;
+  }
+  .hero-headline {
+    font-size: clamp(1.65rem, 7vw, 2.1rem);
+  }
+  .hero-card {
+    width: 128px;
+    height: 188px;
+  }
+  .hero-card-anchor {
+    width: 128px;
+    height: 188px;
+    flex: 0 0 128px;
   }
 }
