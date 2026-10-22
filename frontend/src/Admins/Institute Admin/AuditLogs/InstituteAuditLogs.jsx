@@ -297,7 +297,7 @@ export default function InstituteAuditLogs() {
   return (
     <div className="institute-audit-logs-page flex flex-col gap-5 pb-12">
       {/* ── 1. SUMMARY KPI METRICS CARD ROW (DIRECTLY BENEATH HEADER / BREADCRUMBS) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "12px" }}>
         <div className="audit-kpi-card bg-white border border-neutral-200 rounded-xl p-5 shadow-xs flex items-center justify-between min-w-0">
           <div className="space-y-1 min-w-0 flex-1 mr-2">
             <span className="text-xs text-muted-foreground font-medium block truncate">

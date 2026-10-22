@@ -256,26 +256,41 @@ export default function SuperAdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="super-admin-stats-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+          <div className="super-admin-stats-grid grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "12px" }}>
             {statsArray.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <article className="super-admin-stat-card min-w-0" key={index}>
-                  <div className="super-admin-stat-head flex items-center justify-between min-w-0" style={{ gap: "8px" }}>
-                    <span className="super-admin-stat-label min-w-0 flex-1 whitespace-nowrap truncate">{stat.label}</span>
-                    <div className="super-admin-stat-icon shrink-0" aria-hidden="true">
-                      <Icon size={16} />
-                    </div>
+                <div
+                  className="super-admin-stat-card bg-white border border-neutral-200 rounded-xl shadow-xs flex items-start justify-between min-w-0 p-3.5 sm:p-5"
+                  style={{ boxSizing: "border-box" }}
+                  key={index}
+                >
+                  <div className="flex flex-col min-w-0 flex-1 pr-2" style={{ gap: "4px" }}>
+                    <span className="super-admin-stat-label text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-neutral-500 leading-tight truncate">
+                      {stat.label}
+                    </span>
+                    {statsLoading ? (
+                      <div className="super-admin-stat-skeleton" />
+                    ) : statsStatus === "failed" && !globalStats ? (
+                      <span className="super-admin-stat-value text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap" aria-label="Unavailable">
+                        —
+                      </span>
+                    ) : (
+                      <span className="super-admin-stat-value text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+                        {stat.value ?? 0}
+                      </span>
+                    )}
+                    <span className="super-admin-stat-detail text-[11px] sm:text-xs text-neutral-500 truncate">
+                      {stat.detail}
+                    </span>
                   </div>
-                  {statsLoading ? (
-                    <div className="super-admin-stat-skeleton" />
-                  ) : statsStatus === "failed" && !globalStats ? (
-                    <div className="super-admin-stat-value whitespace-nowrap" aria-label="Unavailable">—</div>
-                  ) : (
-                    <div className="super-admin-stat-value whitespace-nowrap">{stat.value ?? 0}</div>
-                  )}
-                  <div className="super-admin-stat-detail">{stat.detail}</div>
-                </article>
+                  <div
+                    className="super-admin-stat-icon rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0 w-8 h-8 sm:w-9 sm:h-9"
+                    aria-hidden="true"
+                  >
+                    <Icon size={16} />
+                  </div>
+                </div>
               );
             })}
           </div>
