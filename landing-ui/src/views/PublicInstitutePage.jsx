@@ -871,7 +871,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="institute-apply-dialog relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6"
+              className="institute-apply-dialog relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setIsApplyModalOpen(false)}
@@ -1004,7 +1004,7 @@ export default function PublicInstitutePage({ isDark, setIsDark, onGetStarted })
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16 text-sm">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16 text-sm">
             <div>
               <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Product</h4>
               <ul className="space-y-3 text-white/80">

@@ -37,6 +37,7 @@ const Header = ({
   breadcrumbItems,
   onViewProfile,
   onSignOut,
+  onToggleSidebar,
   showProfile = false,
   showNotifications = true,
   searchPlaceholder,
@@ -144,11 +145,11 @@ const Header = ({
   return (
     <header className="header">
       <div className="header-left">
-        {onMenuToggle && (
+        {(onMenuToggle || onToggleSidebar) && (
           <button
             type="button"
-            className="header-hamburger-btn"
-            onClick={onMenuToggle}
+            className="header-hamburger-btn mobile-sidebar-toggle"
+            onClick={onMenuToggle || onToggleSidebar}
             aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={drawerOpen}
             title="Open menu"
