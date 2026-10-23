@@ -508,6 +508,48 @@ export default function TransportManagement() {
     }
   };
 
+  // Filtered routes list for search
+  const filteredRoutes = useMemo(() => {
+    if (!searchQuery.trim()) return routes;
+    const q = searchQuery.toLowerCase();
+    return routes.filter(
+      (r) =>
+        r.routeName?.toLowerCase().includes(q) ||
+        r.vehicleId?.busNumber?.toLowerCase().includes(q) ||
+        r.vehicleId?.plateNumber?.toLowerCase().includes(q) ||
+        r.vehicleId?.driverId?.name?.toLowerCase().includes(q) ||
+        r.stops?.some((st) => st.stopName?.toLowerCase().includes(q))
+    );
+  }, [routes, searchQuery]);
+
+  // Filtered vehicles list for search
+  const filteredVehicles = useMemo(() => {
+    if (!searchQuery.trim()) return vehicles;
+    const q = searchQuery.toLowerCase();
+    return vehicles.filter(
+      (v) =>
+        v.busNumber?.toLowerCase().includes(q) ||
+        v.model?.toLowerCase().includes(q) ||
+        v.plateNumber?.toLowerCase().includes(q) ||
+        v.driverId?.name?.toLowerCase().includes(q) ||
+        v.assignedRoute?.routeName?.toLowerCase().includes(q)
+    );
+  }, [vehicles, searchQuery]);
+
+  // Filtered drivers list for search
+  const filteredDrivers = useMemo(() => {
+    if (!searchQuery.trim()) return drivers;
+    const q = searchQuery.toLowerCase();
+    return drivers.filter(
+      (d) =>
+        d.name?.toLowerCase().includes(q) ||
+        d.phone?.toLowerCase().includes(q) ||
+        d.licenseNumber?.toLowerCase().includes(q) ||
+        d.cnic?.toLowerCase().includes(q) ||
+        d.assignedVehicle?.busNumber?.toLowerCase().includes(q)
+    );
+  }, [drivers, searchQuery]);
+
   // Filtered students list for search
   const filteredStudents = useMemo(() => {
     if (!searchQuery.trim()) return students;
@@ -525,76 +567,86 @@ export default function TransportManagement() {
 
   return (
     <div className="campus-tab-page transport-page">
-      {/* ── Top Header Toolbar ── */}
-      <div className="transport-toolbar">
-        <div className="transport-header-info">
-          <h1>
-            <Bus className="w-6 h-6 text-primary" />
-            Transport & Fleet Management
-          </h1>
-          <p>Configure vehicles, driver records, commuter routes, and student stop mappings.</p>
-        </div>
-
-        <div className="transport-actions">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadTransportData}
-            disabled={loading}
-            className="gap-1.5 text-xs"
+      {/* ── 1. Top Tabs Bar (Strictly At Very Top) ── */}
+      <div className="transport-top-tabs-bar" role="tablist" aria-label="Transport Sections">
+        <div className="transport-tabs-nav">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "routes"}
+            className={`transport-tab-btn ${activeTab === "routes" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("routes");
+              setSearchQuery("");
+            }}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+            <MapPin className="w-4 h-4" />
+            <span>Routes & Stops</span>
+            <span className="transport-tab-badge">{routes.length}</span>
+          </button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSeedPreset}
-            disabled={isSubmitting}
-            className="gap-1.5 text-xs border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "vehicles"}
+            className={`transport-tab-btn ${activeTab === "vehicles" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("vehicles");
+              setSearchQuery("");
+            }}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            Load Sample Scenario
-          </Button>
+            <Bus className="w-4 h-4" />
+            <span>Vehicles & Buses</span>
+            <span className="transport-tab-badge">{vehicles.length}</span>
+          </button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenAddDriver}
-            className="gap-1.5 text-xs"
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "drivers"}
+            className={`transport-tab-btn ${activeTab === "drivers" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("drivers");
+              setSearchQuery("");
+            }}
           >
-            <Users className="w-3.5 h-3.5" />
-            Add Driver
-          </Button>
+            <Users className="w-4 h-4" />
+            <span>Drivers</span>
+            <span className="transport-tab-badge">{drivers.length}</span>
+          </button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenAddVehicle}
-            className="gap-1.5 text-xs"
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "students"}
+            className={`transport-tab-btn ${activeTab === "students" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("students");
+              setSearchQuery("");
+            }}
           >
-            <Bus className="w-3.5 h-3.5" />
-            Add Vehicle
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={handleOpenAddRoute}
-            className="gap-1.5 text-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Route
-          </Button>
+            <UserCheck className="w-4 h-4" />
+            <span>Student Commuters</span>
+            <span className="transport-tab-badge">
+              {students.filter((s) => s.transportEnrolled).length}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* ── KPI Track (Shared Campus Admin Styling) ── */}
-      <div className="campus-kpi-track">
-        <div className="campus-kpi-card">
+      {/* ── 2. Flush Border-to-Border Thin KPI Cards (Below Tabs) ── */}
+      <div className="campus-kpi-track transport-kpi-track">
+        <div
+          className={`campus-kpi-card ${activeTab === "routes" ? "kpi-card-active" : ""}`}
+          onClick={() => {
+            setActiveTab("routes");
+            setSearchQuery("");
+          }}
+          title="Click to switch to Routes & Stops"
+        >
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <MapPin className="w-5 h-5 text-indigo-600" />
+              <MapPin className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Active Routes</span>
@@ -603,10 +655,17 @@ export default function TransportManagement() {
           </div>
         </div>
 
-        <div className="campus-kpi-card">
+        <div
+          className={`campus-kpi-card ${activeTab === "vehicles" ? "kpi-card-active" : ""}`}
+          onClick={() => {
+            setActiveTab("vehicles");
+            setSearchQuery("");
+          }}
+          title="Click to switch to Vehicles & Buses"
+        >
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Bus className="w-5 h-5 text-emerald-600" />
+              <Bus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Fleet Size</span>
@@ -615,10 +674,17 @@ export default function TransportManagement() {
           </div>
         </div>
 
-        <div className="campus-kpi-card">
+        <div
+          className={`campus-kpi-card ${activeTab === "drivers" ? "kpi-card-active" : ""}`}
+          onClick={() => {
+            setActiveTab("drivers");
+            setSearchQuery("");
+          }}
+          title="Click to switch to Drivers"
+        >
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <Users className="w-5 h-5 text-blue-600" />
+              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Drivers on Record</span>
@@ -627,61 +693,115 @@ export default function TransportManagement() {
           </div>
         </div>
 
-        <div className="campus-kpi-card">
+        <div
+          className={`campus-kpi-card ${activeTab === "students" ? "kpi-card-active" : ""}`}
+          onClick={() => {
+            setActiveTab("students");
+            setSearchQuery("");
+          }}
+          title="Click to switch to Student Commuters"
+        >
           <div className="kpi-wrap">
             <div className="kpi-icon">
-              <UserCheck className="w-5 h-5 text-purple-600" />
+              <UserCheck className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="kpi-info">
               <span className="kpi-label">Students Enrolled</span>
-              <span className="kpi-value">{students.filter((s) => s.transportEnrolled).length}</span>
+              <span className="kpi-value">
+                {students.filter((s) => s.transportEnrolled).length}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Tabs Navigation ── */}
-      <div className="transport-tabs-nav">
-        <button
-          className={`transport-tab-btn ${activeTab === "routes" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("routes")}
-        >
-          <MapPin className="w-4 h-4" />
-          Routes & Stops
-          <span className="transport-tab-badge">{routes.length}</span>
-        </button>
+      {/* ── 3. Contiguous 48px Toolbar Directly Below KPI Cards ── */}
+      <div className="campus-toolbar transport-toolbar">
+        <div className="toolbar-left">
+          <div className="toolbar-search">
+            <Search size={13} />
+            <input
+              type="text"
+              placeholder={
+                activeTab === "routes"
+                  ? "Search routes or stops..."
+                  : activeTab === "vehicles"
+                  ? "Search buses or plates..."
+                  : activeTab === "drivers"
+                  ? "Search drivers or phone..."
+                  : "Search students or routes..."
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search records"
+            />
+          </div>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
 
-        <button
-          className={`transport-tab-btn ${activeTab === "vehicles" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("vehicles")}
-        >
-          <Bus className="w-4 h-4" />
-          Vehicles & Buses
-          <span className="transport-tab-badge">{vehicles.length}</span>
-        </button>
+        <div className="toolbar-actions">
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-outline"
+            onClick={loadTransportData}
+            disabled={loading}
+            title="Refresh transport records"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
 
-        <button
-          className={`transport-tab-btn ${activeTab === "drivers" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("drivers")}
-        >
-          <Users className="w-4 h-4" />
-          Drivers
-          <span className="transport-tab-badge">{drivers.length}</span>
-        </button>
+          <button
+            type="button"
+            className="toolbar-btn toolbar-btn-preset"
+            onClick={handleSeedPreset}
+            disabled={isSubmitting}
+            title="Load standard demo scenario"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            Load Sample Scenario
+          </button>
 
-        <button
-          className={`transport-tab-btn ${activeTab === "students" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("students")}
-        >
-          <UserCheck className="w-4 h-4" />
-          Student Commuters
-          <span className="transport-tab-badge">
-            {students.filter((s) => s.transportEnrolled).length}
-          </span>
-        </button>
+          <span className="toolbar-separator" />
+
+          <button
+            type="button"
+            className={`toolbar-btn ${activeTab === "drivers" ? "toolbar-btn-primary" : "toolbar-btn-outline"}`}
+            onClick={handleOpenAddDriver}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Add Driver
+          </button>
+
+          <button
+            type="button"
+            className={`toolbar-btn ${activeTab === "vehicles" ? "toolbar-btn-primary" : "toolbar-btn-outline"}`}
+            onClick={handleOpenAddVehicle}
+          >
+            <Bus className="w-3.5 h-3.5" />
+            Add Vehicle
+          </button>
+
+          <button
+            type="button"
+            className={`toolbar-btn ${activeTab === "routes" || activeTab === "students" ? "toolbar-btn-primary" : "toolbar-btn-outline"}`}
+            onClick={activeTab === "students" ? () => handleOpenAssignStudent(null) : handleOpenAddRoute}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {activeTab === "students" ? "Assign Student" : "Add Route"}
+          </button>
+        </div>
       </div>
 
-      {/* ── Content Area ── */}
+      {/* ── 4. Content Area ── */}
       <div className="transport-content">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -722,9 +842,20 @@ export default function TransportManagement() {
                       </Button>
                     </div>
                   </Card>
+                ) : filteredRoutes.length === 0 ? (
+                  <Card className="p-8 text-center border-dashed">
+                    <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                    <h3 className="font-semibold text-sm">No Matching Routes</h3>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                      No routes match your search "{searchQuery}".
+                    </p>
+                    <Button size="sm" variant="outline" onClick={() => setSearchQuery("")} className="mt-3 text-xs">
+                      Clear Search
+                    </Button>
+                  </Card>
                 ) : (
                   <div className="routes-grid">
-                    {routes.map((route) => {
+                    {filteredRoutes.map((route) => {
                       const veh = route.vehicleId;
                       const driver = veh?.driverId;
                       return (
@@ -876,6 +1007,17 @@ export default function TransportManagement() {
                       Register Bus
                     </Button>
                   </Card>
+                ) : filteredVehicles.length === 0 ? (
+                  <Card className="p-8 text-center border-dashed">
+                    <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                    <h3 className="font-semibold text-sm">No Matching Vehicles</h3>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                      No vehicles match your search "{searchQuery}".
+                    </p>
+                    <Button size="sm" variant="outline" onClick={() => setSearchQuery("")} className="mt-3 text-xs">
+                      Clear Search
+                    </Button>
+                  </Card>
                 ) : (
                   <Card className="overflow-hidden border-zinc-200 dark:border-zinc-800">
                     <Table>
@@ -892,7 +1034,7 @@ export default function TransportManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {vehicles.map((v) => (
+                        {filteredVehicles.map((v) => (
                           <TableRow key={v._id}>
                             <TableCell className="font-bold flex items-center gap-2">
                               <Bus className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
@@ -1005,6 +1147,17 @@ export default function TransportManagement() {
                       Add Driver Record
                     </Button>
                   </Card>
+                ) : filteredDrivers.length === 0 ? (
+                  <Card className="p-8 text-center border-dashed">
+                    <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                    <h3 className="font-semibold text-sm">No Matching Drivers</h3>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                      No drivers match your search "{searchQuery}".
+                    </p>
+                    <Button size="sm" variant="outline" onClick={() => setSearchQuery("")} className="mt-3 text-xs">
+                      Clear Search
+                    </Button>
+                  </Card>
                 ) : (
                   <Card className="overflow-hidden border-zinc-200 dark:border-zinc-800">
                     <Table>
@@ -1020,7 +1173,7 @@ export default function TransportManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {drivers.map((d) => (
+                        {filteredDrivers.map((d) => (
                           <TableRow key={d._id}>
                             <TableCell className="font-bold">
                               <div className="flex items-center gap-2">
@@ -1108,29 +1261,18 @@ export default function TransportManagement() {
             {/* 4. STUDENT COMMUTERS TAB */}
             {activeTab === "students" && (
               <div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-base font-bold text-foreground">Student Transport Mapping</h2>
                     <p className="text-xs text-muted-foreground">
-                      Map students to a Route and Stop. The student/parent immediately sees their Bus & Driver.
+                      Map students to a designated Route and Stop. Students and parents immediately see their Bus & Driver.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:w-64">
-                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
-                      <Input
-                        placeholder="Search student or route..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8 h-8 text-xs"
-                      />
-                    </div>
-                    <Button size="sm" onClick={() => handleOpenAssignStudent(null)} className="h-8 text-xs gap-1.5 shrink-0">
-                      <Plus className="w-3.5 h-3.5" />
-                      Assign Student
-                    </Button>
-                  </div>
+                  <Button size="sm" onClick={() => handleOpenAssignStudent(null)} className="h-8 text-xs gap-1.5 shrink-0">
+                    <Plus className="w-3.5 h-3.5" />
+                    Assign Student
+                  </Button>
                 </div>
 
                 <Card className="overflow-hidden border-zinc-200 dark:border-zinc-800">
