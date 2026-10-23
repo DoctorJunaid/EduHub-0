@@ -73,6 +73,7 @@ export function useStudentPortal() {
     submissions: portal?.submissions || [],
     diary: portal?.diary || [],
     conversations: portal?.conversations || [],
+    transport: portal?.transport || null,
   };
 }
 
