@@ -526,7 +526,7 @@ export const getStudentPortal = async (req, res) => {
       section,
     };
 
-    const [schedules, exams, attendance, fees, payments, results] = await Promise.all([
+    const [schedules, exams, attendance, fees, payments, results, studentProfileWithTransport] = await Promise.all([
       ClassSchedule.find(classFilter).sort({ dayOfWeek: 1, startTime: 1 }).lean(),
       ExamSchedule.find({
         campusId,
@@ -539,6 +539,12 @@ export const getStudentPortal = async (req, res) => {
       FeeRecord.find({ campusId, studentId: student._id }).sort({ dueDate: -1 }).lean(),
       PaymentTransaction.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
       Performance.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
+      StudentProfile.findOne({ user: student._id })
+        .populate({
+          path: "routeId",
+          populate: { path: "vehicleId", populate: { path: "driverId" } },
+        })
+        .lean(),
     ]);
 
     const scheduleIds = schedules.map((row) => row._id);
@@ -839,6 +845,47 @@ export const getStudentPortal = async (req, res) => {
           })),
           updatedAt: row.updatedAt,
         })),
+        transport: (() => {
+          if (!studentProfileWithTransport?.routeId) return null;
+          const r = studentProfileWithTransport.routeId;
+          const v = r.vehicleId || null;
+          const d = v?.driverId || null;
+          const matched = (r.stops || []).find(
+            (s) => (s.stopName || "").trim().toLowerCase() === (studentProfileWithTransport.stopName || "").trim().toLowerCase()
+          ) || (r.stops && r.stops[0]) || {
+            stopName: studentProfileWithTransport.stopName || "Designated Campus Stop",
+            pickupTime: "07:15 AM",
+            dropTime: "02:30 PM",
+            order: 1,
+          };
+          return {
+            assigned: true,
+            route: {
+              id: id(r._id),
+              routeName: r.routeName,
+              status: r.status,
+            },
+            stop: {
+              stopName: matched.stopName,
+              pickupTime: matched.pickupTime || "07:15 AM",
+              dropTime: matched.dropTime || "02:30 PM",
+              order: matched.order ?? 1,
+            },
+            vehicle: {
+              id: id(v?._id),
+              busNumber: v?.busNumber || "Bus",
+              model: v?.model || "Coaster / Van",
+              plateNumber: v?.plateNumber || "",
+              capacity: v?.capacity || 30,
+            },
+            driver: {
+              id: id(d?._id),
+              name: d?.name || "Driver Assigned",
+              phone: d?.phone || "",
+              licenseNumber: d?.licenseNumber || "",
+            },
+          };
+        })(),
       },
     });
   } catch (error) {

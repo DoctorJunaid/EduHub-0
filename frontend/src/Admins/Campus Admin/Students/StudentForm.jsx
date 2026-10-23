@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { selectStudents } from "@/store/Slices/studentsSlice";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
-import { Users, School, GraduationCap, Check, BookOpen } from "lucide-react";
+import { Users, School, GraduationCap, Check, BookOpen, Bus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { studentStatuses } from "./studentData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
 import axiosInstance from "@/api/axiosInstance";
+import { getRoutesApi, assignStudentToRouteApi, getMyTransportApi } from "@/api/transport.api";
 
 const DEFAULT_PROGRAMS = [
   "BS Computer Science",
@@ -69,6 +70,11 @@ export default function StudentForm({
   const [selectedSectionId, setSelectedSectionId] = useState(
     () => student?.sectionId?._id || student?.sectionId || ""
   );
+
+  // Transport state
+  const [transportRoutes, setTransportRoutes] = useState([]);
+  const [selectedTransportRouteId, setSelectedTransportRouteId] = useState("");
+  const [selectedTransportStopName, setSelectedTransportStopName] = useState("");
 
   const safeCampuses = useMemo(() => {
     const rawList = (campuses || []).map((c) =>
@@ -153,6 +159,27 @@ export default function StudentForm({
       isMounted = false;
     };
   }, []);
+
+  // Fetch transport routes and existing mapping
+  useEffect(() => {
+    getRoutesApi()
+      .then((res) => {
+        const list = res.data?.data || res.data || [];
+        setTransportRoutes(list);
+      })
+      .catch(() => {});
+
+    if (student?.id || student?._id) {
+      getMyTransportApi(student.id || student._id)
+        .then((res) => {
+          if (res?.success && res.data?.route?.id) {
+            setSelectedTransportRouteId(res.data.route.id);
+            setSelectedTransportStopName(res.data.stop?.stopName || "");
+          }
+        })
+        .catch(() => {});
+    }
+  }, [student]);
 
   // When a grade is selected, fetch corresponding sections and grade-subjects
   useEffect(() => {
@@ -395,7 +422,16 @@ export default function StudentForm({
 
     setIsSubmitting(true);
     try {
-      await onSave(saved);
+      const savedStudent = await onSave(saved);
+      const targetStudentId =
+        student?.id || student?._id || savedStudent?._id || savedStudent?.data?._id;
+      if (targetStudentId && selectedTransportRouteId) {
+        await assignStudentToRouteApi({
+          studentId: targetStudentId,
+          routeId: selectedTransportRouteId,
+          stopName: selectedTransportStopName,
+        }).catch(() => {});
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -770,6 +806,63 @@ export default function StudentForm({
             />
           </div>
           <div className="activity-form-field"></div>
+
+          <div className="activity-section-title">Transport & Bus Commute</div>
+          <div className="activity-form-field">
+            <Label htmlFor={`${id}-transportRoute`}>Assigned Transit Route</Label>
+            <select
+              id={`${id}-transportRoute`}
+              name="transportRoute"
+              value={selectedTransportRouteId}
+              onChange={(e) => {
+                const rId = e.target.value;
+                setSelectedTransportRouteId(rId);
+                const r = transportRoutes.find((rt) => rt._id === rId);
+                setSelectedTransportStopName(r?.stops?.[0]?.stopName || "");
+              }}
+            >
+              <option value="">-- No Bus Route (Self Commuter) --</option>
+              {transportRoutes.map((r) => (
+                <option key={r._id} value={r._id}>
+                  {r.routeName} ({r.vehicleId?.busNumber || "Bus pending"})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="activity-form-field">
+            <Label htmlFor={`${id}-transportStop`}>Designated Stop & Pickup Time</Label>
+            {(() => {
+              const curR = transportRoutes.find((r) => r._id === selectedTransportRouteId);
+              const stops = curR?.stops || [];
+              if (stops.length > 0) {
+                return (
+                  <select
+                    id={`${id}-transportStop`}
+                    name="transportStop"
+                    value={selectedTransportStopName}
+                    onChange={(e) => setSelectedTransportStopName(e.target.value)}
+                  >
+                    <option value="">-- Select Stop --</option>
+                    {stops.map((s, idx) => (
+                      <option key={s._id || idx} value={s.stopName}>
+                        {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
+                      </option>
+                    ))}
+                  </select>
+                );
+              }
+              return (
+                <input
+                  id={`${id}-transportStop`}
+                  name="transportStop"
+                  placeholder="e.g. Stop 2: Market"
+                  value={selectedTransportStopName}
+                  onChange={(e) => setSelectedTransportStopName(e.target.value)}
+                />
+              );
+            })()}
+          </div>
 
           <div className="activity-section-title">
             {isSchool ? "Parent / Guardian Record" : "Guardian Information"}

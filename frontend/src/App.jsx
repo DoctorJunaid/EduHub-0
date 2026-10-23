@@ -34,6 +34,7 @@ import ClassTimetable from "./Admins/Campus Admin/Timetable/ClassTimetable";
 import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
 import AcademicsConfig from "./Admins/Campus Admin/Academics/AcademicsConfig";
 import TeacherAssignments from "./Admins/Campus Admin/Faculty/TeacherAssignments";
+import TransportManagement from "./Admins/Campus Admin/Transport/TransportManagement";
 import SuperAdminDashboard from "./Admins/Super Admin/Dashboard/SuperAdminDashboard";
 import Institutes from "./Admins/Super Admin/Institutes/Institutes";
 import ManageInstitutePage from "./Admins/Super Admin/Institutes/ManageInstitutePage";
@@ -230,6 +231,7 @@ const App = () => {
             <Route path="settings" element={<Settings />} />
             <Route path="teaching-performance" element={<TeachingPerformance />} />
             <Route path="substitutes" element={<SubstituteAssignments />} />
+            <Route path="transport" element={<TransportManagement />} />
             <Route path="academics" element={<AcademicsConfig />} />
             <Route path="teacher-assignments" element={<TeacherAssignments />} />
             <Route path="admin/seed" element={<AdminSeed />} />

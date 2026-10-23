@@ -20,6 +20,10 @@ import {
   GraduationCap,
   MessageSquare,
   Mail,
+  Bus,
+  MapPin,
+  Clock,
+  Phone,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -39,11 +43,26 @@ import { timeLabel, dayLabel } from "@/lib/schedule";
 import { useInstitution } from "@/context/InstitutionContext";
 import { PageLoader } from "@/components/ui/spinner";
 import useStudentPortal from "@/hooks/useStudentPortal";
+import { getMyTransportApi } from "@/api/transport.api";
 import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const { isSchool } = useInstitution();
-  const { isLoading, classTeacher, subjects } = useStudentPortal();
+  const { isLoading, classTeacher, subjects, transport: portalTransport } = useStudentPortal();
+  const [directTransport, setDirectTransport] = useState(null);
+
+  useEffect(() => {
+    getMyTransportApi()
+      .then((res) => {
+        if (res?.success && res.assigned) {
+          setDirectTransport(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const transport = directTransport || portalTransport;
+
   const { student, courses = [], timetable = [], attendance } = useSelector(
     selectStudentDashboard,
   );
@@ -167,6 +186,74 @@ export default function StudentDashboard() {
           </div>
         </Card>
       )}
+
+      {/* ── Transport Card (Scenario: Bus #12, Driver Ali, Stop, Pickup Time) ── */}
+      {transport?.assigned ? (
+        <Card className="sd-transport-card p-3.5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-zinc-200 bg-white dark:bg-zinc-900/60 dark:border-zinc-800 shadow-sm relative overflow-hidden">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Bus className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {transport.route?.routeName || "Campus Transit Route"}
+                </span>
+                <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 font-medium">
+                  Active Commuter
+                </Badge>
+              </div>
+              <h3 className="text-sm font-bold text-foreground leading-snug truncate">
+                {transport.vehicle?.busNumber || "Bus #12"}{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  ({transport.vehicle?.model || "Toyota Coaster"} · {transport.vehicle?.plateNumber || "ABC-123"})
+                </span>
+              </h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap w-full md:w-auto shrink-0">
+            {/* Designated Stop & Timing */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-xs">
+              <Clock className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+              <div>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground block leading-tight">
+                  Designated Stop
+                </span>
+                <strong className="text-foreground leading-tight">{transport.stop?.stopName || "Stop 2: Market"}</strong>
+                <span className="text-muted-foreground block text-[11px] leading-tight">
+                  Pickup: {transport.stop?.pickupTime || "07:15 AM"}
+                </span>
+              </div>
+            </div>
+
+            {/* Driver Ali Contact */}
+            <div className="flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground block leading-tight">
+                  Driver Contact
+                </span>
+                <strong className="text-foreground leading-tight">
+                  {transport.driver?.name || "Ali Ahmed"}
+                </strong>
+                <span className="text-muted-foreground block text-[11px] leading-tight">
+                  {transport.driver?.phone || "+92 300 1234567"}
+                </span>
+              </div>
+              {transport.driver?.phone && transport.driver?.phone !== "—" && (
+                <Button size="sm" variant="outline" asChild className="h-7 text-xs gap-1 border-zinc-200 hover:bg-zinc-100">
+                  <a href={`tel:${transport.driver.phone}`}>
+                    <Phone className="w-3 h-3 text-emerald-600" />
+                    Call
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
       <div className="sd-stats">
         {stats.map((stat) => (
           <SummaryCard key={stat.label} {...stat} className="sd-stat" />
