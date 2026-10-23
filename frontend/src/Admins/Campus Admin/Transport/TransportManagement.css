@@ -2,119 +2,107 @@
 
 .transport-page {
   padding-bottom: 40px;
+  background: #ffffff;
 }
 
-.transport-toolbar {
+.dark .transport-page {
+  background: #09090b;
+}
+
+/* ==========================================================================
+   1. Top Tabs Bar (Strictly at the Very Top of the Page)
+   ========================================================================== */
+.transport-top-tabs-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 24px;
+  justify-content: flex-start;
   background: #ffffff;
   border-bottom: 1px solid #e4e4e7;
-  flex-wrap: wrap;
+  padding: 0 16px;
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: relative;
+  z-index: 5;
 }
 
-.dark .transport-toolbar {
+.transport-top-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.dark .transport-top-tabs-bar {
   background: #09090b;
   border-color: #27272a;
 }
 
-.transport-header-info h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #09090b;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dark .transport-header-info h1 {
-  color: #f4f4f5;
-}
-
-.transport-header-info p {
-  font-size: 0.8125rem;
-  color: #71717a;
-  margin-top: 2px;
-}
-
-.dark .transport-header-info p {
-  color: #a1a1aa;
-}
-
-.transport-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* Tabs Navigation Bar */
 .transport-tabs-nav {
   display: flex;
-  border-bottom: 1px solid #e4e4e7;
-  background: #fafafa;
-  padding: 0 24px;
-  gap: 2px;
-}
-
-.dark .transport-tabs-nav {
-  background: #121214;
-  border-color: #27272a;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
 }
 
 .transport-tab-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 18px;
-  font-size: 0.875rem;
+  padding: 0 16px;
+  height: 48px;
+  font-size: 13px;
   font-weight: 600;
   color: #71717a;
   border: none;
   background: transparent;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  position: relative;
+  user-select: none;
 }
 
 .transport-tab-btn:hover {
   color: #09090b;
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .dark .transport-tab-btn:hover {
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .transport-tab-btn.is-active {
   color: #09090b;
   border-bottom-color: #09090b;
-  background: #ffffff;
+  font-weight: 700;
+  background: transparent;
 }
 
 .dark .transport-tab-btn.is-active {
   color: #ffffff;
   border-bottom-color: #ffffff;
-  background: #09090b;
 }
 
 .transport-tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 9999px;
-  background: #e4e4e7;
-  color: #18181b;
+  background: #f4f4f5;
+  color: #71717a;
+  line-height: 1.2;
+  transition: all 0.15s ease;
 }
 
 .dark .transport-tab-badge {
   background: #27272a;
-  color: #e4e4e7;
+  color: #a1a1aa;
 }
 
 .transport-tab-btn.is-active .transport-tab-badge {
@@ -127,11 +115,120 @@
   color: #09090b;
 }
 
-/* Tab Content Area */
+/* ==========================================================================
+   2. KPI Cards Track (Directly Under Top Tabs)
+   ========================================================================== */
+.transport-kpi-track {
+  border-top: none;
+}
+
+.transport-kpi-track .campus-kpi-card {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.transport-kpi-track .campus-kpi-card:hover {
+  background: #fafafa;
+}
+
+.dark .transport-kpi-track .campus-kpi-card:hover {
+  background: #18181b;
+}
+
+.transport-kpi-track .campus-kpi-card.kpi-card-active {
+  background: #fafafa;
+}
+
+.dark .transport-kpi-track .campus-kpi-card.kpi-card-active {
+  background: #141416;
+}
+
+.transport-kpi-track .campus-kpi-card.kpi-card-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: #09090b;
+  border-radius: 2px 2px 0 0;
+}
+
+.dark .transport-kpi-track .campus-kpi-card.kpi-card-active::after {
+  background: #ffffff;
+}
+
+/* ==========================================================================
+   3. Toolbar Below KPI Cards
+   ========================================================================== */
+.transport-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.transport-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.dark .transport-toolbar {
+  background: #121214;
+  border-color: #27272a;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: #e4e4e7;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.dark .toolbar-separator {
+  background: #27272a;
+}
+
+.toolbar-btn-preset {
+  background: #fffbeb !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.toolbar-btn-preset:hover {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+}
+
+.dark .toolbar-btn-preset {
+  background: rgba(120, 53, 15, 0.25) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.dark .toolbar-btn-preset:hover {
+  background: rgba(120, 53, 15, 0.4) !important;
+}
+
+/* ==========================================================================
+   4. Content Area
+   ========================================================================== */
 .transport-content {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 20px 24px;
+  max-width: 100%;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* Route Cards Grid */
