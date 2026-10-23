@@ -876,49 +876,137 @@
   text-align: right;
 }
 
-/* Dots navigation matching screenshot */
+/* ─── Premium Mobile Carousel Pagination Dock & Dots ─── */
 .hero-mobile-dots {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  margin: 12px auto 20px;
+  gap: 4px;
+  margin: 14px auto 20px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 9999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
   z-index: 20;
   position: relative;
+  align-self: center;
+  user-select: none;
 }
 
-.hero-mobile-dot {
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: rgba(16, 185, 129, 0.28);
-  width: 6.5px;
-  height: 6.5px;
-  border-radius: 50%;
+.dark .hero-mobile-dots {
+  background: rgba(18, 20, 26, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Accessible ergonomic tap target button */
+.hero-mobile-dot-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 32px !important;
+  width: auto !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 4px !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  flex-shrink: 0;
+  line-height: 0 !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-mobile-dot-btn:active {
+  transform: scale(0.92);
+}
+
+.hero-mobile-dot-btn:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  border-radius: 9999px;
+}
+
+/* The visual circled dot / active pill — strictly immune to line-height or flex cross-stretch */
+.hero-mobile-dot-circle {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  max-height: 8px !important;
+  border-radius: 9999px !important;
+  background: rgba(16, 185, 129, 0.35);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease,
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s ease;
+  flex-shrink: 0 !important;
+  pointer-events: none;
+  line-height: 0 !important;
+}
+
+.hero-mobile-dot-btn:hover .hero-mobile-dot-circle {
+  background: rgba(16, 185, 129, 0.65);
+  transform: scale(1.15);
+}
+
+.dark .hero-mobile-dot-circle {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.dark .hero-mobile-dot-btn:hover .hero-mobile-dot-circle {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Active State: Vibrant emerald pill with glow and rounded ends */
+.hero-mobile-dot-btn.is-active .hero-mobile-dot-circle {
+  width: 22px !important;
+  height: 8px !important;
+  min-width: 22px !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.55), 0 0 10px rgba(16, 185, 129, 0.3) !important;
+  transform: scale(1) !important;
+}
+
+.dark .hero-mobile-dot-btn.is-active .hero-mobile-dot-circle {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.65), 0 0 12px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Backward compatibility for direct .hero-mobile-dot */
+.hero-mobile-dot {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: rgba(16, 185, 129, 0.35) !important;
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  max-height: 8px !important;
+  border-radius: 9999px !important;
+  cursor: pointer;
+  flex-shrink: 0 !important;
+  line-height: 0 !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   -webkit-tap-highlight-color: transparent;
 }
 
-.hero-mobile-dot:hover {
-  background: rgba(16, 185, 129, 0.5);
-}
-
 .hero-mobile-dot.is-active {
-  width: 17px;
-  height: 6.5px;
-  border-radius: 999px;
-  background: #10b981;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.45);
-}
-
-.dark .hero-mobile-dot {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.dark .hero-mobile-dot.is-active {
-  background: #10b981;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
+  width: 22px !important;
+  height: 8px !important;
+  background: #10b981 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.55) !important;
 }
 
 @media (max-width: 768px) {

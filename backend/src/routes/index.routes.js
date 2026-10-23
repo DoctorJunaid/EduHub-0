@@ -121,6 +121,12 @@ router.get("/class-teachers", (req, res, next) => {
 });
 router.use("/class-teachers", classTeacherRoutes);
 
+import transportRoutes from "./transport.routes.js";
+
+// Transport & Driver Management Routes
+router.use("/transport", transportRoutes);
+router.use("/campus/transport", transportRoutes);
+
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);
 
