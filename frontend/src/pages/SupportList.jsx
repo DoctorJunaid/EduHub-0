@@ -96,34 +96,68 @@ export const SupportList = () => {
 
   const tabs = isStaff
     ? [
-        { id: "all", label: "All Tickets", count: stats.total || totalCount },
-        { id: "Open", label: "Open", count: stats.open || stats.waiting || 0 },
+        {
+          id: "all",
+          label: "All Tickets",
+          shortLabel: "All",
+          count: stats.total || totalCount,
+        },
+        {
+          id: "Open",
+          label: "Open",
+          shortLabel: "Open",
+          count: stats.open || stats.waiting || 0,
+        },
         {
           id: "In Progress",
           label: "In Progress",
+          shortLabel: "In Progress",
           count: stats.inProgress || stats.lookingAt || 0,
         },
         {
           id: "Resolved",
           label: "Resolved",
+          shortLabel: "Resolved",
           count: stats.resolved || stats.answered || 0,
         },
         {
           id: "Closed",
           label: "Closed",
+          shortLabel: "Closed",
           count: stats.closed || stats.done || 0,
         },
       ]
     : [
-        { id: "all", label: "All Conversations", count: totalCount },
-        { id: "Open", label: "Waiting for reply", count: stats.waiting || 0 },
+        {
+          id: "all",
+          label: "All Conversations",
+          shortLabel: "All",
+          count: totalCount,
+        },
+        {
+          id: "Open",
+          label: "Waiting for reply",
+          shortLabel: "Waiting",
+          count: stats.waiting || 0,
+        },
         {
           id: "In Progress",
           label: "Being looked at",
+          shortLabel: "In Progress",
           count: stats.lookingAt || 0,
         },
-        { id: "Resolved", label: "Answered", count: stats.answered || 0 },
-        { id: "Closed", label: "Done", count: stats.done || 0 },
+        {
+          id: "Resolved",
+          label: "Answered",
+          shortLabel: "Answered",
+          count: stats.answered || 0,
+        },
+        {
+          id: "Closed",
+          label: "Done",
+          shortLabel: "Done",
+          count: stats.done || 0,
+        },
       ];
 
   const hasActiveFilters = Boolean(
@@ -135,10 +169,10 @@ export const SupportList = () => {
 
   return (
     <div
-      className={`academics-config-page mx-auto w-full max-w-7xl space-y-6 ${isTeacherPortal ? "teacher-help-support" : !isAdmin ? "student-help-support" : ""}`}
+      className={`academics-config-page mx-auto w-full max-w-7xl space-y-4 sm:space-y-6 pb-20 sm:pb-8 ${isTeacherPortal ? "teacher-help-support" : !isAdmin ? "student-help-support" : ""}`}
     >
       {/* 1. Floating Pill Tabs Bar (matches AcademicsConfig tab list) */}
-      <div className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit">
+      <div className="academics-config-tab-list flex h-auto w-full flex-nowrap sm:flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm overflow-x-auto sm:w-fit scrollbar-none">
         {tabs.map((tab) => {
           const isActive = filters.status === tab.id;
           return (
@@ -146,13 +180,14 @@ export const SupportList = () => {
               key={tab.id}
               type="button"
               onClick={() => handleFilterChange("status", tab.id)}
-              className={`h-9 flex-none rounded-lg px-3 sm:px-4 text-xs sm:text-sm font-medium transition-all inline-flex items-center gap-2 cursor-pointer ${
+              className={`h-9 flex-none rounded-lg px-2.5 sm:px-4 text-xs sm:text-sm font-medium transition-all inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive
-                  ? "bg-zinc-900 text-white shadow-sm"
+                  ? "bg-zinc-900 text-white shadow-sm font-semibold"
                   : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
               }`}
             >
-              <span>{tab.label}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.shortLabel || tab.label}</span>
               {typeof tab.count === "number" && (
                 <span
                   className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
@@ -171,13 +206,13 @@ export const SupportList = () => {
 
       {/* 2. Main Card Container (matches AcademicsConfig card) */}
       <Card className="academics-config-card gap-0 overflow-hidden rounded-xl border border-zinc-200 bg-white py-0 shadow-sm">
-        <CardHeader className="academics-config-card-header border-b border-zinc-100 px-5 py-5 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <CardHeader className="academics-config-card-header border-b border-zinc-100 px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <CardTitle className="text-xl font-bold tracking-tight text-zinc-900">
+              <CardTitle className="text-lg sm:text-xl font-bold tracking-tight text-zinc-900">
                 {isStaff ? "Manage Support Tickets" : "Manage Conversations"}
               </CardTitle>
-              <CardDescription className="text-sm text-zinc-500 mt-1">
+              <CardDescription className="text-xs sm:text-sm text-zinc-500 mt-1">
                 {isStaff
                   ? "Triage, assign, escalate, and resolve institutional support requests."
                   : isTeacherPortal
@@ -186,7 +221,7 @@ export const SupportList = () => {
               </CardDescription>
             </div>
 
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
               {isAdmin && (
                 <Button
                   type="button"
@@ -200,9 +235,9 @@ export const SupportList = () => {
                           : "/support/manage",
                     )
                   }
-                  className="h-10 rounded-lg border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs sm:text-sm font-medium"
+                  className="h-9 sm:h-10 rounded-lg border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs sm:text-sm font-medium"
                 >
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
                   Manage All
                 </Button>
               )}
@@ -212,11 +247,11 @@ export const SupportList = () => {
                 variant="outline"
                 onClick={() => refetch()}
                 disabled={isFetching}
-                className="h-10 rounded-lg border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs sm:text-sm font-medium gap-1.5 cursor-pointer"
+                className="h-9 sm:h-10 rounded-lg border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs sm:text-sm font-medium gap-1.5 cursor-pointer shrink-0"
                 title="Refresh list"
               >
                 <RefreshCw
-                  className={`w-4 h-4 ${isFetching ? "animate-spin text-zinc-900" : ""}`}
+                  className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-zinc-900" : ""}`}
                 />
                 <span className="hidden sm:inline">
                   {isFetching ? "Refreshing..." : "Refresh"}
@@ -226,10 +261,10 @@ export const SupportList = () => {
               <Button
                 type="button"
                 onClick={() => setIsNewDialogOpen(true)}
-                className="h-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs sm:text-sm font-medium shadow-sm"
+                className="h-9 sm:h-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 text-xs sm:text-sm font-medium shadow-sm flex-1 sm:flex-initial justify-center"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                {isStaff ? "New Ticket" : "Ask for Help"}
+                <Plus className="w-4 h-4 mr-1.5 shrink-0" />
+                <span>{isStaff ? "New Ticket" : "Ask for Help"}</span>
               </Button>
             </div>
           </div>

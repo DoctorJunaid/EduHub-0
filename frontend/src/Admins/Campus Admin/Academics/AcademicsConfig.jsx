@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/Badge";
-import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit, Search, Users, ClipboardList } from "lucide-react";
+import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit, Search, Users, ClipboardList, Mail } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "@/components/shared/TableSkeleton";
 import axiosInstance from "@/api/axiosInstance";
@@ -228,26 +228,42 @@ export default function AcademicsConfig() {
   return (
     <div className="academics-config-page mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6">
       {/* Top Header Row with Preset Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-zinc-900 to-zinc-800 p-5 rounded-2xl text-white shadow-md">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">Academic Structure & Subjects Master</h2>
-          <p className="text-xs text-zinc-300 mt-0.5">
+      <div
+        className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between"
+        style={{ padding: "20px 24px", gap: "16px", marginBottom: "20px", boxSizing: "border-box" }}
+      >
+        {/* Left: Title & Subtitle */}
+        <div className="flex flex-col min-w-0" style={{ gap: "4px" }}>
+          <h1 className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight">
+            Academic Structure &amp; Subjects Master
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500">
             Configure grades, sections, master subjects, and assign curriculum to classes.
           </p>
         </div>
-        <Button
+
+        {/* Right: + Apply Peshawar Board Preset Button (Project Theme) */}
+        <button
           type="button"
           onClick={handleApplyPeshawarPreset}
           disabled={isApplyingPreset || loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl shadow-sm shrink-0"
+          className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors shadow-xs whitespace-nowrap shrink-0 cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed"
+          style={{
+            height: "38px",
+            padding: "0 16px",
+            gap: "6px",
+            width: "auto",
+            minWidth: "fit-content",
+            boxSizing: "border-box",
+          }}
         >
           {isApplyingPreset ? (
-            <Spinner className="w-4 h-4 mr-2" />
+            <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
           ) : (
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-3.5 h-3.5 text-white shrink-0" />
           )}
-          {isApplyingPreset ? "Applying Preset..." : "Apply Peshawar Board Preset"}
-        </Button>
+          <span>{isApplyingPreset ? "Applying Preset..." : "Apply Peshawar Board Preset"}</span>
+        </button>
       </div>
 
       {loadError && (
@@ -257,13 +273,54 @@ export default function AcademicsConfig() {
         </div>
       )}
       <Tabs defaultValue="grades" className="academics-config-tabs w-full">
-        <TabsList className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit">
-          <TabsTrigger value="grades" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Grades/Classes</TabsTrigger>
-          <TabsTrigger value="sections" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Sections</TabsTrigger>
-          <TabsTrigger value="class_teachers" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-indigo-600 data-[state=active]:text-white sm:px-4 sm:text-sm font-semibold flex items-center gap-1.5">🎓 Class Teachers</TabsTrigger>
-          <TabsTrigger value="subjects" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Subjects Master</TabsTrigger>
-          <TabsTrigger value="class_subjects" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm">Class Subjects</TabsTrigger>
-          <TabsTrigger value="teacher_assignments" className="h-9 flex-none rounded-lg px-3 text-xs text-zinc-600 data-[state=active]:bg-zinc-900 data-[state=active]:text-white sm:px-4 sm:text-sm font-semibold flex items-center gap-1.5">👨‍🏫 Teacher Assignments ({teacherAssignments.length})</TabsTrigger>
+        <TabsList
+          className="academics-config-tab-list flex h-auto w-full flex-wrap justify-start rounded-xl border border-neutral-200 bg-white shadow-xs sm:w-fit"
+          style={{ padding: "4px", gap: "4px" }}
+        >
+          <TabsTrigger
+            value="grades"
+            className="flex-none rounded-lg text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:shadow-xs transition-colors cursor-pointer"
+            style={{ padding: "8px 14px" }}
+          >
+            Grades/Classes
+          </TabsTrigger>
+          <TabsTrigger
+            value="sections"
+            className="flex-none rounded-lg text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:shadow-xs transition-colors cursor-pointer"
+            style={{ padding: "8px 14px" }}
+          >
+            Sections
+          </TabsTrigger>
+          <TabsTrigger
+            value="class_teachers"
+            className="flex-none rounded-lg text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:shadow-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            style={{ padding: "8px 14px" }}
+          >
+            <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+            <span>Class Teachers</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="subjects"
+            className="flex-none rounded-lg text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:shadow-xs transition-colors cursor-pointer"
+            style={{ padding: "8px 14px" }}
+          >
+            Subjects Master
+          </TabsTrigger>
+          <TabsTrigger
+            value="class_subjects"
+            className="flex-none rounded-lg text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:shadow-xs transition-colors cursor-pointer"
+            style={{ padding: "8px 14px" }}
+          >
+            Class Subjects
+          </TabsTrigger>
+          <TabsTrigger
+            value="teacher_assignments"
+            className="flex-none rounded-lg text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:shadow-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            style={{ padding: "8px 14px" }}
+          >
+            <UserCheck className="w-3.5 h-3.5 shrink-0" />
+            <span>Teacher Assignments ({teacherAssignments.length})</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* GRADES TAB */}
@@ -296,9 +353,19 @@ export default function AcademicsConfig() {
                     className="h-10 rounded-lg border-zinc-200 bg-white px-3 text-sm placeholder:text-zinc-400 focus-visible:border-zinc-400 focus-visible:ring-2 focus-visible:ring-zinc-200"
                   />
                 </div>
-                <Button type="submit" disabled={isSubmitting || !newGrade.name} className="h-10 w-full rounded-lg px-4 md:w-auto">
-                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Add Grade
-                </Button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !newGrade.name}
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium shadow-xs transition-colors h-10 w-full md:w-auto cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed shrink-0"
+                  style={{ height: "40px", padding: "0 18px", gap: "6px", boxSizing: "border-box" }}
+                >
+                  {isSubmitting ? (
+                    <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+                  )}
+                  <span>Add Grade</span>
+                </button>
               </form>
 
               <div className="overflow-x-auto rounded-xl border border-zinc-200">
@@ -377,9 +444,15 @@ export default function AcademicsConfig() {
                     required
                   />
                 </div>
-                <Button type="submit" disabled={isSubmitting || !grades.length || !newSection.gradeId || !newSection.name}>
-                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Add Section
-                </Button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !grades.length || !newSection.gradeId || !newSection.name}
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium shadow-xs transition-colors h-10 w-full md:w-auto cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed shrink-0"
+                  style={{ height: "40px", padding: "0 18px", gap: "6px", boxSizing: "border-box" }}
+                >
+                  {isSubmitting ? <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" /> : <Plus className="w-3.5 h-3.5 text-white shrink-0" />}
+                  <span>Add Section</span>
+                </button>
               </form>
 
               <div className="rounded-md border">
@@ -422,7 +495,7 @@ export default function AcademicsConfig() {
                                     setSelectedSectionForAssign(ctInfo || s);
                                     setIsAssignDialogOpen(true);
                                   }}
-                                  className="h-6 px-1.5 text-xs text-indigo-600 hover:text-indigo-800"
+                                  className="h-6 px-1.5 text-xs text-neutral-600 hover:text-neutral-900"
                                 >
                                   <Edit size={12} className="mr-1" /> Change
                                 </Button>
@@ -468,7 +541,7 @@ export default function AcademicsConfig() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="text-indigo-600" />
+                  <GraduationCap className="text-neutral-900" />
                   Class Teacher Roles & Section Ownership
                 </CardTitle>
                 <CardDescription>
@@ -504,7 +577,7 @@ export default function AcademicsConfig() {
                         {hasTeacher ? (
                           <div className="space-y-2 text-xs text-zinc-600 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">
+                              <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold flex items-center justify-center text-xs">
                                 {ct.classTeacher.name?.charAt(0).toUpperCase()}
                               </div>
                               <div>
@@ -517,13 +590,14 @@ export default function AcademicsConfig() {
                               </div>
                             </div>
                             {ct.classTeacher.email && (
-                              <div className="text-zinc-500 truncate">
-                                📧 {ct.classTeacher.email}
+                              <div className="text-zinc-500 truncate flex items-center gap-1.5">
+                                <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                <span>{ct.classTeacher.email}</span>
                               </div>
                             )}
                             <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-200">
                               <span>Students: <strong>{ct.studentCount || 0}</strong></span>
-                              <span>Attendance Today: <strong>{ct.isAttendanceMarkedToday ? "✅ Marked" : "⏳ Pending"}</strong></span>
+                              <span>Attendance Today: <strong>{ct.isAttendanceMarkedToday ? "Marked" : "Pending"}</strong></span>
                             </div>
                           </div>
                         ) : (
@@ -543,8 +617,8 @@ export default function AcademicsConfig() {
                           }}
                           className={`text-xs rounded-xl ${
                             hasTeacher
-                              ? "border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-                              : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                              ? "border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                              : "bg-neutral-900 hover:bg-neutral-800 text-white"
                           }`}
                         >
                           {hasTeacher ? (
@@ -594,9 +668,15 @@ export default function AcademicsConfig() {
                     onChange={(e) => setNewSubject({ ...newSubject, code: e.target.value })}
                   />
                 </div>
-                <Button type="submit" disabled={isSubmitting || !newSubject.name}>
-                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Add Subject
-                </Button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !newSubject.name}
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium shadow-xs transition-colors h-10 w-full md:w-auto cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed shrink-0"
+                  style={{ height: "40px", padding: "0 18px", gap: "6px", boxSizing: "border-box" }}
+                >
+                  {isSubmitting ? <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" /> : <Plus className="w-3.5 h-3.5 text-white shrink-0" />}
+                  <span>Add Subject</span>
+                </button>
               </form>
 
               <div className="rounded-md border">
@@ -676,9 +756,15 @@ export default function AcademicsConfig() {
                     {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                   </select>
                 </div>
-                <Button type="submit" disabled={isSubmitting || !grades.length || !subjects.length || !newGradeSubject.gradeId || !newGradeSubject.subjectId}>
-                  {isSubmitting ? <Spinner className="mr-2 size-4" /> : <Plus className="w-4 h-4 mr-2" />} Assign Subject
-                </Button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !grades.length || !subjects.length || !newGradeSubject.gradeId || !newGradeSubject.subjectId}
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium shadow-xs transition-colors h-10 w-full md:w-auto cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed shrink-0"
+                  style={{ height: "40px", padding: "0 18px", gap: "6px", boxSizing: "border-box" }}
+                >
+                  {isSubmitting ? <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" /> : <Plus className="w-3.5 h-3.5 text-white shrink-0" />}
+                  <span>Assign Subject</span>
+                </button>
               </form>
 
               <div className="rounded-md border">

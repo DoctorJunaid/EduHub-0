@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileClock,
+  FileText,
   GraduationCap,
   List,
   Plus,
@@ -437,79 +438,119 @@ export default function ExamSchedules() {
       className="campus-tab-page class-timetable"
       aria-label="Campus Exam Schedules Management"
     >
-      {/* 1. Top KPI Track (56px Flush) */}
-      <div className="campus-kpi-track class-timetable-kpi">
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <FileClock size={16} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Total Examinations</span>
-              <span className="kpi-value">{totalExams}</span>
-            </div>
+      {/* 1. Top 4 Standardized KPI Metric Cards */}
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 w-full"
+        style={{ gap: "16px", marginBottom: "20px" }}
+      >
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              TOTAL EXAMINATIONS
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {totalExams}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <FileText className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon text-emerald-600 bg-emerald-50">
-              <CalendarDays size={16} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Midterm Papers</span>
-              <span className="kpi-value">{midterms}</span>
-            </div>
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              MIDTERM PAPERS
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {midterms}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <CalendarDays className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon text-rose-600 bg-rose-50">
-              <GraduationCap size={16} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Final Examinations</span>
-              <span className="kpi-value">{finals}</span>
-            </div>
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              FINAL EXAMINATIONS
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {finals}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <GraduationCap className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon text-amber-600 bg-amber-50">
-              <AlertTriangle size={16} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">Dual-Exam Days (Rare)</span>
-              <span className="kpi-value">{dualExamDaysCount}</span>
-            </div>
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              DUAL-EXAM DAYS (RARE)
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {dualExamDaysCount}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <AlertTriangle className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
       </div>
 
       {/* 2. Top Active Class & Section Selection Header Banner */}
-      <div className="class-routine-header-banner">
-        <div className="class-banner-info">
-          <span className="class-banner-badge">
-            <FileClock size={13} />
+      <div
+        className="class-routine-header-banner bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between"
+        style={{ padding: "20px 24px", gap: "16px", marginBottom: "20px", boxSizing: "border-box" }}
+      >
+        <div className="class-banner-info flex flex-col" style={{ gap: "4px" }}>
+          <span className="class-banner-badge inline-flex items-center text-xs font-bold uppercase tracking-wider text-neutral-500" style={{ gap: "5px" }}>
+            <FileClock className="w-3.5 h-3.5" />
             {isSchool ? "Examination Timetable Matrix" : "Academic Exam Schedule"}
           </span>
-          <h2 className="class-banner-title">
+          <h2 className="class-banner-title text-lg font-bold text-neutral-900 tracking-tight" style={{ margin: 0 }}>
             {selectedClass === "ALL" ? "All Grades & Classes" : selectedClass} •{" "}
             {selectedSection === "ALL" ? "All Sections" : `Section ${selectedSection}`}
           </h2>
-          <p className="class-banner-sub">
+          <p className="class-banner-sub text-xs text-neutral-500 font-medium" style={{ margin: 0 }}>
             {filteredRecords.length} exam papers scheduled • Full 7-Day Week • Drag cards to reschedule
           </p>
         </div>
 
-        <div className="class-banner-controls">
+        <div className="class-banner-controls flex flex-wrap items-end justify-between xl:justify-end" style={{ gap: "10px" }}>
           {/* Class Selector */}
-          <div className="class-selector-group">
-            <span className="class-selector-label">{isSchool ? "Grade / Class" : "Degree Program"}</span>
+          <div className="class-selector-group flex flex-col" style={{ gap: "3px" }}>
+            <span className="class-selector-label text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+              {isSchool ? "Grade / Class" : "Degree Program"}
+            </span>
             {isAddingCustomClass ? (
-              <form onSubmit={handleSaveCustomClass} className="flex items-center gap-1">
+              <form onSubmit={handleSaveCustomClass} className="flex items-center" style={{ gap: "4px" }}>
                 <input
                   type="text"
                   autoFocus
@@ -517,22 +558,29 @@ export default function ExamSchedules() {
                   placeholder="e.g. Grade 11"
                   value={customClassInput}
                   onChange={(e) => setCustomClassInput(e.target.value)}
-                  className="custom-input-pill"
+                  className="rounded-lg border border-neutral-300 bg-white text-xs text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                  style={{ height: "38px", padding: "0 12px", minWidth: "120px", boxSizing: "border-box" }}
                 />
-                <button type="submit" className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold">
-                  <Check size={13} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 text-white cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
+                >
+                  <Check className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingCustomClass(false)}
-                  className="px-2 py-1 bg-zinc-200 text-zinc-700 rounded-md text-xs"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-200 text-neutral-700 cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
                 >
                   ✕
                 </button>
               </form>
             ) : (
               <select
-                className="class-header-select"
+                className="class-header-select border border-neutral-200 rounded-lg bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
+                style={{ height: "38px", padding: "0 12px", minWidth: "130px", boxSizing: "border-box" }}
                 aria-label="Select Class"
                 value={selectedClass}
                 onChange={(e) => {
@@ -555,10 +603,10 @@ export default function ExamSchedules() {
           </div>
 
           {/* Section Selector */}
-          <div className="class-selector-group">
-            <span className="class-selector-label">Section</span>
+          <div className="class-selector-group flex flex-col" style={{ gap: "3px" }}>
+            <span className="class-selector-label text-[10px] font-bold uppercase tracking-wider text-neutral-500">Section</span>
             {isAddingCustomSection ? (
-              <form onSubmit={handleSaveCustomSection} className="flex items-center gap-1">
+              <form onSubmit={handleSaveCustomSection} className="flex items-center" style={{ gap: "4px" }}>
                 <input
                   type="text"
                   autoFocus
@@ -566,22 +614,29 @@ export default function ExamSchedules() {
                   placeholder="e.g. Rose"
                   value={customSectionInput}
                   onChange={(e) => setCustomSectionInput(e.target.value)}
-                  className="custom-input-pill"
+                  className="rounded-lg border border-neutral-300 bg-white text-xs text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                  style={{ height: "38px", padding: "0 12px", minWidth: "120px", boxSizing: "border-box" }}
                 />
-                <button type="submit" className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold">
-                  <Check size={13} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 text-white cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
+                >
+                  <Check className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingCustomSection(false)}
-                  className="px-2 py-1 bg-zinc-200 text-zinc-700 rounded-md text-xs"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-200 text-neutral-700 cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
                 >
                   ✕
                 </button>
               </form>
             ) : (
               <select
-                className="class-header-select"
+                className="class-header-select border border-neutral-200 rounded-lg bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
+                style={{ height: "38px", padding: "0 12px", minWidth: "130px", boxSizing: "border-box" }}
                 aria-label="Select Section"
                 value={selectedSection}
                 onChange={(e) => {
@@ -606,7 +661,8 @@ export default function ExamSchedules() {
           {/* Schedule Exam Button */}
           <button
             type="button"
-            className="banner-add-btn"
+            className="banner-add-btn bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-medium inline-flex items-center justify-center whitespace-nowrap shadow-xs cursor-pointer"
+            style={{ height: "38px", padding: "0 16px", gap: "6px" }}
             onClick={() => handleOpenQuickAdd()}
           >
             <Plus size={14} />
@@ -621,31 +677,36 @@ export default function ExamSchedules() {
         onValueChange={setView}
         className="class-timetable-tabs"
       >
-        <div className="campus-toolbar">
-          <div className="toolbar-left">
+        <div className="campus-toolbar flex flex-wrap items-center justify-between" style={{ gap: "12px", marginBottom: "16px" }}>
+          <div className="toolbar-left flex flex-wrap items-center" style={{ gap: "10px" }}>
             <TabsList className="tt-view-tabs">
               <TabsTrigger value="week">Weekly Matrix</TabsTrigger>
               <TabsTrigger value="list">All Scheduled List</TabsTrigger>
             </TabsList>
 
             {/* Week Navigation */}
-            <div className="tt-week-nav">
+            <div className="tt-week-nav flex items-center" style={{ gap: "4px" }}>
               <button
                 type="button"
-                className="tt-week-nav-btn"
+                className="tt-week-nav-btn inline-flex items-center justify-center border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 cursor-pointer"
+                style={{ height: "36px", width: "36px" }}
                 aria-label="Previous week"
                 onClick={() => setWeek(shiftDays(week, -7))}
               >
                 <ChevronLeft size={14} />
               </button>
-              <span className="tt-week-range">
-                <CalendarDays size={13} />
+              <span
+                className="tt-week-range inline-flex items-center border border-neutral-200 rounded-lg bg-white text-xs font-medium text-neutral-700"
+                style={{ height: "36px", padding: "0 12px", gap: "6px" }}
+              >
+                <CalendarDays size={13} className="text-neutral-500" />
                 {week.toLocaleDateString("en-US", dateOptions)} –{" "}
                 {shiftDays(week, 6).toLocaleDateString("en-US", dateOptions)}
               </span>
               <button
                 type="button"
-                className="tt-week-nav-btn"
+                className="tt-week-nav-btn inline-flex items-center justify-center border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 cursor-pointer"
+                style={{ height: "36px", width: "36px" }}
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
               >
@@ -655,24 +716,26 @@ export default function ExamSchedules() {
 
             {/* Search Input */}
             <div
-              className="toolbar-search"
-              style={{ width: "140px", maxWidth: "160px" }}
+              className="toolbar-search relative flex items-center"
+              style={{ height: "36px" }}
             >
-              <Search size={13} />
+              <Search size={14} className="absolute left-3 text-neutral-400 pointer-events-none" />
               <input
                 type="search"
                 placeholder="Search exams..."
                 value={filters.search}
                 onChange={(e) => changeFilter("search", e.target.value)}
                 aria-label="Search exams"
+                className="border border-neutral-200 rounded-lg bg-white text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                style={{ height: "36px", paddingLeft: "32px", paddingRight: "12px", width: "170px", boxSizing: "border-box" }}
               />
             </div>
 
             {/* Exam Type Filter */}
             <select
-              className="toolbar-select"
+              className="toolbar-select border border-neutral-200 rounded-lg bg-white text-xs text-neutral-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-neutral-400"
               aria-label="Filter by Exam Type"
-              style={{ maxWidth: "105px" }}
+              style={{ height: "36px", padding: "0 12px", boxSizing: "border-box" }}
               value={filters.examType}
               onChange={(e) => changeFilter("examType", e.target.value)}
             >
@@ -686,9 +749,9 @@ export default function ExamSchedules() {
 
             {/* Room / Hall Filter */}
             <select
-              className="toolbar-select"
+              className="toolbar-select border border-neutral-200 rounded-lg bg-white text-xs text-neutral-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-neutral-400"
               aria-label="Filter by Room"
-              style={{ maxWidth: "100px" }}
+              style={{ height: "36px", padding: "0 12px", boxSizing: "border-box" }}
               value={filters.room}
               onChange={(e) => changeFilter("room", e.target.value)}
             >
@@ -702,9 +765,9 @@ export default function ExamSchedules() {
 
             {/* Daily Paper Load Filter */}
             <select
-              className="toolbar-select"
+              className="toolbar-select border border-neutral-200 rounded-lg bg-white text-xs text-neutral-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-neutral-400"
               aria-label="Filter by Daily Load"
-              style={{ maxWidth: "115px" }}
+              style={{ height: "36px", padding: "0 12px", boxSizing: "border-box" }}
               value={filters.dailyLoad || ""}
               onChange={(e) => changeFilter("dailyLoad", e.target.value)}
             >
@@ -714,20 +777,32 @@ export default function ExamSchedules() {
             </select>
           </div>
 
-          <div className="toolbar-actions">
+          <div className="toolbar-actions flex items-center">
             {/* Category Color Legend */}
-            <div className="exam-category-legend">
-              <span className="exam-legend-pill">
-                <span className="exam-legend-dot midterm" /> Midterm
+            <div className="exam-category-legend flex items-center" style={{ gap: "8px" }}>
+              <span
+                className="inline-flex items-center rounded-md bg-neutral-100 border border-neutral-200 text-[11px] font-medium text-neutral-700"
+                style={{ padding: "2px 8px", gap: "6px" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" /> Midterm
               </span>
-              <span className="exam-legend-pill">
-                <span className="exam-legend-dot final" /> Final
+              <span
+                className="inline-flex items-center rounded-md bg-neutral-100 border border-neutral-200 text-[11px] font-medium text-neutral-700"
+                style={{ padding: "2px 8px", gap: "6px" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" /> Final
               </span>
-              <span className="exam-legend-pill">
-                <span className="exam-legend-dot quiz" /> Quiz
+              <span
+                className="inline-flex items-center rounded-md bg-neutral-100 border border-neutral-200 text-[11px] font-medium text-neutral-700"
+                style={{ padding: "2px 8px", gap: "6px" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" /> Quiz
               </span>
-              <span className="exam-legend-pill">
-                <span className="exam-legend-dot practical" /> Practical
+              <span
+                className="inline-flex items-center rounded-md bg-neutral-100 border border-neutral-200 text-[11px] font-medium text-neutral-700"
+                style={{ padding: "2px 8px", gap: "6px" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" /> Practical
               </span>
             </div>
           </div>

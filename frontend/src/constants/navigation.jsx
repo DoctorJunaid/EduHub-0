@@ -135,13 +135,17 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <Award size={20} />,
   },
   {
+    label: "Substitutes",
+    path: "/substitutes",
+    group: "Academics",
+    icon: <Users size={20} />,
+  },
+  {
     label: "Fee Management",
     path: "/fees",
     group: "Finance",
     icon: <ClipboardList size={20} />,
   },
-  { label: "Help & Support", path: "/support", icon: <Headset size={20} /> },
-  { label: "Substitutes", path: "/substitutes", icon: <Users size={20} /> },
   {
     label: "Salary Profiles",
     path: "/salary-profiles",
@@ -166,6 +170,7 @@ export const getCampusAdminNav = (isSchool = false) => [
     group: "Finance",
     icon: <ShieldCheck size={20} />,
   },
+  { label: "Help & Support", path: "/support", icon: <Headset size={20} /> },
   { label: "Settings", path: "/settings", icon: <ClipboardList size={20} /> },
 ];
 

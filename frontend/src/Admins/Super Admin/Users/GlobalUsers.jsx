@@ -177,7 +177,7 @@ export default function GlobalUsers() {
   return (
     <div className="global-users-page">
       {/* Mini Stats Banner */}
-      <div className="global-users-stats-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+      <div className="global-users-stats-grid grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "12px" }}>
         <div className="global-users-stat-card min-w-0">
           {loading && users.length === 0 ? (
             <div className="user-skel-stat-val" />

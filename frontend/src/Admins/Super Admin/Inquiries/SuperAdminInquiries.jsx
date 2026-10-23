@@ -147,7 +147,7 @@ export default function SuperAdminInquiries() {
   return (
     <div className="super-inquiries-page">
       {/* KPI Cards: Stable 4-Column Grid */}
-      <div className="inquiries-metrics-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full" style={{ gap: "16px" }}>
+      <div className="inquiries-metrics-grid grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "12px" }}>
         <div className="inquiry-stat-card min-w-0">
           <span className="stat-label min-w-0 whitespace-nowrap truncate">Total Leads</span>
           {initialLoading ? (

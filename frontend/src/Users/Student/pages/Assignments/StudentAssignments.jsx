@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   GraduationCap,
   Sparkles,
+  X,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
@@ -63,10 +64,15 @@ function AssignmentAction({ assignment }) {
   );
 }
 
+const EMPTY_ASSIGNMENTS = [];
+const EMPTY_DIARY = [];
+
 export default function StudentAssignments() {
   const { isLoading } = useStudentPortal();
-  const assignments = useSelector(selectStudentAssignments) || [];
-  const diaryEntries = useSelector(selectStudentDiary) || [];
+  const rawAssignments = useSelector(selectStudentAssignments);
+  const rawDiaryEntries = useSelector(selectStudentDiary);
+  const assignments = rawAssignments || EMPTY_ASSIGNMENTS;
+  const diaryEntries = rawDiaryEntries || EMPTY_DIARY;
   const student = useSelector(selectCurrentStudent);
 
   const [activeTab, setActiveTab] = useState("all"); // "all", "diary", "pending", "completed"
@@ -162,9 +168,11 @@ export default function StudentAssignments() {
 
       {/* Filter Tabs & Search Bar */}
       <div className="sa-controls-row">
-        <div className="sa-tab-pills">
+        <div className="sa-tab-pills" role="tablist" aria-label="Assignment categories">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "all"}
             className={`sa-tab-btn ${activeTab === "all" ? "active" : ""}`}
             onClick={() => setActiveTab("all")}
           >
@@ -172,6 +180,8 @@ export default function StudentAssignments() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "diary"}
             className={`sa-tab-btn ${activeTab === "diary" ? "active" : ""}`}
             onClick={() => setActiveTab("diary")}
           >
@@ -179,6 +189,8 @@ export default function StudentAssignments() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "pending"}
             className={`sa-tab-btn ${activeTab === "pending" ? "active" : ""}`}
             onClick={() => setActiveTab("pending")}
           >
@@ -186,6 +198,8 @@ export default function StudentAssignments() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "completed"}
             className={`sa-tab-btn ${activeTab === "completed" ? "active" : ""}`}
             onClick={() => setActiveTab("completed")}
           >
@@ -194,13 +208,24 @@ export default function StudentAssignments() {
         </div>
 
         <div className="sa-search-wrap">
-          <Search className="w-4 h-4 text-muted-foreground ml-3" />
+          <Search className="sa-search-icon" aria-hidden="true" />
           <Input
             placeholder="Search by subject, topic or teacher..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="sa-search-input"
+            aria-label="Search assignments and diary"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="sa-search-clear"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -219,6 +244,7 @@ export default function StudentAssignments() {
             </p>
           </div>
 
+          {/* Desktop & Tablet Data Table (>= 768px) */}
           <div className="sa-table-container">
             <Table aria-label="Course assignments and submissions">
               <TableHeader>
@@ -318,6 +344,65 @@ export default function StudentAssignments() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Mobile Card View (< 768px) */}
+          <div className="sa-mobile-cards">
+            {filteredAssignments.map((assignment) => (
+              <div key={assignment.id} className="sa-mobile-card">
+                <div className="sa-mobile-card-header">
+                  <div className="min-w-0 flex-1">
+                    <div className="sa-subject-tag-row">
+                      <span className="sa-badge-sub">{assignment.subject}</span>
+                      {assignment.section && (
+                        <span className="sa-badge-sec">Sec {assignment.section}</span>
+                      )}
+                    </div>
+                    <h3 className="sa-mobile-card-title">{assignment.title}</h3>
+                  </div>
+                  <AssignmentStatusBadge status={assignment.status} />
+                </div>
+
+                {assignment.description && (
+                  <p className="sa-mobile-card-desc">{assignment.description}</p>
+                )}
+
+                <div className="sa-mobile-card-meta">
+                  <div className="sa-mobile-meta-item">
+                    <CalendarDays className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span>{assignment.dueDate || "No due date"}</span>
+                  </div>
+                  <div className="sa-mobile-meta-item">
+                    <span className="sa-mobile-meta-label">Total:</span>
+                    <span className="font-semibold">{assignment.totalMarks == null ? "—" : `${assignment.totalMarks} Pts`}</span>
+                  </div>
+                  {assignment.scoreLabel && (
+                    <div className="sa-mobile-meta-item">
+                      <span className="sa-mobile-meta-label">Score:</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{assignment.scoreLabel}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="sa-mobile-card-action">
+                  <AssignmentAction assignment={assignment} />
+                </div>
+              </div>
+            ))}
+
+            {!filteredAssignments.length && (
+              <div className="sa-empty sa-mobile-empty">
+                <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+                <h3>No assignments available.</h3>
+                <p>
+                  {student
+                    ? "Assignments published by your teachers for Class " +
+                      (student.gradeOrClass || "9") +
+                      " will appear here automatically."
+                    : "Your assignments will appear when your student profile is loaded."}
+                </p>
+              </div>
+            )}
+          </div>
         </Card>
       )}
 
@@ -327,7 +412,7 @@ export default function StudentAssignments() {
           <div className="sa-card-heading">
             <h2>
               <span className="sa-diary-icon-bg">
-                <BookOpen className="w-4 h-4 text-blue-600" />
+                <BookOpen className="w-4 h-4" />
               </span>
               Daily Diary &amp; Teacher Lecture Notes
             </h2>

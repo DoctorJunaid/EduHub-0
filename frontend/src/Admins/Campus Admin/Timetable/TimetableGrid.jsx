@@ -48,6 +48,13 @@ function formatCardTime(startTime, endTime) {
   return `${s} – ${e}`;
 }
 
+function formatHourLabel(mark) {
+  const h = Math.floor(mark / 60);
+  const period = h >= 12 && h < 24 ? "PM" : "AM";
+  const displayH = h % 12 || 12;
+  return `${displayH}:00 ${period}`;
+}
+
 // ─── Subject colour theming ───────────────────────────────────────────────────
 const THEMES = [
   { borderLeft: "#2563eb", bg: "rgba(239,246,255,0.92)", hoverBg: "rgba(219,234,254,0.97)", text: "#1e40af" },
@@ -283,18 +290,23 @@ export default function TimetableGrid({
 
       {/* Main grid */}
       <div
-        className="min-w-[780px] w-full border border-zinc-200 bg-white/80 shadow-sm"
-        style={{ backdropFilter: "blur(6px)", borderRadius: "12px", overflow: "hidden" }}
+        className="min-w-[780px] w-full border border-neutral-200 bg-white/80 shadow-xs"
+        style={{
+          backdropFilter: "blur(6px)",
+          borderRadius: "12px",
+          overflow: "hidden",
+          marginBottom: "16px",
+        }}
         role="region"
         aria-label="Weekly class timetable"
       >
         {/* Day headers */}
         <div
-          className="grid border-b border-zinc-200"
+          className="grid border-b border-neutral-200"
           style={{ gridTemplateColumns: gridColumns, background: "rgba(249,250,251,0.9)" }}
         >
           <div
-            className="flex items-center justify-center text-[11px] font-bold text-zinc-500 uppercase tracking-wider border-r border-zinc-200"
+            className="flex items-center justify-center text-[11px] font-bold text-neutral-500 uppercase tracking-wider border-r border-neutral-200"
             style={{ width: TIME_COL_PX, padding: "12px 0" }}
           >
             Time
@@ -302,10 +314,10 @@ export default function TimetableGrid({
           {days.map((day, idx) => (
             <div
               key={day}
-              className="flex flex-col items-center justify-center py-3 border-r last:border-r-0 border-zinc-200"
+              className="flex flex-col items-center justify-center py-3 border-r last:border-r-0 border-neutral-200"
             >
-              <strong className="text-[13px] font-bold text-zinc-800">{day}</strong>
-              <span className="text-[10.5px] text-zinc-400 font-medium mt-0.5">
+              <strong className="text-[13px] font-bold text-neutral-800">{day}</strong>
+              <span className="text-[10.5px] text-neutral-400 font-medium mt-0.5">
                 {shiftDays(week, idx).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
             </div>
@@ -315,7 +327,7 @@ export default function TimetableGrid({
         {/* Body */}
         <div
           className="grid relative"
-          style={{ height: `${gridHeight}px`, gridTemplateColumns: gridColumns }}
+          style={{ height: `${gridHeight + 16}px`, gridTemplateColumns: gridColumns, paddingBottom: "16px" }}
           onPointerUp={dragging ? handleGridPointerUp : undefined}
           onPointerCancel={() => { setDragging(null); setDragPos(null); isDragGesture.current = false; }}
         >
@@ -323,7 +335,7 @@ export default function TimetableGrid({
           {hourMarks.map(mark => (
             <div
               key={`h-${mark}`}
-              className="absolute left-0 right-0 border-t border-zinc-200 pointer-events-none z-0"
+              className="absolute left-0 right-0 border-t border-neutral-200 pointer-events-none z-0"
               style={{ top: `${minToTop(mark, gridStart)}px` }}
             />
           ))}
@@ -338,16 +350,16 @@ export default function TimetableGrid({
 
           {/* Time labels */}
           <div
-            className="relative border-r border-zinc-200"
-            style={{ width: TIME_COL_PX, background: "rgba(249,250,251,0.7)", flexShrink: 0 }}
+            className="relative border-r border-neutral-200 z-[12]"
+            style={{ width: TIME_COL_PX, background: "rgba(249,250,251,0.85)", flexShrink: 0 }}
           >
             {hourMarks.map(mark => (
               <span
                 key={mark}
-                className="absolute left-0 right-0 text-center text-[10px] font-bold text-zinc-400 -translate-y-1/2 px-1"
+                className="absolute left-0 right-0 text-center text-[10px] font-bold text-neutral-500 -translate-y-1/2 px-1 select-none pointer-events-none"
                 style={{ top: `${minToTop(mark, gridStart)}px` }}
               >
-                {timeLabel(`${String(Math.floor(mark / 60)).padStart(2,"0")}:00`)}
+                {formatHourLabel(mark)}
               </span>
             ))}
           </div>
@@ -543,10 +555,29 @@ export default function TimetableGrid({
 
       {/* Empty state */}
       {!records.length && (
-        <div className="p-10 text-center bg-white/60 border border-dashed border-zinc-300 mt-4 rounded-xl">
-          <BookOpen size={28} className="mx-auto text-zinc-300 mb-3" />
-          <p className="text-sm font-bold text-zinc-700">No periods scheduled for this class yet.</p>
-          <p className="text-xs text-zinc-400 mt-1">Click any empty slot in the grid above or use the "+ Schedule Period" button to build this timetable.</p>
+        <div
+          className="w-full rounded-xl border border-dashed border-neutral-300 bg-neutral-50/50 flex flex-col items-center justify-center text-center"
+          style={{
+            padding: "36px 24px",
+            marginTop: "16px",
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            className="rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-500 shrink-0"
+            style={{ width: "44px", height: "44px", marginBottom: "12px" }}
+          >
+            <BookOpen className="w-5 h-5 text-neutral-500 stroke-[1.75]" />
+          </div>
+          <p
+            className="text-sm font-semibold text-neutral-800"
+            style={{ marginBottom: "4px" }}
+          >
+            No periods scheduled for this class yet.
+          </p>
+          <p className="text-xs text-neutral-500">
+            Click any empty slot in the grid above or use the &ldquo;+ Schedule Period&rdquo; button to build this timetable.
+          </p>
         </div>
       )}
 

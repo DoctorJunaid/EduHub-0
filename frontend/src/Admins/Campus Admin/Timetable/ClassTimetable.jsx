@@ -15,6 +15,7 @@ import {
   Check,
   Edit3,
   Settings,
+  UserCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosInstance from "@/api/axiosInstance.js";
@@ -752,96 +753,132 @@ export default function ClassTimetable() {
           </button>
         </div>
       )}
-      {/* 1. KPI Cards Row */}
-      <div className="campus-kpi-track class-timetable-kpi">
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <BookOpen size={14} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">
-                {isSchool ? "Active Class Periods" : "Class Schedule Count"}
-              </span>
-              <span className="kpi-value">{totalPeriodsForClass}</span>
-            </div>
+      {/* 1. KPI Cards Grid */}
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 w-full"
+        style={{ gap: "16px", marginBottom: "20px" }}
+      >
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              {isSchool ? "ACTIVE CLASS PERIODS" : "CLASS SCHEDULE COUNT"}
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {totalPeriodsForClass}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <BookOpen className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <Users size={14} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">
-                {isSchool ? "Class Teachers" : "Instructors"}
-              </span>
-              <span className="kpi-value">{activeInstructorsForClass}</span>
-            </div>
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              {isSchool ? "CLASS TEACHERS" : "INSTRUCTORS"}
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {activeInstructorsForClass}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <Users className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <BookOpen size={14} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">
-                {isSchool ? "Configured Subjects" : "Unique Courses"}
-              </span>
-              <span className="kpi-value">{activeSubjectsForClass}</span>
-            </div>
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              {isSchool ? "CONFIGURED SUBJECTS" : "UNIQUE COURSES"}
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {activeSubjectsForClass}
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <BookOpen className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
 
-        <div className="campus-kpi-card">
-          <div className="kpi-wrap">
-            <div className="kpi-icon">
-              <Clock size={14} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-label">
-                {isSchool ? "Weekly Periods" : "Campus Total"}
-              </span>
-              <span className="kpi-value">{totalWeeklySlots} slots</span>
-            </div>
+        <div
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
+          style={{ padding: "18px 20px", boxSizing: "border-box" }}
+        >
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+              {isSchool ? "WEEKLY PERIODS" : "CAMPUS TOTAL"}
+            </span>
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+              {totalWeeklySlots} slots
+            </span>
+          </div>
+          <div
+            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <Clock className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </div>
       </div>
 
-      {/* 2. Top Active Class & Section Selection Header Banner (Selectable & Directly Editable) */}
-      <div className="class-routine-header-banner">
-        <div className="class-banner-info">
-          <span className="class-banner-badge">
-            {isSchool ? <School size={13} /> : <GraduationCap size={13} />}
+      {/* 2. Top Active Class & Section Selection Header Banner */}
+      <div
+        className="class-routine-header-banner bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between"
+        style={{ padding: "20px 24px", gap: "16px", marginBottom: "16px", boxSizing: "border-box" }}
+      >
+        <div className="class-banner-info flex flex-col" style={{ gap: "3px" }}>
+          <span className="class-banner-badge inline-flex items-center text-xs font-bold uppercase tracking-wider text-neutral-500" style={{ gap: "5px" }}>
+            {isSchool ? <School className="w-3.5 h-3.5" /> : <GraduationCap className="w-3.5 h-3.5" />}
             {isSchool
               ? "Class Routine & Timetable"
               : "Academic Schedule Matrix"}
           </span>
-          <h2 className="class-banner-title">
+          <h2 className="class-banner-title text-lg font-bold text-neutral-900 tracking-tight" style={{ margin: 0 }}>
             {selectedClass} •{" "}
             {selectedSection.toLowerCase().startsWith("section ")
               ? selectedSection
               : `Section ${selectedSection}`}
           </h2>
-          <p className="class-banner-sub">
+          <p className="class-banner-sub text-xs text-neutral-500 font-medium" style={{ margin: 0 }}>
             {totalPeriodsForClass}{" "}
             {totalPeriodsForClass === 1 ? "period" : "periods"} configured •{" "}
-            {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} •
+            {includeSaturday ? "Mon - Sat (6 Days)" : "Mon - Fri (5 Days)"} •{" "}
             Drag cards to reschedule
           </p>
         </div>
 
-        <div className="class-banner-controls">
+        <div
+          className="class-banner-controls flex flex-wrap items-end justify-between xl:justify-end"
+          style={{ gap: "10px" }}
+        >
           {/* Class / Grade Selector & Editable Custom Input */}
-          <div className="class-selector-group">
-            <span className="class-selector-label">Grade / Class</span>
+          <div className="class-selector-group flex flex-col" style={{ gap: "3px" }}>
+            <span className="class-selector-label text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+              Grade / Class
+            </span>
             {isAddingCustomClass ? (
               <form
                 onSubmit={handleSaveCustomClass}
-                className="flex items-center gap-1"
+                className="flex items-center"
+                style={{ gap: "4px" }}
               >
                 <input
                   type="text"
@@ -850,54 +887,59 @@ export default function ClassTimetable() {
                   placeholder="e.g. Grade 11"
                   value={customClassInput}
                   onChange={(e) => setCustomClassInput(e.target.value)}
-                  className="custom-input-pill"
+                  className="rounded-lg border border-neutral-300 bg-white text-xs text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                  style={{ height: "38px", padding: "0 12px", minWidth: "120px", boxSizing: "border-box" }}
                 />
                 <button
                   type="submit"
-                  className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 text-white cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
                 >
-                  <Check size={13} />
+                  <Check className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingCustomClass(false)}
-                  className="px-2 py-1 bg-zinc-200 text-zinc-700 rounded-md text-xs"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-200 text-neutral-700 cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
                 >
                   ✕
                 </button>
               </form>
             ) : (
-              <div className="flex items-center gap-1">
-                <select
-                  className="class-header-select"
-                  aria-label="Select Class"
-                  value={selectedClass}
-                  onChange={(e) => {
-                    if (e.target.value === "__add_new__") {
-                      setIsAddingCustomClass(true);
-                    } else {
-                      setSelectedClass(e.target.value);
-                    }
-                  }}
-                >
-                  {availableClasses.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                  <option value="__add_new__">+ Add New Grade/Class...</option>
-                </select>
-              </div>
+              <select
+                className="class-header-select rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
+                style={{ height: "38px", padding: "0 12px", minWidth: "130px", boxSizing: "border-box" }}
+                aria-label="Select Class"
+                value={selectedClass}
+                onChange={(e) => {
+                  if (e.target.value === "__add_new__") {
+                    setIsAddingCustomClass(true);
+                  } else {
+                    setSelectedClass(e.target.value);
+                  }
+                }}
+              >
+                {availableClasses.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+                <option value="__add_new__">+ Add New Grade/Class...</option>
+              </select>
             )}
           </div>
 
           {/* Section Selector & Editable Custom Input */}
-          <div className="class-selector-group">
-            <span className="class-selector-label">Section</span>
+          <div className="class-selector-group flex flex-col" style={{ gap: "3px" }}>
+            <span className="class-selector-label text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+              Section
+            </span>
             {isAddingCustomSection ? (
               <form
                 onSubmit={handleSaveCustomSection}
-                className="flex items-center gap-1"
+                className="flex items-center"
+                style={{ gap: "4px" }}
               >
                 <input
                   type="text"
@@ -906,118 +948,125 @@ export default function ClassTimetable() {
                   placeholder="e.g. Rose"
                   value={customSectionInput}
                   onChange={(e) => setCustomSectionInput(e.target.value)}
-                  className="custom-input-pill"
+                  className="rounded-lg border border-neutral-300 bg-white text-xs text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                  style={{ height: "38px", padding: "0 12px", minWidth: "120px", boxSizing: "border-box" }}
                 />
                 <button
                   type="submit"
-                  className="px-2 py-1 bg-zinc-900 text-white rounded-md text-xs font-semibold"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-900 text-white cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
                 >
-                  <Check size={13} />
+                  <Check className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingCustomSection(false)}
-                  className="px-2 py-1 bg-zinc-200 text-zinc-700 rounded-md text-xs"
+                  className="inline-flex items-center justify-center rounded-lg bg-neutral-200 text-neutral-700 cursor-pointer"
+                  style={{ height: "38px", width: "38px" }}
                 >
                   ✕
                 </button>
               </form>
             ) : (
-              <div className="flex items-center gap-1">
-                <select
-                  className="class-header-select"
-                  aria-label="Select Section"
-                  value={selectedSection}
-                  onChange={(e) => {
-                    if (e.target.value === "__add_new_sec__") {
-                      setIsAddingCustomSection(true);
-                    } else {
-                      setSelectedSection(e.target.value);
-                    }
-                  }}
-                >
-                  {availableSections.map((s) => {
-                    const label = s.toLowerCase().startsWith("section ")
-                      ? s
-                      : `Section ${s}`;
-                    return (
-                      <option key={s} value={s}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                  <option value="__add_new_sec__">+ Add New Section...</option>
-                </select>
-              </div>
+              <select
+                className="class-header-select rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
+                style={{ height: "38px", padding: "0 12px", minWidth: "130px", boxSizing: "border-box" }}
+                aria-label="Select Section"
+                value={selectedSection}
+                onChange={(e) => {
+                  if (e.target.value === "__add_new_sec__") {
+                    setIsAddingCustomSection(true);
+                  } else {
+                    setSelectedSection(e.target.value);
+                  }
+                }}
+              >
+                {availableSections.map((s) => {
+                  const label = s.toLowerCase().startsWith("section ")
+                    ? s
+                    : `Section ${s}`;
+                  return (
+                    <option key={s} value={s}>
+                      {label}
+                    </option>
+                  );
+                })}
+                <option value="__add_new_sec__">+ Add New Section...</option>
+              </select>
             )}
           </div>
 
-          {/* Schedule Period Button */}
+          {/* + Schedule Period (Primary Dark Button) */}
           <button
             type="button"
-            className="banner-add-btn"
             onClick={() => handleOpenQuickAdd()}
+            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors shadow-xs whitespace-nowrap shrink-0 cursor-pointer"
+            style={{
+              height: "38px",
+              padding: "0 16px",
+              gap: "6px",
+              width: "auto",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
+            }}
           >
-            <Plus size={14} />
-            {isSchool ? "Schedule Period" : "Schedule Class"}
+            <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+            <span>{isSchool ? "Schedule Period" : "Schedule Class"}</span>
           </button>
 
-          {/* Add Lunch / Break Quick Button */}
+          {/* + Add Lunch / Break (Neutral Theme Outline Button — Remove Yellow/Amber!) */}
           <button
             type="button"
-            className="banner-break-btn"
             onClick={() => handleOpenQuickAdd(undefined, true)}
             title="Add Lunch, Recess, or Prayer Break"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-800 text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            style={{
+              height: "38px",
+              padding: "0 14px",
+              gap: "6px",
+              width: "auto",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
+            }}
           >
-            <Coffee size={14} />+ Add Lunch / Break
+            <Coffee className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+            <span>+ Add Lunch / Break</span>
           </button>
 
-          {/* Direct Shortcut to Pre-defined Academic Setup */}
+          {/* Academic Setup (Neutral Outline Button) */}
           <Link
             to="/academics"
             title="Configure Pre-defined Classes, Sections & Subjects"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shrink-0 no-underline"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
+              height: "38px",
+              padding: "0 14px",
               gap: "6px",
-              padding: "7px 12px",
-              borderRadius: "8px",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              background: "#ffffff",
-              color: "#334155",
-              border: "1.5px solid #cbd5e1",
-              textDecoration: "none",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-              transition: "all 0.15s ease",
+              width: "auto",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
             }}
           >
-            <Settings size={13} style={{ color: "#64748b" }} />
-            Academic Setup
+            <Settings className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+            <span>Academic Setup</span>
           </Link>
 
-          {/* Direct Shortcut to Teacher Assignments */}
+          {/* Assign Teachers (Neutral Outline Button) */}
           <Link
             to="/teacher-assignments"
             title="Assign Faculty to Subjects & Sections"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shrink-0 no-underline"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
+              height: "38px",
+              padding: "0 14px",
               gap: "6px",
-              padding: "7px 12px",
-              borderRadius: "8px",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              background: "#ffffff",
-              color: "#334155",
-              border: "1.5px solid #cbd5e1",
-              textDecoration: "none",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-              transition: "all 0.15s ease",
+              width: "auto",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
             }}
           >
-            <Users size={13} style={{ color: "#64748b" }} />
-            Assign Teachers
+            <UserCheck className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+            <span>Assign Teachers</span>
           </Link>
         </div>
       </div>
@@ -1028,80 +1077,81 @@ export default function ClassTimetable() {
         onValueChange={setView}
         className="class-timetable-tabs"
       >
-        <div className="campus-toolbar">
-          <div className="toolbar-left">
-            <TabsList className="tt-view-tabs">
-              <TabsTrigger value="week">Weekly Matrix</TabsTrigger>
-              <TabsTrigger value="list">All Scheduled List</TabsTrigger>
+        <div
+          className="w-full flex flex-wrap items-center justify-between"
+          style={{ marginBottom: "16px", gap: "10px" }}
+        >
+          <div className="flex flex-wrap items-center" style={{ gap: "10px" }}>
+            {/* Segmented Group 1: Weekly Matrix | All Scheduled List */}
+            <TabsList
+              className="bg-neutral-100 border border-neutral-200 rounded-lg inline-flex items-center"
+              style={{ padding: "4px", gap: "4px", height: "auto" }}
+            >
+              <TabsTrigger
+                value="week"
+                className="rounded-md text-xs font-semibold whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 hover:text-neutral-900 cursor-pointer transition-all"
+                style={{ padding: "6px 12px" }}
+              >
+                Weekly Matrix
+              </TabsTrigger>
+              <TabsTrigger
+                value="list"
+                className="rounded-md text-xs font-semibold whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 hover:text-neutral-900 cursor-pointer transition-all"
+                style={{ padding: "6px 12px" }}
+              >
+                All Scheduled List
+              </TabsTrigger>
             </TabsList>
 
-            {/* 5-Day vs 6-Day (Saturday) Toggle */}
+            {/* Segmented Group 2: 5 Days (Mon-Fri) | 6 Days (+Saturday) */}
             <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "3px",
-                padding: "3px",
-                background: "#f4f4f5",
-                border: "1px solid #e4e4e7",
-                borderRadius: "8px",
-              }}
+              className="bg-neutral-100 border border-neutral-200 rounded-lg inline-flex items-center"
+              style={{ padding: "4px", gap: "4px" }}
             >
               <button
                 type="button"
                 onClick={() => setIncludeSaturday(false)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  fontSize: "11.5px",
-                  fontWeight: !includeSaturday ? 700 : 500,
-                  color: !includeSaturday ? "#09090b" : "#71717a",
-                  background: !includeSaturday ? "#ffffff" : "transparent",
-                  boxShadow: !includeSaturday
-                    ? "0 1px 2px rgba(0,0,0,0.08)"
-                    : "none",
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                }}
+                className={`rounded-md text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
+                  !includeSaturday
+                    ? "bg-white text-neutral-900 shadow-xs"
+                    : "text-neutral-600 hover:text-neutral-900"
+                }`}
+                style={{ padding: "6px 12px" }}
               >
                 5 Days (Mon-Fri)
               </button>
               <button
                 type="button"
                 onClick={() => setIncludeSaturday(true)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  fontSize: "11.5px",
-                  fontWeight: includeSaturday ? 700 : 500,
-                  color: includeSaturday ? "#09090b" : "#71717a",
-                  background: includeSaturday ? "#ffffff" : "transparent",
-                  boxShadow: includeSaturday
-                    ? "0 1px 2px rgba(0,0,0,0.08)"
-                    : "none",
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                }}
+                className={`rounded-md text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
+                  includeSaturday
+                    ? "bg-white text-neutral-900 shadow-xs"
+                    : "text-neutral-600 hover:text-neutral-900"
+                }`}
+                style={{ padding: "6px 12px" }}
               >
                 6 Days (+Saturday)
               </button>
             </div>
 
-            <div className="tt-week-nav">
+            {/* Date Navigator */}
+            <div
+              className="inline-flex items-center border border-neutral-200 rounded-lg bg-white shadow-xs"
+              style={{ height: "36px", padding: "0 6px", boxSizing: "border-box" }}
+            >
               <button
                 type="button"
-                className="tt-week-nav-btn"
                 aria-label="Previous week"
                 onClick={() => setWeek(shiftDays(week, -7))}
+                className="p-1.5 text-neutral-500 hover:text-neutral-900 cursor-pointer"
               >
-                <ChevronLeft size={14} />
+                <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="tt-week-range">
-                <CalendarDays size={12} aria-hidden="true" />
+              <span
+                className="text-xs font-medium text-neutral-800 whitespace-nowrap inline-flex items-center"
+                style={{ padding: "0 8px", gap: "6px" }}
+              >
+                <CalendarDays className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
                 {week.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -1118,29 +1168,33 @@ export default function ClassTimetable() {
               </span>
               <button
                 type="button"
-                className="tt-week-nav-btn"
                 aria-label="Next week"
                 onClick={() => setWeek(shiftDays(week, 7))}
+                className="p-1.5 text-neutral-500 hover:text-neutral-900 cursor-pointer"
               >
-                <ChevronRight size={14} />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
+            {/* This Week Button */}
             <button
               type="button"
-              className="toolbar-btn toolbar-btn-outline"
               onClick={() => setWeek(mondayOf(new Date()))}
+              className="inline-flex items-center justify-center border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+              style={{ height: "36px", padding: "0 14px", boxSizing: "border-box" }}
             >
               This Week
             </button>
           </div>
 
-          <div className="toolbar-actions">
+          {/* Right Action: Detailed Form Button */}
+          <div className="flex items-center">
             <button
               type="button"
-              className="toolbar-btn toolbar-btn-outline"
               onClick={() => setFullFormOpen(true)}
               title="Open full detailed schedule form"
+              className="inline-flex items-center justify-center border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+              style={{ height: "36px", padding: "0 14px", boxSizing: "border-box" }}
             >
               Detailed Form
             </button>

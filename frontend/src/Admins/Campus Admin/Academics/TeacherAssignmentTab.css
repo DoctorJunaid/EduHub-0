@@ -324,36 +324,26 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
 }
 
-.tat-badge-workload-target {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
-
-.tat-badge-workload-under {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
-}
-
+.tat-badge-workload-target,
+.tat-badge-workload-under,
 .tat-badge-workload-over {
-  background: #f5f3ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
+  background: #f4f4f5;
+  color: #3f3f46;
+  border: 1px solid #e4e4e7;
 }
 
 .tat-badge-override {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  font-weight: 600;
 }
 
 .tat-badge-standard {
@@ -363,15 +353,15 @@
 }
 
 .tat-badge-role-ct {
-  background: #eef2ff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  background: #18181b;
+  color: #ffffff;
+  border: 1px solid #18181b;
 }
 
 .tat-badge-role-st {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: #f4f4f5;
+  color: #27272a;
+  border: 1px solid #e4e4e7;
 }
 
 @keyframes fadeIn {
