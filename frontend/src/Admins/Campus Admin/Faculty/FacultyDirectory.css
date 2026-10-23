@@ -9,3 +9,17 @@
   margin: 0;
   padding: 0;
 }
+
+.faculty-directory table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.faculty-directory th:last-child,
+.faculty-directory td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+

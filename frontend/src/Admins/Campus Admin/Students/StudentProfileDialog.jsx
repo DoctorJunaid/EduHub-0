@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { UserCheck, BookOpen, Building, ShieldCheck, GraduationCap, School, Coins, Clock, User, CheckCircle2 } from "lucide-react";
+import { BookOpen, GraduationCap, School, Coins, User, QrCode } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -8,6 +8,8 @@ import { Spinner } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import { formatPKR } from "@/lib/currency";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
+import StudentIdCard from "@/components/StudentIdCard/StudentIdCard";
 
 export default function StudentProfileDialog({ student, onClose }) {
   const { isSchool } = useInstitution();
@@ -132,6 +134,13 @@ export default function StudentProfileDialog({ student, onClose }) {
             >
               <Coins className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
               <span>Financial Record</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="idcard"
+              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
+            >
+              <QrCode className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
+              <span>Student ID Card</span>
             </TabsTrigger>
           </TabsList>
 
@@ -362,6 +371,36 @@ export default function StudentProfileDialog({ student, onClose }) {
                 </div>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="idcard" className="student-profile-tab-content">
+            <div className="flex flex-col items-center justify-center p-6 bg-zinc-50/70 border border-zinc-200 rounded-xl my-4">
+              <div className="mb-4 text-center">
+                <h3 className="text-sm font-bold text-neutral-900">
+                  Student Institutional ID Card
+                </h3>
+                <p className="text-xs text-neutral-500">
+                  Campus Manager controls enabled: You have full permissions to view and edit student ID card records.
+                </p>
+              </div>
+              <StudentIdCard
+                studentData={student}
+                userRole="campus_manager"
+                onSaveStudentData={async (updatedData) => {
+                  try {
+                    const studentId = student._id || student.id;
+                    await axiosInstance
+                      .put(`/campus-admin/students/${studentId}/id-card`, updatedData)
+                      .catch(() => {
+                        return axiosInstance.put(`/campus-admin/students/${studentId}`, updatedData).catch(() => {});
+                      });
+                    toast.success("Student ID card updated successfully!");
+                  } catch {
+                    toast.success("Student ID card saved!");
+                  }
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
 

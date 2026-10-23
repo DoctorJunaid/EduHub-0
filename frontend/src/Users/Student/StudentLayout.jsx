@@ -46,6 +46,7 @@ export default function StudentLayout() {
   const nav = getStudentNav(isSchool);
 
   const pageLabel = {
+    "/student/id-card": "Student ID Card",
     "/student/courses": isSchool ? "Subjects" : "Courses",
     "/student/assignments": isSchool ? "Daily Diary & Homework" : "Assignments",
     "/student/attendance": "Attendance Record",

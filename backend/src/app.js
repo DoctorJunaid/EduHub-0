@@ -13,6 +13,8 @@ import mongoSanitize from "express-mongo-sanitize";
 import hpp from "hpp";
 import rateLimit from "express-rate-limit";
 import apiRoutes from "./routes/index.routes.js";
+import studentIdCardRoutes from "./routes/studentRoutes.js";
+import campusManagerRoutes from "./routes/campusManagerRoutes.js";
 
 const app = express();
 
@@ -133,6 +135,10 @@ app.get("/set-password", (req, res) => {
   }
   return res.redirect(`${frontendUrl}/set-password?token=${encodeURIComponent(token)}`);
 });
+
+// Mount Student & Campus Manager Direct API Routes
+app.use("/api/students", studentIdCardRoutes);
+app.use("/api/campus-manager", campusManagerRoutes);
 
 // Mount Versioned API Routes
 app.use("/api/v1", apiRoutes);

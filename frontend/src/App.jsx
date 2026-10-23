@@ -59,6 +59,7 @@ import {
   StudentFees,
   StudentMessages,
   StudentTimetable,
+  StudentIdCardPage,
 } from "./Users/Student";
 
 import { useEffect } from "react";
@@ -128,6 +129,7 @@ const App = () => {
           <Route element={<StudentLayout />}>
             <Route path="student" element={<Navigate to="/student/dashboard" replace />} />
             <Route path="student/dashboard" element={<StudentDashboard />} />
+            <Route path="student/id-card" element={<StudentIdCardPage />} />
             <Route path="student/courses" element={<StudentCourses />} />
             <Route
               path="student/assignments"
