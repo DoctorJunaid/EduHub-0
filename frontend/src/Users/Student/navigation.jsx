@@ -7,6 +7,7 @@ import {
   WalletCards,
   Headset,
   Calendar,
+  QrCode,
 } from "lucide-react";
 
 export const getStudentNav = (isSchool) => [
@@ -15,6 +16,11 @@ export const getStudentNav = (isSchool) => [
     path: "/student/dashboard",
     exact: true,
     icon: <LayoutGrid size={20} />,
+  },
+  {
+    label: "Student ID Card",
+    path: "/student/id-card",
+    icon: <QrCode size={20} />,
   },
   {
     label: isSchool ? "Class Routine & Timetable" : "Timetable",

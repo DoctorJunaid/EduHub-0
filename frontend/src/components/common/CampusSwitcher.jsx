@@ -26,11 +26,6 @@ export default function CampusSwitcher() {
 
   const role = currentUser?.role;
 
-  // Super Admin manages the entire platform globally — no campus switcher needed
-  if (role === "super_admin") {
-    return null;
-  }
-
   // Only institute_admin can switch between multiple campus branches of an institute
   const isMultiCampusAdmin = role === "institute_admin";
 
@@ -39,6 +34,11 @@ export default function CampusSwitcher() {
       dispatch(fetchCampuses());
     }
   }, [dispatch, isMultiCampusAdmin, campuses.length]);
+
+  // Super Admin manages the entire platform globally — no campus switcher needed
+  if (role === "super_admin") {
+    return null;
+  }
 
   // If user is a campus-level user (campus_admin, teacher, student, etc.)
   if (!isMultiCampusAdmin) {

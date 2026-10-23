@@ -20,6 +20,7 @@ import {
   GraduationCap,
   MessageSquare,
   Mail,
+  QrCode,
   Bus,
   MapPin,
   Clock,
@@ -177,6 +178,12 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-zinc-200 hover:bg-zinc-100">
+              <Link to="/student/id-card">
+                <QrCode className="w-3.5 h-3.5" />
+                Student ID Card
+              </Link>
+            </Button>
             <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-zinc-200 hover:bg-zinc-100">
               <Link to="/student/support?category=Academic">
                 <MessageSquare className="w-3.5 h-3.5" />

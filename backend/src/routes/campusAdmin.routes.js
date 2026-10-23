@@ -11,6 +11,10 @@ import {
   updateFacultyInCampus,
 } from "../controllers/campusStudent.controller.js";
 import {
+  getStudentIdCard,
+  updateStudentIdCard,
+} from "../controllers/studentIdCard.controller.js";
+import {
   createTeacher,
   getTeachers,
   getTeacherById,
@@ -103,6 +107,7 @@ router
 router.post("/students/new", checkActiveSubscription, checkStudentQuota, createStudentForCampus);
 router.delete("/students/:id", checkActiveSubscription, removeStudentFromCampus);
 router.put("/students/:id", checkActiveSubscription, updateStudentInCampus);
+router.route("/students/:id/id-card").get(getStudentIdCard).put(updateStudentIdCard).patch(updateStudentIdCard);
 router.get("/students/:id/payments", getStudentPayments);
 
 router.route("/faculty").get(getCampusFaculty);

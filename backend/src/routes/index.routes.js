@@ -21,6 +21,8 @@ import attendanceApprovalRoutes from "./attendanceApproval.routes.js";
 import studentRoutes from "./student.routes.js";
 import academicRoutes from "./academic.routes.js";
 import classSessionRoutes from "./classSession.routes.js";
+import studentIdCardRoutes from "./studentRoutes.js";
+import campusManagerRoutes from "./campusManagerRoutes.js";
 
 const router = express.Router();
 
@@ -36,6 +38,8 @@ router.get("/health", (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/search", searchRoutes);
 router.use("/student", studentRoutes);
+router.use("/students", studentIdCardRoutes);
+router.use("/campus-manager", campusManagerRoutes);
 router.use("/super-admin", superAdminRoutes);
 router.use("/institute-admin", instituteAdminRoutes);
 
