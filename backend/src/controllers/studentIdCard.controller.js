@@ -4,29 +4,43 @@ import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
 import Institute from "../models/institute.model.js";
 import { StudentProfile } from "../models/profile.model.js";
+import {
+  createStudentQrPayload,
+  parseQrPayload,
+} from "../utils/qrAttendance.js";
 
 /**
  * Helper to resolve student and linked user document from id parameter.
- * Handles Student._id, Student.userId, User._id, or roll/rollNo.
+ * Handles Student._id, Student.userId, User._id, QR payloads, or roll/rollNo.
  */
 const resolveStudentDocuments = async (identifier) => {
-  const isValidObjectId = mongoose.Types.ObjectId.isValid(identifier);
+  if (!identifier) return { studentDoc: null, userDoc: null };
+
+  // Check if identifier is a QR code payload (JSON or encoded)
+  let resolvedStudentId = null;
+  const parsed = parseQrPayload(identifier);
+  if (parsed.success && parsed.studentId && mongoose.Types.ObjectId.isValid(parsed.studentId)) {
+    resolvedStudentId = parsed.studentId;
+  }
+
+  const lookupId = resolvedStudentId || identifier;
+  const isValidObjectId = mongoose.Types.ObjectId.isValid(lookupId);
   let studentDoc = null;
   let userDoc = null;
 
   if (isValidObjectId) {
     // 1. Try finding in Student collection by _id
-    studentDoc = await Student.findById(identifier);
+    studentDoc = await Student.findById(lookupId);
     if (!studentDoc) {
       // 2. Try finding in Student collection by userId
-      studentDoc = await Student.findOne({ userId: identifier });
+      studentDoc = await Student.findOne({ userId: lookupId });
     }
 
     // 3. Find linked User document
     if (studentDoc?.userId) {
       userDoc = await User.findById(studentDoc.userId);
     } else {
-      userDoc = await User.findOne({ _id: identifier, role: "student" });
+      userDoc = await User.findOne({ _id: lookupId, role: "student" });
     }
   }
 
@@ -34,7 +48,10 @@ const resolveStudentDocuments = async (identifier) => {
   if (!studentDoc && !userDoc) {
     studentDoc = await Student.findOne({ rollNo: identifier });
     if (!studentDoc) {
-      userDoc = await User.findOne({ roll: identifier, role: "student" });
+      userDoc = await User.findOne({
+        role: "student",
+        $or: [{ roll: identifier }, { rollNo: identifier }, { rollNumber: identifier }],
+      });
     }
   }
 
@@ -46,13 +63,20 @@ const resolveStudentDocuments = async (identifier) => {
     const classProgramValue =
       userDoc.classProgram ||
       (userDoc.gradeOrClass
-        ? `${userDoc.gradeOrClass}${userDoc.section ? ` • Section ${userDoc.section}` : ""}`
-        : userDoc.program || "Class 9 • Section A");
+        ? `${userDoc.gradeOrClass}${userDoc.section ? ` • Section ${userDoc.section.replace(/^Section\s*/i, "")}` : ""}`
+        : userDoc.program || "Class 10 • Section A");
 
     const rollNoValue =
       userDoc.rollNo ||
       userDoc.roll ||
-      `ROLL-${String(userDoc._id).slice(-5).toUpperCase()}`;
+      userDoc.rollNumber ||
+      `ROLL-${String(userDoc._id).slice(-4).toUpperCase()}`;
+
+    const qrPayload = createStudentQrPayload({
+      userId: userDoc._id,
+      campusId: userDoc.campusId,
+      rollNo: rollNoValue,
+    });
 
     // Upsert Student document
     studentDoc = await Student.findOneAndUpdate(
@@ -70,7 +94,9 @@ const resolveStudentDocuments = async (identifier) => {
           guardianPhone: userDoc.guardianPhone || userDoc.phone || "",
           address: userDoc.address || "",
           avatar: userDoc.avatar || "",
-          qrCodeData: userDoc.qrCodeData || `EDUHUB-STUDENT-${rollNoValue}`,
+          qrCodeData: qrPayload,
+          qrToken: qrPayload,
+          status: userDoc.status || "Active",
         },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -117,9 +143,9 @@ export const getStudentIdCard = async (req, res) => {
         });
       }
     } else if (
-      ["campus_manager", "campus_admin", "admin", "principal", "accountant"].includes(req.user.role)
+      ["campus_manager", "campus_admin", "admin", "principal", "accountant", "teacher"].includes(req.user.role)
     ) {
-      // Campus Managers / Campus Admins can only view students belonging to their campus
+      // Campus staff can only view students belonging to their campus
       if (req.user.role !== "super_admin") {
         const managerCampusId = (req.user.campusId?._id || req.user.campusId)?.toString();
         const studentCampusId = (studentDoc.campusId?._id || studentDoc.campusId || userDoc?.campusId)?.toString();
@@ -149,6 +175,19 @@ export const getStudentIdCard = async (req, res) => {
       ? await Institute.findById(userDoc.instituteId).select("name logo type board").lean()
       : null;
 
+    // Ensure qrCodeData is populated with verified structured format
+    let qrPayload = studentDoc.qrCodeData || userDoc?.qrCodeData;
+    if (!qrPayload || !qrPayload.includes("STUDENT_ATTENDANCE")) {
+      qrPayload = createStudentQrPayload({
+        userId: studentDoc.userId || userDoc?._id,
+        campusId: studentDoc.campusId,
+        rollNo: studentDoc.rollNo,
+      });
+      studentDoc.qrCodeData = qrPayload;
+      studentDoc.qrToken = qrPayload;
+      await Student.updateOne({ _id: studentDoc._id }, { $set: { qrCodeData: qrPayload, qrToken: qrPayload } });
+    }
+
     const payload = {
       _id: studentDoc._id,
       id: studentDoc._id,
@@ -165,7 +204,9 @@ export const getStudentIdCard = async (req, res) => {
       guardianPhone: studentDoc.guardianPhone || "",
       address: studentDoc.address || "",
       avatar: studentDoc.avatar || "",
-      qrCodeData: studentDoc.qrCodeData || `EDUHUB-STUDENT-${studentDoc.rollNo || studentDoc._id}`,
+      qrCodeData: qrPayload,
+      qrToken: qrPayload,
+      status: studentDoc.status || userDoc?.status || "Active",
       createdAt: studentDoc.createdAt,
       updatedAt: studentDoc.updatedAt,
     };
@@ -339,7 +380,92 @@ export const updateStudentIdCard = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Regenerate Student QR Token & Card Payload
+ * @route   POST /api/students/:id/regenerate-qr
+ * @access  Private - Restricted to Campus Managers and Admins
+ */
+export const regenerateStudentQr = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const allowedRoles = ["campus_manager", "campus_admin", "admin", "super_admin", "principal"];
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Insufficient permissions to regenerate QR Code.",
+      });
+    }
+
+    const { id } = req.params;
+    const { studentDoc, userDoc } = await resolveStudentDocuments(id);
+
+    if (!studentDoc && !userDoc) {
+      return res.status(404).json({
+        success: false,
+        message: "Student record not found.",
+      });
+    }
+
+    const targetUserId = studentDoc?.userId || userDoc?._id;
+    const targetCampusId = studentDoc?.campusId || userDoc?.campusId;
+    const rollNoValue = studentDoc?.rollNo || userDoc?.rollNo || userDoc?.roll || "1";
+
+    // Validate campus authorization
+    if (req.user.role !== "super_admin") {
+      const managerCampusId = (req.user.campusId?._id || req.user.campusId)?.toString();
+      const studentCampusId = (targetCampusId?._id || targetCampusId)?.toString();
+
+      if (managerCampusId && studentCampusId && managerCampusId !== studentCampusId) {
+        return res.status(403).json({
+          success: false,
+          message: "Access denied. You can only regenerate QR codes for your assigned campus.",
+        });
+      }
+    }
+
+    const newQrPayload = createStudentQrPayload({
+      userId: targetUserId,
+      campusId: targetCampusId,
+      rollNo: rollNoValue,
+    });
+
+    if (studentDoc) {
+      studentDoc.qrCodeData = newQrPayload;
+      studentDoc.qrToken = newQrPayload;
+      await studentDoc.save();
+    }
+
+    if (userDoc) {
+      userDoc.qrCodeData = newQrPayload;
+      await userDoc.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student QR code regenerated successfully.",
+      data: {
+        studentId: targetUserId,
+        rollNo: rollNoValue,
+        qrCodeData: newQrPayload,
+      },
+    });
+  } catch (error) {
+    console.error("Regenerate QR Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to regenerate QR code.",
+    });
+  }
+};
+
 export default {
   getStudentIdCard,
   updateStudentIdCard,
+  regenerateStudentQr,
 };

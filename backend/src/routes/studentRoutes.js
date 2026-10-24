@@ -4,6 +4,7 @@ import { checkRole } from "../middleware/role.middleware.js";
 import {
   getStudentIdCard,
   updateStudentIdCard,
+  regenerateStudentQr,
 } from "../controllers/studentIdCard.controller.js";
 
 const router = express.Router();
@@ -23,7 +24,7 @@ router.get("/:id/id-card", verifyToken, getStudentIdCard);
 router.put(
   "/:id/id-card",
   verifyToken,
-  checkRole(["campus_manager", "admin"]),
+  checkRole(["campus_manager", "admin", "campus_admin", "super_admin"]),
   updateStudentIdCard
 );
 
@@ -35,8 +36,20 @@ router.put(
 router.patch(
   "/:id/id-card",
   verifyToken,
-  checkRole(["campus_manager", "admin"]),
+  checkRole(["campus_manager", "admin", "campus_admin", "super_admin"]),
   updateStudentIdCard
+);
+
+/**
+ * @route   POST /api/students/:id/regenerate-qr
+ * @desc    Regenerate Student QR code data
+ * @access  Private (Campus Manager & Admin restricted via verifyToken and checkRole)
+ */
+router.post(
+  "/:id/regenerate-qr",
+  verifyToken,
+  checkRole(["campus_manager", "admin", "campus_admin", "super_admin", "principal"]),
+  regenerateStudentQr
 );
 
 export default router;

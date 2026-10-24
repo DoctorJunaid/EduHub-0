@@ -8,6 +8,7 @@ export default function StudentIdCardDialog({
   student,
   userRole = "student",
   onSaveStudentData,
+  onRegenerateQr,
 }) {
   if (!open || !student) return null;
 
@@ -52,6 +53,7 @@ export default function StudentIdCardDialog({
             studentData={student}
             userRole={userRole}
             onSaveStudentData={onSaveStudentData}
+            onRegenerateQr={onRegenerateQr}
           />
         </div>
       </div>

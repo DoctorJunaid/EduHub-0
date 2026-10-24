@@ -335,10 +335,7 @@ export async function saveClassAttendance(campusId, teacherUserId, payload) {
         filter: {
           campusId,
           studentId,
-          $or: [
-            { dateStr },
-            { date: { $gte: startOfDay, $lte: endOfDay } },
-          ],
+          dateStr,
         },
         update: {
           $set: {
@@ -347,6 +344,8 @@ export async function saveClassAttendance(campusId, teacherUserId, payload) {
             date: startOfDay,
             dateStr,
             status,
+            method: item.method || "manual",
+            rollNo: item.rollNumber || item.rollNo || item.roll || "",
             className: item.className || className || "Class 10",
             gradeOrClass: item.className || className || "Class 10",
             section: item.section || section || "A",

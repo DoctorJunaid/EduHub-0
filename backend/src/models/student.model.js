@@ -6,7 +6,6 @@ const studentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     campusId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -37,7 +36,6 @@ const studentSchema = new mongoose.Schema(
     rollNo: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     fatherName: {
@@ -62,12 +60,26 @@ const studentSchema = new mongoose.Schema(
     },
     qrCodeData: {
       type: String,
-      default: "", // Reserved for future QR generation
+      default: "",
+      trim: true,
+    },
+    qrToken: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
+    },
+    status: {
+      type: String,
+      default: "Active",
       trim: true,
     },
   },
   { timestamps: true }
 );
+
+studentSchema.index({ campusId: 1, classProgram: 1, rollNo: 1 });
+studentSchema.index({ userId: 1 }, { unique: true });
 
 // Prevent re-compilation in development watch mode
 const Student = mongoose.models.Student || mongoose.model("Student", studentSchema);

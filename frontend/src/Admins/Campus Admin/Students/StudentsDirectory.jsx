@@ -480,6 +480,16 @@ export default function StudentsDirectory() {
               toast.success("Student ID card saved!");
             }
           }}
+          onRegenerateQr={async (studentId) => {
+            try {
+              const res = await axiosInstance.post(`/campus-admin/students/${studentId}/regenerate-qr`);
+              dispatch(fetchStudents());
+              toast.success("QR Code regenerated successfully!");
+              return res.data?.data;
+            } catch (err) {
+              toast.error(err.response?.data?.message || "Failed to regenerate QR code");
+            }
+          }}
         />
       )}
 

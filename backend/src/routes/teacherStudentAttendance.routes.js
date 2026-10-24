@@ -1,5 +1,6 @@
 import express from "express";
 import * as ctrl from "../controllers/teacherStudentAttendance.controller.js";
+import { recordQrScanAttendance } from "../controllers/qrAttendance.controller.js";
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -17,5 +18,8 @@ router.get("/roster", ctrl.getClassRoster);
 
 // POST /api/v1/teacher/attendance/save
 router.post("/save", ctrl.saveAttendance);
+
+// POST /api/v1/teacher/attendance/qr-scan
+router.post("/qr-scan", recordQrScanAttendance);
 
 export default router;

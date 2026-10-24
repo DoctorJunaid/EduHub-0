@@ -13,6 +13,7 @@ import {
 import {
   getStudentIdCard,
   updateStudentIdCard,
+  regenerateStudentQr,
 } from "../controllers/studentIdCard.controller.js";
 import {
   createTeacher,
@@ -90,6 +91,10 @@ import {
   checkStaffQuota,
   checkActiveSubscription,
 } from "../middleware/quota.middleware.js";
+import {
+  recordQrScanAttendance,
+  getAttendanceHealthCheck,
+} from "../controllers/qrAttendance.controller.js";
 
 const router = express.Router();
 
@@ -108,6 +113,7 @@ router.post("/students/new", checkActiveSubscription, checkStudentQuota, createS
 router.delete("/students/:id", checkActiveSubscription, removeStudentFromCampus);
 router.put("/students/:id", checkActiveSubscription, updateStudentInCampus);
 router.route("/students/:id/id-card").get(getStudentIdCard).put(updateStudentIdCard).patch(updateStudentIdCard);
+router.post("/students/:id/regenerate-qr", regenerateStudentQr);
 router.get("/students/:id/payments", getStudentPayments);
 
 router.route("/faculty").get(getCampusFaculty);
@@ -180,6 +186,10 @@ router
   .get(getStudentAttendanceById)
   .put(updateStudentAttendance)
   .delete(deleteStudentAttendance);
+
+// QR Attendance Scanner & System Diagnostics
+router.post("/attendance/qr-scan", recordQrScanAttendance);
+router.get("/attendance/health-check", getAttendanceHealthCheck);
 
 // Fee Records & School Monthly Fee System
 router.post("/fees/generate-monthly", generateMonthlyFees);

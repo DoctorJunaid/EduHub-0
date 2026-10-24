@@ -479,6 +479,16 @@ export default function StudentProfileDialog({ student, onClose }) {
                     toast.success("Student ID card saved!");
                   }
                 }}
+                onRegenerateQr={async (studentId) => {
+                  try {
+                    const sid = studentId || student._id || student.id;
+                    const res = await axiosInstance.post(`/campus-admin/students/${sid}/regenerate-qr`);
+                    toast.success("QR Code regenerated successfully!");
+                    return res.data?.data;
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || "Failed to regenerate QR code");
+                  }
+                }}
               />
             </div>
           </TabsContent>

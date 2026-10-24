@@ -1,20 +1,29 @@
-import React, { useState } from "react";
-import { User, QrCode, Phone, MapPin, Building2, Edit3, Save, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import QRCode from "qrcode";
+import { User, QrCode, Phone, MapPin, Building2, Edit3, Save, X, RefreshCw } from "lucide-react";
 
-export default function StudentIdCard({ studentData, userRole = "student", onSaveStudentData }) {
+export default function StudentIdCard({
+  studentData,
+  userRole = "student",
+  onSaveStudentData,
+  onRegenerateQr,
+}) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [regenerating, setRegenerating] = useState(false);
 
   const getInitialData = (data) => ({
+    studentId: data?._id || data?.id || data?.userId || "",
     instituteName: data?.instituteName || data?.campus || "EduHub Global Institute",
     instituteLogo: data?.instituteLogo || "",
     name: data?.name || "Danyal Mirza",
     classProgram:
       data?.classProgram ||
       (data?.gradeOrClass
-        ? `${data.gradeOrClass}${data.section ? (String(data.section).toLowerCase().startsWith("section") ? ` • ${data.section}` : ` • Section ${data.section}`) : ""}`
-        : data?.program || "Class 9 • Section A"),
-    rollNo: data?.rollNo || data?.roll || "EH-90214",
+        ? `${data.gradeOrClass}${data.section ? (String(data.section).toLowerCase().startsWith("section") ? ` • ${data.section}` : ` • Section ${data.section.replace(/^Section\s*/i, "")}`) : ""}`
+        : data?.program || "Class 10 • Section A"),
+    rollNo: data?.rollNo || data?.roll || data?.rollNumber || "EH-90214",
     fatherName: data?.fatherName || data?.guardian || "Tariq Mirza",
     guardianPhone:
       data?.guardianPhone ||
@@ -23,6 +32,16 @@ export default function StudentIdCard({ studentData, userRole = "student", onSav
       "+92 300 1234567",
     address: data?.address || "House 12, Street 4, Sector F-8/2, Islamabad",
     avatar: data?.avatar || data?.picture || "",
+    qrCodeData:
+      data?.qrCodeData ||
+      data?.qrToken ||
+      JSON.stringify({
+        app: "EduHub",
+        v: 1,
+        type: "STUDENT_ATTENDANCE",
+        studentId: data?._id || data?.id || data?.userId || "",
+        rollNo: data?.rollNo || data?.roll || "1",
+      }),
   });
 
   const [formData, setFormData] = useState(() => getInitialData(studentData));
@@ -50,7 +69,55 @@ export default function StudentIdCard({ studentData, userRole = "student", onSav
   const canEdit =
     userRole === "campus_manager" ||
     userRole === "admin" ||
-    userRole === "campus_admin";
+    userRole === "campus_admin" ||
+    userRole === "super_admin";
+
+  // Generate crisp QR code whenever qrCodeData or rollNo changes
+  useEffect(() => {
+    let active = true;
+    const payload =
+      formData.qrCodeData ||
+      JSON.stringify({
+        app: "EduHub",
+        v: 1,
+        type: "STUDENT_ATTENDANCE",
+        studentId: formData.studentId,
+        rollNo: formData.rollNo,
+      });
+
+    QRCode.toDataURL(payload, {
+      width: 200,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#0f172a",
+        light: "#ffffff",
+      },
+    })
+      .then((url) => {
+        if (active) setQrDataUrl(url);
+      })
+      .catch((err) => {
+        console.error("Failed to generate QR data URL:", err);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [formData.qrCodeData, formData.studentId, formData.rollNo]);
+
+  const handleRegenerate = async () => {
+    if (!onRegenerateQr || regenerating) return;
+    try {
+      setRegenerating(true);
+      const res = await onRegenerateQr(formData.studentId);
+      if (res?.qrCodeData) {
+        setFormData((prev) => ({ ...prev, qrCodeData: res.qrCodeData }));
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto select-none" style={{ gap: "16px" }}>
@@ -89,15 +156,30 @@ export default function StudentIdCard({ studentData, userRole = "student", onSav
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="inline-flex items-center text-xs font-medium text-neutral-700 hover:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer"
-                style={{ padding: "6px 12px", height: "34px", gap: "6px" }}
-              >
-                <Edit3 className="w-3.5 h-3.5 text-neutral-500" />
-                <span>Edit ID Card</span>
-              </button>
+              <div className="flex items-center" style={{ gap: "6px" }}>
+                {onRegenerateQr && (
+                  <button
+                    type="button"
+                    onClick={handleRegenerate}
+                    disabled={regenerating}
+                    title="Regenerate QR Code"
+                    className="inline-flex items-center text-xs font-medium text-neutral-700 hover:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                    style={{ padding: "6px 10px", height: "34px", gap: "5px" }}
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-neutral-500 ${regenerating ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">Regenerate QR</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center text-xs font-medium text-neutral-700 hover:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer"
+                  style={{ padding: "6px 12px", height: "34px", gap: "6px" }}
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-neutral-500" />
+                  <span>Edit ID Card</span>
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -214,17 +296,39 @@ export default function StudentIdCard({ studentData, userRole = "student", onSav
               )}
             </div>
 
-            {/* Bottom Section with Wider QR Code Space & Blue Accent Stripe */}
-            <div className="flex flex-col" style={{ padding: "0 16px 16px 16px", gap: "8px" }}>
+            {/* Bottom Section with Scannable QR Code & Blue Accent Stripe */}
+            <div className="flex flex-col items-center justify-center" style={{ padding: "0 16px 14px 16px", gap: "6px" }}>
               <div
-                className="w-full rounded-xl border border-dashed border-neutral-300 bg-neutral-50/70 flex flex-col items-center justify-center text-center"
-                style={{ height: "84px", padding: "8px" }}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50/70 flex flex-col items-center justify-center text-center shadow-2xs"
+                style={{ height: "96px", padding: "6px" }}
               >
-                <div className="flex items-center" style={{ gap: "6px" }}>
-                  <QrCode className="w-4 h-4 text-neutral-400" />
-                  <span className="text-[11px] font-medium text-neutral-500">QR Code Space</span>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="bg-white p-1 rounded-lg border border-neutral-200 shadow-2xs flex items-center justify-center">
+                    {qrDataUrl ? (
+                      <img
+                        src={qrDataUrl}
+                        alt={`QR Code for ${formData.name}`}
+                        className="w-16 h-16 object-contain"
+                        style={{ imageRendering: "pixelated" }}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 flex items-center justify-center bg-neutral-100 rounded">
+                        <QrCode className="w-6 h-6 text-neutral-400 animate-pulse" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col text-left justify-center">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-900">
+                      Attendance Pass
+                    </span>
+                    <span className="text-[11px] font-mono font-bold text-blue-700">
+                      {formData.rollNo}
+                    </span>
+                    <span className="text-[9px] text-neutral-500">
+                      Scan to record attendance
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[9px] text-neutral-400">(Reserved for backend verification)</span>
               </div>
               <div className="w-full bg-blue-600 rounded-md" style={{ height: "8px" }} />
             </div>
