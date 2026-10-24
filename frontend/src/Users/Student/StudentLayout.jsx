@@ -42,7 +42,6 @@ export default function StudentLayout() {
     ),
   );
   const location = useLocation();
-  const navigate = useNavigate();
   const nav = getStudentNav(isSchool);
 
   const pageLabel = {
@@ -53,6 +52,7 @@ export default function StudentLayout() {
     "/student/diary": isSchool ? "Daily Diary & Homework" : "Diary",
     "/student/grades": isSchool ? "Progress Report Card" : "Results",
     "/student/fees": isSchool ? "School Fee Challan" : "Fees",
+    "/student/transport": isSchool ? "School Bus & Route" : "Transport & Commute",
     "/student/messages": "Messages",
     "/student/timetable": isSchool ? "Class Routine & Timetable" : "Timetable",
     "/student/schedule": isSchool ? "Class Routine & Timetable" : "Timetable",

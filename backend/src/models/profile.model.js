@@ -47,6 +47,27 @@ const studentProfileSchema = new mongoose.Schema(
       relation: { type: String, default: "Parent" },
     },
     enrollmentDate: { type: Date, default: Date.now },
+    campusId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Campus",
+      default: null,
+      index: true,
+    },
+    usesTransport: { type: Boolean, default: false, index: true },
+    transportDetails: {
+      routeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Route",
+        default: null,
+      },
+      stopName: { type: String, trim: true, default: "" },
+      assignedAt: { type: Date, default: null },
+      assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+    },
     routeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Route",

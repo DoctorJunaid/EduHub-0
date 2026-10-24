@@ -671,16 +671,26 @@ export const assignStudentToRoute = async (req, res) => {
 
     // If routeId is null or empty, unassign student from transport
     if (!routeId || routeId === "none" || routeId === "") {
+      profile.usesTransport = false;
+      profile.transportDetails = null;
       profile.routeId = null;
       profile.stopName = "";
       profile.transportEnrolled = false;
       await profile.save();
+
+      if (profile.user) {
+        await User.findByIdAndUpdate(profile.user, {
+          usesTransport: false,
+          transportDetails: null,
+        });
+      }
 
       return res.status(200).json({
         success: true,
         message: "Student unassigned from transport successfully.",
         data: {
           studentId: profile._id,
+          usesTransport: false,
           transportEnrolled: false,
           route: null,
           stopName: "",
@@ -707,21 +717,39 @@ export const assignStudentToRoute = async (req, res) => {
       finalStopName = route.stops[0].stopName;
     }
 
+    const transportDetails = {
+      routeId: route._id,
+      stopName: finalStopName,
+      assignedAt: new Date(),
+      assignedBy: req.user?._id || null,
+    };
+
+    profile.usesTransport = true;
+    profile.transportDetails = transportDetails;
     profile.routeId = route._id;
     profile.stopName = finalStopName;
     profile.transportEnrolled = true;
     await profile.save();
+
+    if (profile.user) {
+      await User.findByIdAndUpdate(profile.user, {
+        usesTransport: true,
+        transportDetails,
+      });
+    }
 
     return res.status(200).json({
       success: true,
       message: `Student successfully mapped to ${route.routeName} at ${finalStopName}.`,
       data: {
         studentId: profile._id,
+        usesTransport: true,
         transportEnrolled: true,
         routeId: route._id,
         routeName: route.routeName,
         stopName: finalStopName,
         vehicle: route.vehicleId,
+        transportDetails,
       },
     });
   } catch (error) {
@@ -748,7 +776,14 @@ export const getTransportStudents = async (req, res) => {
       role: "student",
       isActive: { $ne: false },
     })
-      .select("name email phone gradeOrClass section rollNumber avatar")
+      .select("name email phone studentPhone gradeOrClass section roll rollNumber avatar usesTransport transportDetails")
+      .populate({
+        path: "transportDetails.routeId",
+        populate: {
+          path: "vehicleId",
+          populate: { path: "driverId" },
+        },
+      })
       .lean();
 
     const userIds = studentUsers.map((u) => u._id);
@@ -757,6 +792,13 @@ export const getTransportStudents = async (req, res) => {
     const profiles = await StudentProfile.find({
       user: { $in: userIds },
     })
+      .populate({
+        path: "transportDetails.routeId",
+        populate: {
+          path: "vehicleId",
+          populate: { path: "driverId" },
+        },
+      })
       .populate({
         path: "routeId",
         populate: {
@@ -773,32 +815,44 @@ export const getTransportStudents = async (req, res) => {
 
     const students = studentUsers.map((user) => {
       const prof = profileByUserId[String(user._id)];
-      const route = prof?.routeId;
-      const vehicle = route?.vehicleId;
-      const driver = vehicle?.driverId;
+      const route = user.transportDetails?.routeId || prof?.transportDetails?.routeId || prof?.routeId || null;
+      const vehicle = route?.vehicleId || null;
+      const driver = vehicle?.driverId || null;
+      const usesTransport = Boolean(
+        user.usesTransport ||
+        prof?.usesTransport ||
+        (prof?.transportEnrolled && (prof?.routeId || prof?.transportDetails?.routeId))
+      );
+      const stopName = user.transportDetails?.stopName || prof?.transportDetails?.stopName || prof?.stopName || "";
 
       return {
-        _id: prof?._id || user._id,
+        _id: user._id,
         userId: user._id,
+        profileId: prof?._id || user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone || prof?.guardianDetails?.phone || "",
+        phone: user.studentPhone || user.phone || prof?.guardianDetails?.phone || "",
         gradeOrClass: prof?.gradeOrClass || user.gradeOrClass || "",
         section: prof?.section || user.section || "",
-        rollNumber: prof?.rollNumber || user.rollNumber || "",
-        transportEnrolled: Boolean(prof?.transportEnrolled && prof?.routeId),
+        rollNumber: prof?.rollNumber || user.roll || user.rollNumber || "",
+        usesTransport,
+        transportEnrolled: usesTransport,
         routeId: route?._id || null,
-        routeName: route?.routeName || "",
-        stopName: prof?.stopName || "",
+        routeName: route?.routeName || (usesTransport ? "Route Pending" : ""),
+        stopName,
         vehicleNumber: vehicle?.busNumber || "",
         driverName: driver?.name || "",
         driverPhone: driver?.phone || "",
+        transportDetails: user.transportDetails || prof?.transportDetails || null,
       };
     });
 
+    const enrolledOnly = req.query.enrolledOnly === "true" || req.query.usesTransport === "true";
+    const filtered = enrolledOnly ? students.filter((s) => s.usesTransport) : students;
+
     return res.status(200).json({
       success: true,
-      data: students,
+      data: filtered,
     });
   } catch (error) {
     console.error("Error fetching transport students:", error);
@@ -829,39 +883,124 @@ export const getMyTransport = async (req, res) => {
       });
     }
 
-    // Find student profile
-    const profile = await StudentProfile.findOne({
-      $or: [
-        { user: mongoose.isValidObjectId(targetUserId) ? targetUserId : null },
-        { _id: mongoose.isValidObjectId(targetUserId) ? targetUserId : null },
-        { studentId: targetUserId },
-      ],
-    }).populate({
-      path: "routeId",
-      populate: {
-        path: "vehicleId",
-        populate: { path: "driverId" },
-      },
-    });
+    // Find student profile and user document
+    const [profile, userDoc] = await Promise.all([
+      StudentProfile.findOne({
+        $or: [
+          { user: mongoose.isValidObjectId(targetUserId) ? targetUserId : null },
+          { _id: mongoose.isValidObjectId(targetUserId) ? targetUserId : null },
+          { studentId: targetUserId },
+        ],
+      })
+        .populate({
+          path: "transportDetails.routeId",
+          populate: {
+            path: "vehicleId",
+            populate: { path: "driverId" },
+          },
+        })
+        .populate({
+          path: "routeId",
+          populate: {
+            path: "vehicleId",
+            populate: { path: "driverId" },
+          },
+        }),
+      User.findById(targetUserId)
+        .populate({
+          path: "transportDetails.routeId",
+          populate: {
+            path: "vehicleId",
+            populate: { path: "driverId" },
+          },
+        })
+        .lean(),
+    ]);
 
-    if (!profile || !profile.routeId) {
+    const assignedRoute =
+      profile?.transportDetails?.routeId ||
+      userDoc?.transportDetails?.routeId ||
+      profile?.routeId;
+
+    const assignedStopName =
+      profile?.transportDetails?.stopName ||
+      userDoc?.transportDetails?.stopName ||
+      profile?.stopName ||
+      "";
+
+    const usesTransport = Boolean(
+      profile?.usesTransport ||
+      userDoc?.usesTransport ||
+      assignedRoute ||
+      profile?.transportEnrolled
+    );
+
+    if (!usesTransport && !assignedRoute) {
       return res.status(200).json({
         success: true,
         assigned: false,
+        usesTransport: false,
         data: null,
-        message: "No transport route is currently assigned to this student profile.",
+        message: "No transport is currently active for this student.",
       });
     }
 
-    const route = profile.routeId;
+    // Handle deleted route or unassigned route gracefully without crashes
+    if (!assignedRoute || typeof assignedRoute !== "object" || !assignedRoute.routeName) {
+      return res.status(200).json({
+        success: true,
+        assigned: true,
+        usesTransport: true,
+        data: {
+          assigned: true,
+          usesTransport: true,
+          student: {
+            profileId: profile?._id,
+            stopName: assignedStopName || "Stop Pending",
+            transportEnrolled: true,
+          },
+          route: {
+            id: null,
+            routeName: "Assigned Route (Updated / Unassigned)",
+            status: "Inactive",
+            totalStops: 0,
+          },
+          stop: {
+            stopName: assignedStopName || "Pending Assignment",
+            pickupTime: "07:15 AM",
+            dropTime: "02:30 PM",
+            order: 1,
+          },
+          vehicle: {
+            id: null,
+            busNumber: "Pending Vehicle",
+            model: "—",
+            plateNumber: "—",
+            capacity: 0,
+            status: "Inactive",
+          },
+          driver: {
+            id: null,
+            name: "Driver Pending",
+            phone: "—",
+            licenseNumber: "—",
+            status: "Inactive",
+          },
+        },
+      });
+    }
+
+    const route = assignedRoute;
     const vehicle = route.vehicleId || null;
     const driver = vehicle?.driverId || null;
 
     // Find assigned stop details
     const matchedStop = (route.stops || []).find(
-      (s) => (s.stopName || "").trim().toLowerCase() === (profile.stopName || "").trim().toLowerCase()
+      (s) =>
+        (s.stopName || "").trim().toLowerCase() ===
+        assignedStopName.trim().toLowerCase()
     ) || (route.stops && route.stops[0]) || {
-      stopName: profile.stopName || "Designated Campus Stop",
+      stopName: assignedStopName || "Designated Campus Stop",
       pickupTime: "07:15 AM",
       dropTime: "02:30 PM",
       order: 1,
@@ -869,10 +1008,11 @@ export const getMyTransport = async (req, res) => {
 
     const transportData = {
       assigned: true,
+      usesTransport: true,
       student: {
-        profileId: profile._id,
-        stopName: profile.stopName || matchedStop.stopName,
-        transportEnrolled: profile.transportEnrolled ?? true,
+        profileId: profile?._id,
+        stopName: assignedStopName || matchedStop.stopName,
+        transportEnrolled: true,
       },
       route: {
         id: route._id,
@@ -897,7 +1037,7 @@ export const getMyTransport = async (req, res) => {
           }
         : {
             id: null,
-            busNumber: "Pending Assignment",
+            busNumber: "Pending Vehicle",
             model: "—",
             plateNumber: "—",
             capacity: 0,
@@ -923,6 +1063,7 @@ export const getMyTransport = async (req, res) => {
     return res.status(200).json({
       success: true,
       assigned: true,
+      usesTransport: true,
       data: transportData,
     });
   } catch (error) {

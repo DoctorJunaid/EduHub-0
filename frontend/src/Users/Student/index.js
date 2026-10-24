@@ -15,4 +15,4 @@ export { default as StudentFees } from './pages/Fees/StudentFees';
 export { default as StudentMessages } from './pages/Messages/StudentMessages';
 export { default as StudentTimetable } from './pages/Timetable/StudentTimetable';
 export { default as StudentIdCardPage } from './pages/IdCard/StudentIdCardPage';
-
+export { default as StudentTransport } from './pages/Transport/StudentTransport';

@@ -8,55 +8,65 @@ import {
   Headset,
   Calendar,
   QrCode,
+  Bus,
 } from "lucide-react";
 
-export const getStudentNav = (isSchool) => [
-  {
-    label: "Overview",
-    path: "/student/dashboard",
-    exact: true,
-    icon: <LayoutGrid size={20} />,
-  },
-  {
-    label: "Student ID Card",
-    path: "/student/id-card",
-    icon: <QrCode size={20} />,
-  },
-  {
-    label: isSchool ? "Class Routine & Timetable" : "Timetable",
-    path: "/student/timetable",
-    icon: <Calendar size={20} />,
-  },
-  {
-    label: isSchool ? "My Subjects" : "My Courses",
-    path: "/student/courses",
-    icon: <BookOpen size={20} />,
-  },
-  {
-    label: isSchool ? "Daily Diary & Homework" : "Assignments",
-    path: "/student/assignments",
-    icon: <FileText size={20} />,
-  },
-  {
-    label: "Attendance Record",
-    path: "/student/attendance",
-    icon: <CircleCheck size={20} />,
-  },
-  {
-    label: "Progress Report Card",
-    path: "/student/grades",
-    icon: <Award size={20} />,
-  },
-  {
-    label: isSchool ? "School Fee Challan" : "Fee Vouchers",
-    path: "/student/fees",
-    icon: <WalletCards size={20} />,
-  },
-  {
-    label: "Help & Support",
-    path: "/student/support",
-    icon: <Headset size={20} />,
-  },
-];
+export const getStudentNav = (isSchool, usesTransport = true) => {
+  const items = [
+    {
+      label: "Overview",
+      path: "/student/dashboard",
+      exact: true,
+      icon: <LayoutGrid size={20} />,
+    },
+    {
+      label: "Student ID Card",
+      path: "/student/id-card",
+      icon: <QrCode size={20} />,
+    },
+    {
+      label: isSchool ? "Class Routine & Timetable" : "Timetable",
+      path: "/student/timetable",
+      icon: <Calendar size={20} />,
+    },
+    {
+      label: isSchool ? "My Subjects" : "My Courses",
+      path: "/student/courses",
+      icon: <BookOpen size={20} />,
+    },
+    {
+      label: isSchool ? "Daily Diary & Homework" : "Assignments",
+      path: "/student/assignments",
+      icon: <FileText size={20} />,
+    },
+    {
+      label: "Attendance Record",
+      path: "/student/attendance",
+      icon: <CircleCheck size={20} />,
+    },
+    {
+      label: "Progress Report Card",
+      path: "/student/grades",
+      icon: <Award size={20} />,
+    },
+    {
+      label: isSchool ? "School Fee Challan" : "Fee Vouchers",
+      path: "/student/fees",
+      icon: <WalletCards size={20} />,
+    },
+    {
+      label: isSchool ? "School Bus & Route" : "Transport & Commute",
+      path: "/student/transport",
+      icon: <Bus size={20} />,
+    },
+    {
+      label: "Help & Support",
+      path: "/student/support",
+      icon: <Headset size={20} />,
+    },
+  ];
+
+  return items;
+};
 
 export const studentNavigation = getStudentNav(false);

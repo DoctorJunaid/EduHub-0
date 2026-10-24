@@ -49,6 +49,10 @@ router.use("/campus/faculty", (req, res, next) => {
   req.url = "/faculty" + (req.url === "/" ? "" : req.url);
   campusAdminRoutes(req, res, next);
 });
+router.use("/campus/students", (req, res, next) => {
+  req.url = "/students" + (req.url === "/" ? "" : req.url);
+  campusAdminRoutes(req, res, next);
+});
 
 router.use("/academic", academicRoutes);
 

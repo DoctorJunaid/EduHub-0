@@ -5,6 +5,8 @@ import {
   createStudentForCampus,
   removeStudentFromCampus,
   updateStudentInCampus,
+  updateStudentTransport,
+  handleStudentPost,
   getCampusFaculty,
   createFacultyForCampus,
   removeFacultyFromCampus,
@@ -102,11 +104,12 @@ router.get("/dashboard/stats", getDashboardStats);
 router
   .route("/students")
   .get(getCampusStudents)
-  .post(validateStudentId, addStudentToCampus);
+  .post(handleStudentPost);
 
 router.post("/students/new", checkActiveSubscription, checkStudentQuota, createStudentForCampus);
 router.delete("/students/:id", checkActiveSubscription, removeStudentFromCampus);
 router.put("/students/:id", checkActiveSubscription, updateStudentInCampus);
+router.put("/students/:id/transport", checkActiveSubscription, updateStudentTransport);
 router.route("/students/:id/id-card").get(getStudentIdCard).put(updateStudentIdCard).patch(updateStudentIdCard);
 router.get("/students/:id/payments", getStudentPayments);
 

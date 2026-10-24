@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   Bus,
   Users,
@@ -567,74 +568,7 @@ export default function TransportManagement() {
 
   return (
     <div className="campus-tab-page transport-page">
-      {/* ── 1. Top Tabs Bar (Strictly At Very Top) ── */}
-      <div className="transport-top-tabs-bar" role="tablist" aria-label="Transport Sections">
-        <div className="transport-tabs-nav">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "routes"}
-            className={`transport-tab-btn ${activeTab === "routes" ? "is-active" : ""}`}
-            onClick={() => {
-              setActiveTab("routes");
-              setSearchQuery("");
-            }}
-          >
-            <MapPin className="w-4 h-4" />
-            <span>Routes & Stops</span>
-            <span className="transport-tab-badge">{routes.length}</span>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "vehicles"}
-            className={`transport-tab-btn ${activeTab === "vehicles" ? "is-active" : ""}`}
-            onClick={() => {
-              setActiveTab("vehicles");
-              setSearchQuery("");
-            }}
-          >
-            <Bus className="w-4 h-4" />
-            <span>Vehicles & Buses</span>
-            <span className="transport-tab-badge">{vehicles.length}</span>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "drivers"}
-            className={`transport-tab-btn ${activeTab === "drivers" ? "is-active" : ""}`}
-            onClick={() => {
-              setActiveTab("drivers");
-              setSearchQuery("");
-            }}
-          >
-            <Users className="w-4 h-4" />
-            <span>Drivers</span>
-            <span className="transport-tab-badge">{drivers.length}</span>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "students"}
-            className={`transport-tab-btn ${activeTab === "students" ? "is-active" : ""}`}
-            onClick={() => {
-              setActiveTab("students");
-              setSearchQuery("");
-            }}
-          >
-            <UserCheck className="w-4 h-4" />
-            <span>Student Commuters</span>
-            <span className="transport-tab-badge">
-              {students.filter((s) => s.transportEnrolled).length}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── 2. Flush Border-to-Border Thin KPI Cards (Below Tabs) ── */}
+      {/* ── 1. Flush Border-to-Border Thin KPI Cards ── */}
       <div className="campus-kpi-track transport-kpi-track">
         <div
           className={`campus-kpi-card ${activeTab === "routes" ? "kpi-card-active" : ""}`}
@@ -769,6 +703,15 @@ export default function TransportManagement() {
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             Load Sample Scenario
           </button>
+
+          <Link
+            to="/campus/transport-directory"
+            className="toolbar-btn toolbar-btn-outline inline-flex items-center gap-1.5"
+            title="View Enrolled Students Transport Directory"
+          >
+            <UserCheck className="w-3.5 h-3.5 text-primary" />
+            Transport Directory
+          </Link>
 
           <span className="toolbar-separator" />
 

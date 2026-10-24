@@ -148,6 +148,12 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <Bus size={20} />,
   },
   {
+    label: "Transport Directory",
+    path: "/campus/transport-directory",
+    group: "Operations",
+    icon: <Users size={20} />,
+  },
+  {
     label: "Fee Management",
     path: "/fees",
     group: "Finance",
