@@ -7,6 +7,14 @@ import { Users, School, GraduationCap, Check, BookOpen, Bus } from "lucide-react
 import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { studentStatuses } from "./studentData.js";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -72,9 +80,29 @@ export default function StudentForm({
   );
 
   // Transport state
+  const [requiresTransport, setRequiresTransport] = useState(() => {
+    return Boolean(
+      student?.usesTransport ||
+      student?.transportEnrolled ||
+      student?.transportDetails?.routeId ||
+      student?.routeId
+    );
+  });
   const [transportRoutes, setTransportRoutes] = useState([]);
-  const [selectedTransportRouteId, setSelectedTransportRouteId] = useState("");
-  const [selectedTransportStopName, setSelectedTransportStopName] = useState("");
+  const [selectedTransportRouteId, setSelectedTransportRouteId] = useState(
+    () =>
+      student?.transportDetails?.routeId?._id ||
+      student?.transportDetails?.routeId ||
+      student?.routeId?._id ||
+      student?.routeId ||
+      ""
+  );
+  const [selectedTransportStopName, setSelectedTransportStopName] = useState(
+    () =>
+      student?.transportDetails?.stopName ||
+      student?.stopName ||
+      ""
+  );
 
   const safeCampuses = useMemo(() => {
     const rawList = (campuses || []).map((c) =>
@@ -172,14 +200,33 @@ export default function StudentForm({
     if (student?.id || student?._id) {
       getMyTransportApi(student.id || student._id)
         .then((res) => {
-          if (res?.success && res.data?.route?.id) {
-            setSelectedTransportRouteId(res.data.route.id);
-            setSelectedTransportStopName(res.data.stop?.stopName || "");
+          if (res?.success && (res.assigned || res.usesTransport)) {
+            setRequiresTransport(true);
+            if (res.data?.route?.id) {
+              setSelectedTransportRouteId(res.data.route.id);
+            }
+            if (res.data?.stop?.stopName) {
+              setSelectedTransportStopName(res.data.stop.stopName);
+            }
           }
         })
         .catch(() => {});
     }
   }, [student]);
+
+  const handleToggleTransport = (checked) => {
+    setRequiresTransport(checked);
+    if (!checked) {
+      setSelectedTransportRouteId("");
+      setSelectedTransportStopName("");
+    }
+  };
+
+  const selectedRouteStops = useMemo(() => {
+    if (!selectedTransportRouteId) return [];
+    const r = transportRoutes.find((rt) => rt._id === selectedTransportRouteId);
+    return r?.stops || [];
+  }, [transportRoutes, selectedTransportRouteId]);
 
   // When a grade is selected, fetch corresponding sections and grade-subjects
   useEffect(() => {
@@ -409,6 +456,10 @@ export default function StudentForm({
       saved.sectionId = selectedSectionId;
     }
 
+    saved.usesTransport = requiresTransport;
+    saved.routeId = requiresTransport ? selectedTransportRouteId : null;
+    saved.stopName = requiresTransport ? selectedTransportStopName : "";
+
     const problems = studentIdentityErrors(
       saved,
       records,
@@ -425,11 +476,11 @@ export default function StudentForm({
       const savedStudent = await onSave(saved);
       const targetStudentId =
         student?.id || student?._id || savedStudent?._id || savedStudent?.data?._id;
-      if (targetStudentId && selectedTransportRouteId) {
+      if (targetStudentId) {
         await assignStudentToRouteApi({
           studentId: targetStudentId,
-          routeId: selectedTransportRouteId,
-          stopName: selectedTransportStopName,
+          routeId: requiresTransport ? selectedTransportRouteId : null,
+          stopName: requiresTransport ? selectedTransportStopName : "",
         }).catch(() => {});
       }
     } finally {
@@ -807,61 +858,99 @@ export default function StudentForm({
           </div>
           <div className="activity-form-field"></div>
 
-          <div className="activity-section-title">Transport & Bus Commute</div>
-          <div className="activity-form-field">
-            <Label htmlFor={`${id}-transportRoute`}>Assigned Transit Route</Label>
-            <select
-              id={`${id}-transportRoute`}
-              name="transportRoute"
-              value={selectedTransportRouteId}
-              onChange={(e) => {
-                const rId = e.target.value;
-                setSelectedTransportRouteId(rId);
-                const r = transportRoutes.find((rt) => rt._id === rId);
-                setSelectedTransportStopName(r?.stops?.[0]?.stopName || "");
-              }}
-            >
-              <option value="">-- No Bus Route (Self Commuter) --</option>
-              {transportRoutes.map((r) => (
-                <option key={r._id} value={r._id}>
-                  {r.routeName} ({r.vehicleId?.busNumber || "Bus pending"})
-                </option>
-              ))}
-            </select>
+          <div className="activity-section-title flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Bus className="w-4 h-4 text-primary" />
+              Transport & Commute
+            </span>
           </div>
 
-          <div className="activity-form-field">
-            <Label htmlFor={`${id}-transportStop`}>Designated Stop & Pickup Time</Label>
-            {(() => {
-              const curR = transportRoutes.find((r) => r._id === selectedTransportRouteId);
-              const stops = curR?.stops || [];
-              if (stops.length > 0) {
-                return (
-                  <select
-                    id={`${id}-transportStop`}
-                    name="transportStop"
-                    value={selectedTransportStopName}
-                    onChange={(e) => setSelectedTransportStopName(e.target.value)}
+          <div className="activity-form-field col-span-full bg-zinc-50/80 dark:bg-zinc-900/40 p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 transition-all">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label
+                  htmlFor={`${id}-requiresTransport`}
+                  className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-2"
+                >
+                  Requires Transport
+                  {requiresTransport && (
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                      Yes
+                    </span>
+                  )}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Toggle ON if the student requires school / campus transit service.
+                </p>
+              </div>
+              <Switch
+                id={`${id}-requiresTransport`}
+                checked={requiresTransport}
+                onCheckedChange={handleToggleTransport}
+              />
+            </div>
+
+            {requiresTransport && (
+              <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${id}-transportRoute`} className="text-xs font-semibold text-foreground">
+                    Assigned Transit Route *
+                  </Label>
+                  <Select
+                    value={selectedTransportRouteId || ""}
+                    onValueChange={(rId) => {
+                      setSelectedTransportRouteId(rId);
+                      const r = transportRoutes.find((rt) => rt._id === rId);
+                      setSelectedTransportStopName(r?.stops?.[0]?.stopName || "");
+                    }}
                   >
-                    <option value="">-- Select Stop --</option>
-                    {stops.map((s, idx) => (
-                      <option key={s._id || idx} value={s.stopName}>
-                        {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
-                      </option>
-                    ))}
-                  </select>
-                );
-              }
-              return (
-                <input
-                  id={`${id}-transportStop`}
-                  name="transportStop"
-                  placeholder="e.g. Stop 2: Market"
-                  value={selectedTransportStopName}
-                  onChange={(e) => setSelectedTransportStopName(e.target.value)}
-                />
-              );
-            })()}
+                    <SelectTrigger id={`${id}-transportRoute`} className="w-full bg-white dark:bg-zinc-900">
+                      <SelectValue placeholder="-- Select Transit Route --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {transportRoutes.map((r) => (
+                        <SelectItem key={r._id} value={r._id}>
+                          {r.routeName} ({r.vehicleId?.busNumber || "Bus pending"})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${id}-transportStop`} className="text-xs font-semibold text-foreground">
+                    Designated Stop & Pickup Time *
+                  </Label>
+                  {selectedRouteStops.length > 0 ? (
+                    <Select
+                      value={selectedTransportStopName || ""}
+                      onValueChange={(val) => setSelectedTransportStopName(val)}
+                    >
+                      <SelectTrigger id={`${id}-transportStop`} className="w-full bg-white dark:bg-zinc-900">
+                        <SelectValue placeholder="-- Select Stop --" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedRouteStops.map((s, idx) => (
+                          <SelectItem key={s._id || idx} value={s.stopName}>
+                            {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <input
+                      id={`${id}-transportStop`}
+                      name="transportStop"
+                      className="flex h-9 w-full rounded-md border border-input bg-white dark:bg-zinc-900 px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder={selectedTransportRouteId ? "e.g. Stop 2: Market" : "Select a transit route first"}
+                      value={selectedTransportStopName}
+                      disabled={!selectedTransportRouteId}
+                      onChange={(e) => setSelectedTransportStopName(e.target.value)}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="activity-section-title">

@@ -199,6 +199,32 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    usesTransport: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    transportDetails: {
+      routeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Route",
+        default: null,
+      },
+      stopName: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      assignedAt: {
+        type: Date,
+        default: null,
+      },
+      assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+    },
     passwordVersion: {
       type: Number,
       default: 0,

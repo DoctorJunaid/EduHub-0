@@ -3,6 +3,7 @@ import Campus from "../models/campus.model.js";
 import Institute from "../models/institute.model.js";
 import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
 import { Grade, Section, Subject, GradeSubject } from "../models/academic.model.js";
+import { Route } from "../models/transport.model.js";
 import { logActivity } from "../models/activityLog.model.js";
 import feeService from "../services/fee.service.js";
 
@@ -34,12 +35,23 @@ export const getCampusStudents = async (req, res) => {
       query.instituteId = req.user.instituteId;
     }
 
+    if (req.query?.usesTransport !== undefined) {
+      query.usesTransport = req.query.usesTransport === "true" || req.query.usesTransport === true;
+    }
+
     const students = await User.find(query)
       .select("-passwordHash")
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")
       .populate("gradeId", "name code")
       .populate("sectionId", "name code")
+      .populate({
+        path: "transportDetails.routeId",
+        populate: {
+          path: "vehicleId",
+          populate: { path: "driverId" },
+        },
+      })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -49,6 +61,8 @@ export const getCampusStudents = async (req, res) => {
       institute: s.instituteId?.name || s.institute || "",
       gradeOrClass: s.gradeId?.name || s.gradeOrClass || "",
       section: s.sectionId?.name || s.section || "",
+      usesTransport: Boolean(s.usesTransport),
+      transportDetails: s.transportDetails || null,
     }));
 
     return res.status(200).json({
@@ -281,6 +295,30 @@ export const createStudentForCampus = async (req, res) => {
       }
     }
 
+    const isUsingTransport =
+      req.body.usesTransport === true ||
+      req.body.usesTransport === "true" ||
+      Boolean(req.body.routeId && req.body.routeId !== "none");
+
+    const transportRouteId =
+      isUsingTransport && req.body.routeId && req.body.routeId !== "none"
+        ? req.body.routeId
+        : null;
+
+    const transportStopName =
+      isUsingTransport && req.body.stopName
+        ? String(req.body.stopName).trim()
+        : "";
+
+    const transportDetails = isUsingTransport
+      ? {
+          routeId: transportRouteId,
+          stopName: transportStopName,
+          assignedAt: new Date(),
+          assignedBy: req.user?._id || null,
+        }
+      : null;
+
     const student = await User.create({
       name: name.trim(),
       email: cleanEmail,
@@ -304,6 +342,8 @@ export const createStudentForCampus = async (req, res) => {
       status: status || "Active",
       passwordHash: password || "student123",
       baseFee: req.body.baseFee ? Number(req.body.baseFee) : 0,
+      usesTransport: isUsingTransport,
+      transportDetails: transportDetails,
     });
 
     await student.populate([
@@ -311,6 +351,13 @@ export const createStudentForCampus = async (req, res) => {
       { path: "instituteId", select: "name type board" },
       { path: "gradeId", select: "name code" },
       { path: "sectionId", select: "name code" },
+      {
+        path: "transportDetails.routeId",
+        populate: {
+          path: "vehicleId",
+          populate: { path: "driverId" },
+        },
+      },
     ]);
 
     const studentResponse = student.toObject();
@@ -319,6 +366,8 @@ export const createStudentForCampus = async (req, res) => {
     studentResponse.institute = student.instituteId?.name || "";
     studentResponse.gradeOrClass = student.gradeId?.name || student.gradeOrClass || "";
     studentResponse.section = student.sectionId?.name || student.section || "";
+    studentResponse.usesTransport = isUsingTransport;
+    studentResponse.transportDetails = transportDetails;
 
     // Sync StudentProfile so downstream services (attendance, fees, payroll, exams) find the profile
     try {
@@ -339,6 +388,11 @@ export const createStudentForCampus = async (req, res) => {
             phone: student.guardianPhone || student.phone || "",
             relation: "Parent",
           },
+          usesTransport: isUsingTransport,
+          transportDetails: transportDetails,
+          routeId: transportRouteId,
+          stopName: transportStopName,
+          transportEnrolled: isUsingTransport && Boolean(transportRouteId),
           isActive: student.status !== "Inactive",
         },
         { upsert: true, new: true }
@@ -645,6 +699,9 @@ export const updateStudentInCampus = async (req, res) => {
       "status",
       "isActive",
       "baseFee",
+      "usesTransport",
+      "routeId",
+      "stopName",
     ];
 
     const updateData = {};
@@ -656,6 +713,26 @@ export const updateStudentInCampus = async (req, res) => {
 
     if (updateData.studentPhone && !updateData.phone) {
       updateData.phone = updateData.studentPhone;
+    }
+
+    let transportDetailsPayload = undefined;
+    if (req.body.usesTransport !== undefined) {
+      const isUsing = req.body.usesTransport === true || req.body.usesTransport === "true";
+      updateData.usesTransport = isUsing;
+      if (isUsing) {
+        const routeId = req.body.routeId && req.body.routeId !== "none" ? req.body.routeId : null;
+        const stopName = req.body.stopName ? String(req.body.stopName).trim() : "";
+        transportDetailsPayload = {
+          routeId,
+          stopName,
+          assignedAt: new Date(),
+          assignedBy: req.user?._id || null,
+        };
+        updateData.transportDetails = transportDetailsPayload;
+      } else {
+        transportDetailsPayload = null;
+        updateData.transportDetails = null;
+      }
     }
 
     // Resolve Grade and Section dynamically if modified
@@ -700,7 +777,14 @@ export const updateStudentInCampus = async (req, res) => {
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")
       .populate("gradeId", "name code")
-      .populate("sectionId", "name code");
+      .populate("sectionId", "name code")
+      .populate({
+        path: "transportDetails.routeId",
+        populate: {
+          path: "vehicleId",
+          populate: { path: "driverId" },
+        },
+      });
 
     if (!student) {
       return res
@@ -710,23 +794,35 @@ export const updateStudentInCampus = async (req, res) => {
 
     // Sync StudentProfile so downstream services stay updated
     try {
+      const profileUpdates = {
+        user: student._id,
+        campusId: student.campusId,
+        studentId: student.roll || String(student._id),
+        gradeId: student.gradeId || null,
+        sectionId: student.sectionId || null,
+        gradeOrClass: student.gradeOrClass || student.program || "Class 9",
+        section: student.section || "A",
+        rollNumber: student.roll || "1",
+        guardianDetails: {
+          name: student.guardian || "Guardian",
+          phone: student.guardianPhone || student.phone || "",
+          relation: "Parent",
+        },
+        isActive: student.status !== "Inactive",
+      };
+
+      if (req.body.usesTransport !== undefined) {
+        const isUsing = req.body.usesTransport === true || req.body.usesTransport === "true";
+        profileUpdates.usesTransport = isUsing;
+        profileUpdates.transportDetails = transportDetailsPayload;
+        profileUpdates.routeId = isUsing ? transportDetailsPayload?.routeId : null;
+        profileUpdates.stopName = isUsing ? transportDetailsPayload?.stopName : "";
+        profileUpdates.transportEnrolled = isUsing && Boolean(transportDetailsPayload?.routeId);
+      }
+
       await StudentProfile.findOneAndUpdate(
         { user: student._id },
-        {
-          user: student._id,
-          studentId: student.roll || String(student._id),
-          gradeId: student.gradeId || null,
-          sectionId: student.sectionId || null,
-          gradeOrClass: student.gradeOrClass || student.program || "Class 9",
-          section: student.section || "A",
-          rollNumber: student.roll || "1",
-          guardianDetails: {
-            name: student.guardian || "Guardian",
-            phone: student.guardianPhone || student.phone || "",
-            relation: "Parent",
-          },
-          isActive: student.status !== "Inactive",
-        },
+        profileUpdates,
         { upsert: true, new: true }
       );
     } catch (profileErr) {
@@ -750,11 +846,132 @@ export const updateStudentInCampus = async (req, res) => {
     studentResponse.institute = student.instituteId?.name || "";
     studentResponse.gradeOrClass = student.gradeId?.name || student.gradeOrClass || "";
     studentResponse.section = student.sectionId?.name || student.section || "";
+    studentResponse.usesTransport = Boolean(student.usesTransport);
+    studentResponse.transportDetails = student.transportDetails || null;
 
     return res.status(200).json({ success: true, data: studentResponse });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// @desc    Assign or remove transport for a student
+// @route   PUT /api/v1/campus-admin/students/:id/transport or PUT /api/v1/campus/students/:id/transport
+// @access  Private / Campus Admin & Manager
+export const updateStudentTransport = async (req, res) => {
+  try {
+    const campusId = req.user?.campusId?._id || req.user?.campusId;
+    const studentId = req.params.id;
+    const { usesTransport, routeId, stopName } = req.body;
+
+    if (!campusId && req.user?.role !== "super_admin") {
+      return res.status(400).json({ success: false, message: "Campus context required" });
+    }
+
+    const query = { _id: studentId, role: "student" };
+    if (campusId) query.campusId = campusId;
+
+    const student = await User.findOne(query);
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found in this campus" });
+    }
+
+    const isUsing = usesTransport === true || usesTransport === "true";
+    let transportDetails = null;
+    let finalRouteId = null;
+    let finalStopName = "";
+
+    if (isUsing) {
+      finalRouteId = routeId && routeId !== "none" ? routeId : null;
+      finalStopName = (stopName || "").trim();
+
+      if (finalRouteId) {
+        const routeDoc = await Route.findOne({ _id: finalRouteId, campusId });
+        if (routeDoc && !finalStopName && routeDoc.stops?.length > 0) {
+          finalStopName = routeDoc.stops[0].stopName;
+        }
+      }
+
+      transportDetails = {
+        routeId: finalRouteId,
+        stopName: finalStopName,
+        assignedAt: new Date(),
+        assignedBy: req.user?._id || null,
+      };
+
+      student.usesTransport = true;
+      student.transportDetails = transportDetails;
+    } else {
+      student.usesTransport = false;
+      student.transportDetails = null;
+    }
+
+    await student.save();
+
+    // Synchronize StudentProfile
+    const profile = await StudentProfile.findOneAndUpdate(
+      { user: student._id },
+      {
+        user: student._id,
+        campusId: student.campusId,
+        studentId: student.roll || String(student._id),
+        usesTransport: isUsing,
+        transportDetails: isUsing ? transportDetails : null,
+        routeId: isUsing ? finalRouteId : null,
+        stopName: isUsing ? finalStopName : "",
+        transportEnrolled: isUsing && Boolean(finalRouteId),
+      },
+      { upsert: true, new: true }
+    ).populate({
+      path: "transportDetails.routeId",
+      populate: {
+        path: "vehicleId",
+        populate: { path: "driverId" },
+      },
+    });
+
+    logActivity({
+      campus: campusId,
+      action: isUsing ? "student_transport_assigned" : "student_transport_removed",
+      category: "transport",
+      title: isUsing ? "Student Transport Assigned" : "Student Transport Removed",
+      description: isUsing
+        ? `${student.name} assigned to transport (Stop: ${finalStopName || "Default"})`
+        : `Transport removed for ${student.name}`,
+      entityType: "student",
+      entityId: student._id,
+      performedBy: req.user?._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: isUsing
+        ? "Transport assigned successfully."
+        : "Transport removed successfully.",
+      data: {
+        _id: student._id,
+        name: student.name,
+        email: student.email,
+        usesTransport: isUsing,
+        transportDetails: isUsing ? transportDetails : null,
+        profile,
+      },
+    });
+  } catch (error) {
+    console.error("Update Student Transport Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update student transport",
+    });
+  }
+};
+
+// @desc    Dispatch POST /students: If body has name/email -> admission; else -> student assignment
+export const handleStudentPost = async (req, res, next) => {
+  if (req.body?.name && req.body?.email) {
+    return createStudentForCampus(req, res);
+  }
+  return addStudentToCampus(req, res);
 };
 
 // @desc    Update a faculty in the campus

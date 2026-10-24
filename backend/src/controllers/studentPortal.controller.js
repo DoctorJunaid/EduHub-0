@@ -539,9 +539,15 @@ export const getStudentPortal = async (req, res) => {
       FeeRecord.find({ campusId, studentId: student._id }).sort({ dueDate: -1 }).lean(),
       PaymentTransaction.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
       Performance.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
-      StudentProfile.findOne({ user: student._id })
+      StudentProfile.findOne({
+        $or: [{ user: student._id }, { _id: student._id }],
+      })
         .populate({
           path: "routeId",
+          populate: { path: "vehicleId", populate: { path: "driverId" } },
+        })
+        .populate({
+          path: "transportDetails.routeId",
           populate: { path: "vehicleId", populate: { path: "driverId" } },
         })
         .lean(),
@@ -768,6 +774,30 @@ export const getStudentPortal = async (req, res) => {
           section,
           subjects: subjects.map((s) => s.name).join(", "),
           classTeacher,
+          usesTransport: Boolean(
+            studentProfileWithTransport?.usesTransport ||
+            student?.usesTransport ||
+            studentProfileWithTransport?.routeId ||
+            studentProfileWithTransport?.transportDetails?.routeId ||
+            student?.transportDetails?.routeId ||
+            studentProfileWithTransport?.transportEnrolled
+          ),
+          transportEnrolled: Boolean(
+            studentProfileWithTransport?.transportEnrolled ||
+            studentProfileWithTransport?.usesTransport ||
+            student?.usesTransport ||
+            studentProfileWithTransport?.routeId ||
+            studentProfileWithTransport?.transportDetails?.routeId
+          ),
+          transportDetails:
+            studentProfileWithTransport?.transportDetails ||
+            student.transportDetails ||
+            (studentProfileWithTransport?.routeId
+              ? {
+                  routeId: studentProfileWithTransport.routeId,
+                  stopName: studentProfileWithTransport.stopName,
+                }
+              : null),
         },
         classTeacher,
         subjects,
@@ -846,23 +876,39 @@ export const getStudentPortal = async (req, res) => {
           updatedAt: row.updatedAt,
         })),
         transport: (() => {
-          if (!studentProfileWithTransport?.routeId) return null;
-          const r = studentProfileWithTransport.routeId;
+          const r =
+            studentProfileWithTransport?.transportDetails?.routeId ||
+            studentProfileWithTransport?.routeId ||
+            student?.transportDetails?.routeId;
+          if (!r) return null;
           const v = r.vehicleId || null;
           const d = v?.driverId || null;
-          const matched = (r.stops || []).find(
-            (s) => (s.stopName || "").trim().toLowerCase() === (studentProfileWithTransport.stopName || "").trim().toLowerCase()
-          ) || (r.stops && r.stops[0]) || {
-            stopName: studentProfileWithTransport.stopName || "Designated Campus Stop",
-            pickupTime: "07:15 AM",
-            dropTime: "02:30 PM",
-            order: 1,
-          };
+          const assignedStopName =
+            studentProfileWithTransport?.transportDetails?.stopName ||
+            studentProfileWithTransport?.stopName ||
+            student?.transportDetails?.stopName ||
+            "";
+          const matched =
+            (r.stops || []).find(
+              (s) =>
+                (s.stopName || "").trim().toLowerCase() ===
+                assignedStopName.trim().toLowerCase()
+            ) ||
+            (r.stops && r.stops[0]) || {
+              stopName: assignedStopName || "Designated Campus Stop",
+              pickupTime: "07:15 AM",
+              dropTime: "02:30 PM",
+              order: 1,
+            };
           return {
             assigned: true,
+            usesTransport: true,
             route: {
               id: id(r._id),
               routeName: r.routeName,
+              startPoint: r.startPoint,
+              endPoint: r.endPoint,
+              stops: r.stops,
               status: r.status,
             },
             stop: {

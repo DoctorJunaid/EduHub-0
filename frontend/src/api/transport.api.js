@@ -97,3 +97,9 @@ export const seedTransportPresetApi = async () => {
   return response.data;
 };
 
+// Update student transport details via dedicated endpoint
+export const updateStudentTransportApi = async (studentId, data) => {
+  const response = await axiosInstance.put(`/campus-admin/students/${studentId}/transport`, data);
+  return response.data;
+};
+

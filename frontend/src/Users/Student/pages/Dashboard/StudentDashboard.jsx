@@ -17,6 +17,7 @@ import {
   Clock3,
   ArrowRight,
   Users,
+  User,
   GraduationCap,
   MessageSquare,
   Mail,
@@ -44,25 +45,13 @@ import { timeLabel, dayLabel } from "@/lib/schedule";
 import { useInstitution } from "@/context/InstitutionContext";
 import { PageLoader } from "@/components/ui/spinner";
 import useStudentPortal from "@/hooks/useStudentPortal";
+import { useQuery } from "@tanstack/react-query";
 import { getMyTransportApi } from "@/api/transport.api";
 import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const { isSchool } = useInstitution();
   const { isLoading, classTeacher, subjects, transport: portalTransport } = useStudentPortal();
-  const [directTransport, setDirectTransport] = useState(null);
-
-  useEffect(() => {
-    getMyTransportApi()
-      .then((res) => {
-        if (res?.success && res.assigned) {
-          setDirectTransport(res.data);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const transport = directTransport || portalTransport;
 
   const { student, courses = [], timetable = [], attendance } = useSelector(
     selectStudentDashboard,
@@ -70,6 +59,23 @@ export default function StudentDashboard() {
   const diary = useSelector(selectStudentDiary) || [];
   const assignments = useSelector(selectStudentAssignments) || [];
   const [today, setToday] = useState(() => dateKey(new Date()));
+
+  const targetStudentId = student?.id || student?._id;
+  const { data: transportResponse } = useQuery({
+    queryKey: ["transport", "my-transport", targetStudentId],
+    queryFn: () => getMyTransportApi(targetStudentId),
+    enabled: Boolean(targetStudentId),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const transport = transportResponse?.data || portalTransport || null;
+  const isEnrolledInTransport = Boolean(
+    transport?.assigned ||
+    transport?.usesTransport ||
+    student?.usesTransport ||
+    student?.transportEnrolled ||
+    transport?.route?.routeName
+  );
   useEffect(() => {
     let timer;
     const refreshDay = () => {
@@ -194,78 +200,112 @@ export default function StudentDashboard() {
         </Card>
       )}
 
-      {/* ── Transport Card (Scenario: Bus #12, Driver Ali, Stop, Pickup Time) ── */}
-      {transport?.assigned ? (
-        <Card className="sd-transport-card p-3.5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-zinc-200 bg-white dark:bg-zinc-900/60 dark:border-zinc-800 shadow-sm relative overflow-hidden">
-          <div className="flex items-start sm:items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-              <Bus className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {transport.route?.routeName || "Campus Transit Route"}
-                </span>
-                <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 font-medium">
-                  Active Commuter
-                </Badge>
-              </div>
-              <h3 className="text-sm font-bold text-foreground leading-snug truncate">
-                {transport.vehicle?.busNumber || "Bus #12"}{" "}
-                <span className="text-xs font-normal text-muted-foreground">
-                  ({transport.vehicle?.model || "Toyota Coaster"} · {transport.vehicle?.plateNumber || "ABC-123"})
-                </span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap w-full md:w-auto shrink-0">
-            {/* Designated Stop & Timing */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-xs">
-              <Clock className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
-              <div>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground block leading-tight">
-                  Designated Stop
-                </span>
-                <strong className="text-foreground leading-tight">{transport.stop?.stopName || "Stop 2: Market"}</strong>
-                <span className="text-muted-foreground block text-[11px] leading-tight">
-                  Pickup: {transport.stop?.pickupTime || "07:15 AM"}
-                </span>
-              </div>
-            </div>
-
-            {/* Driver Ali Contact */}
-            <div className="flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-xs">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground block leading-tight">
-                  Driver Contact
-                </span>
-                <strong className="text-foreground leading-tight">
-                  {transport.driver?.name || "Ali Ahmed"}
-                </strong>
-                <span className="text-muted-foreground block text-[11px] leading-tight">
-                  {transport.driver?.phone || "+92 300 1234567"}
-                </span>
-              </div>
-              {transport.driver?.phone && transport.driver?.phone !== "—" && (
-                <Button size="sm" variant="outline" asChild className="h-7 text-xs gap-1 border-zinc-200 hover:bg-zinc-100">
-                  <a href={`tel:${transport.driver.phone}`}>
-                    <Phone className="w-3 h-3 text-emerald-600" />
-                    Call
-                  </a>
-                </Button>
-              )}
-            </div>
-          </div>
-        </Card>
-      ) : null}
-
       <div className="sd-stats">
         {stats.map((stat) => (
           <SummaryCard key={stat.label} {...stat} className="sd-stat" />
         ))}
       </div>
+
+      {/* ── Student Transport Details Card ── */}
+      <Card className="sd-transport-card p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Bus className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold text-foreground">
+                  {isEnrolledInTransport
+                    ? transport?.route?.routeName || "Assigned Campus Bus Route"
+                    : "School Bus & Commute"}
+                </h3>
+                <Badge
+                  variant="outline"
+                  className={
+                    isEnrolledInTransport
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-300 text-[10px] font-bold py-0"
+                      : "bg-zinc-100 text-zinc-600 border-zinc-200 text-[10px] font-medium py-0"
+                  }
+                >
+                  {isEnrolledInTransport ? "Enrolled Commuter" : "Self Commuter"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isEnrolledInTransport
+                  ? `Designated stop: ${transport?.stop?.stopName || "Designated stop"} · Bus ${transport?.vehicle?.busNumber || "Assigned"}`
+                  : "Campus bus service not assigned to this student profile."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {isEnrolledInTransport && transport?.driver?.phone && transport.driver.phone !== "—" && (
+              <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                <a href={`tel:${transport.driver.phone}`}>
+                  <Phone className="w-3 h-3 text-emerald-600" />
+                  Call Driver
+                </a>
+              </Button>
+            )}
+            <Button size="sm" variant="outline" asChild className="h-7 text-xs gap-1 border-zinc-200 hover:bg-zinc-100">
+              <Link to="/student/transport">
+                View Transport Details
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {isEnrolledInTransport ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                <Bus className="w-3 h-3 text-blue-600" /> Assigned Bus
+              </span>
+              <strong className="text-sm font-bold text-foreground block truncate">
+                {transport?.vehicle?.busNumber || "Bus #12"}
+              </strong>
+              <span className="text-xs text-muted-foreground block truncate">
+                {transport?.vehicle?.model || "Toyota Coaster"} · {transport?.vehicle?.plateNumber || "ABC-123"}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-emerald-600" /> Pickup Stop & Timing
+              </span>
+              <strong className="text-sm font-bold text-foreground block truncate">
+                {transport?.stop?.stopName || "Assigned Stop"}
+              </strong>
+              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold block truncate">
+                Pickup: {transport?.stop?.pickupTime || "07:15 AM"} · Return: {transport?.stop?.dropTime || "02:30 PM"}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                <User className="w-3 h-3 text-purple-600" /> Designated Driver
+              </span>
+              <strong className="text-sm font-bold text-foreground block truncate">
+                {transport?.driver?.name || "Ali Ahmed"}
+              </strong>
+              <span className="text-xs text-muted-foreground block truncate">
+                Phone: {transport?.driver?.phone || "—"}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="pt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-muted-foreground gap-2">
+            <span>Need school bus transport? Request route assignment from the administration.</span>
+            <Button size="sm" variant="ghost" asChild className="h-6 text-xs text-primary p-0">
+              <Link to="/student/support?category=Transport">
+                Request Transport Service →
+              </Link>
+            </Button>
+          </div>
+        )}
+      </Card>
       <Card className="sd-timetable">
         <div className="sd-section-heading">
           <div className="sd-section-title">

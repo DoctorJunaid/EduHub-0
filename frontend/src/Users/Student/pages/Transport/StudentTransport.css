@@ -1,0 +1,416 @@
+/* ── Student Transport Module Styling ── */
+
+.transport-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px;
+}
+
+/* Hero Header */
+.transport-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(228, 228, 231, 0.9);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #eff6ff 100%);
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease-in-out;
+}
+
+.dark .transport-hero-card {
+  background: linear-gradient(135deg, #18181b 0%, #1c1917 50%, #1e1b4b 100%);
+  border-color: rgba(63, 63, 70, 0.6);
+}
+
+.transport-hero-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.35);
+}
+
+/* Pulsing Enrolled Badge */
+.commuter-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.dark .commuter-status-pill {
+  background: rgba(6, 78, 59, 0.3);
+  color: #34d399;
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+.status-dot-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+/* Feature KPI Cards */
+.transport-kpi-card {
+  border-radius: 16px;
+  border: 1px solid rgba(228, 228, 231, 0.85);
+  background: #ffffff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .transport-kpi-card {
+  background: #18181b;
+  border-color: rgba(63, 63, 70, 0.6);
+}
+
+.transport-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.dark .transport-kpi-card:hover {
+  border-color: #52525b;
+}
+
+/* KPI Icon Badges */
+.kpi-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.dark .kpi-icon-blue {
+  background: rgba(30, 58, 138, 0.3);
+  color: #60a5fa;
+}
+
+.kpi-icon-emerald {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.dark .kpi-icon-emerald {
+  background: rgba(6, 78, 59, 0.3);
+  color: #34d399;
+}
+
+.kpi-icon-purple {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.dark .kpi-icon-purple {
+  background: rgba(88, 28, 135, 0.3);
+  color: #c084fc;
+}
+
+/* Stepper Journey Route Timeline */
+.transit-timeline-card {
+  border-radius: 16px;
+  border: 1px solid rgba(228, 228, 231, 0.85);
+  background: linear-gradient(to right, #ffffff, #fcfcfd);
+  padding: 20px 24px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.dark .transit-timeline-card {
+  background: #18181b;
+  border-color: rgba(63, 63, 70, 0.6);
+}
+
+.transit-steps-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.transit-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.node-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  border: 2px solid #e4e4e7;
+  background: #ffffff;
+  color: #71717a;
+  transition: all 0.2s ease;
+}
+
+.dark .node-icon-wrapper {
+  background: #27272a;
+  border-color: #52525b;
+  color: #a1a1aa;
+}
+
+.node-active .node-icon-wrapper {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+
+.dark .node-active .node-icon-wrapper {
+  border-color: #059669;
+  background: rgba(6, 78, 59, 0.4);
+  color: #34d399;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
+.node-destination .node-icon-wrapper {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dark .node-destination .node-icon-wrapper {
+  border-color: #2563eb;
+  background: rgba(30, 58, 138, 0.4);
+  color: #60a5fa;
+}
+
+.transit-connector-bar {
+  flex: 1;
+  height: 2px;
+  background: #e4e4e7;
+  position: relative;
+  top: -16px;
+  z-index: 1;
+}
+
+.dark .transit-connector-bar {
+  background: #3f3f46;
+}
+
+.transit-connector-active {
+  background: linear-gradient(90deg, #e4e4e7, #10b981);
+}
+
+.dark .transit-connector-active {
+  background: linear-gradient(90deg, #3f3f46, #059669);
+}
+
+.transit-connector-completed {
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+}
+
+.dark .transit-connector-completed {
+  background: linear-gradient(90deg, #059669, #2563eb);
+}
+
+/* Action Buttons */
+.call-driver-btn {
+  background: #059669;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+  transition: all 0.2s ease;
+}
+
+.call-driver-btn:hover {
+  background: #047857;
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Policy & Safety Rule Cards */
+.rule-card {
+  border-radius: 16px;
+  border: 1px solid rgba(228, 228, 231, 0.85);
+  background: #ffffff;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .rule-card {
+  background: #18181b;
+  border-color: rgba(63, 63, 70, 0.6);
+}
+
+.rule-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.dark .rule-card:hover {
+  border-color: #52525b;
+}
+
+.rule-highlight-box {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 12px 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  border-left: 3px solid #2563eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark .rule-highlight-box {
+  background: #27272a;
+  color: #f4f4f5;
+  border-left-color: #3b82f6;
+}
+
+.rule-highlight-emerald {
+  border-left-color: #10b981;
+}
+
+.rule-highlight-purple {
+  border-left-color: #9333ea;
+}
+
+.rule-highlight-amber {
+  border-left-color: #f59e0b;
+}
+
+.rule-points-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rule-point-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.dark .rule-point-item {
+  color: #a1a1aa;
+}
+
+.rule-point-bullet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #94a3b8;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* Transport Support Banner */
+.transport-support-banner {
+  border-radius: 16px;
+  border: 1px solid rgba(219, 234, 254, 0.8);
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+}
+
+@media (min-width: 640px) {
+  .transport-support-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.dark .transport-support-banner {
+  background: linear-gradient(135deg, #172554 0%, #064e3b 100%);
+  border-color: rgba(30, 58, 138, 0.6);
+}
+
+.support-btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.support-btn-primary:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
