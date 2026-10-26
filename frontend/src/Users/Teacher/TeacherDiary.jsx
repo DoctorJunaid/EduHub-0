@@ -270,8 +270,8 @@ export default function TeacherDiary() {
       aria-labelledby="teacher-diary-title"
     >
       {/* Header Toolbar */}
-      <header className="campus-toolbar teacher-diary-toolbar flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <header className="campus-toolbar teacher-diary-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+        <div className="flex flex-wrap items-center gap-2">
           {classes.length > 0 && (
             <select
               value={selectedClassFilter}
@@ -303,7 +303,7 @@ export default function TeacherDiary() {
               toast.success("Diary entries synchronized.");
             }}
             disabled={isRefreshing}
-            className="toolbar-btn-outline flex items-center gap-1.5"
+            className="toolbar-btn-outline flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             {isRefreshing ? (
               <Spinner className="size-3.5" />
@@ -316,7 +316,7 @@ export default function TeacherDiary() {
 
         <div className="toolbar-right">
           <Button
-            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
+            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0"
             onClick={openNewEntry}
           >
             <Plus size={15} /> New Diary Entry

@@ -94,6 +94,11 @@
 .teacher-gradebook-table-wrap {
   overflow-x: auto;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.teacher-gradebook-table {
+  min-width: 850px;
 }
 
 .teacher-gradebook-student {
@@ -198,7 +203,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .teacher-gradebook {
-    padding: 0 16px 16px 16px;
+    padding: 0 0 16px 0;
   }
 
   .teacher-gradebook-filters {
@@ -208,5 +213,19 @@
 
   .teacher-gradebook-search {
     max-width: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .teacher-gradebook-filters select {
+    width: 100%;
+  }
+
+  .teacher-gradebook-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    text-align: center;
   }
 }
+

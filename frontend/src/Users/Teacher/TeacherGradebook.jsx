@@ -387,7 +387,7 @@ export default function TeacherGradebook() {
       aria-labelledby="teacher-gradebook-title"
     >
       {/* Header Toolbar */}
-      <header className="campus-toolbar flex items-center justify-between">
+      <header className="campus-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -399,7 +399,8 @@ export default function TeacherGradebook() {
               toast.success("Gradebook synchronized.");
             }}
             disabled={isRefreshing}
-            className="toolbar-btn-outline flex items-center gap-1.5"
+            className="toolbar-btn-outline flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            style={{ width: "auto", minWidth: "fit-content" }}
           >
             {isRefreshing ? (
               <Spinner className="size-3.5" />
@@ -412,7 +413,8 @@ export default function TeacherGradebook() {
 
         <div className="toolbar-right">
           <Button
-            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
+            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            style={{ width: "auto", minWidth: "fit-content" }}
             onClick={openAddMarks}
           >
             <Plus size={15} /> Add Marks
@@ -479,7 +481,7 @@ export default function TeacherGradebook() {
         </div>
 
         {/* Gradebook Table Area */}
-        <div className="teacher-gradebook-table-wrap">
+        <div className="teacher-gradebook-table-wrap overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
           {loading || loadingResults ? (
             <div className="py-16 text-center text-slate-500">
               <SpinnerCustom
@@ -533,7 +535,7 @@ export default function TeacherGradebook() {
           ) : (
             <table
               className="campus-data-table teacher-gradebook-table"
-              style={{ width: "100%", tableLayout: "fixed" }}
+              style={{ width: "100%", minWidth: "850px", tableLayout: "fixed" }}
             >
               <thead>
                 <tr>

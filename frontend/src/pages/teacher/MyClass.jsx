@@ -197,7 +197,7 @@ export default function MyClass() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="bg-neutral-100 border border-neutral-200 p-1 rounded-xl flex flex-wrap gap-1.5 max-w-fit">
+        <TabsList className="bg-neutral-100 border border-neutral-200 p-1 rounded-xl flex flex-wrap gap-1.5 w-full sm:w-auto max-w-full">
           <TabsTrigger
             value="attendance"
             className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
@@ -245,27 +245,31 @@ export default function MyClass() {
             </div>
           </div>
 
-          <AttendanceGrid
-            students={students}
-            initialAttendance={attendance?.students || []}
-            onSave={handleSaveAttendance}
-            saving={savingAttendance}
-            dateStr={selectedDate}
-            className={classInfo.className}
-          />
+          <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <AttendanceGrid
+              students={students}
+              initialAttendance={attendance?.students || []}
+              onSave={handleSaveAttendance}
+              saving={savingAttendance}
+              dateStr={selectedDate}
+              className={classInfo.className}
+            />
+          </div>
         </TabsContent>
 
         {/* Tab 2: Results & Report Cards */}
         <TabsContent value="results" className="space-y-4 m-0">
-          <ClassResultGrid
-            gridData={gridData}
-            onCompile={compileResults}
-            onSubmitForApproval={submitForApproval}
-            onRemindTeacher={remindTeacher}
-            onSaveRemarks={saveRemarks}
-            isCompiling={isCompiling}
-            isSubmitting={isSubmitting}
-          />
+          <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <ClassResultGrid
+              gridData={gridData}
+              onCompile={compileResults}
+              onSubmitForApproval={submitForApproval}
+              onRemindTeacher={remindTeacher}
+              onSaveRemarks={saveRemarks}
+              isCompiling={isCompiling}
+              isSubmitting={isSubmitting}
+            />
+          </div>
         </TabsContent>
 
         {/* Tab 3: Students Directory */}
@@ -298,7 +302,7 @@ export default function MyClass() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gap: "16px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full" style={{ gap: "16px" }}>
             {filteredStudents.map((s, idx) => (
               <Card
                 key={s._id || idx}
