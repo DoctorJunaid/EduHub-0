@@ -120,4 +120,7 @@ router.use("/class-teachers", classTeacherRoutes);
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);
 
+import studentLeaveRoutes from "./studentLeave.routes.js";
+router.use("/", studentLeaveRoutes);
+
 export default router;

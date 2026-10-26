@@ -27,6 +27,7 @@ import Assignment from "../models/assignment.model.js";
 import PaymentTransaction from "../models/paymentTransaction.model.js";
 import SubstituteAssignment from "../models/substituteAssignment.model.js";
 import feeService from "../services/fee.service.js";
+import StudentLeaveRequest from "../models/studentLeave.model.js";
 
 const id = (value) => (value ? String(value) : "");
 
@@ -526,7 +527,7 @@ export const getStudentPortal = async (req, res) => {
       section,
     };
 
-    const [schedules, exams, attendance, fees, payments, results] = await Promise.all([
+    const [schedules, exams, attendance, fees, payments, results, leaveRequests] = await Promise.all([
       ClassSchedule.find(classFilter).sort({ dayOfWeek: 1, startTime: 1 }).lean(),
       ExamSchedule.find({
         campusId,
@@ -539,6 +540,7 @@ export const getStudentPortal = async (req, res) => {
       FeeRecord.find({ campusId, studentId: student._id }).sort({ dueDate: -1 }).lean(),
       PaymentTransaction.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
       Performance.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
+      StudentLeaveRequest.find({ campusId, studentId: student._id }).sort({ date: -1 }).lean(),
     ]);
 
     const scheduleIds = schedules.map((row) => row._id);
@@ -768,6 +770,12 @@ export const getStudentPortal = async (req, res) => {
         schedules: formattedSchedules,
         exams: exams.map((row) => ({ ...row, id: id(row._id), _id: id(row._id) })),
         attendance: attendance.map((row) => ({
+          ...row,
+          id: id(row._id),
+          _id: id(row._id),
+          studentId: id(row.studentId),
+        })),
+        leaveRequests: (leaveRequests || []).map((row) => ({
           ...row,
           id: id(row._id),
           _id: id(row._id),

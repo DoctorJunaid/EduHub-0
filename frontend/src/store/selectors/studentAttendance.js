@@ -62,7 +62,7 @@ export const selectStudentAttendancePage = createSelector(
       rows,
       absent: rows.filter(({ record }) => record?.status === "Absent").length,
       late: rows.filter(({ record }) => record?.status === "Late").length,
-      leave: rows.filter(({ record }) => record?.status === "On Leave").length,
+      leave: rows.filter(({ record }) => record?.status === "On Leave" || record?.status === "Excused").length,
     };
   },
 );
