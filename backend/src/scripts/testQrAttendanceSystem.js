@@ -238,10 +238,40 @@ async function runTests() {
     assert(diag.metrics.coverageRate === 100, "100% of enrolled students have valid QR cards");
     assert(diag.metrics.duplicateRecordsToday === 0, "0 duplicate attendance records exist in the database");
 
+    // --- TEST 9: Faculty & Institute Admin Permission Verification ---
+    console.log("\n--- TEST 9: Multi-Role RBAC (Faculty & Institute Admin) ---");
+    const facultyUser = {
+      _id: new mongoose.Types.ObjectId(),
+      role: "faculty",
+      campusId,
+      name: "Test Faculty Member",
+    };
+    const facultyResult = await processQrAttendanceScan(facultyUser, {
+      qrPayload: payload,
+      date: "2026-10-25",
+      status: "Present",
+      overrideIfMarked: true,
+    });
+    assert(facultyResult.success === true, "User with 'faculty' role is authorized to record attendance");
+
+    const instAdminUser = {
+      _id: new mongoose.Types.ObjectId(),
+      role: "institute_admin",
+      campusId,
+      name: "Test Institute Admin",
+    };
+    const instAdminResult = await processQrAttendanceScan(instAdminUser, {
+      qrPayload: payload,
+      date: "2026-10-25",
+      status: "Present",
+      overrideIfMarked: true,
+    });
+    assert(instAdminResult.success === true, "User with 'institute_admin' role is authorized to record attendance");
+
     // Clean up test attendance records
     await StudentAttendance.deleteMany({
       studentId: sampleStudent.userId?._id || sampleStudent._id,
-      dateStr: testDate,
+      dateStr: { $in: [testDate, "2026-10-25"] },
     });
     if (testRollFallbackStudent) {
       await StudentAttendance.deleteMany({
