@@ -47,6 +47,35 @@ const studentProfileSchema = new mongoose.Schema(
       relation: { type: String, default: "Parent" },
     },
     enrollmentDate: { type: Date, default: Date.now },
+    campusId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Campus",
+      default: null,
+      index: true,
+    },
+    usesTransport: { type: Boolean, default: false, index: true },
+    transportDetails: {
+      routeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Route",
+        default: null,
+      },
+      stopName: { type: String, trim: true, default: "" },
+      assignedAt: { type: Date, default: null },
+      assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+    },
+    routeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Route",
+      default: null,
+      index: true,
+    },
+    stopName: { type: String, trim: true, default: "" },
+    transportEnrolled: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
@@ -222,6 +251,13 @@ const studentAttendanceSchema = new mongoose.Schema(
     className: { type: String, default: "" },
     gradeOrClass: { type: String, default: "" },
     section: { type: String, default: "" },
+    rollNo: { type: String, default: "" },
+    academicSession: { type: String, default: "" },
+    method: {
+      type: String,
+      enum: ["manual", "qr_scan", "bulk", "system"],
+      default: "manual",
+    },
     remarks: { type: String, default: "" },
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -244,8 +280,19 @@ const studentAttendanceSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+studentAttendanceSchema.pre("validate", function () {
+  if (this.date && !this.dateStr) {
+    try {
+      this.dateStr = new Date(this.date).toISOString().split("T")[0];
+    } catch {
+      // ignore
+    }
+  }
+});
+
 studentAttendanceSchema.index({ campusId: 1, date: 1 });
-studentAttendanceSchema.index({ campusId: 1, studentId: 1, date: 1 });
+studentAttendanceSchema.index({ campusId: 1, dateStr: 1 });
+studentAttendanceSchema.index({ campusId: 1, studentId: 1, dateStr: 1 }, { unique: true });
 
 const feeRecordSchema = new mongoose.Schema(
   {

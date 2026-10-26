@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { CircleCheck, CircleX, Download, Percent, Plus, Search, Users, CheckCheck } from 'lucide-react';
+import { CircleCheck, CircleX, Download, Percent, Plus, Search, Users, CheckCheck, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import QRAttendanceScanner from '@/components/attendance/QRAttendanceScanner';
 import DataPagination from '@/components/shared/DataPagination';
 import { usePaginationParams } from '@/hooks/usePaginationParams';
 import AttendanceDateNavigator from '@/components/common/AttendanceDateNavigator';
@@ -43,6 +44,7 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
     defaultPageSize: 20,
   });
   const [formOpen, setFormOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -298,6 +300,16 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
             <button
               type="button"
               className="toolbar-btn toolbar-btn-outline"
+              style={{ borderColor: "#3b82f6", color: "#1d4ed8", backgroundColor: "#eff6ff" }}
+              onClick={() => setScannerOpen(true)}
+              title="Scan student QR code or enter roll number"
+            >
+              <QrCode size={14} />
+              Scan QR Code
+            </button>
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-outline"
               onClick={() => setFormOpen(true)}
               disabled={!students.length}
             >
@@ -391,6 +403,15 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
           onClose={() => setFormOpen(false)}
         />
       )}
+
+      <QRAttendanceScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        endpoint="/campus-admin/attendance/qr-scan"
+        onAttendanceMarked={(_record) => {
+          dispatch(fetchStudentAttendance({ date }));
+        }}
+      />
     </section>
   );
 }

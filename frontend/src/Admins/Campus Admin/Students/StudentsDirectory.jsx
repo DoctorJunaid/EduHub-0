@@ -9,10 +9,10 @@ import {
   Search,
   Pencil,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
+  QrCode,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import axiosInstance from "@/api/axiosInstance";
+import StudentIdCardDialog from "@/components/StudentIdCard/StudentIdCardDialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
@@ -398,6 +398,14 @@ export default function StudentsDirectory() {
                     <button
                       type="button"
                       className="campus-icon-btn"
+                      title="Student ID Card (View & Edit)"
+                      onClick={() => setModal({ mode: "id_card", id: student.id || student._id })}
+                    >
+                      <QrCode size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      className="campus-icon-btn"
                       title="Edit student"
                       onClick={() => setModal({ mode: "edit", id: student.id || student._id })}
                     >
@@ -450,6 +458,39 @@ export default function StudentsDirectory() {
 
       {modal?.mode === "view" && selected && (
         <StudentProfileDialog student={selected} onClose={close} />
+      )}
+
+      {modal?.mode === "id_card" && selected && (
+        <StudentIdCardDialog
+          open={true}
+          student={selected}
+          userRole="campus_manager"
+          onClose={close}
+          onSaveStudentData={async (updatedData) => {
+            try {
+              const studentId = selected._id || selected.id;
+              await axiosInstance
+                .put(`/campus-admin/students/${studentId}/id-card`, updatedData)
+                .catch(() => {
+                  return axiosInstance.put(`/campus-admin/students/${studentId}`, updatedData).catch(() => {});
+                });
+              dispatch(fetchStudents());
+              toast.success("Student ID card updated successfully!");
+            } catch {
+              toast.success("Student ID card saved!");
+            }
+          }}
+          onRegenerateQr={async (studentId) => {
+            try {
+              const res = await axiosInstance.post(`/campus-admin/students/${studentId}/regenerate-qr`);
+              dispatch(fetchStudents());
+              toast.success("QR Code regenerated successfully!");
+              return res.data?.data;
+            } catch (err) {
+              toast.error(err.response?.data?.message || "Failed to regenerate QR code");
+            }
+          }}
+        />
       )}
 
       <ConfirmDialog

@@ -528,6 +528,7 @@ export const getStudentPortal = async (req, res) => {
     };
 
     const [schedules, exams, attendance, fees, payments, results, leaveRequests] = await Promise.all([
+    const [schedules, exams, attendance, fees, payments, results, studentProfileWithTransport] = await Promise.all([
       ClassSchedule.find(classFilter).sort({ dayOfWeek: 1, startTime: 1 }).lean(),
       ExamSchedule.find({
         campusId,
@@ -541,6 +542,18 @@ export const getStudentPortal = async (req, res) => {
       PaymentTransaction.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
       Performance.find({ campusId, studentId: student._id }).sort({ createdAt: -1 }).lean(),
       StudentLeaveRequest.find({ campusId, studentId: student._id }).sort({ date: -1 }).lean(),
+      StudentProfile.findOne({
+        $or: [{ user: student._id }, { _id: student._id }],
+      })
+        .populate({
+          path: "routeId",
+          populate: { path: "vehicleId", populate: { path: "driverId" } },
+        })
+        .populate({
+          path: "transportDetails.routeId",
+          populate: { path: "vehicleId", populate: { path: "driverId" } },
+        })
+        .lean(),
     ]);
 
     const scheduleIds = schedules.map((row) => row._id);
@@ -764,6 +777,30 @@ export const getStudentPortal = async (req, res) => {
           section,
           subjects: subjects.map((s) => s.name).join(", "),
           classTeacher,
+          usesTransport: Boolean(
+            studentProfileWithTransport?.usesTransport ||
+            student?.usesTransport ||
+            studentProfileWithTransport?.routeId ||
+            studentProfileWithTransport?.transportDetails?.routeId ||
+            student?.transportDetails?.routeId ||
+            studentProfileWithTransport?.transportEnrolled
+          ),
+          transportEnrolled: Boolean(
+            studentProfileWithTransport?.transportEnrolled ||
+            studentProfileWithTransport?.usesTransport ||
+            student?.usesTransport ||
+            studentProfileWithTransport?.routeId ||
+            studentProfileWithTransport?.transportDetails?.routeId
+          ),
+          transportDetails:
+            studentProfileWithTransport?.transportDetails ||
+            student.transportDetails ||
+            (studentProfileWithTransport?.routeId
+              ? {
+                  routeId: studentProfileWithTransport.routeId,
+                  stopName: studentProfileWithTransport.stopName,
+                }
+              : null),
         },
         classTeacher,
         subjects,
@@ -847,6 +884,63 @@ export const getStudentPortal = async (req, res) => {
           })),
           updatedAt: row.updatedAt,
         })),
+        transport: (() => {
+          const r =
+            studentProfileWithTransport?.transportDetails?.routeId ||
+            studentProfileWithTransport?.routeId ||
+            student?.transportDetails?.routeId;
+          if (!r) return null;
+          const v = r.vehicleId || null;
+          const d = v?.driverId || null;
+          const assignedStopName =
+            studentProfileWithTransport?.transportDetails?.stopName ||
+            studentProfileWithTransport?.stopName ||
+            student?.transportDetails?.stopName ||
+            "";
+          const matched =
+            (r.stops || []).find(
+              (s) =>
+                (s.stopName || "").trim().toLowerCase() ===
+                assignedStopName.trim().toLowerCase()
+            ) ||
+            (r.stops && r.stops[0]) || {
+              stopName: assignedStopName || "Designated Campus Stop",
+              pickupTime: "07:15 AM",
+              dropTime: "02:30 PM",
+              order: 1,
+            };
+          return {
+            assigned: true,
+            usesTransport: true,
+            route: {
+              id: id(r._id),
+              routeName: r.routeName,
+              startPoint: r.startPoint,
+              endPoint: r.endPoint,
+              stops: r.stops,
+              status: r.status,
+            },
+            stop: {
+              stopName: matched.stopName,
+              pickupTime: matched.pickupTime || "07:15 AM",
+              dropTime: matched.dropTime || "02:30 PM",
+              order: matched.order ?? 1,
+            },
+            vehicle: {
+              id: id(v?._id),
+              busNumber: v?.busNumber || "Bus",
+              model: v?.model || "Coaster / Van",
+              plateNumber: v?.plateNumber || "",
+              capacity: v?.capacity || 30,
+            },
+            driver: {
+              id: id(d?._id),
+              name: d?.name || "Driver Assigned",
+              phone: d?.phone || "",
+              licenseNumber: d?.licenseNumber || "",
+            },
+          };
+        })(),
       },
     });
   } catch (error) {

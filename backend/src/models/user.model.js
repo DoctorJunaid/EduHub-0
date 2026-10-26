@@ -151,6 +151,41 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    fatherName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    address: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    classProgram: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    rollNo: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    instituteName: {
+      type: String,
+      trim: true,
+      default: "EduHub Global Institute",
+    },
+    instituteLogo: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    qrCodeData: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     status: {
       type: String,
       enum: ["Active", "Pending", "Inactive", "Suspended", "Graduated", "On Leave", "Withdrawn", "Transferred"],
@@ -163,6 +198,32 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    usesTransport: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    transportDetails: {
+      routeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Route",
+        default: null,
+      },
+      stopName: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      assignedAt: {
+        type: Date,
+        default: null,
+      },
+      assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
     },
     passwordVersion: {
       type: Number,

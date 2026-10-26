@@ -21,6 +21,8 @@ import attendanceApprovalRoutes from "./attendanceApproval.routes.js";
 import studentRoutes from "./student.routes.js";
 import academicRoutes from "./academic.routes.js";
 import classSessionRoutes from "./classSession.routes.js";
+import studentIdCardRoutes from "./studentRoutes.js";
+import campusManagerRoutes from "./campusManagerRoutes.js";
 
 const router = express.Router();
 
@@ -36,6 +38,8 @@ router.get("/health", (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/search", searchRoutes);
 router.use("/student", studentRoutes);
+router.use("/students", studentIdCardRoutes);
+router.use("/campus-manager", campusManagerRoutes);
 router.use("/super-admin", superAdminRoutes);
 router.use("/institute-admin", instituteAdminRoutes);
 
@@ -43,6 +47,10 @@ router.use("/inquiries", inquiryRoutes);
 router.use("/campus-admin", campusAdminRoutes);
 router.use("/campus/faculty", (req, res, next) => {
   req.url = "/faculty" + (req.url === "/" ? "" : req.url);
+  campusAdminRoutes(req, res, next);
+});
+router.use("/campus/students", (req, res, next) => {
+  req.url = "/students" + (req.url === "/" ? "" : req.url);
   campusAdminRoutes(req, res, next);
 });
 
@@ -116,6 +124,12 @@ router.get("/class-teachers", (req, res, next) => {
   classTeacherRoutes(req, res, next);
 });
 router.use("/class-teachers", classTeacherRoutes);
+
+import transportRoutes from "./transport.routes.js";
+
+// Transport & Driver Management Routes
+router.use("/transport", transportRoutes);
+router.use("/campus/transport", transportRoutes);
 
 router.use("/admin/seed", seedRoutes);
 router.use("/campus/seed", seedRoutes);

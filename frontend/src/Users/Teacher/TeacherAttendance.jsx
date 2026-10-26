@@ -13,7 +13,9 @@ import {
   RefreshCw,
   AlertCircle,
   FileCheck2,
+  QrCode,
 } from "lucide-react";
+import QRAttendanceScanner from "@/components/attendance/QRAttendanceScanner";
 import {
   getTeacherAttendanceClasses,
   getTeacherAttendanceRoster,
@@ -53,6 +55,7 @@ export default function TeacherAttendance() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [draft, setDraft] = useState({}); // { [studentId]: "Present" | "Absent" | "Late" | "On Leave" }
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -291,6 +294,17 @@ export default function TeacherAttendance() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="toolbar-btn-outline flex items-center gap-1.5 border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100"
+            onClick={() => setScannerOpen(true)}
+            title="Scan student QR code or enter roll number"
+          >
+            <QrCode size={14} />
+            Scan QR Code
+          </Button>
+
           <Button
             className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
             onClick={handleSaveAttendance}
@@ -626,6 +640,25 @@ export default function TeacherAttendance() {
           </nav>
         </footer>
       </section>
+
+      <QRAttendanceScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        endpoint="/teacher/attendance/qr-scan"
+        classScope={
+          selectedClass
+            ? {
+                className: selectedClass.className || selectedClass.gradeOrClass || "",
+                section: selectedClass.section || "",
+              }
+            : undefined
+        }
+        onAttendanceMarked={(_result) => {
+          queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
+          rosterQuery.refetch();
+          classesQuery.refetch();
+        }}
+      />
     </main>
   );
 }

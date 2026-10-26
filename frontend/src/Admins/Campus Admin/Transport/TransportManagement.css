@@ -1,0 +1,339 @@
+/* Transport Management Styles */
+
+.transport-page {
+  padding-bottom: 40px;
+  background: #ffffff;
+}
+
+.dark .transport-page {
+  background: #09090b;
+}
+
+/* ==========================================================================
+   1. KPI Cards Track (Tab Switcher)
+   ========================================================================== */
+.transport-kpi-track {
+  border-top: none;
+}
+
+.transport-kpi-track .campus-kpi-card {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.transport-kpi-track .campus-kpi-card:hover {
+  background: #fafafa;
+}
+
+.dark .transport-kpi-track .campus-kpi-card:hover {
+  background: #18181b;
+}
+
+.transport-kpi-track .campus-kpi-card.kpi-card-active {
+  background: #fafafa;
+}
+
+.dark .transport-kpi-track .campus-kpi-card.kpi-card-active {
+  background: #141416;
+}
+
+.transport-kpi-track .campus-kpi-card.kpi-card-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: #09090b;
+  border-radius: 2px 2px 0 0;
+}
+
+.dark .transport-kpi-track .campus-kpi-card.kpi-card-active::after {
+  background: #ffffff;
+}
+
+/* ==========================================================================
+   3. Toolbar Below KPI Cards
+   ========================================================================== */
+.transport-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.transport-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.dark .transport-toolbar {
+  background: #121214;
+  border-color: #27272a;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: #e4e4e7;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.dark .toolbar-separator {
+  background: #27272a;
+}
+
+.toolbar-btn-preset {
+  background: #fffbeb !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.toolbar-btn-preset:hover {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+}
+
+.dark .toolbar-btn-preset {
+  background: rgba(120, 53, 15, 0.25) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.dark .toolbar-btn-preset:hover {
+  background: rgba(120, 53, 15, 0.4) !important;
+}
+
+/* ==========================================================================
+   4. Content Area
+   ========================================================================== */
+.transport-content {
+  padding: 20px 24px;
+  max-width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* Route Cards Grid */
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.route-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.dark .route-card {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+.route-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #d4d4d8;
+  transform: translateY(-2px);
+}
+
+.route-card-header {
+  padding: 16px;
+  border-bottom: 1px solid #f4f4f5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+}
+
+.dark .route-card-header {
+  border-color: #27272a;
+  background: linear-gradient(180deg, #27272a 0%, #18181b 100%);
+}
+
+.route-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.dark .route-title {
+  color: #f4f4f5;
+}
+
+.route-vehicle-banner {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dark .route-vehicle-banner {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+.route-stops-list {
+  padding: 16px;
+  flex: 1;
+}
+
+.stop-timeline-item {
+  position: relative;
+  padding-left: 24px;
+  padding-bottom: 14px;
+}
+
+.stop-timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.stop-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 14px;
+  bottom: 0;
+  width: 2px;
+  background: #e4e4e7;
+}
+
+.dark .stop-timeline-item::before {
+  background: #27272a;
+}
+
+.stop-timeline-item:last-child::before {
+  display: none;
+}
+
+.stop-timeline-node {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #09090b;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.dark .stop-timeline-node {
+  border-color: #38bdf8;
+  background: #09090b;
+  color: #38bdf8;
+}
+
+.stop-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stop-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.dark .stop-name {
+  color: #f4f4f5;
+}
+
+.stop-time-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.dark .stop-time-tag {
+  background: #082f49;
+  border-color: #0369a1;
+  color: #7dd3fc;
+}
+
+.route-card-footer {
+  padding: 12px 16px;
+  background: #fafafa;
+  border-top: 1px solid #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dark .route-card-footer {
+  background: #141416;
+  border-color: #27272a;
+}
+
+/* Stops builder inside Route Modal */
+.modal-stops-builder {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.dark .modal-stops-builder {
+  border-color: #27272a;
+  background: #18181b;
+}
+
+.modal-stop-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr auto;
+  gap: 8px;
+  align-items: center;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+}
+
+.dark .modal-stop-row {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+@media (max-width: 768px) {
+  .routes-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-stop-row {
+    grid-template-columns: 1fr;
+  }
+}

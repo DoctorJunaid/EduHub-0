@@ -42,16 +42,17 @@ export default function StudentLayout() {
     ),
   );
   const location = useLocation();
-  const navigate = useNavigate();
   const nav = getStudentNav(isSchool);
 
   const pageLabel = {
+    "/student/id-card": "Student ID Card",
     "/student/courses": isSchool ? "Subjects" : "Courses",
     "/student/assignments": isSchool ? "Daily Diary & Homework" : "Assignments",
     "/student/attendance": "Attendance Record",
     "/student/diary": isSchool ? "Daily Diary & Homework" : "Diary",
     "/student/grades": isSchool ? "Progress Report Card" : "Results",
     "/student/fees": isSchool ? "School Fee Challan" : "Fees",
+    "/student/transport": isSchool ? "School Bus & Route" : "Transport & Commute",
     "/student/messages": "Messages",
     "/student/timetable": isSchool ? "Class Routine & Timetable" : "Timetable",
     "/student/schedule": isSchool ? "Class Routine & Timetable" : "Timetable",

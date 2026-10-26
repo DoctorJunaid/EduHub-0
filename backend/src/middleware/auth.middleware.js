@@ -116,4 +116,6 @@ export const restrictTo = (...roles) => {
   };
 };
 
-export default { protect, restrictTo };
+export const verifyToken = protect;
+
+export default { protect, verifyToken, restrictTo };

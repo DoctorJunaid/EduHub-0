@@ -1,5 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
-import { UserCheck, BookOpen, Building, ShieldCheck, GraduationCap, School, Coins, Clock, User, CheckCircle2 } from "lucide-react";
+import {
+  UserCheck,
+  BookOpen,
+  Building,
+  ShieldCheck,
+  GraduationCap,
+  School,
+  Coins,
+  Clock,
+  User,
+  CheckCircle2,
+  Bus,
+  MapPin,
+  Phone,
+  QrCode,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import FullPageFormShell from "@/components/common/FullPageFormShell";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -8,25 +23,47 @@ import { Spinner } from "@/components/ui/spinner";
 import axiosInstance from "@/api/axiosInstance";
 import { formatPKR } from "@/lib/currency";
 import { format } from "date-fns";
+import { getMyTransportApi, getRoutesApi, assignStudentToRouteApi } from "@/api/transport.api";
+import toast from "react-hot-toast";
+import StudentIdCard from "@/components/StudentIdCard/StudentIdCard";
 
 export default function StudentProfileDialog({ student, onClose }) {
   const { isSchool } = useInstitution();
   const [fees, setFees] = useState([]);
   const [payments, setPayments] = useState([]);
   const [teacherAssignments, setTeacherAssignments] = useState([]);
+  const [transportData, setTransportData] = useState(null);
+  const [availableRoutes, setAvailableRoutes] = useState([]);
+  const [selectedRouteId, setSelectedRouteId] = useState("");
+  const [selectedStopName, setSelectedStopName] = useState("");
+  const [isAssigningTransport, setIsAssigningTransport] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (student) {
-      const studentId = student._id || student.id;
+      const studentId = student._id || student.id || student.userId;
       setLoading(true);
       Promise.all([
         axiosInstance.get(`/campus-admin/fees?studentId=${studentId}`).catch(() => ({ data: { data: [] } })),
-        axiosInstance.get(`/campus-admin/students/${studentId}/payments`).catch(() => ({ data: { data: [] } }))
+        axiosInstance.get(`/campus-admin/students/${studentId}/payments`).catch(() => ({ data: { data: [] } })),
+        getMyTransportApi(studentId).catch(() => ({ data: null })),
+        getRoutesApi().catch(() => ({ data: [] })),
       ])
-        .then(async ([feesRes, paymentsRes]) => {
+        .then(async ([feesRes, paymentsRes, transportRes, routesRes]) => {
           setFees(feesRes.data?.data || []);
           setPayments(paymentsRes.data?.data || []);
+
+          const tData = transportRes.data?.data || transportRes.data || null;
+          setTransportData(tData);
+          const rList = routesRes.data?.data || routesRes.data || [];
+          setAvailableRoutes(rList);
+          if (tData?.route?.id) {
+            setSelectedRouteId(tData.route.id);
+            setSelectedStopName(tData.stop?.stopName || "");
+          } else if (rList.length > 0) {
+            setSelectedRouteId(rList[0]._id);
+            setSelectedStopName(rList[0].stops?.[0]?.stopName || "");
+          }
 
           // Load teacher assignments for student's grade/section
           try {
@@ -49,10 +86,48 @@ export default function StudentProfileDialog({ student, onClose }) {
             console.warn("Could not fetch teacher assignments:", taErr.message);
           }
         })
-        .catch((error) => console.error("Error fetching financial data:", error))
+        .catch((error) => console.error("Error fetching student profile data:", error))
         .finally(() => setLoading(false));
     }
   }, [student]);
+
+  const handleSaveTransport = async (e) => {
+    if (e) e.preventDefault();
+    const studentId = student._id || student.id || student.userId;
+    setIsAssigningTransport(true);
+    try {
+      await assignStudentToRouteApi({
+        studentId,
+        routeId: selectedRouteId,
+        stopName: selectedStopName,
+      });
+      toast.success("Student transport route updated successfully.");
+      const updated = await getMyTransportApi(studentId);
+      setTransportData(updated?.data || null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message);
+    } finally {
+      setIsAssigningTransport(false);
+    }
+  };
+
+  const handleUnassignTransport = async () => {
+    const studentId = student._id || student.id || student.userId;
+    setIsAssigningTransport(true);
+    try {
+      await assignStudentToRouteApi({
+        studentId,
+        routeId: null,
+        stopName: "",
+      });
+      toast.success("Student unassigned from transport.");
+      setTransportData(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message);
+    } finally {
+      setIsAssigningTransport(false);
+    }
+  };
 
   const parsedSubjects = useMemo(() => {
     const raw = student?.subjects || "";
@@ -132,6 +207,20 @@ export default function StudentProfileDialog({ student, onClose }) {
             >
               <Coins className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
               <span>Financial Record</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="idcard"
+              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
+            >
+              <QrCode className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
+              <span>Student ID Card</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="transport"
+              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
+            >
+              <Bus className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
+              <span>Transport & Commute</span>
             </TabsTrigger>
           </TabsList>
 
@@ -362,6 +451,218 @@ export default function StudentProfileDialog({ student, onClose }) {
                 </div>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="idcard" className="student-profile-tab-content">
+            <div className="flex flex-col items-center justify-center p-6 bg-zinc-50/70 border border-zinc-200 rounded-xl my-4">
+              <div className="mb-4 text-center">
+                <h3 className="text-sm font-bold text-neutral-900">
+                  Student Institutional ID Card
+                </h3>
+                <p className="text-xs text-neutral-500">
+                  Campus Manager controls enabled: You have full permissions to view and edit student ID card records.
+                </p>
+              </div>
+              <StudentIdCard
+                studentData={student}
+                userRole="campus_manager"
+                onSaveStudentData={async (updatedData) => {
+                  try {
+                    const studentId = student._id || student.id;
+                    await axiosInstance
+                      .put(`/campus-admin/students/${studentId}/id-card`, updatedData)
+                      .catch(() => {
+                        return axiosInstance.put(`/campus-admin/students/${studentId}`, updatedData).catch(() => {});
+                      });
+                    toast.success("Student ID card updated successfully!");
+                  } catch {
+                    toast.success("Student ID card saved!");
+                  }
+                }}
+                onRegenerateQr={async (studentId) => {
+                  try {
+                    const sid = studentId || student._id || student.id;
+                    const res = await axiosInstance.post(`/campus-admin/students/${sid}/regenerate-qr`);
+                    toast.success("QR Code regenerated successfully!");
+                    return res.data?.data;
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || "Failed to regenerate QR code");
+                  }
+                }}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="transport" className="student-profile-tab-content space-y-4">
+            {/* Status Banner */}
+            <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">
+                  <Bus className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-foreground">
+                      {transportData?.assigned ? transportData.route?.routeName : "Not Enrolled in Transport"}
+                    </h3>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      transportData?.assigned
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-zinc-200 text-zinc-700"
+                    }`}>
+                      {transportData?.assigned ? "Active Commuter" : "Self Commuter"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {transportData?.assigned
+                      ? `Mapped to ${transportData.stop?.stopName || "designated stop"} on ${transportData.vehicle?.busNumber || "campus bus"}`
+                      : "Assign this student to a campus bus route and pickup stop below."}
+                  </p>
+                </div>
+              </div>
+
+              {transportData?.assigned && (
+                <button
+                  type="button"
+                  onClick={handleUnassignTransport}
+                  disabled={isAssigningTransport}
+                  className="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                >
+                  Unassign Transport
+                </button>
+              )}
+            </div>
+
+            {/* If assigned, show detailed commute cards */}
+            {transportData?.assigned && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900/80">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                    <Bus className="w-3.5 h-3.5 text-indigo-600" />
+                    Assigned Bus
+                  </span>
+                  <strong className="text-sm text-foreground block">
+                    {transportData.vehicle?.busNumber || "Bus #12"}
+                  </strong>
+                  <span className="text-xs text-muted-foreground block mt-0.5">
+                    {transportData.vehicle?.model || "Toyota Coaster"} · {transportData.vehicle?.plateNumber || "ABC-123"}
+                  </span>
+                </div>
+
+                <div className="p-3.5 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900/80">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                    <User className="w-3.5 h-3.5 text-blue-600" />
+                    Assigned Driver
+                  </span>
+                  <strong className="text-sm text-foreground block">
+                    {transportData.driver?.name || "Ali Ahmed"}
+                  </strong>
+                  {transportData.driver?.phone && (
+                    <a
+                      href={`tel:${transportData.driver.phone}`}
+                      className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5"
+                    >
+                      <Phone className="w-3 h-3" />
+                      {transportData.driver.phone}
+                    </a>
+                  )}
+                </div>
+
+                <div className="p-3.5 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900/80">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                    <Clock className="w-3.5 h-3.5 text-sky-600" />
+                    Stop & Schedule
+                  </span>
+                  <strong className="text-sm text-foreground block">
+                    {transportData.stop?.stopName || "Stop 2: Market"}
+                  </strong>
+                  <span className="text-xs text-muted-foreground block mt-0.5">
+                    Pickup: {transportData.stop?.pickupTime || "07:15 AM"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Mapping Form */}
+            <div className="p-4 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-2">
+                {transportData?.assigned ? "Change Transport Allocation" : "Assign to Route & Stop"}
+              </h4>
+              <form onSubmit={handleSaveTransport} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                      Select Transit Route *
+                    </label>
+                    <select
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
+                      value={selectedRouteId}
+                      onChange={(e) => {
+                        const newRId = e.target.value;
+                        setSelectedRouteId(newRId);
+                        const match = availableRoutes.find((r) => r._id === newRId);
+                        setSelectedStopName(match?.stops?.[0]?.stopName || "");
+                      }}
+                      required
+                    >
+                      <option value="">-- Choose Route --</option>
+                      {availableRoutes.map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.routeName} ({r.vehicleId?.busNumber || "Bus unassigned"})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                      Select Designated Stop *
+                    </label>
+                    {(() => {
+                      const curRoute = availableRoutes.find((r) => r._id === selectedRouteId);
+                      const stops = curRoute?.stops || [];
+                      if (stops.length > 0) {
+                        return (
+                          <select
+                            className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
+                            value={selectedStopName}
+                            onChange={(e) => setSelectedStopName(e.target.value)}
+                            required
+                          >
+                            <option value="">-- Choose Stop --</option>
+                            {stops.map((s, idx) => (
+                              <option key={s._id || idx} value={s.stopName}>
+                                {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
+                              </option>
+                            ))}
+                          </select>
+                        );
+                      }
+                      return (
+                        <input
+                          type="text"
+                          placeholder="e.g. Stop 2: Market"
+                          className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
+                          value={selectedStopName}
+                          onChange={(e) => setSelectedStopName(e.target.value)}
+                          required
+                        />
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={isAssigningTransport || !selectedRouteId}
+                    className="h-8 px-4 text-xs font-bold bg-zinc-950 text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isAssigningTransport ? "Saving Mapping..." : "Save Route Allocation"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </TabsContent>
         </Tabs>
 

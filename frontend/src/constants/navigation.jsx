@@ -17,6 +17,7 @@ import {
   Layers,
   CreditCard,
   GraduationCap,
+  Bus,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -138,6 +139,18 @@ export const getCampusAdminNav = (isSchool = false) => [
     label: "Substitutes",
     path: "/substitutes",
     group: "Academics",
+    icon: <Users size={20} />,
+  },
+  {
+    label: "Transport & Drivers",
+    path: "/transport",
+    group: "Operations",
+    icon: <Bus size={20} />,
+  },
+  {
+    label: "Transport Directory",
+    path: "/campus/transport-directory",
+    group: "Operations",
     icon: <Users size={20} />,
   },
   {

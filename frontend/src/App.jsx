@@ -34,6 +34,8 @@ import ClassTimetable from "./Admins/Campus Admin/Timetable/ClassTimetable";
 import ExamSchedules from "./Admins/Campus Admin/Exams/ExamSchedules";
 import AcademicsConfig from "./Admins/Campus Admin/Academics/AcademicsConfig";
 import TeacherAssignments from "./Admins/Campus Admin/Faculty/TeacherAssignments";
+import TransportManagement from "./Admins/Campus Admin/Transport/TransportManagement";
+import TransportDirectory from "./pages/campus/TransportDirectory";
 import SuperAdminDashboard from "./Admins/Super Admin/Dashboard/SuperAdminDashboard";
 import Institutes from "./Admins/Super Admin/Institutes/Institutes";
 import ManageInstitutePage from "./Admins/Super Admin/Institutes/ManageInstitutePage";
@@ -59,6 +61,8 @@ import {
   StudentFees,
   StudentMessages,
   StudentTimetable,
+  StudentIdCardPage,
+  StudentTransport,
 } from "./Users/Student";
 
 import { useEffect } from "react";
@@ -128,6 +132,7 @@ const App = () => {
           <Route element={<StudentLayout />}>
             <Route path="student" element={<Navigate to="/student/dashboard" replace />} />
             <Route path="student/dashboard" element={<StudentDashboard />} />
+            <Route path="student/id-card" element={<StudentIdCardPage />} />
             <Route path="student/courses" element={<StudentCourses />} />
             <Route
               path="student/assignments"
@@ -147,6 +152,7 @@ const App = () => {
             <Route path="student/fees" element={<StudentFees />} />
             <Route path="student/timetable" element={<StudentTimetable />} />
             <Route path="student/schedule" element={<StudentTimetable />} />
+            <Route path="student/transport" element={<StudentTransport />} />
             <Route path="student/support" element={<SupportList />} />
             <Route path="student/support/:id" element={<SupportTicketDetail />} />
             <Route path="student/messages" element={<SupportList />} />
@@ -230,6 +236,9 @@ const App = () => {
             <Route path="settings" element={<Settings />} />
             <Route path="teaching-performance" element={<TeachingPerformance />} />
             <Route path="substitutes" element={<SubstituteAssignments />} />
+            <Route path="transport" element={<TransportManagement />} />
+            <Route path="transport/directory" element={<TransportDirectory />} />
+            <Route path="campus/transport-directory" element={<TransportDirectory />} />
             <Route path="academics" element={<AcademicsConfig />} />
             <Route path="teacher-assignments" element={<TeacherAssignments />} />
             <Route path="admin/seed" element={<AdminSeed />} />

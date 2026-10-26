@@ -369,19 +369,23 @@ export default function HeroFanDeck({ onGetStarted, navigate }) {
             </div>
           </div>
 
-          {/* ─── 3 Pagination Dots Indicator (matching screenshot) ─── */}
-          <div className="hero-mobile-dots" aria-label="Hero cards pagination">
+          {/* ─── Modern Circled Pagination Dots Indicator (Responsive & Accessible) ─── */}
+          <div className="hero-mobile-dots" role="tablist" aria-label="Hero cards pagination">
             {[0, 1, 2].map((dotIdx) => {
               const isActive = activeMobileIndex === dotIdx;
+              const cardTitle = MOBILE_HERO_CARDS[dotIdx]?.title || `Card ${dotIdx + 1}`;
               return (
                 <button
                   key={dotIdx}
                   type="button"
-                  className={`hero-mobile-dot ${isActive ? 'is-active' : ''}`}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Go to slide ${dotIdx + 1}: ${cardTitle}`}
+                  className={`hero-mobile-dot-btn ${isActive ? 'is-active' : ''}`}
                   onClick={() => setActiveMobileIndex(dotIdx)}
-                  aria-label={`Slide ${dotIdx + 1}`}
-                  aria-current={isActive ? 'true' : undefined}
-                />
+                >
+                  <span className="hero-mobile-dot-circle" />
+                </button>
               );
             })}
           </div>

@@ -1051,46 +1051,51 @@ class CampusAdminService {
 
   // --- Student Attendance Operations ---
   async createStudentAttendance(campusId, instituteId, data) {
-    const date = new Date(data.date || new Date());
-    date.setHours(0, 0, 0, 0);
+    const rawDate = data.date ? new Date(data.date) : new Date();
+    const dateStr = data.dateStr || rawDate.toISOString().split("T")[0];
+    const date = new Date(`${dateStr}T00:00:00.000Z`);
 
     const payload = {
       ...data,
       date,
-      dateStr: data.dateStr || date.toISOString().split("T")[0],
+      dateStr,
       campusId,
       instituteId: instituteId || null,
       status: data.status || "Present",
+      method: data.method || "manual",
     };
 
     // Upsert so same student cannot have multiple attendance on same day
     return await StudentAttendance.findOneAndUpdate(
-      { campusId, studentId: data.studentId, date },
-      payload,
+      { campusId, studentId: data.studentId, dateStr },
+      { $set: payload },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
   }
 
   async createBulkStudentAttendance(campusId, instituteId, { date: dateInput, records = [] }) {
-    const date = new Date(dateInput || new Date());
-    date.setHours(0, 0, 0, 0);
-    const dateStr = date.toISOString().split("T")[0];
+    const rawDate = dateInput ? new Date(dateInput) : new Date();
+    const dateStr = rawDate.toISOString().split("T")[0];
+    const date = new Date(`${dateStr}T00:00:00.000Z`);
 
     const results = [];
     for (const item of records) {
       if (!item.studentId) continue;
       const updated = await StudentAttendance.findOneAndUpdate(
-        { campusId, studentId: item.studentId, date },
+        { campusId, studentId: item.studentId, dateStr },
         {
-          campusId,
-          instituteId: instituteId || null,
-          studentId: item.studentId,
-          date,
-          dateStr,
-          status: item.status || "Present",
-          remarks: item.remarks || "",
-          className: item.className || item.gradeOrClass || "",
-          section: item.section || "",
+          $set: {
+            campusId,
+            instituteId: instituteId || null,
+            studentId: item.studentId,
+            date,
+            dateStr,
+            status: item.status || "Present",
+            method: "bulk",
+            remarks: item.remarks || "",
+            className: item.className || item.gradeOrClass || "",
+            section: item.section || "",
+          },
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
