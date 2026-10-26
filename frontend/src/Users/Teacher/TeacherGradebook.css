@@ -200,6 +200,10 @@
   color: #71717a;
 }
 
+.teacher-gradebook-table {
+  min-width: 850px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .teacher-gradebook {

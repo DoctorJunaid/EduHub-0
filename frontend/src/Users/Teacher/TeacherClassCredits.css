@@ -399,3 +399,8 @@
     padding-right: 16px;
   }
 }
+
+.teacher-credits-table {
+  width: 100%;
+  min-width: 820px;
+}
