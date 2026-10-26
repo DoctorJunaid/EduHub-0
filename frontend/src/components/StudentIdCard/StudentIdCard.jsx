@@ -86,7 +86,7 @@ export default function StudentIdCard({
       });
 
     QRCode.toDataURL(payload, {
-      width: 200,
+      width: 320,
       margin: 1,
       errorCorrectionLevel: "M",
       color: {
@@ -190,24 +190,29 @@ export default function StudentIdCard({
         className="w-full bg-white border border-neutral-200 rounded-2xl shadow-md overflow-hidden relative flex flex-col justify-between"
         style={{
           width: "340px",
-          height: "520px",
+          height: "540px",
           boxSizing: "border-box",
         }}
       >
         {!isFlipped ? (
           /* ================= FRONT SIDE ================= */
           <div className="flex flex-col h-full justify-between">
-            {/* Top Blue Stripe Header */}
+            {/* Top Light Blue Stripe Header */}
             <div
-              className="bg-blue-600 text-white flex items-center justify-between"
-              style={{ padding: "16px 20px", boxSizing: "border-box" }}
+              className="flex items-center justify-between"
+              style={{
+                background: "linear-gradient(135deg, #4da0ff 0%, #3b82f6 100%)",
+                padding: "16px 20px",
+                boxSizing: "border-box",
+                color: "#ffffff",
+              }}
             >
               <div className="flex items-center min-w-0" style={{ gap: "8px" }}>
-                <div className="w-7 h-7 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0 overflow-hidden">
+                <div className="flex items-center justify-center text-white shrink-0">
                   {formData.instituteLogo ? (
-                    <img src={formData.instituteLogo} alt="Logo" className="w-full h-full object-contain" />
+                    <img src={formData.instituteLogo} alt="Logo" className="w-6 h-6 object-contain" />
                   ) : (
-                    <Building2 className="w-3.5 h-3.5" />
+                    <Building2 className="w-4 h-4 text-white" />
                   )}
                 </div>
                 {isEditing ? (
@@ -220,29 +225,29 @@ export default function StudentIdCard({
                     className="text-xs font-bold text-neutral-900 bg-white rounded px-1.5 py-0.5 w-full"
                   />
                 ) : (
-                  <span className="text-xs font-bold tracking-tight truncate max-w-[160px]">
+                  <span className="text-xs font-bold tracking-tight truncate max-w-[160px]" style={{ color: "#ffffff" }}>
                     {formData.instituteName}
                   </span>
                 )}
               </div>
               <span
-                className="rounded-full bg-white/20 text-white border border-white/30 text-[10px] font-semibold uppercase tracking-wider shrink-0"
-                style={{ padding: "3px 8px" }}
+                className="text-[10px] font-bold uppercase tracking-wider shrink-0"
+                style={{ color: "#ffffff" }}
               >
                 Student ID Card
               </span>
             </div>
 
-            {/* Student Picture & Identity Details */}
-            <div className="flex flex-col items-center text-center my-auto" style={{ gap: "12px", padding: "0 20px" }}>
+            {/* Student Picture & Identity Details with Father Name on Front */}
+            <div className="flex flex-col items-center text-center my-auto" style={{ gap: "14px", padding: "0 20px" }}>
               <div
-                className="rounded-full bg-neutral-100 border-2 border-blue-200 overflow-hidden flex items-center justify-center text-neutral-400 shadow-xs"
-                style={{ width: "84px", height: "84px" }}
+                className="rounded-full bg-neutral-100 border-2 border-blue-200 overflow-hidden flex items-center justify-center text-neutral-400 shadow-md"
+                style={{ width: "142px", height: "142px" }}
               >
                 {formData.avatar ? (
                   <img src={formData.avatar} alt={formData.name} className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-8 h-8 text-neutral-400 stroke-[1.5]" />
+                  <User className="text-neutral-400 stroke-[1.5]" style={{ width: "66px", height: "66px" }} />
                 )}
               </div>
 
@@ -266,6 +271,14 @@ export default function StudentIdCard({
                   />
                   <input
                     type="text"
+                    name="fatherName"
+                    value={formData.fatherName}
+                    onChange={handleChange}
+                    placeholder="Father's Name"
+                    className="text-xs text-neutral-700 text-center border border-neutral-300 rounded px-2 py-1"
+                  />
+                  <input
+                    type="text"
                     name="classProgram"
                     value={formData.classProgram}
                     onChange={handleChange}
@@ -282,85 +295,126 @@ export default function StudentIdCard({
                   />
                 </div>
               ) : (
-                <div className="flex flex-col" style={{ gap: "4px" }}>
-                  <h3 className="text-base font-bold text-neutral-900 tracking-tight">
+                <div className="flex flex-col items-center" style={{ gap: "4px" }}>
+                  <h3 className="text-lg font-bold text-neutral-900 tracking-tight leading-tight">
                     {formData.name}
                   </h3>
-                  <p className="text-xs font-medium text-neutral-600">
+
+                  {/* Father's Name on Front Side */}
+                  <div className="inline-flex items-center gap-1.5 text-xs text-neutral-600 font-medium">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
+                      Father's Name:
+                    </span>
+                    <span className="font-semibold text-neutral-800">
+                      {formData.fatherName || "—"}
+                    </span>
+                  </div>
+
+                  <p className="text-xs font-medium text-neutral-600 mt-1">
                     {formData.classProgram}
                   </p>
+
                   <p className="text-[11px] text-neutral-500 font-mono">
-                    Roll No: <span className="font-semibold text-neutral-800">{formData.rollNo}</span>
+                    Roll No: <span className="font-bold text-blue-700 font-mono">{formData.rollNo}</span>
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Bottom Section with Scannable QR Code & Blue Accent Stripe */}
-            <div className="flex flex-col items-center justify-center" style={{ padding: "0 16px 14px 16px", gap: "6px" }}>
+            {/* Bottom Front Section: Academic Session & Blue Stripe */}
+            <div className="flex flex-col items-center justify-center w-full" style={{ padding: "0 18px 16px 18px", gap: "10px" }}>
               <div
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50/70 flex flex-col items-center justify-center text-center shadow-2xs"
-                style={{ height: "96px", padding: "6px" }}
+                className="w-full rounded-xl border border-neutral-200 flex items-center justify-center text-center"
+                style={{ padding: "10px 14px", boxSizing: "border-box", background: "transparent" }}
               >
-                <div className="flex items-center justify-center gap-3">
-                  <div className="bg-white p-1 rounded-lg border border-neutral-200 shadow-2xs flex items-center justify-center">
-                    {qrDataUrl ? (
-                      <img
-                        src={qrDataUrl}
-                        alt={`QR Code for ${formData.name}`}
-                        className="w-16 h-16 object-contain"
-                        style={{ imageRendering: "pixelated" }}
-                      />
-                    ) : (
-                      <div className="w-16 h-16 flex items-center justify-center bg-neutral-100 rounded">
-                        <QrCode className="w-6 h-6 text-neutral-400 animate-pulse" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col text-left justify-center">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-900">
-                      Attendance Pass
-                    </span>
-                    <span className="text-[11px] font-mono font-bold text-blue-700">
-                      {formData.rollNo}
-                    </span>
-                    <span className="text-[9px] text-neutral-500">
-                      Scan to record attendance
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                    Academic Session:
+                  </span>
+                  <span className="text-xs font-semibold text-neutral-800">
+                    2025 – 2026
+                  </span>
                 </div>
               </div>
-              <div className="w-full bg-blue-600 rounded-md" style={{ height: "8px" }} />
+              <div className="w-full rounded-md" style={{ height: "8px", background: "linear-gradient(135deg, #4da0ff 0%, #3b82f6 100%)" }} />
             </div>
           </div>
         ) : (
           /* ================= BACK SIDE ================= */
           <div className="flex flex-col h-full justify-between">
-            {/* Top Blue Stripe Header */}
+            {/* Top Light Blue Stripe Header */}
             <div
-              className="bg-blue-600 text-white"
-              style={{ padding: "16px 20px", boxSizing: "border-box" }}
+              className="flex items-center justify-between"
+              style={{
+                background: "linear-gradient(135deg, #4da0ff 0%, #3b82f6 100%)",
+                padding: "15px 18px",
+                boxSizing: "border-box",
+                color: "#ffffff",
+              }}
             >
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-                Guardian &amp; Contact Info
-              </h4>
-              <p className="text-[11px] text-blue-100">If found, please return to institute.</p>
+              <div>
+                <h4
+                  className="text-xs font-bold uppercase tracking-wider"
+                  style={{ color: "#ffffff", margin: 0, padding: 0 }}
+                >
+                  Guardian &amp; Contact Info
+                </h4>
+                <p
+                  className="text-[11px] mt-0.5"
+                  style={{ color: "rgba(255, 255, 255, 0.95)", margin: 0, padding: 0 }}
+                >
+                  If found, please return to institute.
+                </p>
+              </div>
+              <span
+                className="text-[11px] font-mono font-bold"
+                style={{ color: "#ffffff" }}
+              >
+                ID: {formData.rollNo}
+              </span>
             </div>
 
-            {/* Back Details */}
-            <div className="flex flex-col my-auto" style={{ padding: "0 20px", gap: "16px" }}>
-              {isEditing ? (
-                <div className="flex flex-col" style={{ gap: "10px" }}>
-                  <div className="flex flex-col" style={{ gap: "2px" }}>
-                    <label className="text-[10px] uppercase font-semibold text-neutral-500">Father&apos;s Name</label>
-                    <input
-                      type="text"
-                      name="fatherName"
-                      value={formData.fatherName}
-                      onChange={handleChange}
-                      className="text-xs font-bold text-neutral-900 border border-neutral-300 rounded px-2 py-1"
+            {/* Back Side Body: Large QR Code at Top + Guardian Phone & Address Below */}
+            <div className="flex flex-col my-auto" style={{ padding: "0 18px", gap: "12px" }}>
+              {/* 1. Large QR Code at Top */}
+              <div
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50/80 flex flex-col items-center justify-center text-center shadow-2xs"
+                style={{ padding: "12px 14px", gap: "8px" }}
+              >
+                <div className="bg-white p-2 rounded-xl border border-neutral-200 shadow-2xs flex items-center justify-center">
+                  {qrDataUrl ? (
+                    <img
+                      src={qrDataUrl}
+                      alt={`QR Code for ${formData.name}`}
+                      style={{ width: "135px", height: "135px", imageRendering: "pixelated" }}
                     />
+                  ) : (
+                    <div
+                      className="flex items-center justify-center bg-neutral-100 rounded-lg"
+                      style={{ width: "135px", height: "135px" }}
+                    >
+                      <QrCode className="w-8 h-8 text-neutral-400 animate-pulse" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-900">
+                      Attendance Pass
+                    </span>
+                    <span className="text-[11px] font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded">
+                      {formData.rollNo}
+                    </span>
                   </div>
+                  <span className="text-[10px] text-neutral-500 mt-0.5">
+                    Scan to record attendance &amp; verify identity
+                  </span>
+                </div>
+              </div>
+
+              {/* 2. Guardian Contact Number & Residential Address Below QR Code */}
+              {isEditing ? (
+                <div className="flex flex-col" style={{ gap: "8px" }}>
                   <div className="flex flex-col" style={{ gap: "2px" }}>
                     <label className="text-[10px] uppercase font-semibold text-neutral-500">Guardian Phone</label>
                     <input
@@ -383,16 +437,7 @@ export default function StudentIdCard({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col" style={{ gap: "16px" }}>
-                  <div className="flex flex-col" style={{ gap: "2px" }}>
-                    <span className="text-[10px] uppercase font-semibold text-neutral-400 tracking-wider">
-                      Father&apos;s Name
-                    </span>
-                    <span className="text-xs font-bold text-neutral-900">
-                      {formData.fatherName}
-                    </span>
-                  </div>
-
+                <div className="flex flex-col" style={{ gap: "10px" }}>
                   <div className="flex flex-col" style={{ gap: "2px" }}>
                     <span className="text-[10px] uppercase font-semibold text-neutral-400 tracking-wider">
                       Guardian Phone Number
@@ -400,7 +445,7 @@ export default function StudentIdCard({
                     <div className="flex items-center" style={{ gap: "6px" }}>
                       <Phone className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
                       <span className="text-xs font-semibold text-neutral-800 font-mono">
-                        {formData.guardianPhone}
+                        {formData.guardianPhone || "—"}
                       </span>
                     </div>
                   </div>
@@ -411,8 +456,8 @@ export default function StudentIdCard({
                     </span>
                     <div className="flex items-start" style={{ gap: "6px" }}>
                       <MapPin className="w-3.5 h-3.5 text-neutral-500 shrink-0 mt-0.5" />
-                      <span className="text-xs text-neutral-700 leading-relaxed">
-                        {formData.address}
+                      <span className="text-xs text-neutral-700 leading-snug line-clamp-2">
+                        {formData.address || "—"}
                       </span>
                     </div>
                   </div>
@@ -422,11 +467,11 @@ export default function StudentIdCard({
 
             {/* Bottom Footer & Blue Accent Stripe */}
             <div className="flex flex-col" style={{ padding: "0 16px 16px 16px", gap: "10px" }}>
-              <div className="border-t border-neutral-200 pt-3 flex items-center justify-between text-[10px] text-neutral-400">
+              <div className="border-t border-neutral-200 pt-2.5 flex items-center justify-between text-[10px] text-neutral-400">
                 <span>Issued by EduHub</span>
                 <span className="font-mono">ID: {formData.rollNo}</span>
               </div>
-              <div className="w-full bg-blue-600 rounded-md" style={{ height: "8px" }} />
+              <div className="w-full rounded-md" style={{ height: "8px", background: "linear-gradient(135deg, #4da0ff 0%, #3b82f6 100%)" }} />
             </div>
           </div>
         )}

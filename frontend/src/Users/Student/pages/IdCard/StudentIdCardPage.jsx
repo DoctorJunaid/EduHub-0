@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentStudent } from "@/store/selectors/studentDashboard";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
@@ -22,6 +22,12 @@ export default function StudentIdCardPage() {
   };
 
   const [studentData, setStudentData] = useState(initialData);
+
+  useEffect(() => {
+    if (currentStudent || currentUser) {
+      setStudentData(currentStudent || currentUser);
+    }
+  }, [currentStudent, currentUser]);
 
   const handleSave = (updatedData) => {
     setStudentData(updatedData);
