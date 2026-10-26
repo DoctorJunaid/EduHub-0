@@ -342,20 +342,20 @@ export default function TeacherTimetable() {
       )}
 
       {/* ── Top 4 Summary KPI Cards Row ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" style={{ gap: "16px" }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "16px" }}>
         {/* KPI 1: Assigned Periods / Wk */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
-          <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
               Assigned Periods / Wk
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
               {loading ? "..." : kpiData.assignedPeriods}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Total teaching sessions / wk</span>
+            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Total teaching sessions / wk</span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
             <BookOpen size={18} />
@@ -364,17 +364,17 @@ export default function TeacherTimetable() {
 
         {/* KPI 2: Classes & Sections */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
-          <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
               Classes & Sections
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
               {loading ? "..." : kpiData.classesAndSections}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Active assigned cohorts</span>
+            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Active assigned cohorts</span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
             <GraduationCap size={18} />
@@ -383,17 +383,17 @@ export default function TeacherTimetable() {
 
         {/* KPI 3: Subjects Taught */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
-          <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
               Subjects Taught
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
               {loading ? "..." : kpiData.subjectsTaught}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Unique course allocations</span>
+            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Unique course allocations</span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
             <CalendarDays size={18} />
@@ -402,17 +402,17 @@ export default function TeacherTimetable() {
 
         {/* KPI 4: Today's Sessions */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
           style={{ padding: "20px 24px", boxSizing: "border-box" }}
         >
-          <div>
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
               Today's Sessions
             </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1">
+            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
               {loading ? "..." : kpiData.todaySessions}
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block">Scheduled for today</span>
+            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Scheduled for today</span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
             <Clock size={18} />
@@ -422,7 +422,7 @@ export default function TeacherTimetable() {
 
       {/* ── Read-Only Context Bar & View Switcher (NO ADMIN BUTTONS) ─────── */}
       <div
-        className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4"
+        className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4"
         style={{ padding: "16px 20px", boxSizing: "border-box" }}
       >
         {/* Left Side: Scope Identity & Class Filter Pills */}
@@ -633,12 +633,12 @@ export default function TeacherTimetable() {
       ) : viewMode === "matrix" ? (
         /* ── Weekly Time-Grid Matrix (Scroll-Free Full-Width Layout) ───────── */
         <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs"
-          style={{ height: "auto", maxHeight: "none", overflow: "visible", width: "100%", boxSizing: "border-box" }}
+          className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-x-auto w-full"
+          style={{ height: "auto", maxHeight: "none", width: "100%", boxSizing: "border-box", WebkitOverflowScrolling: "touch" }}
         >
           <div
-            className="select-none"
-            style={{ height: "auto", maxHeight: "none", overflow: "visible", width: "100%" }}
+            className="select-none min-w-[760px] lg:min-w-0"
+            style={{ height: "auto", maxHeight: "none", width: "100%" }}
           >
             <div style={{ width: "100%", height: "auto", overflow: "visible" }}>
               {/* Matrix Header Row: Time Axis Header + Weekday Columns */}
@@ -847,8 +847,8 @@ export default function TeacherTimetable() {
       ) : (
         /* ── All Scheduled List View ─────────────────────────────────────── */
         <div className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="w-full min-w-[700px] text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50 text-[10.5px] font-bold text-neutral-500 uppercase tracking-wider">
                   <th style={{ padding: "12px 16px" }}>Day</th>
@@ -920,7 +920,7 @@ export default function TeacherTimetable() {
       {/* ── Bottom Summary Table: TEACHING LOAD BREAKDOWN ────────────────── */}
       <div className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
         <div
-          className="flex items-center justify-between border-b border-neutral-200"
+          className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 gap-3"
           style={{ padding: "16px 20px" }}
         >
           <div className="flex items-center" style={{ gap: "12px" }}>
@@ -946,7 +946,7 @@ export default function TeacherTimetable() {
             </div>
           </div>
           <span
-            className="rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-800 whitespace-nowrap"
+            className="rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-800 whitespace-nowrap self-start sm:self-auto"
             style={{ padding: "4px 10px" }}
           >
             {teachingLoadBreakdown.length}{" "}
@@ -954,8 +954,8 @@ export default function TeacherTimetable() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full min-w-[650px] text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50/50 text-[10.5px] font-bold text-neutral-500 uppercase tracking-wider">
                 <th style={{ padding: "14px 20px" }} className="align-middle">Subject / Course</th>

@@ -205,7 +205,15 @@
 /* Responsive */
 @media (max-width: 640px) {
   .teacher-diary {
-    padding: 0 16px 16px 16px;
+    padding: 0 0 16px 0;
+  }
+
+  .teacher-diary-toolbar {
+    width: 100%;
+  }
+
+  .teacher-diary-card header {
+    flex-wrap: wrap;
   }
 
   .teacher-diary-empty {
@@ -217,3 +225,4 @@
     grid-template-columns: 1fr;
   }
 }
+

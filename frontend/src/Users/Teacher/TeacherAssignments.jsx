@@ -376,8 +376,8 @@ export default function TeacherAssignments() {
       </h1>
 
       {/* 1. Header Toolbar */}
-      <div className="teacher-assignments-toolbar">
-        <div className="teacher-assignments-toolbar-filters">
+      <div className="teacher-assignments-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+        <div className="teacher-assignments-toolbar-filters flex flex-wrap items-center gap-2.5">
           {classes.length > 0 && (
             <select
               value={selectedClassFilter}
@@ -435,55 +435,55 @@ export default function TeacherAssignments() {
       </div>
 
       {/* 2. KPI Metrics Strip */}
-      <div className="campus-kpi-track teacher-assignments-kpis">
-        <div className="campus-kpi-card teacher-assignments-kpi">
-          <div className="kpi-wrap">
-            <div className="teacher-assignments-kpi-icon">
+      <div className="campus-kpi-track teacher-assignments-kpis grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "16px" }}>
+        <div className="campus-kpi-card teacher-assignments-kpi min-w-0">
+          <div className="kpi-wrap min-w-0">
+            <div className="teacher-assignments-kpi-icon shrink-0">
               <FileText size={18} />
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">TOTAL ASSIGNMENTS</span>
-              <div className="kpi-value teacher-assignments-kpi-value">{assignments.length}</div>
-              <span className="kpi-subtext">Across {classes.length} classes</span>
+            <div className="kpi-info min-w-0 flex-1">
+              <span className="kpi-label whitespace-nowrap truncate block">TOTAL ASSIGNMENTS</span>
+              <div className="kpi-value teacher-assignments-kpi-value whitespace-nowrap">{assignments.length}</div>
+              <span className="kpi-subtext whitespace-nowrap truncate block">Across {classes.length} classes</span>
             </div>
           </div>
         </div>
 
-        <div className="campus-kpi-card teacher-assignments-kpi">
-          <div className="kpi-wrap">
-            <div className="teacher-assignments-kpi-icon">
+        <div className="campus-kpi-card teacher-assignments-kpi min-w-0">
+          <div className="kpi-wrap min-w-0">
+            <div className="teacher-assignments-kpi-icon shrink-0">
               <CheckCircle2 size={18} />
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">GRADED SUBMISSIONS</span>
-              <div className="kpi-value teacher-assignments-kpi-value">{totalGradedAll}</div>
-              <span className="kpi-subtext">Completed evaluations</span>
+            <div className="kpi-info min-w-0 flex-1">
+              <span className="kpi-label whitespace-nowrap truncate block">GRADED SUBMISSIONS</span>
+              <div className="kpi-value teacher-assignments-kpi-value whitespace-nowrap">{totalGradedAll}</div>
+              <span className="kpi-subtext whitespace-nowrap truncate block">Completed evaluations</span>
             </div>
           </div>
         </div>
 
-        <div className="campus-kpi-card teacher-assignments-kpi">
-          <div className="kpi-wrap">
-            <div className="teacher-assignments-kpi-icon">
+        <div className="campus-kpi-card teacher-assignments-kpi min-w-0">
+          <div className="kpi-wrap min-w-0">
+            <div className="teacher-assignments-kpi-icon shrink-0">
               <Clock3 size={18} />
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">PENDING REVIEWS</span>
-              <div className="kpi-value teacher-assignments-kpi-value">{totalPendingAll}</div>
-              <span className="kpi-subtext">Submissions awaiting grading</span>
+            <div className="kpi-info min-w-0 flex-1">
+              <span className="kpi-label whitespace-nowrap truncate block">PENDING REVIEWS</span>
+              <div className="kpi-value teacher-assignments-kpi-value whitespace-nowrap">{totalPendingAll}</div>
+              <span className="kpi-subtext whitespace-nowrap truncate block">Submissions awaiting grading</span>
             </div>
           </div>
         </div>
 
-        <div className="campus-kpi-card teacher-assignments-kpi">
-          <div className="kpi-wrap">
-            <div className="teacher-assignments-kpi-icon">
+        <div className="campus-kpi-card teacher-assignments-kpi min-w-0">
+          <div className="kpi-wrap min-w-0">
+            <div className="teacher-assignments-kpi-icon shrink-0">
               <Users size={18} />
             </div>
-            <div className="kpi-info">
-              <span className="kpi-label">TOTAL SUBMISSIONS</span>
-              <div className="kpi-value teacher-assignments-kpi-value">{totalSubmissionsAll}</div>
-              <span className="kpi-subtext">Delivered student work</span>
+            <div className="kpi-info min-w-0 flex-1">
+              <span className="kpi-label whitespace-nowrap truncate block">TOTAL SUBMISSIONS</span>
+              <div className="kpi-value teacher-assignments-kpi-value whitespace-nowrap">{totalSubmissionsAll}</div>
+              <span className="kpi-subtext whitespace-nowrap truncate block">Delivered student work</span>
             </div>
           </div>
         </div>
@@ -695,8 +695,8 @@ export default function TeacherAssignments() {
               </header>
 
               <div
-                className="teacher-submissions-wrap"
-                style={{ flex: 1, overflowY: "auto" }}
+                className="teacher-submissions-wrap w-full overflow-x-auto"
+                style={{ flex: 1, WebkitOverflowScrolling: "touch" }}
               >
                 {loadingSubmissions ? (
                   <div className="py-8 text-center text-slate-400">
@@ -706,7 +706,7 @@ export default function TeacherAssignments() {
                 ) : (
                   <table
                     className="campus-data-table teacher-table"
-                    style={{ width: "100%", tableLayout: "fixed" }}
+                    style={{ width: "100%", minWidth: "850px" }}
                   >
                     <thead>
                       <tr>

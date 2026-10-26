@@ -216,28 +216,28 @@ export default function TeacherClassCredits() {
     >
       {/* 4 KPI Metric Cards Grid */}
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full"
+        className="grid grid-cols-2 lg:grid-cols-4 w-full"
         style={{ gap: "16px" }}
       >
         {/* Total Credits */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm"
+          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm min-w-0"
           style={{ padding: "20px", boxSizing: "border-box" }}
         >
-          <div className="flex flex-col" style={{ gap: "6px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "6px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               TOTAL CREDITS
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap truncate">
               {summary?.totalCredits ?? "0"}
             </span>
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-500 truncate">
               {summary?.regularCredits || 0} Regular +{" "}
               {summary?.substituteCredits || 0} Substitute
             </span>
           </div>
           <div
-            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0 ml-2"
             style={{ width: "36px", height: "36px" }}
           >
             <Award className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
@@ -246,22 +246,22 @@ export default function TeacherClassCredits() {
 
         {/* Classes Completed */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm"
+          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm min-w-0"
           style={{ padding: "20px", boxSizing: "border-box" }}
         >
-          <div className="flex flex-col" style={{ gap: "6px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "6px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               CLASSES COMPLETED
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap truncate">
               {summary?.completedCount ?? "0"}
             </span>
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-500 truncate">
               of {summary?.scheduledCount || 0} scheduled classes
             </span>
           </div>
           <div
-            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0 ml-2"
             style={{ width: "36px", height: "36px" }}
           >
             <CheckCircle2 className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
@@ -270,22 +270,22 @@ export default function TeacherClassCredits() {
 
         {/* Substitution Bonus */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm"
+          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm min-w-0"
           style={{ padding: "20px", boxSizing: "border-box" }}
         >
-          <div className="flex flex-col" style={{ gap: "6px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "6px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               SUBSTITUTION BONUS
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap truncate">
               +{formatPKR(summary?.totalBonusEarned)}
             </span>
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-500 truncate">
               {summary?.substituteDutiesTaken || 0} classes covered
             </span>
           </div>
           <div
-            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0 ml-2"
             style={{ width: "36px", height: "36px" }}
           >
             <Coins className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
@@ -294,23 +294,23 @@ export default function TeacherClassCredits() {
 
         {/* Approved Deductions */}
         <div
-          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm"
+          className="bg-white border border-neutral-200 rounded-xl flex items-start justify-between shadow-sm min-w-0"
           style={{ padding: "20px", boxSizing: "border-box" }}
         >
-          <div className="flex flex-col" style={{ gap: "6px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          <div className="flex flex-col min-w-0 flex-1" style={{ gap: "6px" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
               APPROVED DEDUCTIONS
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap truncate">
               -{formatPKR(summary?.approvedDeductionsTotal)}
             </span>
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-500 truncate">
               {summary?.missedCount || 0} missed,{" "}
               {summary?.pendingReviewsCount || 0} pending review
             </span>
           </div>
           <div
-            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
+            className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0 ml-2"
             style={{ width: "36px", height: "36px" }}
           >
             <TrendingDown className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
@@ -324,14 +324,14 @@ export default function TeacherClassCredits() {
         style={{ paddingBottom: "12px", gap: "16px" }}
       >
         {/* Left: Tabs */}
-        <div className="flex items-center" style={{ gap: "24px" }}>
+        <div className="flex items-center flex-wrap gap-x-6 gap-y-2 max-w-full">
           <button
             type="button"
             onClick={() => setActiveTab("today")}
             className={
               activeTab === "today"
-                ? "text-sm font-semibold text-neutral-900 border-b-2 border-neutral-900 cursor-pointer"
-                : "text-sm font-medium text-neutral-500 hover:text-neutral-800 cursor-pointer"
+                ? "text-sm font-semibold text-neutral-900 border-b-2 border-neutral-900 cursor-pointer whitespace-nowrap"
+                : "text-sm font-medium text-neutral-500 hover:text-neutral-800 cursor-pointer whitespace-nowrap"
             }
             style={{ paddingBottom: "10px", marginBottom: "-13px" }}
           >
@@ -342,8 +342,8 @@ export default function TeacherClassCredits() {
             onClick={() => setActiveTab("history")}
             className={
               activeTab === "history"
-                ? "text-sm font-semibold text-neutral-900 border-b-2 border-neutral-900 cursor-pointer"
-                : "text-sm font-medium text-neutral-500 hover:text-neutral-800 cursor-pointer"
+                ? "text-sm font-semibold text-neutral-900 border-b-2 border-neutral-900 cursor-pointer whitespace-nowrap"
+                : "text-sm font-medium text-neutral-500 hover:text-neutral-800 cursor-pointer whitespace-nowrap"
             }
             style={{ paddingBottom: "10px", marginBottom: "-13px" }}
           >
@@ -352,7 +352,7 @@ export default function TeacherClassCredits() {
         </div>
 
         {/* Right: Compact Month Input & Sync Button */}
-        <div className="flex items-center shrink-0" style={{ gap: "10px" }}>
+        <div className="flex items-center shrink-0 flex-wrap gap-2.5">
           <input
             type="month"
             value={selectedMonth}
@@ -373,11 +373,13 @@ export default function TeacherClassCredits() {
               toast.success("Teaching sessions synchronized.");
             }}
             disabled={isRefreshing}
-            className="border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-700 inline-flex items-center justify-center transition-colors shrink-0 cursor-pointer shadow-none disabled:opacity-50"
+            className="border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-700 inline-flex items-center justify-center transition-colors shrink-0 cursor-pointer shadow-none disabled:opacity-50 whitespace-nowrap"
             style={{
               height: "36px",
               padding: "0 14px",
               gap: "6px",
+              minWidth: "fit-content",
+              width: "auto",
             }}
           >
             {isRefreshing ? (
@@ -393,7 +395,7 @@ export default function TeacherClassCredits() {
       {/* Filter and Search Bar for History Tab */}
       {activeTab === "history" && (
         <div
-          className="w-full flex items-center justify-between gap-3 bg-white border border-neutral-200 rounded-lg flex-wrap"
+          className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-lg"
           style={{ padding: "12px 16px" }}
         >
           <div className="relative flex-1 w-full max-w-sm">
@@ -411,12 +413,12 @@ export default function TeacherClassCredits() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter size={14} className="text-neutral-500" />
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Filter size={14} className="text-neutral-500 shrink-0" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs border border-neutral-200 rounded-lg px-3 py-1.5 bg-white font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+              className="w-full sm:w-auto text-xs border border-neutral-200 rounded-lg px-3 py-1.5 bg-white font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400"
               style={{ height: "36px" }}
             >
               <option value="All">All Statuses</option>
@@ -498,8 +500,8 @@ export default function TeacherClassCredits() {
             </p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="teacher-credits-table">
+          <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="teacher-credits-table" style={{ minWidth: "820px" }}>
               <thead>
                 <tr>
                   <th style={{ padding: "16px 20px" }}>Period &amp; Time</th>
