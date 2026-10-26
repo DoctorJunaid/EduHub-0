@@ -46,12 +46,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import "./TeacherAssignments.css";
 
 const initials = (name = "") =>
@@ -93,6 +87,13 @@ export default function TeacherAssignments() {
   const [gradingTarget, setGradingTarget] = useState(null); // { submission, assignment }
 
   const feedbackTextareaId = useId();
+
+  const [minDueDate] = useState(() => dateKey(new Date()));
+  const [defaultNextWeekDueDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return dateKey(d);
+  });
 
   // 1. Classes Query
   const classesQuery = useQuery({
@@ -939,13 +940,11 @@ export default function TeacherAssignments() {
                     name="dueDate"
                     type="date"
                     required
-                    min={dateKey(new Date())}
+                    min={minDueDate}
                     defaultValue={
                       editingAssignment.dueDate
                         ? formatDate(editingAssignment.dueDate)
-                        : dateKey(
-                            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                          )
+                        : defaultNextWeekDueDate
                     }
                   />
                 </label>

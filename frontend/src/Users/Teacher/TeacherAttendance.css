@@ -374,6 +374,13 @@
     padding: 0 16px 16px 16px;
   }
 
+  .teacher-attendance-toolbar.campus-toolbar,
+  .teacher-attendance-toolbar {
+    height: auto !important;
+    min-height: 48px !important;
+    padding-block: 8px !important;
+  }
+
   .teacher-attendance-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
