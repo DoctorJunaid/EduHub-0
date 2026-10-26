@@ -10,15 +10,11 @@ import {
   Keyboard,
   Clock,
   RotateCw,
-  Sparkles,
   Volume2,
   VolumeX,
   X,
   RefreshCw,
   UserCheck,
-  User,
-  ArrowRight,
-  ShieldAlert,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 
@@ -182,6 +178,26 @@ export default function QRAttendanceScanner({
     [classScope, endpoint, manualClass, manualSection, onAttendanceMarked, soundEnabled, targetStatus]
   );
 
+  const stopCamera = useCallback(() => {
+    if (scannerRef.current) {
+      if (scannerRef.current.isScanning) {
+        scannerRef.current
+          .stop()
+          .catch(() => {})
+          .finally(() => {
+            try {
+              scannerRef.current?.clear();
+            } catch {}
+            scannerRef.current = null;
+            setCameraActive(false);
+          });
+      } else {
+        scannerRef.current = null;
+        setCameraActive(false);
+      }
+    }
+  }, []);
+
   /**
    * Initialize Camera Scanner
    */
@@ -260,27 +276,7 @@ export default function QRAttendanceScanner({
       clearTimeout(timer);
       stopCamera();
     };
-  }, [open, activeTab, facingMode, submitAttendance]);
-
-  const stopCamera = () => {
-    if (scannerRef.current) {
-      if (scannerRef.current.isScanning) {
-        scannerRef.current
-          .stop()
-          .catch(() => {})
-          .finally(() => {
-            try {
-              scannerRef.current.clear();
-            } catch {}
-            scannerRef.current = null;
-            setCameraActive(false);
-          });
-      } else {
-        scannerRef.current = null;
-        setCameraActive(false);
-      }
-    }
-  };
+  }, [open, activeTab, facingMode, submitAttendance, stopCamera]);
 
   const handleManualSubmit = (e) => {
     e.preventDefault();
