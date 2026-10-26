@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import toast from "react-hot-toast";
 import { Spinner, SpinnerCustom } from "@/components/ui/spinner";
+import TeacherLeaveRequestsCard from "./TeacherLeaveRequestsCard";
 import "./TeacherAttendance.css";
 
 const getTodayKey = () => new Date().toISOString().split("T")[0];
@@ -346,6 +347,9 @@ export default function TeacherAttendance() {
           variant="late"
         />
       </section>
+
+      {/* Pending Student Leave Applications */}
+      <TeacherLeaveRequestsCard className="mb-6" />
 
       {/* Main Attendance Card */}
       <section className="teacher-attendance-card">

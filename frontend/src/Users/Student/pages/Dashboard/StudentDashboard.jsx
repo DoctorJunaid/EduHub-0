@@ -26,6 +26,8 @@ import {
   MapPin,
   Clock,
   Phone,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -101,12 +103,55 @@ export default function StudentDashboard() {
     return <PageLoader text="Loading student dashboard..." />;
   }
 
+  const [timetablePage, setTimetablePage] = useState(1);
+  const [timetablePageSize, setTimetablePageSize] = useState(4);
+
   const todaysClasses = (timetable || []).filter((session) =>
     session?.days?.includes(parseDate(today).getDay()),
   );
   const displayedClasses = todaysClasses.length > 0 ? todaysClasses : (timetable || []);
   const isShowingAllClasses =
     todaysClasses.length === 0 && (timetable || []).length > 0;
+
+  const totalClasses = displayedClasses.length;
+  const totalTimetablePages = Math.max(1, Math.ceil(totalClasses / timetablePageSize));
+  const safeTimetablePage = Math.min(Math.max(1, timetablePage), totalTimetablePages);
+
+  const timetableStartIndex = (safeTimetablePage - 1) * timetablePageSize;
+  const timetableEndIndex = Math.min(timetableStartIndex + timetablePageSize, totalClasses);
+  const paginatedClasses = displayedClasses.slice(timetableStartIndex, timetableEndIndex);
+
+  useEffect(() => {
+    setTimetablePage(1);
+  }, [displayedClasses.length, today]);
+
+  const getTimetablePageNumbers = () => {
+    if (totalTimetablePages <= 5) {
+      return Array.from({ length: totalTimetablePages }, (_, i) => i + 1);
+    }
+    if (safeTimetablePage <= 3) {
+      return [1, 2, 3, 4, "...", totalTimetablePages];
+    }
+    if (safeTimetablePage >= totalTimetablePages - 2) {
+      return [
+        1,
+        "...",
+        totalTimetablePages - 3,
+        totalTimetablePages - 2,
+        totalTimetablePages - 1,
+        totalTimetablePages,
+      ];
+    }
+    return [
+      1,
+      "...",
+      safeTimetablePage - 1,
+      safeTimetablePage,
+      safeTimetablePage + 1,
+      "...",
+      totalTimetablePages,
+    ];
+  };
 
   const stats = [
     {
@@ -344,6 +389,14 @@ export default function StudentDashboard() {
                     Showing Regular Routine
                   </Badge>
                 )}
+                {totalClasses > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="ml-2 text-xs font-semibold bg-zinc-50 border-zinc-200 text-zinc-700"
+                  >
+                    {totalClasses} {isSchool ? (totalClasses === 1 ? "Period" : "Periods") : (totalClasses === 1 ? "Class" : "Classes")}
+                  </Badge>
+                )}
               </p>
             </div>
           </div>
@@ -375,8 +428,8 @@ export default function StudentDashboard() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayedClasses.map((session) => (
-              <TableRow key={session.id}>
+            {paginatedClasses.map((session, idx) => (
+              <TableRow key={session.id || session._id || `timetable-session-${idx}`}>
                 <TableCell>
                   <strong>{session.subject}</strong>
                   <small>Sec: {session.section}</small>
@@ -389,14 +442,14 @@ export default function StudentDashboard() {
                   </span>
                   <small>{dayLabel(session.days)}</small>
                 </TableCell>
-                <TableCell>{session.room}</TableCell>
-                <TableCell>{session.instructor}</TableCell>
+                <TableCell>{session.room || "Classroom"}</TableCell>
+                <TableCell>{session.instructor || "Assigned Teacher"}</TableCell>
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={`sd-status sd-status-${session.status.toLowerCase()}`}
+                    className={`sd-status sd-status-${(session.status || "active").toLowerCase()}`}
                   >
-                    {session.status === "Active" ? "Scheduled" : session.status}
+                    {session.status === "Active" ? "Scheduled" : (session.status || "Scheduled")}
                   </Badge>
                 </TableCell>
               </TableRow>
@@ -412,6 +465,84 @@ export default function StudentDashboard() {
             )}
           </TableBody>
         </Table>
+
+        {totalClasses > 0 && (
+          <footer className="sd-table-pagination" aria-label="Timetable pagination">
+            <div className="sd-pagination-left">
+              <span className="sd-pagination-info">
+                Showing <strong>{timetableStartIndex + 1}–{timetableEndIndex}</strong> of{" "}
+                <strong>{totalClasses}</strong> {isSchool ? (totalClasses === 1 ? "period" : "periods") : (totalClasses === 1 ? "class" : "classes")}
+              </span>
+
+              {totalClasses > 4 && (
+                <div className="sd-pagination-size-wrap">
+                  <span>Rows:</span>
+                  <select
+                    value={timetablePageSize}
+                    onChange={(e) => {
+                      setTimetablePageSize(Number(e.target.value));
+                      setTimetablePage(1);
+                    }}
+                    className="sd-pagination-select"
+                    aria-label="Periods per page"
+                  >
+                    <option value={4}>4 per page</option>
+                    <option value={6}>6 per page</option>
+                    <option value={8}>8 per page</option>
+                    <option value={12}>12 per page</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {totalTimetablePages > 1 && (
+              <div className="sd-pagination-controls">
+                <button
+                  type="button"
+                  className="sd-pagination-btn"
+                  onClick={() => setTimetablePage((p) => Math.max(1, p - 1))}
+                  disabled={safeTimetablePage <= 1}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={14} aria-hidden="true" />
+                  <span>Prev</span>
+                </button>
+
+                <div className="sd-pagination-pages">
+                  {getTimetablePageNumbers().map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="sd-pagination-ellipsis" aria-hidden="true">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`sd-pagination-page-btn ${p === safeTimetablePage ? "active" : ""}`}
+                        onClick={() => setTimetablePage(p)}
+                        aria-label={`Go to page ${p}`}
+                        aria-current={p === safeTimetablePage ? "page" : undefined}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="sd-pagination-btn"
+                  onClick={() => setTimetablePage((p) => Math.min(totalTimetablePages, p + 1))}
+                  disabled={safeTimetablePage >= totalTimetablePages}
+                  aria-label="Next page"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={14} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </footer>
+        )}
       </Card>
 
       {/* Class Faculty & Incharges Section */}
