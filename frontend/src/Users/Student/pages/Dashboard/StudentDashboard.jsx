@@ -204,45 +204,63 @@ export default function StudentDashboard() {
   return (
     <section className="student-dashboard" aria-label="Student dashboard">
       {classTeacher?.name && (
-        <Card className="sd-teacher-banner p-3 flex flex-row items-center justify-between gap-3 border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/50 dark:border-zinc-800">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-              {classTeacher.name.charAt(0).toUpperCase()}
+        <div className="sd-teacher-banner">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 overflow-hidden">
+              {classTeacher.avatar ? (
+                <img
+                  src={classTeacher.avatar}
+                  alt={classTeacher.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                classTeacher.name.charAt(0).toUpperCase()
+              )}
             </div>
-            <div className="min-w-0">
+            <div className="flex flex-col min-w-0 gap-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
-                  <GraduationCap className="w-3.5 h-3.5" />
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/60">
+                  <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
                   Class Teacher
                 </span>
                 {classTeacher.sectionName && (
-                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-zinc-300 font-medium">
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-zinc-200 bg-zinc-50 text-zinc-700 font-medium">
                     Section {classTeacher.sectionName}
                   </Badge>
                 )}
               </div>
-              <h3 className="text-sm font-bold text-foreground leading-snug truncate">{classTeacher.name}</h3>
-              <p className="text-xs text-muted-foreground truncate">
-                {classTeacher.department || classTeacher.designation || "Class Mentor"}
-                {classTeacher.email && ` · ${classTeacher.email}`}
+              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 tracking-tight leading-snug truncate">
+                {classTeacher.name}
+              </h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate flex items-center gap-1.5">
+                <span>{classTeacher.department || classTeacher.designation || "Class Mentor"}</span>
+                {classTeacher.email && (
+                  <>
+                    <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                    <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">{classTeacher.email}</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-zinc-200 hover:bg-zinc-100">
-              <Link to="/student/id-card">
-                <QrCode className="w-3.5 h-3.5" />
-                Student ID Card
-              </Link>
-            </Button>
-            <Button size="sm" variant="outline" asChild className="h-8 text-xs gap-1.5 border-zinc-200 hover:bg-zinc-100">
-              <Link to="/student/support?category=Academic">
-                <MessageSquare className="w-3.5 h-3.5" />
-                Ask Teacher
-              </Link>
-            </Button>
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            <Link
+              to="/student/id-card"
+              className="sd-teacher-btn-card"
+            >
+              <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>Student ID Card</span>
+            </Link>
+
+            <Link
+              to="/student/support?category=Academic"
+              className="sd-teacher-btn-ask"
+            >
+              <MessageSquare className="w-4 h-4 text-white shrink-0" />
+              <span style={{ color: "#ffffff" }}>Ask Teacher</span>
+            </Link>
           </div>
-        </Card>
+        </div>
       )}
 
       <div className="sd-stats">
@@ -252,31 +270,30 @@ export default function StudentDashboard() {
       </div>
 
       {/* ── Student Transport Details Card ── */}
-      <Card className="sd-transport-card p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-xs">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-              <Bus className="w-5 h-5" />
+      <div className="sd-transport-card">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2.5 border-b border-neutral-100">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 shadow-2xs">
+              <Bus className="w-4.5 h-4.5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-foreground">
+                <h3 className="text-sm font-bold text-neutral-900 leading-snug truncate">
                   {isEnrolledInTransport
                     ? transport?.route?.routeName || "Assigned Campus Bus Route"
                     : "School Bus & Commute"}
                 </h3>
-                <Badge
-                  variant="outline"
-                  className={
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
                     isEnrolledInTransport
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-300 text-[10px] font-bold py-0"
-                      : "bg-zinc-100 text-zinc-600 border-zinc-200 text-[10px] font-medium py-0"
-                  }
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-neutral-100 text-neutral-600 border-neutral-200"
+                  }`}
                 >
                   {isEnrolledInTransport ? "Enrolled Commuter" : "Self Commuter"}
-                </Badge>
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-neutral-500 truncate mt-0.5">
                 {isEnrolledInTransport
                   ? `Designated stop: ${transport?.stop?.stopName || "Designated stop"} · Bus ${transport?.vehicle?.busNumber || "Assigned"}`
                   : "Campus bus service not assigned to this student profile."}
@@ -286,71 +303,74 @@ export default function StudentDashboard() {
 
           <div className="flex items-center gap-2 shrink-0">
             {isEnrolledInTransport && transport?.driver?.phone && transport.driver.phone !== "—" && (
-              <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50">
-                <a href={`tel:${transport.driver.phone}`}>
-                  <Phone className="w-3 h-3 text-emerald-600" />
-                  Call Driver
-                </a>
-              </Button>
+              <a
+                href={`tel:${transport.driver.phone}`}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold border border-emerald-200 bg-emerald-50/60 text-emerald-700 hover:bg-emerald-100 transition-colors"
+              >
+                <Phone className="w-3 h-3 text-emerald-600" />
+                <span>Call Driver</span>
+              </a>
             )}
-            <Button size="sm" variant="outline" asChild className="h-7 text-xs gap-1 border-zinc-200 hover:bg-zinc-100">
-              <Link to="/student/transport">
-                View Transport Details
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </Button>
+            <Link
+              to="/student/transport"
+              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-semibold border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 shadow-2xs transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <span>View Transport Details</span>
+              <ArrowRight className="w-3 h-3 text-neutral-500" />
+            </Link>
           </div>
         </div>
 
         {isEnrolledInTransport ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
-            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2.5">
+            <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 space-y-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
                 <Bus className="w-3 h-3 text-blue-600" /> Assigned Bus
               </span>
-              <strong className="text-sm font-bold text-foreground block truncate">
+              <strong className="text-xs font-bold text-neutral-900 block truncate">
                 {transport?.vehicle?.busNumber || "Bus #12"}
               </strong>
-              <span className="text-xs text-muted-foreground block truncate">
+              <span className="text-[11px] text-neutral-500 block truncate">
                 {transport?.vehicle?.model || "Toyota Coaster"} · {transport?.vehicle?.plateNumber || "ABC-123"}
               </span>
             </div>
 
-            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-600" /> Pickup Stop & Timing
+            <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 space-y-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-emerald-600" /> Pickup Stop &amp; Timing
               </span>
-              <strong className="text-sm font-bold text-foreground block truncate">
+              <strong className="text-xs font-bold text-neutral-900 block truncate">
                 {transport?.stop?.stopName || "Assigned Stop"}
               </strong>
-              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold block truncate">
+              <span className="text-[11px] text-emerald-700 font-semibold block truncate">
                 Pickup: {transport?.stop?.pickupTime || "07:15 AM"} · Return: {transport?.stop?.dropTime || "02:30 PM"}
               </span>
             </div>
 
-            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 space-y-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
                 <User className="w-3 h-3 text-purple-600" /> Designated Driver
               </span>
-              <strong className="text-sm font-bold text-foreground block truncate">
+              <strong className="text-xs font-bold text-neutral-900 block truncate">
                 {transport?.driver?.name || "Ali Ahmed"}
               </strong>
-              <span className="text-xs text-muted-foreground block truncate">
+              <span className="text-[11px] text-neutral-500 block truncate">
                 Phone: {transport?.driver?.phone || "—"}
               </span>
             </div>
           </div>
         ) : (
-          <div className="pt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-muted-foreground gap-2">
-            <span>Need school bus transport? Request route assignment from the administration.</span>
-            <Button size="sm" variant="ghost" asChild className="h-6 text-xs text-primary p-0">
-              <Link to="/student/support?category=Transport">
-                Request Transport Service →
-              </Link>
-            </Button>
+          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-neutral-500 gap-2">
+            <span className="text-[11px]">Need school bus transport? Request route assignment from the administration.</span>
+            <Link
+              to="/student/support?category=Transport"
+              className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 shrink-0"
+            >
+              Request Transport Service →
+            </Link>
           </div>
         )}
-      </Card>
+      </div>
       <Card className="sd-timetable">
         <div className="sd-section-heading">
           <div className="sd-section-title">

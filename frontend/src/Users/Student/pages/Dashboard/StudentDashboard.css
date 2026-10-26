@@ -1,16 +1,124 @@
 .student-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 20px;
   min-width: 0;
-  padding: 8px 12px 12px;
-  background: #fafafa;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 28px 48px;
+  background: #f8fafc;
   color: var(--foreground);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 16px 16px 36px;
+    gap: 16px;
+  }
+}
+
+.sd-teacher-banner {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  padding: 18px 24px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 640px) {
+  .sd-teacher-banner {
+    padding: 16px !important;
+    gap: 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
+
+.sd-teacher-btn-card {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer !important;
+}
+
+.sd-teacher-btn-card:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.sd-teacher-btn-ask {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  height: 38px !important;
+  padding: 0 18px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background: #0f172a !important;
+  border: 1.5px solid #0f172a !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer !important;
+}
+
+.sd-teacher-btn-ask,
+.sd-teacher-btn-ask span,
+.sd-teacher-btn-ask svg {
+  color: #ffffff !important;
+}
+
+.sd-teacher-btn-ask:hover {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+.sd-transport-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  padding: 14px 20px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+@media (max-width: 640px) {
+  .sd-transport-card {
+    padding: 14px 16px !important;
+  }
 }
 
 .student-dashboard [data-slot="card"] {
   border: 1px solid #e4e4e7;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ffffff;
   box-shadow: none;
 }
