@@ -306,6 +306,148 @@
   text-align: center;
 }
 
+/* Table Pagination Footer for Student Dashboard */
+.sd-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 2px 2px;
+  border-top: 1px solid #e4e4e7;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-pagination-info {
+  font-size: 12px;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.sd-pagination-info strong {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.sd-pagination-size-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.sd-pagination-select {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  font-size: 11.5px;
+  color: #09090b;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.sd-pagination-select:hover {
+  border-color: #d4d4d8;
+}
+
+.sd-pagination-select:focus {
+  border-color: #09090b;
+}
+
+.sd-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sd-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.sd-pagination-btn:hover:not(:disabled) {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #09090b;
+}
+
+.sd-pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #ffffff;
+  border-color: #e4e4e7;
+  color: #a1a1aa;
+}
+
+.sd-pagination-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-pagination-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #52525b;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sd-pagination-page-btn:hover:not(.active) {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #09090b;
+}
+
+.sd-pagination-page-btn.active {
+  background: #09090b;
+  border-color: #09090b;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sd-pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 28px;
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
 /* Class Faculty & Incharges Section */
 .student-dashboard .sd-faculty {
   padding: 12px 14px;
@@ -847,6 +989,20 @@
 
   .sd-timetable table {
     min-width: 580px;
+  }
+
+  .sd-table-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .sd-pagination-left {
+    justify-content: space-between;
+  }
+
+  .sd-pagination-controls {
+    justify-content: center;
   }
 }
 
