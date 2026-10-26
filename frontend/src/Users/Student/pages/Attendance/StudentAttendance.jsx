@@ -1,17 +1,21 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
   BookOpen,
   CalendarDays,
   Clock3,
-  ChartNoAxesColumnIncreasing,
   ChevronLeft,
   ChevronRight,
   Search,
   X,
   FileText,
   AlertTriangle,
+  Plus,
+  CheckCircle2,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -23,15 +27,15 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import Progress from "@/components/common/Progress";
 import AttendanceStatusBadge from "@/components/common/AttendanceStatusBadge";
 import { selectStudentAttendancePage } from "@/store/selectors/studentAttendance";
 import { PageLoader } from "@/components/ui/spinner";
 import useStudentPortal from "@/hooks/useStudentPortal";
+import { applyStudentLeaveApi } from "@/api/studentLeave.api";
+import toast from "react-hot-toast";
 import "./StudentAttendance.css";
 
 const percentage = (rate) => `${Number(rate.toFixed(1))}%`;
-const ITEMS_PER_PAGE = 8;
 const LOGS_PER_PAGE = 10;
 
 function AttendancePagination({
@@ -83,15 +87,94 @@ function AttendancePagination({
 }
 
 export default function StudentAttendance() {
-  const { isLoading } = useStudentPortal();
-  const { student, attendance, courses = [], rows = [], absent = 0, late = 0, leave = 0 } =
+  const queryClient = useQueryClient();
+  const { isLoading, leaveRequests = [], refetch } = useStudentPortal();
+  const { student, attendance, rows = [], absent = 0, late = 0, leave = 0 } =
     useSelector(selectStudentAttendancePage) || {};
 
   // All state hooks declared unconditionally at top level
-  const [coursePage, setCoursePage] = useState(1);
   const [logPage, setLogPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all", "Present", "Absent", "Late", "On Leave"
+
+  // Leave Modal State
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [selectedAbsentDate, setSelectedAbsentDate] = useState("");
+  const [leaveCategory, setLeaveCategory] = useState("Medical");
+  const [leaveReason, setLeaveReason] = useState("");
+  const [leaveNote, setLeaveNote] = useState("");
+
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!isLeaveModalOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsLeaveModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLeaveModalOpen]);
+
+  // Map of student's submitted leave requests by dateStr
+  const leaveMap = useMemo(() => {
+    const map = new Map();
+    (leaveRequests || []).forEach((lr) => {
+      const d = lr.dateStr || (lr.date ? String(lr.date).slice(0, 10) : "");
+      if (d) map.set(d, lr);
+    });
+    return map;
+  }, [leaveRequests]);
+
+  // Leave Application Mutation
+  const applyLeaveMutation = useMutation({
+    mutationFn: (payload) => applyStudentLeaveApi(payload),
+    onSuccess: (res) => {
+      toast.success(
+        res.message || "Leave application submitted! Status updated to Pending."
+      );
+      setIsLeaveModalOpen(false);
+      resetLeaveForm();
+      if (typeof refetch === "function") refetch();
+      queryClient.invalidateQueries({ queryKey: ["student"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher", "leave-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["campus-admin"] });
+    },
+    onError: (err) => {
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to submit leave application."
+      );
+    },
+  });
+
+  const resetLeaveForm = () => {
+    setSelectedAbsentDate("");
+    setLeaveCategory("Medical");
+    setLeaveReason("");
+    setLeaveNote("");
+  };
+
+  const handleOpenLeaveModal = (date) => {
+    setSelectedAbsentDate(date);
+    setLeaveCategory("Medical");
+    setLeaveReason("");
+    setLeaveNote("");
+    setIsLeaveModalOpen(true);
+  };
+
+  const handleLeaveSubmit = (e) => {
+    e.preventDefault();
+    if (!leaveReason.trim()) {
+      toast.error("Please provide a reason for absence.");
+      return;
+    }
+    applyLeaveMutation.mutate({
+      date: selectedAbsentDate,
+      category: leaveCategory,
+      reason: leaveReason.trim(),
+      note: leaveNote.trim(),
+    });
+  };
 
   // Filtered attendance rows based on search and status filter
   const filteredRows = useMemo(() => {
@@ -104,26 +187,17 @@ export default function StudentAttendance() {
 
       if (!matchesStatus) return false;
 
-      const subject = item.session?.subject || "";
       const date = item.date || "";
       const remarks = item.record?.remarks || "";
 
       return (
         !q ||
-        subject.toLowerCase().includes(q) ||
         date.toLowerCase().includes(q) ||
+        status.toLowerCase().includes(q) ||
         remarks.toLowerCase().includes(q)
       );
     });
   }, [rows, searchQuery, statusFilter]);
-
-  // Pagination for courses
-  const totalCourseItems = courses.length;
-  const totalCoursePages = Math.max(1, Math.ceil(totalCourseItems / ITEMS_PER_PAGE));
-  const safeCoursePage = Math.min(Math.max(1, coursePage), totalCoursePages);
-  const courseStartIndex = (safeCoursePage - 1) * ITEMS_PER_PAGE;
-  const courseEndIndex = Math.min(courseStartIndex + ITEMS_PER_PAGE, totalCourseItems);
-  const visibleCourses = courses.slice(courseStartIndex, courseEndIndex);
 
   // Pagination for logs
   const totalLogItems = filteredRows.length;
@@ -140,7 +214,7 @@ export default function StudentAttendance() {
       present: rows.filter((r) => r.record?.status === "Present").length,
       absent: rows.filter((r) => r.record?.status === "Absent").length,
       late: rows.filter((r) => r.record?.status === "Late").length,
-      leave: rows.filter((r) => r.record?.status === "On Leave").length,
+      leave: rows.filter((r) => r.record?.status === "On Leave" || r.record?.status === "Excused").length,
     };
   }, [rows]);
 
@@ -150,6 +224,69 @@ export default function StudentAttendance() {
 
   const overallRate = attendance?.rate == null ? 100 : Number(attendance.rate);
   const isAtRisk = overallRate < 75;
+
+  // Render Action column content
+  const renderAction = (record, date) => {
+    const statusLower = String(record?.status || "").toLowerCase();
+    const isAbsent = statusLower === "absent";
+    const isExcused = statusLower === "excused" || statusLower === "on leave";
+    const leaveReq = leaveMap.get(date);
+
+    if (isAbsent) {
+      if (leaveReq?.status === "Pending") {
+        return (
+          <span className="sta-leave-pending-badge" title="Waiting for teacher approval">
+            <Clock3 className="w-3 h-3 text-amber-500 shrink-0" />
+            <span>Pending Review</span>
+          </span>
+        );
+      }
+      if (leaveReq?.status === "Rejected") {
+        return (
+          <div className="sta-leave-action-group">
+            <span
+              className="sta-leave-rejected-badge"
+              title={leaveReq.rejectionReason || "Leave request was rejected"}
+            >
+              <X className="w-3 h-3 text-rose-500 shrink-0" />
+              <span>Rejected</span>
+            </span>
+            <button
+              type="button"
+              className="sta-apply-leave-btn reapply"
+              onClick={() => handleOpenLeaveModal(date)}
+              title="Submit a revised leave application"
+            >
+              Re-apply
+            </button>
+          </div>
+        );
+      }
+      // Absent with no leave application submitted yet
+      return (
+        <button
+          type="button"
+          className="sta-apply-leave-btn"
+          onClick={() => handleOpenLeaveModal(date)}
+          aria-label={`Apply leave for ${date}`}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Apply Leave</span>
+        </button>
+      );
+    }
+
+    if (isExcused) {
+      return (
+        <span className="sta-leave-approved-badge" title="Leave approved by teacher">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>Leave Approved</span>
+        </span>
+      );
+    }
+
+    return <span className="text-muted-foreground/40 text-xs">—</span>;
+  };
 
   return (
     <section className="student-attendance-page">
@@ -222,88 +359,7 @@ export default function StudentAttendance() {
         </div>
       )}
 
-      {/* 2. Subject-wise Progress Card */}
-      <Card className="sta-card">
-        <div className="sta-card-heading">
-          <h2>
-            <span>
-              <ChartNoAxesColumnIncreasing aria-hidden="true" />
-            </span>
-            Subject Attendance Progress
-          </h2>
-          <span className="sta-count-tag">{courses.length} subjects monitored</span>
-        </div>
-
-        <div className="sta-courses">
-          {visibleCourses.map((course) => {
-            const marked = course.attendance?.marked || 0;
-            const present = course.attendance?.present || 0;
-            const rate = course.attendance?.rate == null ? 0 : course.attendance.rate;
-            const hasRate = course.attendance?.rate != null;
-
-            return (
-              <div className="sta-course" key={course.id || course.title}>
-                <div className="sta-course-heading">
-                  <div className="sta-course-title-wrap">
-                    <h3>{course.title || course.name}</h3>
-                    {hasRate && (
-                      <span className={`sta-rate-badge ${rate >= 75 ? "rate-good" : rate >= 65 ? "rate-warn" : "rate-danger"}`}>
-                        {percentage(rate)}
-                      </span>
-                    )}
-                  </div>
-                  <span className="sta-course-days">
-                    {marked > 0 ? (
-                      <>
-                        <strong>{present}</strong> / {marked} days attended
-                      </>
-                    ) : (
-                      "No sessions recorded yet"
-                    )}
-                  </span>
-                </div>
-
-                {hasRate ? (
-                  <div className="sta-progress-wrapper">
-                    <Progress
-                      value={rate}
-                      className={rate >= 75 ? "progress-good" : rate >= 65 ? "progress-warn" : "progress-danger"}
-                      label={`${course.title} attendance: ${percentage(rate)}`}
-                    />
-                  </div>
-                ) : (
-                  <p className="sta-course-empty">
-                    Attendance data will appear as soon as daily lectures commence.
-                  </p>
-                )}
-              </div>
-            );
-          })}
-
-          {!courses.length && (
-            <div className="sta-empty">
-              <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-              <h3>No courses enrolled yet.</h3>
-              <p>Your subject attendance will populate here once enrolled in your semester or class.</p>
-            </div>
-          )}
-        </div>
-
-        {totalCourseItems > ITEMS_PER_PAGE && (
-          <AttendancePagination
-            currentPage={safeCoursePage}
-            totalPages={totalCoursePages}
-            startIndex={courseStartIndex}
-            endIndex={courseEndIndex}
-            totalItems={totalCourseItems}
-            itemLabel="subjects"
-            onPageChange={setCoursePage}
-            ariaLabel="Daily attendance progress pagination"
-          />
-        )}
-      </Card>
-
-      {/* 3. Daily Attendance History Log Card */}
+      {/* Daily Attendance History Log Card */}
       <Card className="sta-card">
         <div className="sta-card-heading">
           <h2>
@@ -386,7 +442,7 @@ export default function StudentAttendance() {
             <Search className="sta-search-icon" aria-hidden="true" />
             <Input
               type="text"
-              placeholder="Search by subject, date, or remarks..."
+              placeholder="Search by date, status, or remarks..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -416,24 +472,20 @@ export default function StudentAttendance() {
           <Table aria-label="Daily attendance history">
             <TableHeader>
               <TableRow>
-                {["Date", "Course / Subject", "Status", "Remarks"].map((heading) => (
-                  <TableHead key={heading} scope="col">
-                    {heading}
-                  </TableHead>
-                ))}
+                <TableHead scope="col">DATE</TableHead>
+                <TableHead scope="col">STATUS</TableHead>
+                <TableHead scope="col">REMARKS</TableHead>
+                <TableHead scope="col" className="sta-action-col">ACTION</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visibleRows.map(({ record, session, date }) => (
-                <TableRow key={record.id || `${date}-${session?.subject}`} className="sta-table-row">
+              {visibleRows.map(({ record, date }) => (
+                <TableRow key={record.id || `${date}-${record?.status}`} className="sta-table-row">
                   <TableCell>
                     <span className="sta-date-cell">
                       <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
                       <time dateTime={date}>{date}</time>
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    <strong className="sta-subject-text">{session?.subject || "General"}</strong>
                   </TableCell>
                   <TableCell>
                     <AttendanceStatusBadge status={record.status} />
@@ -444,6 +496,9 @@ export default function StudentAttendance() {
                         ? record.remarks
                         : "No remarks"}
                     </span>
+                  </TableCell>
+                  <TableCell className="sta-action-col">
+                    {renderAction(record, date)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -462,8 +517,8 @@ export default function StudentAttendance() {
 
         {/* Mobile Cards View (< 768px) */}
         <div className="sta-mobile-cards">
-          {visibleRows.map(({ record, session, date }) => (
-            <div key={record.id || `${date}-${session?.subject}`} className="sta-mobile-card">
+          {visibleRows.map(({ record, date }) => (
+            <div key={record.id || `${date}-${record?.status}`} className="sta-mobile-card">
               <div className="sta-mobile-card-top">
                 <span className="sta-mobile-date">
                   <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
@@ -472,16 +527,15 @@ export default function StudentAttendance() {
                 <AttendanceStatusBadge status={record.status} />
               </div>
 
-              <div className="sta-mobile-subject">
-                <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
-                <strong>{session?.subject || "General"}</strong>
-              </div>
-
               {typeof record.remarks === "string" && record.remarks.trim() && (
                 <div className="sta-mobile-remarks">
-                  <span>Note: {record.remarks}</span>
+                  <span>Remarks: {record.remarks}</span>
                 </div>
               )}
+
+              <div className="sta-mobile-action-wrap">
+                {renderAction(record, date)}
+              </div>
             </div>
           ))}
 
@@ -507,6 +561,130 @@ export default function StudentAttendance() {
           />
         )}
       </Card>
+
+      {/* Leave Application Modal Popup */}
+      {isLeaveModalOpen && (
+        <div
+          className="sta-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsLeaveModalOpen(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="leave-modal-title"
+        >
+          <div className="sta-modal-dialog">
+            {/* Header */}
+            <div className="sta-modal-header">
+              <div className="sta-modal-header-left">
+                <div className="sta-modal-icon-badge" aria-hidden="true">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <div className="sta-modal-title-text">
+                  <h3 id="leave-modal-title">Apply Leave for Absence</h3>
+                  <p>
+                    Submit reason for absence on{" "}
+                    <span className="sta-modal-date-pill">{selectedAbsentDate}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLeaveModalOpen(false)}
+                className="sta-modal-close-btn"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <form onSubmit={handleLeaveSubmit} className="sta-modal-form">
+              <div className="sta-modal-group">
+                <label className="sta-modal-label">Absence Date</label>
+                <input
+                  type="text"
+                  value={selectedAbsentDate}
+                  disabled
+                  className="sta-modal-input"
+                />
+              </div>
+
+              <div className="sta-modal-group">
+                <label className="sta-modal-label">
+                  Leave Category <span className="sta-modal-req">*</span>
+                </label>
+                <select
+                  value={leaveCategory}
+                  onChange={(e) => setLeaveCategory(e.target.value)}
+                  className="sta-modal-select"
+                >
+                  <option value="Medical">Medical / Sick Leave</option>
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Family Emergency">Family Emergency</option>
+                  <option value="Personal">Personal Work</option>
+                  <option value="Event">Family Event</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="sta-modal-group">
+                <label className="sta-modal-label">
+                  Reason for Absence <span className="sta-modal-req">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={leaveReason}
+                  onChange={(e) => setLeaveReason(e.target.value)}
+                  placeholder="State your reason clearly (e.g., severe fever and doctor consultation)..."
+                  className="sta-modal-textarea"
+                />
+              </div>
+
+              <div className="sta-modal-group">
+                <label className="sta-modal-label">Optional Note / File</label>
+                <input
+                  type="text"
+                  value={leaveNote}
+                  onChange={(e) => setLeaveNote(e.target.value)}
+                  placeholder="e.g. Doctor prescription attached / slip signed by parent"
+                  className="sta-modal-input"
+                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="sta-modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setIsLeaveModalOpen(false)}
+                  disabled={applyLeaveMutation.isPending}
+                  className="sta-modal-cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={applyLeaveMutation.isPending || !leaveReason.trim()}
+                  className="sta-modal-submit-btn"
+                >
+                  {applyLeaveMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Submit Leave Request</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

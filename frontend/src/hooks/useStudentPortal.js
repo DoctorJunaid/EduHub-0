@@ -67,6 +67,7 @@ export function useStudentPortal() {
     subjects: portal?.subjects || [],
     schedules: portal?.schedules || [],
     attendance: portal?.attendance || null,
+    leaveRequests: portal?.leaveRequests || [],
     fees: portal?.fees || [],
     results: portal?.results || [],
     assignments: portal?.assignments || [],

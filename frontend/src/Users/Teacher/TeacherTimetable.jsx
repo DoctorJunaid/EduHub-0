@@ -325,7 +325,7 @@ export default function TeacherTimetable() {
   }, [week, includeSaturday]);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 p-6 lg:p-7 min-h-full bg-slate-50/60 box-border">
       {error && (
         <div
           className="bg-neutral-50 border border-neutral-300 text-neutral-700 text-xs rounded-xl flex items-center justify-between"

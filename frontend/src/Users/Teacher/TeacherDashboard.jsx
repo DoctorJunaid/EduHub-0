@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner, SpinnerCustom, PageLoader } from "@/components/ui/spinner";
 import useMyClass from "@/hooks/useMyClass";
 import MyClassWidget from "@/components/classTeacher/MyClassWidget";
+import TeacherLeaveRequestsCard from "./TeacherLeaveRequestsCard";
 import toast from "react-hot-toast";
 import "./TeacherDashboard.css";
 
@@ -218,7 +219,7 @@ export default function TeacherDashboard() {
 
       {/* Class Teacher Hero Card (if assigned) */}
       {isClassTeacher && classInfo && (
-        <div className="mb-6">
+        <div className="w-full">
           <MyClassWidget
             classInfo={classInfo}
             attendance={attendance}
@@ -227,62 +228,61 @@ export default function TeacherDashboard() {
         </div>
       )}
 
+      {/* Pending Student Leave Requests Card */}
+      <TeacherLeaveRequestsCard />
+
       {/* Teacher Workload Summary Banner */}
-      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className={`p-3 rounded-xl flex items-center justify-center shrink-0 ${classes.length < 5 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
-              <BookOpen size={22} />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">Faculty Workload Allocation</h2>
-                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${classes.length < 5 ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"}`}>
-                  {classes.length}/5 Classes Assigned
+      <section className="teacher-workload-banner">
+        <div className="workload-banner-left">
+          <div className={`workload-banner-icon ${classes.length < 5 ? "is-under" : "is-optimal"}`}>
+            <BookOpen size={19} />
+          </div>
+          <div className="workload-banner-content">
+            <div className="workload-heading-row">
+              <h2 className="workload-heading">Faculty Workload Allocation</h2>
+              <span className={`workload-assigned-badge ${classes.length < 5 ? "is-under" : "is-optimal"}`}>
+                {classes.length}/5 Classes Assigned
+              </span>
+              {classes.length < 5 ? (
+                <span className="workload-status-badge is-under">
+                  ⚠️ Under-assigned ({5 - classes.length} more needed)
                 </span>
-                {classes.length < 5 ? (
-                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                    ⚠️ Under-assigned ({5 - classes.length} more needed)
-                  </span>
-                ) : (
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                    ✓ Optimal Daily Requirement Met
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Campus standard requirement is 5 classes/day. Full class routine and assigned periods are synchronized below.
-              </p>
+              ) : (
+                <span className="workload-status-badge is-optimal">
+                  ✓ Optimal Daily Requirement Met
+                </span>
+              )}
             </div>
+            <p className="workload-banner-subtext">
+              Campus standard requirement is 5 classes/day. Full class routine and assigned periods are synchronized below.
+            </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shrink-0">
-            <Clock3 size={14} className="text-slate-400" />
-            <span>Target: <strong>5 Periods/Day</strong></span>
-          </div>
+        </div>
+        <div className="workload-banner-target">
+          <Clock3 size={13} className="text-slate-400" />
+          <span>Target: <strong className="font-semibold text-slate-800">5 Periods/Day</strong></span>
         </div>
       </section>
 
       {/* 1. KPI Cards Strip */}
       <section
-        className="teacher-metrics campus-kpi-track grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full bg-white border-b border-neutral-200"
-        style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", width: "100%", boxSizing: "border-box" }}
+        className="teacher-metrics campus-kpi-track"
         aria-label="Teaching summary"
       >
         {metric.map(([Icon, label, value]) => (
           <article
             className="teacher-metric campus-kpi-card min-w-0"
             key={label}
-            style={{ padding: "16px 14px", boxSizing: "border-box" }}
           >
             <div className="kpi-wrap min-w-0 flex items-center gap-2.5">
               <div className="kpi-icon shrink-0">
                 <Icon size={18} aria-hidden="true" />
               </div>
               <div className="kpi-info min-w-0 flex flex-col overflow-hidden">
-                <span className="kpi-label text-[10.5px] font-semibold text-neutral-500 uppercase tracking-wider truncate">
+                <span className="kpi-label" title={label}>
                   {label}
                 </span>
-                <strong className="kpi-value whitespace-nowrap text-lg xl:text-xl font-bold text-neutral-900 truncate">
+                <strong className="kpi-value truncate">
                   {value}
                 </strong>
               </div>
