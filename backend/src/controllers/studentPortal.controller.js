@@ -527,8 +527,7 @@ export const getStudentPortal = async (req, res) => {
       section,
     };
 
-    const [schedules, exams, attendance, fees, payments, results, leaveRequests] = await Promise.all([
-    const [schedules, exams, attendance, fees, payments, results, studentProfileWithTransport] = await Promise.all([
+    const [schedules, exams, attendance, fees, payments, results, leaveRequests, studentProfileWithTransport] = await Promise.all([
       ClassSchedule.find(classFilter).sort({ dayOfWeek: 1, startTime: 1 }).lean(),
       ExamSchedule.find({
         campusId,
