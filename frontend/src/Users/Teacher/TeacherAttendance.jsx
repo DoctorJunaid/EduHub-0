@@ -271,7 +271,7 @@ export default function TeacherAttendance() {
       aria-labelledby="teacher-attendance-title"
     >
       {/* Header Toolbar */}
-      <header className="campus-toolbar teacher-attendance-toolbar flex items-center justify-between">
+      <header className="campus-toolbar teacher-attendance-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -282,7 +282,7 @@ export default function TeacherAttendance() {
               toast.success("Attendance synced.");
             }}
             disabled={classesQuery.isFetching || isFetchingRoster}
-            className="toolbar-btn-outline flex items-center gap-1.5"
+            className="toolbar-btn-outline flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             {classesQuery.isFetching || isFetchingRoster ? (
               <Spinner className="size-3.5" />
@@ -293,11 +293,11 @@ export default function TeacherAttendance() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="toolbar-btn-outline flex items-center gap-1.5 border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100"
+            className="toolbar-btn-outline flex items-center gap-1.5 border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 whitespace-nowrap shrink-0"
             onClick={() => setScannerOpen(true)}
             title="Scan student QR code or enter roll number"
           >
@@ -306,7 +306,7 @@ export default function TeacherAttendance() {
           </Button>
 
           <Button
-            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5"
+            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0"
             onClick={handleSaveAttendance}
             disabled={saving || !selectedClass || roster.length === 0 || date > getTodayKey()}
           >
@@ -321,7 +321,11 @@ export default function TeacherAttendance() {
       </header>
 
       {/* KPI Metrics Strip */}
-      <section className="teacher-attendance-metrics" aria-label="Attendance statistics">
+      <section
+        className="teacher-attendance-metrics grid grid-cols-2 lg:grid-cols-4 w-full"
+        style={{ gap: "12px" }}
+        aria-label="Attendance statistics"
+      >
         <Metric
           icon={Users}
           label="TOTAL STUDENTS"
@@ -470,7 +474,7 @@ export default function TeacherAttendance() {
           ) : (
             <table
               className="campus-data-table teacher-attendance-table"
-              style={{ width: "100%", tableLayout: "fixed" }}
+              style={{ width: "100%", minWidth: "820px" }}
             >
               <thead>
                 <tr>
@@ -665,13 +669,13 @@ export default function TeacherAttendance() {
 
 function Metric({ icon: Icon, label, value, variant = "total" }) {
   return (
-    <article>
-      <span className={`teacher-attendance-metric-icon ${variant}`}>
+    <article className="min-w-0">
+      <span className={`teacher-attendance-metric-icon ${variant} shrink-0`}>
         <Icon size={20} />
       </span>
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
+      <div className="min-w-0 flex-1">
+        <span className="whitespace-nowrap truncate">{label}</span>
+        <strong className="whitespace-nowrap truncate">{value}</strong>
       </div>
     </article>
   );

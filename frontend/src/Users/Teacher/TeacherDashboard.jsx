@@ -278,11 +278,11 @@ export default function TeacherDashboard() {
               <div className="kpi-icon shrink-0">
                 <Icon size={18} aria-hidden="true" />
               </div>
-              <div className="kpi-info min-w-0 flex flex-col overflow-hidden">
-                <span className="kpi-label" title={label}>
+              <div className="kpi-info min-w-0 flex-1 flex flex-col overflow-hidden">
+                <span className="kpi-label whitespace-nowrap truncate" title={label}>
                   {label}
                 </span>
-                <strong className="kpi-value truncate">
+                <strong className="kpi-value whitespace-nowrap truncate">
                   {value}
                 </strong>
               </div>
@@ -315,13 +315,13 @@ export default function TeacherDashboard() {
       {/* 3. Today's Teaching Credits Table */}
       <div className="teacher-section-container">
         <section className="teacher-table-card">
-          <div className="teacher-card-header">
-            <div className="teacher-card-title-group">
+          <div className="teacher-card-header flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
+            <div className="teacher-card-title-group min-w-0">
               <h2 className="teacher-card-title">Today's Teaching Credits &amp; Periods</h2>
               <span className="teacher-card-subtitle">Fulfill assigned lecture periods to accrue monthly teaching credits &amp; bonuses</span>
             </div>
-            <div className="teacher-card-controls">
-              <Button variant="outline" className="teacher-action-btn toolbar-btn-outline" asChild>
+            <div className="teacher-card-controls flex flex-wrap items-center" style={{ gap: "10px" }}>
+              <Button variant="outline" className="teacher-action-btn toolbar-btn-outline whitespace-nowrap shrink-0" asChild>
                 <Link to="/teacher/credits">All Credit Records →</Link>
               </Button>
             </div>
@@ -627,12 +627,12 @@ function TeacherTable({
   return (
     <div className="teacher-section-container">
       <section className="teacher-table-card">
-        <div className="teacher-card-header">
-          <div className="teacher-card-title-group">
+        <div className="teacher-card-header flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
+          <div className="teacher-card-title-group min-w-0">
             <h2 className="teacher-card-title">{title}</h2>
             <span className="teacher-card-subtitle">{subtitle}</span>
           </div>
-          <div className="teacher-card-controls">
+          <div className="teacher-card-controls flex flex-wrap items-center" style={{ gap: "10px" }}>
             <label className="teacher-search-box">
               <Search size={14} />
               <span className="sr-only">{placeholder}</span>
@@ -642,7 +642,7 @@ function TeacherTable({
                 placeholder={placeholder}
               />
             </label>
-            <Button variant="outline" className="teacher-action-btn toolbar-btn-outline" asChild>
+            <Button variant="outline" className="teacher-action-btn toolbar-btn-outline whitespace-nowrap shrink-0" asChild>
               <Link to={actionTo}>{actionLabel} →</Link>
             </Button>
           </div>

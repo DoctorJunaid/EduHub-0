@@ -27,9 +27,6 @@
 
 /* KPI Strip */
 .teacher-attendance-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
   width: 100%;
 }
 
@@ -182,7 +179,12 @@
 /* Table Area */
 .teacher-attendance-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
+}
+
+.teacher-attendance-table {
+  min-width: 820px;
 }
 
 .teacher-attendance-student {
@@ -412,9 +414,10 @@
   }
 
   .teacher-attendance-footer {
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     padding: 12px;
   }
 }
