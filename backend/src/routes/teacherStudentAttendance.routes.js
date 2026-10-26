@@ -7,7 +7,17 @@ const router = express.Router();
 
 router.use(
   protect,
-  restrictTo("teacher", "faculty", "campus_admin", "campus_manager", "principal", "super_admin")
+  restrictTo(
+    "teacher",
+    "faculty",
+    "campus_admin",
+    "campus_manager",
+    "principal",
+    "institute_admin",
+    "accountant",
+    "super_admin",
+    "admin"
+  )
 );
 
 // GET /api/v1/teacher/attendance/classes

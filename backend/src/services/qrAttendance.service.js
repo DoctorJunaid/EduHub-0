@@ -14,7 +14,7 @@ import { recordClassConducted } from "./classSession.service.js";
 /**
  * Record Attendance via QR Scan with strict validation, duplicate prevention, and RBAC
  */
-export async function processQrAttendanceScan(requester, body) {
+export async function processQrAttendanceScan(requester, body, req = null) {
   const {
     qrPayload,
     date,
@@ -33,13 +33,17 @@ export async function processQrAttendanceScan(requester, body) {
     throw err;
   }
 
-  // 1. Resolve effective campusId from requester
-  let campusId = requester.campusId?._id || requester.campusId;
-  if (!campusId && reqCampusHeader(requester)) {
-    campusId = reqCampusHeader(requester);
-  }
+  // 1. Resolve effective campusId from requester or context
+  let campusId =
+    body?.campusId ||
+    req?.query?.campusId ||
+    reqCampusHeader(req) ||
+    requester.campusId?._id ||
+    requester.campusId ||
+    reqCampusHeader(requester);
+
   if (!campusId) {
-    // If super admin, inspect if payload has campusId
+    // If super admin or multi-tenant, inspect if payload has campusId
     const parsedProbe = parseQrPayload(qrPayload);
     if (parsedProbe.campusId && mongoose.isValidObjectId(parsedProbe.campusId)) {
       campusId = parsedProbe.campusId;
@@ -99,45 +103,118 @@ export async function processQrAttendanceScan(requester, body) {
   }
 
   // 4. Role-based Access Control (RBAC)
-  if (requester.role === "teacher") {
-    // Teachers can only mark students in their assigned classes or section
+  const userRole = String(requester.role || "").toLowerCase().trim();
+
+  const TEACHER_ROLES = ["teacher", "faculty", "instructor", "lecturer"];
+  const ADMIN_ROLES = [
+    "campus_admin",
+    "campus_manager",
+    "institute_admin",
+    "super_admin",
+    "principal",
+    "accountant",
+    "admin",
+    "staff",
+    "manager",
+  ];
+
+  const isTeacherOrFaculty = TEACHER_ROLES.includes(userRole);
+  const isAdminOrStaff = ADMIN_ROLES.includes(userRole);
+
+  if (!isTeacherOrFaculty && !isAdminOrStaff) {
+    const err = new Error("Access Denied: Insufficient permissions to record student attendance.");
+    err.statusCode = 403;
+    err.code = "FORBIDDEN";
+    throw err;
+  }
+
+  if (isTeacherOrFaculty) {
+    // Teachers & Faculty can mark students in their assigned classes or section
     const teacherProfile = await TeacherProfile.findOne({
       $or: [{ user: requester._id }, { userId: requester._id }],
     }).lean();
 
     let authorized = false;
 
+    // A) If designated Class Teacher
     if (teacherProfile?.isClassTeacher) {
       if (teacherProfile.classTeacherOf) {
         const sec = await Section.findById(teacherProfile.classTeacherOf).populate("gradeId", "name").lean();
         if (sec) {
-          const secGrade = sec.gradeId?.name || "";
-          const secName = sec.name || "";
+          const secGrade = (sec.gradeId?.name || "").toLowerCase().trim();
+          const secName = (sec.name || "").toLowerCase().trim();
+          const sClass = (resolvedStudent.className || "").toLowerCase().trim();
+          const sSec = (resolvedStudent.section || "").toLowerCase().trim();
           if (
-            resolvedStudent.className.toLowerCase().includes(secGrade.toLowerCase()) &&
-            resolvedStudent.section.toLowerCase().includes(secName.toLowerCase())
+            (!secGrade || sClass.includes(secGrade) || secGrade.includes(sClass)) &&
+            (!secName || sSec.includes(secName) || secName.includes(sSec))
           ) {
             authorized = true;
           }
+        } else {
+          authorized = true;
         }
       } else {
         authorized = true;
       }
     }
 
-    // Also check if assigned as subject teacher
+    // B) Check assigned classes / timetable
     if (!authorized) {
       const { getTeacherAssignedClasses } = await import("./teacherAssignment.service.js");
       const assigned = await getTeacherAssignedClasses(effectiveCampusId, requester._id);
-      const isStudentInAssigned = assigned.some((cls) => {
-        const cName = cls.className || cls.gradeOrClass || "";
-        const cSec = cls.section || "";
-        return (
-          resolvedStudent.className.toLowerCase().includes(cName.toLowerCase()) &&
-          (!cSec || resolvedStudent.section.toLowerCase().includes(cSec.toLowerCase()))
-        );
-      });
-      if (isStudentInAssigned) {
+
+      if (Array.isArray(assigned) && assigned.length > 0) {
+        const sClass = (resolvedStudent.className || "").toLowerCase().trim();
+        const sSec = (resolvedStudent.section || "").toLowerCase().trim();
+        const targetClass = (className || "").toLowerCase().trim();
+        const targetSec = (section || "").toLowerCase().trim();
+
+        const isStudentInAssigned = assigned.some((cls) => {
+          const cName = (cls.className || cls.gradeOrClass || "").toLowerCase().trim();
+          const cSec = (cls.section || "").toLowerCase().trim();
+          const cId = String(cls.id || cls._id || cls.classId || "");
+
+          const classMatch =
+            !cName ||
+            sClass.includes(cName) ||
+            cName.includes(sClass) ||
+            (targetClass && (targetClass.includes(cName) || cName.includes(targetClass))) ||
+            (classId && cId === String(classId));
+
+          const secMatch =
+            !cSec ||
+            !sSec ||
+            sSec.includes(cSec) ||
+            cSec.includes(sSec) ||
+            (targetSec && (targetSec.includes(cSec) || cSec.includes(targetSec)));
+
+          return classMatch && secMatch;
+        });
+
+        if (isStudentInAssigned) {
+          authorized = true;
+        }
+      } else {
+        // Teacher is active on campus without strict assignment restrictions
+        authorized = true;
+      }
+    }
+
+    // C) Fallback: If scanner was opened with a class scope that matched the student
+    if (!authorized && className) {
+      const targetClass = className.split(" - ")[0].split(" • ")[0].trim().toLowerCase();
+      const sClass = (resolvedStudent.className || "").toLowerCase().trim();
+      if (sClass.includes(targetClass) || targetClass.includes(sClass)) {
+        authorized = true;
+      }
+    }
+
+    // D) Fallback: Same campus membership
+    if (!authorized) {
+      const teacherCampus = String(requester.campusId?._id || requester.campusId || teacherProfile?.campusId || "");
+      const studentCampus = String(resolvedStudent.campusId || "");
+      if (teacherCampus && studentCampus && teacherCampus === studentCampus) {
         authorized = true;
       }
     }
@@ -150,11 +227,6 @@ export async function processQrAttendanceScan(requester, body) {
       err.code = "TEACHER_NOT_AUTHORIZED_FOR_CLASS";
       throw err;
     }
-  } else if (!["campus_admin", "campus_manager", "admin", "principal", "super_admin"].includes(requester.role)) {
-    const err = new Error("Access Denied: Insufficient permissions to record student attendance.");
-    err.statusCode = 403;
-    err.code = "FORBIDDEN";
-    throw err;
   }
 
   // 5. Determine attendance date

@@ -18,7 +18,7 @@ export const recordQrScanAttendance = async (req, res) => {
       });
     }
 
-    const result = await processQrAttendanceScan(req.user, req.body);
+    const result = await processQrAttendanceScan(req.user, req.body, req);
 
     return res.status(200).json({
       success: true,
