@@ -1,165 +1,360 @@
-/* ── Student Transport Module Styling ── */
+/* ═══════════════════════════════════════════════════════════════════
+   STUDENT TRANSPORT & COMMUTE MANAGEMENT — MINIMAL & COMPACT UI
+   Clean, neutral, monochrome-first aesthetic with compact sizing.
+   ═══════════════════════════════════════════════════════════════════ */
 
 .transport-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 4px;
+  gap: 12px;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 8px 18px 28px;
+  color: var(--foreground, #09090b);
 }
 
-/* Hero Header */
+@media (max-width: 640px) {
+  .transport-container {
+    padding: 6px 12px 20px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   1. COMPACT HERO HEADER (Neutral, No loud gradients)
+   ───────────────────────────────────────────────────────────── */
 .transport-hero-card {
   position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-  border: 1px solid rgba(228, 228, 231, 0.9);
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #eff6ff 100%);
-  padding: 24px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease-in-out;
+  border-radius: 12px;
+  border: 1px solid var(--border, #e4e4e7);
+  background: #ffffff;
+  padding: 12px 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .dark .transport-hero-card {
-  background: linear-gradient(135deg, #18181b 0%, #1c1917 50%, #1e1b4b 100%);
-  border-color: rgba(63, 63, 70, 0.6);
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .transport-hero-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #f4f4f5;
+  color: #18181b !important;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.35);
+  border: 1px solid #e4e4e7;
 }
 
-/* Pulsing Enrolled Badge */
+.dark .transport-hero-icon {
+  background: #27272a;
+  color: #f4f4f5 !important;
+  border-color: #3f3f46;
+}
+
+/* Status Pills - Subtle & Monochrome */
 .commuter-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 9999px;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: #f4f4f5;
+  color: #27272a;
+  border: 1px solid #e4e4e7;
 }
 
 .dark .commuter-status-pill {
-  background: rgba(6, 78, 59, 0.3);
-  color: #34d399;
-  border-color: rgba(5, 150, 105, 0.4);
+  background: #27272a;
+  color: #e4e4e7;
+  border-color: #3f3f46;
 }
 
-.status-dot-pulse {
+.status-dot-neutral {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  animation: pulse-ring 2s infinite;
 }
 
-@keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
+.status-dot-amber {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #71717a;
 }
 
-/* Feature KPI Cards */
+/* ─────────────────────────────────────────────────────────────
+   2. COMPACT KPI CARDS GRID (Slim, No Top Stripes, No Rainbows)
+   ───────────────────────────────────────────────────────────── */
+.transport-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
 .transport-kpi-card {
-  border-radius: 16px;
-  border: 1px solid rgba(228, 228, 231, 0.85);
+  border-radius: 10px;
+  border: 1px solid var(--border, #e4e4e7);
   background: #ffffff;
-  padding: 20px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease;
 }
 
 .dark .transport-kpi-card {
   background: #18181b;
-  border-color: rgba(63, 63, 70, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .transport-kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.08);
-  border-color: #cbd5e1;
+  border-color: #a1a1aa;
 }
 
 .dark .transport-kpi-card:hover {
   border-color: #52525b;
 }
 
-/* KPI Icon Badges */
 .kpi-icon-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: #f4f4f5;
+  color: #52525b;
+  border: 1px solid #e4e4e7;
 }
 
-.kpi-icon-blue {
-  background: #eff6ff;
-  color: #2563eb;
+.dark .kpi-icon-badge {
+  background: #27272a;
+  color: #a1a1aa;
+  border-color: #3f3f46;
 }
 
-.dark .kpi-icon-blue {
-  background: rgba(30, 58, 138, 0.3);
-  color: #60a5fa;
+/* ─────────────────────────────────────────────────────────────
+   3. COMPACT BUTTONS & ACTIONS
+   ───────────────────────────────────────────────────────────── */
+.btn-transport-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #18181b !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  border: 1px solid #18181b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer;
+  text-decoration: none !important;
+  white-space: nowrap;
 }
 
-.kpi-icon-emerald {
-  background: #ecfdf5;
-  color: #059669;
+.dark .btn-transport-primary {
+  background: #ffffff !important;
+  color: #18181b !important;
+  border-color: #ffffff !important;
 }
 
-.dark .kpi-icon-emerald {
-  background: rgba(6, 78, 59, 0.3);
-  color: #34d399;
+.btn-transport-primary:hover {
+  background: #27272a !important;
+  color: #ffffff !important;
 }
 
-.kpi-icon-purple {
-  background: #faf5ff;
-  color: #9333ea;
+.dark .btn-transport-primary:hover {
+  background: #f4f4f5 !important;
+  color: #18181b !important;
 }
 
-.dark .kpi-icon-purple {
-  background: rgba(88, 28, 135, 0.3);
-  color: #c084fc;
+.btn-transport-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #18181b !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 6px 11px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer;
+  text-decoration: none !important;
+  white-space: nowrap;
 }
 
-/* Stepper Journey Route Timeline */
+.dark .btn-transport-outline {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f4f4f5 !important;
+}
+
+.btn-transport-outline:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8 !important;
+}
+
+.dark .btn-transport-outline:hover {
+  background: #3f3f46;
+}
+
+/* Call Driver Button */
+.call-driver-btn {
+  background: #18181b;
+  color: #ffffff !important;
+  font-weight: 500;
+  font-size: 11px;
+  padding: 5px 10px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s ease;
+  text-decoration: none !important;
+}
+
+.dark .call-driver-btn {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+}
+
+.call-driver-btn:hover {
+  background: #27272a;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. NAVIGATION TABS (Compact, Neutral)
+   ───────────────────────────────────────────────────────────── */
+.transport-tabs-bar {
+  display: flex;
+  background: #f4f4f5;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #e4e4e7;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.dark .transport-tabs-bar {
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.transport-tab-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #71717a;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.dark .transport-tab-trigger {
+  color: #a1a1aa;
+}
+
+.transport-tab-trigger[data-state="active"] {
+  background: #ffffff;
+  color: #09090b;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .transport-tab-trigger[data-state="active"] {
+  background: #27272a;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. SELF-COMMUTER CARDS (Compact & Subtle)
+   ───────────────────────────────────────────────────────────── */
+.self-commuter-showcase {
+  border-radius: 12px;
+  border: 1px solid var(--border, #e4e4e7);
+  background: #ffffff;
+  padding: 14px 16px;
+}
+
+.dark .self-commuter-showcase {
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Subtle Upgrade Card */
+.upgrade-transport-card {
+  border-radius: 12px;
+  background: #fcfcfd;
+  border: 1px solid #e4e4e7;
+  color: var(--foreground, #09090b);
+  padding: 14px 16px;
+}
+
+.dark .upgrade-transport-card {
+  background: #27272a/40;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.upgrade-perk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  font-size: 11px;
+  font-weight: 500;
+  color: #52525b;
+}
+
+.dark .upgrade-perk-pill {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #d4d4d8;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. TRANSIT PROGRESSION STEPPER (Compact)
+   ───────────────────────────────────────────────────────────── */
 .transit-timeline-card {
-  border-radius: 16px;
-  border: 1px solid rgba(228, 228, 231, 0.85);
-  background: linear-gradient(to right, #ffffff, #fcfcfd);
-  padding: 20px 24px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border, #e4e4e7);
+  background: #ffffff;
+  padding: 14px 16px;
 }
 
 .dark .transit-timeline-card {
   background: #18181b;
-  border-color: rgba(63, 63, 70, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .transit-steps-track {
@@ -167,9 +362,9 @@
   align-items: center;
   justify-content: space-between;
   position: relative;
-  margin-top: 18px;
-  margin-bottom: 8px;
-  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  gap: 8px;
 }
 
 .transit-node {
@@ -183,50 +378,34 @@
 }
 
 .node-icon-wrapper {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  border: 2px solid #e4e4e7;
+  font-size: 12px;
+  border: 1px solid #e4e4e7;
   background: #ffffff;
   color: #71717a;
-  transition: all 0.2s ease;
 }
 
 .dark .node-icon-wrapper {
   background: #27272a;
-  border-color: #52525b;
+  border-color: #3f3f46;
   color: #a1a1aa;
 }
 
 .node-active .node-icon-wrapper {
-  border-color: #10b981;
-  background: #ecfdf5;
-  color: #047857;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  border-color: #18181b;
+  background: #18181b;
+  color: #ffffff;
 }
 
 .dark .node-active .node-icon-wrapper {
-  border-color: #059669;
-  background: rgba(6, 78, 59, 0.4);
-  color: #34d399;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
-}
-
-.node-destination .node-icon-wrapper {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.dark .node-destination .node-icon-wrapper {
-  border-color: #2563eb;
-  background: rgba(30, 58, 138, 0.4);
-  color: #60a5fa;
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #18181b;
 }
 
 .transit-connector-bar {
@@ -234,7 +413,7 @@
   height: 2px;
   background: #e4e4e7;
   position: relative;
-  top: -16px;
+  top: -14px;
   z-index: 1;
 }
 
@@ -242,117 +421,128 @@
   background: #3f3f46;
 }
 
-.transit-connector-active {
-  background: linear-gradient(90deg, #e4e4e7, #10b981);
+/* ─────────────────────────────────────────────────────────────
+   7. ROUTES EXPLORER (Compact)
+   ───────────────────────────────────────────────────────────── */
+.routes-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
 }
 
-.dark .transit-connector-active {
-  background: linear-gradient(90deg, #3f3f46, #059669);
-}
-
-.transit-connector-completed {
-  background: linear-gradient(90deg, #10b981, #3b82f6);
-}
-
-.dark .transit-connector-completed {
-  background: linear-gradient(90deg, #059669, #2563eb);
-}
-
-/* Action Buttons */
-.call-driver-btn {
-  background: #059669;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 12px;
-  padding: 8px 16px;
+.route-catalog-card {
   border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
-  transition: all 0.2s ease;
-}
-
-.call-driver-btn:hover {
-  background: #047857;
-  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
-  transform: translateY(-1px);
-}
-
-/* Policy & Safety Rule Cards */
-.rule-card {
-  border-radius: 16px;
-  border: 1px solid rgba(228, 228, 231, 0.85);
+  border: 1px solid var(--border, #e4e4e7);
   background: #ffffff;
-  padding: 22px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 10px;
+}
+
+.dark .route-catalog-card {
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.route-stop-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  font-size: 11px;
+}
+
+.dark .route-stop-chip {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   8. PRICING MATRIX & ENROLLMENT (Compact)
+   ───────────────────────────────────────────────────────────── */
+.pricing-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.pricing-zone-card {
+  border-radius: 10px;
+  border: 1px solid var(--border, #e4e4e7);
+  background: #ffffff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dark .pricing-zone-card {
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.pricing-zone-card.featured {
+  border-color: #71717a;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   9. POLICY CARDS (Clean & Compact)
+   ───────────────────────────────────────────────────────────── */
+.rule-card {
+  border-radius: 10px;
+  border: 1px solid var(--border, #e4e4e7);
+  background: #ffffff;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .dark .rule-card {
   background: #18181b;
-  border-color: rgba(63, 63, 70, 0.6);
-}
-
-.rule-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08);
-  border-color: #cbd5e1;
-}
-
-.dark .rule-card:hover {
-  border-color: #52525b;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .rule-highlight-box {
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin: 12px 0 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #0f172a;
-  border-left: 3px solid #2563eb;
+  background: #f4f4f5;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 6px 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #18181b;
+  border-left: 2px solid #71717a;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .dark .rule-highlight-box {
   background: #27272a;
   color: #f4f4f5;
-  border-left-color: #3b82f6;
-}
-
-.rule-highlight-emerald {
-  border-left-color: #10b981;
-}
-
-.rule-highlight-purple {
-  border-left-color: #9333ea;
-}
-
-.rule-highlight-amber {
-  border-left-color: #f59e0b;
+  border-left-color: #a1a1aa;
 }
 
 .rule-points-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 4px;
 }
 
 .rule-point-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.5;
+  gap: 6px;
+  font-size: 11px;
+  color: #71717a;
+  line-height: 1.4;
 }
 
 .dark .rule-point-item {
@@ -360,24 +550,25 @@
 }
 
 .rule-point-bullet {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #94a3b8;
-  margin-top: 6px;
+  background: #a1a1aa;
+  margin-top: 5px;
   flex-shrink: 0;
 }
 
-/* Transport Support Banner */
+/* ─────────────────────────────────────────────────────────────
+   10. SUPPORT & HELPLINE BANNER (Compact)
+   ───────────────────────────────────────────────────────────── */
 .transport-support-banner {
-  border-radius: 16px;
-  border: 1px solid rgba(219, 234, 254, 0.8);
-  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
-  padding: 20px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #e4e4e7);
+  background: #fafafa;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  gap: 10px;
 }
 
 @media (min-width: 640px) {
@@ -389,28 +580,239 @@
 }
 
 .dark .transport-support-banner {
-  background: linear-gradient(135deg, #172554 0%, #064e3b 100%);
-  border-color: rgba(30, 58, 138, 0.6);
+  background: #27272a/30;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-.support-btn-primary {
-  background: #2563eb;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 12px;
-  padding: 9px 18px;
-  border-radius: 10px;
+/* ─────────────────────────────────────────────────────────────
+   11. PREVIEW SWITCH
+   ───────────────────────────────────────────────────────────── */
+.preview-mode-switch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #52525b;
+  cursor: pointer;
+  height: 28px;
 }
 
-.support-btn-primary:hover {
-  background: #1d4ed8;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
-  transform: translateY(-1px);
+.dark .preview-mode-switch {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+}
+
+.preview-mode-switch:hover {
+  background: #e4e4e7;
+  color: #18181b;
+}
+
+.dark .preview-mode-switch:hover {
+  background: #3f3f46;
   color: #ffffff;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   12. APPLICATION DIALOG (Refined & Clean)
+   ───────────────────────────────────────────────────────────── */
+.transport-dialog-content {
+  max-width: 480px !important;
+  width: min(480px, calc(100vw - 32px)) !important;
+  border-radius: 14px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border, #e4e4e7) !important;
+  background: #ffffff !important;
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dark .transport-dialog-content {
+  background: #18181b !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.transport-dialog-header {
+  padding: 14px 18px 12px !important;
+  border-bottom: 1px solid #f4f4f5 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: #ffffff !important;
+}
+
+.dark .transport-dialog-header {
+  background: #18181b !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.transport-dialog-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f4f4f5;
+  color: #18181b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e4e4e7;
+  flex-shrink: 0;
+}
+
+.dark .transport-dialog-icon {
+  background: #27272a;
+  color: #f4f4f5;
+  border-color: #3f3f46;
+}
+
+.transport-dialog-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--foreground, #09090b) !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+}
+
+.transport-dialog-desc {
+  font-size: 11px !important;
+  color: #71717a !important;
+  margin-top: 2px !important;
+}
+
+.transport-dialog-body {
+  padding: 14px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.transport-student-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  font-size: 11px;
+}
+
+.dark .transport-student-pill {
+  background: #27272a/50;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.transport-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.transport-field-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #3f3f46;
+}
+
+.dark .transport-field-label {
+  color: #d4d4d8;
+}
+
+.transport-field-control {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #09090b;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dark .transport-field-control {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f4f4f5;
+}
+
+.transport-field-control:focus {
+  border-color: #18181b;
+  box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.06);
+}
+
+.dark .transport-field-control:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.transport-field-textarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #09090b;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dark .transport-field-textarea {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f4f4f5;
+}
+
+.transport-field-textarea:focus {
+  border-color: #18181b;
+  box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.06);
+}
+
+.dark .transport-field-textarea:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.transport-fee-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #fafafa;
+  border: 1px solid #f4f4f5;
+  font-size: 10.5px;
+  color: #71717a;
+}
+
+.dark .transport-fee-notice {
+  background: #27272a/30;
+  border-color: rgba(255, 255, 255, 0.05);
+  color: #a1a1aa;
+}
+
+.transport-dialog-footer {
+  padding: 10px 18px !important;
+  border-top: 1px solid #f4f4f5 !important;
+  background: #fafafa !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+.dark .transport-dialog-footer {
+  background: #18181b !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+

@@ -99,10 +99,6 @@ export default function StudentDashboard() {
     };
   }, []);
 
-  if (isLoading && !student) {
-    return <PageLoader text="Loading student dashboard..." />;
-  }
-
   const [timetablePage, setTimetablePage] = useState(1);
   const [timetablePageSize, setTimetablePageSize] = useState(4);
 
@@ -113,6 +109,14 @@ export default function StudentDashboard() {
   const isShowingAllClasses =
     todaysClasses.length === 0 && (timetable || []).length > 0;
 
+  useEffect(() => {
+    setTimetablePage(1);
+  }, [displayedClasses.length, today]);
+
+  if (isLoading && !student) {
+    return <PageLoader text="Loading student dashboard..." />;
+  }
+
   const totalClasses = displayedClasses.length;
   const totalTimetablePages = Math.max(1, Math.ceil(totalClasses / timetablePageSize));
   const safeTimetablePage = Math.min(Math.max(1, timetablePage), totalTimetablePages);
@@ -120,10 +124,6 @@ export default function StudentDashboard() {
   const timetableStartIndex = (safeTimetablePage - 1) * timetablePageSize;
   const timetableEndIndex = Math.min(timetableStartIndex + timetablePageSize, totalClasses);
   const paginatedClasses = displayedClasses.slice(timetableStartIndex, timetableEndIndex);
-
-  useEffect(() => {
-    setTimetablePage(1);
-  }, [displayedClasses.length, today]);
 
   const getTimetablePageNumbers = () => {
     if (totalTimetablePages <= 5) {
@@ -206,7 +206,7 @@ export default function StudentDashboard() {
       {classTeacher?.name && (
         <div className="sd-teacher-banner">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 overflow-hidden">
+            <div className="w-11 h-11 rounded-full bg-zinc-800 dark:bg-zinc-700 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 overflow-hidden">
               {classTeacher.avatar ? (
                 <img
                   src={classTeacher.avatar}
@@ -219,8 +219,8 @@ export default function StudentDashboard() {
             </div>
             <div className="flex flex-col min-w-0 gap-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/60">
-                  <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700">
+                  <GraduationCap className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                   Class Teacher
                 </span>
                 {classTeacher.sectionName && (
@@ -248,7 +248,7 @@ export default function StudentDashboard() {
               to="/student/id-card"
               className="sd-teacher-btn-card"
             >
-              <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
+              <QrCode className="w-4 h-4 text-zinc-700 dark:text-zinc-300 shrink-0" />
               <span>Student ID Card</span>
             </Link>
 
@@ -271,24 +271,20 @@ export default function StudentDashboard() {
 
       {/* ── Student Transport Details Card ── */}
       <div className="sd-transport-card">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2.5 border-b border-neutral-100">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2.5 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 shadow-2xs">
+            <div className="w-9 h-9 rounded-lg bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 flex items-center justify-center shrink-0 shadow-2xs">
               <Bus className="w-4.5 h-4.5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-neutral-900 leading-snug truncate">
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 leading-snug truncate">
                   {isEnrolledInTransport
                     ? transport?.route?.routeName || "Assigned Campus Bus Route"
                     : "School Bus & Commute"}
                 </h3>
                 <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
-                    isEnrolledInTransport
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-neutral-100 text-neutral-600 border-neutral-200"
-                  }`}
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700"
                 >
                   {isEnrolledInTransport ? "Enrolled Commuter" : "Self Commuter"}
                 </span>
@@ -305,9 +301,9 @@ export default function StudentDashboard() {
             {isEnrolledInTransport && transport?.driver?.phone && transport.driver.phone !== "—" && (
               <a
                 href={`tel:${transport.driver.phone}`}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold border border-emerald-200 bg-emerald-50/60 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold border border-neutral-200 bg-neutral-50 text-neutral-700 hover:bg-neutral-100 transition-colors"
               >
-                <Phone className="w-3 h-3 text-emerald-600" />
+                <Phone className="w-3 h-3 text-neutral-600" />
                 <span>Call Driver</span>
               </a>
             )}
@@ -323,11 +319,11 @@ export default function StudentDashboard() {
 
         {isEnrolledInTransport ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2.5">
-            <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 space-y-0.5">
+            <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 space-y-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                <Bus className="w-3 h-3 text-blue-600" /> Assigned Bus
+                <Bus className="w-3 h-3 text-neutral-600" /> Assigned Bus
               </span>
-              <strong className="text-xs font-bold text-neutral-900 block truncate">
+              <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100 block truncate">
                 {transport?.vehicle?.busNumber || "Bus #12"}
               </strong>
               <span className="text-[11px] text-neutral-500 block truncate">
@@ -335,23 +331,23 @@ export default function StudentDashboard() {
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 space-y-0.5">
+            <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 space-y-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-600" /> Pickup Stop &amp; Timing
+                <MapPin className="w-3 h-3 text-neutral-600" /> Pickup Stop &amp; Timing
               </span>
-              <strong className="text-xs font-bold text-neutral-900 block truncate">
+              <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100 block truncate">
                 {transport?.stop?.stopName || "Assigned Stop"}
               </strong>
-              <span className="text-[11px] text-emerald-700 font-semibold block truncate">
+              <span className="text-[11px] text-neutral-600 dark:text-neutral-400 font-semibold block truncate">
                 Pickup: {transport?.stop?.pickupTime || "07:15 AM"} · Return: {transport?.stop?.dropTime || "02:30 PM"}
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 space-y-0.5">
+            <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 space-y-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                <User className="w-3 h-3 text-purple-600" /> Designated Driver
+                <User className="w-3 h-3 text-neutral-600" /> Designated Driver
               </span>
-              <strong className="text-xs font-bold text-neutral-900 block truncate">
+              <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100 block truncate">
                 {transport?.driver?.name || "Ali Ahmed"}
               </strong>
               <span className="text-[11px] text-neutral-500 block truncate">
@@ -364,7 +360,7 @@ export default function StudentDashboard() {
             <span className="text-[11px]">Need school bus transport? Request route assignment from the administration.</span>
             <Link
               to="/student/support?category=Transport"
-              className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 shrink-0"
+              className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300 hover:underline inline-flex items-center gap-1 shrink-0"
             >
               Request Transport Service →
             </Link>
