@@ -16,6 +16,7 @@ import {
   QrCode,
 } from "lucide-react";
 import QRAttendanceScanner from "@/components/attendance/QRAttendanceScanner";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 import {
   getTeacherAttendanceClasses,
   getTeacherAttendanceRoster,
@@ -660,20 +661,40 @@ export default function TeacherAttendance() {
         </footer>
       </section>
 
-      <QRAttendanceScanner
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        endpoint="/teacher/attendance/qr-scan"
-        classScope={
-          selectedClass
-            ? {
-                className: selectedClass.className || selectedClass.gradeOrClass || "",
-                section: selectedClass.section || "",
-              }
-            : undefined
-        }
-        onAttendanceMarked={handleAttendanceMarked}
-      />
+      <ErrorBoundary
+        title="QR Scanner Notice"
+        fallback={(error, reset) => (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 text-center space-y-4">
+              <h3 className="font-semibold text-slate-900">QR Scanner Encountered an Issue</h3>
+              <p className="text-xs text-slate-600">{error?.message || "Camera was interrupted."}</p>
+              <div className="flex justify-center gap-3">
+                <Button size="sm" variant="outline" onClick={() => setScannerOpen(false)}>
+                  Close
+                </Button>
+                <Button size="sm" onClick={() => { reset(); }}>
+                  Retry Scanner
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      >
+        <QRAttendanceScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          endpoint="/teacher/attendance/qr-scan"
+          classScope={
+            selectedClass
+              ? {
+                  className: selectedClass.className || selectedClass.gradeOrClass || "",
+                  section: selectedClass.section || "",
+                }
+              : undefined
+          }
+          onAttendanceMarked={handleAttendanceMarked}
+        />
+      </ErrorBoundary>
     </main>
   );
 }

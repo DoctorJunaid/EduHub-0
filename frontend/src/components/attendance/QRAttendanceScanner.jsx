@@ -99,6 +99,8 @@ export default function QRAttendanceScanner({
   const [recentScans, setRecentScans] = useState([]);
 
   const scannerRef = useRef(null);
+  const startPromiseRef = useRef(null);
+  const isStoppingRef = useRef(false);
   const lastScannedRef = useRef({ code: "", time: 0 });
   const submitAttendanceRef = useRef(null);
   const scannerContainerId = "qr-attendance-video-region";
@@ -183,28 +185,51 @@ export default function QRAttendanceScanner({
     submitAttendanceRef.current = submitAttendance;
   }, [submitAttendance]);
 
-  const stopCamera = useCallback(() => {
-    if (scannerRef.current) {
-      if (scannerRef.current.isScanning) {
-        scannerRef.current
-          .stop()
-          .catch(() => {})
-          .finally(() => {
-            try {
-              scannerRef.current?.clear();
-            } catch {}
-            scannerRef.current = null;
-            setCameraActive(false);
-          });
-      } else {
-        scannerRef.current = null;
-        setCameraActive(false);
+  /**
+   * Safely stop camera without triggering transition collisions
+   */
+  const stopCamera = useCallback(async () => {
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+
+    try {
+      // 1. If start is currently in-flight, await its completion before stopping
+      if (startPromiseRef.current) {
+        try {
+          await startPromiseRef.current;
+        } catch {
+          // start failed or rejected, proceed with stop
+        }
+        startPromiseRef.current = null;
       }
+
+      // 2. Stop and clear the active instance if present
+      const instance = scannerRef.current;
+      if (instance) {
+        try {
+          const state = typeof instance.getState === "function" ? instance.getState() : 0;
+          // State 2: SCANNING, State 3: PAUSED
+          if (state === 2 || state === 3 || instance.isScanning) {
+            await instance.stop();
+          }
+        } catch (stopErr) {
+          // Safely swallow "already under transition" or "not running" errors
+          console.debug("[QRAttendanceScanner] Safe stop error handled:", stopErr);
+        } finally {
+          try {
+            instance.clear();
+          } catch {}
+          scannerRef.current = null;
+          setCameraActive(false);
+        }
+      }
+    } finally {
+      isStoppingRef.current = false;
     }
   }, []);
 
   /**
-   * Initialize Camera Scanner
+   * Initialize Camera Scanner with safe transition guards
    */
   useEffect(() => {
     if (!open || activeTab !== "camera") {
@@ -213,18 +238,22 @@ export default function QRAttendanceScanner({
     }
 
     let isMounted = true;
-    let html5QrCode = null;
 
     const startScanner = async () => {
+      if (isStoppingRef.current) return;
+
       try {
         setCameraError("");
         setCameraActive(false);
 
         // Ensure container exists in DOM
         const container = document.getElementById(scannerContainerId);
-        if (!container) return;
+        if (!container || !isMounted) return;
 
-        html5QrCode = new Html5Qrcode(scannerContainerId);
+        // Clear any orphaned video/canvas elements from the container
+        container.innerHTML = "";
+
+        const html5QrCode = new Html5Qrcode(scannerContainerId);
         scannerRef.current = html5QrCode;
 
         const config = {
@@ -233,7 +262,7 @@ export default function QRAttendanceScanner({
           aspectRatio: 1.0,
         };
 
-        await html5QrCode.start(
+        const startPromise = html5QrCode.start(
           { facingMode },
           config,
           (decodedText) => {
@@ -258,15 +287,30 @@ export default function QRAttendanceScanner({
           }
         );
 
+        startPromiseRef.current = startPromise;
+        await startPromise;
+        startPromiseRef.current = null;
+
         if (isMounted) {
           setCameraActive(true);
+        } else {
+          // Component unmounted while start was resolving, safely stop
+          try {
+            const state = typeof html5QrCode.getState === "function" ? html5QrCode.getState() : 0;
+            if (state === 2 || state === 3) {
+              await html5QrCode.stop();
+            }
+            html5QrCode.clear();
+          } catch {}
+          scannerRef.current = null;
         }
       } catch (err) {
+        startPromiseRef.current = null;
         if (isMounted) {
           console.warn("Camera start warning:", err);
           setCameraActive(false);
           setCameraError(
-            err.message?.includes("Permission") || err.name === "NotAllowedError"
+            err?.message?.includes("Permission") || err?.name === "NotAllowedError"
               ? "Camera permission denied. Please allow camera access in your browser or use manual roll number entry."
               : "Unable to access camera on this device. You can use manual roll number entry below."
           );

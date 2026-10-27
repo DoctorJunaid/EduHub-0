@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import QRAttendanceScanner from '@/components/attendance/QRAttendanceScanner';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 import DataPagination from '@/components/shared/DataPagination';
 import { usePaginationParams } from '@/hooks/usePaginationParams';
 import AttendanceDateNavigator from '@/components/common/AttendanceDateNavigator';
@@ -404,14 +405,34 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
         />
       )}
 
-      <QRAttendanceScanner
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        endpoint="/campus-admin/attendance/qr-scan"
-        onAttendanceMarked={(_record) => {
-          dispatch(fetchStudentAttendance({ date }));
-        }}
-      />
+      <ErrorBoundary
+        title="Campus QR Scanner Notice"
+        fallback={(error, reset) => (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 text-center space-y-4">
+              <h3 className="font-semibold text-slate-900">QR Scanner Encountered an Issue</h3>
+              <p className="text-xs text-slate-600">{error?.message || "Camera was interrupted."}</p>
+              <div className="flex justify-center gap-3">
+                <Button size="sm" variant="outline" onClick={() => setScannerOpen(false)}>
+                  Close
+                </Button>
+                <Button size="sm" onClick={() => { reset(); }}>
+                  Retry Scanner
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      >
+        <QRAttendanceScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          endpoint="/campus-admin/attendance/qr-scan"
+          onAttendanceMarked={(_record) => {
+            dispatch(fetchStudentAttendance({ date }));
+          }}
+        />
+      </ErrorBoundary>
     </section>
   );
 }
