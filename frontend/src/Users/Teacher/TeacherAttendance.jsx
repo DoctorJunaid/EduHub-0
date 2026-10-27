@@ -287,8 +287,8 @@ export default function TeacherAttendance() {
       aria-labelledby="teacher-attendance-title"
     >
       {/* Header Toolbar */}
-      <header className="campus-toolbar teacher-attendance-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-        <div className="flex items-center gap-2">
+      <header className="teacher-attendance-toolbar">
+        <div className="toolbar-left">
           <Button
             variant="outline"
             size="sm"
@@ -309,16 +309,16 @@ export default function TeacherAttendance() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="toolbar-right">
           <Button
             variant="outline"
             size="sm"
-            className="toolbar-btn-outline flex items-center gap-1.5 border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 whitespace-nowrap shrink-0"
+            className="toolbar-btn-outline flex items-center gap-1.5 border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100 whitespace-nowrap shrink-0 font-medium"
             onClick={() => setScannerOpen(true)}
             title="Scan student QR code or enter roll number"
           >
-            <QrCode size={14} />
-            Scan QR Code
+            <QrCode size={15} className="text-blue-600 shrink-0" />
+            <span>Scan QR Code</span>
           </Button>
 
           <Button
@@ -426,6 +426,17 @@ export default function TeacherAttendance() {
           </input>
 
           <div className="teacher-attendance-bulk">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-blue-300 text-blue-700 bg-blue-50/80 hover:bg-blue-100 flex items-center gap-1.5 font-medium whitespace-nowrap"
+              onClick={() => setScannerOpen(true)}
+              title="Scan student QR code or enter roll number"
+            >
+              <QrCode size={15} className="text-blue-600 shrink-0" />
+              <span>Scan QR Code</span>
+            </Button>
             <Button
               variant="outline"
               onClick={() => markAll("Present")}
@@ -695,6 +706,20 @@ export default function TeacherAttendance() {
           onAttendanceMarked={handleAttendanceMarked}
         />
       </ErrorBoundary>
+
+      {/* Mobile Floating Action Button for Quick QR Attendance */}
+      <div className="teacher-attendance-fab-wrap">
+        <button
+          type="button"
+          onClick={() => setScannerOpen(true)}
+          className="teacher-attendance-fab"
+          aria-label="Scan student QR code"
+          title="Scan QR Code Attendance"
+        >
+          <QrCode size={18} />
+          <span>Scan QR</span>
+        </button>
+      </div>
     </main>
   );
 }
