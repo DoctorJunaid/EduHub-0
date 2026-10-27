@@ -268,7 +268,7 @@ export default function StudentTransport() {
 
             <div className="min-w-0 space-y-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+                <h1 className="text-sm sm:text-base font-bold tracking-tight text-foreground break-words sm:truncate">
                   {isEnrolled
                     ? route?.routeName || "Route 101: DHA & University"
                     : "School Bus & Route Management"}
@@ -316,7 +316,7 @@ export default function StudentTransport() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          <div className="transport-hero-actions">
             {isEnrolled && driver?.phone && driver.phone !== "—" && (
               <a href={`tel:${driver.phone}`} className="call-driver-btn">
                 <Phone className="w-3 h-3" />
@@ -507,16 +507,16 @@ export default function StudentTransport() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-zinc-100 dark:border-zinc-800/80 sm:border-0">
                     <Button
                       onClick={() => handleOpenRequisition()}
-                      className="btn-transport-primary text-xs"
+                      className="btn-transport-primary text-xs flex-1 sm:flex-none justify-center"
                     >
                       Apply for Bus
                     </Button>
                     <Link
                       to="/student/support?category=Transport"
-                      className="btn-transport-outline text-xs"
+                      className="btn-transport-outline text-xs flex-1 sm:flex-none text-center justify-center"
                     >
                       Support Ticket
                     </Link>
@@ -526,8 +526,8 @@ export default function StudentTransport() {
 
               {/* Self Commuter Clearance Details */}
               <div className="self-commuter-showcase space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                  <div>
+                <div className="flex items-start sm:items-center justify-between flex-wrap gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="min-w-0">
                     <h3 className="text-xs sm:text-sm font-bold text-foreground">
                       Private & Guardian Commute Clearance
                     </h3>
@@ -535,7 +535,7 @@ export default function StudentTransport() {
                       Authorized for independent walking, bicycle, or private vehicle drop-off.
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-medium text-muted-foreground">
+                  <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">
                     ID: {student?.studentId || "STD-099"}
                   </span>
                 </div>
@@ -856,7 +856,7 @@ export default function StudentTransport() {
             </div>
             <Link
               to="/student/support?category=Transport"
-              className="btn-transport-primary text-xs"
+              className="btn-transport-primary text-xs w-full sm:w-auto text-center justify-center"
             >
               Open Ticket
             </Link>
@@ -965,7 +965,7 @@ export default function StudentTransport() {
               )}
 
               {/* Schedule & Phone 2-Col */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="transport-field-group">
                   <label className="transport-field-label">Commute Schedule</label>
                   <select
