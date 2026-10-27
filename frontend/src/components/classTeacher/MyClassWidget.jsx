@@ -1,25 +1,34 @@
-import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
-import {
-  GraduationCap,
-  Users,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  ArrowRight,
-  ClipboardList,
-  Award,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { GraduationCap, BookOpen, Award, CheckCircle2 } from "lucide-react";
 
 export default function MyClassWidget({ classInfo, attendance, loading }) {
+  const navigate = useNavigate();
+
   if (loading) {
     return (
-      <Card className="bg-slate-900/80 border border-slate-800 rounded-2xl animate-pulse p-6">
-        <div className="h-6 bg-slate-800 rounded w-1/4 mb-4"></div>
-        <div className="h-4 bg-slate-800 rounded w-1/2"></div>
-      </Card>
+      <div
+        className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs animate-pulse flex flex-col lg:flex-row lg:items-center justify-between"
+        style={{
+          padding: "20px 24px",
+          gap: "16px",
+          marginBottom: "20px",
+          boxSizing: "border-box",
+          minHeight: "80px",
+        }}
+      >
+        <div className="flex items-center min-w-0" style={{ gap: "12px" }}>
+          <div className="w-10 h-10 rounded-lg bg-neutral-200 shrink-0" />
+          <div className="flex flex-col" style={{ gap: "6px" }}>
+            <div className="h-4 bg-neutral-200 rounded w-48" />
+            <div className="h-3 bg-neutral-200 rounded w-32" />
+          </div>
+        </div>
+        <div className="flex items-center shrink-0" style={{ gap: "10px" }}>
+          <div className="h-9 bg-neutral-200 rounded-lg w-24" />
+          <div className="h-9 bg-neutral-200 rounded-lg w-28" />
+          <div className="h-9 bg-neutral-200 rounded-lg w-40" />
+        </div>
+      </div>
     );
   }
 
@@ -35,122 +44,83 @@ export default function MyClassWidget({ classInfo, attendance, loading }) {
     percentage: 100,
   };
 
+  const handleClassHub = () => navigate("/teacher/my-class");
+  const handleClassResults = () => navigate("/teacher/my-class/results");
+  const handleMarkAttendance = () => navigate("/teacher/my-class/attendance");
+
+  const enrolledCount = classInfo.studentCount ?? (summary.total || 0);
+  const classNameDisplay = classInfo.className || "1st Year (11th) - Section A";
+
   return (
-    <div className="relative group overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/20 shadow-2xl transition-all duration-300">
-      <div className="bg-slate-900/95 backdrop-blur-xl rounded-[22px] p-6 text-white border border-slate-800/80 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/30">
-              <GraduationCap size={26} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h3 className="text-xl font-black text-white tracking-tight">
-                  My Class — {classInfo.className || "Class Section"}
-                </h3>
-                <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-xs px-2.5 py-0.5 font-bold">
-                  Class Teacher
-                </Badge>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-                <span className="flex items-center gap-1 font-medium text-slate-300">
-                  <Users size={14} className="text-indigo-400" /> {classInfo.studentCount || summary.total || 0} Enrolled Students
-                </span>
-                <span>•</span>
-                <span>Academic Session 2026–2027</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <Link to="/teacher/my-class">
-              <Button
-                variant="outline"
-                className="border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-200 hover:text-white rounded-xl text-xs flex items-center gap-1.5"
-              >
-                <Users size={14} /> Class Hub
-              </Button>
-            </Link>
-            <Link to="/teacher/my-class/results">
-              <Button
-                variant="outline"
-                className="border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs flex items-center gap-1.5"
-              >
-                <Award size={14} /> Class Results
-              </Button>
-            </Link>
-            <Link to="/teacher/my-class/attendance">
-              <Button
-                className={`rounded-xl text-xs font-semibold px-4 shadow-lg flex items-center gap-1.5 ${
-                  isMarkedToday
-                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30"
-                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-indigo-600/30"
-                }`}
-              >
-                {isMarkedToday ? (
-                  <>
-                    <CheckCircle2 size={15} /> Edit Attendance
-                  </>
-                ) : (
-                  <>
-                    <ClipboardList size={15} /> Mark Today's Attendance
-                  </>
-                )}
-              </Button>
-            </Link>
-          </div>
+    <div
+      className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col lg:flex-row lg:items-center justify-between"
+      style={{
+        padding: "20px 24px",
+        gap: "16px",
+        marginBottom: "20px",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* Left: Title & Subtitle */}
+      <div className="flex items-center min-w-0" style={{ gap: "12px" }}>
+        <div
+          className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+          style={{ width: "40px", height: "40px" }}
+        >
+          <GraduationCap className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
         </div>
-
-        {/* Attendance Summary Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-          <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-400 font-medium block">Present</span>
-              <span className="text-lg font-black text-emerald-400">
-                {summary.present || 0}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">
-              P
-            </div>
+        <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+          <div className="flex items-center flex-wrap" style={{ gap: "8px" }}>
+            <h1 className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight truncate">
+              My Class — {classNameDisplay}
+            </h1>
+            <span
+              className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+              style={{ padding: "2px 8px" }}
+            >
+              Class Teacher
+            </span>
           </div>
-
-          <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-400 font-medium block">Absent</span>
-              <span className="text-lg font-black text-rose-400">
-                {summary.absent || 0}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold text-xs">
-              A
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-400 font-medium block">Late / Excused</span>
-              <span className="text-lg font-black text-amber-400">
-                {(summary.late || 0) + (summary.excused || 0)}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-xs">
-              L/E
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-400 font-medium block">Attendance Rate</span>
-              <span className="text-lg font-black text-indigo-300">
-                {summary.percentage || 100}%
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-xs">
-              %
-            </div>
-          </div>
+          <p className="text-xs sm:text-sm text-neutral-500 truncate">
+            {enrolledCount} Enrolled Students • Academic Session 2026-2027
+          </p>
         </div>
+      </div>
+
+      {/* Right: Action Buttons (Neutral Enterprise Theme) */}
+      <div
+        className="flex flex-wrap items-center shrink-0"
+        style={{ gap: "10px" }}
+      >
+        <button
+          type="button"
+          onClick={handleClassHub}
+          className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+          style={{ height: "38px", padding: "0 14px", gap: "6px" }}
+        >
+          <BookOpen className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+          <span>Class Hub</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleClassResults}
+          className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+          style={{ height: "38px", padding: "0 14px", gap: "6px" }}
+        >
+          <Award className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+          <span>Class Results</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleMarkAttendance}
+          className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+          style={{ height: "38px", padding: "0 16px", gap: "6px" }}
+        >
+          <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0 stroke-[1.75]" />
+          <span>
+            {isMarkedToday ? "Edit Attendance" : "Mark Today's Attendance"}
+          </span>
+        </button>
       </div>
     </div>
   );

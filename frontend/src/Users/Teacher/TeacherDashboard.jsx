@@ -14,6 +14,7 @@ import {
   Clock3,
   Coins,
   FileText,
+  GraduationCap,
   Search,
   Users,
 } from "lucide-react";
@@ -193,12 +194,25 @@ export default function TeacherDashboard() {
     todayScheduledCount > 0 ? `${todayConductedCount}/${todayScheduledCount} Done` : "0 Scheduled";
 
   const metric = [
-    [CalendarCheck, "Today's Lectures", todayWorkloadLabel],
-    [Award, "Monthly Credits", creditSummary?.totalCredits !== undefined && creditSummary?.totalCredits !== null ? creditSummary.totalCredits : "0"],
-    [Coins, "Bonus Earned", `PKR ${(creditSummary?.totalBonusEarned || 0).toLocaleString()}`],
-    [BookOpen, "Assigned Courses", assignedCourseCount],
-    [FileText, "Pending Submissions", pendingSubmissionsCount],
-    [Users, "Enrolled Students", enrolledStudentCount],
+    { icon: CalendarCheck, label: "Today's Lectures", value: todayWorkloadLabel },
+    {
+      icon: Award,
+      label: "Monthly Credits",
+      value:
+        creditSummary?.totalCredits !== undefined && creditSummary?.totalCredits !== null
+          ? creditSummary.totalCredits
+          : "0",
+    },
+    {
+      icon: Coins,
+      label: "Bonus Earned",
+      isCurrency: true,
+      currency: "PKR",
+      amount: (creditSummary?.totalBonusEarned || 0).toLocaleString(),
+    },
+    { icon: BookOpen, label: "Assigned Courses", value: assignedCourseCount },
+    { icon: FileText, label: "Pending Submissions", value: pendingSubmissionsCount },
+    { icon: Users, label: "Enrolled Students", value: enrolledStudentCount },
   ];
 
   if (
@@ -232,96 +246,175 @@ export default function TeacherDashboard() {
       <TeacherLeaveRequestsCard />
 
       {/* Teacher Workload Summary Banner */}
-      <section className="teacher-workload-banner">
-        <div className="workload-banner-left">
-          <div className={`workload-banner-icon ${classes.length < 5 ? "is-under" : "is-optimal"}`}>
-            <BookOpen size={19} />
+      <section
+        className="teacher-workload-banner w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between"
+        style={{ padding: "16px 20px", gap: "16px", boxSizing: "border-box" }}
+      >
+        <div className="workload-banner-left flex items-center min-w-0 flex-1" style={{ gap: "14px" }}>
+          <div
+            className="workload-banner-icon rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <BookOpen className="w-4 h-4 text-neutral-700 stroke-[1.75]" />
           </div>
-          <div className="workload-banner-content">
-            <div className="workload-heading-row">
-              <h2 className="workload-heading">Faculty Workload Allocation</h2>
-              <span className={`workload-assigned-badge ${classes.length < 5 ? "is-under" : "is-optimal"}`}>
+          <div className="workload-banner-content flex flex-col min-w-0" style={{ gap: "2px" }}>
+            <div className="workload-heading-row flex items-center flex-wrap" style={{ gap: "8px" }}>
+              <h2 className="workload-heading text-sm sm:text-base font-bold text-neutral-900 tracking-tight">
+                Faculty Workload Allocation
+              </h2>
+              <span
+                className="workload-assigned-badge inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+                style={{ padding: "2px 8px" }}
+              >
                 {classes.length}/5 Classes Assigned
               </span>
               {classes.length < 5 ? (
-                <span className="workload-status-badge is-under">
-                  ⚠️ Under-assigned ({5 - classes.length} more needed)
+                <span
+                  className="workload-status-badge is-under inline-flex items-center rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200 text-[11px] font-medium"
+                  style={{ padding: "2px 8px", gap: "4px" }}
+                >
+                  Under-assigned ({5 - classes.length} more needed)
                 </span>
               ) : (
-                <span className="workload-status-badge is-optimal">
-                  ✓ Optimal Daily Requirement Met
+                <span
+                  className="workload-status-badge is-optimal inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+                  style={{ padding: "2px 8px", gap: "4px" }}
+                >
+                  <CheckCircle2 className="w-3 h-3 text-neutral-700 stroke-[2]" />
+                  Optimal Daily Requirement Met
                 </span>
               )}
             </div>
-            <p className="workload-banner-subtext">
+            <p className="workload-banner-subtext text-xs text-neutral-500">
               Campus standard requirement is 5 classes/day. Full class routine and assigned periods are synchronized below.
             </p>
           </div>
         </div>
-        <div className="workload-banner-target">
-          <Clock3 size={13} className="text-slate-400" />
-          <span>Target: <strong className="font-semibold text-slate-800">5 Periods/Day</strong></span>
+        <div
+          className="workload-banner-target inline-flex items-center rounded-lg bg-neutral-50 border border-neutral-200 text-xs text-neutral-600 shrink-0 self-start md:self-auto"
+          style={{ padding: "6px 12px", gap: "6px" }}
+        >
+          <Clock3 className="w-3.5 h-3.5 text-neutral-500 stroke-[1.75]" />
+          <span>Target: <strong className="font-semibold text-neutral-900">5 Periods/Day</strong></span>
         </div>
       </section>
 
       {/* 1. KPI Cards Strip */}
       <section
-        className="teacher-metrics campus-kpi-track"
+        className="teacher-metrics campus-kpi-track w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden"
         aria-label="Teaching summary"
+        style={{ boxSizing: "border-box" }}
       >
-        {metric.map(([Icon, label, value]) => (
-          <article
-            className="teacher-metric campus-kpi-card min-w-0"
-            key={label}
-          >
-            <div className="kpi-wrap min-w-0 flex items-center gap-2.5">
-              <div className="kpi-icon shrink-0">
-                <Icon size={18} aria-hidden="true" />
+        {metric.map((m) => {
+          const Icon = m.icon;
+          return (
+            <article
+              className="teacher-metric campus-kpi-card min-w-0 bg-white border-r border-neutral-200 hover:bg-neutral-50/50 transition-colors"
+              key={m.label}
+              style={{ padding: "16px 14px", minHeight: "80px", boxSizing: "border-box" }}
+            >
+              <div className="kpi-wrap min-w-0 flex items-center" style={{ gap: "10px" }}>
+                <div
+                  className="kpi-icon shrink-0 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700"
+                  style={{ width: "36px", height: "36px" }}
+                >
+                  <Icon className="w-4 h-4 text-neutral-700 stroke-[1.75]" aria-hidden="true" />
+                </div>
+                <div className="kpi-info min-w-0 flex-1 flex flex-col overflow-hidden" style={{ gap: "2px" }}>
+                  <span
+                    className="kpi-label text-[11px] font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap truncate"
+                    title={m.label}
+                  >
+                    {m.label}
+                  </span>
+                  <div
+                    className="kpi-value text-base sm:text-lg font-bold text-neutral-900 tracking-tight whitespace-nowrap truncate flex items-baseline"
+                    style={{ gap: "3px" }}
+                  >
+                    {m.isCurrency ? (
+                      <>
+                        <span className="text-xs font-semibold text-neutral-500">{m.currency}</span>
+                        <span>{m.amount}</span>
+                      </>
+                    ) : (
+                      <span>{m.value}</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="kpi-info min-w-0 flex-1 flex flex-col overflow-hidden">
-                <span className="kpi-label whitespace-nowrap truncate" title={label}>
-                  {label}
-                </span>
-                <strong className="kpi-value whitespace-nowrap truncate">
-                  {value}
-                </strong>
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </section>
 
       {/* 2. Quick Actions Strip */}
-      <div className="teacher-quick-actions-container">
-        <nav className="teacher-quick-actions" aria-label="Teacher quick actions">
-          <Link to="/teacher/credits">
-            <Award size={15} /> My Teaching Credits &amp; Sessions
+      <div className="teacher-quick-actions-container w-full">
+        <nav
+          className="teacher-quick-actions grid grid-cols-2 md:grid-cols-5"
+          style={{ gap: "10px", width: "100%" }}
+          aria-label="Teacher quick actions"
+        >
+          <Link
+            to="/teacher/credits"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+          >
+            <Award className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+            <span>My Teaching Credits &amp; Sessions</span>
           </Link>
-          <Link to="/teacher/assignments">
-            <ClipboardList size={15} /> Assignments &amp; Grading
+          <Link
+            to="/teacher/assignments"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+          >
+            <ClipboardList className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+            <span>Assignments &amp; Grading</span>
           </Link>
-          <Link to="/teacher/attendance">
-            <CalendarCheck size={15} /> Take Student Attendance
+          <Link
+            to="/teacher/attendance"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+          >
+            <CalendarCheck className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+            <span>Take Student Attendance</span>
           </Link>
-          <Link to="/teacher/diary">
-            <FileText size={15} /> Daily Lecture Diary
+          <Link
+            to="/teacher/diary"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+          >
+            <FileText className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+            <span>Daily Lecture Diary</span>
           </Link>
-          <Link to="/teacher/gradebook">
-            <BookOpen size={15} /> Exam Marks &amp; Gradebook
+          <Link
+            to="/teacher/gradebook"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+            <span>Exam Marks &amp; Gradebook</span>
           </Link>
         </nav>
       </div>
 
       {/* 3. Today's Teaching Credits Table */}
-      <div className="teacher-section-container">
-        <section className="teacher-table-card">
-          <div className="teacher-card-header flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
-            <div className="teacher-card-title-group min-w-0">
-              <h2 className="teacher-card-title">Today's Teaching Credits &amp; Periods</h2>
-              <span className="teacher-card-subtitle">Fulfill assigned lecture periods to accrue monthly teaching credits &amp; bonuses</span>
+      <div className="teacher-section-container w-full">
+        <section className="teacher-table-card w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
+          <div
+            className="teacher-card-header flex flex-col sm:flex-row sm:items-center justify-between w-full border-b border-neutral-200"
+            style={{ padding: "16px 20px", gap: "12px", boxSizing: "border-box" }}
+          >
+            <div className="teacher-card-title-group min-w-0" style={{ gap: "2px" }}>
+              <h2 className="teacher-card-title text-base font-bold text-neutral-900 tracking-tight">Today's Teaching Credits &amp; Periods</h2>
+              <span className="teacher-card-subtitle text-xs text-neutral-500">Fulfill assigned lecture periods to accrue monthly teaching credits &amp; bonuses</span>
             </div>
             <div className="teacher-card-controls flex flex-wrap items-center" style={{ gap: "10px" }}>
-              <Button variant="outline" className="teacher-action-btn toolbar-btn-outline whitespace-nowrap shrink-0" asChild>
+              <Button
+                variant="outline"
+                className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs whitespace-nowrap shrink-0"
+                style={{ height: "36px", padding: "0 14px" }}
+                asChild
+              >
                 <Link to="/teacher/credits">All Credit Records →</Link>
               </Button>
             </div>
@@ -355,51 +448,60 @@ export default function TeacherDashboard() {
                 <tbody>
                   {todaySessions.map((sess) => (
                     <tr key={sess._id}>
-                      <td className="font-semibold text-slate-900">
+                      <td className="font-semibold text-neutral-900">
                         Period {sess.period} ({sess.startTime} – {sess.endTime})
                       </td>
-                      <td className="font-medium text-slate-800">
+                      <td className="font-medium text-neutral-800">
                         {sess.className} {sess.section ? `(${sess.section})` : ""}
                       </td>
-                      <td className="font-bold text-slate-900">{sess.subject}</td>
+                      <td className="font-bold text-neutral-900">{sess.subject}</td>
                       <td>
                         {sess.isSubstituteDuty ? (
-                          <span className="text-amber-700 font-semibold">Substitution Duty</span>
+                          <span
+                            className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+                            style={{ padding: "2px 8px" }}
+                          >
+                            Substitution Duty
+                          </span>
                         ) : sess.isSubstitutedOut ? (
-                          <span className="text-amber-700 font-semibold">Substituted Out</span>
+                          <span
+                            className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200 text-[11px] font-medium"
+                            style={{ padding: "2px 8px" }}
+                          >
+                            Substituted Out
+                          </span>
                         ) : (
-                          <span className="text-slate-600 font-medium">Assigned Teacher</span>
+                          <span
+                            className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200 text-[11px] font-medium"
+                            style={{ padding: "2px 8px" }}
+                          >
+                            Assigned Teacher
+                          </span>
                         )}
                       </td>
                       <td>
                         <span
-                          className={`campus-status-pill ${
-                            sess.status === "Completed"
-                              ? "is-active"
-                              : sess.status === "Missed" || sess.status === "Absent"
-                              ? "is-danger"
-                              : sess.status === "Substituted"
-                              ? "is-pending"
-                              : "is-active"
-                          }`}
+                          className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+                          style={{ padding: "2px 8px" }}
                         >
                           {sess.status}
                         </span>
                       </td>
                       <td>
                         {sess.status === "Completed" ? (
-                          <strong className="text-emerald-700 font-bold">+{sess.creditValue || 1} Cr</strong>
+                          <strong className="text-neutral-900 font-bold">+{sess.creditValue || 1} Cr</strong>
                         ) : sess.deductionValue > 0 ? (
-                          <strong className="text-rose-600 font-bold">-PKR {sess.deductionValue}</strong>
+                          <strong className="text-neutral-700 font-bold">-PKR {sess.deductionValue}</strong>
                         ) : (
-                          <span className="text-slate-400 font-medium">1 Cr pending</span>
+                          <span className="text-neutral-400 font-medium">1 Cr pending</span>
                         )}
                       </td>
                       <td className="text-right">
                         {sess.status === "Scheduled" && !sess.isSubstitutedOut && (
                           <Button
                             size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-7 px-3 text-xs font-semibold"
+                            className="bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-medium shadow-xs"
+                            style={{ height: "30px", padding: "0 12px" }}
                             disabled={completeMutation.isPending && completeMutation.variables === sess._id}
                             onClick={() => completeMutation.mutate(sess._id)}
                           >
@@ -412,12 +514,18 @@ export default function TeacherDashboard() {
                           </Button>
                         )}
                         {sess.status === "Completed" && (
-                          <span className="text-emerald-600 font-bold flex items-center justify-end gap-1 text-xs">
-                            <CheckCircle2 size={13} /> Completed
+                          <span className="text-neutral-800 font-medium flex items-center justify-end text-xs" style={{ gap: "4px" }}>
+                            <CheckCircle2 size={13} className="text-neutral-700" /> Completed
                           </span>
                         )}
                         {(sess.status === "Missed" || sess.status === "Absent") && (
-                          <Button size="sm" variant="outline" asChild className="h-7 text-xs">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            asChild
+                            className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs"
+                            style={{ height: "30px", padding: "0 12px" }}
+                          >
                             <Link to="/teacher/credits">Review Dispute</Link>
                           </Button>
                         )}
@@ -492,33 +600,41 @@ export default function TeacherDashboard() {
               const isCT = Boolean(item.isClassTeacher || item.role === "Class Teacher");
               return (
                 <tr key={item.id ? `${item.id}-${classStartIndex + idx}` : (item._id ? `${item._id}-${classStartIndex + idx}` : `class-${classStartIndex + idx}`)}>
-                  <td className="font-bold text-slate-900">
+                  <td className="font-bold text-neutral-900">
                     <div>{item.title || item.subject || "Untitled class"}</div>
                     {item.subjectCode && (
-                      <span className="text-[11px] font-mono text-slate-500 font-normal">
+                      <span className="text-[11px] font-mono text-neutral-500 font-normal">
                         Code: {item.subjectCode}
                       </span>
                     )}
                   </td>
-                  <td className="font-medium text-slate-800">
+                  <td className="font-medium text-neutral-800">
                     {item.section || item.className || item.program || "—"}
                   </td>
                   <td>
-                    <span className="flex items-center gap-1.5 text-slate-700">
-                      <Clock3 size={14} className="text-slate-400" />
+                    <span className="flex items-center gap-1.5 text-neutral-700">
+                      <Clock3 size={14} className="text-neutral-400" />
                       {(item.days || [item.dayOfWeek]).filter(Boolean).join(", ")}{" "}
                       {item.startTime ? `${item.startTime} – ${item.endTime || ""}` : ""}
                     </span>
                   </td>
-                  <td className="text-slate-600">{item.room || item.roomNumber || "—"}</td>
+                  <td className="text-neutral-600">{item.room || item.roomNumber || "—"}</td>
                   <td>
                     {isCT ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        👑 Class Teacher
+                      <span
+                        className="inline-flex items-center rounded-md bg-neutral-900 text-white text-[11px] font-medium"
+                        style={{ padding: "2px 8px", gap: "4px" }}
+                      >
+                        <GraduationCap className="w-3 h-3 text-white stroke-[1.75]" />
+                        <span>Class Teacher</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                        📘 Subject Teacher
+                      <span
+                        className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200 text-[11px] font-medium"
+                        style={{ padding: "2px 8px", gap: "4px" }}
+                      >
+                        <BookOpen className="w-3 h-3 text-neutral-500 stroke-[1.75]" />
+                        <span>Subject Teacher</span>
                       </span>
                     )}
                   </td>
@@ -526,14 +642,14 @@ export default function TeacherDashboard() {
                     <div className="teacher-table-actions">
                       <Link
                         to={`/teacher/attendance?classId=${encodeURIComponent(item.id || item._id)}`}
-                        className="teacher-action-link"
+                        className="teacher-action-link text-xs font-medium text-neutral-700 hover:text-neutral-900 hover:underline"
                       >
                         Attendance
                       </Link>
-                      <span className="text-slate-300">•</span>
+                      <span className="text-neutral-300">•</span>
                       <Link
                         to={`/teacher/diary?classId=${encodeURIComponent(item.id || item._id)}`}
-                        className="teacher-action-link"
+                        className="teacher-action-link text-xs font-medium text-neutral-700 hover:text-neutral-900 hover:underline"
                       >
                         Diary
                       </Link>
@@ -578,24 +694,32 @@ export default function TeacherDashboard() {
               <tr key={item.id}>
                 <td>
                   <span className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-neutral-900 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                       {initials(item.studentName)}
                     </span>
-                    <strong className="font-semibold text-slate-900">
+                    <strong className="font-semibold text-neutral-900">
                       {item.studentName || item.studentId}
                     </strong>
                   </span>
                 </td>
-                <td className="font-medium text-slate-800">{assignmentTitle(item)}</td>
-                <td className="text-slate-600">{item.submittedAt || item.submissionDate || "—"}</td>
+                <td className="font-medium text-neutral-800">{assignmentTitle(item)}</td>
+                <td className="text-neutral-600">{item.submittedAt || item.submissionDate || "—"}</td>
                 <td>
-                  <span className="campus-status-pill is-pending">
+                  <span
+                    className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
+                    style={{ padding: "2px 8px" }}
+                  >
                     Needs Grading
                   </span>
                 </td>
-                <td className="text-slate-400">—</td>
+                <td className="text-neutral-400">—</td>
                 <td className="text-right">
-                  <Button size="sm" asChild className="h-7 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button
+                    size="sm"
+                    asChild
+                    className="rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium shadow-xs"
+                    style={{ height: "30px", padding: "0 12px" }}
+                  >
                     <Link to={`/teacher/assignments?submissionId=${encodeURIComponent(item.id)}`}>
                       Evaluate
                     </Link>
@@ -625,24 +749,34 @@ function TeacherTable({
   footer = null,
 }) {
   return (
-    <div className="teacher-section-container">
-      <section className="teacher-table-card">
-        <div className="teacher-card-header flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "12px" }}>
-          <div className="teacher-card-title-group min-w-0">
-            <h2 className="teacher-card-title">{title}</h2>
-            <span className="teacher-card-subtitle">{subtitle}</span>
+    <div className="teacher-section-container w-full">
+      <section className="teacher-table-card w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
+        <div
+          className="teacher-card-header flex flex-col sm:flex-row sm:items-center justify-between w-full border-b border-neutral-200"
+          style={{ padding: "16px 20px", gap: "12px", boxSizing: "border-box" }}
+        >
+          <div className="teacher-card-title-group min-w-0" style={{ gap: "2px" }}>
+            <h2 className="teacher-card-title text-base font-bold text-neutral-900 tracking-tight">{title}</h2>
+            <span className="teacher-card-subtitle text-xs text-neutral-500">{subtitle}</span>
           </div>
           <div className="teacher-card-controls flex flex-wrap items-center" style={{ gap: "10px" }}>
-            <label className="teacher-search-box">
-              <Search size={14} />
+            <label className="teacher-search-box relative flex items-center" style={{ width: "240px" }}>
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 pointer-events-none" />
               <span className="sr-only">{placeholder}</span>
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={placeholder}
+                className="w-full rounded-lg border border-neutral-200 bg-white text-neutral-900 text-xs focus:outline-none focus:border-neutral-900"
+                style={{ height: "36px", paddingLeft: "32px", paddingRight: "12px", boxSizing: "border-box" }}
               />
             </label>
-            <Button variant="outline" className="teacher-action-btn toolbar-btn-outline whitespace-nowrap shrink-0" asChild>
+            <Button
+              variant="outline"
+              className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs whitespace-nowrap shrink-0"
+              style={{ height: "36px", padding: "0 14px" }}
+              asChild
+            >
               <Link to={actionTo}>{actionLabel} →</Link>
             </Button>
           </div>
@@ -661,9 +795,9 @@ function EmptyRow({
 }) {
   return (
     <div className="teacher-empty-state">
-      <Icon className="text-slate-300 mb-1" size={28} />
-      <p className="font-semibold text-slate-600 text-sm mb-0.5">{text}</p>
-      <span className="text-xs text-slate-400">{detail}</span>
+      <Icon className="text-neutral-300 mb-1" size={28} />
+      <p className="font-semibold text-neutral-700 text-sm mb-0.5">{text}</p>
+      <span className="text-xs text-neutral-400">{detail}</span>
     </div>
   );
 }
