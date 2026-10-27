@@ -14,6 +14,7 @@ import {
   AlertCircle,
   FileCheck2,
   QrCode,
+  XCircle,
 } from "lucide-react";
 import QRAttendanceScanner from "@/components/attendance/QRAttendanceScanner";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
@@ -281,90 +282,102 @@ export default function TeacherAttendance() {
     classesQuery.refetch();
   }, [queryClient, rosterQuery, classesQuery]);
 
+  const handleSync = () => {
+    classesQuery.refetch();
+    rosterQuery.refetch();
+    toast.success("Attendance synced.");
+  };
+
+  const handleScanQr = () => {
+    setScannerOpen(true);
+  };
+
+  const handleMarkAllPresent = () => {
+    markAll("Present");
+  };
+
+  const handleMarkAllAbsent = () => {
+    markAll("Absent");
+  };
+
   return (
     <main
-      className="campus-tab-page teacher-attendance"
+      className="campus-tab-page teacher-attendance w-full"
       aria-labelledby="teacher-attendance-title"
     >
-      {/* Header Toolbar */}
-      <header className="teacher-attendance-toolbar">
-        <div className="toolbar-left">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              classesQuery.refetch();
-              rosterQuery.refetch();
-              toast.success("Attendance synced.");
-            }}
+      {/* Top Header Banner & "Sync" Action Bar */}
+      <div
+        className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between"
+        style={{ padding: "18px 20px", gap: "16px", marginBottom: "20px", boxSizing: "border-box" }}
+      >
+        <div className="flex flex-col min-w-0" style={{ gap: "4px" }}>
+          <h1
+            id="teacher-attendance-title"
+            className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight"
+          >
+            Student Attendance &amp; Leave Requests
+          </h1>
+          <p className="text-xs text-neutral-500">
+            Manage daily attendance records and review student leave applications.
+          </p>
+        </div>
+        <div className="flex items-center flex-wrap sm:flex-nowrap" style={{ gap: "8px" }}>
+          <button
+            type="button"
+            onClick={handleSync}
             disabled={classesQuery.isFetching || isFetchingRoster}
-            className="toolbar-btn-outline flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto"
+            style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
           >
             {classesQuery.isFetching || isFetchingRoster ? (
               <Spinner className="size-3.5" />
             ) : (
-              <RefreshCw size={14} />
+              <RefreshCw className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
             )}
-            Sync
-          </Button>
-        </div>
-
-        <div className="toolbar-right">
-          <Button
-            variant="outline"
-            size="sm"
-            className="toolbar-btn-outline flex items-center gap-1.5 border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100 whitespace-nowrap shrink-0 font-medium"
-            onClick={() => setScannerOpen(true)}
-            title="Scan student QR code or enter roll number"
-          >
-            <QrCode size={15} className="text-blue-600 shrink-0" />
-            <span>Scan QR Code</span>
-          </Button>
-
-          <Button
-            className="toolbar-btn toolbar-btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            <span>Sync</span>
+          </button>
+          <button
+            type="button"
             onClick={handleSaveAttendance}
             disabled={saving || !selectedClass || roster.length === 0 || date > getTodayKey()}
+            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto"
+            style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
           >
             {saving ? (
-              <Spinner className="size-4 mr-1 text-white" />
+              <Spinner className="size-3.5 mr-1 text-white" />
             ) : (
-              <Save size={14} className="mr-1" />
+              <Save className="w-3.5 h-3.5 mr-1" />
             )}
-            {saving ? "Saving..." : "Save Attendance"}
-          </Button>
+            <span>{saving ? "Saving..." : "Save Attendance"}</span>
+          </button>
         </div>
-      </header>
+      </div>
 
-      {/* KPI Metrics Strip */}
+      {/* 4 KPI Summary Cards */}
       <section
-        className="teacher-attendance-metrics grid grid-cols-2 lg:grid-cols-4 w-full"
-        style={{ gap: "12px" }}
+        className="grid grid-cols-2 lg:grid-cols-4 w-full"
+        style={{ gap: "16px", marginBottom: "20px" }}
         aria-label="Attendance statistics"
       >
         <Metric
           icon={Users}
           label="TOTAL STUDENTS"
           value={roster.length}
-          variant="total"
         />
         <Metric
           icon={CircleCheck}
           label="PRESENT"
           value={counts.Present}
-          variant="present"
         />
         <Metric
           icon={CircleX}
           label="ABSENT"
           value={counts.Absent}
-          variant="absent"
         />
         <Metric
           icon={Clock3}
           label="LATE / LEAVE"
           value={counts.Late + counts["On Leave"]}
-          variant="late"
         />
       </section>
 
@@ -372,90 +385,108 @@ export default function TeacherAttendance() {
       <TeacherLeaveRequestsCard className="mb-6" />
 
       {/* Main Attendance Card */}
-      <section className="teacher-attendance-card">
-        {/* Controls Strip: Search, Class Dropdown, Date Picker, Bulk Buttons */}
-        <div className="teacher-attendance-controls">
-          <label className="teacher-attendance-search">
-            <Search size={16} />
-            <span className="sr-only">Search students</span>
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Search students, roll number..."
-            />
-          </label>
+      <section className="teacher-attendance-card w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
+        {/* Daily Attendance Marking Toolbar */}
+        <div
+          className="teacher-attendance-controls flex flex-col w-full bg-neutral-50/60 border-b border-neutral-200"
+          style={{ padding: "18px 20px", gap: "14px", boxSizing: "border-box" }}
+        >
+          {/* Top Row: Search Input + Class Selector + Date Picker */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center w-full" style={{ gap: "12px" }}>
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search students, roll number..."
+                className="w-full bg-white border border-neutral-200 rounded-lg text-xs sm:text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors"
+                style={{ height: "38px", paddingLeft: "36px", paddingRight: "12px", boxSizing: "border-box" }}
+              />
+            </div>
 
-          <select
-            value={selectedClassId}
-            onChange={(e) => {
-              setSelectedClassId(e.target.value);
-              setPage(1);
-            }}
-            disabled={loadingClasses || classes.length === 0}
-            aria-label="Select assigned class"
-            className="min-w-[220px]"
-          >
-            {classes.length === 0 ? (
-              <option value="">No assigned classes</option>
-            ) : (
-              classes.map((row) => (
-                <option
-                  key={row.id || row._id || row.classId}
-                  value={row.id || row._id || row.classId}
-                >
-                  {row.className} • Section {row.section} ({row.subject})
-                </option>
-              ))
-            )}
-          </select>
+            {/* Class Selector & Date Picker */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center" style={{ gap: "12px" }}>
+              <select
+                value={selectedClassId}
+                onChange={(e) => {
+                  setSelectedClassId(e.target.value);
+                  setPage(1);
+                }}
+                disabled={loadingClasses || classes.length === 0}
+                aria-label="Select assigned class"
+                className="w-full sm:w-auto min-w-[220px] bg-white border border-neutral-200 rounded-lg text-xs sm:text-sm text-neutral-900 focus:outline-none focus:border-neutral-400 transition-colors cursor-pointer"
+                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+              >
+                {classes.length === 0 ? (
+                  <option value="">No assigned classes</option>
+                ) : (
+                  classes.map((row) => (
+                    <option
+                      key={row.id || row._id || row.classId}
+                      value={row.id || row._id || row.classId}
+                    >
+                      {row.className} • Section {row.section} ({row.subject})
+                    </option>
+                  ))
+                )}
+              </select>
 
-          <input
-            type="date"
-            max={getTodayKey()}
-            value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Attendance date"
-            className="px-3"
-          >
-          </input>
+              <input
+                type="date"
+                max={getTodayKey()}
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setPage(1);
+                }}
+                aria-label="Attendance date"
+                className="w-full sm:w-auto bg-white border border-neutral-200 rounded-lg text-xs sm:text-sm text-neutral-900 focus:outline-none focus:border-neutral-400 transition-colors cursor-pointer"
+                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
 
-          <div className="teacher-attendance-bulk">
-            <Button
+          {/* Action Buttons: Scan QR, Mark All Present, Mark All Absent */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 w-full" style={{ gap: "10px" }}>
+            <button
               type="button"
-              variant="outline"
-              size="sm"
-              className="border-blue-300 text-blue-700 bg-blue-50/80 hover:bg-blue-100 flex items-center gap-1.5 font-medium whitespace-nowrap"
-              onClick={() => setScannerOpen(true)}
-              title="Scan student QR code or enter roll number"
+              onClick={handleScanQr}
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+              style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
             >
-              <QrCode size={15} className="text-blue-600 shrink-0" />
+              <QrCode className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
               <span>Scan QR Code</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => markAll("Present")}
+            </button>
+            <button
+              type="button"
+              onClick={handleMarkAllPresent}
               disabled={loadingRoster || roster.length === 0}
+              className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+              style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
             >
-              <CheckCheck size={16} /> Mark All Present
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => markAll("Absent")}
+              <CheckCheck className="w-3.5 h-3.5 text-white shrink-0" />
+              <span>Mark All Present</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleMarkAllAbsent}
               disabled={loadingRoster || roster.length === 0}
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+              style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
             >
-              <CircleX size={16} /> Mark All Absent
-            </Button>
+              <XCircle className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+              <span>Mark All Absent</span>
+            </button>
           </div>
         </div>
 
         {/* Attendance Roster Table */}
-        <div className="teacher-attendance-table-wrap">
+        <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
           {loadingClasses || loadingRoster ? (
             <div className="py-16 text-center text-slate-500">
               <SpinnerCustom
@@ -500,92 +531,84 @@ export default function TeacherAttendance() {
             </div>
           ) : (
             <table
-              className="campus-data-table teacher-attendance-table"
-              style={{ width: "100%", minWidth: "820px" }}
+              className="w-full min-w-[700px] border-collapse"
+              style={{ width: "100%", minWidth: "700px" }}
             >
               <thead>
-                <tr>
-                  <th style={{ width: "28%" }}>Student Name &amp; Roll No</th>
-                  <th style={{ width: "20%" }}>Program &amp; Section</th>
-                  <th style={{ width: "18%" }}>Current Status</th>
-                  <th style={{ width: "24%" }}>Mark Status</th>
-                  <th style={{ width: "10%", textAlign: "right" }}>Actions</th>
+                <tr className="border-b border-neutral-200 bg-neutral-50/50">
+                  <th className="text-left text-[11px] font-semibold text-neutral-500 uppercase tracking-wider" style={{ padding: "12px 16px", width: "28%" }}>Student Name &amp; Roll No</th>
+                  <th className="text-left text-[11px] font-semibold text-neutral-500 uppercase tracking-wider" style={{ padding: "12px 16px", width: "20%" }}>Program &amp; Section</th>
+                  <th className="text-left text-[11px] font-semibold text-neutral-500 uppercase tracking-wider" style={{ padding: "12px 16px", width: "18%" }}>Current Status</th>
+                  <th className="text-left text-[11px] font-semibold text-neutral-500 uppercase tracking-wider" style={{ padding: "12px 16px", width: "24%" }}>Mark Status</th>
+                  <th className="text-right text-[11px] font-semibold text-neutral-500 uppercase tracking-wider" style={{ padding: "12px 16px", width: "10%" }}>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-neutral-100">
                 {visibleRows.map((student) => {
                   const id = student._id || student.id;
                   const currentStatus = getStatus(student);
 
                   return (
-                    <tr key={id}>
-                      <td>
-                        <span className="teacher-attendance-student">
+                    <tr key={id} className="hover:bg-neutral-50/40 transition-colors">
+                      <td style={{ padding: "12px 16px" }}>
+                        <span className="teacher-attendance-student flex items-center" style={{ gap: "10px" }}>
                           <span className="teacher-avatar">
                             {initials(student.name)}
                           </span>
                           <div>
-                            <strong>{student.name}</strong>
-                            <small>{student.rollNumber || "Roll N/A"}</small>
+                            <strong className="block text-xs font-semibold text-neutral-900">{student.name}</strong>
+                            <small className="block text-[11px] text-neutral-500">{student.rollNumber || "Roll N/A"}</small>
                           </div>
                         </span>
                       </td>
-                      <td>
-                        <span className="font-medium text-slate-800 text-xs">
+                      <td style={{ padding: "12px 16px" }}>
+                        <span className="font-medium text-neutral-800 text-xs">
                           {student.program || student.gradeOrClass || "Class 10"}
                         </span>
-                        <small className="block text-slate-500 text-[11px]">
+                        <small className="block text-neutral-500 text-[11px]">
                           Sec: {student.section || selectedClass?.section || "A"}
                         </small>
                       </td>
-                      <td>
+                      <td style={{ padding: "12px 16px" }}>
                         <Status status={currentStatus} />
                       </td>
-                      <td>
-                        <div className="teacher-status-actions">
+                      <td style={{ padding: "12px 16px" }}>
+                        <div className="teacher-status-actions flex items-center flex-nowrap" style={{ gap: "4px" }}>
                           {["Present", "Absent", "Late", "On Leave"].map(
                             (option) => {
                               const isSelected = currentStatus === option;
                               return (
-                                <Button
+                                <button
                                   key={option}
-                                  size="sm"
-                                  variant={
-                                    isSelected
-                                      ? option === "Absent"
-                                        ? "destructive"
-                                        : option === "Present"
-                                        ? "default"
-                                        : "secondary"
-                                      : "outline"
-                                  }
-                                  className={
+                                  type="button"
+                                  className={`inline-flex items-center justify-center text-[11px] font-medium rounded-md whitespace-nowrap transition-colors ${
                                     isSelected
                                       ? option === "Present"
-                                        ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 h-7 px-2 text-[11px] font-medium rounded-md whitespace-nowrap"
+                                        ? "border border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold"
                                         : option === "Absent"
-                                        ? "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 h-7 px-2 text-[11px] font-medium rounded-md whitespace-nowrap"
+                                        ? "border border-rose-300 bg-rose-50 text-rose-700 font-semibold"
                                         : option === "Late"
-                                        ? "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 h-7 px-2 text-[11px] font-medium rounded-md whitespace-nowrap"
-                                        : "border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 h-7 px-2 text-[11px] font-medium rounded-md whitespace-nowrap"
-                                      : "h-7 px-2 text-[11px] text-slate-700 hover:bg-slate-100 rounded-md whitespace-nowrap"
-                                  }
+                                        ? "border border-amber-300 bg-amber-50 text-amber-700 font-semibold"
+                                        : "border border-neutral-300 bg-neutral-100 text-neutral-700 font-semibold"
+                                      : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                                  }`}
+                                  style={{ height: "28px", padding: "0 8px", boxSizing: "border-box" }}
                                   onClick={() => markStudent(id, option)}
                                 >
                                   {option === "On Leave" ? "Leave" : option}
-                                </Button>
+                                </button>
                               );
                             }
                           )}
                         </div>
                       </td>
-                      <td style={{ textAlign: "right" }}>
+                      <td style={{ padding: "12px 16px", textAlign: "right" }}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              className="teacher-action-trigger"
+                              className="w-8 h-8 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-neutral-900 transition-colors"
                               aria-label={`Actions for ${student.name}`}
                             >
                               <CircleAlert size={16} aria-hidden="true" />
@@ -595,34 +618,34 @@ export default function TeacherAttendance() {
                             align="end"
                             sideOffset={6}
                             collisionPadding={12}
-                            className="teacher-action-menu"
+                            className="bg-white border border-neutral-200 rounded-xl shadow-lg p-1 min-w-[150px]"
                           >
                             <DropdownMenuItem
-                              className="teacher-action-item"
+                              className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-emerald-700 hover:bg-emerald-50 cursor-pointer"
                               onSelect={() => markStudent(id, "Present")}
                             >
-                              <CircleCheck size={16} className="text-emerald-600" />
+                              <CircleCheck size={14} className="text-emerald-600" />
                               Mark Present
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="teacher-action-item text-rose-600"
+                              className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-rose-700 hover:bg-rose-50 cursor-pointer"
                               onSelect={() => markStudent(id, "Absent")}
                             >
-                              <CircleX size={16} className="text-rose-600" />
+                              <CircleX size={14} className="text-rose-600" />
                               Mark Absent
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="teacher-action-item text-amber-600"
+                              className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-amber-700 hover:bg-amber-50 cursor-pointer"
                               onSelect={() => markStudent(id, "Late")}
                             >
-                              <Clock3 size={16} className="text-amber-600" />
+                              <Clock3 size={14} className="text-amber-600" />
                               Mark Late
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="teacher-action-item text-amber-600"
+                              className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-amber-700 hover:bg-amber-50 cursor-pointer"
                               onSelect={() => markStudent(id, "On Leave")}
                             >
-                              <Clock3 size={16} className="text-amber-600" />
+                              <Clock3 size={14} className="text-amber-600" />
                               Mark On Leave
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -646,22 +669,29 @@ export default function TeacherAttendance() {
         </div>
 
         {/* Footer with Pagination */}
-        <footer className="teacher-attendance-footer">
-          <span>Showing {filteredStudents.length ? (currentPage - 1) * pageSize + 1 : 0} - {Math.min(currentPage * pageSize, filteredStudents.length)} of {filteredStudents.length} total records</span>
-          <nav className="teacher-attendance-pagination" aria-label="Attendance pages">
+        <footer
+          className="flex flex-col sm:flex-row items-center justify-between w-full border-t border-neutral-200 bg-neutral-50/50"
+          style={{ padding: "12px 20px", gap: "12px", boxSizing: "border-box" }}
+        >
+          <span className="text-xs text-neutral-500">
+            Showing {filteredStudents.length ? (currentPage - 1) * pageSize + 1 : 0} - {Math.min(currentPage * pageSize, filteredStudents.length)} of {filteredStudents.length} total records
+          </span>
+          <nav className="flex items-center" style={{ gap: "10px" }} aria-label="Attendance pages">
             <button
               type="button"
-              className="teacher-attendance-page-button"
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed text-neutral-700 text-xs font-medium transition-colors shadow-xs"
+              style={{ height: "32px", padding: "0 12px" }}
               aria-label="Previous page"
               disabled={currentPage <= 1}
               onClick={() => setPage(Math.max(1, currentPage - 1))}
             >
               Previous
             </button>
-            <span aria-live="polite">{currentPage} / {pageCount}</span>
+            <span className="text-xs font-medium text-neutral-700" aria-live="polite">{currentPage} / {pageCount}</span>
             <button
               type="button"
-              className="teacher-attendance-page-button"
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed text-neutral-700 text-xs font-medium transition-colors shadow-xs"
+              style={{ height: "32px", padding: "0 12px" }}
               aria-label="Next page"
               disabled={currentPage >= pageCount}
               onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
@@ -724,29 +754,65 @@ export default function TeacherAttendance() {
   );
 }
 
-function Metric({ icon: Icon, label, value, variant = "total" }) {
+function Metric({ icon: Icon, label, value }) {
   return (
-    <article className="min-w-0">
-      <span className={`teacher-attendance-metric-icon ${variant} shrink-0`}>
-        <Icon size={20} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <span className="whitespace-nowrap truncate">{label}</span>
-        <strong className="whitespace-nowrap truncate">{value}</strong>
+    <div
+      className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center min-w-0"
+      style={{ padding: "16px 18px", gap: "12px", boxSizing: "border-box" }}
+    >
+      <div
+        className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+        style={{ width: "36px", height: "36px" }}
+      >
+        <Icon className="w-4 h-4 text-neutral-700 stroke-[2]" />
       </div>
-    </article>
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 truncate">
+          {label}
+        </span>
+        <span className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight truncate">
+          {value}
+        </span>
+      </div>
+    </div>
   );
 }
 
 function Status({ status }) {
   if (!status) {
-    return <span className="teacher-attendance-unmarked">Not marked</span>;
+    return (
+      <span
+        className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-500 border border-neutral-200 text-xs font-medium"
+        style={{ padding: "3px 8px" }}
+      >
+        Not marked
+      </span>
+    );
   }
-  const normalizedClass = String(status).toLowerCase().replace(/\s+/g, "-");
+  const isPresent = status === "Present";
+  const isAbsent = status === "Absent";
+  const isLate = status === "Late";
+
   return (
-    <span className={`teacher-attendance-status ${normalizedClass}`}>
-      <i />
+    <span
+      className={`inline-flex items-center rounded-md text-xs font-medium border ${
+        isPresent
+          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+          : isAbsent
+          ? "bg-rose-50 text-rose-800 border-rose-200"
+          : isLate
+          ? "bg-amber-50 text-amber-800 border-amber-200"
+          : "bg-neutral-100 text-neutral-800 border-neutral-200"
+      }`}
+      style={{ padding: "3px 8px", gap: "6px" }}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          isPresent ? "bg-emerald-500" : isAbsent ? "bg-rose-500" : isLate ? "bg-amber-500" : "bg-neutral-500"
+        }`}
+      />
       {String(status)}
     </span>
   );
 }
+
