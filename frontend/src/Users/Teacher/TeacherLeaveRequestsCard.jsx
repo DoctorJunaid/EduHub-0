@@ -144,7 +144,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
         </div>
 
         {/* Tab & Refresh Controls */}
-        <div className="leave-card-controls flex items-center justify-between w-full sm:w-auto shrink-0" style={{ gap: "8px" }}>
+        <div className="leave-card-controls flex items-center justify-between w-full sm:w-auto shrink-0" style={{ gap: "8px", marginBottom: "12px" }}>
           <div
             className="leave-tabs-pill inline-flex items-center rounded-lg bg-neutral-100 border border-neutral-200 min-w-0"
             style={{ padding: "3px", gap: "2px" }}
@@ -315,7 +315,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                       ? "grid grid-cols-2 sm:flex sm:items-center sm:justify-end w-full sm:w-auto"
                       : "flex items-center justify-start sm:justify-end w-full sm:w-auto"
                   }`}
-                  style={{ gap: "10px", marginTop: "8px" }}
+                  style={{ gap: "10px", marginTop: "12px" }}
                 >
                   {isPending ? (
                     <>
