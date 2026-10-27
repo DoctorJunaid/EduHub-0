@@ -10,7 +10,6 @@ import { studentAttendanceLoaded } from "@/store/Slices/studentAttendanceSlice";
 import { feesLoaded } from "@/store/Slices/feesSlice";
 import { resultsLoaded } from "@/store/Slices/resultsSlice";
 import { examsLoaded } from "@/store/Slices/examsSlice";
-import { facultyLoaded } from "@/store/Slices/facultySlice";
 import {
   assignmentsLoaded,
   submissionsLoaded,
@@ -52,7 +51,6 @@ export function useStudentPortal() {
     if (portal.fees) dispatch(feesLoaded(portal.fees));
     if (portal.results) dispatch(resultsLoaded(portal.results));
     if (portal.exams) dispatch(examsLoaded(portal.exams));
-    if (portal.faculty) dispatch(facultyLoaded(portal.faculty));
     if (portal.assignments) dispatch(assignmentsLoaded(portal.assignments));
     if (portal.submissions) dispatch(submissionsLoaded(portal.submissions));
     if (portal.diary) dispatch(diaryLoaded(portal.diary));

@@ -1,0 +1,270 @@
+/* =========================================================
+   EduHub — Floating Morning Attendance Alert Toast
+   Bottom-right fixed dock, glassmorphism, animated glow
+   ========================================================= */
+
+@keyframes attToastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes attToastPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes attDotPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+/* Toast Container - Fixed Bottom Right */
+.att-toast-container {
+  position: fixed;
+  bottom: 86px;
+  right: 24px;
+  z-index: 9980;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 18px;
+  box-shadow:
+    0 20px 45px -10px rgba(0, 0, 0, 0.65),
+    0 0 25px -4px rgba(245, 158, 11, 0.2);
+  animation: attToastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-sizing: border-box;
+  font-family: inherit;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Amber Top Glow Accent Bar */
+.att-toast-accent-line {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #d97706 100%);
+}
+
+.att-toast-body {
+  padding: 14px 16px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Header Row */
+.att-toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.att-toast-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Icon Wrap with Pulsing Ring */
+.att-toast-icon-wrap {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: attToastPulseGlow 2.5s infinite;
+}
+
+.att-toast-title-stack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.att-toast-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.att-toast-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fef3c7;
+  background: rgba(217, 119, 6, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  padding: 1px 7px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Close Cross Button */
+.att-toast-close-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.att-toast-close-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  color: #ffffff;
+  transform: scale(1.06);
+}
+
+.att-toast-close-btn:active {
+  transform: scale(0.92);
+}
+
+/* Description Text */
+.att-toast-description {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.att-toast-description strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Class Tags List */
+.att-toast-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+.att-toast-chip {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.att-toast-chip-more {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+/* Footer Row */
+.att-toast-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 3px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.att-toast-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.att-toast-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  animation: attDotPulse 2s infinite ease-in-out;
+}
+
+/* Action Button */
+.att-toast-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f59e0b;
+  color: #09090b;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 9px;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.att-toast-action-btn:hover {
+  background: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+  color: #000000;
+}
+
+.att-toast-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobile Screens */
+@media (max-width: 640px) {
+  .att-toast-container {
+    bottom: 80px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+  }
+}

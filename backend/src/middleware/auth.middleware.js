@@ -54,16 +54,21 @@ export const protect = async (req, res, next) => {
 
     if (!currentUser.campusId) {
       try {
-        const TeacherProfile = mongoose.model("TeacherProfile");
-        const prof = await TeacherProfile.findOne({
-          $or: [{ user: currentUser._id }, { userId: currentUser._id }],
-        }).select("campusId").lean();
-        if (prof?.campusId) {
-          currentUser.campusId = prof.campusId;
+        const Campus = mongoose.model("Campus");
+        const managed = await Campus.findOne({ managerId: currentUser._id }).select("_id").lean();
+        if (managed?._id) {
+          currentUser.campusId = managed._id;
         } else {
-          const Campus = mongoose.model("Campus");
-          const defaultCampus = (await Campus.findOne({ status: "Active" }).select("_id").lean()) || (await Campus.findOne({}).select("_id").lean());
-          if (defaultCampus?._id) currentUser.campusId = defaultCampus._id;
+          const TeacherProfile = mongoose.model("TeacherProfile");
+          const prof = await TeacherProfile.findOne({
+            $or: [{ user: currentUser._id }, { userId: currentUser._id }],
+          }).select("campusId").lean();
+          if (prof?.campusId) {
+            currentUser.campusId = prof.campusId;
+          } else {
+            const defaultCampus = (await Campus.findOne({ status: "Active" }).select("_id").lean()) || (await Campus.findOne({}).select("_id").lean());
+            if (defaultCampus?._id) currentUser.campusId = defaultCampus._id;
+          }
         }
       } catch {
         // non-fatal

@@ -15,7 +15,6 @@ import { studentAttendanceLoaded } from "@/store/Slices/studentAttendanceSlice";
 import { feesLoaded } from "@/store/Slices/feesSlice";
 import { resultsLoaded } from "@/store/Slices/resultsSlice";
 import { examsLoaded } from "@/store/Slices/examsSlice";
-import { facultyLoaded } from "@/store/Slices/facultySlice";
 import {
   assignmentsLoaded,
   submissionsLoaded,

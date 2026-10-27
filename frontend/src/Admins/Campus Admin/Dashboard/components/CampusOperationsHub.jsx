@@ -150,8 +150,8 @@ export default function CampusOperationsHub({
       const staffingLabel = isFullyStaffed
         ? "Fully Staffed"
         : !classTeacherName
-        ? "Missing Class Teacher"
-        : "Missing Subject Teachers";
+          ? "Missing Class Teacher"
+          : "Missing Subject Teachers";
 
       return {
         ...c,
@@ -327,14 +327,14 @@ export default function CampusOperationsHub({
     currentTab === 'students'
       ? (isSchool ? 'Enrolled Students' : 'Student Body')
       : currentTab === 'faculty'
-      ? (isSchool ? 'Teaching Staff' : 'Faculty Directory')
-      : currentTab === 'classes'
-      ? (isSchool ? 'Classes & Staffing' : 'Degree Programs')
-      : currentTab === 'timetable'
-      ? (isSchool ? 'Daily Routine' : 'Class Schedule')
-      : currentTab === 'attendance'
-      ? 'Live Attendance Register'
-      : 'Academic Programs';
+        ? (isSchool ? 'Teaching Staff' : 'Faculty Directory')
+        : currentTab === 'classes'
+          ? (isSchool ? 'Classes & Staffing' : 'Degree Programs')
+          : currentTab === 'timetable'
+            ? (isSchool ? 'Daily Routine' : 'Class Schedule')
+            : currentTab === 'attendance'
+              ? 'Live Attendance Register'
+              : 'Academic Programs';
 
   return (
     <div className="campus-operations-hub">
@@ -386,12 +386,12 @@ export default function CampusOperationsHub({
                 currentTab === 'students'
                   ? (isSchool ? 'Search students, roll, guardian...' : 'Search students...')
                   : currentTab === 'faculty'
-                  ? (isSchool ? 'Search teachers, subjects...' : 'Search faculty...')
-                  : currentTab === 'timetable'
-                  ? (isSchool ? 'Search periods, class, subject...' : 'Search timetable...')
-                  : currentTab === 'attendance'
-                  ? 'Search attendance...'
-                  : (isSchool ? 'Search classes, incharge, room...' : 'Search programs...')
+                    ? (isSchool ? 'Search teachers, subjects...' : 'Search faculty...')
+                    : currentTab === 'timetable'
+                      ? (isSchool ? 'Search periods, class, subject...' : 'Search timetable...')
+                      : currentTab === 'attendance'
+                        ? 'Search attendance...'
+                        : (isSchool ? 'Search classes, incharge, room...' : 'Search programs...')
               }
               aria-label="Search records"
             />
@@ -507,13 +507,12 @@ export default function CampusOperationsHub({
                       </div>
                     </div>
                     <span
-                      className={`hub-status-pill ${
-                        student.status === 'Active'
+                      className={`hub-status-pill ${student.status === 'Active'
                           ? 'is-active'
                           : student.status === 'Suspended' || student.status === 'Inactive'
-                          ? 'is-suspended'
-                          : 'is-pending'
-                      }`}
+                            ? 'is-suspended'
+                            : 'is-pending'
+                        }`}
                     >
                       <span className="dot" />
                       {student.status || 'Active'}
@@ -718,13 +717,12 @@ export default function CampusOperationsHub({
                       </div>
                     </div>
                     <span
-                      className={`hub-status-pill ${
-                        row.status === 'Present'
+                      className={`hub-status-pill ${row.status === 'Present'
                           ? 'is-active'
                           : row.status === 'Late'
-                          ? 'is-pending'
-                          : 'is-absent'
-                      }`}
+                            ? 'is-pending'
+                            : 'is-absent'
+                        }`}
                     >
                       <span className="dot" />
                       {row.status}
@@ -769,9 +767,8 @@ export default function CampusOperationsHub({
                       </span>
                     </div>
                     <span
-                      className={`hub-status-pill ${
-                        cls.isFullyStaffed ? 'is-active' : 'is-absent'
-                      }`}
+                      className={`hub-status-pill ${cls.isFullyStaffed ? 'is-active' : 'is-absent'
+                        }`}
                     >
                       <span className="dot" />
                       {cls.staffingLabel || (cls.isFullyStaffed ? 'Fully Staffed' : 'Missing Teacher')}
@@ -909,13 +906,12 @@ export default function CampusOperationsHub({
                     </TableCell>
                     <TableCell className="text-center">
                       <span
-                        className={`hub-status-pill ${
-                          student.status === 'Active'
+                        className={`hub-status-pill ${student.status === 'Active'
                             ? 'is-active'
                             : student.status === 'Suspended' || student.status === 'Inactive'
-                            ? 'is-suspended'
-                            : 'is-pending'
-                        }`}
+                              ? 'is-suspended'
+                              : 'is-pending'
+                          }`}
                       >
                         <span className="dot" />
                         {student.status || 'Active'}
@@ -976,34 +972,33 @@ export default function CampusOperationsHub({
                         }
                       }}
                     >
-                    <TableCell>
-                      <div className="hub-user-info">
-                        <strong className="hub-student-link">{teacher.name}</strong>
-                        <small>{teacher.qualification || (isSchool ? 'M.Sc. Education, B.Ed' : 'Ph.D. Academic')}</small>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="hub-badge-neutral">{teacher.subjects || (isSchool ? 'General Science' : teacher.department)}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="hub-cell-stack">
-                        <strong>{teacher.designation || (isSchool ? 'Senior Subject Teacher' : 'Faculty')}</strong>
-                        <small>{teacher.department || (isSchool ? 'Secondary Wing' : 'Academic')}</small>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={`hub-status-pill ${
-                          teacher.status === 'Active' ? 'is-active' : 'is-pending'
-                        }`}
-                      >
-                        <span className="dot" />
-                        {teacher.status === 'Active' ? 'On Duty' : 'On Leave'}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      <TableCell>
+                        <div className="hub-user-info">
+                          <strong className="hub-student-link">{teacher.name}</strong>
+                          <small>{teacher.qualification || (isSchool ? 'M.Sc. Education, B.Ed' : 'Ph.D. Academic')}</small>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="hub-badge-neutral">{teacher.subjects || (isSchool ? 'General Science' : teacher.department)}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="hub-cell-stack">
+                          <strong>{teacher.designation || (isSchool ? 'Senior Subject Teacher' : 'Faculty')}</strong>
+                          <small>{teacher.department || (isSchool ? 'Secondary Wing' : 'Academic')}</small>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`hub-status-pill ${teacher.status === 'Active' ? 'is-active' : 'is-pending'
+                            }`}
+                        >
+                          <span className="dot" />
+                          {teacher.status === 'Active' ? 'On Duty' : 'On Leave'}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {displayedRows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="hub-empty-cell">
@@ -1062,9 +1057,8 @@ export default function CampusOperationsHub({
                     </TableCell>
                     <TableCell className="text-center">
                       <span
-                        className={`hub-status-pill ${
-                          item.status === 'Active' ? 'is-active' : 'is-pending'
-                        }`}
+                        className={`hub-status-pill ${item.status === 'Active' ? 'is-active' : 'is-pending'
+                          }`}
                       >
                         <span className="dot" />
                         {item.status === 'Active' ? 'In Session' : 'Scheduled'}
@@ -1117,13 +1111,12 @@ export default function CampusOperationsHub({
                     </TableCell>
                     <TableCell className="text-center">
                       <span
-                        className={`hub-status-pill ${
-                          row.status === 'Present'
+                        className={`hub-status-pill ${row.status === 'Present'
                             ? 'is-active'
                             : row.status === 'Late'
-                            ? 'is-pending'
-                            : 'is-absent'
-                        }`}
+                              ? 'is-pending'
+                              : 'is-absent'
+                          }`}
                       >
                         <span className="dot" />
                         {row.status}
@@ -1197,9 +1190,8 @@ export default function CampusOperationsHub({
                     </TableCell>
                     <TableCell className="text-center">
                       <span
-                        className={`hub-status-pill ${
-                          cls.isFullyStaffed ? 'is-active' : 'is-absent'
-                        }`}
+                        className={`hub-status-pill ${cls.isFullyStaffed ? 'is-active' : 'is-absent'
+                          }`}
                       >
                         <span className="dot" />
                         {cls.staffingLabel || (cls.isFullyStaffed ? 'Fully Staffed' : 'Missing Teacher')}

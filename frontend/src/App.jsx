@@ -86,6 +86,7 @@ import SupportList from "./pages/SupportList";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import SupportManage from "./pages/SupportManage";
 import FloatingHelpWidget from "./components/support/FloatingHelpWidget";
+import UnmarkedAttendanceToast from "./components/common/UnmarkedAttendanceToast";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -101,6 +102,7 @@ const App = () => {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <FloatingHelpWidget />
+      <UnmarkedAttendanceToast />
       <Routes>
         <Route path="/" element={<AuthEntry />} />
         <Route
