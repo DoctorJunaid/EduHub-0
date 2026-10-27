@@ -82,6 +82,13 @@ const clearCachedSession = () => {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem('eduHubToken');
   localStorage.removeItem('eduHubUser');
+  try {
+    localStorage.removeItem('eduhub_faculty');
+    localStorage.removeItem('eduhub_students');
+    localStorage.removeItem('eduhub_timetable');
+    localStorage.removeItem('eduhub_attendance');
+    localStorage.removeItem('eduhub_student_attendance');
+  } catch {}
 };
 
 const initialCachedUser = getCachedUser();

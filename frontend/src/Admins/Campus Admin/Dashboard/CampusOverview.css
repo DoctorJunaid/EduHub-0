@@ -4,8 +4,15 @@
    ========================================================================== */
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .campus-overview {
@@ -21,11 +28,12 @@
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   display: flex;
   flex-direction: column;
-  gap: 0; /* Nil gap between cards and table */
+  gap: 0;
+  /* Nil gap between cards and table */
   overflow-x: hidden;
 }
 
-.campus-overview:has(.full-page-activity) > :not(.full-page-activity) {
+.campus-overview:has(.full-page-activity)> :not(.full-page-activity) {
   display: none !important;
 }
 
@@ -246,7 +254,10 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
-.activity-filter-bar::-webkit-scrollbar { display: none; }
+
+.activity-filter-bar::-webkit-scrollbar {
+  display: none;
+}
 
 .activity-filter-chip {
   padding: 3px 9px;
@@ -530,6 +541,7 @@
   color: #ffffff;
   border: none;
 }
+
 .hub-primary-btn:hover {
   opacity: 0.88;
   transform: translateY(-1px);
@@ -601,7 +613,7 @@
 
 .hub-table-wrapper td {
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   color: #09090b;
   background: #ffffff;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
@@ -752,31 +764,139 @@
   white-space: nowrap;
 }
 
-.hub-students-table th:nth-child(1), .hub-students-table td:nth-child(1) { width: 28%; min-width: 160px; }
-.hub-students-table th:nth-child(2), .hub-students-table td:nth-child(2) { width: 20%; min-width: 110px; }
-.hub-students-table th:nth-child(3), .hub-students-table td:nth-child(3) { width: 26%; min-width: 160px; text-align: left; }
-.hub-students-table th:nth-child(4), .hub-students-table td:nth-child(4) { width: 13%; min-width: 85px; text-align: center; }
-.hub-students-table th:nth-child(5), .hub-students-table td:nth-child(5) { width: 13%; min-width: 95px; text-align: center; }
+.hub-students-table th:nth-child(1),
+.hub-students-table td:nth-child(1) {
+  width: 28%;
+  min-width: 160px;
+}
 
-.hub-faculty-table th:nth-child(1), .hub-faculty-table td:nth-child(1) { width: 32%; min-width: 160px; }
-.hub-faculty-table th:nth-child(2), .hub-faculty-table td:nth-child(2) { width: 26%; min-width: 130px; }
-.hub-faculty-table th:nth-child(3), .hub-faculty-table td:nth-child(3) { width: 26%; min-width: 130px; }
-.hub-faculty-table th:nth-child(4), .hub-faculty-table td:nth-child(4) { width: 16%; min-width: 95px; text-align: center; }
+.hub-students-table th:nth-child(2),
+.hub-students-table td:nth-child(2) {
+  width: 20%;
+  min-width: 110px;
+}
 
-.hub-timetable-table th:nth-child(1), .hub-timetable-table td:nth-child(1) { width: 30%; min-width: 150px; }
-.hub-timetable-table th:nth-child(2), .hub-timetable-table td:nth-child(2) { width: 24%; min-width: 120px; }
-.hub-timetable-table th:nth-child(3), .hub-timetable-table td:nth-child(3) { width: 30%; min-width: 150px; }
-.hub-timetable-table th:nth-child(4), .hub-timetable-table td:nth-child(4) { width: 16%; min-width: 95px; text-align: center; }
+.hub-students-table th:nth-child(3),
+.hub-students-table td:nth-child(3) {
+  width: 26%;
+  min-width: 160px;
+  text-align: left;
+}
 
-.hub-attendance-table th:nth-child(1), .hub-attendance-table td:nth-child(1) { width: 30%; min-width: 150px; }
-.hub-attendance-table th:nth-child(2), .hub-attendance-table td:nth-child(2) { width: 26%; min-width: 130px; }
-.hub-attendance-table th:nth-child(3), .hub-attendance-table td:nth-child(3) { width: 26%; min-width: 130px; }
-.hub-attendance-table th:nth-child(4), .hub-attendance-table td:nth-child(4) { width: 18%; min-width: 95px; text-align: center; }
+.hub-students-table th:nth-child(4),
+.hub-students-table td:nth-child(4) {
+  width: 13%;
+  min-width: 85px;
+  text-align: center;
+}
 
-.hub-programs-table th:nth-child(1), .hub-programs-table td:nth-child(1) { width: 30%; min-width: 150px; }
-.hub-programs-table th:nth-child(2), .hub-programs-table td:nth-child(2) { width: 26%; min-width: 130px; }
-.hub-programs-table th:nth-child(3), .hub-programs-table td:nth-child(3) { width: 22%; min-width: 120px; text-align: center; }
-.hub-programs-table th:nth-child(4), .hub-programs-table td:nth-child(4) { width: 22%; min-width: 120px; text-align: center; }
+.hub-students-table th:nth-child(5),
+.hub-students-table td:nth-child(5) {
+  width: 13%;
+  min-width: 95px;
+  text-align: center;
+}
+
+.hub-faculty-table th:nth-child(1),
+.hub-faculty-table td:nth-child(1) {
+  width: 32%;
+  min-width: 160px;
+}
+
+.hub-faculty-table th:nth-child(2),
+.hub-faculty-table td:nth-child(2) {
+  width: 26%;
+  min-width: 130px;
+}
+
+.hub-faculty-table th:nth-child(3),
+.hub-faculty-table td:nth-child(3) {
+  width: 26%;
+  min-width: 130px;
+}
+
+.hub-faculty-table th:nth-child(4),
+.hub-faculty-table td:nth-child(4) {
+  width: 16%;
+  min-width: 95px;
+  text-align: center;
+}
+
+.hub-timetable-table th:nth-child(1),
+.hub-timetable-table td:nth-child(1) {
+  width: 30%;
+  min-width: 150px;
+}
+
+.hub-timetable-table th:nth-child(2),
+.hub-timetable-table td:nth-child(2) {
+  width: 24%;
+  min-width: 120px;
+}
+
+.hub-timetable-table th:nth-child(3),
+.hub-timetable-table td:nth-child(3) {
+  width: 30%;
+  min-width: 150px;
+}
+
+.hub-timetable-table th:nth-child(4),
+.hub-timetable-table td:nth-child(4) {
+  width: 16%;
+  min-width: 95px;
+  text-align: center;
+}
+
+.hub-attendance-table th:nth-child(1),
+.hub-attendance-table td:nth-child(1) {
+  width: 30%;
+  min-width: 150px;
+}
+
+.hub-attendance-table th:nth-child(2),
+.hub-attendance-table td:nth-child(2) {
+  width: 26%;
+  min-width: 130px;
+}
+
+.hub-attendance-table th:nth-child(3),
+.hub-attendance-table td:nth-child(3) {
+  width: 26%;
+  min-width: 130px;
+}
+
+.hub-attendance-table th:nth-child(4),
+.hub-attendance-table td:nth-child(4) {
+  width: 18%;
+  min-width: 95px;
+  text-align: center;
+}
+
+.hub-programs-table th:nth-child(1),
+.hub-programs-table td:nth-child(1) {
+  width: 30%;
+  min-width: 150px;
+}
+
+.hub-programs-table th:nth-child(2),
+.hub-programs-table td:nth-child(2) {
+  width: 26%;
+  min-width: 130px;
+}
+
+.hub-programs-table th:nth-child(3),
+.hub-programs-table td:nth-child(3) {
+  width: 22%;
+  min-width: 120px;
+  text-align: center;
+}
+
+.hub-programs-table th:nth-child(4),
+.hub-programs-table td:nth-child(4) {
+  width: 22%;
+  min-width: 120px;
+  text-align: center;
+}
 
 .hub-table-wrapper th.text-center,
 .hub-table-wrapper td.text-center {
@@ -877,6 +997,7 @@
     height: auto !important;
     min-height: auto !important;
   }
+
   .campus-split-container {
     grid-template-columns: 1fr !important;
     height: auto !important;
@@ -885,21 +1006,25 @@
     max-width: 100%;
     min-width: 0;
   }
+
   .campus-table-panel {
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
   }
+
   .campus-operations-hub {
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
   }
+
   .hub-table-wrapper {
     overflow-y: visible !important;
     height: auto !important;
     min-height: auto !important;
   }
+
   .campus-activity-sidebar {
     border-left: none;
     border-top: 1px solid #e4e4e7;
@@ -909,6 +1034,7 @@
     height: auto !important;
     min-height: auto !important;
   }
+
   .activity-feed-list {
     max-height: 480px;
   }

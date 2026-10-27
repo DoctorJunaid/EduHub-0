@@ -21,7 +21,6 @@ import StudentProfileDialog from '@/Admins/Campus Admin/Students/StudentProfileD
 import CampusThinCards from './components/CampusThinCards';
 import CampusOperationsHub from './components/CampusOperationsHub';
 import CampusActivitySidebar from './components/CampusActivitySidebar';
-import UnmarkedAttendanceBanner from '@/components/classTeacher/UnmarkedAttendanceBanner';
 import { useInstitution } from '@/context/InstitutionContext';
 
 import './CampusOverview.css';
@@ -40,16 +39,10 @@ export default function CampusOverview() {
   const activityLogs = useSelector(selectActivityLogs);
 
   React.useEffect(() => {
-    // Tier 1: Core campus operational records
-    if (!rawStudents || rawStudents.length === 0) {
-      dispatch(fetchStudents());
-    }
-    if (!rawFaculty || rawFaculty.length === 0) {
-      dispatch(fetchFaculty());
-    }
-    if (!rawTimetable || rawTimetable.length === 0) {
-      dispatch(fetchSchedules());
-    }
+    // Tier 1: Core campus operational records - always fetch live from database
+    dispatch(fetchStudents());
+    dispatch(fetchFaculty());
+    dispatch(fetchSchedules());
 
     // Tier 2: Staggered non-critical records (500ms delay) to keep initial paint fast
     const tier2Timer = setTimeout(() => {
@@ -140,21 +133,21 @@ export default function CampusOverview() {
     const activeCampusName = realUserCampus || 'Main Campus';
     const csvContent = isSchool
       ? [
-          'Category,Metric,Details',
-          `School,"${currentUser?.instituteId?.name || 'School Campus'}","${activeCampusName}"`,
-          `Enrolled Students,"${students.length}","95.4% Attendance"`,
-          `Teaching Staff,"${faculty.length}","100% On Duty"`,
-          'Classes & Sections,"10 Grades • 24 Sections","Grade 1 to 10 (A, B, C)"',
-          'Academic Routine,"7 Daily Periods","Assembly + 7 Periods + Recess"',
-        ].join('\n')
+        'Category,Metric,Details',
+        `School,"${currentUser?.instituteId?.name || 'School Campus'}","${activeCampusName}"`,
+        `Enrolled Students,"${students.length}","95.4% Attendance"`,
+        `Teaching Staff,"${faculty.length}","100% On Duty"`,
+        'Classes & Sections,"10 Grades • 24 Sections","Grade 1 to 10 (A, B, C)"',
+        'Academic Routine,"7 Daily Periods","Assembly + 7 Periods + Recess"',
+      ].join('\n')
       : [
-          'Category,Metric,Details',
-          `Campus,"${activeCampusName}","Active Operations"`,
-          `Enrolled Students,"${students.length}","94.2% Attendance"`,
-          `Faculty Members,"${faculty.length}","98% On Duty"`,
-          `Active Classes,"${timetable.length}","Active Labs"`,
-          `Programs,"${studentPrograms.length} Programs","${studentPrograms.slice(0, 4).join(', ')}"`,
-        ].join('\n');
+        'Category,Metric,Details',
+        `Campus,"${activeCampusName}","Active Operations"`,
+        `Enrolled Students,"${students.length}","94.2% Attendance"`,
+        `Faculty Members,"${faculty.length}","98% On Duty"`,
+        `Active Classes,"${timetable.length}","Active Labs"`,
+        `Programs,"${studentPrograms.length} Programs","${studentPrograms.slice(0, 4).join(', ')}"`,
+      ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -176,9 +169,6 @@ export default function CampusOverview() {
 
   return (
     <div className="campus-overview" aria-label="Campus Executive Command Center">
-      {/* 0. Morning Unmarked Attendance Alert */}
-      <UnmarkedAttendanceBanner userRole={currentUser?.role || "campus_admin"} />
-
       {/* 1. 4 Clean KPI Cards Touching Border-to-Border */}
       <CampusThinCards
         students={students}

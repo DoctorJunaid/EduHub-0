@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
 import Institute from "../models/institute.model.js";
@@ -312,11 +313,11 @@ export const createStudentForCampus = async (req, res) => {
 
     const transportDetails = isUsingTransport
       ? {
-          routeId: transportRouteId,
-          stopName: transportStopName,
-          assignedAt: new Date(),
-          assignedBy: req.user?._id || null,
-        }
+        routeId: transportRouteId,
+        stopName: transportStopName,
+        assignedAt: new Date(),
+        assignedBy: req.user?._id || null,
+      }
       : null;
 
     const student = await User.create({
@@ -480,15 +481,26 @@ export const removeStudentFromCampus = async (req, res) => {
 // @access  Private / Campus Admin & Campus Manager
 export const getCampusFaculty = async (req, res) => {
   try {
-    const campusId = req.user?.campusId?._id || req.user?.campusId || req.query?.campusId;
-    if (!campusId)
+    let campusId = req.user?.campusId?._id || req.user?.campusId || req.query?.campusId;
+
+    // Fail-safe: if campusId is missing on req.user, resolve campus where user is manager
+    if (!campusId && req.user?._id) {
+      const managed = await Campus.findOne({ managerId: req.user._id }).select("_id").lean();
+      if (managed) campusId = managed._id;
+    }
+
+    if (!campusId) {
       return res
         .status(400)
         .json({ success: false, message: "No campus assigned" });
+    }
 
     const faculty = await User.find({
       role: { $in: ["faculty", "teacher", "class_teacher", "subject_teacher"] },
-      campusId,
+      $or: [
+        { campusId },
+        { campus: req.user?.campus || "" },
+      ],
     })
       .select("-passwordHash")
       .populate("campusId", "name location code")
@@ -496,11 +508,34 @@ export const getCampusFaculty = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const formatted = faculty.map((f) => ({
-      ...f,
-      campus: f.campusId?.name || f.campus || "",
-      institute: f.instituteId?.name || f.institute || "",
-    }));
+    // Bulk-populate TeacherProfile to get realistic qualifications, designation, and subjects
+    const teacherUserIds = faculty.map((f) => f._id);
+    const profiles = await TeacherProfile.find({
+      $or: [
+        { user: { $in: teacherUserIds } },
+        { userId: { $in: teacherUserIds } },
+      ],
+    }).lean();
+    const profileMap = new Map(profiles.map((p) => [String(p.user || p.userId), p]));
+
+    const formatted = faculty.map((f) => {
+      const prof = profileMap.get(String(f._id));
+      const subjectsStr =
+        f.subjects ||
+        (prof?.subjectsTaught && prof.subjectsTaught.length > 0
+          ? prof.subjectsTaught.join(", ")
+          : "");
+
+      return {
+        ...f,
+        qualification: prof?.qualification || f.qualification || "Bachelor",
+        designation: prof?.designation || f.designation || "Senior Teacher",
+        department: prof?.department || f.department || "Secondary Wing",
+        subjects: subjectsStr || "General",
+        campus: f.campusId?.name || f.campus || "",
+        institute: f.instituteId?.name || f.institute || "",
+      };
+    });
 
     return res
       .status(200)
