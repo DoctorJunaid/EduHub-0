@@ -20,6 +20,8 @@ import {
   ChevronRight,
   ArrowRight,
   RefreshCw,
+  Route,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
@@ -1338,429 +1340,708 @@ export default function TransportManagement() {
 
       {/* ── DRIVER MODAL ── */}
       <Dialog open={driverModalOpen} onOpenChange={setDriverModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingDriver ? "Edit Driver Profile" : "Register New Driver"}</DialogTitle>
-            <DialogDescription>
-              Drivers do not need app logins; they are purely operational records.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="transport-dialog-content sm:max-w-lg">
+          <div className="transport-modal-header">
+            <div className="transport-modal-icon-badge">
+              <UserCheck className="w-5 h-5" />
+            </div>
+            <div className="flex-1 pr-6">
+              <DialogTitle className="transport-modal-title">
+                {editingDriver ? "Edit Driver Profile" : "Register New Driver"}
+              </DialogTitle>
+              <DialogDescription className="transport-modal-desc">
+                Drivers do not need app logins; they are purely operational records.
+              </DialogDescription>
+            </div>
+          </div>
 
-          <form onSubmit={handleSaveDriver} className="space-y-3.5 mt-2">
-            <div>
-              <Label className="text-xs font-bold">Driver Full Name *</Label>
-              <Input
-                placeholder="e.g. Ali Ahmed"
-                value={driverForm.name}
-                onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
-                required
-                className="mt-1 text-xs"
-              />
+          <form onSubmit={handleSaveDriver}>
+            <div className="transport-modal-body">
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>
+                    Driver Full Name <span className="transport-label-req">*</span>
+                  </span>
+                </label>
+                <div className="transport-input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="e.g. Ali Ahmed"
+                    value={driverForm.name}
+                    onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
+                    required
+                    className="transport-input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>
+                      Phone Number <span className="transport-label-req">*</span>
+                    </span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="e.g. +92 300 1234567"
+                      value={driverForm.phone}
+                      onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
+                      required
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>
+                      License Number <span className="transport-label-req">*</span>
+                    </span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="e.g. LIC-98765-PK"
+                      value={driverForm.licenseNumber}
+                      onChange={(e) => setDriverForm({ ...driverForm, licenseNumber: e.target.value })}
+                      required
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>CNIC / ID (Optional)</span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="42101-1234567-1"
+                      value={driverForm.cnic}
+                      onChange={(e) => setDriverForm({ ...driverForm, cnic: e.target.value })}
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>Status</span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <select
+                      className="transport-select-field"
+                      value={driverForm.status}
+                      onChange={(e) => setDriverForm({ ...driverForm, status: e.target.value })}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="On Leave">On Leave</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                    <ChevronDown className="transport-select-chevron" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold">Phone Number *</Label>
-                <Input
-                  placeholder="e.g. +92 300 1234567"
-                  value={driverForm.phone}
-                  onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
-                  required
-                  className="mt-1 text-xs"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs font-bold">License Number *</Label>
-                <Input
-                  placeholder="e.g. LIC-98765-PK"
-                  value={driverForm.licenseNumber}
-                  onChange={(e) => setDriverForm({ ...driverForm, licenseNumber: e.target.value })}
-                  required
-                  className="mt-1 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold">CNIC / ID (Optional)</Label>
-                <Input
-                  placeholder="42101-1234567-1"
-                  value={driverForm.cnic}
-                  onChange={(e) => setDriverForm({ ...driverForm, cnic: e.target.value })}
-                  className="mt-1 text-xs"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs font-bold">Status</Label>
-                <select
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                  value={driverForm.status}
-                  onChange={(e) => setDriverForm({ ...driverForm, status: e.target.value })}
+            <div className="transport-modal-footer">
+              <span className="text-xs text-zinc-500 font-medium">Status: {driverForm.status}</span>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setDriverModalOpen(false)}
                 >
-                  <option value="Active">Active</option>
-                  <option value="On Leave">On Leave</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-modal-submit"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : editingDriver ? (
+                    "Update Driver"
+                  ) : (
+                    "Register Driver"
+                  )}
+                </button>
               </div>
             </div>
-
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" size="sm" onClick={() => setDriverModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : editingDriver ? "Update Driver" : "Register Driver"}
-              </Button>
-            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* ── VEHICLE MODAL ── */}
       <Dialog open={vehicleModalOpen} onOpenChange={setVehicleModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingVehicle ? "Edit Vehicle" : "Add Vehicle / Bus"}</DialogTitle>
-            <DialogDescription>
-              Register a bus or coaster and link an assigned driver to it.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="transport-dialog-content sm:max-w-lg">
+          <div className="transport-modal-header">
+            <div className="transport-modal-icon-badge">
+              <Bus className="w-5 h-5" />
+            </div>
+            <div className="flex-1 pr-6">
+              <DialogTitle className="transport-modal-title">
+                {editingVehicle ? "Edit Vehicle" : "Add Vehicle / Bus"}
+              </DialogTitle>
+              <DialogDescription className="transport-modal-desc">
+                Register a bus or coaster and link an assigned driver to it.
+              </DialogDescription>
+            </div>
+          </div>
 
-          <form onSubmit={handleSaveVehicle} className="space-y-3.5 mt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold">Bus Number / ID *</Label>
-                <Input
-                  placeholder="e.g. Bus #12"
-                  value={vehicleForm.busNumber}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, busNumber: e.target.value })}
-                  required
-                  className="mt-1 text-xs"
-                />
+          <form onSubmit={handleSaveVehicle}>
+            <div className="transport-modal-body">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>
+                      Bus Number / ID <span className="transport-label-req">*</span>
+                    </span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="e.g. Bus #12"
+                      value={vehicleForm.busNumber}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, busNumber: e.target.value })}
+                      required
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>
+                      License Plate <span className="transport-label-req">*</span>
+                    </span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="e.g. ABC-123"
+                      value={vehicleForm.plateNumber}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })}
+                      required
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <Label className="text-xs font-bold">License Plate *</Label>
-                <Input
-                  placeholder="e.g. ABC-123"
-                  value={vehicleForm.plateNumber}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })}
-                  required
-                  className="mt-1 text-xs"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>Model / Make</span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="e.g. Toyota Coaster"
+                      value={vehicleForm.model}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>Seat Capacity</span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <input
+                      type="number"
+                      placeholder="30"
+                      value={vehicleForm.capacity}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, capacity: Number(e.target.value) })}
+                      className="transport-input-field"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>Assigned Driver</span>
+                </label>
+                <div className="transport-input-wrapper">
+                  <select
+                    className="transport-select-field"
+                    value={vehicleForm.driverId}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, driverId: e.target.value })}
+                  >
+                    <option value="">-- No Driver Assigned --</option>
+                    {drivers.map((d) => (
+                      <option key={d._id} value={d._id}>
+                        {d.name} ({d.phone})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="transport-select-chevron" />
+                </div>
+              </div>
+
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>Status</span>
+                </label>
+                <div className="transport-input-wrapper">
+                  <select
+                    className="transport-select-field"
+                    value={vehicleForm.status}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value })}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Maintenance">Under Maintenance</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                  <ChevronDown className="transport-select-chevron" />
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold">Model / Make</Label>
-                <Input
-                  placeholder="e.g. Toyota Coaster"
-                  value={vehicleForm.model}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
-                  className="mt-1 text-xs"
-                />
+            <div className="transport-modal-footer">
+              <span className="text-xs text-zinc-500 font-medium">Capacity: {vehicleForm.capacity || 0} seats</span>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setVehicleModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-modal-submit"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : editingVehicle ? (
+                    "Update Vehicle"
+                  ) : (
+                    "Add Vehicle"
+                  )}
+                </button>
               </div>
-
-              <div>
-                <Label className="text-xs font-bold">Seat Capacity</Label>
-                <Input
-                  type="number"
-                  placeholder="30"
-                  value={vehicleForm.capacity}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, capacity: Number(e.target.value) })}
-                  className="mt-1 text-xs"
-                />
-              </div>
             </div>
-
-            <div>
-              <Label className="text-xs font-bold">Assigned Driver</Label>
-              <select
-                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                value={vehicleForm.driverId}
-                onChange={(e) => setVehicleForm({ ...vehicleForm, driverId: e.target.value })}
-              >
-                <option value="">-- No Driver Assigned --</option>
-                {drivers.map((d) => (
-                  <option key={d._id} value={d._id}>
-                    {d.name} ({d.phone})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label className="text-xs font-bold">Status</Label>
-              <select
-                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                value={vehicleForm.status}
-                onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value })}
-              >
-                <option value="Active">Active</option>
-                <option value="Maintenance">Under Maintenance</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" size="sm" onClick={() => setVehicleModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : editingVehicle ? "Update Vehicle" : "Add Vehicle"}
-              </Button>
-            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* ── ROUTE MODAL (WITH DYNAMIC STOPS BUILDER) ── */}
       <Dialog open={routeModalOpen} onOpenChange={setRouteModalOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingRoute ? "Edit Transport Route" : "Create Transport Route"}</DialogTitle>
-            <DialogDescription>
-              Define the route name, assign a vehicle, and configure transit stops with pickup timings.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSaveRoute} className="space-y-3.5 mt-2">
-            <div>
-              <Label className="text-xs font-bold">Route Name *</Label>
-              <Input
-                placeholder="e.g. Route A: DHA Phase 5"
-                value={routeForm.routeName}
-                onChange={(e) => setRouteForm({ ...routeForm, routeName: e.target.value })}
-                required
-                className="mt-1 text-xs"
-              />
+        <DialogContent className="transport-dialog-content sm:max-w-2xl">
+          {/* Header */}
+          <div className="transport-modal-header">
+            <div className="transport-modal-icon-badge">
+              <Route className="w-5 h-5" />
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold">Assign Vehicle (Bus)</Label>
-                <select
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                  value={routeForm.vehicleId}
-                  onChange={(e) => setRouteForm({ ...routeForm, vehicleId: e.target.value })}
-                >
-                  <option value="">-- No Vehicle Assigned --</option>
-                  {vehicles.map((v) => (
-                    <option key={v._id} value={v._id}>
-                      {v.busNumber} {v.model ? `(${v.model})` : ""} - {v.plateNumber}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label className="text-xs font-bold">Status</Label>
-                <select
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                  value={routeForm.status}
-                  onChange={(e) => setRouteForm({ ...routeForm, status: e.target.value })}
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+            <div className="flex-1 pr-6">
+              <DialogTitle className="transport-modal-title">
+                {editingRoute ? "Edit Transport Route" : "Create Transport Route"}
+              </DialogTitle>
+              <DialogDescription className="transport-modal-desc">
+                Define the route name, assign a vehicle, and configure transit stops with pickup timings.
+              </DialogDescription>
             </div>
+          </div>
 
-            {/* Dynamic Stops Builder */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <Label className="text-xs font-bold">Route Stops & Timetable</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleAddStopToForm}
-                  className="h-6 text-xs gap-1 text-primary hover:text-primary"
-                >
-                  <Plus className="w-3 h-3" />
-                  Add Stop
-                </Button>
+          <form onSubmit={handleSaveRoute}>
+            {/* Modal Body */}
+            <div className="transport-modal-body">
+              {/* Route Name Field */}
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>
+                    Route Name <span className="transport-label-req">*</span>
+                  </span>
+                  <span className="text-[11px] font-normal text-zinc-400">
+                    e.g. Campus Express or Sector line
+                  </span>
+                </label>
+                <div className="transport-input-wrapper">
+                  <MapPin className="transport-input-icon" />
+                  <input
+                    type="text"
+                    placeholder="e.g. Route A: DHA Phase 5"
+                    value={routeForm.routeName}
+                    onChange={(e) => setRouteForm({ ...routeForm, routeName: e.target.value })}
+                    required
+                    className="transport-input-field has-icon"
+                  />
+                </div>
               </div>
 
-              <div className="modal-stops-builder">
-                {routeForm.stops.map((stop, idx) => (
-                  <div key={idx} className="modal-stop-row">
-                    <Input
-                      placeholder="Stop Name (e.g. Stop 1: Park)"
-                      value={stop.stopName}
-                      onChange={(e) => handleStopChange(idx, "stopName", e.target.value)}
-                      required
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      placeholder="Pickup: 07:15 AM"
-                      value={stop.pickupTime}
-                      onChange={(e) => handleStopChange(idx, "pickupTime", e.target.value)}
-                      className="h-8 text-xs font-mono"
-                    />
-                    <Input
-                      placeholder="Drop: 02:30 PM"
-                      value={stop.dropTime}
-                      onChange={(e) => handleStopChange(idx, "dropTime", e.target.value)}
-                      className="h-8 text-xs font-mono"
-                    />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-red-500 hover:text-red-700"
-                      onClick={() => handleRemoveStopFromForm(idx)}
+              {/* Vehicle & Status Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>Assign Vehicle (Bus)</span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <Bus className="transport-input-icon" />
+                    <select
+                      className="transport-select-field has-icon"
+                      value={routeForm.vehicleId}
+                      onChange={(e) => setRouteForm({ ...routeForm, vehicleId: e.target.value })}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                      <option value="">-- No Vehicle Assigned --</option>
+                      {vehicles.map((v) => (
+                        <option key={v._id} value={v._id}>
+                          {v.busNumber} {v.model ? `(${v.model})` : ""} - {v.plateNumber}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="transport-select-chevron" />
                   </div>
-                ))}
+                </div>
+
+                <div className="transport-form-group">
+                  <label className="transport-label">
+                    <span>Status</span>
+                  </label>
+                  <div className="transport-input-wrapper">
+                    <select
+                      className="transport-select-field"
+                      value={routeForm.status}
+                      onChange={(e) => setRouteForm({ ...routeForm, status: e.target.value })}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                    <ChevronDown className="transport-select-chevron" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Stops Builder */}
+              <div className="stops-builder-container">
+                <div className="stops-builder-header">
+                  <div className="flex items-center gap-2">
+                    <span className="transport-label !mb-0">Route Stops & Timetable</span>
+                    <span className="stops-badge-pill">
+                      {routeForm.stops.length} {routeForm.stops.length === 1 ? "Stop" : "Stops"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddStopToForm}
+                    className="btn-add-stop-trigger"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Stop
+                  </button>
+                </div>
+
+                {/* Column Headers */}
+                <div className="stops-column-header-row">
+                  <span className="text-center">#</span>
+                  <span>Stop Name / Landmark</span>
+                  <span className="text-center">Pickup (AM)</span>
+                  <span className="text-center">Drop (PM)</span>
+                  <span></span>
+                </div>
+
+                {/* Stops List */}
+                <div className="stops-card-scroll">
+                  {routeForm.stops.map((stop, idx) => (
+                    <div key={idx} className="stop-row-card-item">
+                      <div className="stop-sequence-num">{idx + 1}</div>
+                      <input
+                        type="text"
+                        placeholder="Stop Name (e.g. Stop 1: Park Gate)"
+                        value={stop.stopName}
+                        onChange={(e) => handleStopChange(idx, "stopName", e.target.value)}
+                        required
+                        className="stop-inner-input"
+                      />
+                      <input
+                        type="text"
+                        placeholder="07:15 AM"
+                        value={stop.pickupTime}
+                        onChange={(e) => handleStopChange(idx, "pickupTime", e.target.value)}
+                        className="stop-inner-input stop-inner-time"
+                      />
+                      <input
+                        type="text"
+                        placeholder="02:30 PM"
+                        value={stop.dropTime}
+                        onChange={(e) => handleStopChange(idx, "dropTime", e.target.value)}
+                        className="stop-inner-input stop-inner-time"
+                      />
+                      <button
+                        type="button"
+                        className="stop-delete-action-btn"
+                        onClick={() => handleRemoveStopFromForm(idx)}
+                        title="Remove Stop"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="stops-micro-hint">
+                  <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
+                  <span>Enter transit stops and scheduled arrival timings for student route mapping.</span>
+                </div>
               </div>
             </div>
 
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" size="sm" onClick={() => setRouteModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : editingRoute ? "Update Route" : "Create Route"}
-              </Button>
-            </DialogFooter>
+            {/* Footer */}
+            <div className="transport-modal-footer">
+              <div className="text-xs text-zinc-500 font-medium">
+                {routeForm.stops.length} stops configured •{" "}
+                <span
+                  className={
+                    routeForm.status === "Active"
+                      ? "text-emerald-600 font-semibold dark:text-emerald-400"
+                      : "text-zinc-500 font-semibold"
+                  }
+                >
+                  {routeForm.status}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setRouteModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-modal-submit"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : editingRoute ? (
+                    "Update Route"
+                  ) : (
+                    "Create Route"
+                  )}
+                </button>
+              </div>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* ── ASSIGN STUDENT MODAL ── */}
       <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Student to Transport</DialogTitle>
-            <DialogDescription>
-              Maps student to Route → Stop → Bus → Driver for dashboard visibility.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSaveAssignment} className="space-y-3.5 mt-2">
-            <div>
-              <Label className="text-xs font-bold">Select Student *</Label>
-              <select
-                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                value={assignForm.studentId}
-                onChange={(e) => setAssignForm({ ...assignForm, studentId: e.target.value })}
-                required
-              >
-                <option value="">-- Choose Student --</option>
-                {students.map((stu) => (
-                  <option key={stu.userId || stu._id} value={stu.userId || stu._id}>
-                    {stu.name} ({stu.gradeOrClass || "Class 9"} {stu.section || ""})
-                  </option>
-                ))}
-              </select>
+        <DialogContent className="transport-dialog-content sm:max-w-lg">
+          <div className="transport-modal-header">
+            <div className="transport-modal-icon-badge">
+              <Users className="w-5 h-5" />
             </div>
-
-            <div>
-              <Label className="text-xs font-bold">Select Route *</Label>
-              <select
-                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                value={assignForm.routeId}
-                onChange={(e) => handleAssignRouteChange(e.target.value)}
-                required
-              >
-                <option value="">-- Choose Route --</option>
-                {routes.map((r) => (
-                  <option key={r._id} value={r._id}>
-                    {r.routeName} (Vehicle: {r.vehicleId?.busNumber || "None"})
-                  </option>
-                ))}
-              </select>
+            <div className="flex-1 pr-6">
+              <DialogTitle className="transport-modal-title">Assign Student to Transport</DialogTitle>
+              <DialogDescription className="transport-modal-desc">
+                Maps student to Route → Stop → Bus → Driver for dashboard visibility.
+              </DialogDescription>
             </div>
+          </div>
 
-            <div>
-              <Label className="text-xs font-bold">Designated Pickup / Drop Stop *</Label>
-              {(() => {
-                const currentRoute = routes.find((r) => r._id === assignForm.routeId);
-                const stops = currentRoute?.stops || [];
-                if (stops.length > 0) {
-                  return (
-                    <select
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm mt-1"
-                      value={assignForm.stopName}
-                      onChange={(e) => setAssignForm({ ...assignForm, stopName: e.target.value })}
-                      required
-                    >
-                      <option value="">-- Choose Stop --</option>
-                      {stops.map((s, idx) => (
-                        <option key={s._id || idx} value={s.stopName}>
-                          {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
-                        </option>
-                      ))}
-                    </select>
-                  );
-                }
-                return (
-                  <Input
-                    placeholder="e.g. Stop 2: Market"
-                    value={assignForm.stopName}
-                    onChange={(e) => setAssignForm({ ...assignForm, stopName: e.target.value })}
+          <form onSubmit={handleSaveAssignment}>
+            <div className="transport-modal-body">
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>
+                    Select Student <span className="transport-label-req">*</span>
+                  </span>
+                </label>
+                <div className="transport-input-wrapper">
+                  <select
+                    className="transport-select-field"
+                    value={assignForm.studentId}
+                    onChange={(e) => setAssignForm({ ...assignForm, studentId: e.target.value })}
                     required
-                    className="mt-1 text-xs"
-                  />
-                );
-              })()}
+                  >
+                    <option value="">-- Choose Student --</option>
+                    {students.map((stu) => (
+                      <option key={stu.userId || stu._id} value={stu.userId || stu._id}>
+                        {stu.name} ({stu.gradeOrClass || "Class 9"} {stu.section || ""})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="transport-select-chevron" />
+                </div>
+              </div>
+
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>
+                    Select Route <span className="transport-label-req">*</span>
+                  </span>
+                </label>
+                <div className="transport-input-wrapper">
+                  <select
+                    className="transport-select-field"
+                    value={assignForm.routeId}
+                    onChange={(e) => handleAssignRouteChange(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Choose Route --</option>
+                    {routes.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.routeName} (Vehicle: {r.vehicleId?.busNumber || "None"})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="transport-select-chevron" />
+                </div>
+              </div>
+
+              <div className="transport-form-group">
+                <label className="transport-label">
+                  <span>
+                    Designated Pickup / Drop Stop <span className="transport-label-req">*</span>
+                  </span>
+                </label>
+                {(() => {
+                  const currentRoute = routes.find((r) => r._id === assignForm.routeId);
+                  const stops = currentRoute?.stops || [];
+                  if (stops.length > 0) {
+                    return (
+                      <div className="transport-input-wrapper">
+                        <select
+                          className="transport-select-field"
+                          value={assignForm.stopName}
+                          onChange={(e) => setAssignForm({ ...assignForm, stopName: e.target.value })}
+                          required
+                        >
+                          <option value="">-- Choose Stop --</option>
+                          {stops.map((s, idx) => (
+                            <option key={s._id || idx} value={s.stopName}>
+                              {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="transport-select-chevron" />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="transport-input-wrapper">
+                      <input
+                        type="text"
+                        placeholder="e.g. Stop 2: Market"
+                        value={assignForm.stopName}
+                        onChange={(e) => setAssignForm({ ...assignForm, stopName: e.target.value })}
+                        required
+                        className="transport-input-field"
+                      />
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" size="sm" onClick={() => setAssignModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Confirm Assignment"}
-              </Button>
-            </DialogFooter>
+            <div className="transport-modal-footer">
+              <span className="text-xs text-zinc-500 font-medium">Link student to active transit pass</span>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setAssignModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-modal-submit"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Confirm Assignment"
+                  )}
+                </button>
+              </div>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* ── DELETE CONFIRMATION MODAL ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
+        <DialogContent className="transport-dialog-content sm:max-w-md">
+          <div className="transport-modal-header !bg-red-50/50 dark:!bg-red-950/20 !border-red-100 dark:!border-red-900/30">
+            <div className="transport-modal-icon-badge !bg-red-500 !text-white shadow-xs">
               <AlertCircle className="w-5 h-5" />
-              Confirm Delete
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove{" "}
-              <strong>{itemToDelete?.title}</strong>? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
+            </div>
+            <div className="flex-1 pr-6">
+              <DialogTitle className="transport-modal-title text-red-600 dark:text-red-400">
+                Confirm Delete
+              </DialogTitle>
+              <DialogDescription className="transport-modal-desc">
+                This action cannot be undone and permanently removes this record.
+              </DialogDescription>
+            </div>
+          </div>
 
-          <DialogFooter className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setDeleteConfirmOpen(false);
-                setItemToDelete(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              disabled={isSubmitting}
-              onClick={handleDeleteConfirm}
-            >
-              {isSubmitting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
+          <div className="transport-modal-body py-5">
+            <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              Are you sure you want to permanently delete{" "}
+              <strong className="text-zinc-900 dark:text-zinc-100 font-semibold bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                {itemToDelete?.title}
+              </strong>
+              ?
+            </p>
+          </div>
+
+          <div className="transport-modal-footer">
+            <div className="flex items-center justify-end gap-2.5 w-full">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setItemToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleDeleteConfirm}
+                className="px-5 py-2 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Record"
+                )}
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
