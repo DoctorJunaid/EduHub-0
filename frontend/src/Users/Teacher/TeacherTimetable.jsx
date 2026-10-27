@@ -43,71 +43,11 @@ function formatCardTime(startTime, endTime) {
   return `${s} – ${e}`;
 }
 
-function calculateDayLanes(records, day) {
-  if (!Array.isArray(records)) return [];
-  const dayRecords = records
-    .filter((record) => record && Array.isArray(record.days) && record.days.includes(day))
-    .sort((a, b) => minutes(a.startTime) - minutes(b.startTime));
-
-  if (dayRecords.length === 0) return [];
-
-  // Group into overlapping clusters so non-overlapping periods get full width (laneCount: 1)
-  const clusters = [];
-  let currentCluster = [];
-  let clusterEnd = -1;
-
-  for (const record of dayRecords) {
-    const start = minutes(record.startTime);
-    const end = minutes(record.endTime);
-
-    if (currentCluster.length === 0) {
-      currentCluster.push(record);
-      clusterEnd = end;
-    } else if (start < clusterEnd) {
-      currentCluster.push(record);
-      clusterEnd = Math.max(clusterEnd, end);
-    } else {
-      clusters.push(currentCluster);
-      currentCluster = [record];
-      clusterEnd = end;
-    }
-  }
-  if (currentCluster.length > 0) {
-    clusters.push(currentCluster);
-  }
-
-  // Assign lanes per cluster
-  const result = [];
-  for (const cluster of clusters) {
-    if (cluster.length === 1) {
-      result.push({
-        record: cluster[0],
-        lane: 0,
-        laneCount: 1,
-      });
-    } else {
-      const lanes = [];
-      const clusterBlocks = cluster.map((record) => {
-        const start = minutes(record.startTime);
-        let lane = lanes.findIndex((laneEnd) => laneEnd <= start);
-        if (lane === -1) {
-          lane = lanes.length;
-        }
-        lanes[lane] = minutes(record.endTime);
-        return { record, lane };
-      });
-      const clusterLaneCount = Math.max(1, lanes.length);
-      for (const b of clusterBlocks) {
-        result.push({
-          record: b.record,
-          lane: b.lane,
-          laneCount: clusterLaneCount,
-        });
-      }
-    }
-  }
-
-  return result;
+function formatClassSection(className, sectionName) {
+  const cls = (className || "").trim() || "Class";
+  let sec = (sectionName || "").trim() || "A";
+  sec = sec.replace(/^(section\s*|sec\s*|\.\s*)/i, "").trim() || "A";
+  return `${cls} • Section ${sec}`;
 }
 
 export default function TeacherTimetable() {
@@ -163,13 +103,8 @@ export default function TeacherTimetable() {
     const set = new Set();
     for (const r of records) {
       if (r.isBreak || r.slotType === "break") continue;
-      const c = r.className || r.program || "";
-      const s = r.sectionName || r.section || "";
-      if (c && s) {
-        set.add(`${c} • Sec ${s}`);
-      } else if (c) {
-        set.add(c);
-      }
+      const formatted = formatClassSection(r.className || r.program, r.sectionName || r.section);
+      if (formatted) set.add(formatted);
     }
     return Array.from(set);
   }, [records]);
@@ -179,10 +114,9 @@ export default function TeacherTimetable() {
     return records.filter((r) => {
       if (r.isBreak || r.slotType === "break") return false;
       if (selectedClassFilter === "ALL") return true;
+      const formatted = formatClassSection(r.className || r.program, r.sectionName || r.section);
       const c = r.className || r.program || "";
-      const s = r.sectionName || r.section || "";
-      const combo = `${c} • Sec ${s}`;
-      return combo === selectedClassFilter || c === selectedClassFilter;
+      return formatted === selectedClassFilter || c === selectedClassFilter;
     });
   }, [records, selectedClassFilter]);
 
@@ -248,11 +182,9 @@ export default function TeacherTimetable() {
 
     // 2. Classes & Sections taught
     const classCombos = new Set(
-      filteredClassRecords.map((r) => {
-        const c = r.className || r.program || "";
-        const s = r.sectionName || r.section || "";
-        return `${c} • ${s}`;
-      }).filter(Boolean)
+      filteredClassRecords.map((r) =>
+        formatClassSection(r.className || r.program, r.sectionName || r.section)
+      ).filter(Boolean)
     );
 
     // 3. Subjects Taught
@@ -279,9 +211,7 @@ export default function TeacherTimetable() {
     const map = new Map();
     for (const r of filteredClassRecords) {
       const subName = (r.subjectName || r.subject || "").trim();
-      const clsName = r.className || r.program || "Class";
-      const secName = r.sectionName || r.section || "A";
-      const classSecStr = `${clsName} • Sec ${secName}`;
+      const classSecStr = formatClassSection(r.className || r.program, r.sectionName || r.section);
       if (!subName) continue;
       const key = `${subName}__${classSecStr}`.toLowerCase();
       if (!map.has(key)) {
@@ -342,82 +272,65 @@ export default function TeacherTimetable() {
       )}
 
       {/* ── Top 4 Summary KPI Cards Row ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 w-full" style={{ gap: "16px" }}>
-        {/* KPI 1: Assigned Periods / Wk */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
-              Assigned Periods / Wk
-            </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
-              {loading ? "..." : kpiData.assignedPeriods}
+      {/* ── Top 4 Summary KPI Cards Row ─────────────────────────────────── */}
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 w-full"
+        style={{ gap: "12px", marginBottom: "20px" }}
+      >
+        {[
+          {
+            label: "Assigned Periods / Wk",
+            value: loading ? "..." : kpiData.assignedPeriods,
+            subtitle: "Total teaching sessions / wk",
+            icon: <BookOpen size={16} />,
+          },
+          {
+            label: "Classes & Sections",
+            value: loading ? "..." : kpiData.classesAndSections,
+            subtitle: "Active assigned cohorts",
+            icon: <GraduationCap size={16} />,
+          },
+          {
+            label: "Subjects Taught",
+            value: loading ? "..." : kpiData.subjectsTaught,
+            subtitle: "Unique course allocations",
+            icon: <CalendarDays size={16} />,
+          },
+          {
+            label: "Today's Sessions",
+            value: loading ? "..." : kpiData.todaySessions,
+            subtitle: "Scheduled for today",
+            icon: <Clock size={16} />,
+          },
+        ].map((card, idx) => (
+          <div
+            key={idx}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col justify-between min-w-0 p-3.5 sm:p-5"
+            style={{ padding: "14px 16px", gap: "8px", boxSizing: "border-box" }}
+          >
+            <div className="flex items-start justify-between w-full" style={{ gap: "8px" }}>
+              <div className="flex flex-col min-w-0 flex-1" style={{ gap: "4px" }}>
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-neutral-500 leading-snug">
+                  {card.label}
+                </span>
+                <span className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+                  {card.value}
+                </span>
+              </div>
+              <div
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+                style={{ width: "34px", height: "34px" }}
+              >
+                {card.icon}
+              </div>
             </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Total teaching sessions / wk</span>
+            {card.subtitle && (
+              <span className="text-[11px] text-neutral-500 truncate block w-full leading-tight">
+                {card.subtitle}
+              </span>
+            )}
           </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
-            <BookOpen size={18} />
-          </div>
-        </div>
-
-        {/* KPI 2: Classes & Sections */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
-              Classes & Sections
-            </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
-              {loading ? "..." : kpiData.classesAndSections}
-            </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Active assigned cohorts</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
-            <GraduationCap size={18} />
-          </div>
-        </div>
-
-        {/* KPI 3: Subjects Taught */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
-              Subjects Taught
-            </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
-              {loading ? "..." : kpiData.subjectsTaught}
-            </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Unique course allocations</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
-            <CalendarDays size={18} />
-          </div>
-        </div>
-
-        {/* KPI 4: Today's Sessions */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between min-w-0"
-          style={{ padding: "20px 24px", boxSizing: "border-box" }}
-        >
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block whitespace-nowrap truncate">
-              Today's Sessions
-            </span>
-            <div className="text-2xl font-bold text-neutral-900 mt-1 whitespace-nowrap">
-              {loading ? "..." : kpiData.todaySessions}
-            </div>
-            <span className="text-[11px] text-neutral-400 mt-0.5 block whitespace-nowrap truncate">Scheduled for today</span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
-            <Clock size={18} />
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* ── Read-Only Context Bar & View Switcher (NO ADMIN BUTTONS) ─────── */}
@@ -427,19 +340,20 @@ export default function TeacherTimetable() {
       >
         {/* Left Side: Scope Identity & Class Filter Pills */}
         <div>
-          <div className="flex items-center flex-wrap" style={{ gap: "8px" }}>
+          {/* Header Badges */}
+          <div className="flex flex-wrap items-center" style={{ gap: "6px", marginBottom: "6px" }}>
             <span
-              className="inline-flex items-center rounded-md text-xs font-medium bg-neutral-100 text-neutral-800 border border-neutral-200"
+              className="inline-flex items-center rounded-md text-xs font-medium bg-neutral-100 text-neutral-800 border border-neutral-200 whitespace-nowrap"
               style={{ padding: "4px 10px", gap: "6px" }}
             >
               Faculty Schedule
             </span>
             {teacherInfo.isClassTeacher && teacherInfo.classTeacherSection && (
               <span
-                className="inline-flex items-center rounded-md text-xs font-medium bg-neutral-100 text-neutral-800 border border-neutral-200"
+                className="inline-flex items-center rounded-md text-xs font-medium bg-neutral-100 text-neutral-800 border border-neutral-200 whitespace-nowrap"
                 style={{ padding: "4px 10px", gap: "6px" }}
               >
-                <CheckCircle2 size={13} className="text-neutral-600" /> Class Teacher:{" "}
+                <CheckCircle2 size={13} className="text-neutral-600 shrink-0" /> Class Teacher:{" "}
                 {teacherInfo.classTeacherSection.gradeName || "Class"} •{" "}
                 {teacherInfo.classTeacherSection.sectionName || "Section"}
               </span>
@@ -467,7 +381,7 @@ export default function TeacherTimetable() {
               <button
                 type="button"
                 onClick={() => setSelectedClassFilter("ALL")}
-                className={`rounded-md text-[11px] font-semibold transition-colors cursor-pointer border ${
+                className={`rounded-md text-[11px] font-semibold transition-colors cursor-pointer border whitespace-nowrap ${
                   selectedClassFilter === "ALL"
                     ? "bg-neutral-900 text-white border-neutral-900"
                     : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100"
@@ -481,7 +395,7 @@ export default function TeacherTimetable() {
                   key={cls}
                   type="button"
                   onClick={() => setSelectedClassFilter(cls)}
-                  className={`rounded-md text-[11px] font-semibold transition-colors cursor-pointer border ${
+                  className={`rounded-md text-[11px] font-semibold transition-colors cursor-pointer border whitespace-nowrap ${
                     selectedClassFilter === cls
                       ? "bg-neutral-900 text-white border-neutral-900"
                       : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100"
@@ -497,113 +411,113 @@ export default function TeacherTimetable() {
 
         {/* Right Side: View Controls with Segmented Containers */}
         <div
-          className="flex flex-wrap items-center"
+          className="flex flex-wrap items-center w-full lg:w-auto"
           style={{ gap: "10px" }}
         >
-          {/* Group 1: View Mode Toggle */}
-          <div
-            className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100"
-            style={{ padding: "4px", gap: "4px" }}
-          >
-            <button
-              type="button"
-              onClick={() => setViewMode("matrix")}
-              className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                viewMode === "matrix"
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-              style={{ padding: "6px 12px", gap: "6px" }}
+          <div className="flex flex-wrap items-center w-full sm:w-auto" style={{ gap: "8px" }}>
+            {/* Group 1: View Mode Toggle */}
+            <div
+              className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100"
+              style={{ padding: "4px", gap: "4px" }}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Weekly Matrix</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                viewMode === "list"
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-              style={{ padding: "6px 12px", gap: "6px" }}
+              <button
+                type="button"
+                onClick={() => setViewMode("matrix")}
+                className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  viewMode === "matrix"
+                    ? "bg-white text-neutral-900 shadow-xs font-semibold"
+                    : "text-neutral-600 hover:text-neutral-900"
+                }`}
+                style={{ height: "36px", padding: "0 12px", gap: "6px" }}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Weekly Matrix</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  viewMode === "list"
+                    ? "bg-white text-neutral-900 shadow-xs font-semibold"
+                    : "text-neutral-600 hover:text-neutral-900"
+                }`}
+                style={{ height: "36px", padding: "0 12px", gap: "6px" }}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span>All Scheduled List</span>
+              </button>
+            </div>
+
+            {/* Group 2: Day Range Toggle */}
+            <div
+              className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100"
+              style={{ padding: "4px", gap: "4px" }}
             >
-              <List className="w-3.5 h-3.5" />
-              <span>All Scheduled List</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setIncludeSaturday(false)}
+                className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  !includeSaturday
+                    ? "bg-white text-neutral-900 shadow-xs font-semibold"
+                    : "text-neutral-600 hover:text-neutral-900"
+                }`}
+                style={{ height: "36px", padding: "0 12px" }}
+              >
+                5 Days (Mon–Fri)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncludeSaturday(true)}
+                className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  includeSaturday
+                    ? "bg-white text-neutral-900 shadow-xs font-semibold"
+                    : "text-neutral-600 hover:text-neutral-900"
+                }`}
+                style={{ height: "36px", padding: "0 12px" }}
+              >
+                6 Days (+Sat)
+              </button>
+            </div>
           </div>
 
-          {/* Group 2: Day Range Toggle */}
-          <div
-            className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-100"
-            style={{ padding: "4px", gap: "4px" }}
-          >
+          {/* Group 3 & 4: Date Navigator & This Week in a single row */}
+          <div className="flex items-center w-full sm:w-auto" style={{ gap: "8px" }}>
+            {/* Date Range Navigator */}
+            <div
+              className="flex-1 sm:flex-initial inline-flex items-center justify-between rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800"
+              style={{ height: "36px", padding: "0 8px", minWidth: "170px", boxSizing: "border-box" }}
+            >
+              <button
+                type="button"
+                onClick={() => setWeek((prev) => shiftDays(prev, -7))}
+                className="p-1 hover:bg-neutral-100 rounded text-neutral-600 inline-flex items-center justify-center cursor-pointer"
+                title="Previous week"
+              >
+                <ChevronLeft className="w-3.5 h-3.5 text-neutral-600" />
+              </button>
+              <span className="whitespace-nowrap px-2 text-xs font-semibold text-neutral-800 select-none">
+                {weekLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => setWeek((prev) => shiftDays(prev, 7))}
+                className="p-1 hover:bg-neutral-100 rounded text-neutral-600 inline-flex items-center justify-center cursor-pointer"
+                title="Next week"
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
+              </button>
+            </div>
+
+            {/* This Week Button */}
             <button
               type="button"
-              onClick={() => setIncludeSaturday(false)}
-              className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                !includeSaturday
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-              style={{ padding: "6px 12px" }}
+              onClick={() => setWeek(mondayOf(new Date()))}
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-700 whitespace-nowrap shrink-0 shadow-xs cursor-pointer"
+              style={{ height: "36px", padding: "0 14px", boxSizing: "border-box" }}
             >
-              5 Days (Mon–Fri)
-            </button>
-            <button
-              type="button"
-              onClick={() => setIncludeSaturday(true)}
-              className={`inline-flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                includeSaturday
-                  ? "bg-white text-neutral-900 shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-              style={{ padding: "6px 12px" }}
-            >
-              6 Days (+Sat)
+              This Week
             </button>
           </div>
-
-          {/* Group 3: Week Date Navigator */}
-          <div
-            className="inline-flex items-center rounded-lg border border-neutral-200 bg-white"
-            style={{ padding: "4px 8px", gap: "8px", height: "36px" }}
-          >
-            <button
-              type="button"
-              onClick={() => setWeek((prev) => shiftDays(prev, -7))}
-              className="rounded hover:bg-neutral-100 text-neutral-600 inline-flex items-center justify-center cursor-pointer"
-              style={{ padding: "4px" }}
-              title="Previous week"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <span
-              className="text-xs font-medium text-neutral-800 whitespace-nowrap select-none"
-              style={{ padding: "0 4px" }}
-            >
-              {weekLabel}
-            </span>
-            <button
-              type="button"
-              onClick={() => setWeek((prev) => shiftDays(prev, 7))}
-              className="rounded hover:bg-neutral-100 text-neutral-600 inline-flex items-center justify-center cursor-pointer"
-              style={{ padding: "4px" }}
-              title="Next week"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Group 4: This Week Button */}
-          <button
-            type="button"
-            onClick={() => setWeek(mondayOf(new Date()))}
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-800 transition-colors cursor-pointer"
-            style={{ padding: "0 14px", height: "36px" }}
-          >
-            This Week
-          </button>
         </div>
       </div>
 
@@ -634,18 +548,18 @@ export default function TeacherTimetable() {
         /* ── Weekly Time-Grid Matrix (Scroll-Free Full-Width Layout) ───────── */
         <div
           className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-x-auto w-full"
-          style={{ height: "auto", maxHeight: "none", width: "100%", boxSizing: "border-box", WebkitOverflowScrolling: "touch" }}
+          style={{ width: "100%", boxSizing: "border-box", WebkitOverflowScrolling: "touch" }}
         >
           <div
-            className="select-none min-w-[760px] lg:min-w-0"
-            style={{ height: "auto", maxHeight: "none", width: "100%" }}
+            className="select-none"
+            style={{ width: "100%", minWidth: `${TIME_COL_PX + activeDays.length * 165}px` }}
           >
             <div style={{ width: "100%", height: "auto", overflow: "visible" }}>
               {/* Matrix Header Row: Time Axis Header + Weekday Columns */}
               <div
                 className="grid border-b border-neutral-200 bg-neutral-50 rounded-t-xl"
                 style={{
-                  gridTemplateColumns: `${TIME_COL_PX}px repeat(${activeDays.length}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `${TIME_COL_PX}px repeat(${activeDays.length}, minmax(165px, 1fr))`,
                 }}
               >
                 {/* Time Axis Column Top Label */}
@@ -671,15 +585,15 @@ export default function TeacherTimetable() {
                       className={`text-center border-r last:border-r-0 border-neutral-200 ${
                         isToday ? "bg-neutral-100/70" : ""
                       }`}
-                      style={{ padding: "10px 8px" }}
+                      style={{ padding: "10px 8px", minWidth: "165px" }}
                     >
-                      <div className="text-xs font-bold text-neutral-900 flex items-center justify-center gap-1.5">
+                      <div className="text-xs font-bold text-neutral-900 flex items-center justify-center gap-1.5 whitespace-nowrap">
                         {day.label}
                         {isToday && (
                           <span className="w-1.5 h-1.5 rounded-full bg-neutral-800 inline-block" />
                         )}
                       </div>
-                      <span className="text-[11px] font-medium text-neutral-500 block mt-0.5">
+                      <span className="text-[11px] font-medium text-neutral-500 block mt-0.5 whitespace-nowrap">
                         {dateStr}
                       </span>
                     </div>
@@ -691,8 +605,8 @@ export default function TeacherTimetable() {
               <div
                 className="relative grid"
                 style={{
-                  gridTemplateColumns: `${TIME_COL_PX}px repeat(${activeDays.length}, minmax(0, 1fr))`,
-                  height: `${gridHeight}px`,
+                  gridTemplateColumns: `${TIME_COL_PX}px repeat(${activeDays.length}, minmax(165px, 1fr))`,
+                  height: `${gridHeight + 36}px`,
                 }}
               >
                 {/* Horizontal Hour Lines across entire grid */}
@@ -718,7 +632,7 @@ export default function TeacherTimetable() {
                     return (
                       <div
                         key={`t-${m}`}
-                        className="absolute left-0 right-0 text-center text-[10.5px] font-semibold text-neutral-500 transform -translate-y-1/2"
+                        className="absolute left-0 right-0 text-center text-[10.5px] font-semibold text-neutral-500 transform -translate-y-1/2 whitespace-nowrap"
                         style={{ top: `${top}px` }}
                       >
                         {displayH}:00 {ampm}
@@ -731,7 +645,10 @@ export default function TeacherTimetable() {
                 {activeDays.map((day) => {
                   const dayNum = day.index;
                   const isToday = currentWeekday === dayNum;
-                  const blocks = calculateDayLanes(filteredClassRecords, dayNum);
+                  const dayBreaks = breakRecords.filter((b) => b.days.includes(dayNum));
+                  const dayPeriods = filteredClassRecords.filter(
+                    (r) => Array.isArray(r.days) && r.days.includes(dayNum)
+                  );
 
                   return (
                     <div
@@ -739,101 +656,100 @@ export default function TeacherTimetable() {
                       className={`relative border-r last:border-r-0 border-neutral-200 ${
                         isToday ? "bg-neutral-50/30" : ""
                       }`}
+                      style={{ minWidth: "165px" }}
                     >
-                      {/* Break Slots for this Day */}
-                      {breakRecords
-                        .filter((b) => b.days.includes(dayNum))
-                        .map((bRecord, bIdx) => {
-                          const sMin = minutes(bRecord.startTime);
-                          const eMin = minutes(bRecord.endTime);
-                          const bTop = (sMin - gridStart) * PX_PER_MIN;
-                          const bHeight = (eMin - sMin) * PX_PER_MIN;
+                      {hourMarks.slice(0, -1).map((m) => {
+                        const hourStart = m;
+                        const hourEnd = m + 60;
+                        const breaksInHour = dayBreaks.filter((b) => {
+                          const s = minutes(b.startTime);
+                          return s >= hourStart && s < hourEnd;
+                        });
+                        const periodsInHour = dayPeriods.filter((p) => {
+                          const s = minutes(p.startTime);
+                          return s >= hourStart && s < hourEnd;
+                        });
 
-                          return (
-                            <div
-                              key={`break-${bIdx}-${dayNum}`}
-                              className="absolute rounded-lg border border-neutral-300 border-l-4 border-l-neutral-400 bg-neutral-100/90 shadow-2xs z-[3] overflow-hidden flex flex-col justify-center cursor-default"
-                              style={{
-                                top: `${bTop}px`,
-                                height: `${Math.max(bHeight, 28)}px`,
-                                left: "4px",
-                                width: "calc(100% - 8px)",
-                                padding: "4px 8px",
-                                boxSizing: "border-box",
-                              }}
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <Coffee size={11} className="text-neutral-500 shrink-0" />
-                                <span className="text-[11px] font-bold text-neutral-800 truncate">
-                                  {bRecord.subject || "Break / Recess"}
-                                </span>
-                              </div>
-                              {bHeight >= 38 && (
-                                <span className="text-[10px] font-medium text-neutral-500 block truncate mt-0.5">
-                                  {formatCardTime(bRecord.startTime, bRecord.endTime)}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+                        if (!breaksInHour.length && !periodsInHour.length) return null;
 
-                      {/* Class Period Cards for Teacher */}
-                      {blocks.map(({ record, lane, laneCount }) => {
-                        const id = record._id || record.id;
-                        const startMin = minutes(record.startTime);
-                        const durMin = minutes(record.endTime) - startMin;
-                        const cardTop = (startMin - gridStart) * PX_PER_MIN;
-                        const cardH = durMin * PX_PER_MIN;
-
-                        const clsStr = record.className || record.program || "Class";
-                        const secStr = record.sectionName || record.section || "A";
-                        const classBadge = `${clsStr} • Sec ${secStr}`;
-
-                        const isFullWidth = laneCount === 1;
-                        const cardStyle = isFullWidth
-                          ? {
-                              top: `${cardTop}px`,
-                              height: `${Math.max(cardH, 68)}px`,
-                              minHeight: "68px",
-                              left: "4px",
-                              width: "calc(100% - 8px)",
-                              padding: "8px 10px",
-                              boxSizing: "border-box",
-                            }
-                          : {
-                              top: `${cardTop}px`,
-                              height: `${Math.max(cardH, 68)}px`,
-                              minHeight: "68px",
-                              left: `calc(${(lane / laneCount) * 100}% + 2px)`,
-                              width: `calc(${100 / laneCount}% - 4px)`,
-                              padding: "8px 10px",
-                              boxSizing: "border-box",
-                            };
+                        const topOffset = (hourStart - gridStart) * PX_PER_MIN;
 
                         return (
                           <div
-                            key={id}
-                            draggable={false}
-                            className="absolute rounded-lg border border-neutral-200 border-l-4 border-l-neutral-800 bg-neutral-50 shadow-xs z-[5] overflow-hidden flex flex-col justify-start cursor-default hover:bg-neutral-100/80 transition-colors"
-                            style={cardStyle}
+                            key={`slot-${dayNum}-${m}`}
+                            className="absolute left-0 right-0"
+                            style={{
+                              top: `${topOffset}px`,
+                              width: "100%",
+                              zIndex: 5,
+                            }}
                           >
-                            {/* 1. Subject Title */}
-                            <span
-                              className="text-xs font-bold text-neutral-900 leading-tight truncate block"
-                              title={record.subjectName || record.subject}
+                            <div
+                              className="flex flex-col w-full"
+                              style={{
+                                gap: "6px",
+                                padding: "6px",
+                                position: "relative",
+                                boxSizing: "border-box",
+                              }}
                             >
-                              {record.subjectName || record.subject}
-                            </span>
+                              {/* Break Slots */}
+                              {breaksInHour.map((bRecord, bIdx) => (
+                                <div
+                                  key={`break-${bIdx}`}
+                                  className="w-full rounded-lg border border-neutral-300 border-l-4 border-l-neutral-400 bg-neutral-100/90 shadow-2xs overflow-hidden flex flex-col justify-center cursor-default shrink-0"
+                                  style={{
+                                    padding: "5px 8px",
+                                    boxSizing: "border-box",
+                                  }}
+                                >
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <Coffee size={11} className="text-neutral-500 shrink-0" />
+                                    <span className="text-[11px] font-bold text-neutral-800 truncate">
+                                      {bRecord.subject || "Break / Recess"}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] font-medium text-neutral-500 block truncate mt-0.5">
+                                    {formatCardTime(bRecord.startTime, bRecord.endTime)}
+                                  </span>
+                                </div>
+                              ))}
 
-                            {/* 2. Time Range */}
-                            <span className="text-[11px] font-medium text-neutral-500 mt-0.5 whitespace-nowrap block">
-                              {formatCardTime(record.startTime, record.endTime)}
-                            </span>
+                              {/* Class Period Cards */}
+                              {periodsInHour.map((record) => {
+                                const id = record._id || record.id || `${record.startTime}-${record.endTime}`;
+                                const classBadge = formatClassSection(
+                                  record.className || record.program,
+                                  record.sectionName || record.section
+                                );
 
-                            {/* 3. Class & Section */}
-                            <span className="text-[11px] text-neutral-600 mt-0.5 truncate block font-medium">
-                              {classBadge}
-                            </span>
+                                return (
+                                  <div
+                                    key={id}
+                                    draggable={false}
+                                    className="w-full rounded-xl bg-white border border-neutral-200 border-l-4 border-l-neutral-900 shadow-xs flex flex-col justify-between hover:bg-neutral-50 transition-colors cursor-default shrink-0"
+                                    style={{
+                                      padding: "8px 10px",
+                                      gap: "3px",
+                                      boxSizing: "border-box",
+                                    }}
+                                  >
+                                    <span
+                                      className="text-xs font-bold text-neutral-900 truncate block"
+                                      title={record.subjectName || record.subject}
+                                    >
+                                      {record.subjectName || record.subject}
+                                    </span>
+                                    <span className="text-[11px] font-medium text-neutral-600 whitespace-nowrap block">
+                                      {formatCardTime(record.startTime, record.endTime)}
+                                    </span>
+                                    <span className="text-[11px] text-neutral-500 truncate block">
+                                      {classBadge}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       })}
@@ -851,12 +767,12 @@ export default function TeacherTimetable() {
             <table className="w-full min-w-[700px] text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50 text-[10.5px] font-bold text-neutral-500 uppercase tracking-wider">
-                  <th style={{ padding: "12px 16px" }}>Day</th>
-                  <th style={{ padding: "12px 16px" }}>Time Slot</th>
-                  <th style={{ padding: "12px 16px" }}>Subject / Course</th>
-                  <th style={{ padding: "12px 16px" }}>Class & Section</th>
-                  <th style={{ padding: "12px 16px" }}>Room</th>
-                  <th style={{ padding: "12px 16px" }}>Type</th>
+                  <th style={{ padding: "12px 16px" }} className="whitespace-nowrap">Day</th>
+                  <th style={{ padding: "12px 16px" }} className="whitespace-nowrap">Time Slot</th>
+                  <th style={{ padding: "12px 16px" }} className="whitespace-nowrap">Subject / Course</th>
+                  <th style={{ padding: "12px 16px" }} className="whitespace-nowrap">Class & Section</th>
+                  <th style={{ padding: "12px 16px" }} className="whitespace-nowrap">Room</th>
+                  <th style={{ padding: "12px 16px" }} className="whitespace-nowrap">Type</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -876,30 +792,28 @@ export default function TeacherTimetable() {
 
                     return (
                       <tr key={item._id || idx} className="hover:bg-neutral-50/70 transition-colors">
-                        <td style={{ padding: "12px 16px" }} className="font-semibold text-neutral-800">
+                        <td style={{ padding: "12px 16px" }} className="font-semibold text-neutral-800 whitespace-nowrap">
                           {daysStr}
                         </td>
-                        <td style={{ padding: "12px 16px" }} className="font-medium text-neutral-600">
+                        <td style={{ padding: "12px 16px" }} className="font-medium text-neutral-600 whitespace-nowrap">
                           {formatCardTime(item.startTime, item.endTime)}
                         </td>
-                        <td style={{ padding: "12px 16px" }}>
+                        <td style={{ padding: "12px 16px" }} className="whitespace-nowrap">
                           <span className="font-bold text-neutral-900">
                             {item.subjectName || item.subject || item.breakTitle}
                           </span>
                         </td>
-                        <td style={{ padding: "12px 16px" }} className="text-neutral-700 font-semibold">
+                        <td style={{ padding: "12px 16px" }} className="text-neutral-700 font-semibold whitespace-nowrap">
                           {isB
                             ? "All Classes"
-                            : `${item.className || item.program || "Class"} • Sec ${
-                                item.sectionName || item.section || "A"
-                              }`}
+                            : formatClassSection(item.className || item.program, item.sectionName || item.section)}
                         </td>
-                        <td style={{ padding: "12px 16px" }} className="text-neutral-500">
+                        <td style={{ padding: "12px 16px" }} className="text-neutral-500 whitespace-nowrap">
                           {item.room || item.roomNumber || "Main Room"}
                         </td>
-                        <td style={{ padding: "12px 16px" }}>
+                        <td style={{ padding: "12px 16px" }} className="whitespace-nowrap">
                           <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${
                               isB
                                 ? "bg-neutral-200 text-neutral-800"
                                 : "bg-neutral-100 text-neutral-800 border border-neutral-200"
@@ -958,28 +872,28 @@ export default function TeacherTimetable() {
           <table className="w-full min-w-[650px] text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50/50 text-[10.5px] font-bold text-neutral-500 uppercase tracking-wider">
-                <th style={{ padding: "14px 20px" }} className="align-middle">Subject / Course</th>
-                <th style={{ padding: "14px 20px" }} className="align-middle">Class & Section</th>
-                <th style={{ padding: "14px 20px" }} className="align-middle">Weekly Sessions</th>
-                <th style={{ padding: "14px 20px" }} className="align-middle">Scheduled Days</th>
+                <th style={{ padding: "12px 16px" }} className="align-middle whitespace-nowrap">Subject / Course</th>
+                <th style={{ padding: "12px 16px" }} className="align-middle whitespace-nowrap">Class & Section</th>
+                <th style={{ padding: "12px 16px" }} className="align-middle whitespace-nowrap">Weekly Sessions</th>
+                <th style={{ padding: "12px 16px" }} className="align-middle whitespace-nowrap">Scheduled Days</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {teachingLoadBreakdown.map((item) => (
                 <tr key={`${item.subject}-${item.classSection}`} className="hover:bg-neutral-50/70 transition-colors">
-                  <td style={{ padding: "14px 20px" }} className="font-bold text-neutral-900 align-middle">
-                    <div className="flex items-center gap-2">
+                  <td style={{ padding: "12px 16px" }} className="font-bold text-neutral-900 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       <span className="w-2 h-2 rounded-full bg-neutral-800 shrink-0" />
                       <span>{item.subject}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "14px 20px" }} className="align-middle">
-                    <div className="flex items-center gap-1.5 text-neutral-800 font-semibold">
+                  <td style={{ padding: "12px 16px" }} className="align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 text-neutral-800 font-semibold whitespace-nowrap">
                       <GraduationCap size={13} className="text-neutral-400 shrink-0" />
                       <span>{item.classSection}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "14px 20px" }} className="align-middle">
+                  <td style={{ padding: "12px 16px" }} className="align-middle whitespace-nowrap">
                     <span
                       className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-medium inline-flex items-center whitespace-nowrap"
                       style={{ padding: "4px 10px" }}
@@ -987,7 +901,7 @@ export default function TeacherTimetable() {
                       {item.count} {item.count === 1 ? "Period" : "Periods"}/wk
                     </span>
                   </td>
-                  <td style={{ padding: "14px 20px" }} className="text-neutral-600 font-medium text-[11px] align-middle">
+                  <td style={{ padding: "12px 16px" }} className="text-neutral-600 font-medium text-[11px] align-middle whitespace-nowrap">
                     {item.daysFormatted}
                   </td>
                 </tr>

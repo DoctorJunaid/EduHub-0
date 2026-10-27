@@ -33,14 +33,6 @@ const formatDate = (dateStr) => {
   }
 };
 
-const getCategoryClass = (category = "") => {
-  const cat = (category || "").toLowerCase();
-  if (cat.includes("medical") || cat.includes("sick")) return "leave-category-medical";
-  if (cat.includes("casual")) return "leave-category-casual";
-  if (cat.includes("event") || cat.includes("wedding") || cat.includes("family")) return "leave-category-event";
-  return "leave-category-default";
-};
-
 export default function TeacherLeaveRequestsCard({ className = "" }) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("Pending");
@@ -152,9 +144,9 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
         </div>
 
         {/* Tab & Refresh Controls */}
-        <div className="leave-card-controls flex items-center shrink-0" style={{ gap: "8px" }}>
+        <div className="leave-card-controls flex items-center justify-between w-full sm:w-auto shrink-0" style={{ gap: "8px" }}>
           <div
-            className="leave-tabs-pill inline-flex items-center rounded-lg bg-neutral-100 border border-neutral-200"
+            className="leave-tabs-pill inline-flex items-center rounded-lg bg-neutral-100 border border-neutral-200 min-w-0"
             style={{ padding: "3px", gap: "2px" }}
           >
             <button
@@ -165,7 +157,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                   ? "bg-white text-neutral-900 font-semibold shadow-xs border border-neutral-200/60"
                   : "text-neutral-600 hover:text-neutral-900 font-medium"
               }`}
-              style={{ height: "28px", padding: "0 10px" }}
+              style={{ height: "28px", padding: "0 8px" }}
             >
               Pending ({pendingLeaves.length})
             </button>
@@ -177,7 +169,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                   ? "bg-white text-neutral-900 font-semibold shadow-xs border border-neutral-200/60"
                   : "text-neutral-600 hover:text-neutral-900 font-medium"
               }`}
-              style={{ height: "28px", padding: "0 10px" }}
+              style={{ height: "28px", padding: "0 8px" }}
             >
               Approved ({approvedLeaves.length})
             </button>
@@ -189,7 +181,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                   ? "bg-white text-neutral-900 font-semibold shadow-xs border border-neutral-200/60"
                   : "text-neutral-600 hover:text-neutral-900 font-medium"
               }`}
-              style={{ height: "28px", padding: "0 10px" }}
+              style={{ height: "28px", padding: "0 8px" }}
             >
               All ({leavesList.length})
             </button>
@@ -199,7 +191,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="leave-refresh-btn inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-600 hover:text-neutral-900 transition-colors shadow-xs"
+            className="leave-refresh-btn inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-600 hover:text-neutral-900 transition-colors shadow-xs shrink-0"
             style={{ width: "32px", height: "32px" }}
             title="Refresh leave requests"
           >
@@ -317,15 +309,22 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                 </div>
 
                 {/* Right: Actions or Status */}
-                <div className="leave-row-actions flex items-center shrink-0" style={{ gap: "8px" }}>
+                <div
+                  className={`leave-row-actions ${
+                    isPending
+                      ? "grid grid-cols-2 sm:flex sm:items-center sm:justify-end w-full sm:w-auto"
+                      : "flex items-center justify-start sm:justify-end w-full sm:w-auto"
+                  }`}
+                  style={{ gap: "10px", marginTop: "8px" }}
+                >
                   {isPending ? (
                     <>
                       <button
                         type="button"
                         disabled={isProcessing}
                         onClick={() => handleReview(leave._id, "Reject")}
-                        className="leave-btn-reject inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors shadow-xs"
-                        style={{ height: "36px", padding: "0 14px", gap: "6px" }}
+                        className="leave-btn-reject inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+                        style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
                       >
                         {isProcessing ? (
                           <Loader2 size={13} className="animate-spin text-neutral-700" />
@@ -339,8 +338,8 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                         type="button"
                         disabled={isProcessing}
                         onClick={() => handleReview(leave._id, "Approved")}
-                        className="leave-btn-approve inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-                        style={{ height: "36px", padding: "0 16px", gap: "6px" }}
+                        className="leave-btn-approve inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+                        style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
                       >
                         {isProcessing ? (
                           <Loader2 size={13} className="animate-spin text-white" />
@@ -353,7 +352,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                   ) : isApproved ? (
                     <span
                       className="leave-status-approved inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-medium"
-                      style={{ height: "34px", padding: "0 12px", gap: "6px" }}
+                      style={{ height: "36px", padding: "0 12px", gap: "6px" }}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-neutral-700 stroke-[1.75]" />
                       <span>Approved &amp; Synced</span>
@@ -361,7 +360,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
                   ) : (
                     <span
                       className="leave-status-rejected inline-flex items-center rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200 text-xs font-medium"
-                      style={{ height: "34px", padding: "0 12px", gap: "6px" }}
+                      style={{ height: "36px", padding: "0 12px", gap: "6px" }}
                     >
                       <XCircle className="w-3.5 h-3.5 text-neutral-500 stroke-[1.75]" />
                       <span>Rejected</span>

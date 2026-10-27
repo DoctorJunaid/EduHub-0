@@ -353,8 +353,8 @@
 }
 
 .leave-btn-reject {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   padding: 0 14px !important;
   border-radius: 8px !important;
   background: #ffffff !important;
@@ -372,14 +372,14 @@
 }
 
 .leave-btn-reject:hover:not(:disabled) {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  background: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
 }
 
 .leave-btn-approve {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   padding: 0 16px !important;
   border-radius: 8px !important;
   background: #0f172a !important;
@@ -484,7 +484,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .teacher-leave-card {
     padding: 16px 14px !important;
   }
@@ -496,8 +496,8 @@
   }
 
   .leave-card-controls {
-    width: 100%;
-    justify-content: space-between;
+    width: 100% !important;
+    justify-content: space-between !important;
   }
 
   .leave-row-main {
@@ -505,13 +505,19 @@
   }
 
   .leave-row-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-top: 8px !important;
   }
 
   .leave-btn-reject,
   .leave-btn-approve {
-    justify-content: center;
+    width: 100% !important;
+    justify-content: center !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    box-sizing: border-box !important;
   }
 }

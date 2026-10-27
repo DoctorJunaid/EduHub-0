@@ -79,8 +79,8 @@ export default function MySalary() {
 
   return (
     <div
-      className="w-full flex flex-col"
-      style={{ padding: "24px", gap: "24px", boxSizing: "border-box" }}
+      className="w-full flex flex-col p-4 sm:p-6"
+      style={{ gap: "24px", boxSizing: "border-box" }}
     >
       {/* Main Contract Card */}
       <div className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
@@ -92,12 +92,12 @@ export default function MySalary() {
           {/* Left: Avatar + Name & Role */}
           <div className="flex items-center" style={{ gap: "14px" }}>
             <div
-              className="rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center font-bold text-neutral-800 text-base shrink-0"
-              style={{ width: "44px", height: "44px" }}
+              className="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center font-bold text-neutral-800 text-base shrink-0"
+              style={{ width: "48px", height: "48px" }}
             >
               {(teacher.user?.name || "T").charAt(0).toUpperCase()}
             </div>
-            <div className="flex flex-col" style={{ gap: "2px" }}>
+            <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
               <h2 className="text-base font-bold text-neutral-900 leading-snug">
                 {teacher.user?.name || "Faculty Member"}
               </h2>
@@ -109,20 +109,29 @@ export default function MySalary() {
           </div>
 
           {/* Right: Active Contract Badge + Payslips Button */}
-          <div className="flex items-center shrink-0" style={{ gap: "10px" }}>
+          <div
+            className="flex flex-wrap items-center shrink-0"
+            style={{ gap: "10px" }}
+          >
             <span
               className="inline-flex items-center rounded-full bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-medium whitespace-nowrap"
-              style={{ padding: "5px 12px" }}
+              style={{ padding: "6px 12px" }}
             >
               {profile.isActive ? "Active Contract" : "Inactive Contract"}
             </span>
             <button
               type="button"
               onClick={() => navigate("/my-payslips")}
-              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-medium text-neutral-800 transition-colors shadow-xs whitespace-nowrap cursor-pointer"
-              style={{ height: "34px", padding: "0 14px", gap: "6px" }}
+              className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 cursor-pointer"
+              style={{
+                height: "38px",
+                padding: "0 16px",
+                gap: "6px",
+                minWidth: "fit-content",
+                boxSizing: "border-box",
+              }}
             >
-              <FileText className="w-3.5 h-3.5 text-neutral-600" />
+              <FileText className="w-3.5 h-3.5 text-white shrink-0" />
               <span>Go to My Payslips</span>
             </button>
           </div>
@@ -131,79 +140,111 @@ export default function MySalary() {
         {/* Main Card Body Container */}
         <div
           className="w-full flex flex-col"
-          style={{ padding: "24px", gap: "24px", boxSizing: "border-box" }}
+          style={{ padding: "20px 24px", gap: "20px", boxSizing: "border-box" }}
         >
-          {/* 3-Column Summary Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200 border border-neutral-200 rounded-xl bg-neutral-50/30 w-full overflow-hidden">
-            {/* Column 1: Base Salary */}
+          {/* Salary Breakdown Summary */}
+          <div
+            className="w-full border border-neutral-200 rounded-xl bg-white flex flex-col"
+            style={{ padding: "4px 20px", boxSizing: "border-box" }}
+          >
+            {/* Row 1: Base Salary */}
             <div
-              className="flex items-center justify-between"
-              style={{ padding: "16px 20px" }}
+              className="flex flex-col sm:flex-row sm:items-center justify-between w-full"
+              style={{
+                padding: "14px 0",
+                borderBottom: "1px solid #e5e5e5",
+                gap: "8px",
+                boxSizing: "border-box",
+              }}
             >
-              <div className="flex flex-col" style={{ gap: "4px" }}>
-                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+              <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                   Base Salary
                 </span>
-                <strong className="text-xl font-bold text-neutral-900 tracking-tight">
+                <span className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
                   {formatPKR(profile.baseSalary)}
-                </strong>
-                <span className="text-[11px] text-neutral-500">
+                </span>
+              </div>
+              <div
+                className="flex items-center justify-between sm:justify-start"
+                style={{ gap: "12px" }}
+              >
+                <span className="text-xs text-neutral-500">
                   Fixed monthly base pay
                 </span>
-              </div>
-              <div
-                className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
-                style={{ width: "36px", height: "36px" }}
-              >
-                <Banknote className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                <div
+                  className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+                  style={{ width: "36px", height: "36px" }}
+                >
+                  <Banknote className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                </div>
               </div>
             </div>
 
-            {/* Column 2: Allowances */}
+            {/* Row 2: Allowances */}
             <div
-              className="flex items-center justify-between"
-              style={{ padding: "16px 20px" }}
+              className="flex flex-col sm:flex-row sm:items-center justify-between w-full"
+              style={{
+                padding: "14px 0",
+                borderBottom: "1px solid #e5e5e5",
+                gap: "8px",
+                boxSizing: "border-box",
+              }}
             >
-              <div className="flex flex-col" style={{ gap: "4px" }}>
-                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+              <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                   Allowances
                 </span>
-                <strong className="text-xl font-bold text-neutral-900 tracking-tight">
+                <span className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
                   +{formatPKR(totalAllowances)}
-                </strong>
-                <span className="text-[11px] text-neutral-500">
-                  {profile.allowances?.length || 0} allowance items
                 </span>
               </div>
               <div
-                className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
-                style={{ width: "36px", height: "36px" }}
+                className="flex items-center justify-between sm:justify-start"
+                style={{ gap: "12px" }}
               >
-                <Wallet className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                <span className="text-xs text-neutral-500">
+                  {profile.allowances?.length || 0} allowance items
+                </span>
+                <div
+                  className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+                  style={{ width: "36px", height: "36px" }}
+                >
+                  <Wallet className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                </div>
               </div>
             </div>
 
-            {/* Column 3: Gross Monthly Pay */}
+            {/* Row 3: Gross Monthly Pay */}
             <div
-              className="flex items-center justify-between"
-              style={{ padding: "16px 20px" }}
+              className="flex flex-col sm:flex-row sm:items-center justify-between w-full"
+              style={{
+                padding: "14px 0",
+                gap: "8px",
+                boxSizing: "border-box",
+              }}
             >
-              <div className="flex flex-col" style={{ gap: "4px" }}>
-                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+              <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                   Gross Monthly Pay
                 </span>
-                <strong className="text-xl font-bold text-neutral-900 tracking-tight">
+                <span className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
                   {formatPKR(gross)}
-                </strong>
-                <span className="text-[11px] text-neutral-500">
-                  ~{formatPKR(dailySalary)}/day rate
                 </span>
               </div>
               <div
-                className="rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0"
-                style={{ width: "36px", height: "36px" }}
+                className="flex items-center justify-between sm:justify-start"
+                style={{ gap: "12px" }}
               >
-                <ShieldCheck className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                <span className="text-xs text-neutral-500">
+                  ~{formatPKR(dailySalary)}/day rate
+                </span>
+                <div
+                  className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-600 shrink-0"
+                  style={{ width: "36px", height: "36px" }}
+                >
+                  <ShieldCheck className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                </div>
               </div>
             </div>
           </div>
@@ -243,39 +284,51 @@ export default function MySalary() {
               Deductions &amp; Estimated Monthly Net
             </span>
             <div
-              className="grid grid-cols-1 md:grid-cols-3 w-full"
+              className="grid grid-cols-1 sm:grid-cols-3 w-full"
               style={{ gap: "16px" }}
             >
               <div
-                className="rounded-xl border border-neutral-200 bg-neutral-50/50 flex flex-col justify-center"
-                style={{ padding: "16px 20px", gap: "6px" }}
+                className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col justify-between"
+                style={{
+                  padding: "18px 20px",
+                  gap: "8px",
+                  boxSizing: "border-box",
+                }}
               >
-                <span className="text-xs font-medium text-neutral-500">
+                <span className="text-xs font-medium text-neutral-500 truncate">
                   Income Tax Deduction
                 </span>
-                <span className="text-lg font-bold text-neutral-900">
+                <span className="text-lg font-bold text-neutral-900 tracking-tight whitespace-nowrap">
                   -{formatPKR(profile.taxDeduction)}
                 </span>
               </div>
               <div
-                className="rounded-xl border border-neutral-200 bg-neutral-50/50 flex flex-col justify-center"
-                style={{ padding: "16px 20px", gap: "6px" }}
+                className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col justify-between"
+                style={{
+                  padding: "18px 20px",
+                  gap: "8px",
+                  boxSizing: "border-box",
+                }}
               >
-                <span className="text-xs font-medium text-neutral-500">
+                <span className="text-xs font-medium text-neutral-500 truncate">
                   Other Deductions
                 </span>
-                <span className="text-lg font-bold text-neutral-900">
+                <span className="text-lg font-bold text-neutral-900 tracking-tight whitespace-nowrap">
                   -{formatPKR(profile.otherDeduction)}
                 </span>
               </div>
               <div
-                className="rounded-xl border border-neutral-300 bg-neutral-100/70 flex flex-col justify-center"
-                style={{ padding: "16px 20px", gap: "6px" }}
+                className="bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col justify-between"
+                style={{
+                  padding: "18px 20px",
+                  gap: "8px",
+                  boxSizing: "border-box",
+                }}
               >
-                <span className="text-xs font-medium text-neutral-600">
+                <span className="text-xs font-medium text-neutral-500 truncate">
                   Est. Net Contract
                 </span>
-                <span className="text-lg font-bold text-neutral-900">
+                <span className="text-lg font-bold text-neutral-900 tracking-tight whitespace-nowrap">
                   {formatPKR(estimatedNet)}
                 </span>
               </div>

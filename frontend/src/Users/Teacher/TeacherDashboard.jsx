@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -50,7 +50,7 @@ export default function TeacherDashboard() {
 
   const { isClassTeacher, classInfo, attendance, loading: myClassLoading } = useMyClass();
   const reduxClasses = useSelector(selectAssignedTeacherClasses);
-  const teacher = useSelector(selectTeacherIdentity);
+  const _teacher = useSelector(selectTeacherIdentity);
   const enrolledStudents = useSelector(selectStudentsForAssignedClasses);
   const reduxAssignments = useSelector((state) => state.assignments?.records || []);
   const reduxSubmissions = useSelector((state) => state.submissions?.records || []);
@@ -301,7 +301,7 @@ export default function TeacherDashboard() {
 
       {/* 1. KPI Cards Strip */}
       <section
-        className="teacher-metrics campus-kpi-track w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden"
+        className="teacher-metrics campus-kpi-track w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6"
         aria-label="Teaching summary"
         style={{ boxSizing: "border-box" }}
       >
@@ -309,37 +309,37 @@ export default function TeacherDashboard() {
           const Icon = m.icon;
           return (
             <article
-              className="teacher-metric campus-kpi-card min-w-0 bg-white border-r border-neutral-200 hover:bg-neutral-50/50 transition-colors"
+              className="teacher-metric campus-kpi-card min-w-0 bg-white hover:bg-neutral-50/50 transition-colors p-3.5 sm:p-4"
               key={m.label}
-              style={{ padding: "16px 14px", minHeight: "80px", boxSizing: "border-box" }}
+              style={{ minHeight: "80px", boxSizing: "border-box" }}
             >
-              <div className="kpi-wrap min-w-0 flex items-center" style={{ gap: "10px" }}>
-                <div
-                  className="kpi-icon shrink-0 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700"
-                  style={{ width: "36px", height: "36px" }}
-                >
-                  <Icon className="w-4 h-4 text-neutral-700 stroke-[1.75]" aria-hidden="true" />
-                </div>
-                <div className="kpi-info min-w-0 flex-1 flex flex-col overflow-hidden" style={{ gap: "2px" }}>
+              <div className="kpi-wrap min-w-0 flex flex-col justify-between h-full w-full" style={{ gap: "6px" }}>
+                <div className="flex items-center justify-between w-full" style={{ gap: "6px" }}>
                   <span
-                    className="kpi-label text-[11px] font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap truncate"
+                    className="kpi-label text-[10.5px] sm:text-[11px] font-semibold text-neutral-500 uppercase tracking-wide truncate"
                     title={m.label}
                   >
                     {m.label}
                   </span>
                   <div
-                    className="kpi-value text-base sm:text-lg font-bold text-neutral-900 tracking-tight whitespace-nowrap truncate flex items-baseline"
-                    style={{ gap: "3px" }}
+                    className="kpi-icon shrink-0 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700"
+                    style={{ width: "30px", height: "30px" }}
                   >
-                    {m.isCurrency ? (
-                      <>
-                        <span className="text-xs font-semibold text-neutral-500">{m.currency}</span>
-                        <span>{m.amount}</span>
-                      </>
-                    ) : (
-                      <span>{m.value}</span>
-                    )}
+                    <Icon className="w-3.5 h-3.5 text-neutral-700 stroke-[1.75]" aria-hidden="true" />
                   </div>
+                </div>
+                <div
+                  className="kpi-value text-base sm:text-lg font-bold text-neutral-900 tracking-tight truncate flex items-baseline"
+                  style={{ gap: "3px" }}
+                >
+                  {m.isCurrency ? (
+                    <>
+                      <span className="text-xs font-semibold text-neutral-500">{m.currency}</span>
+                      <span>{m.amount}</span>
+                    </>
+                  ) : (
+                    <span>{m.value}</span>
+                  )}
                 </div>
               </div>
             </article>
@@ -350,49 +350,49 @@ export default function TeacherDashboard() {
       {/* 2. Quick Actions Strip */}
       <div className="teacher-quick-actions-container w-full">
         <nav
-          className="teacher-quick-actions grid grid-cols-2 md:grid-cols-5"
-          style={{ gap: "10px", width: "100%" }}
+          className="teacher-quick-actions grid grid-cols-2 sm:flex sm:flex-wrap items-center w-full"
+          style={{ gap: "8px", width: "100%" }}
           aria-label="Teacher quick actions"
         >
           <Link
             to="/teacher/credits"
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+            style={{ height: "38px", padding: "0 12px", gap: "6px", boxSizing: "border-box" }}
           >
             <Award className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
-            <span>My Teaching Credits &amp; Sessions</span>
+            <span className="truncate">My Teaching Credits &amp; Sessions</span>
           </Link>
           <Link
             to="/teacher/assignments"
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+            style={{ height: "38px", padding: "0 12px", gap: "6px", boxSizing: "border-box" }}
           >
             <ClipboardList className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
-            <span>Assignments &amp; Grading</span>
+            <span className="truncate">Assignments &amp; Grading</span>
           </Link>
           <Link
             to="/teacher/attendance"
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+            style={{ height: "38px", padding: "0 12px", gap: "6px", boxSizing: "border-box" }}
           >
             <CalendarCheck className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
-            <span>Take Student Attendance</span>
+            <span className="truncate">Take Student Attendance</span>
           </Link>
           <Link
             to="/teacher/diary"
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+            style={{ height: "38px", padding: "0 12px", gap: "6px", boxSizing: "border-box" }}
           >
             <FileText className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
-            <span>Daily Lecture Diary</span>
+            <span className="truncate">Daily Lecture Diary</span>
           </Link>
           <Link
             to="/teacher/gradebook"
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-            style={{ height: "40px", padding: "0 14px", gap: "8px" }}
+            className="col-span-2 sm:col-span-1 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+            style={{ height: "38px", padding: "0 12px", gap: "6px", boxSizing: "border-box" }}
           >
             <BookOpen className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
-            <span>Exam Marks &amp; Gradebook</span>
+            <span className="truncate">Exam Marks &amp; Gradebook</span>
           </Link>
         </nav>
       </div>
@@ -408,18 +408,18 @@ export default function TeacherDashboard() {
               <h2 className="teacher-card-title text-base font-bold text-neutral-900 tracking-tight">Today's Teaching Credits &amp; Periods</h2>
               <span className="teacher-card-subtitle text-xs text-neutral-500">Fulfill assigned lecture periods to accrue monthly teaching credits &amp; bonuses</span>
             </div>
-            <div className="teacher-card-controls flex flex-wrap items-center" style={{ gap: "10px" }}>
+            <div className="teacher-card-controls flex flex-wrap items-center w-full sm:w-auto" style={{ gap: "10px" }}>
               <Button
                 variant="outline"
-                className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs whitespace-nowrap shrink-0"
-                style={{ height: "36px", padding: "0 14px" }}
+                className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs whitespace-nowrap shrink-0 w-full sm:w-auto inline-flex items-center justify-center"
+                style={{ height: "38px", padding: "0 14px", boxSizing: "border-box" }}
                 asChild
               >
                 <Link to="/teacher/credits">All Credit Records →</Link>
               </Button>
             </div>
           </div>
-          <div className="teacher-table-scroll">
+          <div className="teacher-table-scroll w-full overflow-x-auto">
             {loadingSessions ? (
               <div className="p-8 flex items-center justify-center">
                 <SpinnerCustom text="Loading today's periods..." size="default" />
@@ -759,8 +759,8 @@ function TeacherTable({
             <h2 className="teacher-card-title text-base font-bold text-neutral-900 tracking-tight">{title}</h2>
             <span className="teacher-card-subtitle text-xs text-neutral-500">{subtitle}</span>
           </div>
-          <div className="teacher-card-controls flex flex-wrap items-center" style={{ gap: "10px" }}>
-            <label className="teacher-search-box relative flex items-center" style={{ width: "240px" }}>
+          <div className="teacher-card-controls flex flex-col sm:flex-row sm:items-center w-full sm:w-auto" style={{ gap: "10px" }}>
+            <label className="teacher-search-box relative flex items-center w-full sm:w-[240px]">
               <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 pointer-events-none" />
               <span className="sr-only">{placeholder}</span>
               <input
@@ -768,20 +768,20 @@ function TeacherTable({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={placeholder}
                 className="w-full rounded-lg border border-neutral-200 bg-white text-neutral-900 text-xs focus:outline-none focus:border-neutral-900"
-                style={{ height: "36px", paddingLeft: "32px", paddingRight: "12px", boxSizing: "border-box" }}
+                style={{ height: "38px", paddingLeft: "32px", paddingRight: "12px", boxSizing: "border-box" }}
               />
             </label>
             <Button
               variant="outline"
-              className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs whitespace-nowrap shrink-0"
-              style={{ height: "36px", padding: "0 14px" }}
+              className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-xs whitespace-nowrap shrink-0 w-full sm:w-auto inline-flex items-center justify-center"
+              style={{ height: "38px", padding: "0 14px", boxSizing: "border-box" }}
               asChild
             >
               <Link to={actionTo}>{actionLabel} →</Link>
             </Button>
           </div>
         </div>
-        <div className="teacher-table-scroll">{children}</div>
+        <div className="teacher-table-scroll w-full overflow-x-auto">{children}</div>
         {footer}
       </section>
     </div>

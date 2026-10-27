@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import {
   CheckCircle2,
@@ -116,42 +115,61 @@ export default function AttendanceGrid({
     <div className="space-y-4">
       {/* Top action bar */}
       <div
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
-        style={{ padding: "16px 20px", boxSizing: "border-box" }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-neutral-200 rounded-xl"
+        style={{ padding: "14px 20px", gap: "12px", boxSizing: "border-box" }}
       >
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button
-            size="sm"
+        <div className="flex items-center w-full sm:w-auto" style={{ gap: "10px" }}>
+          <button
+            type="button"
             onClick={handleMarkAllPresent}
-            className="bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0"
+            style={{
+              height: "38px",
+              padding: "0 16px",
+              gap: "6px",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
+            }}
           >
-            <CheckCheck size={14} /> Mark All Present
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
+            <CheckCheck className="w-3.5 h-3.5 text-white shrink-0" />
+            <span>Mark All Present</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleReset}
-            className="border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg text-xs flex items-center gap-1.5"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0"
+            style={{
+              height: "38px",
+              padding: "0 14px",
+              gap: "6px",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
+            }}
           >
-            <RotateCcw size={14} /> Reset
-          </Button>
+            <RotateCcw className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+            <span>Reset</span>
+          </button>
         </div>
 
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-2.5 text-neutral-400" size={15} />
-          <Input
+          <Search
+            className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          />
+          <input
             placeholder="Search student or roll no..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-white border-neutral-300 text-neutral-900 placeholder:text-neutral-400 rounded-lg text-xs h-9"
+            className="w-full bg-white border border-neutral-300 text-neutral-900 placeholder:text-neutral-400 rounded-lg text-xs focus:outline-none focus:border-neutral-500"
+            style={{ height: "38px", paddingLeft: "36px", paddingRight: "12px", boxSizing: "border-box" }}
           />
         </div>
       </div>
 
       {/* Attendance Table / Grid */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[700px] text-left text-xs border-collapse">
             <thead className="bg-neutral-50/50 text-neutral-500 text-[10.5px] uppercase tracking-wider font-bold border-b border-neutral-200">
               <tr>
                 <th style={{ padding: "12px 16px" }} className="w-12 text-center">#</th>
@@ -283,10 +301,10 @@ export default function AttendanceGrid({
 
         {/* Bottom Floating/Fixed Summary Bar */}
         <div
-          className="bg-neutral-50 border-t border-neutral-200 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ padding: "14px 20px" }}
+          className="bg-neutral-50 border-t border-neutral-200 flex flex-col md:flex-row items-stretch md:items-center justify-between"
+          style={{ padding: "16px 20px", gap: "14px", boxSizing: "border-box" }}
         >
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center text-xs" style={{ gap: "8px" }}>
             <span className="text-neutral-500 font-semibold uppercase text-[10.5px] tracking-wider">Summary:</span>
             <span
               className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-medium text-xs"
@@ -317,21 +335,31 @@ export default function AttendanceGrid({
             </span>
           </div>
 
-          <Button
+          <button
+            type="button"
             onClick={handleSave}
             disabled={saving || students.length === 0}
-            className="bg-neutral-900 hover:bg-neutral-800 text-white font-semibold px-5 py-2 rounded-lg text-xs shadow-xs flex items-center gap-2"
+            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-500 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 cursor-pointer disabled:cursor-not-allowed"
+            style={{
+              height: "38px",
+              padding: "0 18px",
+              gap: "8px",
+              minWidth: "fit-content",
+              boxSizing: "border-box",
+            }}
           >
             {saving ? (
               <>
-                <Spinner size="sm" /> Saving Attendance...
+                <Spinner size="sm" />
+                <span>Saving Attendance...</span>
               </>
             ) : (
               <>
-                <Save size={14} /> Save Attendance
+                <Save className="w-3.5 h-3.5 shrink-0" />
+                <span>Save Attendance</span>
               </>
             )}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
