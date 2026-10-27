@@ -46,7 +46,7 @@ export function createStudentQrPayload(student) {
  */
 export async function generateQrDataUrl(payloadString, options = {}) {
   const defaultOpts = {
-    errorCorrectionLevel: "M",
+    errorCorrectionLevel: options.errorCorrectionLevel || "Q", // 25% damage recovery for year-long plastic card durability
     width: options.width || 256,
     margin: options.margin !== undefined ? options.margin : 1,
     color: {

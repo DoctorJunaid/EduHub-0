@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import QRCode from "qrcode";
-import { User, QrCode, Phone, MapPin, Building2, Edit3, Save, X, RefreshCw } from "lucide-react";
+import { User, QrCode, Phone, MapPin, Building2, Edit3, Save, X, RefreshCw, Printer } from "lucide-react";
 
 export default function StudentIdCard({
   studentData,
@@ -88,7 +88,7 @@ export default function StudentIdCard({
     QRCode.toDataURL(payload, {
       width: 320,
       margin: 1,
-      errorCorrectionLevel: "M",
+      errorCorrectionLevel: "Q", // 25% error correction for durable long-term printed cards
       color: {
         dark: "#0f172a",
         light: "#ffffff",
@@ -121,16 +121,51 @@ export default function StudentIdCard({
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto select-none" style={{ gap: "16px" }}>
+      {/* Print Styles */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          .student-id-card-printable,
+          .student-id-card-printable * {
+            visibility: visible !important;
+          }
+          .student-id-card-printable {
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            box-shadow: none !important;
+            border: 1px solid #cbd5e1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
+
       {/* Controls Bar */}
-      <div className="flex items-center justify-between w-full" style={{ padding: "0 4px" }}>
-        <button
-          type="button"
-          onClick={() => setIsFlipped(!isFlipped)}
-          className="text-xs font-medium text-neutral-600 hover:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer"
-          style={{ padding: "6px 14px", height: "34px" }}
-        >
-          {isFlipped ? "View Front Side" : "View Back Side"}
-        </button>
+      <div className="flex items-center justify-between w-full print:hidden" style={{ padding: "0 4px" }}>
+        <div className="flex items-center" style={{ gap: "6px" }}>
+          <button
+            type="button"
+            onClick={() => setIsFlipped(!isFlipped)}
+            className="text-xs font-medium text-neutral-600 hover:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer"
+            style={{ padding: "6px 14px", height: "34px" }}
+          >
+            {isFlipped ? "View Front Side" : "View Back Side"}
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            title="Print ID Card"
+            className="inline-flex items-center text-xs font-medium text-neutral-600 hover:text-neutral-900 bg-white border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer"
+            style={{ padding: "6px 10px", height: "34px", gap: "4px" }}
+          >
+            <Printer className="w-3.5 h-3.5 text-neutral-500" />
+            <span className="hidden sm:inline">Print</span>
+          </button>
+        </div>
 
         {canEdit && (
           <div className="flex items-center" style={{ gap: "8px" }}>
@@ -187,7 +222,7 @@ export default function StudentIdCard({
 
       {/* ID Card Box with Blue Stripes */}
       <div
-        className="w-full bg-white border border-neutral-200 rounded-2xl shadow-md overflow-hidden relative flex flex-col justify-between"
+        className="student-id-card-printable w-full bg-white border border-neutral-200 rounded-2xl shadow-md overflow-hidden relative flex flex-col justify-between"
         style={{
           width: "340px",
           height: "540px",
