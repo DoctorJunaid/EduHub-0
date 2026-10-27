@@ -56,7 +56,9 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
     queryKey: ["teacher", "leave-requests"],
     queryFn: async () => {
       const res = await getTeacherLeavesApi();
-      return res.data || [];
+      if (Array.isArray(res)) return res;
+      if (Array.isArray(res?.data)) return res.data;
+      return [];
     },
     staleTime: 30 * 1000,
   });
@@ -89,15 +91,21 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
     reviewMutation.mutate({ id, status });
   };
 
-  const pendingLeaves = leaves.filter((l) => l.status === "Pending");
-  const approvedLeaves = leaves.filter((l) => l.status === "Approved");
+  const leavesList = Array.isArray(leaves)
+    ? leaves
+    : Array.isArray(leaves?.data)
+    ? leaves.data
+    : [];
+
+  const pendingLeaves = leavesList.filter((l) => l && l.status === "Pending");
+  const approvedLeaves = leavesList.filter((l) => l && l.status === "Approved");
 
   const displayedLeaves =
     activeTab === "Pending"
       ? pendingLeaves
       : activeTab === "Approved"
       ? approvedLeaves
-      : leaves;
+      : leavesList;
 
   return (
     <section className={`teacher-leave-card ${className}`}>
@@ -150,7 +158,7 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
               onClick={() => setActiveTab("All")}
               className={`leave-tab-btn ${activeTab === "All" ? "is-active" : ""}`}
             >
-              All ({leaves.length})
+              All ({leavesList.length})
             </button>
           </div>
 
@@ -191,11 +199,12 @@ export default function TeacherLeaveRequestsCard({ className = "" }) {
           </div>
         ) : (
           displayedLeaves.map((leave) => {
+            if (!leave) return null;
             const isProcessing = reviewingId === leave._id;
             const isPending = leave.status === "Pending";
             const isApproved = leave.status === "Approved";
             const studentName = leave.studentName || leave.studentId?.name || "Student";
-            const initial = studentName.charAt(0).toUpperCase();
+            const initial = String(studentName).charAt(0).toUpperCase() || "S";
 
             return (
               <div key={leave._id} className="leave-request-row">

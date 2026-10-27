@@ -100,6 +100,7 @@ export default function QRAttendanceScanner({
 
   const scannerRef = useRef(null);
   const lastScannedRef = useRef({ code: "", time: 0 });
+  const submitAttendanceRef = useRef(null);
   const scannerContainerId = "qr-attendance-video-region";
 
   /**
@@ -178,6 +179,10 @@ export default function QRAttendanceScanner({
     [classScope, endpoint, manualClass, manualSection, onAttendanceMarked, soundEnabled, targetStatus]
   );
 
+  useEffect(() => {
+    submitAttendanceRef.current = submitAttendance;
+  }, [submitAttendance]);
+
   const stopCamera = useCallback(() => {
     if (scannerRef.current) {
       if (scannerRef.current.isScanning) {
@@ -244,7 +249,9 @@ export default function QRAttendanceScanner({
             }
 
             lastScannedRef.current = { code: decodedText, time: now };
-            submitAttendance(decodedText);
+            if (submitAttendanceRef.current) {
+              submitAttendanceRef.current(decodedText);
+            }
           },
           () => {
             // Frame scan failure (no QR code in frame), suppress console noise
@@ -276,7 +283,7 @@ export default function QRAttendanceScanner({
       clearTimeout(timer);
       stopCamera();
     };
-  }, [open, activeTab, facingMode, submitAttendance, stopCamera]);
+  }, [open, activeTab, facingMode, stopCamera]);
 
   const handleManualSubmit = (e) => {
     e.preventDefault();

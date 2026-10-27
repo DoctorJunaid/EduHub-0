@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -38,7 +38,7 @@ import "./TeacherAttendance.css";
 const getTodayKey = () => new Date().toISOString().split("T")[0];
 
 const initials = (name = "") =>
-  name
+  String(name || "")
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -152,6 +152,7 @@ export default function TeacherAttendance() {
 
   // Helper to get effective status for a student
   const getStatus = (student) => {
+    if (!student) return "";
     const sId = student._id || student.id;
     return draft[sId] !== undefined ? draft[sId] : student.status || "";
   };
@@ -165,7 +166,9 @@ export default function TeacherAttendance() {
   const markAll = (status) => {
     const updated = {};
     roster.forEach((s) => {
-      updated[s._id || s.id] = status;
+      if (s) {
+        updated[s._id || s.id] = status;
+      }
     });
     setDraft(updated);
     toast.success(`Marked all ${roster.length} students as ${status}.`);
@@ -182,6 +185,8 @@ export default function TeacherAttendance() {
       queryClient.invalidateQueries({ queryKey: ["teacher", "credits"] });
       queryClient.invalidateQueries({ queryKey: ["teacher", "myClass"] });
       queryClient.invalidateQueries({ queryKey: ["campus", "class-sessions"] });
+      rosterQuery.refetch();
+      classesQuery.refetch();
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to save attendance records.");
@@ -199,6 +204,7 @@ export default function TeacherAttendance() {
     }
 
     const recordsToSave = roster
+      .filter(Boolean)
       .map((student) => {
         const sId = student._id || student.id;
         const effectiveStatus = draft[sId] || student.status || "Present";
@@ -206,8 +212,8 @@ export default function TeacherAttendance() {
           studentId: sId,
           status: effectiveStatus,
           remarks: student.remarks || "",
-          className: selectedClass.className || student.gradeOrClass || "Class 10",
-          section: selectedClass.section || student.section || "A",
+          className: selectedClass?.className || student.gradeOrClass || "Class 10",
+          section: selectedClass?.section || student.section || "A",
         };
       })
       .filter((r) => r.status);
@@ -229,14 +235,15 @@ export default function TeacherAttendance() {
 
   const saving = saveMutation.isPending;
 
-  // Filtered Students Search with Debounce
+  // Filtered Students Search with Debounce and String Casts
   const filteredStudents = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
     if (!q) return roster;
     return roster.filter((s) => {
-      const name = (s.name || "").toLowerCase();
-      const roll = (s.rollNumber || s.roll || "").toLowerCase();
-      const email = (s.email || "").toLowerCase();
+      if (!s) return false;
+      const name = String(s.name || "").toLowerCase();
+      const roll = String(s.rollNumber ?? s.roll ?? "").toLowerCase();
+      const email = String(s.email || "").toLowerCase();
       return name.includes(q) || roll.includes(q) || email.includes(q);
     });
   }, [roster, debouncedSearch]);
@@ -253,6 +260,7 @@ export default function TeacherAttendance() {
   const counts = useMemo(() => {
     const tally = { Present: 0, Absent: 0, Late: 0, "On Leave": 0, Unmarked: 0 };
     roster.forEach((s) => {
+      if (!s) return;
       const st = getStatus(s);
       if (st === "Present") tally.Present += 1;
       else if (st === "Absent") tally.Absent += 1;
@@ -264,6 +272,13 @@ export default function TeacherAttendance() {
   }, [roster, draft]);
 
   const hasMarkedAny = Object.keys(draft).length > 0 || roster.some((s) => s.status);
+
+  const handleAttendanceMarked = useCallback((_result) => {
+    queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
+    queryClient.invalidateQueries({ queryKey: ["teacher", "attendance"] });
+    rosterQuery.refetch();
+    classesQuery.refetch();
+  }, [queryClient, rosterQuery, classesQuery]);
 
   return (
     <main
@@ -657,11 +672,7 @@ export default function TeacherAttendance() {
               }
             : undefined
         }
-        onAttendanceMarked={(_result) => {
-          queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
-          rosterQuery.refetch();
-          classesQuery.refetch();
-        }}
+        onAttendanceMarked={handleAttendanceMarked}
       />
     </main>
   );
@@ -685,11 +696,11 @@ function Status({ status }) {
   if (!status) {
     return <span className="teacher-attendance-unmarked">Not marked</span>;
   }
-  const normalizedClass = status.toLowerCase().replace(/\s+/g, "-");
+  const normalizedClass = String(status).toLowerCase().replace(/\s+/g, "-");
   return (
     <span className={`teacher-attendance-status ${normalizedClass}`}>
       <i />
-      {status}
+      {String(status)}
     </span>
   );
 }
