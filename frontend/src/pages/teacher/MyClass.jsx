@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/ui/spinner";
 import {
   GraduationCap,
@@ -139,32 +138,32 @@ export default function MyClass() {
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
       <div
-        className="bg-white border border-neutral-200 rounded-xl shadow-xs"
-        style={{ padding: "20px 24px", boxSizing: "border-box" }}
+        className="bg-white border border-neutral-200 rounded-xl shadow-xs w-full"
+        style={{ padding: "18px 20px", gap: "16px", boxSizing: "border-box" }}
       >
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "16px" }}>
+          <div className="flex items-start sm:items-center min-w-0" style={{ gap: "12px" }}>
             <div
-              className="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-800 flex items-center justify-center shrink-0"
-              style={{ width: "48px", height: "48px" }}
+              className="w-10 h-10 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-800 flex items-center justify-center shrink-0"
+              style={{ width: "40px", height: "40px" }}
             >
-              <GraduationCap size={24} />
+              <GraduationCap className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight m-0">
+            <div className="flex flex-col min-w-0" style={{ gap: "4px" }}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base sm:text-xl font-bold text-neutral-900 leading-snug tracking-tight m-0">
                   My Class — {classInfo.className}
                 </h1>
                 <span
-                  className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-semibold"
-                  style={{ padding: "4px 10px" }}
+                  className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-semibold shrink-0"
+                  style={{ padding: "3px 10px" }}
                 >
                   Class Teacher Role
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-neutral-500 mt-1 flex flex-wrap items-center gap-2.5">
+              <p className="text-xs text-neutral-500 m-0 flex flex-wrap items-center gap-2">
                 <span className="flex items-center gap-1 font-medium text-neutral-700">
-                  <Users size={14} className="text-neutral-500" />{" "}
+                  <Users size={13} className="text-neutral-500 shrink-0" />{" "}
                   {students.length} Enrolled Students
                 </span>
                 <span>•</span>
@@ -175,18 +174,26 @@ export default function MyClass() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end md:self-center">
-            <Button
-              variant="outline"
-              size="sm"
+          <div className="flex items-center self-end sm:self-auto shrink-0">
+            <button
+              type="button"
               onClick={() => {
                 refreshClass();
                 refreshResults();
               }}
-              className="border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs flex items-center gap-1.5"
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs self-end sm:self-auto shrink-0"
+              style={{
+                height: "38px",
+                padding: "0 14px",
+                gap: "6px",
+                width: "auto",
+                minWidth: "fit-content",
+                boxSizing: "border-box",
+              }}
             >
-              <RefreshCw size={13} /> Refresh
-            </Button>
+              <RefreshCw className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+              <span>Refresh</span>
+            </button>
           </div>
         </div>
       </div>
@@ -197,50 +204,97 @@ export default function MyClass() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="bg-neutral-100 border border-neutral-200 p-1 rounded-xl flex flex-wrap gap-1.5 w-full sm:w-auto max-w-full">
-          <TabsTrigger
-            value="attendance"
-            className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
+        <div
+          className="w-full bg-neutral-100 border border-neutral-200 rounded-xl flex items-center overflow-x-auto no-scrollbar"
+          style={{
+            padding: "4px",
+            gap: "4px",
+            height: "auto",
+            minHeight: "44px",
+            boxSizing: "border-box",
+            marginBottom: "16px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab("attendance")}
+            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial ${
+              activeTab === "attendance"
+                ? "bg-white text-neutral-900 shadow-xs border border-neutral-200/80"
+                : "text-neutral-600 hover:text-neutral-900"
+            }`}
+            style={{
+              height: "36px",
+              padding: "0 14px",
+              gap: "6px",
+              boxSizing: "border-box",
+            }}
           >
-            <Clock size={14} /> Daily Attendance
-          </TabsTrigger>
-          <TabsTrigger
-            value="results"
-            className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
+            <Clock size={14} className="shrink-0" />
+            <span>Daily Attendance</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("results")}
+            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial ${
+              activeTab === "results"
+                ? "bg-white text-neutral-900 shadow-xs border border-neutral-200/80"
+                : "text-neutral-600 hover:text-neutral-900"
+            }`}
+            style={{
+              height: "36px",
+              padding: "0 14px",
+              gap: "6px",
+              boxSizing: "border-box",
+            }}
           >
-            <Award size={14} /> Class Results & Reports
-          </TabsTrigger>
-          <TabsTrigger
-            value="students"
-            className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-xs text-neutral-600 rounded-lg text-xs font-semibold px-4 py-2 transition-all flex items-center gap-1.5"
+            <Award size={14} className="shrink-0" />
+            <span>Class Results &amp; Reports</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("students")}
+            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial ${
+              activeTab === "students"
+                ? "bg-white text-neutral-900 shadow-xs border border-neutral-200/80"
+                : "text-neutral-600 hover:text-neutral-900"
+            }`}
+            style={{
+              height: "36px",
+              padding: "0 14px",
+              gap: "6px",
+              boxSizing: "border-box",
+            }}
           >
-            <Users size={14} /> Students Directory ({students.length})
-          </TabsTrigger>
-        </TabsList>
+            <Users size={14} className="shrink-0" />
+            <span>Students Directory ({students.length})</span>
+          </button>
+        </div>
 
         {/* Tab 1: Daily Attendance */}
         <TabsContent value="attendance" className="space-y-4 m-0">
           <div
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
-            style={{ padding: "16px 20px", boxSizing: "border-box" }}
+            style={{ padding: "18px 20px", gap: "14px", boxSizing: "border-box" }}
           >
             <div>
-              <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2 m-0">
-                <Calendar size={16} className="text-neutral-600" />
-                Mark Daily Attendance
+              <h3 className="text-base sm:text-lg font-bold text-neutral-900 flex items-center gap-2 m-0">
+                <Calendar size={16} className="text-neutral-600 shrink-0" />
+                <span>Mark Daily Attendance</span>
               </h3>
-              <p className="text-xs text-neutral-500 mt-0.5 m-0">
-                Mark attendance every morning for your class. Records update live on student & parent portals.
+              <p className="text-xs text-neutral-500 mt-1 m-0">
+                Mark attendance every morning for your class. Records update live on student &amp; parent portals.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-600 font-medium">Date:</span>
+            <div className="flex items-center w-full sm:w-auto" style={{ gap: "10px" }}>
+              <span className="text-xs text-neutral-600 font-medium whitespace-nowrap">Date:</span>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-white border border-neutral-300 text-neutral-900 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-neutral-500"
+                className="bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs focus:outline-none focus:border-neutral-500"
+                style={{ height: "38px", padding: "0 12px", width: "auto", minWidth: "160px", boxSizing: "border-box" }}
               />
             </div>
           </div>
@@ -276,28 +330,28 @@ export default function MyClass() {
         <TabsContent value="students" className="space-y-4 m-0">
           <div
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
-            style={{ padding: "16px 20px", boxSizing: "border-box" }}
+            style={{ padding: "18px 20px", gap: "14px", boxSizing: "border-box" }}
           >
             <div>
-              <h3 className="text-sm font-bold text-neutral-900 m-0">
+              <h3 className="text-base sm:text-lg font-bold text-neutral-900 m-0">
                 Students Enrolled in {classInfo.className}
               </h3>
-              <p className="text-xs text-neutral-500 mt-0.5 m-0">
+              <p className="text-xs text-neutral-500 mt-1 m-0">
                 Primary student roster with guardian contact information.
               </p>
             </div>
 
             <div className="relative w-full sm:w-64">
               <Search
-                className="absolute left-3 top-2.5 text-neutral-400"
-                size={14}
+                className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
               />
               <input
                 type="text"
                 placeholder="Search students..."
                 value={studentSearch}
                 onChange={(e) => setStudentSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs placeholder:text-neutral-400 focus:outline-none focus:border-neutral-500"
+                className="w-full bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs placeholder:text-neutral-400 focus:outline-none focus:border-neutral-500"
+                style={{ height: "38px", paddingLeft: "36px", paddingRight: "12px", boxSizing: "border-box" }}
               />
             </div>
           </div>

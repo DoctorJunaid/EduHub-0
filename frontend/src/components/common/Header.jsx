@@ -142,32 +142,85 @@ const Header = ({
     </button>
   );
 
+  const filteredSegments =
+    breadcrumbItems ||
+    segments.filter((segment) => !institute || segment !== "institute-admin");
+
+  const activePageTitle = (() => {
+    if (!filteredSegments || filteredSegments.length === 0) {
+      return homeLabel || (institute ? "Dashboard" : "Home");
+    }
+    const lastSeg = filteredSegments[filteredSegments.length - 1];
+    let label = String(lastSeg)
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+    if (label.toLowerCase() === "messages" || label.toLowerCase() === "support") {
+      label = "Help & Support";
+    }
+
+    const isHexOrId =
+      /^[0-9a-fA-F]{24}$/.test(lastSeg) ||
+      /^fac-\d+$/i.test(lastSeg) ||
+      /^stu-\d+$/i.test(lastSeg) ||
+      /^[0-9a-fA-F-]{36}$/.test(lastSeg);
+
+    if (isHexOrId) {
+      if (location.state?.teacherName) return location.state.teacherName;
+      if (location.state?.name) return location.state.name;
+      const matched = facultyRecords.find(
+        (f) =>
+          f.id === lastSeg ||
+          f._id === lastSeg ||
+          f.userId === lastSeg ||
+          f.user?._id === lastSeg ||
+          f.user === lastSeg
+      );
+      if (matched?.name) return matched.name;
+      return "Details";
+    }
+    return label;
+  })();
+
   return (
-    <header className="header">
-      <div className="header-left">
+    <header
+      className="header flex items-center justify-between w-full"
+      style={{ height: "64px", padding: "0 12px", gap: "8px", boxSizing: "border-box" }}
+    >
+      <div
+        className="header-left flex items-center min-w-0 flex-1 overflow-hidden"
+        style={{ gap: "8px" }}
+      >
         {(onMenuToggle || onToggleSidebar) && (
           <button
             type="button"
-            className="header-hamburger-btn mobile-sidebar-toggle"
+            className="header-hamburger-btn mobile-sidebar-toggle shrink-0"
             onClick={onMenuToggle || onToggleSidebar}
             aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={drawerOpen}
             title="Open menu"
+            style={{ width: "36px", height: "36px", flexShrink: 0 }}
           >
             <Menu size={20} />
           </button>
         )}
 
-        <nav className="breadcrumbs" aria-label="Breadcrumb">
+        {/* Mobile current active page name (< 640px) */}
+        <div className="flex sm:hidden items-center min-w-0 overflow-hidden">
+          <span className="text-xs font-semibold text-neutral-800 truncate block">
+            {activePageTitle}
+          </span>
+        </div>
+
+        {/* Full Breadcrumbs on Tablet & Desktop (>= 640px) */}
+        <nav
+          className="breadcrumbs hidden sm:flex items-center min-w-0 overflow-hidden"
+          aria-label="Breadcrumb"
+        >
           <Link to={homePath || (institute ? "/institute-admin" : "/dashboard")}>
             {homeLabel || (institute ? "Dashboard" : "Home")}
           </Link>
-          {(
-            breadcrumbItems ||
-            segments.filter(
-              (segment) => !institute || segment !== "institute-admin",
-            )
-          ).map((segment, index, arr) => {
+          {filteredSegments.map((segment, index, arr) => {
             let label = segment
               .replace(/-/g, " ")
               .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -258,10 +311,14 @@ const Header = ({
         />
       </div>
 
-      <div className="header-actions">
+      <div
+        className="header-actions flex items-center shrink-0"
+        style={{ gap: "6px" }}
+      >
         <button
           type="button"
-          className="header-icon-btn mobile-search-toggle-btn"
+          className="header-icon-btn mobile-search-toggle-btn w-9 h-9 rounded-lg border border-neutral-200 bg-white flex items-center justify-center text-neutral-600 shrink-0"
+          style={{ width: "36px", height: "36px", padding: 0, boxSizing: "border-box", flexShrink: 0 }}
           onClick={() => setMobileSearchOpen(true)}
           aria-label="Open search"
           title="Search"

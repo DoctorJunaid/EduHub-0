@@ -19,14 +19,14 @@ export default function MyClassWidget({ classInfo, attendance, loading }) {
         <div className="flex items-center min-w-0" style={{ gap: "12px" }}>
           <div className="w-10 h-10 rounded-lg bg-neutral-200 shrink-0" />
           <div className="flex flex-col" style={{ gap: "6px" }}>
-            <div className="h-4 bg-neutral-200 rounded w-48" />
-            <div className="h-3 bg-neutral-200 rounded w-32" />
+            <div className="h-4 bg-neutral-200 rounded w-28" />
+            <div className="h-3 bg-neutral-200 rounded w-44" />
           </div>
         </div>
-        <div className="flex items-center shrink-0" style={{ gap: "10px" }}>
-          <div className="h-9 bg-neutral-200 rounded-lg w-24" />
-          <div className="h-9 bg-neutral-200 rounded-lg w-28" />
-          <div className="h-9 bg-neutral-200 rounded-lg w-40" />
+        <div className="grid grid-cols-2 sm:flex sm:flex-row items-center w-full lg:w-auto shrink-0" style={{ gap: "10px" }}>
+          <div className="h-9 bg-neutral-200 rounded-lg w-full sm:w-24" />
+          <div className="h-9 bg-neutral-200 rounded-lg w-full sm:w-28" />
+          <div className="col-span-2 sm:col-span-1 h-9 bg-neutral-200 rounded-lg w-full sm:w-40" />
         </div>
       </div>
     );
@@ -49,7 +49,6 @@ export default function MyClassWidget({ classInfo, attendance, loading }) {
   const handleMarkAttendance = () => navigate("/teacher/my-class/attendance");
 
   const enrolledCount = classInfo.studentCount ?? (summary.total || 0);
-  const classNameDisplay = classInfo.className || "1st Year (11th) - Section A";
 
   return (
     <div
@@ -61,7 +60,7 @@ export default function MyClassWidget({ classInfo, attendance, loading }) {
         boxSizing: "border-box",
       }}
     >
-      {/* Left: Title & Subtitle */}
+      {/* Left: Icon, Class Teacher Badge & Enrolled Subtitle ("My Class — ..." removed) */}
       <div className="flex items-center min-w-0" style={{ gap: "12px" }}>
         <div
           className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
@@ -69,54 +68,51 @@ export default function MyClassWidget({ classInfo, attendance, loading }) {
         >
           <GraduationCap className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
         </div>
-        <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+        <div className="flex flex-col min-w-0" style={{ gap: "4px" }}>
           <div className="flex items-center flex-wrap" style={{ gap: "8px" }}>
-            <h1 className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight truncate">
-              My Class — {classNameDisplay}
-            </h1>
             <span
-              className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium"
-              style={{ padding: "2px 8px" }}
+              className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-semibold"
+              style={{ padding: "3px 10px" }}
             >
               Class Teacher
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-neutral-500 truncate">
+          <p className="text-xs text-neutral-500 truncate">
             {enrolledCount} Enrolled Students • Academic Session 2026-2027
           </p>
         </div>
       </div>
 
-      {/* Right: Action Buttons (Neutral Enterprise Theme) */}
+      {/* Right: Responsive Action Buttons */}
       <div
-        className="flex flex-wrap items-center shrink-0"
+        className="grid grid-cols-2 sm:flex sm:flex-row items-center w-full lg:w-auto shrink-0"
         style={{ gap: "10px" }}
       >
         <button
           type="button"
           onClick={handleClassHub}
-          className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-          style={{ height: "38px", padding: "0 14px", gap: "6px" }}
+          className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+          style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
         >
-          <BookOpen className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+          <BookOpen className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
           <span>Class Hub</span>
         </button>
         <button
           type="button"
           onClick={handleClassResults}
-          className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-          style={{ height: "38px", padding: "0 14px", gap: "6px" }}
+          className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+          style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
         >
-          <Award className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
+          <Award className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
           <span>Class Results</span>
         </button>
         <button
           type="button"
           onClick={handleMarkAttendance}
-          className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
-          style={{ height: "38px", padding: "0 16px", gap: "6px" }}
+          className="col-span-2 sm:col-span-1 inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+          style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
         >
-          <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0 stroke-[1.75]" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
           <span>
             {isMarkedToday ? "Edit Attendance" : "Mark Today's Attendance"}
           </span>
