@@ -139,15 +139,17 @@ export const SupportManage = () => {
     setSelectedIds([]);
   };
 
-  const handleToggleSelect = (id) => {
+  const handleSelectOne = (id) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(tickets.map((t) => t._id));
+  const handleSelectAll = (e) => {
+    const isChecked = typeof e === "boolean" ? e : Boolean(e?.target?.checked);
+    if (isChecked) {
+      const allIds = tickets.map((t) => t._id || t.id);
+      setSelectedIds(allIds);
     } else {
       setSelectedIds([]);
     }
@@ -284,8 +286,10 @@ export const SupportManage = () => {
             <TicketListTable
               tickets={tickets}
               selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
+              onToggleSelect={handleSelectOne}
+              handleSelectOne={handleSelectOne}
               onSelectAll={handleSelectAll}
+              handleSelectAll={handleSelectAll}
               onNewTicket={() => setIsNewDialogOpen(true)}
             />
           )}

@@ -29,11 +29,12 @@ export const TicketCategoryBadge = ({ category = "Other", showIconOnly = false, 
 
   return (
     <span
-      className={`isu-ticket-badge inline-flex items-center gap-1.5 h-6 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700 border border-neutral-200/70 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 shrink-0 whitespace-nowrap leading-none ${className}`}
-      style={{ padding: "3px 10px" }}
+      className={`isu-ticket-badge inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium max-w-[140px] truncate ${className}`}
+      style={{ padding: "2px 8px", gap: "6px" }}
+      title={label}
     >
-      {React.createElement(CategoryIcon, { className: "w-3.5 h-3.5 text-muted-foreground shrink-0" })}
-      <span>{label}</span>
+      {React.createElement(CategoryIcon, { className: "w-3.5 h-3.5 text-neutral-600 shrink-0" })}
+      <span className="truncate">{label}</span>
     </span>
   );
 };
