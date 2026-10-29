@@ -7,6 +7,9 @@ import {
   User,
   BookOpen,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
 } from "lucide-react";
 import {
   shiftDays,
@@ -261,6 +264,25 @@ export default function TimetableGrid({
     onQuickAdd?.({ days: [dayNum], startTime: minToTime(snapped), endTime: minToTime(snapped + 50) });
   }, [dragging, gridStart, onQuickAdd]);
 
+  // ── Mobile day-by-day navigation ─────────────────────────────────────────
+  const [mobileDay, setMobileDay] = useState(0); // index into days[]
+  const mobileDayRecords = useMemo(() => {
+    const dayNum = mobileDay + 1;
+    const dayClasses = classRecords
+      .filter(r => {
+        const rDays = Array.isArray(r.days) && r.days.length ? r.days : [1];
+        return rDays.includes(dayNum);
+      })
+      .sort((a, b) => minutes(a.startTime) - minutes(b.startTime));
+    const dayBreaks = breakRecords
+      .filter(b => {
+        const bDays = Array.isArray(b.days) && b.days.length ? b.days : [1];
+        return bDays.includes(dayNum);
+      })
+      .sort((a, b) => minutes(a.startTime) - minutes(b.startTime));
+    return { classes: dayClasses, breaks: dayBreaks };
+  }, [mobileDay, classRecords, breakRecords]);
+
   return (
     <div className="overflow-x-auto min-w-0 pb-4 select-none">
       {/* Conflict banner */}
@@ -288,9 +310,9 @@ export default function TimetableGrid({
         </div>
       )}
 
-      {/* Main grid */}
+      {/* Main grid (Desktop) */}
       <div
-        className="min-w-[780px] w-full border border-neutral-200 bg-white/80 shadow-xs"
+        className="ttg-desktop-grid min-w-[780px] w-full border border-neutral-200 bg-white/80 shadow-xs"
         style={{
           backdropFilter: "blur(6px)",
           borderRadius: "12px",
@@ -553,6 +575,133 @@ export default function TimetableGrid({
         </div>
       </div>
 
+      {/* Mobile Day-by-Day Card View */}
+      <div className="ttg-mobile-view">
+        {/* Day selector tabs */}
+        <div className="ttg-mobile-day-tabs">
+          <button
+            type="button"
+            className="ttg-mobile-nav-btn"
+            onClick={() => setMobileDay(d => Math.max(0, d - 1))}
+            disabled={mobileDay === 0}
+            aria-label="Previous day"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className="ttg-mobile-day-pills">
+            {days.map((day, idx) => (
+              <button
+                key={day}
+                type="button"
+                className={`ttg-mobile-day-pill ${idx === mobileDay ? 'ttg-mobile-day-active' : ''}`}
+                onClick={() => setMobileDay(idx)}
+              >
+                <span className="ttg-day-abbr">{day.slice(0, 3)}</span>
+                <span className="ttg-day-date">
+                  {shiftDays(week, idx).toLocaleDateString("en-US", { day: "numeric" })}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="ttg-mobile-nav-btn"
+            onClick={() => setMobileDay(d => Math.min(days.length - 1, d + 1))}
+            disabled={mobileDay === days.length - 1}
+            aria-label="Next day"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {/* Merged & sorted schedule for selected day */}
+        <div className="ttg-mobile-schedule">
+          {(() => {
+            const allItems = [
+              ...mobileDayRecords.classes.map(r => ({ ...r, _type: 'class' })),
+              ...mobileDayRecords.breaks.map(r => ({ ...r, _type: 'break' })),
+            ].sort((a, b) => minutes(a.startTime) - minutes(b.startTime));
+
+            if (!allItems.length) {
+              return (
+                <div className="ttg-mobile-empty">
+                  <BookOpen size={20} />
+                  <span>No classes scheduled for {days[mobileDay]}</span>
+                </div>
+              );
+            }
+
+            return allItems.map((item, i) => {
+              const isBreak = item._type === 'break';
+              const theme = getSubjectTheme(item.subject, isBreak);
+              const id = item._id || item.id;
+              const hasConflict = !isBreak && conflictIds.has(id);
+
+              return (
+                <div
+                  key={`${id}-${i}`}
+                  className={`ttg-mobile-card ${isBreak ? 'ttg-mobile-card-break' : ''} ${hasConflict ? 'ttg-mobile-card-conflict' : ''}`}
+                  style={{
+                    borderLeftColor: hasConflict ? '#ef4444' : theme.borderLeft,
+                  }}
+                  onClick={() => { if (!isBreak) onView?.(id); }}
+                >
+                  <div className="ttg-mobile-card-time">
+                    <Clock size={12} className="ttg-mobile-time-icon" />
+                    <span>{formatCardTime(item.startTime, item.endTime)}</span>
+                  </div>
+                  <div className="ttg-mobile-card-body">
+                    <div className="ttg-mobile-card-title">
+                      {isBreak && <Coffee size={13} className="ttg-mobile-break-icon" />}
+                      {hasConflict && <AlertTriangle size={11} className="ttg-mobile-conflict-icon" />}
+                      <span>{item.subject || item.breakTitle || 'Break'}</span>
+                    </div>
+                    {!isBreak && (item.instructor || item.teacherName) && (
+                      <div className="ttg-mobile-card-teacher">
+                        <User size={11} />
+                        <span>{item.instructor || item.teacherName}</span>
+                      </div>
+                    )}
+                  </div>
+                  {!isBreak && onAction && (
+                    <div className="ttg-mobile-card-actions">
+                      <button
+                        type="button"
+                        className="ttg-mobile-action-btn"
+                        onClick={(e) => { e.stopPropagation(); onAction('edit', id, item); }}
+                        title="Edit"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        className="ttg-mobile-action-btn ttg-mobile-action-delete"
+                        onClick={(e) => { e.stopPropagation(); onAction('delete', id, item); }}
+                        title="Delete"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )}
+                  {isBreak && onAction && (
+                    <div className="ttg-mobile-card-actions">
+                      <button
+                        type="button"
+                        className="ttg-mobile-action-btn"
+                        onClick={(e) => { e.stopPropagation(); onAction('edit', id, item); }}
+                        title="Edit break"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
+        </div>
+      </div>
+
       {/* Empty state */}
       {!records.length && (
         <div
@@ -582,23 +731,25 @@ export default function TimetableGrid({
       )}
 
       {/* Subject & Teacher Allocation Table */}
-      <div className="mt-6 border border-zinc-200 bg-white/80 rounded-xl shadow-xs" style={{ backdropFilter: "blur(6px)" }}>
-        <div className="flex items-center justify-between px-5 py-3.5 bg-zinc-50/80 border-b border-zinc-200 rounded-t-xl">
+      <div className="sfa-container mt-6 border border-zinc-200 bg-white/80 rounded-xl shadow-xs" style={{ backdropFilter: "blur(6px)" }}>
+        <div className="sfa-header flex items-center justify-between px-5 py-3.5 bg-zinc-50/80 border-b border-zinc-200 rounded-t-xl">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-zinc-900 text-white flex items-center justify-center text-xs font-bold rounded-lg">
+            <div className="sfa-icon w-7 h-7 bg-zinc-900 text-white flex items-center justify-center text-xs font-bold rounded-lg">
               <BookOpen size={14} />
             </div>
             <div>
-              <h4 className="text-[12px] font-extrabold text-zinc-900 uppercase tracking-wider m-0">Subject & Faculty Allocation</h4>
-              <span className="text-[11px] text-zinc-500 font-medium">Assigned subject teachers and weekly teaching loads</span>
+              <h4 className="sfa-title text-[12px] font-extrabold text-zinc-900 uppercase tracking-wider m-0">Subject & Faculty Allocation</h4>
+              <span className="sfa-subtitle text-[11px] text-zinc-500 font-medium">Assigned subject teachers and weekly teaching loads</span>
             </div>
           </div>
-          <span className="text-[11px] font-bold px-2.5 py-1 bg-zinc-200 text-zinc-900 rounded-md">
+          <span className="sfa-badge text-[11px] font-bold px-2.5 py-1 bg-zinc-200 text-zinc-900 rounded-md">
             {uniqueSubjects.length} {uniqueSubjects.length === 1 ? "Subject" : "Subjects"}
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+
+        {/* Desktop Table View */}
+        <div className="sfa-table-wrap overflow-x-auto">
+          <table className="sfa-table w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-100/60 text-[10.5px] font-extrabold text-zinc-500 uppercase tracking-wider">
                 <th className="py-2.5 px-4">Subject / Course</th>
@@ -652,6 +803,49 @@ export default function TimetableGrid({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="sfa-cards-wrap">
+          {uniqueSubjects.map(item => {
+            const theme = getSubjectTheme(item.subject);
+            return (
+              <div key={item.subject} className="sfa-card">
+                <div className="sfa-card-top">
+                  <div className="sfa-card-subject">
+                    <span className="sfa-card-dot" style={{ backgroundColor: theme.borderLeft }} />
+                    <span className="sfa-card-subject-name">{item.subject}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onAction?.("edit", item.representativeRecordId, item.firstRecord)}
+                    className="sfa-card-edit-btn"
+                  >
+                    <Pencil size={10} />Edit
+                  </button>
+                </div>
+                <div className="sfa-card-details">
+                  <div className="sfa-card-detail">
+                    <User size={11} className="sfa-card-detail-icon" />
+                    <span className="sfa-card-detail-value">{item.instructor}</span>
+                  </div>
+                  <div className="sfa-card-detail">
+                    <span className="sfa-card-detail-badge">
+                      {item.count} {item.count === 1 ? "Period" : "Periods"}/wk
+                    </span>
+                  </div>
+                  <div className="sfa-card-detail">
+                    <span className="sfa-card-detail-days">{item.daysFormatted}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {!uniqueSubjects.length && (
+            <div className="sfa-cards-empty">
+              No subjects scheduled yet. Add periods above to populate this directory.
+            </div>
+          )}
         </div>
       </div>
     </div>

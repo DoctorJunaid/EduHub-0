@@ -8,6 +8,11 @@ import {
 import User from "../models/user.model.js";
 import { createNotification } from "./notification.service.js";
 
+function escapeRegex(text) {
+  if (!text || typeof text !== "string") return "";
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+
 /**
  * 1. Assign Class Teacher to a Class / Section (Campus Admin Only)
  */
