@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
 import {
   BookOpen,
   User,
@@ -10,11 +10,8 @@ import {
   FileText,
   History,
   AlertTriangle,
-  ArrowLeft,
 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PageLoader, Spinner, SpinnerCustom } from "@/components/ui/spinner";
+import { PageLoader } from "@/components/ui/spinner";
 import TeacherHeader from "@/components/teacher-profile/TeacherHeader";
 import TeacherStatsCards from "@/components/teacher-profile/TeacherStatsCards";
 import TeacherQuickSidebar from "@/components/teacher-profile/TeacherQuickSidebar";
@@ -75,10 +72,11 @@ export default function TeacherProfile() {
   } = useTeacherProfile(teacherId);
 
   useEffect(() => {
-    if (teacher?.userId?.name) {
-      document.title = `${teacher.userId.name} | Faculty Profile | EduHub`;
+    const teacherName = teacher?.userId?.name || teacher?.user?.name || teacher?.name;
+    if (teacherName) {
+      document.title = `${teacherName} | Faculty Profile | EduHub`;
       if (typeof sessionStorage !== "undefined" && teacherId) {
-        sessionStorage.setItem(`teacherName_${teacherId}`, teacher.userId.name);
+        sessionStorage.setItem(`teacherName_${teacherId}`, teacherName);
       }
     }
   }, [teacher, teacherId]);
@@ -92,45 +90,59 @@ export default function TeacherProfile() {
     handleTabChange("timetable");
   };
 
-  // 404 / 403 Error States
-  if (error) {
-    const isForbidden = error.status === 403;
-
-    return (
-      <div className="campus-tab-page flex flex-col items-center justify-center p-12 text-center bg-white min-h-[500px]">
-        <div
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
-            isForbidden ? "bg-rose-50 text-rose-600" : "bg-zinc-100 text-zinc-600"
-          }`}
-        >
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-        <h2 className="text-lg font-bold text-zinc-900 mb-1">
-          {isForbidden ? "Access Denied (403)" : "Teacher Profile Not Found (404)"}
-        </h2>
-        <p className="text-xs text-zinc-500 max-w-md mb-6">
-          {error.message ||
-            (isForbidden
-              ? "This teacher profile belongs to another campus or you do not have permission to view it."
-              : "The requested teacher profile could not be found in your campus registry.")}
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate("/faculty")}
-          className="toolbar-btn toolbar-btn-primary"
-        >
-          <ArrowLeft size={13} />
-          <span>Back to Faculty Directory</span>
-        </button>
-      </div>
-    );
-  }
-
   // Loading Spinner State
   if (loading && !teacher) {
     return (
       <div className="campus-tab-page">
         <PageLoader text="Loading teacher profile..." />
+      </div>
+    );
+  }
+
+  // 404 / 403 Error States & Graceful fallback
+  if (error || (!loading && !teacher)) {
+    const isForbidden = error?.status === 403;
+    const rawMsg = error?.message;
+    const isTechnicalOrUndefined =
+      !rawMsg ||
+      rawMsg.includes("data is undefined") ||
+      rawMsg.includes('["teacher"') ||
+      rawMsg.includes("profile");
+
+    const messageText = isForbidden
+      ? "This teacher profile belongs to another campus or you do not have permission to view it."
+      : isTechnicalOrUndefined
+      ? "The requested teacher profile could not be loaded or does not exist."
+      : rawMsg;
+
+    return (
+      <div
+        className="w-full flex flex-col items-center justify-center text-center bg-white rounded-xl border border-neutral-200"
+        style={{ minHeight: "50vh", padding: "32px", boxSizing: "border-box" }}
+      >
+        <div
+          className={`rounded-full flex items-center justify-center ${
+            isForbidden
+              ? "bg-rose-50 border border-rose-200 text-rose-600"
+              : "bg-amber-50 border border-amber-200 text-amber-600"
+          }`}
+          style={{ width: "48px", height: "48px", marginBottom: "16px" }}
+        >
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-neutral-900" style={{ marginBottom: "8px" }}>
+          {isForbidden ? "Access Denied (403)" : "Teacher Profile Not Found (404)"}
+        </h2>
+        <p className="text-sm text-neutral-500" style={{ marginBottom: "24px", maxWidth: "400px" }}>
+          {messageText}
+        </p>
+        <Link
+          to="/campus-manager/teachers"
+          className="bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors inline-flex items-center justify-center shadow-xs font-medium text-sm"
+          style={{ height: "40px", padding: "0 20px", boxSizing: "border-box" }}
+        >
+          Back to Faculty Directory
+        </Link>
       </div>
     );
   }
@@ -253,16 +265,16 @@ export default function TeacherProfile() {
         open={assignDialogOpen}
         onClose={() => setAssignDialogOpen(false)}
         onAssign={assignClass}
-        teacherName={teacher?.userId?.name || "Teacher"}
+        teacherName={teacher?.userId?.name || teacher?.name || "Teacher"}
       />
 
       {editProfileOpen && (
         <FacultyForm
           initialValues={{
             id: teacher?.userId?._id || teacher?._id,
-            name: teacher?.userId?.name,
-            email: teacher?.userId?.email,
-            phone: teacher?.userId?.phone,
+            name: teacher?.userId?.name || teacher?.name,
+            email: teacher?.userId?.email || teacher?.email,
+            phone: teacher?.userId?.phone || teacher?.phone,
             department: teacher?.department,
             designation: teacher?.designation,
             qualification: teacher?.qualification,

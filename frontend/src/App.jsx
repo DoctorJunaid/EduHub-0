@@ -220,10 +220,13 @@ const App = () => {
           <Route element={<MainLayout />}>
             <Route path="dashboard" element={<CampusOverview />} />
             <Route path="faculty" element={<FacultyDirectory />} />
+            <Route path="campus-manager/teachers" element={<FacultyDirectory />} />
+            <Route path="campus-manager/faculty" element={<FacultyDirectory />} />
             <Route path="faculty/:teacherId" element={<TeacherProfile />} />
             <Route path="teachers/:teacherId" element={<TeacherProfile />} />
             <Route path="teacher/:teacherId" element={<TeacherProfile />} />
             <Route path="faculty-profile/:teacherId" element={<TeacherProfile />} />
+            <Route path="campus-manager/teachers/:teacherId" element={<TeacherProfile />} />
             <Route path="students" element={<StudentsDirectory />} />
             <Route path="timetable" element={<ClassTimetable />} />
             <Route path="exams" element={<ExamSchedules />} />

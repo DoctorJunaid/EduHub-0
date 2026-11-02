@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Users,
   UserCheck,
@@ -324,12 +324,12 @@ export default function FacultyDirectory() {
                         ? "pending"
                         : "inactive";
 
-                    const targetTeacherId =
-                      teacher._id ||
-                      teacher.id ||
-                      teacher.user?._id ||
-                      teacher.userId ||
-                      teacher.employeeId;
+                    const targetTeacherId = (typeof teacher._id === "string" ? teacher._id : teacher._id?._id || teacher._id?.toString()) || (typeof teacher.id === "string" ? teacher.id : teacher.id?._id || teacher.id?.toString()) || (typeof teacher.userId === "string" ? teacher.userId : teacher.userId?._id || teacher.userId?.toString()) || (typeof teacher.user === "string" ? teacher.user : teacher.user?._id || teacher.user?.toString()) || teacher.employeeId;
+
+
+
+
+
 
                     return (
                       <tr
@@ -365,7 +365,9 @@ export default function FacultyDirectory() {
                               </AvatarFallback>
                             </Avatar>
                             <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                              <strong
+                              <Link
+                                to={`/faculty/${targetTeacherId}`}
+                                onClick={(e) => e.stopPropagation()}
                                 className="campus-clickable-link"
                                 style={{
                                   fontSize: "13px",
@@ -378,7 +380,7 @@ export default function FacultyDirectory() {
                                 }}
                               >
                                 {teacher.name}
-                              </strong>
+                              </Link>
                               <span
                                 style={{
                                   fontSize: "11px",
