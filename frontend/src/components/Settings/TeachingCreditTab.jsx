@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Award, Save, AlertCircle, Coins, ShieldCheck } from "lucide-react";
+import { Award, Save, AlertCircle, Coins, ShieldCheck, Check, Sparkles, CheckCircle2 } from "lucide-react";
 import { getTeachingConfig, updateTeachingConfig } from "@/api/classSession.api";
 import { Button } from "@/components/ui/button";
 import { Spinner, PageLoader } from "@/components/ui/spinner";
@@ -66,20 +66,32 @@ export default function TeachingCreditTab() {
   }
 
   return (
-    <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
-      {/* Credits Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-          <Award size={18} className="text-blue-600" />
-          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-            Teaching Credit Weights
-          </h3>
+    <form onSubmit={handleSave} className="space-y-6 max-w-5xl">
+      {/* 1. Teaching Credit Weights Card */}
+      <div className="bg-white border border-neutral-200/90 rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+              <Award size={18} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900 tracking-tight">
+                Teaching Credit Weights
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Define standard and substitution lecture credit multipliers for faculty workload.
+              </p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-neutral-100 text-neutral-700">
+            Workload Policy
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Credit Per Completed Lecture
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-neutral-800">
+              Credit Per Completed Lecture <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -87,19 +99,19 @@ export default function TeachingCreditTab() {
               min="0"
               value={config.creditPerCompletedPeriod}
               onChange={(e) =>
-                handleChange("creditPerCompletedPeriod", parseFloat(e.target.value))
+                handleChange("creditPerCompletedPeriod", parseFloat(e.target.value) || 0)
               }
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
+              className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
               required
             />
-            <span className="text-[11px] text-slate-400 block mt-0.5">
-              Default: 1.0 credit per fulfilled timetable period.
-            </span>
+            <p className="text-[11px] text-neutral-500">
+              Default standard is 1.0 credit per fulfilled timetable period.
+            </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Credit For Substitution Lecture
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-neutral-800">
+              Credit For Substitution Lecture <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -107,93 +119,155 @@ export default function TeachingCreditTab() {
               min="0"
               value={config.creditForSubstitution}
               onChange={(e) =>
-                handleChange("creditForSubstitution", parseFloat(e.target.value))
+                handleChange("creditForSubstitution", parseFloat(e.target.value) || 0)
               }
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
+              className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
               required
             />
-            <span className="text-[11px] text-slate-400 block mt-0.5">
-              Awarded to substitute teacher when class is completed.
-            </span>
+            <p className="text-[11px] text-neutral-500">
+              Awarded to substitute teacher upon successful session verification.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Substitution Bonuses Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-          <Coins size={18} className="text-purple-600" />
-          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-            Substitution Bonus &amp; Eligibility
-          </h3>
+      {/* 2. Substitution Bonus & Eligibility Card */}
+      <div className="bg-white border border-neutral-200/90 rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+              <Coins size={18} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900 tracking-tight">
+                Substitution Bonus &amp; Eligibility
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Financial incentives and management approvals for teacher substitutions.
+              </p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">
+            Payroll Extra
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Bonus Per Substitute Lecture (PKR)
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-neutral-800">
+              Bonus Per Substitute Lecture (PKR) <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="number"
-              min="0"
-              value={config.bonusPerSubstituteClass}
-              onChange={(e) =>
-                handleChange("bonusPerSubstituteClass", parseInt(e.target.value, 10))
-              }
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
-              required
-            />
-            <span className="text-[11px] text-slate-400 block mt-0.5">
-              Cash bonus added to substitute teacher's monthly payroll.
-            </span>
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-400 pointer-events-none">
+                Rs.
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={config.bonusPerSubstituteClass}
+                onChange={(e) =>
+                  handleChange("bonusPerSubstituteClass", parseInt(e.target.value, 10) || 0)
+                }
+                className="w-full h-11 pl-10 pr-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
+                required
+              />
+            </div>
+            <p className="text-[11px] text-neutral-500">
+              Fixed cash bonus added to the substitute teacher's monthly payroll slip.
+            </p>
           </div>
 
-          <div className="space-y-3 pt-2">
-            <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={config.requireApprovalForSubstituteBonus}
-                onChange={(e) =>
-                  handleChange("requireApprovalForSubstituteBonus", e.target.checked)
-                }
-                className="rounded text-blue-600 focus:ring-blue-500"
-              />
-              Require Campus Manager approval for substitute bonus
-            </label>
+          {/* Toggle Switches */}
+          <div className="space-y-3.5">
+            <div
+              onClick={() => handleChange("requireApprovalForSubstituteBonus", !config.requireApprovalForSubstituteBonus)}
+              className="flex items-start justify-between p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/50 hover:bg-neutral-50 cursor-pointer transition-colors"
+            >
+              <div className="pr-3">
+                <span className="text-xs font-semibold text-neutral-900 block">
+                  Campus Manager Bonus Approval
+                </span>
+                <span className="text-[11px] text-neutral-500 block mt-0.5 leading-snug">
+                  Require administrative approval before disbursing substitute payments.
+                </span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={config.requireApprovalForSubstituteBonus}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-0.5 ${
+                  config.requireApprovalForSubstituteBonus ? "bg-neutral-900" : "bg-neutral-300"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                    config.requireApprovalForSubstituteBonus ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
 
-            <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={config.requireApprovalForMissedDeduction}
-                onChange={(e) =>
-                  handleChange("requireApprovalForMissedDeduction", e.target.checked)
-                }
-                className="rounded text-blue-600 focus:ring-blue-500"
-              />
-              Require Campus Manager review before applying missed class deduction
-            </label>
+            <div
+              onClick={() => handleChange("requireApprovalForMissedDeduction", !config.requireApprovalForMissedDeduction)}
+              className="flex items-start justify-between p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/50 hover:bg-neutral-50 cursor-pointer transition-colors"
+            >
+              <div className="pr-3">
+                <span className="text-xs font-semibold text-neutral-900 block">
+                  Campus Manager Deduction Review
+                </span>
+                <span className="text-[11px] text-neutral-500 block mt-0.5 leading-snug">
+                  Review and confirm missed lecture salary cuts prior to monthly finalization.
+                </span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={config.requireApprovalForMissedDeduction}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-0.5 ${
+                  config.requireApprovalForMissedDeduction ? "bg-neutral-900" : "bg-neutral-300"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                    config.requireApprovalForMissedDeduction ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Missed Class & Deduction Rules */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-          <ShieldCheck size={18} className="text-rose-600" />
-          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-            Missed Period Salary Deduction Formula
-          </h3>
+      {/* 3. Missed Period Salary Deduction Formula Card */}
+      <div className="bg-white border border-neutral-200/90 rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+              <ShieldCheck size={18} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900 tracking-tight">
+                Missed Period Salary Deduction Formula
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Automated deduction calculation formula and exceptions policy.
+              </p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
+            Deduction Formula
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Deduction Calculation Mode
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-neutral-800">
+              Deduction Calculation Mode <span className="text-rose-500">*</span>
             </label>
             <select
               value={config.deductionMode}
               onChange={(e) => handleChange("deductionMode", e.target.value)}
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl bg-white"
+              className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all"
             >
               <option value="Formula">
                 Formula Based (Base Salary ÷ Working Days ÷ Expected Periods)
@@ -203,24 +277,24 @@ export default function TeachingCreditTab() {
           </div>
 
           {config.deductionMode === "FixedAmount" ? (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Fixed Deduction Amount (PKR)
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-neutral-800">
+                Fixed Deduction Amount (PKR) <span className="text-rose-500">*</span>
               </label>
               <input
                 type="number"
                 min="0"
                 value={config.perMissedClassDeduction}
                 onChange={(e) =>
-                  handleChange("perMissedClassDeduction", parseInt(e.target.value, 10))
+                  handleChange("perMissedClassDeduction", parseInt(e.target.value, 10) || 0)
                 }
-                className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
+                className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
               />
             </div>
           ) : (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Formula Multiplier
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-neutral-800">
+                Formula Multiplier <span className="text-rose-500">*</span>
               </label>
               <input
                 type="number"
@@ -228,19 +302,19 @@ export default function TeachingCreditTab() {
                 min="0.1"
                 value={config.missedClassFormulaMultiplier}
                 onChange={(e) =>
-                  handleChange("missedClassFormulaMultiplier", parseFloat(e.target.value))
+                  handleChange("missedClassFormulaMultiplier", parseFloat(e.target.value) || 0)
                 }
-                className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
+                className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
               />
-              <span className="text-[11px] text-slate-400 block mt-0.5">
-                1.0 = exact period wage. &gt;1.0 = includes penalty.
-              </span>
+              <p className="text-[11px] text-neutral-500">
+                1.0 = exact period wage. Values &gt; 1.0 apply an additional penalty factor.
+              </p>
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Expected Teaching Periods Per Day
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-neutral-800">
+              Expected Teaching Periods Per Day <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -248,16 +322,16 @@ export default function TeachingCreditTab() {
               max="12"
               value={config.expectedPeriodsPerDay}
               onChange={(e) =>
-                handleChange("expectedPeriodsPerDay", parseInt(e.target.value, 10))
+                handleChange("expectedPeriodsPerDay", parseInt(e.target.value, 10) || 0)
               }
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
+              className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Working Days Per Month Basis
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-neutral-800">
+              Working Days Per Month Basis <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -265,49 +339,85 @@ export default function TeachingCreditTab() {
               max="31"
               value={config.workingDaysPerMonth}
               onChange={(e) =>
-                handleChange("workingDaysPerMonth", parseInt(e.target.value, 10))
+                handleChange("workingDaysPerMonth", parseInt(e.target.value, 10) || 0)
               }
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl"
+              className="w-full h-11 px-3.5 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
               required
             />
           </div>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 space-y-2">
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={config.approvedLeaveDeducts}
-              onChange={(e) => handleChange("approvedLeaveDeducts", e.target.checked)}
-              className="rounded text-blue-600 focus:ring-blue-500"
-            />
-            Deduct salary for approved faculty leave (Unchecked = 0 deduction for approved leave)
-          </label>
+        {/* Policy Checkboxes with Clean Styled Cards */}
+        <div className="pt-4 border-t border-neutral-100 space-y-3">
+          <div
+            onClick={() => handleChange("approvedLeaveDeducts", !config.approvedLeaveDeducts)}
+            className="flex items-start justify-between p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/50 hover:bg-neutral-50 cursor-pointer transition-colors"
+          >
+            <div className="pr-3">
+              <span className="text-xs font-semibold text-neutral-900 block">
+                Deduct salary for approved faculty leaves
+              </span>
+              <span className="text-[11px] text-neutral-500 block mt-0.5 leading-snug">
+                When disabled (default), approved official leaves incur zero wage deduction.
+              </span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={config.approvedLeaveDeducts}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-0.5 ${
+                config.approvedLeaveDeducts ? "bg-neutral-900" : "bg-neutral-300"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                  config.approvedLeaveDeducts ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
 
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={config.cancelledClassDeducts}
-              onChange={(e) =>
-                handleChange("cancelledClassDeducts", e.target.checked)
-              }
-              className="rounded text-blue-600 focus:ring-blue-500"
-            />
-            Deduct salary for officially cancelled classes / campus closures
-          </label>
+          <div
+            onClick={() => handleChange("cancelledClassDeducts", !config.cancelledClassDeducts)}
+            className="flex items-start justify-between p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/50 hover:bg-neutral-50 cursor-pointer transition-colors"
+          >
+            <div className="pr-3">
+              <span className="text-xs font-semibold text-neutral-900 block">
+                Deduct salary for officially cancelled classes or campus closures
+              </span>
+              <span className="text-[11px] text-neutral-500 block mt-0.5 leading-snug">
+                When disabled (default), teachers are not penalized for campus-wide emergency closures.
+              </span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={config.cancelledClassDeducts}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-0.5 ${
+                config.cancelledClassDeducts ? "bg-neutral-900" : "bg-neutral-300"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                  config.cancelledClassDeducts ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-end">
+      {/* Save Button */}
+      <div className="flex justify-end pt-2">
         <Button
           type="submit"
           disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold px-6 py-2.5 flex items-center gap-1.5"
+          className="h-11 px-7 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center gap-2"
         >
           {saving ? (
-            <Spinner className="mr-2 size-4 text-white" />
+            <Spinner className="w-4 h-4 text-white" />
           ) : (
-            <Save size={14} className="mr-1.5" />
+            <Save size={15} />
           )}
           Save Business Rules
         </Button>

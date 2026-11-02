@@ -30,7 +30,20 @@ export const getTeacherProfile = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
     const teacherId = resolveEffectiveTeacherId(req);
+
+    if (!teacherId) {
+      return res.status(400).json({ success: false, message: "Teacher ID is required" });
+    }
+
     const data = await teacherProfileService.getTeacherFullProfile(campusId, teacherId);
+
+    if (!data || !data.teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher Profile Not Found",
+        debugKey: ["teacher", teacherId, "profile"],
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -40,6 +53,8 @@ export const getTeacherProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 export const getTeacherClasses = async (req, res, next) => {
   try {
@@ -90,6 +105,8 @@ export const getTeacherAttendance = async (req, res, next) => {
   }
 };
 
+
+
 export const getTeacherPayroll = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
@@ -104,6 +121,8 @@ export const getTeacherPayroll = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 export const getTeacherSubstitutes = async (req, res, next) => {
   try {
@@ -120,6 +139,8 @@ export const getTeacherSubstitutes = async (req, res, next) => {
   }
 };
 
+
+
 export const getTeacherActivity = async (req, res, next) => {
   try {
     const campusId = getCampusId(req);
@@ -134,6 +155,8 @@ export const getTeacherActivity = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 export const assignTeacherClass = async (req, res, next) => {
   try {
@@ -172,3 +195,5 @@ export const unassignTeacherClass = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getTeacherProfileById = getTeacherProfile;

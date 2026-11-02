@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/Badge";
-import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit, Search, Users, ClipboardList, Mail } from "lucide-react";
+import { Plus, Trash2, UserCheck, UserPlus, GraduationCap, Edit, Search, Users, ClipboardList, Mail, CheckCircle2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "@/components/shared/TableSkeleton";
 import axiosInstance from "@/api/axiosInstance";
@@ -43,6 +43,8 @@ export default function AcademicsConfig() {
   const [assignmentSearch, setAssignmentSearch] = useState("");
   const [assignmentTeacherFilter, setAssignmentTeacherFilter] = useState("");
   const [assignmentGradeFilter, setAssignmentGradeFilter] = useState("");
+  const [classTeacherSearch, setClassTeacherSearch] = useState("");
+  const [classTeacherStatusFilter, setClassTeacherStatusFilter] = useState("all");
 
   const fetchData = async () => {
     setLoadError("");
@@ -76,7 +78,8 @@ export default function AcademicsConfig() {
       applyResult(taRes, "Teacher assignments", setTeacherAssignments);
       applyResult(tRes, "Teachers", setTeachers, (d) => Array.isArray(d?.data) ? d.data : (Array.isArray(d) ? d : []));
       if (ctRes.status === "fulfilled") {
-        setClassTeachers(ctRes.value.data || []);
+        const ctData = ctRes.value.data?.data || ctRes.value.data || [];
+        setClassTeachers(Array.isArray(ctData) ? ctData : []);
       }
       if (failures.length) {
         const message = `Some academic data could not be loaded. ${failures.join("; ")}`;
@@ -241,29 +244,6 @@ export default function AcademicsConfig() {
             Configure grades, sections, master subjects, and assign curriculum to classes.
           </p>
         </div>
-
-        {/* Right: + Apply Peshawar Board Preset Button (Project Theme) */}
-        <button
-          type="button"
-          onClick={handleApplyPeshawarPreset}
-          disabled={isApplyingPreset || loading}
-          className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium transition-colors shadow-xs whitespace-nowrap shrink-0 cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed"
-          style={{
-            height: "38px",
-            padding: "0 16px",
-            gap: "6px",
-            width: "auto",
-            minWidth: "fit-content",
-            boxSizing: "border-box",
-          }}
-        >
-          {isApplyingPreset ? (
-            <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-          ) : (
-            <Plus className="w-3.5 h-3.5 text-white shrink-0" />
-          )}
-          <span>{isApplyingPreset ? "Applying Preset..." : "Apply Peshawar Board Preset"}</span>
-        </button>
       </div>
 
       {loadError && (
@@ -536,108 +516,289 @@ export default function AcademicsConfig() {
         </TabsContent>
 
         {/* CLASS TEACHERS TAB */}
-        <TabsContent value="class_teachers" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="text-neutral-900" />
-                  Class Teacher Roles & Section Ownership
-                </CardTitle>
-                <CardDescription>
-                  Every class section has one primary Class Teacher responsible for daily attendance, student records, and compiling term results.
-                </CardDescription>
+        <TabsContent value="class_teachers" className="space-y-5 mt-4">
+          {/* Top KPI Metrics Matching EduHub Teacher Assignments Design */}
+          {(() => {
+            const totalSections = classTeachers.length;
+            const assignedCount = classTeachers.filter((ct) => !!ct.classTeacher).length;
+            const unassignedCount = totalSections - assignedCount;
+            const markedTodayCount = classTeachers.filter((ct) => ct.isAttendanceMarkedToday).length;
+
+            return (
+              <div
+                className="grid grid-cols-2 sm:grid-cols-4 w-full"
+                style={{ gap: "16px", marginBottom: "4px" }}
+              >
+                {/* TOTAL SECTIONS */}
+                <div
+                  className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+                  style={{ padding: "18px 20px", boxSizing: "border-box" }}
+                >
+                  <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+                      Total Class Sections
+                    </span>
+                    <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+                      {totalSections}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 truncate">Configured in campus</span>
+                  </div>
+                  <div
+                    className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+                    style={{ width: "38px", height: "38px" }}
+                  >
+                    <GraduationCap className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                  </div>
+                </div>
+
+                {/* ASSIGNED TEACHERS */}
+                <div
+                  className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+                  style={{ padding: "18px 20px", boxSizing: "border-box" }}
+                >
+                  <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+                      Assigned Ownership
+                    </span>
+                    <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+                      {assignedCount}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 truncate">Primary class teachers</span>
+                  </div>
+                  <div
+                    className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+                    style={{ width: "38px", height: "38px" }}
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                  </div>
+                </div>
+
+                {/* UNASSIGNED SECTIONS */}
+                <div
+                  className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+                  style={{ padding: "18px 20px", boxSizing: "border-box" }}
+                >
+                  <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+                      Vacant Sections
+                    </span>
+                    <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+                      {unassignedCount}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 truncate">Pending teacher assign</span>
+                  </div>
+                  <div
+                    className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+                    style={{ width: "38px", height: "38px" }}
+                  >
+                    <AlertTriangle className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                  </div>
+                </div>
+
+                {/* ATTENDANCE MARKED TODAY */}
+                <div
+                  className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
+                  style={{ padding: "18px 20px", boxSizing: "border-box" }}
+                >
+                  <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+                      Attendance Today
+                    </span>
+                    <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+                      {markedTodayCount}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 truncate">Submitted for current date</span>
+                  </div>
+                  <div
+                    className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+                    style={{ width: "38px", height: "38px" }}
+                  >
+                    <ClipboardList className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+                  </div>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {classTeachers.map((ct) => {
-                  const hasTeacher = !!ct.classTeacher;
-                  return (
-                    <div
-                      key={ct._id || ct.classId}
-                      className="p-5 rounded-2xl border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-bold text-base text-zinc-900">
-                            {ct.className}
-                          </h4>
+            );
+          })()}
+
+          {/* Main Card with Uniform Clean Border & Header */}
+          <div
+            className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs"
+            style={{ padding: "20px 24px", boxSizing: "border-box" }}
+          >
+            {/* Header + Filter Bar */}
+            <div
+              className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 pb-4 mb-5"
+              style={{ gap: "12px" }}
+            >
+              <div>
+                <h3 className="text-base font-bold text-neutral-900 flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-neutral-900" />
+                  Class Teacher Roles &amp; Section Ownership
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Every class section has one primary Class Teacher responsible for daily attendance, student records, and compiling term results.
+                </p>
+              </div>
+
+              {/* Search & Filter Controls */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                  <input
+                    type="text"
+                    placeholder="Search class or teacher..."
+                    value={classTeacherSearch}
+                    onChange={(e) => setClassTeacherSearch(e.target.value)}
+                    className="h-9 pl-8 pr-3 text-xs rounded-lg border border-neutral-200 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 w-48 sm:w-56"
+                  />
+                </div>
+                <select
+                  value={classTeacherStatusFilter}
+                  onChange={(e) => setClassTeacherStatusFilter(e.target.value)}
+                  className="h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="unassigned">Unassigned</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Content List */}
+            {loading && classTeachers.length === 0 ? (
+              <div className="py-14 flex flex-col items-center justify-center text-neutral-500">
+                <Spinner className="w-7 h-7 mb-2 text-neutral-600" />
+                <p className="text-xs text-neutral-500 font-medium">Loading class teachers...</p>
+              </div>
+            ) : classTeachers.length === 0 ? (
+              <div className="py-14 text-center text-sm text-neutral-500 bg-neutral-50/50 rounded-xl border border-dashed border-neutral-200">
+                <GraduationCap className="w-8 h-8 mx-auto text-neutral-400 mb-2 stroke-[1.5]" />
+                <p className="font-semibold text-neutral-800">No classes or sections found</p>
+                <p className="text-xs text-neutral-400 mt-1">Add grades and sections in the Sections tab to start assigning Class Teachers.</p>
+              </div>
+            ) : (() => {
+              const filtered = classTeachers.filter((ct) => {
+                const matchesSearch =
+                  !classTeacherSearch.trim() ||
+                  ct.className?.toLowerCase().includes(classTeacherSearch.toLowerCase()) ||
+                  ct.classTeacher?.name?.toLowerCase().includes(classTeacherSearch.toLowerCase()) ||
+                  ct.classTeacher?.email?.toLowerCase().includes(classTeacherSearch.toLowerCase());
+
+                const matchesStatus =
+                  classTeacherStatusFilter === "all" ||
+                  (classTeacherStatusFilter === "assigned" && !!ct.classTeacher) ||
+                  (classTeacherStatusFilter === "unassigned" && !ct.classTeacher);
+
+                return matchesSearch && matchesStatus;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="py-12 text-center text-xs text-neutral-400 bg-neutral-50/50 rounded-xl border border-dashed border-neutral-200">
+                    No class sections match the selected search or filter.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filtered.map((ct) => {
+                    const hasTeacher = !!ct.classTeacher;
+                    return (
+                      <div
+                        key={ct._id || ct.classId}
+                        className="p-4 rounded-xl border border-neutral-200 bg-white hover:border-neutral-300 transition-all flex flex-col justify-between"
+                        style={{ boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)" }}
+                      >
+                        <div>
+                          {/* Card Title & Badge */}
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-bold text-sm text-neutral-900 tracking-tight">
+                              {ct.className}
+                            </h4>
+                            {hasTeacher ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                Assigned
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+                                Unassigned
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Teacher Detail or Empty */}
                           {hasTeacher ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">
-                              Assigned
-                            </Badge>
+                            <div className="space-y-2 text-xs text-neutral-600 bg-neutral-50/80 p-3 rounded-lg border border-neutral-100">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold flex items-center justify-center text-xs shrink-0">
+                                  {ct.classTeacher.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-bold text-neutral-900 block text-xs truncate">
+                                    {ct.classTeacher.name}
+                                  </span>
+                                  <span className="text-[11px] text-neutral-500 block truncate">
+                                    {ct.classTeacher.department || "Faculty"}
+                                  </span>
+                                </div>
+                              </div>
+                              {ct.classTeacher.email && (
+                                <div className="text-neutral-500 truncate flex items-center gap-1.5 text-[11px]">
+                                  <Mail className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                                  <span className="truncate">{ct.classTeacher.email}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1.5 border-t border-neutral-200/70">
+                                <span>Students: <strong className="text-neutral-700">{ct.studentCount || 0}</strong></span>
+                                <span>
+                                  Attendance:{" "}
+                                  <strong className={ct.isAttendanceMarkedToday ? "text-emerald-700 font-semibold" : "text-amber-700 font-semibold"}>
+                                    {ct.isAttendanceMarkedToday ? "Marked Today" : "Pending"}
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
                           ) : (
-                            <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
-                              Unassigned
-                            </Badge>
+                            <div className="py-6 text-center text-xs text-neutral-400 bg-neutral-50/50 rounded-lg border border-dashed border-neutral-200">
+                              No teacher assigned yet.
+                            </div>
                           )}
                         </div>
 
-                        {hasTeacher ? (
-                          <div className="space-y-2 text-xs text-zinc-600 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold flex items-center justify-center text-xs">
-                                {ct.classTeacher.name?.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <span className="font-bold text-zinc-900 block text-sm">
-                                  {ct.classTeacher.name}
-                                </span>
-                                <span className="text-zinc-500">
-                                  {ct.classTeacher.department || "Faculty"}
-                                </span>
-                              </div>
-                            </div>
-                            {ct.classTeacher.email && (
-                              <div className="text-zinc-500 truncate flex items-center gap-1.5">
-                                <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                                <span>{ct.classTeacher.email}</span>
-                              </div>
+                        {/* Card Action */}
+                        <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant={hasTeacher ? "outline" : "default"}
+                            onClick={() => {
+                              setSelectedSectionForAssign(ct);
+                              setIsAssignDialogOpen(true);
+                            }}
+                            className={`text-xs h-8 px-3 rounded-lg font-medium transition-colors ${
+                              hasTeacher
+                                ? "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                                : "bg-neutral-900 hover:bg-neutral-800 text-white"
+                            }`}
+                          >
+                            {hasTeacher ? (
+                              <>
+                                <Edit size={12} className="mr-1.5" /> Reassign
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus size={12} className="mr-1.5" /> Assign Teacher
+                              </>
                             )}
-                            <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-200">
-                              <span>Students: <strong>{ct.studentCount || 0}</strong></span>
-                              <span>Attendance Today: <strong>{ct.isAttendanceMarkedToday ? "Marked" : "Pending"}</strong></span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="py-6 text-center text-xs text-zinc-400 bg-zinc-50/50 rounded-xl border border-dashed border-zinc-200">
-                            No teacher assigned yet.
-                          </div>
-                        )}
+                          </Button>
+                        </div>
                       </div>
-
-                      <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant={hasTeacher ? "outline" : "default"}
-                          onClick={() => {
-                            setSelectedSectionForAssign(ct);
-                            setIsAssignDialogOpen(true);
-                          }}
-                          className={`text-xs rounded-xl ${
-                            hasTeacher
-                              ? "border-neutral-200 text-neutral-700 hover:bg-neutral-100"
-                              : "bg-neutral-900 hover:bg-neutral-800 text-white"
-                          }`}
-                        >
-                          {hasTeacher ? (
-                            <>
-                              <Edit size={13} className="mr-1" /> Reassign
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus size={13} className="mr-1" /> Assign Teacher
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
         </TabsContent>
 
         {/* SUBJECTS MASTER TAB */}

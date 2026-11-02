@@ -298,165 +298,125 @@ export default function TeacherAssignmentTab({
   }, [filteredAssignments, safeCurrentPage]);
 
   return (
-    <div className="tat-container w-full" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div className="tat-container w-full flex flex-col gap-6 sm:gap-8">
       {/* 1. Header & KPI Metric Cards */}
-      <div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 w-full"
-        style={{ gap: "16px", marginBottom: "4px" }}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 w-full gap-4 sm:gap-5">
         {/* TOTAL FACULTY */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "18px 20px", boxSizing: "border-box" }}
-        >
-          <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+        <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-xs flex items-center justify-between p-4 sm:p-5 transition-all hover:border-neutral-300">
+          <div className="flex flex-col min-w-0 gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 truncate">
               Total Faculty
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+            <span className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
               {metrics.totalTeachers}
             </span>
-            <span className="text-[11px] text-neutral-400 truncate">Registered in campus</span>
+            <span className="text-xs text-neutral-400 truncate">Registered in campus</span>
           </div>
-          <div
-            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
-            style={{ width: "38px", height: "38px" }}
-          >
-            <Users className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+          <div className="w-11 h-11 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-center text-neutral-700 shrink-0">
+            <Users className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
           </div>
         </div>
 
         {/* UNDER-ASSIGNED */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "18px 20px", boxSizing: "border-box" }}
-        >
-          <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+        <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-xs flex items-center justify-between p-4 sm:p-5 transition-all hover:border-neutral-300">
+          <div className="flex flex-col min-w-0 gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 truncate">
               Under-Assigned
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+            <span className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
               {metrics.underAssignedCount}
             </span>
-            <span className="text-[11px] text-neutral-400 truncate">&lt; {REQUIRED_CLASSES_PER_DAY} classes/day</span>
+            <span className="text-xs text-neutral-400 truncate">&lt; {REQUIRED_CLASSES_PER_DAY} classes/day</span>
           </div>
-          <div
-            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
-            style={{ width: "38px", height: "38px" }}
-          >
-            <AlertTriangle className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+          <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-700 shrink-0">
+            <AlertTriangle className="w-5 h-5 text-amber-600 stroke-[1.75]" />
           </div>
         </div>
 
         {/* OPTIMAL WORKLOAD */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "18px 20px", boxSizing: "border-box" }}
-        >
-          <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+        <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-xs flex items-center justify-between p-4 sm:p-5 transition-all hover:border-neutral-300">
+          <div className="flex flex-col min-w-0 gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 truncate">
               Optimal Workload
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+            <span className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
               {metrics.optimalCount}
             </span>
-            <span className="text-[11px] text-neutral-400 truncate">&ge; {REQUIRED_CLASSES_PER_DAY} classes assigned</span>
+            <span className="text-xs text-neutral-400 truncate">&ge; {REQUIRED_CLASSES_PER_DAY} classes assigned</span>
           </div>
-          <div
-            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
-            style={{ width: "38px", height: "38px" }}
-          >
-            <CheckCircle2 className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-emerald-700 shrink-0">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 stroke-[1.75]" />
           </div>
         </div>
 
         {/* TOTAL ALLOCATIONS */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "18px 20px", boxSizing: "border-box" }}
-        >
-          <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+        <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-xs flex items-center justify-between p-4 sm:p-5 transition-all hover:border-neutral-300">
+          <div className="flex flex-col min-w-0 gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 truncate">
               Total Allocations
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+            <span className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
               {metrics.totalAssignments}
             </span>
-            <span className="text-[11px] text-neutral-400 truncate">Active class subjects</span>
+            <span className="text-xs text-neutral-400 truncate">Active class subjects</span>
           </div>
-          <div
-            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
-            style={{ width: "38px", height: "38px" }}
-          >
-            <BookOpen className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+          <div className="w-11 h-11 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-center text-neutral-700 shrink-0">
+            <BookOpen className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
           </div>
         </div>
 
         {/* FORCE OVERRIDES */}
-        <div
-          className="bg-white border border-neutral-200 rounded-xl shadow-xs flex items-center justify-between"
-          style={{ padding: "18px 20px", boxSizing: "border-box" }}
-        >
-          <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap truncate">
+        <div className="bg-white border border-neutral-200/90 rounded-2xl shadow-xs flex items-center justify-between p-4 sm:p-5 transition-all hover:border-neutral-300 col-span-2 sm:col-span-1">
+          <div className="flex flex-col min-w-0 gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 truncate">
               Force Overrides
             </span>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">
+            <span className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
               {metrics.forceConfirmedCount}
             </span>
-            <span className="text-[11px] text-neutral-400 truncate">Manual overrides active</span>
+            <span className="text-xs text-neutral-400 truncate">Manual overrides active</span>
           </div>
-          <div
-            className="rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
-            style={{ width: "38px", height: "38px" }}
-          >
-            <ShieldAlert className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
+          <div className="w-11 h-11 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-center text-neutral-700 shrink-0">
+            <ShieldAlert className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
           </div>
         </div>
       </div>
 
       {/* 2. Assignment Form Card */}
-      <div
-        className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs"
-        style={{ padding: "20px 24px", boxSizing: "border-box" }}
-      >
-        <div
-          className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 pb-4 mb-5"
-          style={{ gap: "12px" }}
-        >
-          <div>
-            <h3 className="text-base font-bold text-neutral-900">Assign Teacher to Class &amp; Subject</h3>
-            <p className="text-xs text-neutral-500 mt-0.5">
+      <div className="w-full bg-white border border-neutral-200/90 rounded-2xl shadow-xs overflow-hidden">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 border-b border-neutral-100 bg-neutral-50/50">
+          <div className="space-y-1">
+            <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight flex items-center gap-2.5">
+              <BookOpen className="w-5 h-5 text-neutral-800" />
+              Assign Teacher to Class &amp; Subject
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-500">
               Allocate subject teachers, schedule routine periods, prevent conflicts, and balance workloads.
             </p>
           </div>
-          <span
-            className="inline-flex items-center rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200 text-xs font-medium self-start sm:self-auto shrink-0"
-            style={{ padding: "4px 10px" }}
-          >
-            Daily Standard: {REQUIRED_CLASSES_PER_DAY} Classes / Teacher
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200 text-xs font-medium self-start sm:self-auto shrink-0">
+            Daily Standard: <strong className="ml-1 text-neutral-900">{REQUIRED_CLASSES_PER_DAY} Classes / Teacher</strong>
           </span>
         </div>
 
-        <form onSubmit={(e) => handleSubmitAssignment(e, false)}>
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 items-end"
-            style={{ gap: "14px" }}
-          >
-            {/* Teacher Selector with Workload Badge */}
-            <div className="flex flex-col" style={{ gap: "6px" }}>
-              <label htmlFor="tatTeacher" className="text-xs font-semibold text-neutral-700 flex items-center justify-between">
-                <span>Teacher *</span>
+        {/* Form Body with generous padding & comfortable spacing */}
+        <form onSubmit={(e) => handleSubmitAssignment(e, false)} className="p-6 sm:p-8 space-y-7">
+          {/* Main 2-column or 3-column structured grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            {/* 1. Teacher Selector */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="tatTeacher" className="text-xs font-semibold text-neutral-800 flex items-center justify-between">
+                <span>Teacher <span className="text-rose-500">*</span></span>
                 {formData.teacherId && (
-                  <span className="text-[11px] font-normal text-neutral-400">
-                    Current: {teacherWorkloadMap[String(formData.teacherId)] || 0} classes
+                  <span className="text-[11px] font-normal text-neutral-500">
+                    {teacherWorkloadMap[String(formData.teacherId)] || 0} classes assigned
                   </span>
                 )}
               </label>
               <select
                 id="tatTeacher"
-                className="w-full rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
-                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+                className="w-full h-12 px-4 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all"
                 value={formData.teacherId}
                 onChange={(e) => {
                   setFormData({ ...formData, teacherId: e.target.value });
@@ -469,21 +429,22 @@ export default function TeacherAssignmentTab({
                   const isUnder = count < REQUIRED_CLASSES_PER_DAY;
                   return (
                     <option key={t._id} value={t._id}>
-                      {t.name} — ({count} {count === 1 ? "Class" : "Classes"} Assigned
-                      {isUnder ? " • Under-assigned" : " • Target Reached"})
+                      {t.name} — ({count} {count === 1 ? "Class" : "Classes"}
+                      {isUnder ? " • Under-assigned" : " • Target reached"})
                     </option>
                   );
                 })}
               </select>
             </div>
 
-            {/* Class / Grade Selector */}
-            <div className="flex flex-col" style={{ gap: "6px" }}>
-              <label htmlFor="tatGrade" className="text-xs font-semibold text-neutral-700 block">Class / Grade *</label>
+            {/* 2. Class / Grade Selector */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="tatGrade" className="text-xs font-semibold text-neutral-800">
+                Class / Grade <span className="text-rose-500">*</span>
+              </label>
               <select
                 id="tatGrade"
-                className="w-full rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
-                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+                className="w-full h-12 px-4 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all"
                 value={formData.gradeId}
                 onChange={(e) =>
                   setFormData({
@@ -504,13 +465,14 @@ export default function TeacherAssignmentTab({
               </select>
             </div>
 
-            {/* Section Selector */}
-            <div className="flex flex-col" style={{ gap: "6px" }}>
-              <label htmlFor="tatSection" className="text-xs font-semibold text-neutral-700 block">Section *</label>
+            {/* 3. Section Selector */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="tatSection" className="text-xs font-semibold text-neutral-800">
+                Section <span className="text-rose-500">*</span>
+              </label>
               <select
                 id="tatSection"
-                className="w-full rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer disabled:bg-neutral-100 disabled:text-neutral-400 disabled:cursor-not-allowed"
-                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+                className="w-full h-12 px-4 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all disabled:bg-neutral-100 disabled:text-neutral-400 disabled:cursor-not-allowed"
                 value={formData.sectionId}
                 onChange={(e) => setFormData({ ...formData, sectionId: e.target.value })}
                 required
@@ -527,13 +489,14 @@ export default function TeacherAssignmentTab({
               </select>
             </div>
 
-            {/* Subject Selector */}
-            <div className="flex flex-col" style={{ gap: "6px" }}>
-              <label htmlFor="tatSubject" className="text-xs font-semibold text-neutral-700 block">Subject *</label>
+            {/* 4. Subject Selector */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="tatSubject" className="text-xs font-semibold text-neutral-800">
+                Subject <span className="text-rose-500">*</span>
+              </label>
               <select
                 id="tatSubject"
-                className="w-full rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer disabled:bg-neutral-100 disabled:text-neutral-400 disabled:cursor-not-allowed"
-                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+                className="w-full h-12 px-4 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all disabled:bg-neutral-100 disabled:text-neutral-400 disabled:cursor-not-allowed"
                 value={formData.subjectId}
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 required
@@ -555,33 +518,31 @@ export default function TeacherAssignmentTab({
               </select>
             </div>
 
-            {/* Time Routine / Slot */}
-            <div className="flex flex-col" style={{ gap: "6px" }}>
-              <label htmlFor="tatTimeSlot" className="text-xs font-semibold text-neutral-700 flex items-center justify-between">
-                <span>Time Routine / Period</span>
+            {/* 5. Time Routine / Period */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-neutral-800">
+                <span>Period / Time Routine</span>
                 <button
                   type="button"
                   onClick={() => setUseCustomTime(!useCustomTime)}
-                  className="text-neutral-700 hover:text-neutral-900 underline underline-offset-2 text-xs font-medium cursor-pointer"
+                  className="text-neutral-600 hover:text-neutral-900 underline underline-offset-2 text-xs font-medium cursor-pointer"
                 >
-                  {useCustomTime ? "Use Standard Periods" : "Custom Time"}
+                  {useCustomTime ? "Use Standard" : "Custom Time"}
                 </button>
-              </label>
+              </div>
               {useCustomTime ? (
                 <input
                   type="text"
                   placeholder="e.g. 08:30 AM – 09:15 AM"
                   value={formData.customTimeSlot}
                   onChange={(e) => setFormData({ ...formData, customTimeSlot: e.target.value })}
-                  className="w-full rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
-                  style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+                  className="w-full h-12 px-4 text-xs rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
                   required
                 />
               ) : (
                 <select
                   id="tatTimeSlot"
-                  className="w-full rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
-                  style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
+                  className="w-full h-12 px-4 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all"
                   value={formData.timeSlot}
                   onChange={(e) => setFormData({ ...formData, timeSlot: e.target.value })}
                 >
@@ -593,17 +554,32 @@ export default function TeacherAssignmentTab({
                 </select>
               )}
             </div>
+
+            {/* 6. Room / Hall / Lab */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="tatRoom" className="text-xs font-semibold text-neutral-800">
+                Room / Hall / Lab <span className="text-neutral-400 font-normal">(Optional)</span>
+              </label>
+              <input
+                id="tatRoom"
+                type="text"
+                placeholder="e.g. Room 101, Physics Lab"
+                value={formData.roomNumber}
+                onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
+                className="w-full h-12 px-4 text-xs rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
+              />
+            </div>
           </div>
 
-          {/* Conflict Alert Box with "Confirm Forcefully" button */}
+          {/* Conflict Alert Box with proper spacing */}
           {currentConflict && (
             <div
-              className={`tat-conflict-alert ${
+              className={`tat-conflict-alert my-3 ${
                 currentConflict.timeConflict ? "danger-mode" : ""
               }`}
             >
               <div className="tat-conflict-head">
-                <AlertTriangle size={20} className="tat-conflict-icon" />
+                <AlertTriangle size={22} className="tat-conflict-icon" />
                 <div>
                   <h4 className="tat-conflict-title">
                     {currentConflict.timeConflict && currentConflict.subjectConflict
@@ -638,7 +614,7 @@ export default function TeacherAssignmentTab({
                 </div>
               </div>
 
-              <div className="tat-conflict-actions">
+              <div className="tat-conflict-actions pt-2">
                 <span className="text-xs font-medium text-neutral-600 mr-auto">
                   Administrative override is permitted with logged audit trail.
                 </span>
@@ -650,8 +626,7 @@ export default function TeacherAssignmentTab({
                       timeSlot: STANDARD_PERIODS[1],
                     }))
                   }
-                  className="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white text-xs font-medium text-neutral-700 hover:bg-neutral-50 px-3 py-1.5 transition-colors cursor-pointer"
-                  style={{ height: "32px" }}
+                  className="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-700 hover:bg-neutral-50 px-3.5 py-2 transition-colors cursor-pointer"
                 >
                   Adjust Period
                 </button>
@@ -659,13 +634,12 @@ export default function TeacherAssignmentTab({
                   type="button"
                   disabled={isSubmitting}
                   onClick={(e) => handleSubmitAssignment(e, true)}
-                  className="inline-flex items-center justify-center rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-                  style={{ height: "32px", gap: "6px" }}
+                  className="inline-flex items-center justify-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2 shadow-xs transition-colors cursor-pointer disabled:opacity-50 gap-2"
                 >
                   {isSubmitting ? (
                     <Spinner className="w-3.5 h-3.5 text-white shrink-0" />
                   ) : (
-                    <ShieldAlert size={14} className="shrink-0" />
+                    <ShieldAlert size={15} className="shrink-0" />
                   )}
                   <span>Confirm Forcefully</span>
                 </button>
@@ -673,23 +647,8 @@ export default function TeacherAssignmentTab({
             </div>
           )}
 
-          {/* Row 2: Room / Hall / Lab on left, Submit button on right */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mt-4" style={{ gap: "14px" }}>
-            <div className="w-full sm:max-w-xs flex flex-col" style={{ gap: "6px" }}>
-              <label htmlFor="tatRoom" className="text-xs font-semibold text-neutral-700 block">
-                Room / Hall / Lab
-              </label>
-              <input
-                id="tatRoom"
-                type="text"
-                placeholder="e.g. Room 102, Physics Lab"
-                value={formData.roomNumber}
-                onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                className="w-full rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
-                style={{ height: "38px", padding: "0 12px", boxSizing: "border-box" }}
-              />
-            </div>
-
+          {/* Form Action Row: Submit button with proper margin and sizing */}
+          <div className="pt-6 border-t border-neutral-100 flex items-center justify-end">
             <button
               type="submit"
               disabled={
@@ -699,13 +658,12 @@ export default function TeacherAssignmentTab({
                 !formData.sectionId ||
                 !formData.subjectId
               }
-              className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-500 text-white text-xs font-medium whitespace-nowrap shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed shrink-0"
-              style={{ height: "38px", padding: "0 18px", gap: "6px", boxSizing: "border-box" }}
+              className="inline-flex items-center justify-center h-12 px-7 rounded-xl bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed shrink-0 gap-2.5 w-full sm:w-auto"
             >
               {isSubmitting ? (
-                <Spinner className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                <Spinner className="w-4 h-4 text-neutral-500 shrink-0" />
               ) : (
-                <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+                <Plus className="w-4 h-4 text-white shrink-0" />
               )}
               <span>Assign Teacher</span>
             </button>
@@ -714,15 +672,12 @@ export default function TeacherAssignmentTab({
       </div>
 
       {/* 3. Integrated Table Card with Toolbar, Table & Pagination */}
-      <div className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-        {/* Search & Filter Toolbar */}
-        <div
-          className="w-full flex flex-col lg:flex-row lg:items-center justify-between border-b border-neutral-200 bg-white"
-          style={{ padding: "16px 20px", gap: "12px", boxSizing: "border-box" }}
-        >
-          {/* Left: Search Input */}
-          <div className="relative w-full lg:w-80 shrink-0">
-            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="w-full bg-white border border-neutral-200/90 rounded-2xl shadow-xs overflow-hidden">
+        {/* Search & Filter Toolbar - Fully responsive with comfortable padding & gaps */}
+        <div className="w-full flex flex-col lg:flex-row lg:items-center justify-between p-5 sm:p-6 border-b border-neutral-100 bg-neutral-50/50 gap-4">
+          {/* Search Input */}
+          <div className="relative w-full lg:w-96 shrink-0">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
@@ -731,13 +686,12 @@ export default function TeacherAssignmentTab({
                 setCurrentPage(1);
               }}
               placeholder="Search by teacher, class, subject, room, or period..."
-              className="w-full rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
-              style={{ height: "36px", paddingLeft: "34px", paddingRight: "12px", boxSizing: "border-box" }}
+              className="w-full h-10 pl-10 pr-4 text-xs rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition-all"
             />
           </div>
 
-          {/* Right: Filter Pills & Compact Dropdowns in ONE horizontal row */}
-          <div className="flex flex-wrap items-center" style={{ gap: "10px" }}>
+          {/* Filter Controls Row */}
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             {/* Under-assigned Filter Toggle */}
             <button
               type="button"
@@ -745,16 +699,15 @@ export default function TeacherAssignmentTab({
                 setShowUnderAssignedOnly(!showUnderAssignedOnly);
                 setCurrentPage(1);
               }}
-              className={`inline-flex items-center rounded-lg border text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+              className={`inline-flex items-center h-10 px-3.5 rounded-xl border text-xs font-medium transition-colors whitespace-nowrap cursor-pointer gap-2 shadow-2xs ${
                 showUnderAssignedOnly
                   ? "bg-neutral-900 text-white border-neutral-900"
                   : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
               }`}
-              style={{ height: "36px", padding: "0 12px", gap: "6px" }}
               title="Filter teachers who have fewer than 5 classes assigned per day"
             >
-              <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${showUnderAssignedOnly ? "text-white" : "text-neutral-600"}`} />
-              <span>Under-assigned Teachers ({metrics.underAssignedCount})</span>
+              <AlertTriangle className={`w-4 h-4 shrink-0 ${showUnderAssignedOnly ? "text-white" : "text-amber-500"}`} />
+              <span>Under-assigned ({metrics.underAssignedCount})</span>
             </button>
 
             {/* Manual Overrides Filter Toggle */}
@@ -764,26 +717,24 @@ export default function TeacherAssignmentTab({
                 setFilterOverrideOnly(!filterOverrideOnly);
                 setCurrentPage(1);
               }}
-              className={`inline-flex items-center rounded-lg border text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+              className={`inline-flex items-center h-10 px-3.5 rounded-xl border text-xs font-medium transition-colors whitespace-nowrap cursor-pointer gap-2 shadow-2xs ${
                 filterOverrideOnly
                   ? "bg-neutral-900 text-white border-neutral-900"
                   : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
               }`}
-              style={{ height: "36px", padding: "0 12px", gap: "6px" }}
             >
-              <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${filterOverrideOnly ? "text-white" : "text-neutral-600"}`} />
-              <span>Manual Overrides ({metrics.forceConfirmedCount})</span>
+              <ShieldAlert className={`w-4 h-4 shrink-0 ${filterOverrideOnly ? "text-white" : "text-neutral-500"}`} />
+              <span>Overrides ({metrics.forceConfirmedCount})</span>
             </button>
 
-            {/* Compact Teacher Dropdown (Fixed auto width, NOT full width!) */}
+            {/* Teacher Dropdown */}
             <select
               value={filterTeacher}
               onChange={(e) => {
                 setFilterTeacher(e.target.value);
                 setCurrentPage(1);
               }}
-              className="rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
-              style={{ height: "36px", padding: "0 12px", width: "auto", minWidth: "150px" }}
+              className="h-10 px-3.5 rounded-xl border border-neutral-200 bg-white text-xs font-medium text-neutral-700 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all flex-1 sm:flex-initial"
             >
               <option value="">All Teachers</option>
               {teachers.map((t) => (
@@ -793,15 +744,14 @@ export default function TeacherAssignmentTab({
               ))}
             </select>
 
-            {/* Compact Class Dropdown (Fixed auto width, NOT full width!) */}
+            {/* Class Dropdown */}
             <select
               value={filterGrade}
               onChange={(e) => {
                 setFilterGrade(e.target.value);
                 setCurrentPage(1);
               }}
-              className="rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
-              style={{ height: "36px", padding: "0 12px", width: "auto", minWidth: "140px" }}
+              className="h-10 px-3.5 rounded-xl border border-neutral-200 bg-white text-xs font-medium text-neutral-700 shadow-2xs focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 cursor-pointer transition-all flex-1 sm:flex-initial"
             >
               <option value="">All Classes</option>
               {grades.map((g) => (
