@@ -270,7 +270,13 @@ export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser,
     throw new Error("Invalid review status. Must be 'Approved' or 'Rejected'.");
   }
 
-  const leaveReq = await StudentLeaveRequest.findOne({ _id: leaveRequestId, campusId });
+  let leaveReq = null;
+  if (campusId) {
+    leaveReq = await StudentLeaveRequest.findOne({ _id: leaveRequestId, campusId });
+  }
+  if (!leaveReq) {
+    leaveReq = await StudentLeaveRequest.findById(leaveRequestId);
+  }
   if (!leaveReq) {
     throw new Error("Leave request not found.");
   }
