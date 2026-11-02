@@ -304,7 +304,9 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
 
   let targetCampusId = campusId || teacher.user?.campusId || teacher.campusId;
   if (!targetCampusId) {
-    const anyCampus = await Campus.findOne().lean();
+    const anyCampus = teacher.instituteId
+      ? await Campus.findOne({ instituteId: teacher.instituteId }).lean()
+      : null;
     targetCampusId = anyCampus ? anyCampus._id : new mongoose.Types.ObjectId();
   }
 

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance.js';
+import { queryClient } from '../../lib/queryClient.js';
 
 export const loggedOutState = {
   isAuthenticated: false,
@@ -78,16 +79,44 @@ const getCachedUser = () => {
   }
 };
 
-const clearCachedSession = () => {
+export const clearCachedSession = () => {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem('eduHubToken');
   localStorage.removeItem('eduHubUser');
+  localStorage.removeItem('eduHubActiveCampusId');
+  localStorage.removeItem('eduHub_institutes_cache');
+  localStorage.removeItem('eduHub_stats_cache');
   try {
-    localStorage.removeItem('eduhub_faculty');
-    localStorage.removeItem('eduhub_students');
-    localStorage.removeItem('eduhub_timetable');
-    localStorage.removeItem('eduhub_attendance');
-    localStorage.removeItem('eduhub_student_attendance');
+    const keysToRemove = [
+      'eduhub_faculty',
+      'eduhub_students',
+      'eduhub_campuses',
+      'eduhub_timetable',
+      'eduhub_attendance',
+      'eduhub_student_attendance',
+      'eduhub_exams',
+      'eduhub_results',
+      'eduhub_fees',
+      'eduhub_diary',
+      'eduhub_assignments',
+      'eduhub_submissions',
+      'eduhub_broadcasts',
+      'eduhub_messages',
+      'eduhub_demo_lifecycle',
+      'eduhub_auth',
+    ];
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+    }
+    const allKeys = Object.keys(localStorage);
+    for (const k of allKeys) {
+      if (k.toLowerCase().startsWith('eduhub')) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {}
+  try {
+    queryClient.clear();
   } catch {}
 };
 
@@ -123,6 +152,8 @@ const slice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, { payload }) => {
+        // Clear prior session tenant and cache artifacts to prevent cross-account leakage
+        clearCachedSession();
         state.status = 'succeeded';
         state.isAuthenticated = true;
         state.user = payload;

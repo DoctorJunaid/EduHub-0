@@ -29,11 +29,14 @@ axiosInstance.interceptors.request.use(
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubToken') : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      const activeCampusId = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
+      if (activeCampusId && !config.headers['x-campus-id']) {
+        config.headers['x-campus-id'] = activeCampusId;
+      }
     }
-    const activeCampusId = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
-    if (activeCampusId && !config.headers['x-campus-id']) {
-      config.headers['x-campus-id'] = activeCampusId;
-    }
+    // Enforce no-cache on all outbound API requests to avoid stale HTTP proxy/edge responses
+    config.headers['Cache-Control'] = 'no-cache';
+    config.headers['Pragma'] = 'no-cache';
     return config;
   },
   (error) => {
@@ -46,9 +49,13 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear token and redirect to login if unauthorized
+      // Clear token and stale session cache on unauthorized response
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('eduHubToken');
+        localStorage.removeItem('eduHubUser');
+        localStorage.removeItem('eduHubActiveCampusId');
+        localStorage.removeItem('eduHub_institutes_cache');
+        localStorage.removeItem('eduHub_stats_cache');
       }
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';

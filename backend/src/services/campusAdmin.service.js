@@ -25,6 +25,25 @@ import {
 class CampusAdminService {
   // --- Dashboard Aggregated Statistics ---
   async getDashboardStats(campusId, isSchool = false) {
+    if (!campusId) {
+      return {
+        totalStudents: 0,
+        activeStudents: 0,
+        totalFaculty: 0,
+        activeFaculty: 0,
+        totalClasses: 0,
+        totalExams: 0,
+        studentAttendanceRate: 0,
+        facultyAttendanceRate: 0,
+        todayStudentAttendanceLogged: 0,
+        todayFacultyAttendanceLogged: 0,
+        totalFeeAmount: 0,
+        collectedFeeAmount: 0,
+        pendingVouchersCount: 0,
+        isSchool,
+      };
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);

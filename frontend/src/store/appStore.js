@@ -65,8 +65,12 @@ export function createAppStore({
     initial = populateStudentDemo(initial, now);
   }
   const store = configureStore({
-    reducer: (state, action) =>
-      preferRealStudentData(preserveDemoEdits(state, reducers(state, action))),
+    reducer: (state, action) => {
+      if (action.type === "auth/loggedOut" || action.type === "auth/resetStore") {
+        state = undefined;
+      }
+      return preferRealStudentData(preserveDemoEdits(state, reducers(state, action)));
+    },
     preloadedState: preferRealStudentData(initial),
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

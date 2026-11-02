@@ -58,6 +58,12 @@ export const protect = async (req, res, next) => {
         const managed = await Campus.findOne({ managerId: currentUser._id }).select("_id").lean();
         if (managed?._id) {
           currentUser.campusId = managed._id;
+        } else if (currentUser.instituteId) {
+          // Strictly resolve campus within the user's assigned institute
+          const instCampus =
+            (await Campus.findOne({ instituteId: currentUser.instituteId, status: "Active" }).select("_id").lean()) ||
+            (await Campus.findOne({ instituteId: currentUser.instituteId }).select("_id").lean());
+          if (instCampus?._id) currentUser.campusId = instCampus._id;
         } else {
           const TeacherProfile = mongoose.model("TeacherProfile");
           const prof = await TeacherProfile.findOne({
@@ -65,9 +71,6 @@ export const protect = async (req, res, next) => {
           }).select("campusId").lean();
           if (prof?.campusId) {
             currentUser.campusId = prof.campusId;
-          } else {
-            const defaultCampus = (await Campus.findOne({ status: "Active" }).select("_id").lean()) || (await Campus.findOne({}).select("_id").lean());
-            if (defaultCampus?._id) currentUser.campusId = defaultCampus._id;
           }
         }
       } catch {

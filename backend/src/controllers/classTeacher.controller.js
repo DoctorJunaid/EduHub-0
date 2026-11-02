@@ -30,11 +30,13 @@ async function getCampusId(req) {
       return (prof.campusId._id || prof.campusId).toString();
     }
   }
-  const Campus = (await import("../models/campus.model.js")).default;
-  const defaultCampus =
-    (await Campus.findOne({ status: "Active" }).select("_id").lean()) ||
-    (await Campus.findOne({}).select("_id").lean());
-  if (defaultCampus?._id) return defaultCampus._id.toString();
+  if (req.user?.instituteId) {
+    const Campus = (await import("../models/campus.model.js")).default;
+    const defaultCampus =
+      (await Campus.findOne({ instituteId: req.user.instituteId, status: "Active" }).select("_id").lean()) ||
+      (await Campus.findOne({ instituteId: req.user.instituteId }).select("_id").lean());
+    if (defaultCampus?._id) return defaultCampus._id.toString();
+  }
   return null;
 }
 
