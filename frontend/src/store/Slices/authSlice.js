@@ -43,6 +43,7 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
       user.id = String(user._id);
     }
     localStorage.setItem('eduHubToken', token);
+    localStorage.removeItem('eduHubActiveCampusId');
     return user;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -82,6 +83,7 @@ const clearCachedSession = () => {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem('eduHubToken');
   localStorage.removeItem('eduHubUser');
+  localStorage.removeItem('eduHubActiveCampusId');
   try {
     localStorage.removeItem('eduhub_faculty');
     localStorage.removeItem('eduhub_students');

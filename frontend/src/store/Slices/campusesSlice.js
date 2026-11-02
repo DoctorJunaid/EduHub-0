@@ -159,6 +159,11 @@ const slice = createSlice({
           if (typeof localStorage !== 'undefined') {
             localStorage.setItem('eduHubActiveCampusId', state.activeCampusId);
           }
+        } else {
+          state.activeCampusId = null;
+          if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('eduHubActiveCampusId');
+          }
         }
       })
       .addCase(fetchCampuses.rejected, (state, { payload }) => {

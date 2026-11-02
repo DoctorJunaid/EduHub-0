@@ -1,31 +1,13 @@
 import * as attendanceService from "../services/teacherStudentAttendance.service.js";
 import User from "../models/user.model.js";
 import { TeacherProfile } from "../models/profile.model.js";
+import { getTenantCampusId } from "../utils/tenantCampus.js";
 
 /**
- * Helper to extract campusId from user context with multi-level fallback.
+ * Helper to extract campusId strictly within the user's tenant scope.
  */
 async function getCampusId(req) {
-  let cid = req.body?.campusId || req.query?.campusId || req.headers?.["x-campus-id"] || req.user?.campusId;
-  if (cid) {
-    return typeof cid === "object" && cid !== null ? (cid._id || cid.id || cid).toString() : String(cid);
-  }
-  if (req.user?._id) {
-    const userDoc = await User.findById(req.user._id).select("campusId").lean();
-    if (userDoc?.campusId) {
-      return (userDoc.campusId._id || userDoc.campusId).toString();
-    }
-    const prof = await TeacherProfile.findOne({
-      $or: [{ user: req.user._id }, { userId: req.user._id }],
-    }).select("campusId").lean();
-    if (prof?.campusId) {
-      return (prof.campusId._id || prof.campusId).toString();
-    }
-  }
-  const Campus = (await import("../models/campus.model.js")).default;
-  const defaultCampus = await Campus.findOne({ status: "Active" }).select("_id").lean() || await Campus.findOne({}).select("_id").lean();
-  if (defaultCampus?._id) return defaultCampus._id.toString();
-  return null;
+  return await getTenantCampusId(req);
 }
 
 /**

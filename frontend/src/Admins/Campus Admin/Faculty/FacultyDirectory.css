@@ -1,25 +1,76 @@
 /* ==========================================================================
    Faculty Directory Styles
-   Overrides and page-specific styles for FacultyDirectory
+   Aligns seamlessly with CampusShared.css and StudentsDirectory
    ========================================================================== */
 
 .faculty-directory {
+  min-width: 0;
   width: 100%;
-  max-width: 100%;
   margin: 0;
   padding: 0;
+  background: #ffffff;
+}
+
+.faculty-directory [data-slot="table-container"] {
+  width: 100%;
+  overflow-x: hidden !important;
 }
 
 .faculty-directory table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: auto;
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
 }
 
-.faculty-directory th:last-child,
-.faculty-directory td:last-child {
-  text-align: right;
+.faculty-directory th {
+  padding: 8px 14px !important;
+  font-size: 10px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
   white-space: nowrap;
 }
 
+.faculty-directory td {
+  height: auto !important;
+  padding: 8px 14px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 12px;
+  color: #09090b;
+  white-space: nowrap;
+}
 
+.faculty-directory td strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #09090b;
+  line-height: 1.25;
+}
+
+/* Ensure no overlap with bottom-right floating help widget */
+.faculty-directory [aria-label="Table pagination"],
+.faculty-directory .campus-footer {
+  padding-right: 80px !important;
+  padding-bottom: 16px !important;
+}
+
+@media (max-width: 768px) {
+  .faculty-directory [data-slot="table-container"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .faculty-directory table {
+    min-width: 640px !important;
+    table-layout: auto !important;
+  }
+
+  .faculty-directory [aria-label="Table pagination"] {
+    padding-right: 16px !important;
+    padding-bottom: 76px !important;
+  }
+}

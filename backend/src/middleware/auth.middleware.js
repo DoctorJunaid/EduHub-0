@@ -52,7 +52,25 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    if (!currentUser.campusId) {
+    if (currentUser.role === "institute_admin") {
+      const headerCampusId = req.headers["x-campus-id"];
+      if (headerCampusId && mongoose.isValidObjectId(headerCampusId)) {
+        const Campus = mongoose.model("Campus");
+        const exists = await Campus.findOne({
+          _id: headerCampusId,
+          instituteId: currentUser.instituteId,
+        }).select("_id").lean();
+        currentUser.campusId = exists?._id || null;
+      } else if (currentUser.instituteId) {
+        const Campus = mongoose.model("Campus");
+        const defaultCampus =
+          (await Campus.findOne({ instituteId: currentUser.instituteId, status: "Active" }).select("_id").lean()) ||
+          (await Campus.findOne({ instituteId: currentUser.instituteId }).select("_id").lean());
+        currentUser.campusId = defaultCampus?._id || null;
+      } else {
+        currentUser.campusId = null;
+      }
+    } else if (!currentUser.campusId) {
       try {
         const Campus = mongoose.model("Campus");
         const managed = await Campus.findOne({ managerId: currentUser._id }).select("_id").lean();
@@ -65,8 +83,10 @@ export const protect = async (req, res, next) => {
           }).select("campusId").lean();
           if (prof?.campusId) {
             currentUser.campusId = prof.campusId;
-          } else {
-            const defaultCampus = (await Campus.findOne({ status: "Active" }).select("_id").lean()) || (await Campus.findOne({}).select("_id").lean());
+          } else if (currentUser.instituteId) {
+            const defaultCampus =
+              (await Campus.findOne({ instituteId: currentUser.instituteId, status: "Active" }).select("_id").lean()) ||
+              (await Campus.findOne({ instituteId: currentUser.instituteId }).select("_id").lean());
             if (defaultCampus?._id) currentUser.campusId = defaultCampus._id;
           }
         }
@@ -76,6 +96,8 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = currentUser;
+    if (currentUser.instituteId) req.instituteId = currentUser.instituteId;
+    if (currentUser.campusId) req.campusId = currentUser.campusId;
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
