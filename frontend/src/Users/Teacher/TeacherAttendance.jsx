@@ -95,6 +95,13 @@ export default function TeacherAttendance() {
     }
   }, [classes, selectedClassId, params]);
 
+  // Automatically open QR scanner if ?scan=true or ?scanner=true is in URL
+  useEffect(() => {
+    if (params.get("scan") === "true" || params.get("scanner") === "true") {
+      setScannerOpen(true);
+    }
+  }, [params]);
+
   const selectedClass = useMemo(() => {
     return (
       classes.find(
@@ -244,7 +251,7 @@ export default function TeacherAttendance() {
     return roster.filter((s) => {
       if (!s) return false;
       const name = String(s.name || "").toLowerCase();
-      const roll = String(s.rollNumber ?? s.roll ?? "").toLowerCase();
+      const roll = String(s.rollNumber ?? s.rollNo ?? s.roll ?? "").toLowerCase();
       const email = String(s.email || "").toLowerCase();
       return name.includes(q) || roll.includes(q) || email.includes(q);
     });
@@ -275,11 +282,15 @@ export default function TeacherAttendance() {
 
   const hasMarkedAny = Object.keys(draft).length > 0 || roster.some((s) => s.status);
 
-  const handleAttendanceMarked = useCallback((_result) => {
+  const handleAttendanceMarked = useCallback((result) => {
     queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
     queryClient.invalidateQueries({ queryKey: ["teacher", "attendance"] });
     rosterQuery.refetch();
     classesQuery.refetch();
+    if (result?.student?._id || result?.student?.id) {
+      const sId = String(result.student._id || result.student.id);
+      setDraft((prev) => ({ ...prev, [sId]: result.record?.status || "Present" }));
+    }
   }, [queryClient, rosterQuery, classesQuery]);
 
   const handleSync = () => {
@@ -324,9 +335,19 @@ export default function TeacherAttendance() {
         <div className="flex items-center flex-wrap sm:flex-nowrap" style={{ gap: "8px" }}>
           <button
             type="button"
+            onClick={handleScanQr}
+            className="inline-flex items-center justify-center rounded-lg border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
+            style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
+            title="Scan student QR code or enter roll number"
+          >
+            <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Scan QR Code</span>
+          </button>
+          <button
+            type="button"
             onClick={handleSync}
             disabled={classesQuery.isFetching || isFetchingRoster}
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
             style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
           >
             {classesQuery.isFetching || isFetchingRoster ? (
@@ -340,7 +361,7 @@ export default function TeacherAttendance() {
             type="button"
             onClick={handleSaveAttendance}
             disabled={saving || !selectedClass || roster.length === 0 || date > getTodayKey()}
-            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto"
+            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
             style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
           >
             {saving ? (
@@ -456,10 +477,11 @@ export default function TeacherAttendance() {
             <button
               type="button"
               onClick={handleScanQr}
-              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+              className="inline-flex items-center justify-center rounded-lg border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors whitespace-nowrap shadow-xs cursor-pointer"
               style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
+              title="Scan student QR code or enter roll number"
             >
-              <QrCode className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+              <QrCode className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>Scan QR Code</span>
             </button>
             <button
@@ -557,7 +579,7 @@ export default function TeacherAttendance() {
                           </span>
                           <div>
                             <strong className="block text-xs font-semibold text-neutral-900">{student.name}</strong>
-                            <small className="block text-[11px] text-neutral-500">{student.rollNumber || "Roll N/A"}</small>
+                            <small className="block text-[11px] text-neutral-500">{student.rollNumber || student.rollNo || student.roll || "Roll N/A"}</small>
                           </div>
                         </span>
                       </td>

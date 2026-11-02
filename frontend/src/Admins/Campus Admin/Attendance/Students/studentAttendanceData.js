@@ -6,9 +6,11 @@ export const studentAttendanceKey = ({ studentId, classId, date }) =>
 
 export function validStudentAttendance(record) {
   const studentId = recordId(record?.studentId);
+  const classId = recordId(record?.classId);
   return Boolean(
     record &&
     studentId &&
+    classId &&
     validDate(record.date || record.dateStr) &&
     (!record.status || attendanceStatuses.includes(record.status))
   );
@@ -105,22 +107,13 @@ export function recordedStudentRows(records, students, classes) {
       const student =
         studentFor(students, sId) ||
         (students && students.find((s) => recordId(s) === sId)) ||
-        (students && students.length === 1 ? students[0] : null) ||
-        { id: sId, _id: sId, name: record.studentName || 'Student', roll: record.roll || 'R-101' };
+        (typeof record.studentId === 'object' && record.studentId !== null && record.studentId.name ? record.studentId : null);
 
-      let session = classFor(classes, recordId(record.classId));
-      if (!session) {
-        session = (classes || []).find(
-          (c) =>
-            (record.subject && (c.subject === record.subject || c.title === record.subject)) ||
-            (record.className && (c.className === record.className || c.program === record.className))
-        ) || (classes && classes[0]) || {
-          id: record.classId || 'general',
-          subject: record.subject || 'Mathematics',
-          className: record.className || record.gradeOrClass || 'Class 10',
-          section: record.section || 'A',
-        };
-      }
+      const session =
+        classFor(classes, recordId(record.classId)) ||
+        (typeof record.classId === 'object' && record.classId !== null && (record.classId.subject || record.classId.title) ? record.classId : null);
+
+      if (!student || !session) return null;
       return rowFor(student, session, record, dateFor(record));
     })
     .filter(Boolean)

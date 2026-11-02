@@ -8,7 +8,10 @@ export function validDiaryEntry(entry) {
     id &&
     typeof entry.title === "string" &&
     entry.title.trim() &&
-    validDate(entry.date)
+    validDate(entry.date) &&
+    (entry.resources === undefined ||
+      typeof entry.resources === "string" ||
+      Array.isArray(entry.resources))
   );
 }
 

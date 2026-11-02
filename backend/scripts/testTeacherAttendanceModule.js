@@ -6,6 +6,7 @@ import { StudentAttendance } from "../src/models/profile.model.js";
 import * as attendanceService from "../src/services/teacherStudentAttendance.service.js";
 
 dotenv.config({ path: "backend/.env" });
+dotenv.config();
 const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 async function runAttendanceTest() {

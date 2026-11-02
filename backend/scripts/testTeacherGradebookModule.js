@@ -6,6 +6,7 @@ import { Performance } from "../src/models/profile.model.js";
 import * as gradebookService from "../src/services/teacherGradebook.service.js";
 
 dotenv.config({ path: "backend/.env" });
+dotenv.config();
 const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 async function runGradebookTest() {

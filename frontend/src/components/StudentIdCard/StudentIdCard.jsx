@@ -32,6 +32,7 @@ export default function StudentIdCard({
       "+92 300 1234567",
     address: data?.address || "House 12, Street 4, Sector F-8/2, Islamabad",
     avatar: data?.avatar || data?.picture || "",
+    campusId: data?.campusId?._id || data?.campusId || "",
     qrCodeData:
       data?.qrCodeData ||
       data?.qrToken ||
@@ -40,6 +41,7 @@ export default function StudentIdCard({
         v: 1,
         type: "STUDENT_ATTENDANCE",
         studentId: data?._id || data?.id || data?.userId || "",
+        campusId: data?.campusId?._id || data?.campusId || "",
         rollNo: data?.rollNo || data?.roll || "1",
       }),
   });
@@ -82,6 +84,7 @@ export default function StudentIdCard({
         v: 1,
         type: "STUDENT_ATTENDANCE",
         studentId: formData.studentId,
+        campusId: formData.campusId || "",
         rollNo: formData.rollNo,
       });
 
