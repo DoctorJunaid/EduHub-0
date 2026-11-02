@@ -9,6 +9,7 @@ import {
   RotateCcw,
   CheckCheck,
   Save,
+  ShieldCheck,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -28,14 +29,15 @@ export default function AttendanceGrid({
     const stateMap = {};
     const notesMap = {};
 
-    // Initialize with existing attendance or default to "Present"
+    // Initialize with existing attendance, gate check-in status, or default to "Present"
     students.forEach((s) => {
       const sId = s._id || s.studentId || s.id;
       const existing = initialAttendance.find(
         (a) => (a.studentId || a._id || a.id) === sId
       );
-      stateMap[sId] = existing ? existing.status : "Present";
-      notesMap[sId] = existing ? existing.remarks || "" : "";
+      const preStatus = existing?.status || (s.status && s.status !== "Not Marked" ? s.status : (s.attendance?.status || "Present"));
+      stateMap[sId] = preStatus;
+      notesMap[sId] = existing ? existing.remarks || "" : (s.remarks || s.attendance?.remarks || "");
     });
 
     setAttendanceState(stateMap);
@@ -191,6 +193,14 @@ export default function AttendanceGrid({
                   const sId = student._id || student.studentId || student.id;
                   const currentStatus = attendanceState[sId] || "Present";
                   const currentRemark = remarksState[sId] || "";
+                  const existing = initialAttendance.find(
+                    (a) => (a.studentId || a._id || a.id) === sId
+                  );
+                  const gateInfo = student.gateCheckedIn || student.entryTime
+                    ? { entryTime: student.entryTime, isLateArrival: student.isLateArrival }
+                    : (existing && (existing.method === 'gate_kiosk' || existing.entryTime))
+                      ? { entryTime: existing.entryTime, isLateArrival: existing.isLateArrival }
+                      : null;
 
                   return (
                     <tr
@@ -214,8 +224,21 @@ export default function AttendanceGrid({
                             )}
                           </div>
                           <div>
-                            <div className="font-semibold text-neutral-900 text-xs">
-                              {student.name || "Student"}
+                            <div className="font-semibold text-neutral-900 text-xs flex items-center gap-1.5 flex-wrap">
+                              <span>{student.name || "Student"}</span>
+                              {gateInfo && (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                                    gateInfo.isLateArrival
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  }`}
+                                  title={`Checked in at school gate via kiosk at ${gateInfo.entryTime || 'morning'}${gateInfo.isLateArrival ? ' (Late arrival)' : ''}`}
+                                >
+                                  <ShieldCheck size={11} className="shrink-0" />
+                                  <span>Gate: {gateInfo.entryTime || "In"}</span>
+                                </span>
+                              )}
                             </div>
                             {student.email && (
                               <div className="text-[11px] text-neutral-500">

@@ -891,11 +891,13 @@ export async function getMyClassAttendance(
     .sort({ rollNumber: 1, name: 1 })
     .lean();
 
-  // Fetch recorded attendance for the day
+  // Fetch recorded attendance for the day (including gate kiosk scans for enrolled students)
+  const studentIds = students.map((s) => s._id);
   const recorded = await StudentAttendance.find({
     campusId,
     dateStr,
     $or: [
+      { studentId: { $in: studentIds } },
       { className: new RegExp(`^${gradeName}$`, "i") },
       { gradeOrClass: new RegExp(`^${gradeName}$`, "i") },
     ],
@@ -930,6 +932,10 @@ export async function getMyClassAttendance(
       rollNo: s.rollNumber || s.rollNo || s.roll || `${sectionName}-${String(idx + 1).padStart(3, "0")}`,
       avatar: s.avatar || "",
       status: rec ? rec.status : "Present",
+      method: rec?.method || "manual",
+      entryTime: rec?.entryTime || "",
+      isLateArrival: !!rec?.isLateArrival,
+      gateCheckedIn: rec ? (rec.method === "gate_kiosk" || rec.method === "qr_scan") : false,
       remarks: rec ? rec.remarks || "" : "",
       markedAt: rec?.updatedAt || rec?.createdAt || null,
       isMarked: !!rec,
