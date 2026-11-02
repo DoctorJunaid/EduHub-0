@@ -3,7 +3,6 @@ import toast from "react-hot-toast";
 import * as api from "../api/teacherProfile.api";
 import { qk } from "@/lib/queryKeys";
 
-
 export function useTeacherProfile(teacherId) {
   const queryClient = useQueryClient();
 
@@ -16,14 +15,19 @@ export function useTeacherProfile(teacherId) {
   } = useQuery({
     queryKey: qk.teacherProfile(teacherId),
     queryFn: async () => {
-      try {
-        const res = await api.getTeacherProfileApi(teacherId);
-        if (res.data?.teacher?.userId?.name && typeof sessionStorage !== "undefined") {
-          sessionStorage.setItem(`teacherName_${teacherId}`, res.data.teacher.userId.name);
+      const res = await api.getTeacherProfileApi(teacherId);
+      const payload = res?.data?.teacher ? res.data : (res?.data || res);
+      const teacherObj = payload?.teacher || (payload?._id ? payload : null);
+      if (teacherObj) {
+        const teacherName =
+          teacherObj.userId?.name ||
+          teacherObj.user?.name ||
+          teacherObj.name;
+        if (teacherName && typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem(`teacherName_${teacherId}`, teacherName);
         }
-      } catch {
-        return null;
       }
+      return payload || null;
     },
     enabled: Boolean(teacherId),
     staleTime: 5 * 60 * 1000,
@@ -39,7 +43,7 @@ export function useTeacherProfile(teacherId) {
     queryFn: async () => {
       try {
         const res = await api.getTeacherClassesApi(teacherId);
-        return res.data || [];
+        return res?.data || res || [];
       } catch {
         return [];
       }
@@ -58,7 +62,7 @@ export function useTeacherProfile(teacherId) {
     queryFn: async () => {
       try {
         const res = await api.getTeacherTimetableApi(teacherId);
-        return res.data || [];
+        return res?.data || res || [];
       } catch {
         return [];
       }
@@ -77,7 +81,7 @@ export function useTeacherProfile(teacherId) {
     queryFn: async () => {
       try {
         const res = await api.getTeacherAttendanceApi(teacherId, 30);
-        return res.data || null;
+        return res?.data || res || null;
       } catch {
         return null;
       }
@@ -96,7 +100,7 @@ export function useTeacherProfile(teacherId) {
     queryFn: async () => {
       try {
         const res = await api.getTeacherPayrollApi(teacherId);
-        return res.data || null;
+        return res?.data || res || null;
       } catch {
         return null;
       }
@@ -115,7 +119,7 @@ export function useTeacherProfile(teacherId) {
     queryFn: async () => {
       try {
         const res = await api.getTeacherSubstitutesApi(teacherId);
-        return res.data || null;
+        return res?.data || res || null;
       } catch {
         return null;
       }
@@ -134,7 +138,7 @@ export function useTeacherProfile(teacherId) {
     queryFn: async () => {
       try {
         const res = await api.getTeacherActivityApi(teacherId);
-        return res.data || [];
+        return res?.data || res || [];
       } catch {
         return [];
       }
@@ -176,15 +180,23 @@ export function useTeacherProfile(teacherId) {
     },
   });
 
+  const resolvedTeacher =
+    profileData?.teacher || (profileData?._id ? profileData : null);
+
   return {
     profileData,
-    teacher: profileData?.teacher,
+    teacher: resolvedTeacher,
     stats: profileData?.stats,
     loading: loadingProfile,
     error: profileError
       ? {
           status: profileError.response?.status || 500,
-          message: profileError.response?.data?.message || profileError.message || "Failed to load teacher profile",
+          message:
+            profileError.response?.data?.message ||
+            (profileError.message?.includes("data is undefined")
+              ? "The requested teacher profile could not be found."
+              : profileError.message) ||
+            "Failed to load teacher profile",
         }
       : null,
     refetchProfile,

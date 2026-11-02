@@ -228,9 +228,15 @@ export const getTeacherById = async (req, res) => {
     );
     res.status(200).json({ success: true, data: profile });
   } catch (error) {
-    handleError(res, error, 404);
+    res.status(404).json({
+      success: false,
+      message: error.message || "Teacher Profile Not Found",
+      debugKey: ["teacher", req.params.id, "profile"],
+    });
   }
 };
+
+export const getTeacherProfileById = getTeacherById;
 
 export const updateTeacher = async (req, res) => {
   try {

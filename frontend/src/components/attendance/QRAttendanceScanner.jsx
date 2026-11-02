@@ -427,7 +427,7 @@ export default function QRAttendanceScanner({
           {/* Attendance Status Selector (Present vs Late) */}
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-medium text-neutral-500">Mark as:</span>
-            <div className="inline-flex rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-0.5 shadow-2xs">
+            <div className="inline-flex items-center rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-0.5 shadow-2xs gap-1">
               <button
                 type="button"
                 onClick={() => setTargetStatus("Present")}
@@ -725,14 +725,14 @@ export default function QRAttendanceScanner({
         </div>
 
         {/* Footer Bar */}
-        <div className="px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 flex items-center justify-between text-xs">
+        <div className="px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <span className="text-[11px] text-neutral-500">
             Records are automatically saved and synchronized with database reports.
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg font-medium transition-colors cursor-pointer shadow-xs"
+            className="w-full sm:w-auto px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg font-medium transition-colors cursor-pointer shadow-xs whitespace-nowrap shrink-0 text-center"
           >
             Done Scanning
           </button>
