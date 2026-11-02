@@ -1,5 +1,16 @@
 import * as leaveService from "../services/studentLeave.service.js";
 
+const getCampusId = (req) => {
+  return (
+    req.user?.campusId?._id ||
+    req.user?.campusId ||
+    req.user?.campus ||
+    req.query?.campusId ||
+    req.headers?.["x-campus-id"] ||
+    null
+  );
+};
+
 /**
  * POST /api/v1/student/leave-requests
  * Student applies for leave on an absent date
@@ -47,7 +58,7 @@ export async function applyStudentLeave(req, res) {
 export async function getStudentLeaves(req, res) {
   try {
     const studentId = req.user._id;
-    const campusId = req.user.campusId;
+    const campusId = getCampusId(req);
 
     const leaves = await leaveService.getStudentLeaveRequests(campusId, studentId);
 
@@ -71,7 +82,7 @@ export async function getStudentLeaves(req, res) {
 export async function getTeacherLeaves(req, res) {
   try {
     const teacherUserId = req.user._id;
-    const campusId = req.user.campusId;
+    const campusId = getCampusId(req);
     const { status } = req.query;
 
     const leaves = await leaveService.getTeacherLeaveRequests(campusId, teacherUserId, { status });
@@ -98,7 +109,7 @@ export async function reviewLeaveRequest(req, res) {
     const { id } = req.params;
     const { status, remarks } = req.body;
     const reviewerUser = req.user;
-    const campusId = req.user.campusId;
+    const campusId = getCampusId(req);
 
     if (!status || !["Approved", "Rejected"].includes(status)) {
       return res.status(400).json({
@@ -135,7 +146,7 @@ export async function reviewLeaveRequest(req, res) {
  */
 export async function getCampusLeaves(req, res) {
   try {
-    const campusId = req.user.campusId;
+    const campusId = getCampusId(req);
     const { status } = req.query;
 
     const leaves = await leaveService.getTeacherLeaveRequests(campusId, req.user._id, { status });
