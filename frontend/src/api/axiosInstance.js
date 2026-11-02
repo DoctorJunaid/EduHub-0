@@ -44,11 +44,28 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+let isRedirecting = false;
+
 // Response Interceptor: Handle 401 Unauthorized globally
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    isRedirecting = false;
+    return response;
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint =
+        requestUrl.includes('/auth/login') ||
+        requestUrl.includes('/auth/signup') ||
+        requestUrl.includes('/auth/register');
+
+      const isAuthPage =
+        typeof window !== 'undefined' &&
+        (window.location.pathname === '/login' ||
+          window.location.pathname === '/signup' ||
+          window.location.pathname === '/set-password');
+
       // Clear token and stale session cache on unauthorized response
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('eduHubToken');
@@ -57,7 +74,10 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem('eduHub_institutes_cache');
         localStorage.removeItem('eduHub_stats_cache');
       }
-      if (window.location.pathname !== '/login') {
+
+      // Avoid looping redirects if this was an auth endpoint or already on an auth page or already redirecting
+      if (!isAuthEndpoint && !isAuthPage && !isRedirecting && typeof window !== 'undefined') {
+        isRedirecting = true;
         window.location.href = '/login';
       }
     }

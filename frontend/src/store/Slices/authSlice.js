@@ -43,7 +43,10 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
     if (user && !user.id && user._id) {
       user.id = String(user._id);
     }
+    // Wipe prior tenant cache before establishing new session
+    clearTenantDataCaches();
     localStorage.setItem('eduHubToken', token);
+    localStorage.setItem('eduHubUser', JSON.stringify(user));
     return user;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -79,15 +82,13 @@ const getCachedUser = () => {
   }
 };
 
-export const clearCachedSession = () => {
+export const clearTenantDataCaches = () => {
   if (typeof localStorage === 'undefined') return;
-  localStorage.removeItem('eduHubToken');
-  localStorage.removeItem('eduHubUser');
-  localStorage.removeItem('eduHubActiveCampusId');
-  localStorage.removeItem('eduHub_institutes_cache');
-  localStorage.removeItem('eduHub_stats_cache');
   try {
-    const keysToRemove = [
+    localStorage.removeItem('eduHubActiveCampusId');
+    localStorage.removeItem('eduHub_institutes_cache');
+    localStorage.removeItem('eduHub_stats_cache');
+    const tenantKeys = [
       'eduhub_faculty',
       'eduhub_students',
       'eduhub_campuses',
@@ -105,19 +106,22 @@ export const clearCachedSession = () => {
       'eduhub_demo_lifecycle',
       'eduhub_auth',
     ];
-    for (const key of keysToRemove) {
+    for (const key of tenantKeys) {
       localStorage.removeItem(key);
-    }
-    const allKeys = Object.keys(localStorage);
-    for (const k of allKeys) {
-      if (k.toLowerCase().startsWith('eduhub')) {
-        localStorage.removeItem(k);
-      }
     }
   } catch {}
   try {
     queryClient.clear();
   } catch {}
+};
+
+export const clearCachedSession = () => {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.removeItem('eduHubToken');
+    localStorage.removeItem('eduHubUser');
+  } catch {}
+  clearTenantDataCaches();
 };
 
 const initialCachedUser = getCachedUser();
@@ -152,8 +156,6 @@ const slice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, { payload }) => {
-        // Clear prior session tenant and cache artifacts to prevent cross-account leakage
-        clearCachedSession();
         state.status = 'succeeded';
         state.isAuthenticated = true;
         state.user = payload;
