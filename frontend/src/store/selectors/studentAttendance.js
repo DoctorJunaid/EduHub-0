@@ -24,7 +24,11 @@ export const selectStudentAttendancePage = createSelector(
 
     const sId = String(dashboard.student?._id || dashboard.student?.id || "");
     const rows = history
-      .filter(({ student }) => String(student?._id || student?.id) === sId)
+      .filter(
+        ({ student, record }) =>
+          String(student?._id || student?.id) === sId ||
+          (record?.studentId && String(record.studentId) === sId),
+      )
       .sort(
         (a, b) =>
           (b.date || "").localeCompare(a.date || "") ||

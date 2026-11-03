@@ -891,16 +891,12 @@ export async function getMyClassAttendance(
     .sort({ rollNumber: 1, name: 1 })
     .lean();
 
-  // Fetch recorded attendance for the day (including gate kiosk scans for enrolled students)
+  // Fetch recorded attendance strictly for the enrolled students of this section on the day
   const studentIds = students.map((s) => s._id);
   const recorded = await StudentAttendance.find({
     campusId,
     dateStr,
-    $or: [
-      { studentId: { $in: studentIds } },
-      { className: new RegExp(`^${gradeName}$`, "i") },
-      { gradeOrClass: new RegExp(`^${gradeName}$`, "i") },
-    ],
+    studentId: { $in: studentIds },
   }).lean();
 
   const recordMap = new Map();

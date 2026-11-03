@@ -28,6 +28,7 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
+  Info,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -42,6 +43,7 @@ import {
 } from "@/components/ui/Table";
 import SummaryCard from "@/components/common/SummaryCard";
 import { selectStudentDashboard } from "@/store/selectors/studentDashboard";
+import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { dateKey, parseDate } from "@/lib/dates";
 import { timeLabel, dayLabel } from "@/lib/schedule";
 import { useInstitution } from "@/context/InstitutionContext";
@@ -53,16 +55,47 @@ import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const { isSchool } = useInstitution();
-  const { isLoading, classTeacher, subjects, transport: portalTransport } = useStudentPortal();
+  const portal = useStudentPortal();
+  const {
+    isLoading,
+    classTeacher,
+    subjects = [],
+    transport: portalTransport,
+    student: portalStudent,
+  } = portal;
 
-  const { student, courses = [], timetable = [], attendance } = useSelector(
+  const { student: reduxStudent, courses = [], timetable = [], attendance } = useSelector(
     selectStudentDashboard,
   );
+  const user = useSelector(selectCurrentUser);
   const diary = useSelector(selectStudentDiary) || [];
   const assignments = useSelector(selectStudentAssignments) || [];
   const [today, setToday] = useState(() => dateKey(new Date()));
 
+  const student = portalStudent || reduxStudent || user || null;
   const targetStudentId = student?.id || student?._id;
+
+  const studentName = student?.name || user?.name || "Student";
+  const studentInitials = studentName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] || "")
+    .join("")
+    .toUpperCase() || "ST";
+
+  const studentEmail = student?.email || user?.email || "";
+  const studentRoll = student?.roll || student?.rollNumber || student?.rollNo || "";
+  const rawClass =
+    student?.gradeOrClass ||
+    student?.className ||
+    student?.program ||
+    (isSchool ? "Class 9" : "Semester 1");
+  const studentClass = String(rawClass).startsWith("Class") ? rawClass : `Class ${rawClass}`;
+  const cleanSection = student?.section
+    ? String(student.section).replace(/^(section\s*)+/i, "").trim() || "A"
+    : "A";
+  const studentAvatar = student?.avatar || user?.avatar || "";
   const { data: transportResponse } = useQuery({
     queryKey: ["transport", "my-transport", targetStudentId],
     queryFn: () => getMyTransportApi(targetStudentId),
@@ -153,16 +186,21 @@ export default function StudentDashboard() {
     ];
   };
 
+  const totalEnrolledCount =
+    subjects && subjects.length > 0
+      ? subjects.length
+      : courses && courses.length > 0
+        ? courses.length
+        : 0;
+
   const stats = [
     {
       label: isSchool ? "Enrolled Subjects" : "Enrolled Courses",
       icon: BookOpen,
-      value: student ? courses.length : "—",
-      description: student
-        ? isSchool
-          ? "Subjects assigned to your grade"
-          : "Subjects on your student record"
-        : "Student record not linked",
+      value: totalEnrolledCount > 0 ? totalEnrolledCount : (student ? "—" : "—"),
+      description: isSchool
+        ? "Subjects assigned to your grade"
+        : "Subjects on your student record",
     },
     {
       label: "Attendance Rate",
@@ -182,11 +220,9 @@ export default function StudentDashboard() {
     {
       label: isSchool ? "Homework Tasks" : "Pending Tasks",
       icon: FileText,
-      value: student
-        ? assignments.filter(
-            (assignment) => assignment.status === "Pending Submission",
-          ).length
-        : "—",
+      value: assignments.filter(
+        (assignment) => assignment.status === "Pending Submission",
+      ).length,
       description: isSchool
         ? "Homework awaiting teacher check"
         : "Assignments awaiting submission",
@@ -197,71 +233,89 @@ export default function StudentDashboard() {
   const upcomingAssignments = assignments.filter(
     (assignment) => assignment.dueDate >= today,
   );
-  const cleanSection = student?.section
-    ? student.section.replace(/^(section\s*)+/i, "").trim() || "A"
-    : "A";
 
   return (
     <section className="student-dashboard" aria-label="Student dashboard">
-      {classTeacher?.name && (
-        <div className="sd-teacher-banner">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-full bg-zinc-800 dark:bg-zinc-700 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 overflow-hidden">
-              {classTeacher.avatar ? (
-                <img
-                  src={classTeacher.avatar}
-                  alt={classTeacher.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                classTeacher.name.charAt(0).toUpperCase()
+      {/* ── Student Profile & Welcome Banner (Always visible for ANY logged in student) ── */}
+      <div className="sd-profile-banner" tabIndex={-1} aria-label="Student profile banner">
+        <div className="sd-profile-banner-left">
+          <div className="sd-profile-avatar" aria-hidden="true">
+            {studentAvatar ? (
+              <img
+                src={studentAvatar}
+                alt={studentName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{studentInitials}</span>
+            )}
+          </div>
+          <div className="sd-profile-info">
+            <div className="sd-profile-meta">
+              <span className="sd-profile-tag sd-profile-tag-active">
+                <span className="sd-active-dot" />
+                Active Student
+              </span>
+              <Badge variant="outline" className="sd-profile-badge-class">
+                {studentClass} · Section {cleanSection}
+              </Badge>
+              {studentRoll && (
+                <Badge variant="outline" className="sd-profile-badge-roll">
+                  Roll #{studentRoll}
+                </Badge>
               )}
             </div>
-            <div className="flex flex-col min-w-0 gap-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700">
-                  <GraduationCap className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
-                  Class Teacher
+
+            <h1 className="sd-profile-name">
+              {studentName}
+            </h1>
+
+            <div className="sd-profile-details">
+              {studentEmail && (
+                <span className="sd-profile-detail-item">
+                  <Mail className="w-3.5 h-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+                  <span>{studentEmail}</span>
                 </span>
-                {classTeacher.sectionName && (
-                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-zinc-200 bg-zinc-50 text-zinc-700 font-medium">
-                    Section {classTeacher.sectionName}
-                  </Badge>
-                )}
-              </div>
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 tracking-tight leading-snug truncate">
-                {classTeacher.name}
-              </h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate flex items-center gap-1.5">
-                <span>{classTeacher.department || classTeacher.designation || "Class Mentor"}</span>
-                {classTeacher.email && (
-                  <>
-                    <span className="text-neutral-300 dark:text-neutral-600">•</span>
-                    <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">{classTeacher.email}</span>
-                  </>
-                )}
-              </p>
+              )}
+              {studentEmail && <span className="sd-profile-dot">•</span>}
+              <span className="sd-profile-detail-item">
+                <GraduationCap className="w-3.5 h-3.5 shrink-0 text-zinc-600 dark:text-zinc-400" aria-hidden="true" />
+                <span>
+                  {classTeacher?.name ? (
+                    <>
+                      Class Teacher: <strong>{classTeacher.name}</strong>
+                    </>
+                  ) : (
+                    <>
+                      Class Incharge: <strong>Section Faculty Incharge</strong>
+                    </>
+                  )}
+                </span>
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0 flex-wrap">
-            <Link
-              to="/student/id-card"
-              className="sd-teacher-btn-card"
-            >
-              <QrCode className="w-4 h-4 text-zinc-700 dark:text-zinc-300 shrink-0" />
-              <span>Student ID Card</span>
-            </Link>
-
-            <Link
-              to="/student/support?category=Academic"
-              className="sd-teacher-btn-ask"
-            >
-              <MessageSquare className="w-4 h-4 text-white shrink-0" />
-              <span style={{ color: "#ffffff" }}>Ask Teacher</span>
-            </Link>
-          </div>
         </div>
-      )}
+
+        <div className="sd-profile-actions">
+          <Link
+            to="/student/id-card"
+            className="sd-profile-btn-card"
+            title="View or Print Student Digital ID Card"
+          >
+            <QrCode className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Student ID Card</span>
+          </Link>
+
+          <Link
+            to="/student/support?category=Academic"
+            className="sd-profile-btn-ask"
+            title="Contact Academic Support or Teacher"
+          >
+            <MessageSquare className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Ask Teacher</span>
+          </Link>
+        </div>
+      </div>
 
       <div className="sd-stats">
         {stats.map((stat) => (
@@ -269,27 +323,25 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* ── Student Transport Details Card ── */}
+      {/* ── Student Transport Details Card (School Bus & Commute) ── */}
       <div className="sd-transport-card">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2.5 border-b border-neutral-100 dark:border-neutral-800">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 flex items-center justify-center shrink-0 shadow-2xs">
-              <Bus className="w-4.5 h-4.5" />
+        <div className="sd-transport-header">
+          <div className="sd-transport-info">
+            <div className="sd-transport-icon" aria-hidden="true">
+              <Bus className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 leading-snug truncate">
+            <div className="sd-transport-titles">
+              <div className="sd-transport-title-row">
+                <h3 className="sd-transport-title">
                   {isEnrolledInTransport
                     ? transport?.route?.routeName || "Assigned Campus Bus Route"
                     : "School Bus & Commute"}
                 </h3>
-                <span
-                  className="text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700"
-                >
+                <span className={`sd-transport-badge ${isEnrolledInTransport ? "is-enrolled" : "is-self"}`}>
                   {isEnrolledInTransport ? "Enrolled Commuter" : "Self Commuter"}
                 </span>
               </div>
-              <p className="text-xs text-neutral-500 truncate mt-0.5">
+              <p className="sd-transport-desc">
                 {isEnrolledInTransport
                   ? `Designated stop: ${transport?.stop?.stopName || "Designated stop"} · Bus ${transport?.vehicle?.busNumber || "Assigned"}`
                   : "Campus bus service not assigned to this student profile."}
@@ -297,83 +349,96 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="sd-transport-actions">
             {isEnrolledInTransport && transport?.driver?.phone && transport.driver.phone !== "—" && (
               <a
                 href={`tel:${transport.driver.phone}`}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold border border-neutral-200 bg-neutral-50 text-neutral-700 hover:bg-neutral-100 transition-colors"
+                className="sd-transport-btn sd-transport-btn-secondary"
               >
-                <Phone className="w-3 h-3 text-neutral-600" />
+                <Phone className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Call Driver</span>
               </a>
             )}
             <Link
               to="/student/transport"
-              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-semibold border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 shadow-2xs transition-colors whitespace-nowrap cursor-pointer"
+              className="sd-transport-btn sd-transport-btn-primary"
             >
               <span>View Transport Details</span>
-              <ArrowRight className="w-3 h-3 text-neutral-500" />
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
             </Link>
           </div>
         </div>
 
         {isEnrolledInTransport ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2.5">
-            <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                <Bus className="w-3 h-3 text-neutral-600" /> Assigned Bus
+          <div className="sd-transport-grid">
+            <div className="sd-transport-box">
+              <span className="sd-transport-box-label">
+                <Bus className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" aria-hidden="true" /> Assigned Bus
               </span>
-              <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100 block truncate">
+              <strong className="sd-transport-box-title">
                 {transport?.vehicle?.busNumber || "Bus #12"}
               </strong>
-              <span className="text-[11px] text-neutral-500 block truncate">
+              <span className="sd-transport-box-sub">
                 {transport?.vehicle?.model || "Toyota Coaster"} · {transport?.vehicle?.plateNumber || "ABC-123"}
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-neutral-600" /> Pickup Stop &amp; Timing
+            <div className="sd-transport-box">
+              <span className="sd-transport-box-label">
+                <MapPin className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" aria-hidden="true" /> Pickup Stop &amp; Routine
               </span>
-              <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100 block truncate">
+              <strong className="sd-transport-box-title">
                 {transport?.stop?.stopName || "Assigned Stop"}
               </strong>
-              <span className="text-[11px] text-neutral-600 dark:text-neutral-400 font-semibold block truncate">
-                Pickup: {transport?.stop?.pickupTime || "07:15 AM"} · Return: {transport?.stop?.dropTime || "02:30 PM"}
-              </span>
+              <div className="sd-transport-timing-row">
+                <span className="sd-timing-pill">Pickup: {transport?.stop?.pickupTime || "07:15 AM"}</span>
+                <span className="sd-timing-pill">Return: {transport?.stop?.dropTime || "02:30 PM"}</span>
+              </div>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                <User className="w-3 h-3 text-neutral-600" /> Designated Driver
+            <div className="sd-transport-box">
+              <span className="sd-transport-box-label">
+                <User className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" aria-hidden="true" /> Designated Driver
               </span>
-              <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100 block truncate">
+              <strong className="sd-transport-box-title">
                 {transport?.driver?.name || "Ali Ahmed"}
               </strong>
-              <span className="text-[11px] text-neutral-500 block truncate">
-                Phone: {transport?.driver?.phone || "—"}
-              </span>
+              <div className="sd-transport-driver-sub">
+                <span>Phone:</span>
+                {transport?.driver?.phone && transport.driver.phone !== "—" ? (
+                  <a href={`tel:${transport.driver.phone}`} className="sd-driver-phone-link">
+                    {transport.driver.phone}
+                  </a>
+                ) : (
+                  <span>—</span>
+                )}
+              </div>
             </div>
           </div>
         ) : (
-          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-neutral-500 gap-2">
-            <span className="text-[11px]">Need school bus transport? Request route assignment from the administration.</span>
+          <div className="sd-transport-unassigned">
+            <div className="sd-transport-unassigned-text">
+              <Info className="w-4 h-4 text-zinc-500 shrink-0" aria-hidden="true" />
+              <span>Need school bus transport? Request route assignment from the administration.</span>
+            </div>
             <Link
               to="/student/support?category=Transport"
-              className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300 hover:underline inline-flex items-center gap-1 shrink-0"
+              className="sd-transport-request-link"
             >
-              Request Transport Service →
+              <span>Request Transport Service</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
             </Link>
           </div>
         )}
       </div>
+
       <Card className="sd-timetable">
         <div className="sd-section-heading">
           <div className="sd-section-title">
-            <span className="sd-icon">
+            <span className="sd-icon" aria-hidden="true">
               <CalendarDays aria-hidden="true" />
             </span>
-            <div>
+            <div className="min-w-0">
               <h2>
                 {isShowingAllClasses
                   ? isSchool
@@ -383,192 +448,248 @@ export default function StudentDashboard() {
                     ? "Today's Period Timetable"
                     : "Today's Class Timetable"}
               </h2>
-              <p>
-                {student?.section
-                  ? `${isSchool ? "Daily period routine" : "Weekly lecture schedule"} for Section ${cleanSection}`
-                  : isSchool
-                    ? "Your daily periods"
-                    : "Your class schedule"}{" "}
-                <span aria-hidden="true">·</span>{" "}
-                <time dateTime={today}>
+              <div className="sd-timetable-meta">
+                <span className="sd-timetable-section-note">
+                  {student?.section
+                    ? `${isSchool ? "Daily period routine" : "Weekly lecture schedule"} for Section ${cleanSection}`
+                    : isSchool
+                      ? "Your daily periods"
+                      : "Your class schedule"}
+                </span>
+                <span className="sd-timetable-dot" aria-hidden="true">·</span>
+                <time dateTime={today} className="sd-timetable-date">
                   {parseDate(today).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                     weekday: "short",
                   })}
                 </time>
-                {isShowingAllClasses && (
-                  <Badge
-                    variant="outline"
-                    className="ml-2 text-xs font-normal bg-muted/40"
-                  >
-                    Showing Regular Routine
-                  </Badge>
-                )}
-                {totalClasses > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="ml-2 text-xs font-semibold bg-zinc-50 border-zinc-200 text-zinc-700"
-                  >
-                    {totalClasses} {isSchool ? (totalClasses === 1 ? "Period" : "Periods") : (totalClasses === 1 ? "Class" : "Classes")}
-                  </Badge>
-                )}
-              </p>
+                <div className="sd-timetable-badges">
+                  {isShowingAllClasses && (
+                    <Badge
+                      variant="outline"
+                      className="text-[11px] font-normal bg-muted/40"
+                    >
+                      Showing Regular Routine
+                    </Badge>
+                  )}
+                  {totalClasses > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="text-[11px] font-semibold bg-zinc-50 border-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+                    >
+                      {totalClasses} {isSchool ? (totalClasses === 1 ? "Period" : "Periods") : (totalClasses === 1 ? "Class" : "Classes")}
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="sd-timetable-header-btn">
             <Link to="/student/courses">
-              {isSchool ? "View All Subjects" : "View All Courses"}
+              <span>{isSchool ? "View All Subjects" : "View All Courses"}</span>
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
         </div>
-        <div className="md:hidden flex items-center justify-between text-[11px] text-muted-foreground px-1 py-1">
-          <span>Swipe routine horizontally</span>
-          <span>← Scroll →</span>
-        </div>
-        <Table aria-label="Today's class timetable">
-          <TableHeader>
-            <TableRow>
-              {[
-                "Course / Subject",
-                "Timing & Routine",
-                "Room / Lab",
-                "Instructor",
-                "Status",
-              ].map((heading) => (
-                <TableHead key={heading} scope="col">
-                  {heading}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedClasses.map((session, idx) => (
-              <TableRow key={session.id || session._id || `timetable-session-${idx}`}>
-                <TableCell>
-                  <strong>{session.subject}</strong>
-                  <small>Sec: {session.section}</small>
-                </TableCell>
-                <TableCell>
-                  <span className="sd-class-time">
-                    <Clock3 aria-hidden="true" />
-                    {timeLabel(session.startTime)} –{" "}
-                    {timeLabel(session.endTime)}
-                  </span>
-                  <small>{dayLabel(session.days)}</small>
-                </TableCell>
-                <TableCell>{session.room || "Classroom"}</TableCell>
-                <TableCell>{session.instructor || "Assigned Teacher"}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className={`sd-status sd-status-${(session.status || "active").toLowerCase()}`}
-                  >
-                    {session.status === "Active" ? "Scheduled" : (session.status || "Scheduled")}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-            {!displayedClasses.length && (
-              <TableRow>
-                <TableCell colSpan={5} className="sd-table-empty">
-                  {student
-                    ? "No classes scheduled for your section."
-                    : "Your timetable will appear when your student record is linked."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
 
-        {totalClasses > 0 && (
-          <footer className="sd-table-pagination" aria-label="Timetable pagination">
-            <div className="sd-pagination-left">
-              <span className="sd-pagination-info">
-                Showing <strong>{timetableStartIndex + 1}–{timetableEndIndex}</strong> of{" "}
-                <strong>{totalClasses}</strong> {isSchool ? (totalClasses === 1 ? "period" : "periods") : (totalClasses === 1 ? "class" : "classes")}
-              </span>
-
-              {totalClasses > 4 && (
-                <div className="sd-pagination-size-wrap">
-                  <span>Rows:</span>
-                  <select
-                    value={timetablePageSize}
-                    onChange={(e) => {
-                      setTimetablePageSize(Number(e.target.value));
-                      setTimetablePage(1);
-                    }}
-                    className="sd-pagination-select"
-                    aria-label="Periods per page"
-                  >
-                    <option value={4}>4 per page</option>
-                    <option value={6}>6 per page</option>
-                    <option value={8}>8 per page</option>
-                    <option value={12}>12 per page</option>
-                  </select>
-                </div>
-              )}
+        {!displayedClasses.length ? (
+          <div className="sd-timetable-empty">
+            <span className="sd-timetable-empty-icon" aria-hidden="true">
+              <CalendarDays className="w-5 h-5 text-zinc-500" />
+            </span>
+            <p className="sd-timetable-empty-title">
+              {isSchool ? "No periods scheduled for today" : "No classes scheduled for today"}
+            </p>
+            <p className="sd-timetable-empty-desc">
+              {student
+                ? `${isSchool ? "Daily period routine" : "Class schedule"} for Section ${cleanSection} will appear once periods are active.`
+                : "Your timetable will appear when your student record is linked."}
+            </p>
+            <Button variant="outline" size="sm" asChild className="sd-timetable-empty-btn">
+              <Link to="/student/courses">
+                <span>{isSchool ? "View All Subjects" : "View All Courses"}</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="md:hidden flex items-center justify-between text-[11px] text-muted-foreground px-1 py-1">
+              <span>Swipe routine horizontally</span>
+              <span>← Scroll →</span>
             </div>
 
-            {totalTimetablePages > 1 && (
-              <div className="sd-pagination-controls">
-                <button
-                  type="button"
-                  className="sd-pagination-btn"
-                  onClick={() => setTimetablePage((p) => Math.max(1, p - 1))}
-                  disabled={safeTimetablePage <= 1}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={14} aria-hidden="true" />
-                  <span>Prev</span>
-                </button>
+            {/* Desktop / Tablet Table View */}
+            <div className="sd-timetable-desktop-view">
+              <Table aria-label="Today's class timetable">
+                <TableHeader>
+                  <TableRow>
+                    {[
+                      "Course / Subject",
+                      "Timing & Routine",
+                      "Room / Lab",
+                      "Instructor",
+                      "Status",
+                    ].map((heading) => (
+                      <TableHead key={heading} scope="col">
+                        {heading}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedClasses.map((session, idx) => (
+                    <TableRow key={session.id || session._id || `timetable-session-${idx}`}>
+                      <TableCell>
+                        <strong>{session.subject}</strong>
+                        <small>Sec: {session.section}</small>
+                      </TableCell>
+                      <TableCell>
+                        <span className="sd-class-time">
+                          <Clock3 aria-hidden="true" />
+                          {timeLabel(session.startTime)} –{" "}
+                          {timeLabel(session.endTime)}
+                        </span>
+                        <small>{dayLabel(session.days)}</small>
+                      </TableCell>
+                      <TableCell>{session.room || "Classroom"}</TableCell>
+                      <TableCell>{session.instructor || "Assigned Teacher"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={`sd-status sd-status-${(session.status || "active").toLowerCase()}`}
+                        >
+                          {session.status === "Active" ? "Scheduled" : (session.status || "Scheduled")}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
-                <div className="sd-pagination-pages">
-                  {getTimetablePageNumbers().map((p, idx) =>
-                    p === "..." ? (
-                      <span key={`ellipsis-${idx}`} className="sd-pagination-ellipsis" aria-hidden="true">
-                        …
-                      </span>
-                    ) : (
-                      <button
-                        key={p}
-                        type="button"
-                        className={`sd-pagination-page-btn ${p === safeTimetablePage ? "active" : ""}`}
-                        onClick={() => setTimetablePage(p)}
-                        aria-label={`Go to page ${p}`}
-                        aria-current={p === safeTimetablePage ? "page" : undefined}
-                      >
-                        {p}
-                      </button>
-                    )
-                  )}
+            {/* Mobile Card-based Routine View (< 640px) */}
+            <div className="sd-timetable-mobile-cards">
+              {paginatedClasses.map((session, idx) => (
+                <div key={session.id || session._id || `m-session-${idx}`} className="sd-period-card">
+                  <div className="sd-period-card-top">
+                    <div className="min-w-0">
+                      <strong className="sd-period-subject">{session.subject}</strong>
+                      <span className="sd-period-section">Section {session.section}</span>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={`sd-status sd-status-${(session.status || "active").toLowerCase()}`}
+                    >
+                      {session.status === "Active" ? "Scheduled" : (session.status || "Scheduled")}
+                    </Badge>
+                  </div>
+                  <div className="sd-period-card-details">
+                    <div className="sd-period-detail-item">
+                      <Clock3 className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+                      <span>{timeLabel(session.startTime)} – {timeLabel(session.endTime)}</span>
+                    </div>
+                    <div className="sd-period-detail-item">
+                      <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+                      <span>{session.room || "Classroom"}</span>
+                    </div>
+                    <div className="sd-period-detail-item">
+                      <GraduationCap className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{session.instructor || "Assigned Teacher"}</span>
+                    </div>
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <button
-                  type="button"
-                  className="sd-pagination-btn"
-                  onClick={() => setTimetablePage((p) => Math.min(totalTimetablePages, p + 1))}
-                  disabled={safeTimetablePage >= totalTimetablePages}
-                  aria-label="Next page"
-                >
-                  <span>Next</span>
-                  <ChevronRight size={14} aria-hidden="true" />
-                </button>
+            <footer className="sd-table-pagination" aria-label="Timetable pagination">
+              <div className="sd-pagination-left">
+                <span className="sd-pagination-info">
+                  Showing <strong>{timetableStartIndex + 1}–{timetableEndIndex}</strong> of{" "}
+                  <strong>{totalClasses}</strong> {isSchool ? (totalClasses === 1 ? "period" : "periods") : (totalClasses === 1 ? "class" : "classes")}
+                </span>
+
+                {totalClasses > 4 && (
+                  <div className="sd-pagination-size-wrap">
+                    <span>Rows:</span>
+                    <select
+                      value={timetablePageSize}
+                      onChange={(e) => {
+                        setTimetablePageSize(Number(e.target.value));
+                        setTimetablePage(1);
+                      }}
+                      className="sd-pagination-select"
+                      aria-label="Periods per page"
+                    >
+                      <option value={4}>4 per page</option>
+                      <option value={6}>6 per page</option>
+                      <option value={8}>8 per page</option>
+                      <option value={12}>12 per page</option>
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-          </footer>
+
+              {totalTimetablePages > 1 && (
+                <div className="sd-pagination-controls">
+                  <button
+                    type="button"
+                    className="sd-pagination-btn"
+                    onClick={() => setTimetablePage((p) => Math.max(1, p - 1))}
+                    disabled={safeTimetablePage <= 1}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={14} aria-hidden="true" />
+                    <span>Prev</span>
+                  </button>
+
+                  <div className="sd-pagination-pages">
+                    {getTimetablePageNumbers().map((p, idx) =>
+                      p === "..." ? (
+                        <span key={`ellipsis-${idx}`} className="sd-pagination-ellipsis" aria-hidden="true">
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={p}
+                          type="button"
+                          className={`sd-pagination-page-btn ${p === safeTimetablePage ? "active" : ""}`}
+                          onClick={() => setTimetablePage(p)}
+                          aria-label={`Go to page ${p}`}
+                          aria-current={p === safeTimetablePage ? "page" : undefined}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="sd-pagination-btn"
+                    onClick={() => setTimetablePage((p) => Math.min(totalTimetablePages, p + 1))}
+                    disabled={safeTimetablePage >= totalTimetablePages}
+                    aria-label="Next page"
+                  >
+                    <span>Next</span>
+                    <ChevronRight size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </footer>
+          </>
         )}
       </Card>
 
       {/* Class Faculty & Incharges Section */}
       <Card className="sd-faculty">
-        <div className="sd-section-heading">
+        <div className="sd-section-heading sd-faculty-header">
           <div className="sd-section-title">
-            <span className="sd-icon">
+            <span className="sd-icon" aria-hidden="true">
               <Users aria-hidden="true" />
             </span>
-            <div>
+            <div className="min-w-0">
               <h2>Class Faculty &amp; Teacher Incharges</h2>
               <p>Appointed Class Teacher and Subject Teachers for your section</p>
             </div>
@@ -599,8 +720,8 @@ export default function StudentDashboard() {
                 </p>
                 {classTeacher?.email && (
                   <div className="sd-incharge-email">
-                    <Mail className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
-                    <span className="truncate">{classTeacher.email}</span>
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <span>{classTeacher.email}</span>
                   </div>
                 )}
               </div>
@@ -634,7 +755,7 @@ export default function StudentDashboard() {
                           {sub.name}
                         </strong>
                         <span className="sd-subject-teacher-name">
-                          <GraduationCap className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
+                          <GraduationCap className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
                           <span className="truncate">{teacherName}</span>
                         </span>
                         {teacherEmail && (
@@ -652,8 +773,8 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="sd-faculty-empty">
-                <span className="sd-faculty-empty-icon">
-                  <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="sd-faculty-empty-icon" aria-hidden="true">
+                  <BookOpen className="w-4 h-4" />
                 </span>
                 <p className="sd-faculty-empty-title">No subject teachers allocated yet</p>
                 <p className="sd-faculty-empty-desc">
