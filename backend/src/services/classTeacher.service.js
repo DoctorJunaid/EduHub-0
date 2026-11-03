@@ -21,7 +21,7 @@ export async function assignClassTeacher(
   classId,
   teacherProfileId,
   assignedByUserId,
-  note = ""
+  note = "",
 ) {
   if (!mongoose.isValidObjectId(classId)) {
     throw new Error("Invalid Class/Section ID.");
@@ -33,7 +33,7 @@ export async function assignClassTeacher(
   // 1. Verify section belongs to campus
   let section = await Section.findOne({ _id: classId, campusId }).populate(
     "gradeId",
-    "name"
+    "name",
   );
   if (!section) {
     section = await Section.findById(classId).populate("gradeId", "name");
@@ -45,12 +45,12 @@ export async function assignClassTeacher(
   // 2. Verify teacher profile belongs to campus (supports profileId or userId)
   let teacher = await TeacherProfile.findById(teacherProfileId).populate(
     "user",
-    "_id name email campusId role"
+    "_id name email campusId role",
   );
   if (!teacher) {
     teacher = await TeacherProfile.findOne({ user: teacherProfileId }).populate(
       "user",
-      "_id name email campusId role"
+      "_id name email campusId role",
     );
   }
   if (!teacher) {
@@ -64,7 +64,7 @@ export async function assignClassTeacher(
       });
       teacher = await TeacherProfile.findById(teacher._id).populate(
         "user",
-        "_id name email campusId role"
+        "_id name email campusId role",
       );
     }
   }
@@ -74,7 +74,7 @@ export async function assignClassTeacher(
   const teacherCampus = teacher.user?.campusId;
   if (teacherCampus && String(teacherCampus) !== String(campusId)) {
     throw new Error(
-      "Teacher does not belong to this campus (cross-campus assignment rejected)."
+      "Teacher does not belong to this campus (cross-campus assignment rejected).",
     );
   }
 
@@ -111,7 +111,7 @@ export async function assignClassTeacher(
         classTeacherAssignedBy: null,
         classTeacherNote: "",
       },
-    }
+    },
   );
 
   // 4. If current section already has another teacher, unassign that teacher profile
@@ -132,7 +132,7 @@ export async function assignClassTeacher(
           isClassTeacher: false,
           classTeacherOf: null,
         },
-      }
+      },
     );
   }
 
@@ -212,7 +212,7 @@ export async function removeClassTeacher(campusId, classId, removedByUserId) {
 
   const section = await Section.findOne({ _id: classId, campusId }).populate(
     "gradeId",
-    "name"
+    "name",
   );
   if (!section) {
     throw new Error("Class section not found.");
@@ -382,8 +382,14 @@ export async function getAllClassTeachers(campusId) {
       campusId,
       dateStr: today,
       $or: [
-        { className: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
-        { gradeOrClass: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
+        {
+          className: new RegExp(`^${gradeName}$`, "i"),
+          section: new RegExp(`^${sectionName}$`, "i"),
+        },
+        {
+          gradeOrClass: new RegExp(`^${gradeName}$`, "i"),
+          section: new RegExp(`^${sectionName}$`, "i"),
+        },
       ],
     });
 
@@ -421,7 +427,10 @@ export async function getAllClassTeachers(campusId) {
 /**
  * 5. Get current logged-in teacher's Class Teacher assignment
  */
-export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId) {
+export async function getMyClassAssignment(
+  campusIdOrUserId,
+  maybeTeacherUserId,
+) {
   let campusId = campusIdOrUserId;
   let teacherUserId = maybeTeacherUserId;
 
@@ -435,17 +444,28 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
   let teacherProfile = null;
   if (mongoose.isValidObjectId(teacherUserId)) {
     teacherProfile = await TeacherProfile.findOne({
-      $or: [{ user: teacherUserId }, { userId: teacherUserId }, { _id: teacherUserId }],
+      $or: [
+        { user: teacherUserId },
+        { userId: teacherUserId },
+        { _id: teacherUserId },
+      ],
     }).populate("user", "name email phone avatar");
 
     if (teacherProfile && !teacherProfile.user) {
-      teacherProfile.user = await User.findById(teacherProfile.userId || teacherProfile.user).select("name email phone avatar").lean();
+      teacherProfile.user = await User.findById(
+        teacherProfile.userId || teacherProfile.user,
+      )
+        .select("name email phone avatar")
+        .lean();
     }
   }
 
   if (!teacherProfile && mongoose.isValidObjectId(teacherUserId)) {
     const userDoc = await User.findById(teacherUserId);
-    if (userDoc && ["teacher", "faculty", "class_teacher"].includes(userDoc.role)) {
+    if (
+      userDoc &&
+      ["teacher", "faculty", "class_teacher"].includes(userDoc.role)
+    ) {
       teacherProfile = await TeacherProfile.create({
         user: userDoc._id,
         userId: userDoc._id,
@@ -456,7 +476,9 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
         employeeId: `EMP-${userDoc._id.toString().slice(-4).toUpperCase()}`,
         isActive: true,
       });
-      teacherProfile = await TeacherProfile.findById(teacherProfile._id).populate("user", "name email phone avatar");
+      teacherProfile = await TeacherProfile.findById(
+        teacherProfile._id,
+      ).populate("user", "name email phone avatar");
     }
   }
 
@@ -464,7 +486,8 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
     return { isClassTeacher: false, classInfo: null };
   }
 
-  const effectiveCampusId = campusId || teacherProfile.campusId || teacherProfile.user?.campusId;
+  const effectiveCampusId =
+    campusId || teacherProfile.campusId || teacherProfile.user?.campusId;
   const canonicalUserId = teacherProfile.user?._id || teacherUserId;
 
   let sectionDoc = null;
@@ -503,7 +526,11 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
 
   // 4. Fallback: Check if teacher has a TeacherAssignment (prioritize All Subjects / subjectId: null)
   if (!sectionDoc) {
-    const possibleTeacherIds = [canonicalUserId, teacherProfile._id, teacherUserId].filter(Boolean);
+    const possibleTeacherIds = [
+      canonicalUserId,
+      teacherProfile._id,
+      teacherUserId,
+    ].filter(Boolean);
     const ta = await TeacherAssignment.findOne({
       teacherId: { $in: possibleTeacherIds },
       ...(effectiveCampusId ? { campusId: effectiveCampusId } : {}),
@@ -520,7 +547,10 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
 
   // Synchronize teacherProfile, Section, and User if section found
   if (sectionDoc) {
-    if (!teacherProfile.isClassTeacher || String(teacherProfile.classTeacherOf) !== String(sectionDoc._id)) {
+    if (
+      !teacherProfile.isClassTeacher ||
+      String(teacherProfile.classTeacherOf) !== String(sectionDoc._id)
+    ) {
       await TeacherProfile.findByIdAndUpdate(teacherProfile._id, {
         isClassTeacher: true,
         classTeacherOf: sectionDoc._id,
@@ -528,7 +558,11 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
       teacherProfile.isClassTeacher = true;
       teacherProfile.classTeacherOf = sectionDoc._id;
     }
-    if (!sectionDoc.classTeacherId || (String(sectionDoc.classTeacherId) !== String(teacherProfile._id) && String(sectionDoc.classTeacherId) !== String(canonicalUserId))) {
+    if (
+      !sectionDoc.classTeacherId ||
+      (String(sectionDoc.classTeacherId) !== String(teacherProfile._id) &&
+        String(sectionDoc.classTeacherId) !== String(canonicalUserId))
+    ) {
       await Section.findByIdAndUpdate(sectionDoc._id, {
         classTeacherId: teacherProfile._id,
         classTeacherAssignedAt: sectionDoc.classTeacherAssignedAt || new Date(),
@@ -617,7 +651,11 @@ export async function getMyClassAssignment(campusIdOrUserId, maybeTeacherUserId)
 /**
  * 6. Get Students of the Class Teacher's class
  */
-export async function getMyClassStudents(campusId, teacherUserId, options = {}) {
+export async function getMyClassStudents(
+  campusId,
+  teacherUserId,
+  options = {},
+) {
   const myClass = await getMyClassAssignment(campusId, teacherUserId);
   if (!myClass.isClassTeacher || !myClass.classInfo) {
     throw new Error("You are not currently assigned as a Class Teacher.");
@@ -631,7 +669,13 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
         $or: [
           { campusId: effectiveCampusId },
           ...(mongoose.Types.ObjectId.isValid(effectiveCampusId)
-            ? [{ campusId: new mongoose.Types.ObjectId(String(effectiveCampusId)) }]
+            ? [
+                {
+                  campusId: new mongoose.Types.ObjectId(
+                    String(effectiveCampusId),
+                  ),
+                },
+              ]
             : []),
         ],
       }
@@ -665,7 +709,7 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
     ],
   })
     .select(
-      "_id name email phone roll rollNo rollNumber gradeOrClass program section avatar guardianName guardianPhone guardianRelation isActive createdAt"
+      "_id name email phone roll rollNo rollNumber gradeOrClass program section avatar guardianName guardianPhone guardianRelation isActive createdAt",
     )
     .sort({ rollNumber: 1, name: 1 })
     .lean();
@@ -674,7 +718,11 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
     _id: u._id.toString(),
     id: u._id.toString(),
     studentId: u._id.toString(),
-    rollNo: u.rollNumber || u.rollNo || u.roll || `${sectionName}-${String(idx + 1).padStart(3, "0")}`,
+    rollNo:
+      u.rollNumber ||
+      u.rollNo ||
+      u.roll ||
+      `${sectionName}-${String(idx + 1).padStart(3, "0")}`,
     name: u.name || "Student",
     email: u.email || "",
     phone: u.phone || "",
@@ -703,14 +751,17 @@ export async function getMyClassStudents(campusId, teacherUserId, options = {}) 
 export async function markClassAttendance(
   campusId,
   teacherUserId,
-  { date, records = [], classId, userRole }
+  { date, records = [], classId, userRole },
 ) {
   let targetClassId = classId;
   let gradeName = "";
   let sectionName = "";
 
   if (targetClassId) {
-    const sec = await Section.findById(targetClassId).populate("gradeId", "name");
+    const sec = await Section.findById(targetClassId).populate(
+      "gradeId",
+      "name",
+    );
     if (sec) {
       gradeName = sec.gradeId?.name || "";
       sectionName = sec.name || "";
@@ -719,8 +770,13 @@ export async function markClassAttendance(
 
   if (!gradeName) {
     const myClass = await getMyClassAssignment(campusId, teacherUserId);
-    if (!myClass.isClassTeacher && !["campus_admin", "principal"].includes(userRole)) {
-      throw new Error("You are not authorized to mark attendance for this class.");
+    if (
+      !myClass.isClassTeacher &&
+      !["campus_admin", "principal"].includes(userRole)
+    ) {
+      throw new Error(
+        "You are not authorized to mark attendance for this class.",
+      );
     }
     if (myClass.classInfo) {
       targetClassId = myClass.classInfo.classId;
@@ -737,13 +793,16 @@ export async function markClassAttendance(
   const diffTime = Math.abs(today - targetDate);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  const isAdmin = ["campus_admin", "campus_manager", "principal", "super_admin"].includes(
-    userRole
-  );
+  const isAdmin = [
+    "campus_admin",
+    "campus_manager",
+    "principal",
+    "super_admin",
+  ].includes(userRole);
 
   if (diffDays > 7 && !isAdmin) {
     throw new Error(
-      "Attendance older than 7 days is locked. Please contact Campus Admin for override."
+      "Attendance older than 7 days is locked. Please contact Campus Admin for override.",
     );
   }
 
@@ -757,7 +816,8 @@ export async function markClassAttendance(
     const studentId = rec.studentId || rec._id || rec.id;
     if (!studentId || !mongoose.isValidObjectId(studentId)) continue;
 
-    const rawStatus = (rec.status || "Present").trim();
+    const rawStatus = (rec.status || "").trim();
+    if (!rawStatus) continue;
     // Normalize status
     let status = "Present";
     if (/absent/i.test(rawStatus)) status = "Absent";
@@ -790,7 +850,7 @@ export async function markClassAttendance(
           markedBy: teacherUserId,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 
     savedRecords.push(attendanceDoc);
@@ -825,7 +885,7 @@ export async function getMyClassAttendance(
   campusId,
   teacherUserId,
   date,
-  customClassId = null
+  customClassId = null,
 ) {
   let gradeName = "";
   let sectionName = "";
@@ -912,8 +972,8 @@ export async function getMyClassAttendance(
 
   const attendanceList = students.map((s, idx) => {
     const rec = recordMap.get(String(s._id));
-    const status = rec ? rec.status : "Present";
-    if (rec) {
+    const status = rec ? rec.status : "";
+    if (rec && status) {
       markedCount++;
       if (status === "Present" || status === "present") present++;
       else if (status === "Absent" || status === "absent") absent++;
@@ -925,13 +985,19 @@ export async function getMyClassAttendance(
       _id: s._id.toString(),
       studentId: s._id.toString(),
       name: s.name || "Student",
-      rollNo: s.rollNumber || s.rollNo || s.roll || `${sectionName}-${String(idx + 1).padStart(3, "0")}`,
+      rollNo:
+        s.rollNumber ||
+        s.rollNo ||
+        s.roll ||
+        `${sectionName}-${String(idx + 1).padStart(3, "0")}`,
       avatar: s.avatar || "",
-      status: rec ? rec.status : "Present",
+      status: rec ? rec.status : "",
       method: rec?.method || "manual",
       entryTime: rec?.entryTime || "",
       isLateArrival: !!rec?.isLateArrival,
-      gateCheckedIn: rec ? (rec.method === "gate_kiosk" || rec.method === "qr_scan") : false,
+      gateCheckedIn: rec
+        ? rec.method === "gate_kiosk" || rec.method === "qr_scan"
+        : false,
       remarks: rec ? rec.remarks || "" : "",
       markedAt: rec?.updatedAt || rec?.createdAt || null,
       isMarked: !!rec,
@@ -939,10 +1005,6 @@ export async function getMyClassAttendance(
   });
 
   const isMarked = markedCount > 0;
-  if (!isMarked) {
-    // Default preview counts
-    present = students.length;
-  }
 
   return {
     isClassTeacher: true,
@@ -957,9 +1019,9 @@ export async function getMyClassAttendance(
       late,
       excused,
       percentage:
-        students.length > 0
+        students.length > 0 && markedCount > 0
           ? Math.round(((present + late) / students.length) * 100)
-          : 100,
+          : 0,
     },
     students: attendanceList,
   };
@@ -971,7 +1033,7 @@ export async function getMyClassAttendance(
 export async function getMyClassAttendanceMonthly(
   campusId,
   teacherUserId,
-  { classId, month, year }
+  { classId, month, year },
 ) {
   let gradeName = "";
   let sectionName = "";
@@ -994,7 +1056,8 @@ export async function getMyClassAttendanceMonthly(
   }
 
   const currentYear = year || new Date().getFullYear();
-  const currentMonth = month || String(new Date().getMonth() + 1).padStart(2, "0");
+  const currentMonth =
+    month || String(new Date().getMonth() + 1).padStart(2, "0");
   const prefix = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
 
   const records = await StudentAttendance.find({
@@ -1055,7 +1118,7 @@ export async function getMyClassStats(campusId, teacherUserId) {
     campusId,
     teacherUserId,
     today,
-    myClass.classInfo.classId
+    myClass.classInfo.classId,
   );
 
   return {
@@ -1092,8 +1155,14 @@ export async function getUnmarkedClassesToday(campusId) {
       campusId,
       dateStr: today,
       $or: [
-        { className: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
-        { gradeOrClass: new RegExp(`^${gradeName}$`, "i"), section: new RegExp(`^${sectionName}$`, "i") },
+        {
+          className: new RegExp(`^${gradeName}$`, "i"),
+          section: new RegExp(`^${sectionName}$`, "i"),
+        },
+        {
+          gradeOrClass: new RegExp(`^${gradeName}$`, "i"),
+          section: new RegExp(`^${sectionName}$`, "i"),
+        },
       ],
     });
 
