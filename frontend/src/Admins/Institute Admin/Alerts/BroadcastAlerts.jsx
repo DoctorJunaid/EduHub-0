@@ -290,7 +290,7 @@ export default function BroadcastAlerts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loading && alertsList.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-6">
                     <PageLoader

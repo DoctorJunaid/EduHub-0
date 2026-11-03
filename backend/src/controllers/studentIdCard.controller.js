@@ -8,6 +8,7 @@ import {
   createStudentQrPayload,
   parseQrPayload,
 } from "../utils/qrAttendance.js";
+import { normalizeImageUrl } from "../utils/imageUrl.js";
 
 /**
  * Helper to resolve student and linked user document from id parameter.
@@ -314,7 +315,7 @@ export const updateStudentIdCard = async (req, res) => {
     if (fatherName !== undefined) studentDoc.fatherName = String(fatherName).trim();
     if (guardianPhone !== undefined) studentDoc.guardianPhone = String(guardianPhone).trim();
     if (address !== undefined) studentDoc.address = String(address).trim();
-    if (avatar !== undefined) studentDoc.avatar = String(avatar).trim();
+    if (avatar !== undefined) studentDoc.avatar = normalizeImageUrl(String(avatar).trim());
     if (qrCodeData !== undefined) {
       studentDoc.qrCodeData = String(qrCodeData).trim();
     } else if (!studentDoc.qrCodeData) {
@@ -335,7 +336,7 @@ export const updateStudentIdCard = async (req, res) => {
         if (!userDoc.phone) userDoc.phone = String(guardianPhone).trim();
       }
       if (address !== undefined) userDoc.address = String(address).trim();
-      if (avatar !== undefined) userDoc.avatar = String(avatar).trim();
+      if (avatar !== undefined) userDoc.avatar = normalizeImageUrl(String(avatar).trim());
       if (rollNo !== undefined) {
         userDoc.rollNo = String(rollNo).trim();
         userDoc.roll = String(rollNo).trim();

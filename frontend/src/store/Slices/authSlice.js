@@ -47,6 +47,7 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
     clearTenantDataCaches();
     localStorage.setItem('eduHubToken', token);
     localStorage.setItem('eduHubUser', JSON.stringify(user));
+    localStorage.removeItem('eduHubActiveCampusId');
     return user;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Login failed');

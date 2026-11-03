@@ -21,6 +21,15 @@ export const fetchStudents = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch students"
       );
     }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { students } = getState();
+      if (students?.status === "loading" || students?.isRefreshing) {
+        return false;
+      }
+    },
   }
 );
 
@@ -81,6 +90,7 @@ const studentsSlice = createSlice({
   initialState: {
     records: [],
     status: "idle",
+    isRefreshing: false,
     error: null,
   },
   reducers: {
@@ -122,10 +132,15 @@ const studentsSlice = createSlice({
     builder
       // Fetch
       .addCase(fetchStudents.pending, (state) => {
-        state.status = "loading";
+        if (state.records.length === 0) {
+          state.status = "loading";
+        }
+        state.isRefreshing = true;
+        state.error = null;
       })
       .addCase(fetchStudents.fulfilled, (state, { payload }) => {
         state.status = "succeeded";
+        state.isRefreshing = false;
         const list = Array.isArray(payload)
           ? payload
           : payload?.students || payload?.data || [];
@@ -139,7 +154,8 @@ const studentsSlice = createSlice({
         }));
       })
       .addCase(fetchStudents.rejected, (state, { payload }) => {
-        state.status = "failed";
+        state.status = state.records.length > 0 ? "succeeded" : "failed";
+        state.isRefreshing = false;
         state.error = payload;
       })
       // Add

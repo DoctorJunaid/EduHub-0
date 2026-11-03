@@ -325,7 +325,7 @@ export default function TeacherDiary() {
       </header>
 
       {/* Main Content Area */}
-      {loading ? (
+      {(classesQuery.isLoading && classes.length === 0) || (entriesQuery.isLoading && entries.length === 0) ? (
         <div className="py-16 text-center text-slate-500">
           <SpinnerCustom
             text="Loading daily lecture diary entries..."

@@ -430,7 +430,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
           <div className="teacher-table-scroll w-full overflow-x-auto">
-            {loadingSessions ? (
+            {loadingSessions && todaySessions.length === 0 ? (
               <div className="p-8 flex items-center justify-center">
                 <SpinnerCustom text="Loading today's periods..." size="default" />
               </div>

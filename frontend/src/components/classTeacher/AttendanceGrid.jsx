@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { normalizeImageUrl } from "@/utils/imageUrl";
 
 export default function AttendanceGrid({
   students = [],
@@ -215,9 +216,10 @@ export default function AttendanceGrid({
                           <div className="w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-800 flex items-center justify-center font-bold text-xs shrink-0">
                             {student.avatar ? (
                               <img
-                                src={student.avatar}
+                                src={normalizeImageUrl(student.avatar)}
                                 alt={student.name}
                                 className="w-full h-full rounded-lg object-cover"
+                                referrerPolicy="no-referrer"
                               />
                             ) : (
                               (student.name || "S").charAt(0).toUpperCase()

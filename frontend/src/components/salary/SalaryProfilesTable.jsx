@@ -1,6 +1,5 @@
 import React from 'react';
-import { Pencil, Power, PowerOff } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { Power, PowerOff } from 'lucide-react';
 import TableSkeleton from '@/components/shared/TableSkeleton';
 
 const formatPKR = (amount) => `PKR ${Number(amount || 0).toLocaleString('en-PK')}`;
@@ -28,11 +27,6 @@ export default function SalaryProfilesTable({
 
   return (
     <div className="campus-table-container salary-profiles-table-wrap relative">
-      {loading && profiles.length > 0 && (
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center z-10">
-          <Spinner className="size-6 text-primary" />
-        </div>
-      )}
       <div className="overflow-x-auto flex-1">
         <table className="salary-profiles-table">
           <thead>

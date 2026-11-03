@@ -22,6 +22,15 @@ export const fetchFaculty = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch faculty"
       );
     }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { faculty } = getState();
+      if (faculty?.status === "loading" || faculty?.isRefreshing) {
+        return false;
+      }
+    },
   }
 );
 
@@ -82,6 +91,7 @@ const facultySlice = createSlice({
   initialState: {
     records: [],
     status: "idle",
+    isRefreshing: false,
     error: null,
   },
   reducers: {
@@ -120,10 +130,15 @@ const facultySlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchFaculty.pending, (state) => {
-        state.status = "loading";
+        if (state.records.length === 0) {
+          state.status = "loading";
+        }
+        state.isRefreshing = true;
+        state.error = null;
       })
       .addCase(fetchFaculty.fulfilled, (state, { payload }) => {
         state.status = "succeeded";
+        state.isRefreshing = false;
         const list = Array.isArray(payload)
           ? payload
           : payload?.faculty || payload?.data || [];
@@ -136,7 +151,8 @@ const facultySlice = createSlice({
         }));
       })
       .addCase(fetchFaculty.rejected, (state, { payload }) => {
-        state.status = "failed";
+        state.status = state.records.length > 0 ? "succeeded" : "failed";
+        state.isRefreshing = false;
         state.error = payload;
       })
       .addCase(addFaculty.fulfilled, (state, { payload }) => {

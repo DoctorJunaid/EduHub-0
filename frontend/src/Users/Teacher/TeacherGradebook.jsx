@@ -482,7 +482,7 @@ export default function TeacherGradebook() {
 
         {/* Gradebook Table Area */}
         <div className="teacher-gradebook-table-wrap overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
-          {loading || loadingResults ? (
+          {(loading && classes.length === 0) || (loadingResults && results.length === 0) ? (
             <div className="py-16 text-center text-slate-500">
               <SpinnerCustom
                 text="Loading student evaluations &amp; marks..."

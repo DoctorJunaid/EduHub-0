@@ -743,7 +743,7 @@ export default function ClassTimetable() {
       {/* Main Content Body */}
       <div className="class-timetable-content">
         {/* Loading state */}
-        {timetableStatus === "loading" && (
+        {timetableStatus === "loading" && records.length === 0 && (
           <div
             style={{
               display: "flex",

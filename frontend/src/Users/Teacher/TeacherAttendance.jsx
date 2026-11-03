@@ -545,7 +545,7 @@ export default function TeacherAttendance() {
           className="w-full overflow-x-auto"
           style={{ WebkitOverflowScrolling: "touch", height: "auto", maxHeight: "none", overflowY: "visible" }}
         >
-          {loadingClasses || loadingRoster ? (
+          {(loadingClasses && classes.length === 0) || (loadingRoster && roster.length === 0) ? (
             <div className="py-16 text-center text-slate-500">
               <SpinnerCustom
                 text="Loading enrolled students &amp; attendance status..."
