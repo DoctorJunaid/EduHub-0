@@ -1,10 +1,19 @@
 import mongoose from "mongoose";
 import StudentLeaveRequest from "../models/studentLeave.model.js";
-import { StudentAttendance, StudentProfile, TeacherProfile } from "../models/profile.model.js";
-import { Section, TeacherAssignment } from "../models/academic.model.js";
+import {
+  StudentAttendance,
+  StudentProfile,
+  TeacherProfile,
+} from "../models/profile.model.js";
+import { Section, TeacherAssignment, Grade } from "../models/academic.model.js";
 import User from "../models/user.model.js";
 import { resolveStudentSubjects } from "../controllers/studentPortal.controller.js";
 import { getTeacherAssignedClasses } from "./teacherAssignment.service.js";
+
+function escapeRegex(text) {
+  if (!text || typeof text !== "string") return "";
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
 
 /**
  * Normalize raw date into YYYY-MM-DD dateStr and UTC start/end Date objects
@@ -45,7 +54,9 @@ export async function submitStudentLeave({
   let campusId = studentUser.campusId;
   if (!campusId) {
     try {
-      const prof = await StudentProfile.findOne({ user: studentUser._id }).select("campusId").lean();
+      const prof = await StudentProfile.findOne({ user: studentUser._id })
+        .select("campusId")
+        .lean();
       if (prof?.campusId) campusId = prof.campusId;
     } catch {
       // ignore
@@ -67,7 +78,9 @@ export async function submitStudentLeave({
     "Urgent",
     "Other",
   ];
-  const safeCategory = ALLOWED_CATEGORIES.includes(category) ? category : "Other";
+  const safeCategory = ALLOWED_CATEGORIES.includes(category)
+    ? category
+    : "Other";
 
   const { dateStr, startOfDay } = normalizeDateStr(date);
 
@@ -86,7 +99,10 @@ export async function submitStudentLeave({
       teacherName = resolved.classTeacher.name;
     }
   } catch (err) {
-    console.warn("[submitStudentLeave] resolveStudentSubjects fallback:", err.message);
+    console.warn(
+      "[submitStudentLeave] resolveStudentSubjects fallback:",
+      err.message,
+    );
   }
 
   // Fallback: check Section if teacher not resolved
@@ -95,7 +111,9 @@ export async function submitStudentLeave({
       const secDoc = await Section.findOne({
         campusId,
         $or: [{ name: section }, { name: `Section ${section}` }],
-      }).populate("classTeacherId").lean();
+      })
+        .populate("classTeacherId")
+        .lean();
 
       if (secDoc?.classTeacherId) {
         const ct = secDoc.classTeacherId;
@@ -109,7 +127,10 @@ export async function submitStudentLeave({
 
   const studentName = studentUser.name || "Student";
   const rollNumber =
-    studentUser.rollNumber || studentUser.roll || studentUser.admissionNo || "STD-001";
+    studentUser.rollNumber ||
+    studentUser.roll ||
+    studentUser.admissionNo ||
+    "STD-001";
 
   // Check if leave request already exists for this date
   let leaveRequest = await StudentLeaveRequest.findOne({
@@ -185,7 +206,10 @@ export async function submitStudentLeave({
       });
     }
   } catch (attErr) {
-    console.warn("[submitStudentLeave] attendance sync notice:", attErr.message);
+    console.warn(
+      "[submitStudentLeave] attendance sync notice:",
+      attErr.message,
+    );
   }
 
   return leaveRequest;
@@ -201,9 +225,56 @@ export async function getStudentLeaveRequests(campusId, studentId) {
 }
 
 /**
- * 3. Get leave requests visible to a teacher or campus manager
+ * Resolve Section(s) where the user is designated as Class Teacher
  */
-export async function getTeacherLeaveRequests(campusId, teacherUserId, filter = {}) {
+export async function findClassTeacherSectionsForUser(teacherUserId, campusId) {
+  const possibleIds = [teacherUserId];
+  if (mongoose.isValidObjectId(teacherUserId)) {
+    const tp = await TeacherProfile.findOne({
+      $or: [
+        { user: teacherUserId },
+        { userId: teacherUserId },
+        { _id: teacherUserId },
+      ],
+    }).lean();
+
+    if (tp) {
+      possibleIds.push(tp._id);
+      if (tp.classTeacherOf) {
+        const sec = await Section.findById(tp.classTeacherOf)
+          .populate("gradeId", "name")
+          .lean();
+        if (sec) return [sec];
+      }
+    }
+  }
+
+  const query = {
+    classTeacherId: { $in: possibleIds },
+  };
+  if (campusId) query.campusId = campusId;
+
+  let sections = await Section.find(query).populate("gradeId", "name").lean();
+
+  if ((!sections || sections.length === 0) && campusId) {
+    sections = await Section.find({ classTeacherId: { $in: possibleIds } })
+      .populate("gradeId", "name")
+      .lean();
+  }
+
+  return sections || [];
+}
+
+/**
+ * 3. Get leave requests visible to a teacher or campus manager
+ * STRICT CLASS & SECTION ISOLATION: A Class Teacher can ONLY see leave requests
+ * for students in their designated class and section!
+ */
+export async function getTeacherLeaveRequests(
+  campusId,
+  teacherUserId,
+  filter = {},
+) {
   const user = await User.findById(teacherUserId).lean();
   const isElevated =
     user?.role === "campus_admin" ||
@@ -220,43 +291,90 @@ export async function getTeacherLeaveRequests(campusId, teacherUserId, filter = 
   if (isElevated) {
     if (campusId) query.campusId = campusId;
   } else {
-    // Teacher / Faculty: find all classes & sections taught by this teacher
-    const assignedClasses = await getTeacherAssignedClasses(campusId, teacherUserId);
-    const orConditions = [];
+    // Teacher / Faculty: strictly scoped to the class/section where they are the designated Class Teacher
+    const assignedSections = await findClassTeacherSectionsForUser(
+      teacherUserId,
+      campusId,
+    );
 
-    // 1. Directly assigned to this teacher
-    orConditions.push({ teacherId: teacherUserId });
-
-    // 2. Any leave request from the teacher's active campus
-    if (campusId) {
-      orConditions.push({ campusId });
+    // If teacher is NOT assigned as Class Teacher for any section, return empty array immediately
+    if (!assignedSections || assignedSections.length === 0) {
+      return [];
     }
 
-    // 3. Any student whose class and section the teacher is assigned to teach
-    for (const c of assignedClasses) {
-      const cName = c.className || c.gradeOrClass;
-      const cSec = c.section;
-      if (cName) {
-        const cond = {
-          $or: [
-            { className: cName },
-            { className: new RegExp(`^${cName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
-          ],
-        };
-        if (cSec && cSec !== "All" && cSec !== "All sections") {
-          cond.section = new RegExp(`^${cSec.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
-        }
-        orConditions.push(cond);
-      }
+    const sectionMatchConditions = [];
+    const studentFilterConditions = [];
+
+    for (const secDoc of assignedSections) {
+      const gName = secDoc.gradeId?.name || "";
+      const sName = secDoc.name || "";
+      const cleanGrade = gName.replace(/^(class|grade)\s*/i, "").trim();
+      const cleanSec = sName.replace(/^section\s*/i, "").trim();
+
+      const gradeRegexList = [
+        new RegExp(`^${escapeRegex(gName)}$`, "i"),
+        ...(cleanGrade
+          ? [new RegExp(`^(class|grade)\\s*${escapeRegex(cleanGrade)}$`, "i")]
+          : []),
+      ];
+
+      const secRegexList = [
+        new RegExp(`^${escapeRegex(sName)}$`, "i"),
+        ...(cleanSec
+          ? [new RegExp(`^(section\\s*)?${escapeRegex(cleanSec)}$`, "i")]
+          : []),
+      ];
+
+      sectionMatchConditions.push({
+        $and: [
+          { $or: gradeRegexList.map((r) => ({ className: r })) },
+          { $or: secRegexList.map((r) => ({ section: r })) },
+        ],
+      });
+
+      studentFilterConditions.push({
+        $or: [
+          { sectionId: secDoc._id },
+          {
+            $and: [
+              {
+                $or: [
+                  ...gradeRegexList.map((r) => ({ gradeOrClass: r })),
+                  ...gradeRegexList.map((r) => ({ program: r })),
+                ],
+              },
+              {
+                $or: secRegexList.map((r) => ({ section: r })),
+              },
+            ],
+          },
+        ],
+      });
     }
 
-    if (orConditions.length > 0) {
-      query.$or = orConditions;
+    // Find all student IDs enrolled in the teacher's designated sections
+    const studentQuery = {
+      role: "student",
+      $or: studentFilterConditions,
+    };
+    if (campusId) studentQuery.campusId = campusId;
+
+    const enrolledStudents = await User.find(studentQuery).select("_id").lean();
+    const validStudentIds = enrolledStudents.map((s) => s._id);
+
+    const orRules = [...sectionMatchConditions];
+    if (validStudentIds.length > 0) {
+      orRules.push({ studentId: { $in: validStudentIds } });
     }
+
+    query.$and = [...(campusId ? [{ campusId }] : []), { $or: orRules }];
   }
 
   return await StudentLeaveRequest.find(query)
-    .populate("studentId", "name email rollNumber roll admissionNo gradeOrClass program section avatar")
+    .populate(
+      "studentId",
+      "name email rollNumber roll admissionNo gradeOrClass program section avatar",
+    )
     .sort({ date: -1, createdAt: -1 })
     .lean();
 }
@@ -265,20 +383,100 @@ export async function getTeacherLeaveRequests(campusId, teacherUserId, filter = 
  * 4. Review (Approve or Reject) a leave request
  * Automatically syncs the result to central StudentAttendance database!
  */
-export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser, { status, remarks = "" }) {
+export async function reviewLeaveRequest(
+  leaveRequestId,
+  campusId,
+  reviewerUser,
+  { status, remarks = "" },
+) {
   if (!["Approved", "Rejected"].includes(status)) {
     throw new Error("Invalid review status. Must be 'Approved' or 'Rejected'.");
   }
 
   let leaveReq = null;
   if (campusId) {
-    leaveReq = await StudentLeaveRequest.findOne({ _id: leaveRequestId, campusId });
+    leaveReq = await StudentLeaveRequest.findOne({
+      _id: leaveRequestId,
+      campusId,
+    });
   }
   if (!leaveReq) {
     leaveReq = await StudentLeaveRequest.findById(leaveRequestId);
   }
   if (!leaveReq) {
     throw new Error("Leave request not found.");
+  }
+
+  // Enforce teacher authorization: only the designated Class Teacher can review
+  const isElevated =
+    reviewerUser?.role === "campus_admin" ||
+    reviewerUser?.role === "campus_manager" ||
+    reviewerUser?.role === "principal" ||
+    reviewerUser?.role === "super_admin";
+
+  if (!isElevated) {
+    const assignedSections = await findClassTeacherSectionsForUser(
+      reviewerUser._id,
+      campusId || leaveReq.campusId,
+    );
+    if (!assignedSections || assignedSections.length === 0) {
+      const err = new Error(
+        "Forbidden: You are not designated as a Class Teacher.",
+      );
+      err.statusCode = 403;
+      throw err;
+    }
+
+    const studentUser = await User.findById(leaveReq.studentId).lean();
+    let belongs = false;
+
+    for (const sec of assignedSections) {
+      const gName = sec.gradeId?.name || "";
+      const sName = sec.name || "";
+      const cleanG = gName
+        .replace(/^(class|grade)\s*/i, "")
+        .trim()
+        .toLowerCase();
+      const cleanS = sName
+        .replace(/^section\s*/i, "")
+        .trim()
+        .toLowerCase();
+
+      const lG = (
+        leaveReq.className ||
+        studentUser?.gradeOrClass ||
+        studentUser?.program ||
+        ""
+      )
+        .replace(/^(class|grade)\s*/i, "")
+        .trim()
+        .toLowerCase();
+      const lS = (leaveReq.section || studentUser?.section || "")
+        .replace(/^section\s*/i, "")
+        .trim()
+        .toLowerCase();
+
+      const studentSecId = studentUser?.sectionId
+        ? String(studentUser.sectionId)
+        : "";
+      if (studentSecId && studentSecId === String(sec._id)) {
+        belongs = true;
+        break;
+      }
+
+      if (cleanG && lG && cleanG === lG && (!cleanS || !lS || cleanS === lS)) {
+        belongs = true;
+        break;
+      }
+    }
+
+    if (!belongs) {
+      const err = new Error(
+        "Forbidden: You can only review leave requests for your designated Class and Section.",
+      );
+      err.statusCode = 403;
+      throw err;
+    }
   }
 
   const dateStr = leaveReq.dateStr;
@@ -309,10 +507,7 @@ export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser,
       {
         campusId: leaveReq.campusId,
         studentId: leaveReq.studentId,
-        $or: [
-          { dateStr },
-          { date: { $gte: startOfDay, $lte: endOfDay } },
-        ],
+        $or: [{ dateStr }, { date: { $gte: startOfDay, $lte: endOfDay } }],
       },
       {
         $set: {
@@ -329,7 +524,7 @@ export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser,
           markedBy: reviewerUser._id,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
   } else {
     // Rejected
@@ -341,10 +536,7 @@ export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser,
       {
         campusId: leaveReq.campusId,
         studentId: leaveReq.studentId,
-        $or: [
-          { dateStr },
-          { date: { $gte: startOfDay, $lte: endOfDay } },
-        ],
+        $or: [{ dateStr }, { date: { $gte: startOfDay, $lte: endOfDay } }],
       },
       {
         $set: {
@@ -352,7 +544,7 @@ export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser,
           remarks: `Leave request rejected: ${remarks || "Application not approved"}`,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -362,4 +554,23 @@ export async function reviewLeaveRequest(leaveRequestId, campusId, reviewerUser,
     leaveRequest: leaveReq,
     syncedAttendance,
   };
+}
+
+/**
+ * 5. Campus admin / manager fetches all leave requests across campus
+ */
+export async function getCampusLeaveRequests(campusId, filter = {}) {
+  const query = {};
+  if (campusId) query.campusId = campusId;
+  if (filter.status && filter.status !== "all") {
+    query.status = filter.status;
+  }
+
+  return await StudentLeaveRequest.find(query)
+    .populate(
+      "studentId",
+      "name email rollNumber roll admissionNo gradeOrClass program section avatar",
+    )
+    .sort({ date: -1, createdAt: -1 })
+    .lean();
 }
