@@ -91,7 +91,7 @@ export default function ClassesTab({
       {/* 1. Top Sub-header Toolbar */}
       <div className="teacher-classes-toolbar campus-toolbar" style={{ borderRadius: "8px", border: "1px solid #e4e4e7" }}>
         <div className="toolbar-left">
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <span style={{ fontSize: "13px", fontWeight: "700", color: "#09090b" }}>
               Assigned Classes & Sections
             </span>
