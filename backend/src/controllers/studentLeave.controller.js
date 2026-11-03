@@ -86,10 +86,22 @@ export async function getTeacherLeaves(req, res) {
     const { status } = req.query;
 
     const leaves = await leaveService.getTeacherLeaveRequests(campusId, teacherUserId, { status });
+    const leavesList = Array.isArray(leaves) ? leaves : [];
+
+    const pendingCount = leavesList.filter((l) => l.status === "Pending").length;
+    const approvedCount = leavesList.filter((l) => l.status === "Approved").length;
+    const rejectedCount = leavesList.filter((l) => l.status === "Rejected").length;
 
     return res.status(200).json({
       success: true,
-      data: leaves,
+      data: leavesList,
+      counts: {
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        all: leavesList.length,
+        total: leavesList.length,
+      },
     });
   } catch (error) {
     console.error("[getTeacherLeaves] Error:", error);
@@ -133,7 +145,8 @@ export async function reviewLeaveRequest(req, res) {
     });
   } catch (error) {
     console.error("[reviewLeaveRequest] Error:", error);
-    return res.status(400).json({
+    const statusCode = error.statusCode || 400;
+    return res.status(statusCode).json({
       success: false,
       message: error.message || "Failed to review leave request.",
     });
