@@ -33,6 +33,21 @@ import toast from "react-hot-toast";
 import "./GateAttendanceKiosk.css";
 
 /**
+ * Auto-repair payload if hardware scanner dropped leading/trailing braces
+ */
+function repairPayload(raw) {
+  if (!raw || typeof raw !== "string") return raw;
+  let str = raw.trim();
+  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"'))) {
+    str = "{" + str;
+  }
+  if (str.startsWith("{") && !str.endsWith("}")) {
+    str = str + "}";
+  }
+  return str;
+}
+
+/**
  * Play instant, crisp optical scanner capture beep (emulates hardware laser confirmation)
  */
 function playScanCaptureBeep() {
@@ -270,7 +285,7 @@ export default function GateAttendanceKiosk() {
   // Core Gate Check-In Processor
   const processGateScan = useCallback(
     async (payload) => {
-      const cleanPayload = typeof payload === "string" ? payload.trim() : payload;
+      const cleanPayload = typeof payload === "string" ? repairPayload(payload.trim()) : payload;
       if (!cleanPayload || isProcessing) return;
 
       setIsProcessing(true);
@@ -350,7 +365,7 @@ export default function GateAttendanceKiosk() {
    */
   const handleHardwareScanCaptured = useCallback(
     (code) => {
-      const trimmed = (code || "").trim();
+      const trimmed = repairPayload((code || "").trim());
       if (!trimmed) return;
 
       // 1. Instant Hardware Scanner Beep

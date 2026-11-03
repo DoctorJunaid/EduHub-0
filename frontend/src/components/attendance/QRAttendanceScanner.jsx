@@ -20,6 +20,21 @@ import axiosInstance from "@/api/axiosInstance";
 import { normalizeImageUrl } from "@/utils/imageUrl";
 
 /**
+ * Auto-repair payload if hardware scanner dropped leading/trailing braces
+ */
+function repairPayload(raw) {
+  if (!raw || typeof raw !== "string") return raw;
+  let str = raw.trim();
+  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"'))) {
+    str = "{" + str;
+  }
+  if (str.startsWith("{") && !str.endsWith("}")) {
+    str = str + "}";
+  }
+  return str;
+}
+
+/**
  * Play a clean, synthetic audio cue using the Web Audio API
  */
 function playAudioFeedback(type = "success") {
@@ -131,10 +146,12 @@ export default function QRAttendanceScanner({
    */
   const submitAttendance = useCallback(
     async (rawCode, { override = false } = {}) => {
+      const cleanCode = typeof rawCode === "string" ? repairPayload(rawCode.trim()) : rawCode;
+      if (!cleanCode) return;
       setIsProcessing(true);
       try {
         const payload = {
-          qrPayload: rawCode,
+          qrPayload: cleanCode,
           status: targetStatus,
           classId: classScope?.classId || classScope?.id || undefined,
           className: classScope?.className || manualClass || undefined,
