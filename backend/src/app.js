@@ -18,8 +18,20 @@ import campusManagerRoutes from "./routes/campusManagerRoutes.js";
 
 const app = express();
 
+// Disable ETags to prevent 304 Not Modified caching on dynamic multi-tenant APIs
+app.set("etag", false);
+
 // Trust proxy for rate limiting behind reverse proxies
 app.set("trust proxy", 1);
+
+// Anti-caching headers for all API routes (prevents Vercel Edge & browser stale multi-tenant caching)
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
 
 // Security HTTP headers
 app.use(helmet());

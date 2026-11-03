@@ -95,6 +95,7 @@ import {
 } from "../middleware/quota.middleware.js";
 import {
   recordQrScanAttendance,
+  getGateKioskTodayStats,
   getAttendanceHealthCheck,
 } from "../controllers/qrAttendance.controller.js";
 
@@ -190,8 +191,9 @@ router
   .put(updateStudentAttendance)
   .delete(deleteStudentAttendance);
 
-// QR Attendance Scanner & System Diagnostics
+// QR Attendance Scanner & Gate Kiosk
 router.post("/attendance/qr-scan", recordQrScanAttendance);
+router.get("/attendance/gate-kiosk-stats", getGateKioskTodayStats);
 router.get("/attendance/health-check", getAttendanceHealthCheck);
 
 // Fee Records & School Monthly Fee System

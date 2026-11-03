@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { CircleCheck, CircleX, Download, Percent, Plus, Search, Users, CheckCheck, QrCode } from 'lucide-react';
+import { CircleCheck, CircleX, Download, Percent, Plus, Search, Users, CheckCheck, QrCode, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -36,6 +37,7 @@ const emptyFilters = { search: '', program: '', section: '', subject: '', status
 export default function StudentAttendance({ matchTimetable, rateMode }) {
   const { isSchool } = useInstitution();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [date, setDate] = useState(() => dateKey(new Date()));
   const [view, setView] = useState('daily');
@@ -307,6 +309,16 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
             >
               <QrCode size={14} />
               Scan QR Code
+            </button>
+            <button
+              type="button"
+              className="toolbar-btn toolbar-btn-outline"
+              style={{ borderColor: "#10b981", color: "#047857", backgroundColor: "#ecfdf5", fontWeight: "600" }}
+              onClick={() => navigate('/gate-attendance')}
+              title="Launch Global Gate Attendance Kiosk for Turnstile / Gate Check-in"
+            >
+              <ShieldCheck size={14} />
+              Gate Kiosk Mode
             </button>
             <button
               type="button"

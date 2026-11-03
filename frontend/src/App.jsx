@@ -1,6 +1,7 @@
 import BroadcastAlerts from "./Admins/Institute Admin/Alerts/BroadcastAlerts";
 import FacultyAttendance from "./Admins/Campus Admin/Attendance/FacultyAttendance";
 import StudentAttendance from "./Admins/Campus Admin/Attendance/Students/StudentAttendance";
+import GateAttendanceKiosk from "./Admins/Campus Admin/Attendance/GateAttendanceKiosk";
 import ExamResults from "./Admins/Campus Admin/Results/ExamResults";
 import FeeManagement from "./Admins/Campus Admin/Fees/FeeManagement";
 import Messages from "./Admins/Campus Admin/Messages/Messages";
@@ -217,18 +218,24 @@ const App = () => {
             />
           }
         >
+          <Route path="gate-attendance/kiosk" element={<GateAttendanceKiosk />} />
           <Route element={<MainLayout />}>
             <Route path="dashboard" element={<CampusOverview />} />
             <Route path="faculty" element={<FacultyDirectory />} />
+            <Route path="campus-manager/teachers" element={<FacultyDirectory />} />
+            <Route path="campus-manager/faculty" element={<FacultyDirectory />} />
             <Route path="faculty/:teacherId" element={<TeacherProfile />} />
             <Route path="teachers/:teacherId" element={<TeacherProfile />} />
             <Route path="teacher/:teacherId" element={<TeacherProfile />} />
             <Route path="faculty-profile/:teacherId" element={<TeacherProfile />} />
+            <Route path="campus-manager/teachers/:teacherId" element={<TeacherProfile />} />
             <Route path="students" element={<StudentsDirectory />} />
             <Route path="timetable" element={<ClassTimetable />} />
             <Route path="exams" element={<ExamSchedules />} />
             <Route path="faculty-attendance" element={<FacultyAttendance />} />
             <Route path="student-attendance" element={<StudentAttendance />} />
+            <Route path="gate-attendance" element={<GateAttendanceKiosk />} />
+            <Route path="gate-kiosk" element={<GateAttendanceKiosk />} />
             <Route path="results" element={<ExamResults />} />
             <Route path="fees" element={<FeeManagement />} />
             <Route path="support" element={<SupportList />} />

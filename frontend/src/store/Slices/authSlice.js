@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance.js';
+import { queryClient } from '../../lib/queryClient.js';
 
 export const loggedOutState = {
   isAuthenticated: false,
@@ -42,7 +43,10 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
     if (user && !user.id && user._id) {
       user.id = String(user._id);
     }
+    // Wipe prior tenant cache before establishing new session
+    clearTenantDataCaches();
     localStorage.setItem('eduHubToken', token);
+    localStorage.setItem('eduHubUser', JSON.stringify(user));
     localStorage.removeItem('eduHubActiveCampusId');
     return user;
   } catch (error) {
@@ -79,18 +83,46 @@ const getCachedUser = () => {
   }
 };
 
-const clearCachedSession = () => {
+export const clearTenantDataCaches = () => {
   if (typeof localStorage === 'undefined') return;
-  localStorage.removeItem('eduHubToken');
-  localStorage.removeItem('eduHubUser');
-  localStorage.removeItem('eduHubActiveCampusId');
   try {
-    localStorage.removeItem('eduhub_faculty');
-    localStorage.removeItem('eduhub_students');
-    localStorage.removeItem('eduhub_timetable');
-    localStorage.removeItem('eduhub_attendance');
-    localStorage.removeItem('eduhub_student_attendance');
+    localStorage.removeItem('eduHubActiveCampusId');
+    localStorage.removeItem('eduHub_institutes_cache');
+    localStorage.removeItem('eduHub_stats_cache');
+    const tenantKeys = [
+      'eduhub_faculty',
+      'eduhub_students',
+      'eduhub_campuses',
+      'eduhub_timetable',
+      'eduhub_attendance',
+      'eduhub_student_attendance',
+      'eduhub_exams',
+      'eduhub_results',
+      'eduhub_fees',
+      'eduhub_diary',
+      'eduhub_assignments',
+      'eduhub_submissions',
+      'eduhub_broadcasts',
+      'eduhub_messages',
+      'eduhub_demo_lifecycle',
+      'eduhub_auth',
+    ];
+    for (const key of tenantKeys) {
+      localStorage.removeItem(key);
+    }
   } catch {}
+  try {
+    queryClient.clear();
+  } catch {}
+};
+
+export const clearCachedSession = () => {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.removeItem('eduHubToken');
+    localStorage.removeItem('eduHubUser');
+  } catch {}
+  clearTenantDataCaches();
 };
 
 const initialCachedUser = getCachedUser();

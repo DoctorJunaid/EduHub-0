@@ -25,6 +25,25 @@ import {
 class CampusAdminService {
   // --- Dashboard Aggregated Statistics ---
   async getDashboardStats(campusId, isSchool = false) {
+    if (!campusId) {
+      return {
+        totalStudents: 0,
+        activeStudents: 0,
+        totalFaculty: 0,
+        activeFaculty: 0,
+        totalClasses: 0,
+        totalExams: 0,
+        studentAttendanceRate: 0,
+        facultyAttendanceRate: 0,
+        todayStudentAttendanceLogged: 0,
+        todayFacultyAttendanceLogged: 0,
+        totalFeeAmount: 0,
+        collectedFeeAmount: 0,
+        pendingVouchersCount: 0,
+        isSchool,
+      };
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -131,19 +150,62 @@ class CampusAdminService {
   }
 
   async getTeacherProfileById(id, campusId) {
-    const query = { _id: id };
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+    const orConditions = [];
+    if (isObjectId) {
+      orConditions.push({ _id: id }, { user: id }, { userId: id });
+    }
+    orConditions.push({ staffId: id }, { employeeId: id });
+
+    const query = { $or: orConditions };
     if (campusId) query.campusId = campusId;
-    const profile = await TeacherProfile.findOne(query).populate(
+
+    let profile = await TeacherProfile.findOne(query).populate(
       "user",
       "name email phone department designation",
     );
+
+    if (!profile && isObjectId) {
+      const user = await User.findById(id);
+      if (user) {
+        profile = await TeacherProfile.findOne({
+          $or: [{ user: user._id }, { userId: user._id }],
+        }).populate("user", "name email phone department designation");
+
+        if (!profile) {
+          const uniqueSuffix = `${user._id.toString().slice(-4).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+          profile = await TeacherProfile.create({
+            user: user._id,
+            employeeId: user.employeeId || user.staffId || `EMP-${uniqueSuffix}`,
+            department: user.department || "General Academics",
+            qualification: user.qualification || "B.Ed / Masters",
+            designation: user.designation || "Teacher",
+            isActive: user.isActive !== false,
+            campusId: campusId || user.campusId,
+          });
+          profile = await TeacherProfile.findById(profile._id).populate(
+            "user",
+            "name email phone department designation",
+          );
+        }
+      }
+    }
+
     if (!profile) throw new Error("Teacher profile not found.");
     return profile;
   }
 
   async updateTeacherProfile(id, campusId, updateData) {
-    const query = { _id: id };
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+    const orConditions = [];
+    if (isObjectId) {
+      orConditions.push({ _id: id }, { user: id }, { userId: id });
+    }
+    orConditions.push({ staffId: id }, { employeeId: id });
+
+    const query = { $or: orConditions };
     if (campusId) query.campusId = campusId;
+
     const profile = await TeacherProfile.findOneAndUpdate(query, updateData, {
       new: true,
       runValidators: true,
@@ -153,8 +215,16 @@ class CampusAdminService {
   }
 
   async deleteTeacherProfile(id, campusId) {
-    const query = { _id: id };
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+    const orConditions = [];
+    if (isObjectId) {
+      orConditions.push({ _id: id }, { user: id }, { userId: id });
+    }
+    orConditions.push({ staffId: id }, { employeeId: id });
+
+    const query = { $or: orConditions };
     if (campusId) query.campusId = campusId;
+
     const profile = await TeacherProfile.findOneAndDelete(query);
     if (!profile) throw new Error("Teacher profile not found.");
     return profile;

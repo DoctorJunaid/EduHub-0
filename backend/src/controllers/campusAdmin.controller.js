@@ -5,11 +5,11 @@ import campusAdminService from "../services/campusAdmin.service.js";
 import feeService from "../services/fee.service.js";
 import ActivityLog, { logActivity } from "../models/activityLog.model.js";
 
-// Helper to safely extract campus and institute context
+// Helper to safely extract campus and institute context with strict multi-tenant isolation
 const getContext = (req) => {
   let campusId =
-    req.headers["x-campus-id"] ||
     req.campusId ||
+    req.headers["x-campus-id"] ||
     req.query.campusId ||
     req.user?.campusId;
 
@@ -17,18 +17,26 @@ const getContext = (req) => {
     campusId = campusId._id;
   }
 
+  // If campus admin or campus manager, strictly enforce their assigned campus
+  if (req.user?.role === "campus_admin" || req.user?.role === "campus_manager") {
+    const userCampusId = req.user.campusId?._id || req.user.campusId;
+    if (userCampusId) {
+      campusId = userCampusId.toString();
+    }
+  }
+
   const instituteId =
-    req.headers["x-institute-id"] ||
     req.instituteId ||
+    req.headers["x-institute-id"] ||
     req.user?.instituteId ||
     req.query.instituteId;
 
-  if (!campusId && req.user?.role !== "super_admin") {
+  if (!campusId && req.user?.role !== "super_admin" && req.user?.role !== "institute_admin") {
     const error = new Error("Campus context required. Please select an active campus branch from the top header.");
     error.statusCode = 400;
     throw error;
   }
-  return { campusId, instituteId };
+  return { campusId: campusId ? campusId.toString() : null, instituteId };
 };
 
 // Helper for HTTP response error handling
@@ -228,9 +236,15 @@ export const getTeacherById = async (req, res) => {
     );
     res.status(200).json({ success: true, data: profile });
   } catch (error) {
-    handleError(res, error, 404);
+    res.status(404).json({
+      success: false,
+      message: error.message || "Teacher Profile Not Found",
+      debugKey: ["teacher", req.params.id, "profile"],
+    });
   }
 };
+
+export const getTeacherProfileById = getTeacherById;
 
 export const updateTeacher = async (req, res) => {
   try {

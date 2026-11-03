@@ -58,6 +58,18 @@ export default function TeacherAttendance() {
   const debouncedSearch = useDebounce(search, 300);
   const [draft, setDraft] = useState({}); // { [studentId]: "Present" | "Absent" | "Late" | "On Leave" }
   const [scannerOpen, setScannerOpen] = useState(false);
+
+  // Ensure body scroll lock is properly cleaned up when QR modal opens/closes
+  useEffect(() => {
+    if (scannerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [scannerOpen]);
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -94,6 +106,13 @@ export default function TeacherAttendance() {
       }
     }
   }, [classes, selectedClassId, params]);
+
+  // Automatically open QR scanner if ?scan=true or ?scanner=true is in URL
+  useEffect(() => {
+    if (params.get("scan") === "true" || params.get("scanner") === "true") {
+      setScannerOpen(true);
+    }
+  }, [params]);
 
   const selectedClass = useMemo(() => {
     return (
@@ -244,7 +263,7 @@ export default function TeacherAttendance() {
     return roster.filter((s) => {
       if (!s) return false;
       const name = String(s.name || "").toLowerCase();
-      const roll = String(s.rollNumber ?? s.roll ?? "").toLowerCase();
+      const roll = String(s.rollNumber ?? s.rollNo ?? s.roll ?? "").toLowerCase();
       const email = String(s.email || "").toLowerCase();
       return name.includes(q) || roll.includes(q) || email.includes(q);
     });
@@ -275,11 +294,15 @@ export default function TeacherAttendance() {
 
   const hasMarkedAny = Object.keys(draft).length > 0 || roster.some((s) => s.status);
 
-  const handleAttendanceMarked = useCallback((_result) => {
+  const handleAttendanceMarked = useCallback((result) => {
     queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
     queryClient.invalidateQueries({ queryKey: ["teacher", "attendance"] });
     rosterQuery.refetch();
     classesQuery.refetch();
+    if (result?.student?._id || result?.student?.id) {
+      const sId = String(result.student._id || result.student.id);
+      setDraft((prev) => ({ ...prev, [sId]: result.record?.status || "Present" }));
+    }
   }, [queryClient, rosterQuery, classesQuery]);
 
   const handleSync = () => {
@@ -301,9 +324,19 @@ export default function TeacherAttendance() {
   };
 
   return (
-    <main
-      className="campus-tab-page teacher-attendance w-full"
+    <div
+      className="campus-tab-page teacher-attendance w-full flex flex-col"
       aria-labelledby="teacher-attendance-title"
+      style={{
+        height: "auto",
+        minHeight: "min-content",
+        maxHeight: "none",
+        overflowY: "visible",
+        padding: "24px",
+        gap: "20px",
+        paddingBottom: "48px",
+        boxSizing: "border-box",
+      }}
     >
       {/* Top Header Banner & "Sync" Action Bar */}
       <div
@@ -324,9 +357,19 @@ export default function TeacherAttendance() {
         <div className="flex items-center flex-wrap sm:flex-nowrap" style={{ gap: "8px" }}>
           <button
             type="button"
+            onClick={handleScanQr}
+            className="inline-flex items-center justify-center rounded-lg border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
+            style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
+            title="Scan student QR code or enter roll number"
+          >
+            <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Scan QR Code</span>
+          </button>
+          <button
+            type="button"
             onClick={handleSync}
             disabled={classesQuery.isFetching || isFetchingRoster}
-            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
             style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
           >
             {classesQuery.isFetching || isFetchingRoster ? (
@@ -340,7 +383,7 @@ export default function TeacherAttendance() {
             type="button"
             onClick={handleSaveAttendance}
             disabled={saving || !selectedClass || roster.length === 0 || date > getTodayKey()}
-            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto"
+            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
             style={{ height: "38px", padding: "0 16px", gap: "6px", boxSizing: "border-box" }}
           >
             {saving ? (
@@ -385,7 +428,10 @@ export default function TeacherAttendance() {
       <TeacherLeaveRequestsCard className="mb-6" />
 
       {/* Main Attendance Card */}
-      <section className="teacher-attendance-card w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
+      <section
+        className="teacher-attendance-card w-full bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-col"
+        style={{ height: "auto", maxHeight: "none", overflowY: "visible" }}
+      >
         {/* Daily Attendance Marking Toolbar */}
         <div
           className="teacher-attendance-controls flex flex-col w-full bg-neutral-50/60 border-b border-neutral-200"
@@ -425,14 +471,22 @@ export default function TeacherAttendance() {
                 {classes.length === 0 ? (
                   <option value="">No assigned classes</option>
                 ) : (
-                  classes.map((row) => (
-                    <option
-                      key={row.id || row._id || row.classId}
-                      value={row.id || row._id || row.classId}
-                    >
-                      {row.className} • Section {row.section} ({row.subject})
-                    </option>
-                  ))
+                  classes.map((row) => {
+                    const sec = row.section ? String(row.section).trim() : "";
+                    const secText = sec
+                      ? sec.toLowerCase().startsWith("section")
+                        ? sec
+                        : `Section ${sec}`
+                      : "";
+                    return (
+                      <option
+                        key={row.id || row._id || row.classId}
+                        value={row.id || row._id || row.classId}
+                      >
+                        {row.className}{secText ? ` • ${secText}` : ""}{row.subject ? ` (${row.subject})` : ""}
+                      </option>
+                    );
+                  })
                 )}
               </select>
 
@@ -456,10 +510,11 @@ export default function TeacherAttendance() {
             <button
               type="button"
               onClick={handleScanQr}
-              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs"
+              className="inline-flex items-center justify-center rounded-lg border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors whitespace-nowrap shadow-xs cursor-pointer"
               style={{ height: "38px", padding: "0 14px", gap: "6px", boxSizing: "border-box" }}
+              title="Scan student QR code or enter roll number"
             >
-              <QrCode className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+              <QrCode className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>Scan QR Code</span>
             </button>
             <button
@@ -486,7 +541,10 @@ export default function TeacherAttendance() {
         </div>
 
         {/* Attendance Roster Table */}
-        <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div
+          className="w-full overflow-x-auto"
+          style={{ WebkitOverflowScrolling: "touch", height: "auto", maxHeight: "none", overflowY: "visible" }}
+        >
           {loadingClasses || loadingRoster ? (
             <div className="py-16 text-center text-slate-500">
               <SpinnerCustom
@@ -557,7 +615,7 @@ export default function TeacherAttendance() {
                           </span>
                           <div>
                             <strong className="block text-xs font-semibold text-neutral-900">{student.name}</strong>
-                            <small className="block text-[11px] text-neutral-500">{student.rollNumber || "Roll N/A"}</small>
+                            <small className="block text-[11px] text-neutral-500">{student.rollNumber || student.rollNo || student.roll || "Roll N/A"}</small>
                           </div>
                         </span>
                       </td>
@@ -750,7 +808,7 @@ export default function TeacherAttendance() {
           <span>Scan QR</span>
         </button>
       </div>
-    </main>
+    </div>
   );
 }
 

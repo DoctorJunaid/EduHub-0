@@ -79,6 +79,24 @@ export default function StudentAttendanceTable({ rows, page, pageSize }) {
               </TableCell>
               <TableCell style={{ width: '11%', textAlign: 'center', whiteSpace: 'nowrap' }}>
                 <AttendanceStatusBadge status={record?.status} emptyLabel="Not Taken" />
+                {record?.entryTime && (
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: '4px',
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      borderRadius: '4px',
+                      backgroundColor: record?.isLateArrival ? '#fef3c7' : '#ecfdf5',
+                      color: record?.isLateArrival ? '#b45309' : '#047857',
+                      border: `1px solid ${record?.isLateArrival ? '#fde68a' : '#a7f3d0'}`
+                    }}
+                    title={`Checked in at gate at ${record.entryTime}${record.isLateArrival ? ' (Late arrival)' : ''}`}
+                  >
+                    Gate: {record.entryTime}
+                  </span>
+                )}
               </TableCell>
             </TableRow>
           );

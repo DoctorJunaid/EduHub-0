@@ -80,7 +80,7 @@ export const selectStudentCourses = createSelector(
       const attendanceRows = attendanceHistory.filter(
         ({ student, session }) =>
           String(student.id || student._id || "") === sId &&
-          (classIds.has(session.id) || !session.id || classIds.size === 0 || normalized(session.subject) === normalized(title)),
+          (classIds.has(session.id) || (session?.subject && normalized(session.subject) === normalized(title))),
       );
 
       const category = getSubjectCategory(title);

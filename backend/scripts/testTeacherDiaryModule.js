@@ -6,6 +6,7 @@ import Diary from "../src/models/diary.model.js";
 import * as diaryService from "../src/services/teacherDiary.service.js";
 
 dotenv.config({ path: "backend/.env" });
+dotenv.config();
 const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 async function runDiaryTest() {

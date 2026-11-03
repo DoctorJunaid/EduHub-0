@@ -124,6 +124,12 @@ export const getCampusAdminNav = (isSchool = false) => [
     icon: <Users size={20} />,
   },
   {
+    label: "Gate Attendance Kiosk",
+    path: "/gate-attendance",
+    group: "Academics",
+    icon: <ShieldCheck size={20} />,
+  },
+  {
     label: isSchool ? "Exams & Report Cards" : "Exam Results & GPA",
     path: "/results",
     group: "Academics",

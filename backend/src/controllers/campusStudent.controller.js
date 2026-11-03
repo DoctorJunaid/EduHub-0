@@ -20,9 +20,25 @@ export const getCampusStudents = async (req, res) => {
       });
     }
 
-    const campusId = req.user?.campusId?._id || req.user?.campusId || req.query?.campusId;
+    let campusId =
+      req.campusId ||
+      req.headers["x-campus-id"] ||
+      req.user?.campusId?._id ||
+      req.user?.campusId ||
+      req.query?.campusId;
 
-    if (!campusId && req.user?.role !== "super_admin") {
+    if (campusId && typeof campusId === "object" && campusId._id) {
+      campusId = campusId._id;
+    }
+
+    if (req.user?.role === "campus_admin" || req.user?.role === "campus_manager") {
+      const userCampusId = req.user.campusId?._id || req.user.campusId;
+      if (userCampusId) {
+        campusId = userCampusId;
+      }
+    }
+
+    if (!campusId && req.user?.role !== "super_admin" && !req.user?.instituteId) {
       return res.status(400).json({
         success: false,
         message: "Campus context required. No campus assigned or specified.",
@@ -481,7 +497,23 @@ export const removeStudentFromCampus = async (req, res) => {
 // @access  Private / Campus Admin & Campus Manager
 export const getCampusFaculty = async (req, res) => {
   try {
-    let campusId = req.user?.campusId?._id || req.user?.campusId || req.query?.campusId;
+    let campusId =
+      req.campusId ||
+      req.headers["x-campus-id"] ||
+      req.user?.campusId?._id ||
+      req.user?.campusId ||
+      req.query?.campusId;
+
+    if (campusId && typeof campusId === "object" && campusId._id) {
+      campusId = campusId._id;
+    }
+
+    if (req.user?.role === "campus_admin" || req.user?.role === "campus_manager") {
+      const userCampusId = req.user.campusId?._id || req.user.campusId;
+      if (userCampusId) {
+        campusId = userCampusId;
+      }
+    }
 
     // Fail-safe: if campusId is missing on req.user, resolve campus where user is manager
     if (!campusId && req.user?._id) {
@@ -489,19 +521,22 @@ export const getCampusFaculty = async (req, res) => {
       if (managed) campusId = managed._id;
     }
 
-    if (!campusId) {
+    if (!campusId && req.user?.role !== "super_admin" && !req.user?.instituteId) {
       return res
         .status(400)
         .json({ success: false, message: "No campus assigned" });
     }
 
-    const faculty = await User.find({
+    const query = {
       role: { $in: ["faculty", "teacher", "class_teacher", "subject_teacher"] },
-      $or: [
-        { campusId },
-        { campus: req.user?.campus || "" },
-      ],
-    })
+    };
+    if (campusId) {
+      query.campusId = campusId;
+    } else if (req.user?.instituteId) {
+      query.instituteId = req.user.instituteId;
+    }
+
+    const faculty = await User.find(query)
       .select("-passwordHash")
       .populate("campusId", "name location code")
       .populate("instituteId", "name type board")

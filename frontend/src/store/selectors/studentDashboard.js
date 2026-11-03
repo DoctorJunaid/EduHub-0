@@ -15,11 +15,11 @@ export function matchCurrentStudent(user, students = []) {
   );
   if (byId) return byId;
   const email = user.email?.trim().toLowerCase();
-  if (!email) return user;
-  const match = (students || []).find(
+  if (!email) return null;
+  const matches = (students || []).filter(
     (student) => student.email?.trim().toLowerCase() === email,
   );
-  return match || user;
+  return matches.length === 1 ? matches[0] : null;
 }
 
 export const selectCurrentStudent = createSelector(
@@ -82,7 +82,7 @@ export const selectStudentDashboard = createSelector(
         results: [],
       };
     const className = student.gradeOrClass || student.program || student.className || "";
-    const hasExplicitSubjects = student.subjects !== undefined && student.subjects !== null && String(student.subjects).trim().length > 0;
+    const hasExplicitSubjects = student.subjects !== undefined && student.subjects !== null;
     const rawSubjects = Array.isArray(student.subjects)
       ? student.subjects
       : String(student.subjects || "").split(",");
@@ -102,27 +102,26 @@ export const selectStudentDashboard = createSelector(
           )
         : [];
 
-    const courses =
-      hasExplicitSubjects && rawSubjects.filter(Boolean).length > 0
-        ? [
-            ...new Set(
-              rawSubjects
-                .map((subject) =>
-                  typeof subject === "object"
-                    ? subject.name || subject.title || subject.subject || ""
-                    : subject,
-                )
-                .map((subject) => String(subject).trim())
-                .filter(Boolean),
-            ),
-          ]
-        : [
-            ...new Set(
-              sectionTimetable
-                .map((s) => (s.subject || s.subjectName || "").trim())
-                .filter(Boolean),
-            ),
-          ];
+    const courses = hasExplicitSubjects
+      ? [
+          ...new Set(
+            rawSubjects
+              .map((subject) =>
+                typeof subject === "object"
+                  ? subject.name || subject.title || subject.subject || ""
+                  : subject,
+              )
+              .map((subject) => String(subject).trim())
+              .filter(Boolean),
+          ),
+        ]
+      : [
+          ...new Set(
+            sectionTimetable
+              .map((s) => (s.subject || s.subjectName || "").trim())
+              .filter(Boolean),
+          ),
+        ];
 
     // Match the existing program/section relationship; never include other sections to fill the reference.
     const classes =

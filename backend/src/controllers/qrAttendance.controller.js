@@ -1,10 +1,11 @@
 import {
   processQrAttendanceScan,
   getAttendanceSystemDiagnostics,
+  getGateKioskStats,
 } from "../services/qrAttendance.service.js";
 
 /**
- * @desc    Record Student Attendance via QR Code Scan
+ * @desc    Record Student Attendance via QR Code Scan / Gate Kiosk
  * @route   POST /api/v1/campus-admin/attendance/qr-scan
  * @route   POST /api/v1/teacher/attendance/qr-scan
  * @access  Private (Campus Managers, Admins, Teachers)
@@ -36,6 +37,38 @@ export const recordQrScanAttendance = async (req, res) => {
 };
 
 /**
+ * @desc    Get Real-Time Gate Attendance Kiosk Statistics & Recent Scans
+ * @route   GET /api/v1/campus-admin/attendance/gate-kiosk-stats
+ * @access  Private (Campus Admin, Campus Manager, Super Admin, Principal)
+ */
+export const getGateKioskTodayStats = async (req, res) => {
+  try {
+    let campusId =
+      req.campusId ||
+      req.headers["x-campus-id"] ||
+      req.user?.campusId?._id ||
+      req.user?.campusId ||
+      req.query?.campusId;
+
+    if (campusId && typeof campusId === "object" && campusId._id) {
+      campusId = campusId._id;
+    }
+
+    const stats = await getGateKioskStats(campusId, req.query?.date);
+
+    return res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to retrieve gate kiosk statistics.",
+    });
+  }
+};
+
+/**
  * @desc    Get Attendance & QR Code System Health Check
  * @route   GET /api/v1/campus-admin/attendance/health-check
  * @access  Private (Campus Admin, Super Admin, Principal)
@@ -59,5 +92,6 @@ export const getAttendanceHealthCheck = async (req, res) => {
 
 export default {
   recordQrScanAttendance,
+  getGateKioskTodayStats,
   getAttendanceHealthCheck,
 };

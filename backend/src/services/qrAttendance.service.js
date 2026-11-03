@@ -229,8 +229,41 @@ export async function processQrAttendanceScan(requester, body, req = null) {
     }
   }
 
-  // 5. Determine attendance date
+  // 5. Determine attendance date & current entry time
   const { dateStr, startOfDay, endOfDay } = normalizeDate(date || new Date());
+  const now = new Date();
+  const entryTime = now.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  // Determine scan method and late status
+  const method = body.method === "gate_kiosk" ? "gate_kiosk" : (body.method || "qr_scan");
+  let isLateArrival = false;
+  let finalStatus = "Present";
+
+  // If Gate Kiosk, calculate punctuality based on campus cutoff time (default: 08:15 AM)
+  const cutoffTime = body.cutoffTime || "08:15";
+  if (method === "gate_kiosk" && (!body.status || body.status === "Present")) {
+    if (cutoffTime) {
+      const [cutoffHours, cutoffMinutes] = cutoffTime.split(":").map(Number);
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      if (
+        currentHours > cutoffHours ||
+        (currentHours === cutoffHours && currentMinutes > cutoffMinutes)
+      ) {
+        finalStatus = "Late";
+        isLateArrival = true;
+      }
+    }
+  } else if (body.status) {
+    const validStatuses = ["Present", "Absent", "Late", "On Leave", "Excused"];
+    const matchedStatus = validStatuses.find((v) => v.toLowerCase() === String(body.status).toLowerCase());
+    if (matchedStatus) finalStatus = matchedStatus;
+    if (finalStatus === "Late") isLateArrival = true;
+  }
 
   // 6. Check existing attendance on this date (Duplicate Prevention)
   const existingRecord = await StudentAttendance.findOne({
@@ -243,7 +276,7 @@ export async function processQrAttendanceScan(requester, body, req = null) {
     return {
       success: true,
       alreadyMarked: true,
-      message: `Attendance has already been marked for ${resolvedStudent.name} on ${dateStr} (Status: ${existingRecord.status}).`,
+      message: `Attendance has already been marked for ${resolvedStudent.name} on ${dateStr} (Status: ${existingRecord.status}${existingRecord.entryTime ? ` at ${existingRecord.entryTime}` : ""}).`,
       student: {
         id: resolvedStudent.studentId,
         studentId: resolvedStudent.studentId,
@@ -259,18 +292,16 @@ export async function processQrAttendanceScan(requester, body, req = null) {
         attendanceId: existingRecord._id,
         date: existingRecord.dateStr || dateStr,
         status: existingRecord.status,
-        method: existingRecord.method || "manual",
+        method: existingRecord.method || method,
+        entryTime: existingRecord.entryTime || "",
+        isLateArrival: !!existingRecord.isLateArrival,
         recordedAt: existingRecord.updatedAt || existingRecord.createdAt,
         remarks: existingRecord.remarks || "",
       },
     };
   }
 
-  // 7. Normalize status string
-  const validStatuses = ["Present", "Absent", "Late", "On Leave", "Excused"];
-  let finalStatus = "Present";
-  const matchedStatus = validStatuses.find((v) => v.toLowerCase() === String(status).toLowerCase());
-  if (matchedStatus) finalStatus = matchedStatus;
+  const effectiveRemarks = remarks || (method === "gate_kiosk" ? `Gate Check-In at ${entryTime}` : "Recorded via QR Code Scan");
 
   // 8. Atomically save attendance record
   const attendanceDoc = await StudentAttendance.findOneAndUpdate(
@@ -287,17 +318,19 @@ export async function processQrAttendanceScan(requester, body, req = null) {
         date: startOfDay,
         dateStr,
         status: finalStatus,
-        method: "qr_scan",
+        method,
+        entryTime,
+        isLateArrival,
         className: resolvedStudent.className,
         gradeOrClass: resolvedStudent.className,
         section: resolvedStudent.section,
         rollNo: resolvedStudent.rollNo,
         academicSession: resolvedStudent.userDoc?.academicYear || "2026-2027",
-        remarks: remarks || "Recorded via QR Code Scan",
+        remarks: effectiveRemarks,
         markedBy: requester._id,
       },
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
 
   // 9. Sync class conduction event if teacher marked it
@@ -308,7 +341,7 @@ export async function processQrAttendanceScan(requester, body, req = null) {
         classId: classId || null,
         className: resolvedStudent.className,
         section: resolvedStudent.section,
-        source: "qr_scan",
+        source: method,
         remarks: `QR attendance: ${resolvedStudent.name}`,
       });
     } catch (sessionErr) {
@@ -320,7 +353,7 @@ export async function processQrAttendanceScan(requester, body, req = null) {
     success: true,
     alreadyMarked: false,
     updated: !!existingRecord,
-    message: `Attendance confirmed: ${resolvedStudent.name} (${resolvedStudent.rollNo}) marked ${finalStatus}.`,
+    message: `Attendance confirmed: ${resolvedStudent.name} (${resolvedStudent.rollNo}) checked in (${finalStatus}${isLateArrival ? " - Late" : ""}) at ${entryTime}.`,
     student: {
       id: resolvedStudent.studentId,
       studentId: resolvedStudent.studentId,
@@ -337,9 +370,89 @@ export async function processQrAttendanceScan(requester, body, req = null) {
       date: attendanceDoc.dateStr,
       status: attendanceDoc.status,
       method: attendanceDoc.method,
+      entryTime: attendanceDoc.entryTime || entryTime,
+      isLateArrival: attendanceDoc.isLateArrival || false,
       recordedAt: attendanceDoc.updatedAt || attendanceDoc.createdAt,
       remarks: attendanceDoc.remarks,
     },
+  };
+}
+
+/**
+ * Get Real-Time Gate Kiosk Influx & Morning Statistics
+ */
+export async function getGateKioskStats(campusId, targetDate = null) {
+  const { dateStr } = normalizeDate(targetDate || new Date());
+  const campusFilter = campusId ? { campusId } : {};
+
+  // 1. Total enrolled active students for this campus
+  const totalEnrolled = await User.countDocuments({
+    ...campusFilter,
+    role: "student",
+    isActive: { $ne: false },
+    status: { $nin: ["Inactive", "Suspended", "Withdrawn", "Graduated"] },
+  });
+
+  // 2. All student attendance for today
+  const todayAttendance = await StudentAttendance.find({
+    ...campusFilter,
+    dateStr,
+  })
+    .populate("studentId", "name roll rollNo rollNumber avatar email")
+    .sort({ updatedAt: -1, createdAt: -1 })
+    .lean();
+
+  const totalScannedToday = todayAttendance.length;
+  let onTimeCount = 0;
+  let lateCount = 0;
+  let gateKioskCount = 0;
+
+  for (const rec of todayAttendance) {
+    const st = String(rec.status || "").toLowerCase();
+    if (st === "present") onTimeCount++;
+    else if (st === "late") lateCount++;
+    if (rec.method === "gate_kiosk") gateKioskCount++;
+  }
+
+  // 3. Recent 20 scans with clean formatted payload
+  const recentScans = todayAttendance.slice(0, 20).map((r) => {
+    const studentUser = r.studentId;
+    return {
+      id: r._id,
+      studentId: studentUser?._id || r.studentId,
+      name: studentUser?.name || "Student",
+      rollNo: r.rollNo || studentUser?.rollNo || studentUser?.roll || "",
+      className: r.className || r.gradeOrClass || "Class",
+      section: r.section || "A",
+      avatar: studentUser?.avatar || "",
+      status: r.status || "Present",
+      entryTime:
+        r.entryTime ||
+        (r.updatedAt
+          ? new Date(r.updatedAt).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : ""),
+      isLateArrival: !!r.isLateArrival,
+      method: r.method,
+      recordedAt: r.updatedAt || r.createdAt,
+    };
+  });
+
+  return {
+    date: dateStr,
+    totalEnrolled,
+    totalScannedToday,
+    onTimeCount,
+    lateCount,
+    gateKioskCount,
+    coverageRate:
+      totalEnrolled > 0
+        ? Math.min(100, Math.round((totalScannedToday / totalEnrolled) * 100))
+        : 0,
+    recentScans,
   };
 }
 
@@ -365,8 +478,8 @@ export async function getAttendanceSystemDiagnostics(campusId) {
   const presentCount = todayAttendances.filter((a) => a.status?.toLowerCase() === "present").length;
   const absentCount = todayAttendances.filter((a) => a.status?.toLowerCase() === "absent").length;
   const lateCount = todayAttendances.filter((a) => a.status?.toLowerCase() === "late").length;
-  const qrScannedCount = todayAttendances.filter((a) => a.method === "qr_scan").length;
-  const manualCount = todayAttendances.filter((a) => a.method !== "qr_scan").length;
+  const qrScannedCount = todayAttendances.filter((a) => a.method === "qr_scan" || a.method === "gate_kiosk").length;
+  const manualCount = todayAttendances.filter((a) => a.method !== "qr_scan" && a.method !== "gate_kiosk").length;
 
   // Check duplicate attendance count on todayStr
   const dupes = await StudentAttendance.aggregate([

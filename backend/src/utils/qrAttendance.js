@@ -183,6 +183,15 @@ export async function resolveStudentFromPayload(rawOrParsedPayload, { campusId, 
 
     if (userDoc) {
       studentDoc = await Student.findOne({ userId: userDoc._id }).lean();
+    } else {
+      // Check if studentId was the _id of a Student document
+      studentDoc = await Student.findById(parsedPayload.studentId).lean();
+      if (studentDoc && studentDoc.userId) {
+        userDoc = await User.findOne({
+          _id: studentDoc.userId,
+          role: "student",
+        }).lean();
+      }
     }
   }
 
@@ -237,6 +246,20 @@ export async function resolveStudentFromPayload(rawOrParsedPayload, { campusId, 
       err.code = "AMBIGUOUS_ROLL_NUMBER";
       err.matches = matches;
       throw err;
+    } else if (matches.length === 0) {
+      // Also check Student collection by rollNo if User collection had no matching roll
+      const studentMatches = await Student.find({
+        rollNo: parsedPayload.rollNo,
+        ...(campusId ? { campusId } : {}),
+      }).limit(5).lean();
+
+      if (studentMatches.length === 1) {
+        studentDoc = studentMatches[0];
+        userDoc = await User.findOne({
+          _id: studentDoc.userId,
+          role: "student",
+        }).lean();
+      }
     }
   }
 

@@ -29,11 +29,14 @@ axiosInstance.interceptors.request.use(
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubToken') : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      const activeCampusId = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
+      if (activeCampusId && !config.headers['x-campus-id']) {
+        config.headers['x-campus-id'] = activeCampusId;
+      }
     }
-    const activeCampusId = typeof localStorage !== 'undefined' ? localStorage.getItem('eduHubActiveCampusId') : null;
-    if (activeCampusId && !config.headers['x-campus-id']) {
-      config.headers['x-campus-id'] = activeCampusId;
-    }
+    // Enforce no-cache on all outbound API requests to avoid stale HTTP proxy/edge responses
+    config.headers['Cache-Control'] = 'no-cache';
+    config.headers['Pragma'] = 'no-cache';
     return config;
   },
   (error) => {
@@ -41,16 +44,40 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+let isRedirecting = false;
+
 // Response Interceptor: Handle 401 Unauthorized globally
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    isRedirecting = false;
+    return response;
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear token and redirect to login if unauthorized
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint =
+        requestUrl.includes('/auth/login') ||
+        requestUrl.includes('/auth/signup') ||
+        requestUrl.includes('/auth/register');
+
+      const isAuthPage =
+        typeof window !== 'undefined' &&
+        (window.location.pathname === '/login' ||
+          window.location.pathname === '/signup' ||
+          window.location.pathname === '/set-password');
+
+      // Clear token and stale session cache on unauthorized response
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('eduHubToken');
+        localStorage.removeItem('eduHubUser');
+        localStorage.removeItem('eduHubActiveCampusId');
+        localStorage.removeItem('eduHub_institutes_cache');
+        localStorage.removeItem('eduHub_stats_cache');
       }
-      if (window.location.pathname !== '/login') {
+
+      // Avoid looping redirects if this was an auth endpoint or already on an auth page or already redirecting
+      if (!isAuthEndpoint && !isAuthPage && !isRedirecting && typeof window !== 'undefined') {
+        isRedirecting = true;
         window.location.href = '/login';
       }
     }

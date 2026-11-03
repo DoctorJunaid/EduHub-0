@@ -304,13 +304,11 @@ export async function upsertProfile(campusId, targetId, userId, rawPayload) {
 
   let targetCampusId = campusId || teacher.user?.campusId || teacher.campusId;
   if (!targetCampusId) {
-    if (teacher.user?.instituteId) {
-      const instCampus = await Campus.findOne({ instituteId: teacher.user.instituteId }).select("_id").lean();
-      if (instCampus?._id) targetCampusId = instCampus._id;
-    }
-    if (!targetCampusId) {
-      targetCampusId = new mongoose.Types.ObjectId();
-    }
+    const instId = teacher.user?.instituteId || teacher.instituteId;
+    const instCampus = instId
+      ? await Campus.findOne({ instituteId: instId }).select("_id").lean()
+      : null;
+    targetCampusId = instCampus?._id || new mongoose.Types.ObjectId();
   }
 
   const updateData = {

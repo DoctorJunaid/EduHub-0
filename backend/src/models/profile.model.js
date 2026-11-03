@@ -255,9 +255,11 @@ const studentAttendanceSchema = new mongoose.Schema(
     academicSession: { type: String, default: "" },
     method: {
       type: String,
-      enum: ["manual", "qr_scan", "bulk", "system"],
+      enum: ["manual", "qr_scan", "gate_kiosk", "bulk", "system"],
       default: "manual",
     },
+    entryTime: { type: String, default: "" },
+    isLateArrival: { type: Boolean, default: false },
     remarks: { type: String, default: "" },
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,

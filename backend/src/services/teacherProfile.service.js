@@ -34,7 +34,14 @@ export const resolveTeacher = async (campusIdOrTeacherId, maybeTeacherId) => {
     );
 
     if (!profile) {
-      profile = await TeacherProfile.findOne({ user: teacherId }).populate(
+      profile = await TeacherProfile.findOne({
+        $or: [
+          { user: teacherId },
+          { userId: teacherId },
+          { staffId: teacherId },
+          { employeeId: teacherId },
+        ],
+      }).populate(
         "user",
         "name email phone avatar role campusId instituteId isActive createdAt updatedAt"
       );
@@ -42,33 +49,52 @@ export const resolveTeacher = async (campusIdOrTeacherId, maybeTeacherId) => {
   }
 
   if (!profile && teacherId) {
-    profile = await TeacherProfile.findOne({ employeeId: teacherId }).populate(
+    profile = await TeacherProfile.findOne({
+      $or: [
+        { employeeId: teacherId },
+        { staffId: teacherId },
+      ],
+    }).populate(
       "user",
       "name email phone avatar role campusId instituteId isActive createdAt updatedAt"
     );
   }
 
   if (!profile && mongoose.Types.ObjectId.isValid(teacherId)) {
-    // Check if User exists in the system
-    const userQuery = { _id: teacherId };
+    // Check if User exists in the system by User._id
+    let user = null;
     if (campusId) {
-      userQuery.$or = [{ campusId }, { campusId: { $exists: false } }, { campusId: null }];
-    }
-    const user = await User.findOne(userQuery);
-    if (user) {
-      // Auto-create or fetch profile
-      profile = await TeacherProfile.create({
-        user: user._id,
-        employeeId: `EMP-${user._id.toString().slice(-4).toUpperCase()}`,
-        department: user.department || "General Academics",
-        qualification: user.qualification || "B.Ed / Masters",
-        designation: user.designation || "Teacher",
-        isActive: user.isActive !== false,
+      user = await User.findOne({
+        _id: teacherId,
+        $or: [{ campusId }, { campus: { $exists: true } }, { campusId: { $exists: false } }, { campusId: null }],
       });
-      profile = await TeacherProfile.findById(profile._id).populate(
+    }
+    if (!user) {
+      user = await User.findById(teacherId);
+    }
+    if (user) {
+      profile = await TeacherProfile.findOne({
+        $or: [{ user: user._id }, { userId: user._id }],
+      }).populate(
         "user",
         "name email phone avatar role campusId instituteId isActive createdAt updatedAt"
       );
+
+      if (!profile) {
+        const uniqueSuffix = `${user._id.toString().slice(-4).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+        profile = await TeacherProfile.create({
+          user: user._id,
+          employeeId: user.employeeId || user.staffId || `EMP-${uniqueSuffix}`,
+          department: user.department || "General Academics",
+          qualification: user.qualification || "B.Ed / Masters",
+          designation: user.designation || "Teacher",
+          isActive: user.isActive !== false,
+        });
+        profile = await TeacherProfile.findById(profile._id).populate(
+          "user",
+          "name email phone avatar role campusId instituteId isActive createdAt updatedAt"
+        );
+      }
     }
   }
 
@@ -106,27 +132,7 @@ export const resolveTeacher = async (campusIdOrTeacherId, maybeTeacherId) => {
   }
 
   if (!profile) {
-    return {
-      _id: teacherId,
-      employeeId: `EMP-${String(teacherId).slice(-4).toUpperCase()}`,
-      department: "General Academics",
-      designation: "Faculty Member",
-      qualification: "M.S. / B.Ed",
-      bio: "Experienced faculty educator dedicated to academic excellence and modern teaching standards.",
-      joiningDate: new Date("2023-01-15"),
-      emergencyContact: { name: "Family Member", phone: "+92 300 0000000", relation: "Spouse" },
-      address: { street: "Campus Faculty Avenue", city: "Islamabad", state: "Federal", country: "Pakistan" },
-      isActive: true,
-      user: {
-        _id: teacherId,
-        name: "Faculty Educator",
-        email: "teacher@eduhub.edu",
-        phone: "+92 300 1234567",
-        role: "teacher",
-        avatar: "",
-        campusId,
-      },
-    };
+    return null;
   }
 
   return profile;
@@ -137,6 +143,9 @@ export const resolveTeacher = async (campusIdOrTeacherId, maybeTeacherId) => {
  */
 export const getTeacherFullProfile = async (campusId, teacherId) => {
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return null;
+  }
   const teacherUserId = profile.user?._id;
   const teacherProfileId = profile._id;
 
@@ -230,6 +239,9 @@ export const getTeacherClasses = async (campusIdOrTeacherId, maybeTeacherId) => 
     campusId = null;
   }
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return { count: 0, data: [] };
+  }
   const teacherUserId = profile.user?._id;
   const teacherProfileId = profile._id;
   const possibleTeacherIds = [teacherUserId, teacherProfileId].filter(Boolean);
@@ -310,6 +322,9 @@ export const getTeacherTimetable = async (campusIdOrTeacherId, maybeTeacherId, m
     query = {};
   }
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return { days: [], periods: [], slots: [], data: [], count: 0, teacher: null };
+  }
   const teacherUserId = profile.user?._id;
   const teacherProfileId = profile._id;
   const teacherName = profile.user?.name || "";
@@ -462,6 +477,9 @@ export const getTeacherTimetable = async (campusIdOrTeacherId, maybeTeacherId, m
  */
 export const getTeacherAttendance = async (campusId, teacherId, days = 30) => {
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return { summary: { present: 0, late: 0, absent: 0, leave: 0, total: 0, rate: 100 }, records: [] };
+  }
   const teacherProfileId = profile._id;
 
   const limitDays = Number(days) || 30;
@@ -515,6 +533,9 @@ export const getTeacherAttendance = async (campusId, teacherId, days = 30) => {
  */
 export const getTeacherPayroll = async (campusId, teacherId) => {
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return { salaryProfile: null, payrolls: [] };
+  }
   const teacherProfileId = profile._id;
 
   const salaryProfile = await TeacherSalaryProfile.findOne({
@@ -560,6 +581,9 @@ export const getTeacherPayroll = async (campusId, teacherId) => {
  */
 export const getTeacherSubstitutes = async (campusId, teacherId) => {
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return { dutiesCovered: [], dutiesMissed: [] };
+  }
   const teacherProfileId = profile._id;
 
   const [covered, missed] = await Promise.all([
@@ -608,6 +632,9 @@ export const getTeacherSubstitutes = async (campusId, teacherId) => {
  */
 export const getTeacherActivity = async (campusId, teacherId) => {
   const profile = await resolveTeacher(campusId, teacherId);
+  if (!profile) {
+    return [];
+  }
   const teacherUserId = profile.user?._id;
   const teacherProfileId = profile._id;
 

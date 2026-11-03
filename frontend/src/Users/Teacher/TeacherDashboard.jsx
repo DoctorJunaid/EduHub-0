@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Search,
   Users,
+  QrCode,
 } from "lucide-react";
 import {
   selectAssignedTeacherClasses,
@@ -377,6 +378,15 @@ export default function TeacherDashboard() {
           >
             <CalendarCheck className="w-3.5 h-3.5 text-neutral-600 shrink-0 stroke-[1.75]" />
             <span className="truncate">Take Student Attendance</span>
+          </Link>
+          <Link
+            to="/teacher/attendance?scan=true"
+            className="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors whitespace-nowrap shadow-xs w-full sm:w-auto"
+            style={{ height: "38px", padding: "0 12px", gap: "6px", boxSizing: "border-box" }}
+            title="Scan student QR codes for instant attendance"
+          >
+            <QrCode className="w-3.5 h-3.5 text-blue-600 shrink-0 stroke-[2]" />
+            <span className="truncate">Scan QR Attendance</span>
           </Link>
           <Link
             to="/teacher/diary"

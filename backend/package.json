@@ -4,7 +4,7 @@
   "description": "backend of eduhub",
   "main": "src/server.js",
   "scripts": {
-    "test": "vitest run",
+    "test": "node src/scripts/testQrAttendanceSystem.js && node scripts/testClassTeacherAndResults.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:manager": "node src/scripts/seedCampusManager.js",
