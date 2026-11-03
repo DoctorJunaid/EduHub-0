@@ -186,7 +186,7 @@ export default function CampusOverview() {
             students={students}
             faculty={faculty}
             timetable={timetable}
-            isLoading={studentsStatus === 'loading' || facultyStatus === 'loading'}
+            isLoading={(studentsStatus === 'loading' && students.length === 0) || (facultyStatus === 'loading' && faculty.length === 0)}
             onAddStudent={() => setAddingStudent(true)}
             onAddTeacher={() => setAddingTeacher(true)}
             onViewStudentProfile={(student) => setInspectingStudent(student)}

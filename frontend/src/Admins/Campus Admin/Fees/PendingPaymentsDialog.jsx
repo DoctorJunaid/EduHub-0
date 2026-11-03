@@ -114,7 +114,7 @@ export default function PendingPaymentsDialog({ onClose, onConfirm }) {
           className="flex-1 min-h-0 overflow-y-auto"
           style={{ padding: "24px clamp(20px, 4vw, 32px)" }}
         >
-          {loading ? (
+          {loading && payments.length === 0 ? (
             <div
               className="flex justify-center items-center"
               style={{ padding: "40px 20px" }}

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import QRCode from "qrcode";
-import { User, QrCode, Phone, MapPin, Building2, Edit3, Save, X, RefreshCw, Printer } from "lucide-react";
+import { User, QrCode, Phone, MapPin, Building2, Edit3, Save, X, RefreshCw, Printer, Upload } from "lucide-react";
+import toast from "react-hot-toast";
+import { normalizeImageUrl, getImageFallbackUrls } from "@/utils/imageUrl";
 
 export default function StudentIdCard({
   studentData,
@@ -31,7 +33,7 @@ export default function StudentIdCard({
       data?.studentPhone ||
       "+92 300 1234567",
     address: data?.address || "House 12, Street 4, Sector F-8/2, Islamabad",
-    avatar: data?.avatar || data?.picture || "",
+    avatar: normalizeImageUrl(data?.avatar || data?.picture || ""),
     campusId: data?.campusId?._id || data?.campusId || "",
     qrCodeData:
       data?.qrCodeData ||
@@ -56,6 +58,67 @@ export default function StudentIdCard({
     setFormData(getInitialData(studentData));
   }
 
+  const fileInputRef = useRef(null);
+  const [imgError, setImgError] = useState(false);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+
+  const fallbackUrls = useMemo(() => {
+    return getImageFallbackUrls(formData.avatar);
+  }, [formData.avatar]);
+
+  useEffect(() => {
+    setImgError(false);
+    setFallbackIndex(0);
+  }, [formData.avatar]);
+
+  const currentImageSrc = useMemo(() => {
+    if (!formData.avatar) return "";
+    if (fallbackUrls.length > 0 && fallbackIndex < fallbackUrls.length) {
+      return fallbackUrls[fallbackIndex];
+    }
+    return normalizeImageUrl(formData.avatar);
+  }, [formData.avatar, fallbackUrls, fallbackIndex]);
+
+  const handleImageError = () => {
+    if (fallbackUrls.length > 0 && fallbackIndex < fallbackUrls.length - 1) {
+      setFallbackIndex((prev) => prev + 1);
+    } else {
+      setImgError(true);
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const raw = e.target.value;
+    const normalized = normalizeImageUrl(raw);
+    setFormData((prev) => ({ ...prev, avatar: normalized }));
+    setImgError(false);
+    setFallbackIndex(0);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose a valid image file (PNG, JPG, JPEG, WEBP)");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file size must be less than 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      if (dataUrl) {
+        setFormData((prev) => ({ ...prev, avatar: dataUrl }));
+        setImgError(false);
+        setFallbackIndex(0);
+        toast.success("Photo loaded from file!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -64,7 +127,10 @@ export default function StudentIdCard({
   const handleSave = () => {
     setIsEditing(false);
     if (onSaveStudentData) {
-      onSaveStudentData(formData);
+      onSaveStudentData({
+        ...formData,
+        avatar: normalizeImageUrl(formData.avatar),
+      });
     }
   };
 
@@ -279,11 +345,18 @@ export default function StudentIdCard({
             {/* Student Picture & Identity Details with Father Name on Front */}
             <div className="flex flex-col items-center text-center my-auto" style={{ gap: "14px", padding: "0 20px" }}>
               <div
-                className="rounded-full bg-neutral-100 border-2 border-blue-200 overflow-hidden flex items-center justify-center text-neutral-400 shadow-md"
+                className="rounded-full bg-neutral-100 border-2 border-blue-200 overflow-hidden flex items-center justify-center text-neutral-400 shadow-md relative"
                 style={{ width: "142px", height: "142px" }}
               >
-                {formData.avatar ? (
-                  <img src={formData.avatar} alt={formData.name} className="w-full h-full object-cover" />
+                {currentImageSrc && !imgError ? (
+                  <img
+                    src={currentImageSrc}
+                    alt={formData.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    onError={handleImageError}
+                  />
                 ) : (
                   <User className="text-neutral-400 stroke-[1.5]" style={{ width: "66px", height: "66px" }} />
                 )}
@@ -291,14 +364,52 @@ export default function StudentIdCard({
 
               {isEditing ? (
                 <div className="flex flex-col w-full" style={{ gap: "6px" }}>
-                  <input
-                    type="text"
-                    name="avatar"
-                    value={formData.avatar}
-                    onChange={handleChange}
-                    placeholder="Picture URL"
-                    className="text-[11px] text-neutral-600 border border-neutral-300 rounded px-2 py-0.5 w-full text-center"
-                  />
+                  <div className="flex items-center gap-1.5 w-full">
+                    <input
+                      type="text"
+                      name="avatar"
+                      value={formData.avatar}
+                      onChange={handleAvatarChange}
+                      placeholder="Paste image link (Google Drive, Dropbox, web)..."
+                      className="text-[11px] text-neutral-700 border border-neutral-300 rounded px-2 py-1 w-full text-center focus:border-blue-500 focus:outline-none"
+                    />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Upload photo from device"
+                      className="shrink-0 p-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border border-neutral-300 rounded cursor-pointer transition-colors"
+                      style={{ height: "26px", minWidth: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Upload size={13} />
+                    </button>
+                    {formData.avatar && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, avatar: "" }));
+                          setImgError(false);
+                        }}
+                        title="Clear photo"
+                        className="shrink-0 p-1 bg-neutral-100 hover:bg-rose-100 text-neutral-600 hover:text-rose-600 border border-neutral-300 rounded cursor-pointer transition-colors"
+                        style={{ height: "26px", minWidth: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+
+                  {imgError && formData.avatar && (
+                    <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-center">
+                      Could not load image. If using Google Drive, make sure link sharing is set to &quot;Anyone with the link can view&quot; or click the upload icon to choose a photo directly.
+                    </span>
+                  )}
                   <input
                     type="text"
                     name="name"

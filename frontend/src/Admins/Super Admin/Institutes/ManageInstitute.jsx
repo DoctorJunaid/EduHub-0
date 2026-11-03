@@ -429,7 +429,7 @@ export default function ManageInstitute({ institute, onClose }) {
       {/* ── TAB: ADMIN ── */}
       {activeTab === TAB_ADMIN && (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {adminLoading ? (
+          {adminLoading && !adminInfo ? (
             <div style={{ padding: "16px 0" }}>
               <SpinnerCustom text="Loading admin info..." size="default" />
             </div>
@@ -664,7 +664,7 @@ export default function ManageInstitute({ institute, onClose }) {
             </form>
           )}
 
-          {campusLoading ? (
+          {campusLoading && campuses.length === 0 ? (
             <div style={{ padding: "16px 0" }}>
               <SpinnerCustom text="Loading campuses..." size="default" />
             </div>

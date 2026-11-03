@@ -10,7 +10,6 @@ import {
   Clock3,
   CheckCircle2,
 } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
 import TableSkeleton from "../shared/TableSkeleton";
 import api from "../../api/axiosInstance";
 import { toast } from "react-hot-toast";
@@ -277,11 +276,6 @@ const SubstituteAssignments = () => {
       </div>
 
       <div className="campus-table-container substitutes-table-wrap relative">
-        {loading && assignments.length > 0 && (
-          <div className="absolute inset-0 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-lg">
-            <Spinner className="size-6 text-primary" />
-          </div>
-        )}
         <div className="overflow-x-auto flex-1">
           <table className="substitutes-table">
             <thead>

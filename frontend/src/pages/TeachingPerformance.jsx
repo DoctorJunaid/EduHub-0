@@ -353,7 +353,7 @@ export default function TeachingPerformance() {
             {filteredTeachers.length} teachers
           </span>
         </div>
-        {loading ? (
+        {loading && filteredTeachers.length === 0 ? (
           <div className="p-12 text-center text-slate-500 text-sm">
             <SpinnerCustom
               text="Loading teaching records..."

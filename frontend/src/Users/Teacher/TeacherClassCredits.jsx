@@ -454,7 +454,7 @@ export default function TeacherClassCredits() {
         </div>
 
         {/* Card Body / Empty State */}
-        {loading ? (
+        {loading && sessions.length === 0 ? (
           <div
             className="w-full flex flex-col items-center justify-center text-center text-neutral-500 text-sm"
             style={{ padding: "64px 24px" }}

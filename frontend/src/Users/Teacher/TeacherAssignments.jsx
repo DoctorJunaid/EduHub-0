@@ -491,7 +491,7 @@ export default function TeacherAssignments() {
       </div>
 
       {/* 3. Main Assignment Cards & List Section */}
-      {loading ? (
+      {(assignmentsQuery.isLoading && assignments.length === 0) || (classesQuery.isLoading && classes.length === 0) ? (
         <div className="teacher-credits-state text-center text-slate-500 text-sm py-12">
           <SpinnerCustom
             text="Loading assigned classes &amp; coursework..."

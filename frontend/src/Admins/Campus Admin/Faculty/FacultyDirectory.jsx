@@ -39,7 +39,6 @@ import { useInstitution } from "@/context/InstitutionContext";
 import DataPagination from "@/components/shared/DataPagination";
 import { usePaginationParams } from "@/hooks/usePaginationParams";
 import TableSkeleton from "@/components/shared/TableSkeleton";
-import { Spinner } from "@/components/ui/spinner";
 import "./FacultyDirectory.css";
 
 export default function FacultyDirectory() {
@@ -249,11 +248,6 @@ export default function FacultyDirectory() {
 
       {/* 3. Fixed Table Container with Zero Overflow */}
       <div className="campus-table-container relative">
-        {isLoading && facultyRecords.length > 0 && (
-          <div className="absolute inset-0 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-lg">
-            <Spinner className="size-6 text-primary" />
-          </div>
-        )}
         <Table>
           <TableHeader>
             <TableRow>

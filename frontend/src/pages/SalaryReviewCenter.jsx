@@ -324,7 +324,7 @@ export default function SalaryReviewCenter() {
           <span>{filteredItems.length} adjustment records found</span>
         </div>
 
-        {loading ? (
+        {loading && filteredItems.length === 0 ? (
           <div className="salary-review-state">
             <RefreshCw className="animate-spin inline-block mr-2" size={16} />
             Loading salary adjustment items...

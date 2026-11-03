@@ -227,7 +227,7 @@ export default function InstituteStaff() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loading && staffList.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="ist-empty">
                     <PageLoader

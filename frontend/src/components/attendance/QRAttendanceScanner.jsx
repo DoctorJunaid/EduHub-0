@@ -17,6 +17,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
+import { normalizeImageUrl } from "@/utils/imageUrl";
 
 /**
  * Play a clean, synthetic audio cue using the Web Audio API
@@ -785,9 +786,10 @@ export default function QRAttendanceScanner({
                           <div className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
                             {scanResult.student.avatar ? (
                               <img
-                                src={scanResult.student.avatar}
+                                src={normalizeImageUrl(scanResult.student.avatar)}
                                 alt=""
                                 className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
                               />
                             ) : (
                               scanResult.student.name?.[0] || "S"
