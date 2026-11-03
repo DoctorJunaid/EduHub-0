@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/Card";
 import { PageLoader } from "@/components/ui/spinner";
@@ -18,6 +19,7 @@ import AttendanceGrid from "@/components/classTeacher/AttendanceGrid";
 import ClassResultGrid from "@/components/results/ClassResultGrid";
 import useMyClass from "@/hooks/useMyClass";
 import useClassResults from "@/hooks/useClassResults";
+import * as classTeacherApi from "@/api/classTeacher.api";
 
 export default function MyClass() {
   const navigate = useNavigate();
@@ -38,6 +40,8 @@ export default function MyClass() {
   const [activeTab, setActiveTab] = useState("attendance");
   const [studentSearch, setStudentSearch] = useState("");
 
+  const classId = classInfo?.classId || classInfo?._id;
+
   const {
     loading: _resultsLoading,
     gridData,
@@ -48,7 +52,29 @@ export default function MyClass() {
     submitForApproval,
     remindTeacher,
     refresh: refreshResults,
-  } = useClassResults(classInfo?.classId || classInfo?._id);
+  } = useClassResults(classId);
+
+  // Fetch attendance specifically for selectedDate so changing date loads existing records or blank roster
+  const {
+    data: dateAttendanceData,
+    isLoading: _dateAttendanceLoading,
+    refetch: refetchDateAttendance,
+  } = useQuery({
+    queryKey: ["my-class-attendance-date", classId, selectedDate],
+    queryFn: async () => {
+      const res = await classTeacherApi.getMyClassAttendance(selectedDate, classId);
+      return res?.data || res;
+    },
+    enabled: Boolean(isClassTeacher && classId && selectedDate),
+    staleTime: 30 * 1000,
+  });
+
+  const activeAttendanceRecords =
+    dateAttendanceData?.students ||
+    (selectedDate === new Date().toISOString().split("T")[0]
+      ? attendance?.students
+      : []) ||
+    [];
 
   if (classLoading) {
     return <PageLoader text="Loading your class workspace..." />;
@@ -121,6 +147,7 @@ export default function MyClass() {
     setSavingAttendance(true);
     try {
       await saveAttendance(records, selectedDate);
+      await refetchDateAttendance();
     } finally {
       setSavingAttendance(false);
     }
@@ -135,11 +162,11 @@ export default function MyClass() {
   });
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header Banner */}
+    <div className="space-y-6 pb-24">
+      {/* Top Class Header Card */}
       <div
         className="bg-white border border-neutral-200 rounded-xl shadow-xs w-full"
-        style={{ padding: "18px 20px", gap: "16px", boxSizing: "border-box" }}
+        style={{ padding: "20px 24px", marginBottom: "16px", boxSizing: "border-box" }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full" style={{ gap: "16px" }}>
           <div className="flex items-start sm:items-center min-w-0" style={{ gap: "12px" }}>
@@ -155,7 +182,7 @@ export default function MyClass() {
                   My Class — {classInfo.className}
                 </h1>
                 <span
-                  className="rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs font-semibold shrink-0"
+                  className="rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-700 shrink-0"
                   style={{ padding: "3px 10px" }}
                 >
                   Class Teacher Role
@@ -180,10 +207,11 @@ export default function MyClass() {
               onClick={() => {
                 refreshClass();
                 refreshResults();
+                refetchDateAttendance();
               }}
-              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs self-end sm:self-auto shrink-0"
+              className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium transition-colors whitespace-nowrap shadow-xs self-end sm:self-auto shrink-0 cursor-pointer"
               style={{
-                height: "38px",
+                height: "36px",
                 padding: "0 14px",
                 gap: "6px",
                 width: "auto",
@@ -198,7 +226,7 @@ export default function MyClass() {
         </div>
       </div>
 
-      {/* Main Tabbed Interface */}
+      {/* Navigation Tabs Bar */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
@@ -208,7 +236,7 @@ export default function MyClass() {
           className="w-full bg-neutral-100 border border-neutral-200 rounded-xl flex items-center overflow-x-auto no-scrollbar"
           style={{
             padding: "4px",
-            gap: "4px",
+            gap: "6px",
             height: "auto",
             minHeight: "44px",
             boxSizing: "border-box",
@@ -218,7 +246,7 @@ export default function MyClass() {
           <button
             type="button"
             onClick={() => setActiveTab("attendance")}
-            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial ${
+            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial cursor-pointer ${
               activeTab === "attendance"
                 ? "bg-white text-neutral-900 shadow-xs border border-neutral-200/80"
                 : "text-neutral-600 hover:text-neutral-900"
@@ -236,7 +264,7 @@ export default function MyClass() {
           <button
             type="button"
             onClick={() => setActiveTab("results")}
-            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial ${
+            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial cursor-pointer ${
               activeTab === "results"
                 ? "bg-white text-neutral-900 shadow-xs border border-neutral-200/80"
                 : "text-neutral-600 hover:text-neutral-900"
@@ -254,7 +282,7 @@ export default function MyClass() {
           <button
             type="button"
             onClick={() => setActiveTab("students")}
-            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial ${
+            className={`inline-flex items-center justify-center rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 flex-1 sm:flex-initial cursor-pointer ${
               activeTab === "students"
                 ? "bg-white text-neutral-900 shadow-xs border border-neutral-200/80"
                 : "text-neutral-600 hover:text-neutral-900"
@@ -274,7 +302,7 @@ export default function MyClass() {
         {/* Tab 1: Daily Attendance */}
         <TabsContent value="attendance" className="space-y-4 m-0">
           <div
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl shadow-xs"
             style={{ padding: "18px 20px", gap: "14px", boxSizing: "border-box" }}
           >
             <div>
@@ -293,7 +321,7 @@ export default function MyClass() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs focus:outline-none focus:border-neutral-500"
+                className="bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs focus:outline-none focus:border-neutral-500 transition-colors"
                 style={{ height: "38px", padding: "0 12px", width: "auto", minWidth: "160px", boxSizing: "border-box" }}
               />
             </div>
@@ -302,7 +330,7 @@ export default function MyClass() {
           <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <AttendanceGrid
               students={students}
-              initialAttendance={attendance?.students || []}
+              initialAttendance={activeAttendanceRecords}
               onSave={handleSaveAttendance}
               saving={savingAttendance}
               dateStr={selectedDate}
@@ -329,7 +357,7 @@ export default function MyClass() {
         {/* Tab 3: Students Directory */}
         <TabsContent value="students" className="space-y-4 m-0">
           <div
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-neutral-200 rounded-xl shadow-xs"
             style={{ padding: "18px 20px", gap: "14px", boxSizing: "border-box" }}
           >
             <div>
@@ -350,7 +378,7 @@ export default function MyClass() {
                 placeholder="Search students..."
                 value={studentSearch}
                 onChange={(e) => setStudentSearch(e.target.value)}
-                className="w-full bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs placeholder:text-neutral-400 focus:outline-none focus:border-neutral-500"
+                className="w-full bg-white border border-neutral-300 text-neutral-900 rounded-lg text-xs placeholder:text-neutral-400 focus:outline-none focus:border-neutral-500 transition-colors"
                 style={{ height: "38px", paddingLeft: "36px", paddingRight: "12px", boxSizing: "border-box" }}
               />
             </div>
