@@ -35,7 +35,15 @@ function playAudioFeedback(type = "success") {
 
     const now = ctx.currentTime;
 
-    if (type === "success") {
+    if (type === "capture") {
+      // Instant high-pitch optical scanner beep
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(2400, now);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+      osc.start(now);
+      osc.stop(now + 0.065);
+    } else if (type === "success") {
       // Crisp 2-tone pleasant chime
       osc.type = "sine";
       osc.frequency.setValueAtTime(587.33, now); // D5
@@ -212,6 +220,55 @@ export default function QRAttendanceScanner({
   useEffect(() => {
     submitAttendanceRef.current = submitAttendance;
   }, [submitAttendance]);
+
+  // Synchronous hardware scanner buffer for handheld/desktop USB barcode & QR scanners
+  const scanBufferRef = useRef("");
+  const scanTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e) => {
+      // Ignore if user is manually typing in manual roll input or select
+      const tagName = (e.target?.tagName || "").toLowerCase();
+      if (tagName === "input" && e.target?.id !== "scanner-hw-input") return;
+      if (tagName === "textarea" || tagName === "select") return;
+
+      if (e.key === "Enter" || e.key === "Tab") {
+        const buffered = scanBufferRef.current.trim();
+        if (buffered.length > 0) {
+          e.preventDefault();
+          scanBufferRef.current = "";
+          if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+          if (soundEnabled) playAudioFeedback("capture");
+          submitAttendance(buffered);
+        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        scanBufferRef.current += e.key;
+        if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+        scanTimeoutRef.current = setTimeout(() => {
+          const current = scanBufferRef.current.trim();
+          if (
+            current.length >= 10 &&
+            (current.includes("EduHub") || current.includes("{") || current.includes("STUDENT"))
+          ) {
+            scanBufferRef.current = "";
+            if (soundEnabled) playAudioFeedback("capture");
+            submitAttendance(current);
+          }
+        }, 1200);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    };
+  }, [open, soundEnabled, submitAttendance]);
 
   /**
    * Safely stop camera without triggering transition collisions
