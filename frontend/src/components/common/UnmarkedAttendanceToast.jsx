@@ -37,16 +37,19 @@ export default function UnmarkedAttendanceToast() {
 
     let isMounted = true;
 
-    // 1. Campus Admin / Principal / Institute Admin / Campus Manager
-    const isCampusAdmin = [
+    // 1. Campus Admin / Principal / Campus Manager (campus-level staff only, NOT institute_admin or super_admin)
+    const isCampusStaff = [
       "campus_admin",
       "campus_manager",
       "principal",
-      "institute_admin",
-      "super_admin",
     ].includes(userRole);
 
-    if (isCampusAdmin) {
+    const activeCampusId =
+      currentUser?.campusId?._id ||
+      currentUser?.campusId ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem("eduHubActiveCampusId") : null);
+
+    if (isCampusStaff && activeCampusId) {
       classTeacherApi
         .getUnmarkedClassesToday()
         .then((res) => {

@@ -314,7 +314,7 @@ export default function InstituteStudents() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loading && studentsList.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="isd-empty">
                     <PageLoader

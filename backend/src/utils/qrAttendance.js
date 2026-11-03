@@ -76,12 +76,33 @@ export function parseQrPayload(rawInput) {
   if (typeof rawInput === "object" && rawInput !== null) {
     parsed = rawInput;
   } else if (typeof rawInput === "string") {
-    const trimmed = rawInput.trim();
-    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      try {
-        parsed = JSON.parse(trimmed);
-      } catch {
-        // Not valid JSON, continue with string heuristics
+    let trimmed = rawInput.trim();
+
+    // Auto-repair missing braces (common when hardware HID scanners drop the initial '{' Shift key)
+    if (!trimmed.startsWith("{") && (trimmed.includes('"app"') || trimmed.includes('"studentId"'))) {
+      trimmed = "{" + trimmed;
+    }
+    if (trimmed.startsWith("{") && !trimmed.endsWith("}")) {
+      trimmed = trimmed + "}";
+    }
+
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      // Regex extraction fallback if JSON format is still malformed
+      const studentIdMatch = trimmed.match(/"studentId"\s*:\s*"([a-f0-9]{24})"/i);
+      if (studentIdMatch) {
+        const campusIdMatch = trimmed.match(/"campusId"\s*:\s*"([a-f0-9]{24})"/i);
+        const rollNoMatch = trimmed.match(/"rollNo"\s*:\s*"([^"\r\n]+)"/i);
+        const sigMatch = trimmed.match(/"sig"\s*:\s*"([a-f0-9]+)"/i);
+
+        parsed = {
+          app: "EduHub",
+          studentId: studentIdMatch[1],
+          campusId: campusIdMatch ? campusIdMatch[1] : "",
+          rollNo: rollNoMatch ? rollNoMatch[1] : "",
+          sig: sigMatch ? sigMatch[1] : "",
+        };
       }
     }
   }

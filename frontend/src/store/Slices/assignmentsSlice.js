@@ -18,6 +18,15 @@ export const fetchAssignments = createAsyncThunk(
       );
     }
   },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { assignments } = getState();
+      if (assignments?.status === "loading" || assignments?.isRefreshing) {
+        return false;
+      }
+    },
+  }
 );
 
 export const createAssignment = createAsyncThunk(
@@ -120,6 +129,7 @@ const assignmentsSlice = createSlice({
   initialState: {
     records: [],
     status: "idle",
+    isRefreshing: false,
     error: null,
   },
   reducers: {
@@ -146,15 +156,21 @@ const assignmentsSlice = createSlice({
     builder
       // Fetch all
       .addCase(fetchAssignments.pending, (state) => {
-        state.status = "loading";
+        if (state.records.length === 0) {
+          state.status = "loading";
+        }
+        state.isRefreshing = true;
+        state.error = null;
       })
       .addCase(fetchAssignments.fulfilled, (state, { payload }) => {
         state.status = "succeeded";
+        state.isRefreshing = false;
         const list = Array.isArray(payload) ? payload : payload?.data || [];
         state.records = list.map((r) => ({ ...r, id: r._id || r.id }));
       })
       .addCase(fetchAssignments.rejected, (state, { payload }) => {
-        state.status = "failed";
+        state.status = state.records.length > 0 ? "succeeded" : "failed";
+        state.isRefreshing = false;
         state.error = payload;
       })
       // Create

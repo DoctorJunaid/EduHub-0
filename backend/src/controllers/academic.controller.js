@@ -9,11 +9,20 @@ import {
 import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
 import { TeacherProfile } from "../models/profile.model.js";
+import { getTenantCampusId } from "../utils/tenantCampus.js";
+
+async function getCampusId(req) {
+  return await getTenantCampusId(req);
+}
 
 // GRADES
 export const getGrades = async (req, res) => {
   try {
-    const grades = await Grade.find({ campusId: req.user.campusId }).sort({
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(200).json([]);
+    }
+    const grades = await Grade.find({ campusId }).sort({
       createdAt: 1,
     });
     res.status(200).json(grades);
@@ -24,15 +33,19 @@ export const getGrades = async (req, res) => {
 
 export const createGrade = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required. Please select or create a campus branch first." });
+    }
     const { name, description } = req.body;
-    const existing = await Grade.findOne({ campusId: req.user.campusId, name });
+    const existing = await Grade.findOne({ campusId, name });
     if (existing) {
       return res.status(400).json({ message: "Grade already exists" });
     }
     const grade = await Grade.create({
       name,
       description,
-      campusId: req.user.campusId,
+      campusId,
       instituteId: req.user.instituteId,
     });
     res.status(201).json(grade);
@@ -43,12 +56,16 @@ export const createGrade = async (req, res) => {
 
 export const deleteGrade = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required." });
+    }
     const { id } = req.params;
-    await Grade.findOneAndDelete({ _id: id, campusId: req.user.campusId });
+    await Grade.findOneAndDelete({ _id: id, campusId });
     // Also delete linked sections, gradeSubjects, teacherAssignments
-    await Section.deleteMany({ gradeId: id });
-    await GradeSubject.deleteMany({ gradeId: id });
-    await TeacherAssignment.deleteMany({ gradeId: id });
+    await Section.deleteMany({ gradeId: id, campusId });
+    await GradeSubject.deleteMany({ gradeId: id, campusId });
+    await TeacherAssignment.deleteMany({ gradeId: id, campusId });
     res.status(200).json({ message: "Grade deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error deleting grade", error });
@@ -58,8 +75,12 @@ export const deleteGrade = async (req, res) => {
 // SECTIONS
 export const getSections = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(200).json([]);
+    }
     const { gradeId } = req.query;
-    const query = { campusId: req.user.campusId };
+    const query = { campusId };
     if (gradeId) query.gradeId = gradeId;
     const sections = await Section.find(query).populate("gradeId", "name");
     res.status(200).json(sections);
@@ -70,9 +91,13 @@ export const getSections = async (req, res) => {
 
 export const createSection = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required. Please select or create a campus branch first." });
+    }
     const { name, gradeId } = req.body;
     const existing = await Section.findOne({
-      campusId: req.user.campusId,
+      campusId,
       gradeId,
       name,
     });
@@ -82,7 +107,7 @@ export const createSection = async (req, res) => {
     const section = await Section.create({
       name,
       gradeId,
-      campusId: req.user.campusId,
+      campusId,
       instituteId: req.user.instituteId,
     });
     const populated = await Section.findById(section._id).populate("gradeId", "name");
@@ -94,9 +119,13 @@ export const createSection = async (req, res) => {
 
 export const deleteSection = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required." });
+    }
     const { id } = req.params;
-    await Section.findOneAndDelete({ _id: id, campusId: req.user.campusId });
-    await TeacherAssignment.deleteMany({ sectionId: id });
+    await Section.findOneAndDelete({ _id: id, campusId });
+    await TeacherAssignment.deleteMany({ sectionId: id, campusId });
     res.status(200).json({ message: "Section deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error deleting section", error });
@@ -106,7 +135,11 @@ export const deleteSection = async (req, res) => {
 // SUBJECTS
 export const getSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find({ campusId: req.user.campusId });
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(200).json([]);
+    }
+    const subjects = await Subject.find({ campusId });
     res.status(200).json(subjects);
   } catch (error) {
     res.status(500).json({ message: "Server error fetching subjects", error });
@@ -115,8 +148,12 @@ export const getSubjects = async (req, res) => {
 
 export const createSubject = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required. Please select or create a campus branch first." });
+    }
     const { name, code, description } = req.body;
-    const existing = await Subject.findOne({ campusId: req.user.campusId, name });
+    const existing = await Subject.findOne({ campusId, name });
     if (existing) {
       return res.status(400).json({ message: "Subject already exists" });
     }
@@ -124,7 +161,7 @@ export const createSubject = async (req, res) => {
       name,
       code,
       description,
-      campusId: req.user.campusId,
+      campusId,
       instituteId: req.user.instituteId,
     });
     res.status(201).json(subject);
@@ -135,10 +172,14 @@ export const createSubject = async (req, res) => {
 
 export const deleteSubject = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required." });
+    }
     const { id } = req.params;
-    await Subject.findOneAndDelete({ _id: id, campusId: req.user.campusId });
-    await GradeSubject.deleteMany({ subjectId: id });
-    await TeacherAssignment.deleteMany({ subjectId: id });
+    await Subject.findOneAndDelete({ _id: id, campusId });
+    await GradeSubject.deleteMany({ subjectId: id, campusId });
+    await TeacherAssignment.deleteMany({ subjectId: id, campusId });
     res.status(200).json({ message: "Subject deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error deleting subject", error });
@@ -148,8 +189,12 @@ export const deleteSubject = async (req, res) => {
 // GRADE-SUBJECT ASSIGNMENTS (Class Subjects)
 export const getGradeSubjects = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(200).json([]);
+    }
     const { gradeId } = req.query;
-    const query = { campusId: req.user.campusId };
+    const query = { campusId };
     if (gradeId) query.gradeId = gradeId;
     const gradeSubjects = await GradeSubject.find(query)
       .populate("gradeId", "name")
@@ -162,11 +207,15 @@ export const getGradeSubjects = async (req, res) => {
 
 export const assignSubjectToGrade = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required. Please select or create a campus branch first." });
+    }
     const { gradeId, subjectId } = req.body;
     const existing = await GradeSubject.findOne({
       gradeId,
       subjectId,
-      campusId: req.user.campusId,
+      campusId,
     });
     if (existing) {
       return res.status(400).json({ message: "Subject already assigned to this grade" });
@@ -174,7 +223,7 @@ export const assignSubjectToGrade = async (req, res) => {
     const gradeSubject = await GradeSubject.create({
       gradeId,
       subjectId,
-      campusId: req.user.campusId,
+      campusId,
       instituteId: req.user.instituteId,
     });
     const populated = await GradeSubject.findById(gradeSubject._id)
@@ -188,10 +237,14 @@ export const assignSubjectToGrade = async (req, res) => {
 
 export const removeSubjectFromGrade = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required." });
+    }
     const { id } = req.params;
-    const gs = await GradeSubject.findOneAndDelete({ _id: id, campusId: req.user.campusId });
+    const gs = await GradeSubject.findOneAndDelete({ _id: id, campusId });
     if (gs) {
-      await TeacherAssignment.deleteMany({ gradeId: gs.gradeId, subjectId: gs.subjectId });
+      await TeacherAssignment.deleteMany({ gradeId: gs.gradeId, subjectId: gs.subjectId, campusId });
     }
     res.status(200).json({ message: "Subject removed from grade" });
   } catch (error) {
@@ -202,7 +255,7 @@ export const removeSubjectFromGrade = async (req, res) => {
 // TEACHER ASSIGNMENTS
 export const checkTeacherAssignmentConflict = async (req, res) => {
   try {
-    const campusId = req.user.campusId;
+    const campusId = await getCampusId(req);
     const { teacherId, gradeId, sectionId, subjectId, timeSlot } = {
       ...req.query,
       ...req.body,
@@ -309,8 +362,12 @@ export const checkTeacherAssignmentConflict = async (req, res) => {
 
 export const getTeacherAssignments = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(200).json([]);
+    }
     const { gradeId, sectionId, subjectId, teacherId } = req.query;
-    const query = { campusId: req.user.campusId };
+    const query = { campusId };
     if (gradeId) query.gradeId = gradeId;
     if (sectionId) query.sectionId = sectionId;
     if (subjectId) {
@@ -340,7 +397,7 @@ export const getTeacherAssignments = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // Calculate total classes assigned per teacher in this campus for workload visibility
-    const allCampusAssignments = await TeacherAssignment.find({ campusId: req.user.campusId }).select("teacherId").lean();
+    const allCampusAssignments = await TeacherAssignment.find({ campusId }).select("teacherId").lean();
     const teacherWorkloadCounts = {};
     for (const a of allCampusAssignments) {
       const tId = String(a.teacherId?._id || a.teacherId);
@@ -378,7 +435,10 @@ export const createTeacherAssignment = async (req, res) => {
       overrideReason = "",
     } = req.body;
 
-    let campusId = req.user.campusId;
+    let campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required. Please select or create an active campus." });
+    }
     let instituteId = req.user.instituteId;
 
     if (!teacherId || !gradeId || !sectionId) {
@@ -592,8 +652,12 @@ export const createTeacherAssignment = async (req, res) => {
 
 export const deleteTeacherAssignment = async (req, res) => {
   try {
+    const campusId = await getCampusId(req);
+    if (!campusId) {
+      return res.status(400).json({ message: "Campus context required." });
+    }
     const { id } = req.params;
-    const assignment = await TeacherAssignment.findOneAndDelete({ _id: id, campusId: req.user.campusId });
+    const assignment = await TeacherAssignment.findOneAndDelete({ _id: id, campusId });
     if (assignment && assignment.subjectId) {
       const subjectDoc = await Subject.findById(assignment.subjectId);
       if (subjectDoc) {
@@ -655,7 +719,7 @@ export const getPeshawarPresetPreview = async (req, res) => {
 
 export const seedPeshawarBoardPreset = async (req, res) => {
   try {
-    const campusId = req.user.campusId;
+    const campusId = await getCampusId(req);
     const instituteId = req.user.instituteId;
 
     if (!campusId) {

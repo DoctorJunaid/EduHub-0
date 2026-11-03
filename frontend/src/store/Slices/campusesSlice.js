@@ -46,6 +46,15 @@ export const fetchCampuses = createAsyncThunk(
         error.response?.data?.message || error.message || 'Failed to fetch campuses'
       );
     }
+  },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { campuses } = getState();
+      if (campuses?.status === 'loading' || campuses?.isRefreshing) {
+        return false;
+      }
+    },
   }
 );
 
@@ -107,6 +116,7 @@ const slice = createSlice({
   initialState: {
     records: [],
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    isRefreshing: false,
     error: null,
   },
   reducers: {
@@ -144,11 +154,15 @@ const slice = createSlice({
     builder
       // Fetch
       .addCase(fetchCampuses.pending, (state) => {
-        state.status = 'loading';
+        if (state.records.length === 0) {
+          state.status = 'loading';
+        }
+        state.isRefreshing = true;
         state.error = null;
       })
       .addCase(fetchCampuses.fulfilled, (state, { payload }) => {
         state.status = 'succeeded';
+        state.isRefreshing = false;
         state.records = payload;
         // If no active campus is selected yet or stored active campus is not in payload, select first available
         if (payload.length > 0) {
@@ -167,7 +181,8 @@ const slice = createSlice({
         }
       })
       .addCase(fetchCampuses.rejected, (state, { payload }) => {
-        state.status = 'failed';
+        state.status = state.records.length > 0 ? 'succeeded' : 'failed';
+        state.isRefreshing = false;
         state.error = payload;
       })
       // Create

@@ -1135,6 +1135,15 @@ export async function getMyClassStats(campusId, teacherUserId) {
  * 11. Get classes that haven't marked attendance today (Admin Alert & Cron support)
  */
 export async function getUnmarkedClassesToday(campusId) {
+  if (!campusId) {
+    return {
+      date: new Date().toISOString().split("T")[0],
+      totalClasses: 0,
+      unmarkedCount: 0,
+      unmarkedClasses: [],
+    };
+  }
+
   const sections = await Section.find({ campusId })
     .populate("gradeId", "name")
     .populate({

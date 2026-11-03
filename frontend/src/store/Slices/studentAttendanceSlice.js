@@ -55,6 +55,15 @@ export const fetchStudentAttendance = createAsyncThunk(
       );
     }
   },
+  {
+    condition: (force, { getState }) => {
+      if (force === true) return true;
+      const { studentAttendance } = getState();
+      if (studentAttendance?.status === "loading" || studentAttendance?.isRefreshing) {
+        return false;
+      }
+    },
+  }
 );
 
 export const markStudentAttendance = createAsyncThunk(
@@ -102,6 +111,7 @@ const slice = createSlice({
   initialState: {
     records: [],
     status: "idle",
+    isRefreshing: false,
     error: null,
   },
   reducers: {
@@ -130,15 +140,21 @@ const slice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchStudentAttendance.pending, (state) => {
-        state.status = "loading";
+        if (state.records.length === 0) {
+          state.status = "loading";
+        }
+        state.isRefreshing = true;
+        state.error = null;
       })
       .addCase(fetchStudentAttendance.fulfilled, (state, { payload }) => {
         state.status = "succeeded";
+        state.isRefreshing = false;
         const list = Array.isArray(payload) ? payload : payload?.data || [];
         state.records = list.map(normalizeAttendance);
       })
       .addCase(fetchStudentAttendance.rejected, (state, { payload }) => {
-        state.status = "failed";
+        state.status = state.records.length > 0 ? "succeeded" : "failed";
+        state.isRefreshing = false;
         state.error = payload;
       })
       .addCase(markStudentAttendance.fulfilled, (state, { payload }) => {

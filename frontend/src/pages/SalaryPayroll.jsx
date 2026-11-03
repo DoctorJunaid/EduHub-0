@@ -320,11 +320,6 @@ const SalaryPayroll = () => {
       </div>
 
       <div className="campus-table-container salary-payroll-table-wrap relative">
-        {loading && payrolls.length > 0 && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center z-10">
-            <Spinner className="size-6 text-primary" />
-          </div>
-        )}
         {loading && payrolls.length === 0 ? (
           <div className="p-4">
             <TableSkeleton rows={5} columns={7} />

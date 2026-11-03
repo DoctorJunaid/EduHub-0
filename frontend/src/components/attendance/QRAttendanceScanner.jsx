@@ -17,6 +17,22 @@ import {
   UserCheck,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
+import { normalizeImageUrl } from "@/utils/imageUrl";
+
+/**
+ * Auto-repair payload if hardware scanner dropped leading/trailing braces
+ */
+function repairPayload(raw) {
+  if (!raw || typeof raw !== "string") return raw;
+  let str = raw.trim();
+  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"'))) {
+    str = "{" + str;
+  }
+  if (str.startsWith("{") && !str.endsWith("}")) {
+    str = str + "}";
+  }
+  return str;
+}
 
 /**
  * Play a clean, synthetic audio cue using the Web Audio API
@@ -34,7 +50,15 @@ function playAudioFeedback(type = "success") {
 
     const now = ctx.currentTime;
 
-    if (type === "success") {
+    if (type === "capture") {
+      // Instant high-pitch optical scanner beep
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(2400, now);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+      osc.start(now);
+      osc.stop(now + 0.065);
+    } else if (type === "success") {
       // Crisp 2-tone pleasant chime
       osc.type = "sine";
       osc.frequency.setValueAtTime(587.33, now); // D5
@@ -122,10 +146,12 @@ export default function QRAttendanceScanner({
    */
   const submitAttendance = useCallback(
     async (rawCode, { override = false } = {}) => {
+      const cleanCode = typeof rawCode === "string" ? repairPayload(rawCode.trim()) : rawCode;
+      if (!cleanCode) return;
       setIsProcessing(true);
       try {
         const payload = {
-          qrPayload: rawCode,
+          qrPayload: cleanCode,
           status: targetStatus,
           classId: classScope?.classId || classScope?.id || undefined,
           className: classScope?.className || manualClass || undefined,
@@ -211,6 +237,55 @@ export default function QRAttendanceScanner({
   useEffect(() => {
     submitAttendanceRef.current = submitAttendance;
   }, [submitAttendance]);
+
+  // Synchronous hardware scanner buffer for handheld/desktop USB barcode & QR scanners
+  const scanBufferRef = useRef("");
+  const scanTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e) => {
+      // Ignore if user is manually typing in manual roll input or select
+      const tagName = (e.target?.tagName || "").toLowerCase();
+      if (tagName === "input" && e.target?.id !== "scanner-hw-input") return;
+      if (tagName === "textarea" || tagName === "select") return;
+
+      if (e.key === "Enter" || e.key === "Tab") {
+        const buffered = scanBufferRef.current.trim();
+        if (buffered.length > 0) {
+          e.preventDefault();
+          scanBufferRef.current = "";
+          if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+          if (soundEnabled) playAudioFeedback("capture");
+          submitAttendance(buffered);
+        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        scanBufferRef.current += e.key;
+        if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+        scanTimeoutRef.current = setTimeout(() => {
+          const current = scanBufferRef.current.trim();
+          if (
+            current.length >= 10 &&
+            (current.includes("EduHub") || current.includes("{") || current.includes("STUDENT"))
+          ) {
+            scanBufferRef.current = "";
+            if (soundEnabled) playAudioFeedback("capture");
+            submitAttendance(current);
+          }
+        }, 1200);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    };
+  }, [open, soundEnabled, submitAttendance]);
 
   /**
    * Safely stop camera without triggering transition collisions
@@ -761,19 +836,35 @@ export default function QRAttendanceScanner({
                         : scanResult.message}
                     </span>
                   </div>
-                  {scanResult.record?.status && (
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
-                        scanResult.record.status === "Present"
-                          ? "bg-emerald-200/80 text-emerald-900"
-                          : scanResult.record.status === "Late"
-                            ? "bg-amber-200/80 text-amber-900"
-                            : "bg-blue-200/80 text-blue-900"
-                      }`}
-                    >
-                      {scanResult.record.status}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {scanResult.record?.status && (
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
+                          scanResult.record.status === "Present"
+                            ? "bg-emerald-200/80 text-emerald-900"
+                            : scanResult.record.status === "Late"
+                              ? "bg-amber-200/80 text-amber-900"
+                              : "bg-blue-200/80 text-blue-900"
+                        }`}
+                      >
+                        {scanResult.record.status}
+                      </span>
+                    )}
+                    {scanResult.type === "warning" && scanResult.rawCode && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          submitAttendance(scanResult.rawCode, {
+                            override: true,
+                          })
+                        }
+                        disabled={isProcessing}
+                        className="px-2 py-0.5 text-[10px] font-semibold bg-amber-600 hover:bg-amber-500 text-white rounded-md transition-colors shadow-2xs cursor-pointer whitespace-nowrap"
+                      >
+                        Update Status
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

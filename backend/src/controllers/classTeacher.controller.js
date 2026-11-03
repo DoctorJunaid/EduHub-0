@@ -1,43 +1,13 @@
 import * as classTeacherService from "../services/classTeacher.service.js";
 import User from "../models/user.model.js";
 import { TeacherProfile } from "../models/profile.model.js";
+import { getTenantCampusId } from "../utils/tenantCampus.js";
 
 /**
- * Helper to resolve campusId
+ * Helper to resolve campusId strictly within the user's tenant scope
  */
 async function getCampusId(req) {
-  let cid =
-    req.body?.campusId ||
-    req.query?.campusId ||
-    req.headers?.["x-campus-id"] ||
-    req.user?.campusId;
-  if (cid) {
-    return typeof cid === "object" && cid !== null
-      ? (cid._id || cid.id || cid).toString()
-      : String(cid);
-  }
-  if (req.user?._id) {
-    const userDoc = await User.findById(req.user._id).select("campusId").lean();
-    if (userDoc?.campusId) {
-      return (userDoc.campusId._id || userDoc.campusId).toString();
-    }
-    const prof = await TeacherProfile.findOne({
-      $or: [{ user: req.user._id }, { userId: req.user._id }],
-    })
-      .select("campusId")
-      .lean();
-    if (prof?.campusId) {
-      return (prof.campusId._id || prof.campusId).toString();
-    }
-  }
-  if (req.user?.instituteId) {
-    const Campus = (await import("../models/campus.model.js")).default;
-    const defaultCampus =
-      (await Campus.findOne({ instituteId: req.user.instituteId, status: "Active" }).select("_id").lean()) ||
-      (await Campus.findOne({ instituteId: req.user.instituteId }).select("_id").lean());
-    if (defaultCampus?._id) return defaultCampus._id.toString();
-  }
-  return null;
+  return await getTenantCampusId(req);
 }
 
 // 1. Assign Class Teacher (Admin)
@@ -249,7 +219,15 @@ export const getUnmarkedClassesToday = async (req, res) => {
   try {
     const campusId = await getCampusId(req);
     if (!campusId) {
-      return res.status(400).json({ success: false, message: "Campus ID is required." });
+      return res.status(200).json({
+        success: true,
+        data: {
+          date: new Date().toISOString().split("T")[0],
+          totalClasses: 0,
+          unmarkedCount: 0,
+          unmarkedClasses: [],
+        },
+      });
     }
 
     const data = await classTeacherService.getUnmarkedClassesToday(campusId);

@@ -115,7 +115,7 @@ export default function CampusBranches() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loading && campuses.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="campuses-empty">
                     <PageLoader message="Loading campus branches..." className="min-h-[140px] py-6" />

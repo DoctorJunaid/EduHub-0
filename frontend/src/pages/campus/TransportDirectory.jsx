@@ -10,18 +10,11 @@ import {
   AlertCircle,
   UserCheck,
   CheckCircle2,
-  Filter,
-  ArrowUpDown,
-  Phone,
-  ShieldCheck,
-  ChevronRight,
+  Users,
 } from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableHeader,
@@ -46,15 +39,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import TableSkeleton from "@/components/shared/TableSkeleton";
+import DataPagination from "@/components/shared/DataPagination";
+import { usePaginationParams } from "@/hooks/usePaginationParams";
 import toast from "react-hot-toast";
 import axiosInstance from "@/api/axiosInstance";
-import { getRoutesApi, getTransportStudentsApi } from "@/api/transport.api";
+import { getRoutesApi } from "@/api/transport.api";
 import { Link } from "react-router-dom";
+import "./TransportDirectory.css";
 
 export default function TransportDirectory() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [routeFilter, setRouteFilter] = useState("all");
+  const [assignmentFilter, setAssignmentFilter] = useState("all");
+
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPage: 1,
+    defaultPageSize: 20,
+  });
 
   // Edit Dialog State
   const [editingStudent, setEditingStudent] = useState(null);
@@ -70,19 +73,17 @@ export default function TransportDirectory() {
   } = useQuery({
     queryKey: ["transport", "students", "enrolled"],
     queryFn: async () => {
-      // Query students enrolled in transport
       const res = await axiosInstance.get("/transport/students", {
         params: { usesTransport: true },
       });
       const list = res.data?.data || res.data || [];
-      // Guarantee only students who require transport
       return list.filter((s) => s.usesTransport === true || s.transportEnrolled === true);
     },
     staleTime: 60 * 1000,
   });
 
   // 2. Fetch Available Transit Routes using React Query
-  const { data: routes = [], isLoading: isRoutesLoading } = useQuery({
+  const { data: routes = [] } = useQuery({
     queryKey: ["transport", "routes"],
     queryFn: async () => {
       const res = await getRoutesApi();
@@ -171,7 +172,19 @@ export default function TransportDirectory() {
     return r?.stops || [];
   }, [routes, editRouteId]);
 
-  // Filter students by search text and route dropdown
+  // KPI Metrics Calculation
+  const totalCommuters = students.length;
+  const assignedCommuters = useMemo(
+    () => students.filter((s) => Boolean(s.routeId && s.routeName)).length,
+    [students]
+  );
+  const unassignedCommuters = useMemo(
+    () => students.filter((s) => !s.routeId || !s.routeName).length,
+    [students]
+  );
+  const activeRoutesCount = routes.length;
+
+  // Filter students by search text, route, and assignment status
   const filteredStudents = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return students.filter((s) => {
@@ -190,258 +203,353 @@ export default function TransportDirectory() {
         routeFilter === "all" ||
         String(s.routeId) === String(routeFilter);
 
-      return matchesSearch && matchesRoute;
+      const hasRoute = Boolean(s.routeId && s.routeName);
+      const matchesAssignment =
+        assignmentFilter === "all" ||
+        (assignmentFilter === "assigned" && hasRoute) ||
+        (assignmentFilter === "unassigned" && !hasRoute);
+
+      return matchesSearch && matchesRoute && matchesAssignment;
     });
-  }, [students, searchQuery, routeFilter]);
+  }, [students, searchQuery, routeFilter, assignmentFilter]);
+
+  // Pagination Slice
+  const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const displayedStudents = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredStudents.slice(start, start + pageSize);
+  }, [filteredStudents, currentPage, pageSize]);
 
   return (
-    <div className="campus-tab-page transport-directory-page p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-      {/* ── Top Header / Breadcrumb ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <Link to="/transport" className="hover:underline flex items-center gap-1">
-              <Bus className="w-3.5 h-3.5" />
-              Transport & Drivers
-            </Link>
-            <span>/</span>
-            <span className="font-semibold text-foreground">Transport Directory</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            Student Transport Directory
-            <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">
-              {students.length} Enrolled
-            </Badge>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Directory of all students where Requires Transport is active. View assigned routes, stops, and fleet vehicles.
-          </p>
+    <div className="campus-tab-page transport-directory-page">
+      {/* ── 1. Top Enterprise Header ── */}
+      <div className="transport-directory-header">
+        <div className="header-breadcrumbs">
+          <Link to="/transport" className="breadcrumb-parent">
+            <Bus size={13} />
+            <span>Transport &amp; Drivers</span>
+          </Link>
+          <span className="breadcrumb-separator">/</span>
+          <span className="breadcrumb-current">Transport Directory</span>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetchStudents()}
-            disabled={isStudentsLoading || isStudentsRefetching}
-            className="h-9 gap-1.5 text-xs font-semibold"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isStudentsRefetching ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <Button size="sm" asChild className="h-9 gap-1.5 text-xs font-semibold bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:opacity-90">
-            <Link to="/students">
-              <UserCheck className="w-3.5 h-3.5" />
-              Admission / Students
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Toolbar: Search & Route Filter ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-zinc-900/60 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
-        <div className="flex items-center gap-2 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <Input
-              type="text"
-              placeholder="Search by student name, roll number, route, or stop..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs w-full bg-zinc-50 dark:bg-zinc-950/50"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Label htmlFor="route-filter" className="text-xs font-medium text-muted-foreground shrink-0 hidden md:inline">
-            Route:
-          </Label>
-          <Select value={routeFilter} onValueChange={(val) => setRouteFilter(val)}>
-            <SelectTrigger id="route-filter" className="h-9 text-xs w-full sm:w-[220px] bg-zinc-50 dark:bg-zinc-950/50">
-              <SelectValue placeholder="All Transit Routes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Transit Routes ({students.length})</SelectItem>
-              {routes.map((r) => (
-                <SelectItem key={r._id} value={r._id}>
-                  {r.routeName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* ── Main Data Table ── */}
-      <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 overflow-hidden shadow-xs">
-        {isStudentsLoading ? (
-          <div className="p-12 flex flex-col items-center justify-center gap-3">
-            <Spinner className="w-6 h-6 text-indigo-600" />
-            <p className="text-xs text-muted-foreground font-medium">
-              Loading enrolled transport students...
+        <div className="header-main-row">
+          <div className="header-title-group">
+            <div className="title-with-badge">
+              <h1 className="page-heading">Student Transport Directory</h1>
+              <span className="commuters-count-pill">
+                {students.length} {students.length === 1 ? "Commuter" : "Commuters"}
+              </span>
+            </div>
+            <p className="page-description">
+              Directory of all students where Requires Transport is active. View assigned transit routes, designated stops, and vehicle assignments.
             </p>
           </div>
-        ) : filteredStudents.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-muted-foreground">
-              <Bus className="w-6 h-6 opacity-60" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-foreground">
-                {searchQuery || routeFilter !== "all"
-                  ? "No matching commuters found"
-                  : "No students currently enrolled in transport"}
-              </h3>
-              <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                {searchQuery || routeFilter !== "all"
-                  ? "Try clearing your search query or route filter to see all transport records."
-                  : "When students are admitted or edited with Requires Transport toggled ON, they will appear here."}
-              </p>
-            </div>
-            {(searchQuery || routeFilter !== "all") && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setRouteFilter("all");
-                }}
-                className="text-xs h-8 mt-1"
-              >
-                Clear Filters
-              </Button>
-            )}
+
+          <div className="header-actions">
+            <button
+              type="button"
+              className="action-btn-secondary"
+              onClick={() => refetchStudents()}
+              disabled={isStudentsLoading || isStudentsRefetching}
+              title="Sync student transport records"
+            >
+              <RefreshCw size={13} className={isStudentsRefetching ? "animate-spin" : ""} />
+              <span>Refresh</span>
+            </button>
+            <Link
+              to="/students"
+              className="action-btn-primary"
+              title="Open Student Admissions Directory"
+            >
+              <UserCheck size={13} />
+              <span>Admission / Students</span>
+            </Link>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-zinc-50/75 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800">
-                  <TableHead className="text-xs font-bold uppercase tracking-wider py-3">Student Name</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider py-3">Class</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider py-3">Route Name</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider py-3">Designated Stop</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider py-3 text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map((student) => {
-                  const studentId = student.userId || student._id;
-                  const hasRoute = Boolean(student.routeName && student.routeId);
+        </div>
+      </div>
 
-                  return (
-                    <TableRow
-                      key={studentId}
-                      className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 border-b border-zinc-200/80 dark:border-zinc-800/80 transition-colors"
-                    >
-                      {/* Column 1: Student Name */}
-                      <TableCell className="py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
-                            {student.name ? student.name.charAt(0).toUpperCase() : "S"}
-                          </div>
-                          <div className="min-w-0">
-                            <span className="font-bold text-sm text-foreground block truncate">
-                              {student.name || "Unnamed Student"}
-                            </span>
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
-                              <span>Roll: {student.rollNumber || "—"}</span>
-                              {student.email && (
-                                <>
-                                  <span>·</span>
-                                  <span className="truncate max-w-[160px]">{student.email}</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
+      {/* ── 2. Top Metric Cards (Flush 4-Card Track) ── */}
+      <div className="campus-kpi-track">
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Users size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Commuter Students</span>
+              <strong className="kpi-value">{totalCommuters}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon" style={{ color: "#16a34a" }}>
+              <CheckCircle2 size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Route Assigned</span>
+              <strong className="kpi-value">{assignedCommuters}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon" style={{ color: unassignedCommuters > 0 ? "#ea580c" : "#71717a" }}>
+              <AlertCircle size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Pending Route</span>
+              <strong className="kpi-value">{unassignedCommuters}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="campus-kpi-card">
+          <div className="kpi-wrap">
+            <div className="kpi-icon">
+              <Bus size={16} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-label">Active Transit Routes</span>
+              <strong className="kpi-value">{activeRoutesCount}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. Contiguous Toolbar Directly Under KPI Track ── */}
+      <div className="campus-toolbar">
+        <div className="toolbar-left">
+          <div className="toolbar-search" style={{ minWidth: "240px", maxWidth: "340px" }}>
+            <Search size={14} />
+            <input
+              type="text"
+              placeholder="Search student name, roll, route, or stop..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              aria-label="Search student transport"
+            />
+          </div>
+
+          <select
+            className="toolbar-select"
+            value={routeFilter}
+            onChange={(e) => {
+              setRouteFilter(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Filter by route"
+            style={{ minWidth: "170px", maxWidth: "230px" }}
+          >
+            <option value="all">All Transit Routes ({students.length})</option>
+            {routes.map((r) => (
+              <option key={r._id} value={r._id}>
+                {r.routeName}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="toolbar-select"
+            value={assignmentFilter}
+            onChange={(e) => {
+              setAssignmentFilter(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Filter by assignment status"
+            style={{ minWidth: "140px", maxWidth: "180px" }}
+          >
+            <option value="all">All Statuses</option>
+            <option value="assigned">Route Assigned</option>
+            <option value="unassigned">Pending Route</option>
+          </select>
+        </div>
+
+        <div className="toolbar-actions">
+          {(searchQuery || routeFilter !== "all" || assignmentFilter !== "all") && (
+            <button
+              type="button"
+              className="toolbar-btn text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setSearchQuery("");
+                setRouteFilter("all");
+                setAssignmentFilter("all");
+                setPage(1);
+              }}
+              title="Clear all filters"
+            >
+              Reset Filters
+            </button>
+          )}
+          <span className="text-xs text-zinc-500 font-medium">
+            {filteredStudents.length} of {students.length} students
+          </span>
+        </div>
+      </div>
+
+      {/* ── 4. Fixed Table Container with Zero Overflow ── */}
+      <div className="campus-table-container relative">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead style={{ width: "30%" }}>Student Name &amp; Roll</TableHead>
+              <TableHead style={{ width: "18%" }}>Class &amp; Section</TableHead>
+              <TableHead style={{ width: "26%" }}>Route &amp; Fleet Vehicle</TableHead>
+              <TableHead style={{ width: "16%" }}>Designated Stop</TableHead>
+              <TableHead className="text-center" style={{ width: "10%" }}>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isStudentsLoading && students.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="p-0">
+                  <TableSkeleton rows={6} columns={5} />
+                </TableCell>
+              </TableRow>
+            ) : displayedStudents.length > 0 ? (
+              displayedStudents.map((student) => {
+                const studentId = student.userId || student._id;
+                const hasRoute = Boolean(student.routeName && student.routeId);
+                const initialChar = student.name ? student.name.charAt(0).toUpperCase() : "S";
+
+                return (
+                  <TableRow key={studentId}>
+                    {/* Column 1: Student Name & Roll */}
+                    <TableCell style={{ width: "30%", overflow: "hidden" }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold text-xs flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                          {initialChar}
                         </div>
-                      </TableCell>
-
-                      {/* Column 2: Class */}
-                      <TableCell className="py-3.5">
-                        <span className="font-semibold text-xs text-foreground block">
-                          {student.gradeOrClass || "Unassigned"}
-                        </span>
-                        {student.section && (
-                          <span className="text-[11px] text-muted-foreground block">
-                            Section: {student.section}
+                        <div className="min-w-0">
+                          <span className="transport-student-name block truncate">
+                            {student.name || "Unnamed Student"}
                           </span>
-                        )}
-                      </TableCell>
-
-                      {/* Column 3: Route Name (Safe Null Handling) */}
-                      <TableCell className="py-3.5">
-                        {hasRoute ? (
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                            <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                            <span>{student.routeName}</span>
-                            {student.vehicleNumber && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 ml-1 font-normal bg-zinc-50 dark:bg-zinc-800">
-                                {student.vehicleNumber}
-                              </Badge>
+                          <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex-wrap">
+                            <span>Roll: {student.rollNumber || "—"}</span>
+                            {student.email && (
+                              <>
+                                <span>·</span>
+                                <span className="truncate max-w-[150px]">{student.email}</span>
+                              </>
                             )}
                           </div>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] py-0.5 px-2 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 font-medium flex items-center gap-1 w-fit"
-                          >
-                            <AlertCircle className="w-3 h-3" />
-                            Route Unassigned
-                          </Badge>
-                        )}
-                      </TableCell>
-
-                      {/* Column 4: Stop Name */}
-                      <TableCell className="py-3.5">
-                        {student.stopName ? (
-                          <div>
-                            <span className="text-xs font-medium text-foreground block">
-                              {student.stopName}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">
-                            No stop designated
-                          </span>
-                        )}
-                      </TableCell>
-
-                      {/* Column 5: Action (Edit / Remove) */}
-                      <TableCell className="py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenEdit(student)}
-                            className="h-8 px-2.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                            title="Edit transit route and stop"
-                          >
-                            <Edit2 className="w-3.5 h-3.5 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemove(student)}
-                            disabled={updateTransportMutation.isPending}
-                            className="h-8 px-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
-                            title="Remove transport requirement"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 mr-1" />
-                            Remove
-                          </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </Card>
+                      </div>
+                    </TableCell>
+
+                    {/* Column 2: Class & Section */}
+                    <TableCell style={{ width: "18%" }}>
+                      <span className="font-semibold text-xs text-foreground block">
+                        {student.gradeOrClass || "Unassigned Class"}
+                      </span>
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block">
+                        {student.section ? `Section: ${student.section}` : "No section"}
+                      </span>
+                    </TableCell>
+
+                    {/* Column 3: Route & Fleet Vehicle */}
+                    <TableCell style={{ width: "26%" }}>
+                      {hasRoute ? (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="transport-route-pill">
+                            <MapPin size={12} className="shrink-0" />
+                            <span>{student.routeName}</span>
+                          </span>
+                          {student.vehicleNumber && (
+                            <span className="transport-vehicle-badge">
+                              {student.vehicleNumber}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="transport-pending-pill">
+                          <AlertCircle size={12} className="shrink-0" />
+                          <span>Route Unassigned</span>
+                        </span>
+                      )}
+                    </TableCell>
+
+                    {/* Column 4: Designated Stop */}
+                    <TableCell style={{ width: "16%" }}>
+                      {student.stopName ? (
+                        <span className="transport-stop-text block truncate" title={student.stopName}>
+                          {student.stopName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-400 italic">
+                          No stop designated
+                        </span>
+                      )}
+                    </TableCell>
+
+                    {/* Column 5: Actions */}
+                    <TableCell className="text-center" style={{ width: "10%" }}>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(student)}
+                          className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                          title="Edit transit route and stop assignment"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(student)}
+                          disabled={updateTransportMutation.isPending}
+                          className="p-1.5 rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors disabled:opacity-50"
+                          title="Remove student from transport"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  style={{ textAlign: "center", padding: "48px 16px", color: "#71717a" }}
+                >
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Bus size={32} className="text-zinc-300 dark:text-zinc-600 mb-1" />
+                    <p className="font-semibold text-sm text-zinc-700 dark:text-zinc-300">
+                      {searchQuery || routeFilter !== "all" || assignmentFilter !== "all"
+                        ? "No commuter students match your filter criteria."
+                        : "No students currently enrolled in campus transport."}
+                    </p>
+                    <p className="text-xs text-zinc-400 max-w-sm">
+                      {searchQuery || routeFilter !== "all" || assignmentFilter !== "all"
+                        ? "Try clearing your search query or route filters to view all records."
+                        : "When students are admitted or edited with Requires Transport toggled ON, they will appear here."}
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* ── 5. Standardized DataPagination Footer ── */}
+      <DataPagination
+        page={currentPage}
+        pageSize={pageSize}
+        total={filteredStudents.length}
+        pageCount={pageCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel="commuters"
+      />
 
       {/* ── Edit Transport Modal Dialog ── */}
       <Dialog open={Boolean(editingStudent)} onOpenChange={(open) => !open && setEditingStudent(null)}>
@@ -484,7 +592,7 @@ export default function TransportDirectory() {
 
             <div className="space-y-1.5">
               <Label htmlFor="dialog-stop-select" className="text-xs font-semibold">
-                Designated Stop & Pickup Time *
+                Designated Stop &amp; Pickup Time *
               </Label>
               {editRouteStops.length > 0 ? (
                 <Select

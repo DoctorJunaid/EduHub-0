@@ -294,7 +294,7 @@ export default function InstituteDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loading && studentsList.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="institute-empty">
                     <PageLoader message="Loading registered students..." className="min-h-[140px] py-6" />

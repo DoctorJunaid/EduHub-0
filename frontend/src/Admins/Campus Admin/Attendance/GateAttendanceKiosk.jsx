@@ -21,10 +21,59 @@ import {
   CameraOff,
   UserCheck,
   TrendingUp,
+  Usb,
+  Zap,
+  Check,
+  RefreshCw,
+  Radio,
+  Sparkles,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
 import "./GateAttendanceKiosk.css";
+
+/**
+ * Auto-repair payload if hardware scanner dropped leading/trailing braces
+ */
+function repairPayload(raw) {
+  if (!raw || typeof raw !== "string") return raw;
+  let str = raw.trim();
+  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"'))) {
+    str = "{" + str;
+  }
+  if (str.startsWith("{") && !str.endsWith("}")) {
+    str = str + "}";
+  }
+  return str;
+}
+
+/**
+ * Play instant, crisp optical scanner capture beep (emulates hardware laser confirmation)
+ */
+function playScanCaptureBeep() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+    osc.type = "sine";
+    // Crisp high-frequency scanner chirp: 2400 Hz for 65ms
+    osc.frequency.setValueAtTime(2400, now);
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+
+    osc.start(now);
+    osc.stop(now + 0.065);
+  } catch {
+    // AudioContext may be restricted before user gesture
+  }
+}
 
 /**
  * Play synthetic Web Audio API feedback cue for rapid gate throughput
@@ -43,25 +92,25 @@ function playGateChime(type = "success") {
     const now = ctx.currentTime;
 
     if (type === "success") {
-      // Pleasant 2-tone chime: D5 -> A5
+      // Pleasant 2-tone chime: D5 (587.33Hz) -> A5 (880Hz)
       osc.type = "sine";
       osc.frequency.setValueAtTime(587.33, now);
       osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.start(now);
-      osc.stop(now + 0.28);
+      osc.stop(now + 0.3);
     } else if (type === "late") {
-      // 2-tone chime in minor third: G5 -> Bb5
+      // 2-tone chime in minor third: G5 (783.99Hz) -> Bb5 (932.33Hz)
       osc.type = "triangle";
       osc.frequency.setValueAtTime(783.99, now);
       osc.frequency.exponentialRampToValueAtTime(932.33, now + 0.12);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
       osc.start(now);
-      osc.stop(now + 0.32);
+      osc.stop(now + 0.35);
     } else if (type === "warning") {
-      // Double low alert beep
+      // Double low alert beep (440Hz -> 349.23Hz)
       osc.type = "triangle";
       osc.frequency.setValueAtTime(440, now);
       osc.frequency.setValueAtTime(349.23, now + 0.1);
@@ -74,9 +123,9 @@ function playGateChime(type = "success") {
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(160, now);
       gain.gain.setValueAtTime(0.25, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
       osc.start(now);
-      osc.stop(now + 0.35);
+      osc.stop(now + 0.38);
     }
 
     if (navigator.vibrate) {
@@ -98,7 +147,7 @@ export default function GateAttendanceKiosk() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [cutoffTime, setCutoffTime] = useState("08:15"); // Gate Cutoff Time (08:15 AM)
-  const [scanMode, setScanMode] = useState("camera"); // "camera" | "usb" | "manual"
+  const [scanMode, setScanMode] = useState("usb"); // "usb" | "camera" | "manual" (Default to USB scanner)
 
   // Live Stats State
   const [stats, setStats] = useState({
@@ -118,20 +167,71 @@ export default function GateAttendanceKiosk() {
   const [facingMode, setFacingMode] = useState("environment");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Manual & USB Scanner Input State
+  // USB / Hardware Scanner State & WebHID Detection
+  const [hidDevice, setHidDevice] = useState(null);
+  const [hidSupported, setHidSupported] = useState(false);
+  const [scannerSignal, setScannerSignal] = useState({
+    active: true,
+    lastTime: null,
+    totalScans: 0,
+  });
+  const [usbInputValue, setUsbInputValue] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [scanAcknowledgment, setScanAcknowledgment] = useState(null); // { code, timestamp }
+
+  // Manual Roll Input State
   const [manualInput, setManualInput] = useState("");
-  const [usbBuffer, setUsbBuffer] = useState("");
-  const lastKeyTimeRef = useRef(Date.now());
+
+  // Refs for synchronous keystroke accumulation (Hardware Barcode Guns / Desktop Scanners)
+  const scanBufferRef = useRef("");
+  const scanTimeoutRef = useRef(null);
   const usbInputRef = useRef(null);
+  const feedbackTimerRef = useRef(null);
+  const ackTimerRef = useRef(null);
 
   // Hero Feedback State
   const [heroFeedback, setHeroFeedback] = useState(null);
-  const feedbackTimerRef = useRef(null);
 
   // Live Clock Tick
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // WebHID Detection & USB Connection Observer
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && "hid" in navigator) {
+      setHidSupported(true);
+
+      // Check if scanner was already granted permission
+      navigator.hid
+        .getDevices()
+        .then((devices) => {
+          if (devices && devices.length > 0) {
+            setHidDevice(devices[0]);
+          }
+        })
+        .catch(() => {});
+
+      const onConnect = (e) => {
+        if (e.device) {
+          setHidDevice(e.device);
+          toast.success(`Scanner Connected: ${e.device.productName || "USB Device"}`);
+        }
+      };
+
+      const onDisconnect = (e) => {
+        setHidDevice((prev) => (prev === e.device ? null : prev));
+        toast("Scanner Disconnected", { icon: "🔌" });
+      };
+
+      navigator.hid.addEventListener("connect", onConnect);
+      navigator.hid.addEventListener("disconnect", onDisconnect);
+      return () => {
+        navigator.hid.removeEventListener("connect", onConnect);
+        navigator.hid.removeEventListener("disconnect", onDisconnect);
+      };
+    }
   }, []);
 
   // Fetch Gate Kiosk Live Morning Stats
@@ -185,12 +285,14 @@ export default function GateAttendanceKiosk() {
   // Core Gate Check-In Processor
   const processGateScan = useCallback(
     async (payload) => {
-      if (isProcessing || !payload) return;
+      const cleanPayload = typeof payload === "string" ? repairPayload(payload.trim()) : payload;
+      if (!cleanPayload || isProcessing) return;
+
       setIsProcessing(true);
 
       try {
         const response = await axiosInstance.post("/campus-admin/attendance/qr-scan", {
-          qrPayload: payload,
+          qrPayload: cleanPayload,
           method: "gate_kiosk",
           cutoffTime,
         });
@@ -207,6 +309,7 @@ export default function GateAttendanceKiosk() {
           if (isAlready) feedbackType = "warning";
           else if (isLate) feedbackType = "late";
 
+          // Play Attendance Record Audio Chime
           if (soundEnabled) {
             playGateChime(feedbackType === "late" ? "late" : feedbackType === "warning" ? "warning" : "success");
           }
@@ -214,7 +317,7 @@ export default function GateAttendanceKiosk() {
           triggerFeedback({
             type: feedbackType,
             title: isAlready
-              ? "Already Checked In"
+              ? "Already Checked In Today"
               : isLate
               ? "Late Arrival Recorded"
               : "Welcome! Checked In",
@@ -247,40 +350,132 @@ export default function GateAttendanceKiosk() {
       } finally {
         setTimeout(() => {
           setIsProcessing(false);
+          setScanAcknowledgment(null);
         }, 1200); // 1.2s cooldown to prevent double-scan
       }
     },
     [isProcessing, cutoffTime, soundEnabled, triggerFeedback, fetchStats]
   );
 
-  // USB Barcode Scanner Keyboard Listener
+  /**
+   * Handle Instant Hardware Scan Arrival
+   * 1. Plays crisp optical scanner capture beep
+   * 2. Shows immediate visual acknowledgment on frontend
+   * 3. Dispatches attendance verification with backend
+   */
+  const handleHardwareScanCaptured = useCallback(
+    (code) => {
+      const trimmed = repairPayload((code || "").trim());
+      if (!trimmed) return;
+
+      // 1. Instant Hardware Scanner Beep
+      if (soundEnabled) {
+        playScanCaptureBeep();
+      }
+
+      // 2. Instant Visual Acknowledgment Banner
+      const nowStr = new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      setScanAcknowledgment({
+        code: trimmed,
+        timestamp: nowStr,
+      });
+
+      if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+      ackTimerRef.current = setTimeout(() => {
+        setScanAcknowledgment(null);
+      }, 5000);
+
+      // 3. Update Hardware Activity Signals
+      setScannerSignal((prev) => ({
+        active: true,
+        lastTime: nowStr,
+        totalScans: prev.totalScans + 1,
+      }));
+
+      // 4. Submit to Gate Attendance Engine
+      processGateScan(trimmed);
+    },
+    [soundEnabled, processGateScan]
+  );
+
+  // Global Hardware Scanner Keystroke Listener (Captures scans across all kiosk modes)
   useEffect(() => {
-    if (scanMode !== "usb") return;
-
     const handleKeyDown = (e) => {
-      const now = Date.now();
-      const diff = now - lastKeyTimeRef.current;
-      lastKeyTimeRef.current = now;
+      // Do not intercept if actively typing inside manual text boxes
+      const isManual =
+        e.target?.id === "gk-manual-input" ||
+        e.target?.id === "gk-cutoff";
 
-      if (e.key === "Enter") {
-        if (usbBuffer.trim().length > 0) {
+      if (isManual) return;
+
+      if (e.key === "Enter" || e.key === "Tab") {
+        const buffered = scanBufferRef.current.trim();
+        if (buffered.length > 0) {
           e.preventDefault();
-          processGateScan(usbBuffer.trim());
-          setUsbBuffer("");
+          scanBufferRef.current = "";
+          setUsbInputValue("");
+          if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+          handleHardwareScanCaptured(buffered);
         }
-      } else if (e.key.length === 1) {
-        // Fast keystrokes (< 50ms) are typical of hardware barcode guns
-        if (diff > 120) {
-          setUsbBuffer(e.key);
-        } else {
-          setUsbBuffer((prev) => prev + e.key);
-        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        // Accumulate character synchronously in ref
+        scanBufferRef.current += e.key;
+        setUsbInputValue(scanBufferRef.current);
+
+        // Fallback auto-submit timeout for scanners that don't transmit an Enter suffix
+        if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+        scanTimeoutRef.current = setTimeout(() => {
+          const current = scanBufferRef.current.trim();
+          if (
+            current.length >= 10 &&
+            (current.includes("EduHub") || current.includes("{") || current.includes("STUDENT"))
+          ) {
+            scanBufferRef.current = "";
+            setUsbInputValue("");
+            handleHardwareScanCaptured(current);
+          }
+        }, 1200);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scanMode, usbBuffer, processGateScan]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    };
+  }, [handleHardwareScanCaptured]);
+
+  // Auto-focus USB input when USB mode is active
+  useEffect(() => {
+    if (scanMode === "usb" && usbInputRef.current) {
+      usbInputRef.current.focus();
+    }
+  }, [scanMode]);
+
+  // WebHID Explicit Pair Handler
+  const handleRequestUsbPair = async () => {
+    try {
+      if (!navigator.hid) {
+        toast.error("WebHID is not supported on this browser.");
+        return;
+      }
+      const devices = await navigator.hid.requestDevice({ filters: [] });
+      if (devices && devices.length > 0) {
+        setHidDevice(devices[0]);
+        toast.success(`Paired: ${devices[0].productName || "USB Scanner"}`);
+      }
+    } catch {
+      // user closed prompt
+    }
+  };
 
   // Camera Scanner Setup via Html5Qrcode
   const html5QrCodeRef = useRef(null);
@@ -306,7 +501,7 @@ export default function GateAttendanceKiosk() {
           aspectRatio: 1.777778,
         },
         (decodedText) => {
-          processGateScan(decodedText);
+          handleHardwareScanCaptured(decodedText);
         },
         () => {
           // parse error per frame - ignore
@@ -320,7 +515,7 @@ export default function GateAttendanceKiosk() {
         err?.message || "Camera access was denied or device is not available."
       );
     }
-  }, [facingMode, processGateScan]);
+  }, [facingMode, handleHardwareScanCaptured]);
 
   const stopCamera = useCallback(async () => {
     if (html5QrCodeRef.current) {
@@ -351,8 +546,21 @@ export default function GateAttendanceKiosk() {
       toast.error("Please enter a student roll number or name.");
       return;
     }
-    processGateScan(manualInput.trim());
+    handleHardwareScanCaptured(manualInput.trim());
     setManualInput("");
+  };
+
+  // Handle USB Console Input Submit
+  const handleUsbInputSubmit = (e) => {
+    e.preventDefault();
+    if (!usbInputValue.trim()) {
+      toast.error("Please scan an ID card or enter a payload.");
+      return;
+    }
+    const val = usbInputValue.trim();
+    setUsbInputValue("");
+    scanBufferRef.current = "";
+    handleHardwareScanCaptured(val);
   };
 
   const formattedTimeStr = currentTime.toLocaleTimeString("en-US", {
@@ -392,6 +600,24 @@ export default function GateAttendanceKiosk() {
         </div>
 
         <div className="gk-header-controls">
+          {/* Hardware Connection Status Pill */}
+          <div
+            className={`gk-hardware-pill ${
+              hidDevice || scannerSignal.lastTime ? "is-connected" : "is-listening"
+            }`}
+            title="Desktop / Gun Scanner Hardware Status"
+          >
+            <span className="gk-hardware-dot" />
+            <Usb size={13} />
+            <span>
+              {hidDevice
+                ? hidDevice.productName || "USB Scanner Connected"
+                : scannerSignal.lastTime
+                ? `Scanner Active (${scannerSignal.lastTime})`
+                : "Scanner Ready & Listening"}
+            </span>
+          </div>
+
           {/* Live Clock Card */}
           <div className="gk-clock-card">
             <span className="gk-clock-time">{formattedTimeStr}</span>
@@ -505,19 +731,19 @@ export default function GateAttendanceKiosk() {
             <div className="gk-mode-tabs">
               <button
                 type="button"
+                className={`gk-mode-btn ${scanMode === "usb" ? "active" : ""}`}
+                onClick={() => setScanMode("usb")}
+              >
+                <Barcode size={15} />
+                <span>USB / Desktop Scanner</span>
+              </button>
+              <button
+                type="button"
                 className={`gk-mode-btn ${scanMode === "camera" ? "active" : ""}`}
                 onClick={() => setScanMode("camera")}
               >
                 <Camera size={15} />
                 <span>Camera QR Scanner</span>
-              </button>
-              <button
-                type="button"
-                className={`gk-mode-btn ${scanMode === "usb" ? "active" : ""}`}
-                onClick={() => setScanMode("usb")}
-              >
-                <Barcode size={15} />
-                <span>USB / Gun Scanner</span>
               </button>
               <button
                 type="button"
@@ -529,7 +755,102 @@ export default function GateAttendanceKiosk() {
               </button>
             </div>
 
-            {/* Mode 1: Camera Scanner */}
+            {/* Mode 1: USB Hardware Desktop / Gun Scanner */}
+            {scanMode === "usb" && (
+              <div className="gk-hardware-console">
+                {/* Hardware Connection & Status Banner */}
+                <div className="gk-hardware-hero">
+                  <div className="gk-hardware-hero-icon">
+                    <Barcode size={32} />
+                  </div>
+                  <div className="gk-hardware-hero-text">
+                    <div className="flex items-center gap-2">
+                      <h3>Desktop &amp; Gun Scanner Active</h3>
+                      <span className="gk-signal-badge">
+                        <span className="gk-pulse-dot" />
+                        <span>Ready For Scans</span>
+                      </span>
+                    </div>
+                    <p>
+                      Present student QR cards, barcodes, or mobile screens in front of the red scanner window.
+                      Attendance is recorded instantly with synthetic audio confirmation.
+                    </p>
+                  </div>
+                  {hidSupported && (
+                    <button
+                      type="button"
+                      className="gk-pair-btn"
+                      onClick={handleRequestUsbPair}
+                      title="Explicitly pair scanner via WebHID to display model name"
+                    >
+                      <Usb size={14} />
+                      <span>{hidDevice ? "Re-pair USB" : "Pair WebHID"}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Explicit Interactive Scanner Input Console */}
+                <form onSubmit={handleUsbInputSubmit} className="gk-scanner-input-container">
+                  <div className="gk-input-header">
+                    <label htmlFor="gk-usb-hardware-input" className="gk-input-label">
+                      <span>Scanner Input Stream &amp; Focus:</span>
+                    </label>
+                    <div className="gk-input-meta">
+                      <span className={`gk-focus-pill ${isInputFocused ? "focused" : ""}`}>
+                        {isInputFocused ? "● Scanner Focused" : "○ Click to Focus"}
+                      </span>
+                      {scannerSignal.totalScans > 0 && (
+                        <span className="text-xs text-slate-500">
+                          Scans today: <strong>{scannerSignal.totalScans}</strong>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="gk-input-wrapper">
+                    <input
+                      ref={usbInputRef}
+                      id="gk-usb-hardware-input"
+                      type="text"
+                      className="gk-scanner-input"
+                      placeholder="Flash ID Card or type student roll/code..."
+                      value={usbInputValue}
+                      onChange={(e) => {
+                        setUsbInputValue(e.target.value);
+                        scanBufferRef.current = e.target.value;
+                      }}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
+                      autoComplete="off"
+                      spellCheck="false"
+                    />
+                    <button
+                      type="button"
+                      className="gk-refocus-btn"
+                      onClick={() => usbInputRef.current?.focus()}
+                      title="Keep cursor focused for maximum reliability"
+                    >
+                      Focus
+                    </button>
+                    <button
+                      type="submit"
+                      className="gk-scanner-submit-btn"
+                      disabled={isProcessing || !usbInputValue.trim()}
+                    >
+                      <Check size={16} />
+                      <span>Submit</span>
+                    </button>
+                  </div>
+
+                  <div className="gk-scanner-hints">
+                    <span>⚡ <strong>Hands-Free Auto-Capture:</strong> The scanner types and hits Enter automatically.</span>
+                    <span>🔊 <strong>Sounds:</strong> Optical Beep on capture + Gate Chime on record.</span>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Mode 2: Camera Scanner */}
             {scanMode === "camera" && (
               <div>
                 <div className="gk-camera-viewport">
@@ -569,25 +890,6 @@ export default function GateAttendanceKiosk() {
               </div>
             )}
 
-            {/* Mode 2: USB Hardware Scanner Gun */}
-            {scanMode === "usb" && (
-              <div className="gk-usb-panel">
-                <div className="gk-usb-icon">
-                  <Barcode size={28} />
-                </div>
-                <h3>Hardware Scanner Ready</h3>
-                <p>
-                  Flash any student QR or barcode card with your handheld scanner. Input is captured
-                  automatically across turnstiles and gates.
-                </p>
-                {usbBuffer && (
-                  <div className="mt-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-mono">
-                    Buffer: {usbBuffer}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Mode 3: Manual Roll Number Search */}
             {scanMode === "manual" && (
               <div>
@@ -596,6 +898,7 @@ export default function GateAttendanceKiosk() {
                 </p>
                 <form onSubmit={handleManualSubmit} className="gk-manual-search-row">
                   <input
+                    id="gk-manual-input"
                     type="text"
                     className="gk-manual-input"
                     placeholder="Enter student roll number or full name..."
@@ -612,7 +915,29 @@ export default function GateAttendanceKiosk() {
             )}
           </div>
 
-          {/* Hero Feedback Card */}
+          {/* Instant Scan Acknowledgment Banner (Optical Capture Acknowledgment) */}
+          {scanAcknowledgment && (
+            <div className="gk-acknowledgment-banner">
+              <div className="gk-ack-icon">
+                <Zap size={18} className="text-amber-500 animate-bounce" />
+              </div>
+              <div className="gk-ack-content">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-xs text-slate-900">Scan Detected &amp; Acknowledged</span>
+                  <span className="text-[11px] text-slate-500">{scanAcknowledgment.timestamp}</span>
+                </div>
+                <p className="text-xs text-slate-600 truncate font-mono">
+                  Payload: {scanAcknowledgment.code.slice(0, 50)}
+                  {scanAcknowledgment.code.length > 50 ? "..." : ""}
+                </p>
+              </div>
+              <div className="gk-ack-status">
+                <span className="gk-ack-pill">Validating...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Hero Feedback Card (Full Student Profile & Attendance Result) */}
           {heroFeedback && (
             <div className={`gk-hero-feedback status-${heroFeedback.type}`}>
               <div className="gk-hero-student-meta">
