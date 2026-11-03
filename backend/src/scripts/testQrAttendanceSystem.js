@@ -17,6 +17,11 @@ import {
   getAttendanceSystemDiagnostics,
 } from "../services/qrAttendance.service.js";
 
+import dns from "node:dns";
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch {}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -27,7 +32,7 @@ async function runTests() {
   console.log("=================================================");
 
   const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/eduhub";
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 });
   console.log("Connected to MongoDB successfully.\n");
 
   let passed = 0;

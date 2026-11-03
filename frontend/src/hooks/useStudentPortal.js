@@ -32,10 +32,10 @@ export function useStudentPortal() {
       const res = await getStudentPortalApi();
       return res.data || {};
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     enabled: Boolean(studentId && !String(studentId).startsWith("demo:")),
   });
 

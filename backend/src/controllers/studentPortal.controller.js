@@ -488,6 +488,26 @@ export async function resolveStudentSubjects(student, campusId) {
     }
   }
 
+  // Fallback: If section has teacher assignments or instructors, use as section incharge
+  if (!classTeacher && teacherAssignments.length > 0) {
+    const primaryTa = teacherAssignments.find((ta) => ta.teacherId && ta.teacherId.name) || teacherAssignments[0];
+    if (primaryTa?.teacherId) {
+      classTeacher = {
+        _id: id(primaryTa.teacherId._id),
+        profileId: id(primaryTa.teacherId._id),
+        userId: id(primaryTa.teacherId._id),
+        name: primaryTa.teacherId.name || "Assigned Faculty",
+        email: primaryTa.teacherId.email || "",
+        phone: primaryTa.teacherId.phone || "",
+        avatar: primaryTa.teacherId.avatar || "",
+        department: primaryTa.teacherId.department || "Academic Faculty",
+        designation: primaryTa.teacherId.designation || "Section Incharge",
+        assignedAt: null,
+        note: "Class Incharge & Academic Instructor",
+      };
+    }
+  }
+
   const resultList = Array.from(subjectsMap.values());
   return {
     gradeName,
@@ -761,6 +781,22 @@ export const getStudentPortal = async (req, res) => {
         }
       } catch (e) {
         console.warn("Failed to resolve classTeacher for student:", e.message);
+      }
+    }
+
+    if (!classTeacher) {
+      const subTeacher = (subjects || []).find((s) => s.instructor?.name);
+      if (subTeacher?.instructor) {
+        classTeacher = {
+          name: subTeacher.instructor.name,
+          email: subTeacher.instructor.email || "",
+          phone: subTeacher.instructor.phone || "",
+          avatar: subTeacher.instructor.avatar || "",
+          designation: subTeacher.instructor.designation || "Section Incharge",
+          department: subTeacher.instructor.department || "Academic Faculty",
+          note: "Section Faculty Incharge",
+          assignedAt: null,
+        };
       }
     }
 

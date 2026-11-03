@@ -48,18 +48,18 @@ export const selectStudentProfile = createSelector(
 );
 
 export function summarizeStudentAttendance(rows) {
-  const policyPending = rows.some(
-    ({ record }) => !["Present", "Absent"].includes(record.status),
-  );
   const summary = studentAttendanceSummary(
     rows,
-    policyPending ? undefined : "present-only",
+    "include-late-exclude-leave",
   );
   return {
-    present: summary.Present,
-    marked: summary.marked,
-    rate: summary.rate,
-    policyPending,
+    present: summary.Present || 0,
+    absent: summary.Absent || 0,
+    late: summary.Late || 0,
+    leave: summary["On Leave"] || 0,
+    marked: summary.marked || 0,
+    rate: summary.rate != null ? summary.rate : 100,
+    policyPending: false,
     risk: summary.rate != null && summary.rate < 75,
   };
 }
@@ -145,8 +145,11 @@ export const selectStudentDashboard = createSelector(
             )
             .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""))
         : [];
+    const targetStudentId = String(student.id || student._id || "");
     const rows = attendanceHistory.filter(
-      (row) => row.student.id === student.id,
+      (row) =>
+        String(row.student?.id || row.student?._id) === targetStudentId ||
+        String(row.record?.studentId) === targetStudentId,
     );
     const retiredSummary =
       student.academicSummaryDemo &&

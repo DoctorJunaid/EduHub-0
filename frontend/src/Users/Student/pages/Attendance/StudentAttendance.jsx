@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Check,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -92,10 +93,23 @@ export default function StudentAttendance() {
   const { student, attendance, rows = [], absent = 0, late = 0, leave = 0 } =
     useSelector(selectStudentAttendancePage) || {};
 
-  // All state hooks declared unconditionally at top level
   const [logPage, setLogPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all", "Present", "Absent", "Late", "On Leave"
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      if (typeof refetch === "function") await refetch();
+      queryClient.invalidateQueries({ queryKey: ["student"] });
+      toast.success("Attendance synced with latest school records!");
+    } catch {
+      toast.error("Failed to sync attendance.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Leave Modal State
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -368,7 +382,29 @@ export default function StudentAttendance() {
             </span>
             Daily Attendance Log
           </h2>
-          <span className="sta-count-tag">{filteredRows.length} logs found</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="sta-tab-btn"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 10px",
+                fontSize: "12px",
+                fontWeight: "500",
+                cursor: "pointer",
+              }}
+              title="Sync latest attendance records"
+              aria-label="Refresh attendance records"
+            >
+              <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} aria-hidden="true" />
+              <span>{isRefreshing ? "Syncing..." : "Refresh"}</span>
+            </button>
+            <span className="sta-count-tag">{filteredRows.length} logs found</span>
+          </div>
         </div>
 
         {/* Filter Controls Row */}

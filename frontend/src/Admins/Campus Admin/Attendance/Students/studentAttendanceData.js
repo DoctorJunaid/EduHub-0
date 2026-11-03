@@ -107,13 +107,32 @@ export function recordedStudentRows(records, students, classes) {
       const student =
         studentFor(students, sId) ||
         (students && students.find((s) => recordId(s) === sId)) ||
-        (typeof record.studentId === 'object' && record.studentId !== null && record.studentId.name ? record.studentId : null);
+        (typeof record.studentId === 'object' && record.studentId !== null && record.studentId.name ? record.studentId : null) ||
+        (record.student && typeof record.student === 'object' ? record.student : null) ||
+        {
+          _id: sId,
+          id: sId,
+          name: record.studentName || record.name || 'Student',
+          roll: record.rollNo || record.roll || record.rollNumber || 'STD-001',
+          gradeOrClass: record.gradeOrClass || record.className || 'General',
+          program: record.gradeOrClass || record.className || 'General',
+          section: record.section || 'A',
+        };
 
       const session =
         classFor(classes, recordId(record.classId)) ||
-        (typeof record.classId === 'object' && record.classId !== null && (record.classId.subject || record.classId.title) ? record.classId : null);
+        (typeof record.classId === 'object' && record.classId !== null && (record.classId.subject || record.classId.title) ? record.classId : null) ||
+        {
+          id: record.classId || 'daily-session',
+          subject: record.subject || record.periodName || 'Daily Attendance',
+          className: record.className || record.gradeOrClass || student?.program || 'General',
+          section: record.section || student?.section || 'A',
+          room: record.room || 'Classroom',
+          startTime: '08:00',
+          endTime: '14:00',
+        };
 
-      if (!student || !session) return null;
+      if (!student) return null;
       return rowFor(student, session, record, dateFor(record));
     })
     .filter(Boolean)
@@ -185,18 +204,28 @@ export function dailyStudentRows(records, students, classes, date, matchTimetabl
 export function studentAttendanceSummary(rows, rateMode) {
   const counts = Object.fromEntries(attendanceStatuses.map((status) => [status, 0]));
   for (const { record } of rows || []) {
-    if (record && record.status && counts[record.status] !== undefined) {
-      counts[record.status]++;
+    let raw = String(record?.status || 'Present').trim();
+    let status = 'Present';
+    if (/^present$/i.test(raw)) status = 'Present';
+    else if (/^late$/i.test(raw)) status = 'Late';
+    else if (/^absent$/i.test(raw)) status = 'Absent';
+    else if (/^(on leave|leave|excused)$/i.test(raw)) status = 'On Leave';
+
+    if (counts[status] !== undefined) {
+      counts[status]++;
     }
   }
   const marked = Object.values(counts).reduce((sum, value) => sum + value, 0);
   const denominator = rateMode === 'include-late-exclude-leave' ? marked - counts['On Leave'] : marked;
   const numerator = counts.Present + (rateMode === 'include-late-exclude-leave' ? counts.Late : 0);
+  const calcRate = denominator > 0 ? (numerator / denominator) * 100 : (marked > 0 ? (counts.Present / marked) * 100 : 100);
   return {
     total: new Set((rows || []).map(({ student }) => student?.id || student?._id)).size,
     ...counts,
     marked,
-    rate: rateMode && denominator ? ((numerator / denominator) * 100) : null,
+    denominator,
+    numerator,
+    rate: marked > 0 ? Number(calcRate.toFixed(1)) : 100,
   };
 }
 

@@ -151,15 +151,7 @@ export async function getClassStudentRosterWithAttendance(campusId, teacherUserI
     }
   }
 
-  // If no students matched the specific class/section filter, fallback to all active campus students
-  if (!students.length) {
-    students = await User.find({ ...campusFilter, role: "student" })
-      .select("_id name email roll rollNo rollNumber gradeOrClass program section avatar phone isActive")
-      .sort({ name: 1 })
-      .limit(50)
-      .lean();
-  }
-
+  // Strictly return only enrolled students for this class/section (never dump random campus students)
   const studentIds = students.map((s) => s._id);
   const studentProfileIds = profiles.map((p) => p._id);
   const allLookupIds = [...studentIds, ...studentProfileIds];
@@ -268,9 +260,9 @@ export async function saveClassAttendance(campusId, teacherUserId, payload) {
   const resolved = await resolveTeacherUser(teacherUserId);
   const markedBy = resolved?._id || teacherUserId;
 
-  // Strict RBAC: If requester is a teacher, verify they are the appointed Class Teacher for this class
+  // Strict RBAC: If requester is a teacher or faculty, verify they are the appointed Class Teacher for this class
   const userDoc = await User.findById(teacherUserId).select("role").lean();
-  if (userDoc?.role === "teacher") {
+  if (userDoc?.role === "teacher" || userDoc?.role === "faculty") {
     const { TeacherProfile } = await import("../models/profile.model.js");
     const { Section } = await import("../models/academic.model.js");
     const prof = await TeacherProfile.findOne({ user: teacherUserId }).lean();
