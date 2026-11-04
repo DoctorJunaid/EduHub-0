@@ -45,6 +45,9 @@ export const fetchExams = createAsyncThunk(
       if (exams?.status === 'loading') {
         return false;
       }
+      if (force !== true && exams?.records?.length > 0 && exams?.status === 'succeeded') {
+        return false;
+      }
     },
   }
 );

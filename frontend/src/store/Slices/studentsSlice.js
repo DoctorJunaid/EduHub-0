@@ -29,6 +29,9 @@ export const fetchStudents = createAsyncThunk(
       if (students?.status === "loading" || students?.isRefreshing) {
         return false;
       }
+      if (force !== true && students?.records?.length > 0 && students?.status === "succeeded") {
+        return false;
+      }
     },
   }
 );

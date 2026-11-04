@@ -37,11 +37,11 @@ export const FloatingHelpWidget = () => {
 
   const { data: ticketsData } = useSupportTickets(
     { limit: 3, page: 1 },
-    { enabled: shouldFetch && isOpen }
+    { enabled: Boolean(shouldFetch && isOpen) }
   );
 
   const { stats } = useSupportStats({
-    enabled: shouldFetch,
+    enabled: Boolean(shouldFetch && isOpen),
   });
 
   const createTicketMutation = useCreateTicket();
@@ -210,13 +210,15 @@ export const FloatingHelpWidget = () => {
       </aside>
 
       {/* New Ticket / Ask for Help Dialog */}
-      <NewTicketDialog
-        open={isNewDialogOpen}
-        onOpenChange={setIsNewDialogOpen}
-        onCreate={(payload) => createTicketMutation.mutateAsync(payload)}
-        isPending={createTicketMutation.isPending}
-        isAdmin={isStaff}
-      />
+      {isNewDialogOpen && (
+        <NewTicketDialog
+          open={isNewDialogOpen}
+          onOpenChange={setIsNewDialogOpen}
+          onCreate={(payload) => createTicketMutation.mutateAsync(payload)}
+          isPending={createTicketMutation.isPending}
+          isAdmin={isStaff}
+        />
+      )}
     </>
   );
 };

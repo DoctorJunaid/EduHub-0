@@ -30,6 +30,9 @@ export const fetchFaculty = createAsyncThunk(
       if (faculty?.status === "loading" || faculty?.isRefreshing) {
         return false;
       }
+      if (force !== true && faculty?.records?.length > 0 && faculty?.status === "succeeded") {
+        return false;
+      }
     },
   }
 );

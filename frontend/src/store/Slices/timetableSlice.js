@@ -92,6 +92,9 @@ export const fetchSchedules = createAsyncThunk(
       if (timetable?.status === "loading") {
         return false;
       }
+      if (force !== true && timetable?.records?.length > 0 && timetable?.status === "succeeded") {
+        return false;
+      }
     },
   }
 );

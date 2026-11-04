@@ -7,7 +7,7 @@ import { TicketStatusBadge } from "./TicketStatusBadge";
 import { TicketPriorityBadge } from "./TicketPriorityBadge";
 import { TicketCategoryBadge } from "./TicketCategoryBadge";
 import { EmptyConversationsState } from "./EmptyConversationsState";
-import { User, AlertCircle } from "lucide-react";
+import { User, AlertCircle, ChevronRight } from "lucide-react";
 import { getSupportTicketPath } from "@/utils/supportRouting";
 
 export const TicketListTable = ({
@@ -31,13 +31,13 @@ export const TicketListTable = ({
   const selectAllHandler = handleSelectAll || onSelectAll;
 
   return (
-    <div className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-      <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-        <table className="isu-ticket-table w-full min-w-[1100px] border-collapse text-left table-auto">
+    <div className="w-full bg-white border border-neutral-200/90 rounded-xl shadow-xs overflow-hidden">
+      <div className="w-full overflow-x-auto scrollbar-thin">
+        <table className="w-full min-w-[880px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50/70">
+            <tr className="border-b border-neutral-200 bg-neutral-50/80">
               {selectHandler && (
-                <th className="w-10 text-center" style={{ padding: "12px 16px" }}>
+                <th className="w-10 text-center px-3 py-3">
                   <input
                     type="checkbox"
                     checked={tickets.length > 0 && selectedIds.length === tickets.length}
@@ -52,57 +52,36 @@ export const TicketListTable = ({
                   />
                 </th>
               )}
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "12%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[120px] whitespace-nowrap">
                 Ticket #
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "20%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 min-w-[200px]">
                 Subject
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "15%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[150px] whitespace-nowrap">
                 Creator
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "15%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[140px] whitespace-nowrap">
                 Category
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "10%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[100px] whitespace-nowrap">
                 Priority
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "10%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[110px] whitespace-nowrap">
                 Status
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-                style={{ padding: "12px 16px", width: "10%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[140px] whitespace-nowrap">
                 Assigned To
               </th>
-              <th
-                className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 text-right"
-                style={{ padding: "12px 16px", width: "8%" }}
-              >
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3.5 py-3 w-[100px] text-right whitespace-nowrap">
                 Last Activity
+              </th>
+              <th className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-3 py-3 w-[50px] text-center">
+                Action
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-200">
+          <tbody className="divide-y divide-neutral-100">
             {tickets.map((ticket) => {
               const ticketId = ticket._id || ticket.id;
               const isSelected = selectedIds.includes(ticketId);
@@ -121,14 +100,13 @@ export const TicketListTable = ({
                 <tr
                   key={ticketId}
                   onClick={() => navigate(getSupportTicketPath(role, ticketId))}
-                  className={`hover:bg-neutral-50/50 transition-colors cursor-pointer ${
-                    isSelected ? "bg-neutral-100/60" : ""
+                  className={`group hover:bg-neutral-50/80 transition-colors cursor-pointer ${
+                    isSelected ? "bg-neutral-100/70" : ""
                   }`}
                 >
                   {selectHandler && (
                     <td
-                      className="w-10 text-center align-middle"
-                      style={{ padding: "12px 16px" }}
+                      className="w-10 text-center px-3 py-3.5 align-middle"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (e.target.tagName !== "INPUT") {
@@ -148,72 +126,80 @@ export const TicketListTable = ({
                       />
                     </td>
                   )}
-                  <td
-                    className="text-xs font-mono font-medium text-neutral-900 whitespace-nowrap align-middle"
-                    style={{ padding: "12px 16px" }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>{ticket.ticketNumber || ticket.ticketNo}</span>
+                  <td className="px-3.5 py-3.5 align-middle whitespace-nowrap">
+                    <div className="flex flex-col gap-1 items-start">
+                      <span className="text-xs font-mono font-bold text-neutral-900 group-hover:text-blue-600 transition-colors whitespace-nowrap">
+                        {ticket.ticketNumber || ticket.ticketNo}
+                      </span>
                       {ticket.isOverdue && (
-                        <span title="Overdue SLA" className="inline-flex items-center">
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                        <span
+                          title="Overdue SLA"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-1.5 py-0.5 rounded shadow-xs"
+                        >
+                          <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                          <span>Overdue</span>
                         </span>
                       )}
                     </div>
                   </td>
-                  <td
-                    className="text-xs text-neutral-800 truncate max-w-xs align-middle"
-                    style={{ padding: "12px 16px" }}
-                  >
-                    {ticket.subject}
+                  <td className="px-3.5 py-3.5 align-middle">
+                    <p className="text-xs font-semibold text-neutral-900 group-hover:text-blue-600 transition-colors line-clamp-1 max-w-sm">
+                      {ticket.subject}
+                    </p>
+                    {ticket.description && (
+                      <p className="text-[11px] text-neutral-500 line-clamp-1 mt-0.5 max-w-sm">
+                        {ticket.description}
+                      </p>
+                    )}
                   </td>
-                  <td className="text-xs text-neutral-700 align-middle" style={{ padding: "12px 16px" }}>
+                  <td className="px-3.5 py-3.5 align-middle whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[10px] font-semibold text-neutral-700 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[10px] font-bold text-neutral-700 shrink-0 shadow-xs">
                         {creatorInitial}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-medium leading-none text-neutral-900 truncate">
+                        <p className="text-xs font-semibold leading-tight text-neutral-900 truncate max-w-[110px]">
                           {creatorName}
                         </p>
-                        <p className="text-[10px] text-neutral-500 capitalize leading-none mt-1">
+                        <p className="text-[10px] text-neutral-500 capitalize leading-tight mt-0.5 font-medium">
                           {creatorRole}
                         </p>
                       </div>
                     </div>
                   </td>
-                  {/* Category Cell with Ellipsis & Max Width to prevent spilling */}
-                  <td className="text-xs text-neutral-700 align-middle" style={{ padding: "12px 16px" }}>
-                    <TicketCategoryBadge category={ticket.category} className="max-w-[140px] truncate" />
+                  <td className="px-3.5 py-3.5 align-middle whitespace-nowrap">
+                    <TicketCategoryBadge category={ticket.category} className="shadow-xs" />
                   </td>
-                  <td className="text-xs align-middle" style={{ padding: "12px 16px" }}>
-                    <TicketPriorityBadge priority={ticket.priority} />
+                  <td className="px-3.5 py-3.5 align-middle whitespace-nowrap">
+                    <TicketPriorityBadge priority={ticket.priority} className="shadow-xs" />
                   </td>
-                  <td className="text-xs align-middle" style={{ padding: "12px 16px" }}>
-                    <TicketStatusBadge status={ticket.status} isAdmin={true} />
+                  <td className="px-3.5 py-3.5 align-middle whitespace-nowrap">
+                    <TicketStatusBadge status={ticket.status} isAdmin={true} className="shadow-xs" />
                   </td>
-                  <td className="text-xs text-neutral-700 truncate align-middle" style={{ padding: "12px 16px" }}>
+                  <td className="px-3.5 py-3.5 align-middle whitespace-nowrap">
                     {assigneeName ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[10px] font-semibold text-neutral-700 shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[10px] font-bold text-neutral-700 shrink-0 shadow-xs">
                           {assigneeInitial}
                         </div>
-                        <span className="text-xs font-medium text-neutral-900 truncate">
+                        <span className="text-xs font-medium text-neutral-900 truncate max-w-[100px]">
                           {assigneeName}
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-400 italic">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-neutral-400 italic">
                         <User className="w-3.5 h-3.5 text-neutral-400" />
                         <span>Unassigned</span>
-                      </div>
+                      </span>
                     )}
                   </td>
-                  <td
-                    className="text-xs text-neutral-500 text-right whitespace-nowrap font-mono align-middle"
-                    style={{ padding: "12px 16px" }}
-                  >
+                  <td className="px-3.5 py-3.5 text-right whitespace-nowrap text-[11px] text-neutral-500 font-medium align-middle">
                     {timeAgo}
+                  </td>
+                  <td className="px-3 py-3.5 text-center align-middle">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg border border-neutral-200/80 bg-white group-hover:bg-neutral-900 group-hover:text-white group-hover:border-neutral-900 text-neutral-500 transition-colors shadow-xs">
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
                   </td>
                 </tr>
               );
