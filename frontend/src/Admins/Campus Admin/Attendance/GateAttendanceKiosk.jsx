@@ -33,21 +33,59 @@ import toast from "react-hot-toast";
 import "./GateAttendanceKiosk.css";
 
 /**
- * Auto-repair payload if hardware scanner dropped leading/trailing braces
+ * Auto-repair payload if hardware scanner dropped leading/trailing braces, quotes, or inverted case
  */
 function repairPayload(raw) {
-  if (!raw || typeof raw !== "string") return raw;
-  let str = raw.trim();
-  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"'))) {
+  if (!raw) return "";
+  let str = (typeof raw === "object" ? JSON.stringify(raw) : String(raw)).trim();
+
+  // Strip AIM barcode symbology identifiers (]Q1, ]C1, ]e0, ]d1) and ASCII control chars
+  str = str.replace(/^\][A-Za-z0-9]{2}/, "").replace(/[\x00-\x1F\x7F]/g, " ").trim();
+
+  // Handle multiple concatenated scans in buffer: take the last segment
+  if ((str.match(/studentId|studentid|STUDENT/gi) || []).length > 1) {
+    const parts = str.split(/(?=\{|\bV:|\bv:)/i).filter(Boolean);
+    if (parts.length > 0) str = parts[parts.length - 1].trim();
+  }
+
+  // Check if string contains structured key-values (with or without quotes/braces/capslock)
+  const studentIdMatch = str.match(
+    /["']?(?:student[_-]?id|studentid|user[_-]?id|userid)["']?\s*[:=]\s*["']?([0-9a-fA-F]{24})["']?/i
+  );
+  if (studentIdMatch) {
+    const campusIdMatch = str.match(
+      /["']?(?:campus[_-]?id|campusid)["']?\s*[:=]\s*["']?([0-9a-fA-F]{24})["']?/i
+    );
+    const rollNoMatch = str.match(
+      /["']?(?:roll[_-]?no|rollno|roll[_-]?number|rollnumber|roll)["']?\s*[:=]\s*["']?([^"',;}\r\n\s]+)["']?/i
+    );
+    const sigMatch = str.match(
+      /["']?(?:sig|signature|token)["']?\s*[:=]\s*["']?([0-9a-fA-F]+)["']?/i
+    );
+    const vMatch = str.match(/\b(?:v|version)\s*[:=]\s*["']?(\d+)["']?/i);
+
+    return JSON.stringify({
+      app: "EduHub",
+      v: vMatch ? parseInt(vMatch[1], 10) : 1,
+      type: "STUDENT_ATTENDANCE",
+      studentId: studentIdMatch[1].toLowerCase(),
+      campusId: campusIdMatch ? campusIdMatch[1].toLowerCase() : "",
+      rollNo: rollNoMatch ? rollNoMatch[1].trim() : "",
+      sig: sigMatch ? sigMatch[1].toLowerCase() : "",
+    });
+  }
+
+  // Auto-repair missing braces on JSON strings
+  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"') || str.includes("studentId"))) {
     str = "{" + str;
   }
   if (str.startsWith("{") && !str.endsWith("}")) {
     str = str + "}";
   }
-  // Auto-normalize corrupted type strings caused by HID scanner shift/numlock quirks
   if (str.includes('"type"') && !str.includes('"type":"STUDENT_ATTENDANCE"')) {
     str = str.replace(/"type"\s*:\s*"[^"]*"/, '"type":"STUDENT_ATTENDANCE"');
   }
+
   return str;
 }
 
@@ -179,8 +217,6 @@ export default function GateAttendanceKiosk() {
     lastTime: null,
     totalScans: 0,
   });
-  const [usbInputValue, setUsbInputValue] = useState("");
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const [scanAcknowledgment, setScanAcknowledgment] = useState(null); // { code, timestamp }
 
   // Manual Roll Input State
@@ -189,7 +225,9 @@ export default function GateAttendanceKiosk() {
   // Refs for synchronous keystroke accumulation (Hardware Barcode Guns / Desktop Scanners)
   const scanBufferRef = useRef("");
   const scanTimeoutRef = useRef(null);
-  const usbInputRef = useRef(null);
+  const hiddenInputRef = useRef(null);
+  const lastScanTimeRef = useRef(0);
+  const lastScanCodeRef = useRef("");
   const feedbackTimerRef = useRef(null);
   const ackTimerRef = useRef(null);
 
@@ -292,6 +330,14 @@ export default function GateAttendanceKiosk() {
       const cleanPayload = typeof payload === "string" ? repairPayload(payload.trim()) : payload;
       if (!cleanPayload || isProcessing) return;
 
+      // Debounce identical scans within 1.5s to prevent hardware gun duplicate bursts
+      const nowTs = Date.now();
+      if (lastScanCodeRef.current === cleanPayload && nowTs - lastScanTimeRef.current < 1500) {
+        return;
+      }
+      lastScanTimeRef.current = nowTs;
+      lastScanCodeRef.current = cleanPayload;
+
       setIsProcessing(true);
 
       try {
@@ -343,11 +389,15 @@ export default function GateAttendanceKiosk() {
       } catch (err) {
         if (soundEnabled) playGateChime("error");
 
-        const msg = err.response?.data?.message || err.message || "Unrecognized student or invalid card.";
+        const resData = err.response?.data || {};
+        const msg = resData.message || err.message || "Unrecognized student or invalid card.";
+        const code = resData.code || "SCAN_ERROR";
+
         triggerFeedback({
           type: "error",
-          title: "Check-In Failed",
+          title: "Check-In Rejected",
           message: msg,
+          code,
           student: null,
           record: null,
         });
@@ -422,7 +472,6 @@ export default function GateAttendanceKiosk() {
         if (buffered.length > 0) {
           e.preventDefault();
           scanBufferRef.current = "";
-          setUsbInputValue("");
           if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
           handleHardwareScanCaptured(buffered);
         }
@@ -432,18 +481,20 @@ export default function GateAttendanceKiosk() {
       if (e.key.length === 1) {
         // Accumulate character synchronously in ref
         scanBufferRef.current += e.key;
-        setUsbInputValue(scanBufferRef.current);
 
         // Fallback auto-submit timeout for scanners that don't transmit an Enter suffix
         if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
         scanTimeoutRef.current = setTimeout(() => {
           const current = scanBufferRef.current.trim();
           if (
-            current.length >= 10 &&
-            (current.includes("EduHub") || current.includes("{") || current.includes("STUDENT"))
+            current.length >= 8 &&
+            (current.includes("EduHub") ||
+              current.includes("{") ||
+              current.includes("STUDENT") ||
+              current.includes("studentId") ||
+              current.includes(":"))
           ) {
             scanBufferRef.current = "";
-            setUsbInputValue("");
             handleHardwareScanCaptured(current);
           }
         }, 1200);
@@ -457,10 +508,10 @@ export default function GateAttendanceKiosk() {
     };
   }, [handleHardwareScanCaptured]);
 
-  // Auto-focus USB input when USB mode is active
+  // Keep background input ready for keyboard emulation
   useEffect(() => {
-    if (scanMode === "usb" && usbInputRef.current) {
-      usbInputRef.current.focus();
+    if (scanMode === "usb" && hiddenInputRef.current) {
+      hiddenInputRef.current.focus();
     }
   }, [scanMode]);
 
@@ -552,19 +603,6 @@ export default function GateAttendanceKiosk() {
     }
     handleHardwareScanCaptured(manualInput.trim());
     setManualInput("");
-  };
-
-  // Handle USB Console Input Submit
-  const handleUsbInputSubmit = (e) => {
-    e.preventDefault();
-    if (!usbInputValue.trim()) {
-      toast.error("Please scan an ID card or enter a payload.");
-      return;
-    }
-    const val = usbInputValue.trim();
-    setUsbInputValue("");
-    scanBufferRef.current = "";
-    handleHardwareScanCaptured(val);
   };
 
   const formattedTimeStr = currentTime.toLocaleTimeString("en-US", {
@@ -759,98 +797,73 @@ export default function GateAttendanceKiosk() {
               </button>
             </div>
 
-            {/* Mode 1: USB Hardware Desktop / Gun Scanner */}
+            {/* Mode 1: Automated USB / Desktop Optical Scanner Target (Hands-Free HUD) */}
             {scanMode === "usb" && (
-              <div className="gk-hardware-console">
-                {/* Hardware Connection & Status Banner */}
-                <div className="gk-hardware-hero">
-                  <div className="gk-hardware-hero-icon">
-                    <Barcode size={32} />
-                  </div>
-                  <div className="gk-hardware-hero-text">
-                    <div className="flex items-center gap-2">
-                      <h3>Desktop &amp; Gun Scanner Active</h3>
-                      <span className="gk-signal-badge">
-                        <span className="gk-pulse-dot" />
-                        <span>Ready For Scans</span>
-                      </span>
+              <div className="gk-scanner-hud">
+                {/* Background keystroke catcher for maximum browser & OS compatibility */}
+                <input
+                  ref={hiddenInputRef}
+                  type="text"
+                  className="gk-hidden-input"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  readOnly
+                />
+
+                <div className="gk-hud-visualizer">
+                  <div className="gk-reticle-ring">
+                    <div className="gk-reticle-laser" />
+                    <div className="gk-reticle-crosshair-h" />
+                    <div className="gk-reticle-crosshair-v" />
+                    <div className="gk-reticle-center">
+                      <Barcode size={44} className="text-blue-500" />
                     </div>
-                    <p>
-                      Present student QR cards, barcodes, or mobile screens in front of the red scanner window.
-                      Attendance is recorded instantly with synthetic audio confirmation.
-                    </p>
                   </div>
-                  {hidSupported && (
-                    <button
-                      type="button"
-                      className="gk-pair-btn"
-                      onClick={handleRequestUsbPair}
-                      title="Explicitly pair scanner via WebHID to display model name"
-                    >
-                      <Usb size={14} />
-                      <span>{hidDevice ? "Re-pair USB" : "Pair WebHID"}</span>
-                    </button>
-                  )}
+                  <div className="gk-hud-status-badge">
+                    <span className="gk-pulse-dot" />
+                    <span>AUTOMATIC SCANNER LISTENING</span>
+                  </div>
                 </div>
 
-                {/* Explicit Interactive Scanner Input Console */}
-                <form onSubmit={handleUsbInputSubmit} className="gk-scanner-input-container">
-                  <div className="gk-input-header">
-                    <label htmlFor="gk-usb-hardware-input" className="gk-input-label">
-                      <span>Scanner Input Stream &amp; Focus:</span>
-                    </label>
-                    <div className="gk-input-meta">
-                      <span className={`gk-focus-pill ${isInputFocused ? "focused" : ""}`}>
-                        {isInputFocused ? "● Scanner Focused" : "○ Click to Focus"}
-                      </span>
-                      {scannerSignal.totalScans > 0 && (
-                        <span className="text-xs text-slate-500">
-                          Scans today: <strong>{scannerSignal.totalScans}</strong>
-                        </span>
-                      )}
+                <div className="gk-hud-details">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <h3>Desktop &amp; Gun Scanner Active</h3>
+                      <p>
+                        Present student ID cards, QR badges, or mobile screens in front of the scanner window.
+                        Attendance is recorded automatically with synthetic audio confirmation.
+                      </p>
                     </div>
+                    {hidSupported && (
+                      <button
+                        type="button"
+                        className="gk-pair-btn"
+                        onClick={handleRequestUsbPair}
+                        title="Explicitly pair scanner via WebHID to display hardware product name"
+                      >
+                        <Usb size={14} />
+                        <span>{hidDevice ? hidDevice.productName || "Paired USB" : "Pair WebHID"}</span>
+                      </button>
+                    )}
                   </div>
 
-                  <div className="gk-input-wrapper">
-                    <input
-                      ref={usbInputRef}
-                      id="gk-usb-hardware-input"
-                      type="text"
-                      className="gk-scanner-input"
-                      placeholder="Flash ID Card or type student roll/code..."
-                      value={usbInputValue}
-                      onChange={(e) => {
-                        setUsbInputValue(e.target.value);
-                        scanBufferRef.current = e.target.value;
-                      }}
-                      onFocus={() => setIsInputFocused(true)}
-                      onBlur={() => setIsInputFocused(false)}
-                      autoComplete="off"
-                      spellCheck="false"
-                    />
-                    <button
-                      type="button"
-                      className="gk-refocus-btn"
-                      onClick={() => usbInputRef.current?.focus()}
-                      title="Keep cursor focused for maximum reliability"
-                    >
-                      Focus
-                    </button>
-                    <button
-                      type="submit"
-                      className="gk-scanner-submit-btn"
-                      disabled={isProcessing || !usbInputValue.trim()}
-                    >
-                      <Check size={16} />
-                      <span>Submit</span>
-                    </button>
+                  <div className="gk-hud-badges">
+                    <span className="gk-hud-pill">
+                      <Check size={12} className="text-emerald-500" /> Windows 10/11 &amp; Linux Compatible
+                    </span>
+                    <span className="gk-hud-pill">
+                      <Zap size={12} className="text-amber-500" /> Instant Buffer &amp; Audio Beep
+                    </span>
+                    <span className="gk-hud-pill">
+                      <Clock size={12} className="text-blue-500" /> Cutoff Threshold: {cutoffTime} AM
+                    </span>
+                    {scannerSignal.totalScans > 0 && (
+                      <span className="gk-hud-pill text-slate-500">
+                        Total scans today: <strong>{scannerSignal.totalScans}</strong>
+                      </span>
+                    )}
                   </div>
-
-                  <div className="gk-scanner-hints">
-                    <span>⚡ <strong>Hands-Free Auto-Capture:</strong> The scanner types and hits Enter automatically.</span>
-                    <span>🔊 <strong>Sounds:</strong> Optical Beep on capture + Gate Chime on record.</span>
-                  </div>
-                </form>
+                </div>
               </div>
             )}
 
@@ -941,51 +954,98 @@ export default function GateAttendanceKiosk() {
             </div>
           )}
 
-          {/* Hero Feedback Card (Full Student Profile & Attendance Result) */}
+          {/* Hero Feedback Card: ONLY Display Reason for Failure on Error, or Student Profile on Success */}
           {heroFeedback && (
-            <div className={`gk-hero-feedback status-${heroFeedback.type}`}>
-              <div className="gk-hero-student-meta">
-                {heroFeedback.student?.avatar ? (
-                  <img
-                    src={heroFeedback.student.avatar}
-                    alt={heroFeedback.student.name}
-                    className="gk-hero-avatar"
-                  />
-                ) : (
-                  <div className="gk-hero-avatar">
-                    {(heroFeedback.student?.name || "S").charAt(0).toUpperCase()}
+            heroFeedback.type === "error" ? (
+              <div className="gk-hero-feedback status-error">
+                <div className="gk-hero-error-banner">
+                  <div className="gk-hero-error-icon">
+                    <XCircle size={36} className="text-rose-500 animate-pulse" />
                   </div>
-                )}
-
-                <div className="gk-hero-info">
-                  <h2>{heroFeedback.student?.name || "Student"}</h2>
-                  <div className="gk-hero-class-chips">
-                    <span className="gk-chip">
-                      Roll #{heroFeedback.student?.rollNo || "—"}
-                    </span>
-                    <span className="gk-chip">
-                      {heroFeedback.student?.className || "Class"}
-                    </span>
-                    <span className="gk-chip">
-                      Section {heroFeedback.student?.section || "A"}
-                    </span>
+                  <div className="gk-hero-error-details">
+                    <div className="flex items-center gap-2">
+                      <span className="gk-status-badge-lg error">
+                        <XCircle size={15} />
+                        <span>{heroFeedback.title || "Check-In Rejected"}</span>
+                      </span>
+                      {heroFeedback.code && (
+                        <span className="gk-error-code-badge font-mono">
+                          [{heroFeedback.code}]
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="gk-error-reason-title">
+                      {heroFeedback.message || "Unrecognized student QR code or invalid card."}
+                    </h3>
+                    <p className="gk-error-advice">
+                      {heroFeedback.code === "STUDENT_NOT_FOUND" &&
+                        "The scanned card does not match any enrolled student in this campus. Please verify the QR card."}
+                      {heroFeedback.code === "CAMPUS_MISMATCH" &&
+                        "This student is registered at another campus and cannot mark attendance here."}
+                      {heroFeedback.code === "STUDENT_INELIGIBLE" &&
+                        "This student's enrollment status is inactive or suspended. Please contact the campus administration."}
+                      {heroFeedback.code === "CLASS_MISMATCH" &&
+                        "Student belongs to another class than the active session."}
+                      {(!heroFeedback.code || heroFeedback.code === "SCAN_ERROR" || heroFeedback.code === "INVALID_QR_PAYLOAD") &&
+                        "Hold the student ID card flat and steady in front of the scanner to re-attempt."}
+                    </p>
                   </div>
                 </div>
+                <div className="gk-hero-error-actions">
+                  <button
+                    type="button"
+                    className="gk-hero-dismiss-btn"
+                    onClick={() => setHeroFeedback(null)}
+                    title="Dismiss alert"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
+            ) : (
+              <div className={`gk-hero-feedback status-${heroFeedback.type}`}>
+                <div className="gk-hero-student-meta">
+                  {heroFeedback.student?.avatar ? (
+                    <img
+                      src={heroFeedback.student.avatar}
+                      alt={heroFeedback.student.name}
+                      className="gk-hero-avatar"
+                    />
+                  ) : (
+                    <div className="gk-hero-avatar">
+                      {(heroFeedback.student?.name || "S").charAt(0).toUpperCase()}
+                    </div>
+                  )}
 
-              <div className="gk-hero-status-box">
-                <span className={`gk-status-badge-lg ${heroFeedback.type}`}>
-                  {heroFeedback.type === "present" && <CheckCircle2 size={16} />}
-                  {heroFeedback.type === "late" && <AlertTriangle size={16} />}
-                  {heroFeedback.type === "warning" && <UserCheck size={16} />}
-                  {heroFeedback.type === "error" && <XCircle size={16} />}
-                  <span>{heroFeedback.title}</span>
-                </span>
-                <span className="gk-hero-time">
-                  Time: {heroFeedback.entryTime}
-                </span>
+                  <div className="gk-hero-info">
+                    <h2>{heroFeedback.student?.name || "Student"}</h2>
+                    <div className="gk-hero-class-chips">
+                      <span className="gk-chip">
+                        Roll #{heroFeedback.student?.rollNo || "—"}
+                      </span>
+                      <span className="gk-chip">
+                        {heroFeedback.student?.className || "Class"}
+                      </span>
+                      <span className="gk-chip">
+                        Section {heroFeedback.student?.section || "A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="gk-hero-status-box">
+                  <span className={`gk-status-badge-lg ${heroFeedback.type}`}>
+                    {heroFeedback.type === "present" && <CheckCircle2 size={16} />}
+                    {heroFeedback.type === "late" && <AlertTriangle size={16} />}
+                    {heroFeedback.type === "warning" && <UserCheck size={16} />}
+                    <span>{heroFeedback.title}</span>
+                  </span>
+                  <span className="gk-hero-time">
+                    Time: {heroFeedback.entryTime}
+                  </span>
+                </div>
               </div>
-            </div>
+            )
           )}
         </div>
 

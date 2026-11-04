@@ -535,81 +535,180 @@
   animation: gkPulse 2s infinite;
 }
 
-/* USB Barcode & Desktop Gun Console */
-.gk-hardware-console {
+/* ========================================================
+   Automated USB & 2D Optical Scanner HUD (Hands-Free)
+   ======================================================== */
+.gk-scanner-hud {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.gk-hardware-hero {
-  display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
-  background: #f8fafc;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 14px;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.is-fullscreen .gk-hardware-hero {
-  background: #1e293b;
-  border-color: #334155;
+.is-fullscreen .gk-scanner-hud {
+  background: #111827;
+  border-color: #1f2937;
 }
 
-.gk-hardware-hero-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  background: #eff6ff;
-  color: #2563eb;
+/* Targeting Reticle & Laser Visualizer */
+.gk-hud-visualizer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.gk-reticle-ring {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 2px dashed #93c5fd;
   display: grid;
   place-items: center;
-  flex-shrink: 0;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  animation: gkReticleSpin 24s linear infinite;
 }
 
-.is-fullscreen .gk-hardware-hero-icon {
-  background: rgba(37, 99, 235, 0.2);
+.is-fullscreen .gk-reticle-ring {
+  border-color: #3b82f6;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+}
+
+@keyframes gkReticleSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.gk-reticle-center {
+  animation: gkReticleCounterSpin 24s linear infinite;
+  display: grid;
+  place-items: center;
+}
+
+@keyframes gkReticleCounterSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.gk-reticle-crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(59, 130, 246, 0.25);
+  pointer-events: none;
+}
+
+.gk-reticle-crosshair-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: rgba(59, 130, 246, 0.25);
+  pointer-events: none;
+}
+
+.gk-reticle-laser {
+  position: absolute;
+  top: 20%;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ef4444, #f87171, transparent);
+  box-shadow: 0 0 10px #ef4444;
+  pointer-events: none;
+  animation: gkLaserSweep 2s ease-in-out infinite alternate;
+}
+
+@keyframes gkLaserSweep {
+  0% { top: 20%; opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { top: 80%; opacity: 0.3; }
+}
+
+.gk-hud-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.is-fullscreen .gk-hud-status-badge {
+  background: rgba(37, 99, 235, 0.15);
   color: #60a5fa;
+  border-color: rgba(37, 99, 235, 0.35);
 }
 
-.gk-hardware-hero-text {
-  flex: 1;
+.gk-hud-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
 }
 
-.gk-hardware-hero-text h3 {
-  font-size: 15px;
+.gk-hud-details h3 {
+  font-size: 16px;
   font-weight: 700;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
-.gk-hardware-hero-text p {
-  font-size: 12px;
+.gk-hud-details p {
+  font-size: 13px;
   color: #64748b;
-  margin: 3px 0 0;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.is-fullscreen .gk-hardware-hero-text p {
+.is-fullscreen .gk-hud-details p {
   color: #94a3b8;
 }
 
-.gk-signal-badge {
+.gk-hud-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.gk-hud-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px;
+  padding: 4px 10px;
   border-radius: 9999px;
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #a7f3d0;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
 }
 
-.is-fullscreen .gk-signal-badge {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.3);
+.is-fullscreen .gk-hud-pill {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
 }
 
 .gk-pair-btn {
@@ -643,155 +742,112 @@
   background: #334155;
 }
 
-/* Scanner Input Console Container */
-.gk-scanner-input-container {
+/* Dedicated Error / Rejection Card — ONLY Displays Reason for Failure */
+.gk-hero-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+}
+
+.gk-hero-error-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #ffe4e6;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.is-fullscreen .gk-hero-error-icon {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.gk-hero-error-details {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.is-fullscreen .gk-scanner-input-container {
-  background: #111827;
-  border-color: #334155;
-}
-
-.gk-input-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.gk-input-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-}
-
-.is-fullscreen .gk-input-label {
-  color: #94a3b8;
-}
-
-.gk-input-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gk-focus-pill {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-  transition: all 0.15s ease;
-}
-
-.gk-focus-pill.focused {
-  background: #ecfdf5;
-  color: #059669;
-  border-color: #a7f3d0;
-}
-
-.is-fullscreen .gk-focus-pill {
-  background: #1e293b;
-  color: #94a3b8;
-  border-color: #334155;
-}
-
-.is-fullscreen .gk-focus-pill.focused {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.35);
-}
-
-.gk-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gk-scanner-input {
+  gap: 4px;
   flex: 1;
-  height: 48px;
-  padding: 0 16px;
+}
+
+.gk-hero-error-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gk-error-code-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.is-fullscreen .gk-error-code-badge {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.gk-error-reason-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #991b1b;
+  margin: 4px 0 2px;
+  letter-spacing: -0.01em;
+}
+
+.is-fullscreen .gk-error-reason-title {
+  color: #fca5a5;
+}
+
+.gk-error-advice {
+  font-size: 12px;
+  color: #7f1d1d;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.is-fullscreen .gk-error-advice {
+  color: #fecdd3;
+}
+
+.gk-hero-error-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.gk-hero-dismiss-btn {
+  padding: 8px 16px;
   border-radius: 8px;
-  border: 2px solid #2563eb;
+  border: 1px solid #fca5a5;
   background: #ffffff;
-  color: inherit;
-  font-size: 14px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.is-fullscreen .gk-scanner-input {
-  background: #1e293b;
-  color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
-}
-
-.gk-scanner-input:focus {
-  border-color: #1d4ed8;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22);
-}
-
-.gk-refocus-btn {
-  height: 48px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  color: #475569;
+  color: #b91c1c;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.gk-refocus-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+.gk-hero-dismiss-btn:hover {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-.is-fullscreen .gk-refocus-btn {
+.is-fullscreen .gk-hero-dismiss-btn {
   background: #1e293b;
-  border-color: #334155;
-  color: #e2e8f0;
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
 }
 
-.gk-scanner-submit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 48px;
-  padding: 0 18px;
-  border-radius: 8px;
-  border: none;
-  background: #10b981;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.gk-scanner-submit-btn:hover:not(:disabled) {
-  background: #059669;
-}
-
-.gk-scanner-submit-btn:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-  opacity: 0.6;
+.is-fullscreen .gk-hero-dismiss-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
 }
 
 .gk-scanner-hints {
