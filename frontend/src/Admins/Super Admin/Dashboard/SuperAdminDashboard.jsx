@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import InstituteForm from "../Institutes/InstituteForm";
 import ManageInstitute from "../Institutes/ManageInstitute";
+import ConvertLeadModal from "../Inquiries/ConvertLeadModal";
 import toast from "react-hot-toast";
 import "./SuperAdminDashboard.css";
 
@@ -85,6 +86,8 @@ export default function SuperAdminDashboard() {
   const [inquiries, setInquiries] = useState([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(true);
   const [convertingId, setConvertingId] = useState(null);
+  const [selectedLeadToConvert, setSelectedLeadToConvert] = useState(null);
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
 
   const fetchInquiries = async () => {
     try {
@@ -116,19 +119,21 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleConvertLead = async (inquiry) => {
-    if (!window.confirm(`Convert "${inquiry.instituteName}" to a registered institution on EduHub?`)) {
-      return;
-    }
-    setConvertingId(inquiry._id);
+  const handleConfirmConversion = async () => {
+    if (!selectedLeadToConvert) return;
+    setConvertingId(selectedLeadToConvert._id);
     try {
-      await axiosInstance.post(`/super-admin/inquiries/${inquiry._id}/convert`);
-      toast.success(`Registered ${inquiry.instituteName} successfully!`);
+      await axiosInstance.post(`/super-admin/inquiries/${selectedLeadToConvert._id}/convert`);
+      toast.success(`Registered ${selectedLeadToConvert.instituteName} successfully!`);
       setInquiries((prev) =>
-        prev.map((inq) => (inq._id === inquiry._id ? { ...inq, status: "Converted" } : inq))
+        prev.map((inq) =>
+          inq._id === selectedLeadToConvert._id ? { ...inq, status: "Converted" } : inq
+        )
       );
       dispatch(fetchInstitutes());
       dispatch(fetchGlobalStats());
+      setIsConvertModalOpen(false);
+      setSelectedLeadToConvert(null);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to convert inquiry");
     } finally {
@@ -440,7 +445,10 @@ export default function SuperAdminDashboard() {
                             type="button"
                             className="super-admin-inquiry-btn super-admin-inquiry-btn-convert"
                             disabled={convertingId === inquiry._id}
-                            onClick={() => handleConvertLead(inquiry)}
+                            onClick={() => {
+                              setSelectedLeadToConvert(inquiry);
+                              setIsConvertModalOpen(true);
+                            }}
                           >
                             {convertingId === inquiry._id ? (
                               <Spinner className="size-3 text-white" />
@@ -623,6 +631,18 @@ export default function SuperAdminDashboard() {
           </section>
         </>
       )}
+          {/* Convert Lead Confirmation Modal */}
+      <ConvertLeadModal
+        open={isConvertModalOpen && !!selectedLeadToConvert}
+        lead={selectedLeadToConvert}
+        loading={convertingId === selectedLeadToConvert?._id}
+        onConfirm={handleConfirmConversion}
+        onCancel={() => {
+          if (convertingId) return;
+          setIsConvertModalOpen(false);
+          setSelectedLeadToConvert(null);
+        }}
+      />
     </section>
   );
 }
