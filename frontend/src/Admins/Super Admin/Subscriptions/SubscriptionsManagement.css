@@ -250,7 +250,7 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
-  min-width: 860px;
+  min-width: 1040px;
 }
 
 .subs-table thead {
@@ -266,6 +266,11 @@
   letter-spacing: 0.05em;
   color: #71717a;
   white-space: nowrap;
+}
+
+.subs-table th.th-actions {
+  text-align: right;
+  padding-right: 20px;
 }
 
 .subs-table tbody {
@@ -371,6 +376,24 @@
 .skeleton-quota-bar {
   width: 100%;
   height: 12px;
+}
+
+.skeleton-btn-primary {
+  width: 86px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.skeleton-btn-secondary {
+  width: 58px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.skeleton-btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
 }
 
 /* ── Cell Specifics ── */
@@ -623,6 +646,54 @@
 
 .quota-fill.full {
   background: #ef4444;
+}
+
+/* ── Action Buttons ── */
+.cell-actions {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.action-buttons-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.table-act-btn {
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #27272a;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.table-act-btn:hover {
+  background: #f4f4f5;
+  color: #09090b;
+  border-color: #d4d4d8;
+}
+
+.table-act-btn.plan {
+  background: #09090b;
+  border-color: #09090b;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.table-act-btn.plan:hover {
+  background: #27272a;
+  border-color: #27272a;
 }
 
 /* Modals */
