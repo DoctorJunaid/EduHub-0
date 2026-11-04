@@ -86,6 +86,11 @@ export function parseQrPayload(rawInput) {
       trimmed = trimmed + "}";
     }
 
+    // Auto-normalize corrupted type strings caused by HID scanner shift/numlock quirks
+    if (trimmed.includes('"type"') && !trimmed.includes('"type":"STUDENT_ATTENDANCE"')) {
+      trimmed = trimmed.replace(/"type"\s*:\s*"[^"]*"/, '"type":"STUDENT_ATTENDANCE"');
+    }
+
     try {
       parsed = JSON.parse(trimmed);
     } catch {

@@ -44,6 +44,10 @@ function repairPayload(raw) {
   if (str.startsWith("{") && !str.endsWith("}")) {
     str = str + "}";
   }
+  // Auto-normalize corrupted type strings caused by HID scanner shift/numlock quirks
+  if (str.includes('"type"') && !str.includes('"type":"STUDENT_ATTENDANCE"')) {
+    str = str.replace(/"type"\s*:\s*"[^"]*"/, '"type":"STUDENT_ATTENDANCE"');
+  }
   return str;
 }
 

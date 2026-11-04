@@ -29,7 +29,7 @@ export const TicketCategoryBadge = ({ category = "Other", showIconOnly = false, 
 
   return (
     <span
-      className={`isu-ticket-badge inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium max-w-[140px] truncate ${className}`}
+      className={`isu-ticket-badge inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium whitespace-nowrap ${className}`}
       style={{ padding: "2px 8px", gap: "6px" }}
       title={label}
     >

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
   processQrAttendanceScan,
   getAttendanceSystemDiagnostics,
@@ -43,15 +44,33 @@ export const recordQrScanAttendance = async (req, res) => {
  */
 export const getGateKioskTodayStats = async (req, res) => {
   try {
-    let campusId =
+    let rawCampusId =
       req.campusId ||
       req.headers["x-campus-id"] ||
       req.user?.campusId?._id ||
       req.user?.campusId ||
       req.query?.campusId;
 
-    if (campusId && typeof campusId === "object" && campusId._id) {
-      campusId = campusId._id;
+    if (rawCampusId && typeof rawCampusId === "object" && rawCampusId._id) {
+      rawCampusId = rawCampusId._id;
+    }
+
+    const strId = String(rawCampusId || "").trim();
+    let campusId = null;
+
+    if (
+      strId &&
+      strId !== "undefined" &&
+      strId !== "null" &&
+      strId !== "all" &&
+      mongoose.Types.ObjectId.isValid(strId)
+    ) {
+      campusId = strId;
+    } else if (
+      req.user?.campusId &&
+      mongoose.Types.ObjectId.isValid(String(req.user.campusId._id || req.user.campusId))
+    ) {
+      campusId = String(req.user.campusId._id || req.user.campusId);
     }
 
     const stats = await getGateKioskStats(campusId, req.query?.date);
@@ -61,6 +80,7 @@ export const getGateKioskTodayStats = async (req, res) => {
       data: stats,
     });
   } catch (err) {
+    console.error("[getGateKioskTodayStats ERROR]", err);
     return res.status(500).json({
       success: false,
       message: err.message || "Failed to retrieve gate kiosk statistics.",

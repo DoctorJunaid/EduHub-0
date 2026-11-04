@@ -63,6 +63,10 @@ export default function CampusOperationsHub({
   const showCards = viewMode === 'cards' || (viewMode === 'auto' && isMobileScreen);
 
   React.useEffect(() => {
+    // Only fetch academic teacher assignments & class teachers when user clicks on Classes/Programs tab!
+    if (currentTab !== 'classes' && currentTab !== 'programs') return;
+    if (academicAssignments.length > 0 && campusClassTeachers.length > 0) return;
+
     let isMounted = true;
     Promise.allSettled([
       axiosInstance.get('/academic/teacher-assignments'),
@@ -79,7 +83,7 @@ export default function CampusOperationsHub({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [currentTab, academicAssignments.length, campusClassTeachers.length]);
 
   React.useEffect(() => {
     setSearchQuery('');
