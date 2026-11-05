@@ -27,6 +27,8 @@ import {
   RefreshCw,
   Radio,
   Sparkles,
+  X,
+  CornerDownLeft,
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import toast from "react-hot-toast";
@@ -642,73 +644,80 @@ export default function GateAttendanceKiosk() {
         </div>
 
         <div className="gk-header-controls">
-          {/* Hardware Connection Status Pill */}
-          <div
-            className={`gk-hardware-pill ${
-              hidDevice || scannerSignal.lastTime ? "is-connected" : "is-listening"
-            }`}
-            title="Desktop / Gun Scanner Hardware Status"
-          >
-            <span className="gk-hardware-dot" />
-            <Usb size={13} />
-            <span>
-              {hidDevice
-                ? hidDevice.productName || "USB Scanner Connected"
-                : scannerSignal.lastTime
-                ? `Scanner Active (${scannerSignal.lastTime})`
-                : "Scanner Ready & Listening"}
-            </span>
+          {/* Top row / primary indicators on mobile, inline on desktop */}
+          <div className="gk-header-toprow">
+            {/* Hardware Connection Status Pill */}
+            <div
+              className={`gk-hardware-pill ${
+                hidDevice || scannerSignal.lastTime ? "is-connected" : "is-listening"
+              }`}
+              title="Desktop / Gun Scanner Hardware Status"
+            >
+              <span className="gk-hardware-dot" />
+              <Usb size={13} className="shrink-0" />
+              <span className="gk-hardware-text">
+                {hidDevice
+                  ? hidDevice.productName || "USB Scanner Connected"
+                  : scannerSignal.lastTime
+                  ? `Scanner Active (${scannerSignal.lastTime})`
+                  : "Scanner Ready & Listening"}
+              </span>
+            </div>
+
+            {/* Live Clock Card */}
+            <div className="gk-clock-card">
+              <span className="gk-clock-time">{formattedTimeStr}</span>
+              <span className="gk-clock-date">{formattedDateStr}</span>
+            </div>
           </div>
 
-          {/* Live Clock Card */}
-          <div className="gk-clock-card">
-            <span className="gk-clock-time">{formattedTimeStr}</span>
-            <span className="gk-clock-date">{formattedDateStr}</span>
+          {/* Actions row: Cutoff, audio, fullscreen, exit */}
+          <div className="gk-header-actions">
+            {/* Gate Cutoff Selector */}
+            <div className="gk-cutoff-selector" title="Arrivals after this time are marked Late">
+              <Clock size={14} className="text-amber-500 shrink-0" />
+              <label htmlFor="gk-cutoff">Cutoff:</label>
+              <input
+                id="gk-cutoff"
+                type="time"
+                className="gk-cutoff-input"
+                value={cutoffTime}
+                onChange={(e) => setCutoffTime(e.target.value)}
+              />
+            </div>
+
+            {/* Sound Toggle */}
+            <button
+              type="button"
+              className="gk-btn-icon"
+              onClick={() => setSoundEnabled((prev) => !prev)}
+              title={soundEnabled ? "Mute audio cues" : "Enable audio cues"}
+            >
+              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
+
+            {/* Fullscreen Toggle */}
+            <button
+              type="button"
+              className="gk-btn-icon"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Exit full screen" : "Enter full screen kiosk mode"}
+            >
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+
+            {/* Exit / Return */}
+            <button
+              type="button"
+              className="gk-btn-exit"
+              onClick={() => navigate("/student-attendance")}
+              title="Return to Student Attendance Table"
+            >
+              <ArrowLeft size={14} className="shrink-0" />
+              <span className="gk-btn-exit-full">Attendance Table</span>
+              <span className="gk-btn-exit-short">Table</span>
+            </button>
           </div>
-
-          {/* Gate Cutoff Selector */}
-          <div className="gk-cutoff-selector" title="Arrivals after this time are marked Late">
-            <Clock size={14} className="text-amber-500 shrink-0" />
-            <label htmlFor="gk-cutoff">Cutoff:</label>
-            <input
-              id="gk-cutoff"
-              type="time"
-              className="gk-cutoff-input"
-              value={cutoffTime}
-              onChange={(e) => setCutoffTime(e.target.value)}
-            />
-          </div>
-
-          {/* Sound Toggle */}
-          <button
-            type="button"
-            className="gk-btn-icon"
-            onClick={() => setSoundEnabled((prev) => !prev)}
-            title={soundEnabled ? "Mute audio cues" : "Enable audio cues"}
-          >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          </button>
-
-          {/* Fullscreen Toggle */}
-          <button
-            type="button"
-            className="gk-btn-icon"
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Exit full screen" : "Enter full screen kiosk mode"}
-          >
-            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
-
-          {/* Exit / Return */}
-          <button
-            type="button"
-            className="gk-btn-exit"
-            onClick={() => navigate("/student-attendance")}
-            title="Return to Student Attendance Table"
-          >
-            <ArrowLeft size={14} />
-            <span>Attendance Table</span>
-          </button>
         </div>
       </header>
 
@@ -757,7 +766,9 @@ export default function GateAttendanceKiosk() {
           </div>
           <div className="gk-kpi-content">
             <span className="gk-kpi-val">{stats.lateCount || 0}</span>
-            <span className="gk-kpi-label">Late Arrivals (&gt; {cutoffTime})</span>
+            <span className="gk-kpi-label">
+              Late Arrivals <span className="gk-cutoff-sub">(&gt; {cutoffTime})</span>
+            </span>
           </div>
         </div>
       </div>
@@ -776,24 +787,30 @@ export default function GateAttendanceKiosk() {
                 className={`gk-mode-btn ${scanMode === "usb" ? "active" : ""}`}
                 onClick={() => setScanMode("usb")}
               >
-                <Barcode size={15} />
-                <span>USB / Desktop Scanner</span>
+                <Barcode size={15} className="shrink-0" />
+                <span className="gk-tab-label-full">USB / Desktop Scanner</span>
+                <span className="gk-tab-label-mid">USB Scanner</span>
+                <span className="gk-tab-label-short">USB</span>
               </button>
               <button
                 type="button"
                 className={`gk-mode-btn ${scanMode === "camera" ? "active" : ""}`}
                 onClick={() => setScanMode("camera")}
               >
-                <Camera size={15} />
-                <span>Camera QR Scanner</span>
+                <Camera size={15} className="shrink-0" />
+                <span className="gk-tab-label-full">Camera QR Scanner</span>
+                <span className="gk-tab-label-mid">Camera QR</span>
+                <span className="gk-tab-label-short">Camera</span>
               </button>
               <button
                 type="button"
                 className={`gk-mode-btn ${scanMode === "manual" ? "active" : ""}`}
                 onClick={() => setScanMode("manual")}
               >
-                <Search size={15} />
-                <span>Manual Roll Search</span>
+                <Search size={15} className="shrink-0" />
+                <span className="gk-tab-label-full">Manual Roll Search</span>
+                <span className="gk-tab-label-mid">Manual Roll</span>
+                <span className="gk-tab-label-short">Manual</span>
               </button>
             </div>
 
@@ -869,9 +886,19 @@ export default function GateAttendanceKiosk() {
 
             {/* Mode 2: Camera Scanner */}
             {scanMode === "camera" && (
-              <div>
+              <div className="gk-camera-section">
                 <div className="gk-camera-viewport">
-                  <div id={scannerContainerId} style={{ width: "100%", height: "100%" }} />
+                  <div
+                    id={scannerContainerId}
+                    className="gk-camera-stream"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      display: cameraActive ? "block" : "none",
+                    }}
+                  />
                   {cameraActive && (
                     <div className="gk-scanner-overlay">
                       <div className="gk-scan-target" />
@@ -881,24 +908,42 @@ export default function GateAttendanceKiosk() {
                     </div>
                   )}
                   {!cameraActive && (
-                    <div className="text-center p-6 text-slate-400">
-                      <CameraOff size={36} className="mx-auto mb-2 opacity-60" />
-                      <p className="text-xs">{cameraError || "Initializing video stream..."}</p>
+                    <div className="gk-camera-fallback">
+                      <div className="gk-camera-fallback-icon-wrap">
+                        <CameraOff size={32} className="gk-camera-fallback-icon" />
+                      </div>
+                      <p className="gk-camera-fallback-msg">
+                        {cameraError || "Camera stream unavailable or permission needed."}
+                      </p>
+                      <button
+                        type="button"
+                        className="gk-camera-retry-btn"
+                        onClick={startCamera}
+                        title="Retry camera initialization"
+                      >
+                        <RotateCw size={13} />
+                        <span>Retry Camera</span>
+                      </button>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    Continuous Scanning Active
+                <div className="gk-camera-controls-bar">
+                  <span className="gk-camera-status-pill">
+                    <span
+                      className={`gk-camera-status-dot ${
+                        cameraActive ? "is-active" : "is-standby"
+                      }`}
+                    />
+                    <span>{cameraActive ? "Continuous Scanning Active" : "Camera Standby"}</span>
                   </span>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="gk-camera-flip-btn"
                     onClick={() =>
                       setFacingMode((prev) => (prev === "environment" ? "user" : "environment"))
                     }
+                    title="Switch front/back camera"
                   >
                     <RotateCw size={12} />
                     <span>Flip Camera</span>
@@ -909,25 +954,68 @@ export default function GateAttendanceKiosk() {
 
             {/* Mode 3: Manual Roll Number Search */}
             {scanMode === "manual" && (
-              <div>
-                <p className="text-xs text-slate-500 mb-2">
-                  Enter student Roll Number (e.g. <code>2</code> or <code>101</code>) or student Name for manual gate check-in:
-                </p>
-                <form onSubmit={handleManualSubmit} className="gk-manual-search-row">
-                  <input
-                    id="gk-manual-input"
-                    type="text"
-                    className="gk-manual-input"
-                    placeholder="Enter student roll number or full name..."
-                    value={manualInput}
-                    onChange={(e) => setManualInput(e.target.value)}
-                    autoFocus
-                  />
-                  <button type="submit" className="gk-manual-submit-btn">
+              <div className="gk-manual-panel">
+                {/* Hero Header */}
+                <div className="gk-manual-header">
+                  <div className="gk-manual-icon-wrap">
+                    <UserCheck size={20} />
+                  </div>
+                  <div className="gk-manual-title-block">
+                    <h3>Manual Student Gate Check-In</h3>
+                    <p>Direct entry verification for students with forgotten or damaged ID cards</p>
+                  </div>
+                </div>
+
+                {/* Form Group */}
+                <form onSubmit={handleManualSubmit} className="gk-manual-form">
+                  <div className="gk-manual-input-wrapper">
+                    <Search size={18} className="gk-manual-search-icon" />
+                    <input
+                      id="gk-manual-input"
+                      type="text"
+                      className="gk-manual-input-field"
+                      placeholder="Enter student roll number or full name..."
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      autoFocus
+                    />
+                    {manualInput && (
+                      <button
+                        type="button"
+                        className="gk-manual-clear-btn"
+                        onClick={() => setManualInput("")}
+                        title="Clear input"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="gk-manual-action-btn"
+                    disabled={!manualInput.trim()}
+                  >
                     <CheckCircle2 size={16} />
                     <span>Check In</span>
                   </button>
                 </form>
+
+                {/* Helper / Quick Tips Strip */}
+                <div className="gk-manual-hints-strip">
+                  <span className="gk-hint-tag">
+                    <span className="gk-hint-dot" />
+                    <span>Roll No. (e.g. <code>2</code>, <code>101</code>)</span>
+                  </span>
+                  <span className="gk-hint-tag">
+                    <span className="gk-hint-dot" />
+                    <span>Student Name</span>
+                  </span>
+                  <span className="gk-hint-tag gk-hint-key">
+                    <CornerDownLeft size={11} />
+                    <span>Press Enter to Submit</span>
+                  </span>
+                </div>
               </div>
             )}
           </div>

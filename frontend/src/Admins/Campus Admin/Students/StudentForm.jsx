@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { selectStudents } from "@/store/Slices/studentsSlice";
 import { selectCurrentUser } from "@/store/Slices/authSlice";
 import { studentIdentityErrors, hasStudentIdentityConflicts } from "@/store/studentIdentity";
-import { Users, School, GraduationCap, Check, BookOpen, Bus } from "lucide-react";
+import { Users, School, GraduationCap, Check, BookOpen, Bus, MapPin, Navigation, Clock, CheckCircle2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,17 @@ const DEFAULT_SCHOOL_CLASSES = [
   "Kindergarten (KG)",
   "Nursery",
 ];
+
+const cleanBusNumber = (val) => {
+  if (!val) return "Bus TBA";
+  let s = String(val).trim();
+  s = s.replace(/^(bus\s*#?\s*)+/i, "").replace(/^#+/, "").trim();
+  if (!s) return "Bus TBA";
+  if (/^(bus|van|coaster|wagon|car)\b/i.test(s)) {
+    return s;
+  }
+  return `Bus #${s}`;
+};
 
 export default function StudentForm({
   student,
@@ -222,11 +233,19 @@ export default function StudentForm({
     }
   };
 
-  const selectedRouteStops = useMemo(() => {
-    if (!selectedTransportRouteId) return [];
-    const r = transportRoutes.find((rt) => rt._id === selectedTransportRouteId);
-    return r?.stops || [];
+  const selectedRoute = useMemo(() => {
+    if (!selectedTransportRouteId) return null;
+    return transportRoutes.find((rt) => rt._id === selectedTransportRouteId) || null;
   }, [transportRoutes, selectedTransportRouteId]);
+
+  const selectedRouteStops = useMemo(() => {
+    return selectedRoute?.stops || [];
+  }, [selectedRoute]);
+
+  const selectedStop = useMemo(() => {
+    if (!selectedRoute || !selectedTransportStopName) return null;
+    return selectedRoute.stops?.find((s) => s.stopName === selectedTransportStopName) || null;
+  }, [selectedRoute, selectedTransportStopName]);
 
   // When a grade is selected, fetch corresponding sections and grade-subjects
   useEffect(() => {
@@ -522,15 +541,7 @@ export default function StudentForm({
         {hasStudentIdentityConflicts(records) && (
           <p
             role="status"
-            style={{
-              padding: "10px 14px",
-              background: "#fffbeb",
-              border: "1px solid #fef3c7",
-              borderRadius: "8px",
-              fontSize: "12px",
-              color: "#b45309",
-              marginBottom: "18px",
-            }}
+            className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs font-medium text-amber-800 dark:text-amber-200 mb-4"
           >
             Some existing records share an email or roll number. Make sure each
             student has a distinct identity.
@@ -691,148 +702,139 @@ export default function StudentForm({
             }
           )}
 
-          {/* Enrolled Subjects with Interactive Chips */}
-          <div className="activity-form-field span-2">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "6px",
-              }}
-            >
-              <Label htmlFor={`${id}-subjects`} style={{ margin: 0 }}>
-                {isSchool
-                  ? "Enrolled School Subjects *"
-                  : "Enrolled Subjects *"}
-              </Label>
+          {/* Enrolled Subjects with Responsive Tiles */}
+          <div className="activity-form-field span-2 col-span-full">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800 space-y-3.5">
+              {/* Header Row */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-blue-100/80 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor={`${id}-subjects`}
+                      className="text-xs font-bold text-slate-900 dark:text-zinc-100 cursor-pointer m-0 block"
+                    >
+                      {isSchool
+                        ? "Enrolled School Subjects"
+                        : "Enrolled Subjects"}{" "}
+                      <span className="text-rose-500">*</span>
+                    </Label>
+                    {gradeSubjects.length > 0 && (
+                      <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                        {currentSubjectList.length} of {gradeSubjects.length} subjects selected
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {gradeSubjects.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={selectAllSubjects}
+                      className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200/80 dark:border-blue-800/60 rounded-lg px-2.5 py-1 transition-colors cursor-pointer"
+                    >
+                      Select All ({gradeSubjects.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearSubjects}
+                      className="text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/80 border border-rose-200/80 dark:border-rose-800/60 rounded-lg px-2.5 py-1 transition-colors cursor-pointer"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Responsive Grid of Subjects */}
               {gradeSubjects.length > 0 && (
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    type="button"
-                    onClick={selectAllSubjects}
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#0284c7",
-                      background: "#f0f9ff",
-                      border: "1px solid #bae6fd",
-                      borderRadius: "6px",
-                      padding: "2px 8px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Select All ({gradeSubjects.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearSubjects}
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#dc2626",
-                      background: "#fef2f2",
-                      border: "1px solid #fecaca",
-                      borderRadius: "6px",
-                      padding: "2px 8px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Clear All
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
+                  {gradeSubjects.map((gs) => {
+                    const subName = gs.subjectId?.name;
+                    if (!subName) return null;
+                    const isSelected = currentSubjectList.some(
+                      (s) => s.toLowerCase() === subName.toLowerCase()
+                    );
+                    return (
+                      <button
+                        key={gs._id}
+                        type="button"
+                        onClick={() => toggleSubject(subName)}
+                        className={`group relative flex items-center justify-between w-full px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-150 cursor-pointer text-left select-none ${
+                          isSelected
+                            ? "bg-blue-600 dark:bg-blue-600 text-white border-blue-600 shadow-xs shadow-blue-500/25 ring-1 ring-blue-600"
+                            : "bg-white dark:bg-zinc-950 text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 hover:bg-slate-50/80 dark:hover:bg-zinc-900/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 pr-1">
+                          <div
+                            className={`w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
+                              isSelected
+                                ? "bg-white text-blue-600"
+                                : "border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-850 group-hover:border-blue-400"
+                            }`}
+                          >
+                            {isSelected && (
+                              <Check className="w-3 h-3 text-blue-600" strokeWidth={3} />
+                            )}
+                          </div>
+                          <span className="font-semibold truncate text-xs">
+                            {subName}
+                          </span>
+                        </div>
+                        {gs.subjectId?.code && (
+                          <span
+                            className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-md flex-shrink-0 transition-colors ml-2 ${
+                              isSelected
+                                ? "bg-white/20 text-white"
+                                : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
+                            }`}
+                          >
+                            {gs.subjectId.code}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-            </div>
 
-            {/* Interactive Subject Badges */}
-            {gradeSubjects.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "6px",
-                  padding: "10px",
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "8px",
-                  marginBottom: "8px",
-                }}
-              >
-                {gradeSubjects.map((gs) => {
-                  const subName = gs.subjectId?.name;
-                  if (!subName) return null;
-                  const isSelected = currentSubjectList.some(
-                    (s) => s.toLowerCase() === subName.toLowerCase()
-                  );
-                  return (
-                    <button
-                      key={gs._id}
-                      type="button"
-                      onClick={() => toggleSubject(subName)}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "5px",
-                        padding: "4px 10px",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                        border: isSelected
-                          ? "1px solid #0284c7"
-                          : "1px solid #cbd5e1",
-                        background: isSelected ? "#0284c7" : "#ffffff",
-                        color: isSelected ? "#ffffff" : "#334155",
-                        boxShadow: isSelected
-                          ? "0 1px 2px rgba(2, 132, 199, 0.2)"
-                          : "none",
-                      }}
-                    >
-                      {isSelected && <Check size={13} strokeWidth={2.5} />}
-                      <span>{subName}</span>
-                      {gs.subjectId?.code && (
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            opacity: isSelected ? 0.9 : 0.6,
-                            marginLeft: "2px",
-                          }}
-                        >
-                          ({gs.subjectId.code})
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+              {/* Comma-Separated Input & Custom Subjects */}
+              <div className="pt-2.5 border-t border-slate-200/70 dark:border-zinc-800/80 space-y-1.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <Label
+                    htmlFor={`${id}-subjects`}
+                    className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 cursor-pointer"
+                  >
+                    Custom / Additional Subjects
+                  </Label>
+                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">
+                    Comma-separated list
+                  </span>
+                </div>
+                <input
+                  id={`${id}-subjects`}
+                  name="subjects"
+                  className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3.5 py-1 text-xs shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20 font-medium"
+                  value={values.subjects}
+                  required
+                  placeholder={
+                    isSchool
+                      ? "e.g. Mathematics, English Language, Urdu, General Science..."
+                      : "e.g. Advanced Web Design, Data Structures, Machine Learning..."
+                  }
+                  onChange={(e) =>
+                    setValues((prev) => ({ ...prev, subjects: e.target.value }))
+                  }
+                />
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400">
+                  Tap subject tiles above to toggle enrollment, or type custom subjects directly separated by commas.
+                </p>
               </div>
-            )}
-
-            <input
-              id={`${id}-subjects`}
-              name="subjects"
-              value={values.subjects}
-              required
-              placeholder={
-                isSchool
-                  ? "e.g. Mathematics, English Language, Urdu, General Science, Islamiat, Computer"
-                  : "e.g. Advanced Web Design, Data Structures, Machine Learning"
-              }
-              onChange={(e) =>
-                setValues((prev) => ({ ...prev, subjects: e.target.value }))
-              }
-            />
-            <small
-              style={{
-                fontSize: "11px",
-                color: "#64748b",
-                marginTop: "4px",
-                display: "block",
-              }}
-            >
-              Click badges above to quickly toggle enrolled subjects, or edit
-              custom subjects directly separated by commas.
-            </small>
+            </div>
           </div>
 
           {field("status", "Enrollment Status", { options: studentStatuses })}
@@ -858,97 +860,320 @@ export default function StudentForm({
           </div>
           <div className="activity-form-field"></div>
 
+          {/* Section: Transport & Commute */}
           <div className="activity-section-title flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Bus className="w-4 h-4 text-primary" />
-              Transport & Commute
+              <Bus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              Transport &amp; Commute
+            </span>
+            <span className="text-xs font-normal text-muted-foreground hidden sm:inline">
+              Campus Transit Fleet &amp; Route Assignment
             </span>
           </div>
 
-          <div className="activity-form-field col-span-full bg-zinc-50/80 dark:bg-zinc-900/40 p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 transition-all">
+          <div
+            className={`activity-form-field col-span-full rounded-2xl border transition-all duration-300 p-5 ${
+              requiresTransport
+                ? "bg-gradient-to-b from-blue-50/70 via-white to-slate-50/60 dark:from-blue-950/20 dark:via-zinc-900/80 dark:to-zinc-900/50 border-blue-200/90 dark:border-blue-900/60 shadow-sm"
+                : "bg-zinc-50/80 dark:bg-zinc-900/40 border-zinc-200/80 dark:border-zinc-800"
+            }`}
+          >
+            {/* Top Toggle Row */}
             <div className="flex items-center justify-between gap-4">
-              <div className="space-y-0.5">
-                <Label
-                  htmlFor={`${id}-requiresTransport`}
-                  className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-2"
+              <div className="flex items-center gap-3.5">
+                <div
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                    requiresTransport
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
+                      : "bg-slate-200/80 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
+                  }`}
                 >
-                  Requires Transport
-                  {requiresTransport && (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                      Yes
-                    </span>
-                  )}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Toggle ON if the student requires school / campus transit service.
-                </p>
+                  <Bus className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <Label
+                      htmlFor={`${id}-requiresTransport`}
+                      className="text-sm font-bold text-slate-900 dark:text-zinc-100 cursor-pointer"
+                    >
+                      Requires Transport
+                    </Label>
+                    {requiresTransport ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Active Commuter
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-200/70 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                        Self Commute
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                    Toggle ON if this student requires designated school bus transit and daily pickup stops.
+                  </p>
+                </div>
               </div>
+
               <Switch
                 id={`${id}-requiresTransport`}
                 checked={requiresTransport}
                 onCheckedChange={handleToggleTransport}
+                className="data-[state=checked]:bg-blue-600"
               />
             </div>
 
+            {/* Transport Route & Stop Configuration Panel */}
             {requiresTransport && (
-              <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${id}-transportRoute`} className="text-xs font-semibold text-foreground">
-                    Assigned Transit Route *
-                  </Label>
-                  <Select
-                    value={selectedTransportRouteId || ""}
-                    onValueChange={(rId) => {
-                      setSelectedTransportRouteId(rId);
-                      const r = transportRoutes.find((rt) => rt._id === rId);
-                      setSelectedTransportStopName(r?.stops?.[0]?.stopName || "");
-                    }}
-                  >
-                    <SelectTrigger id={`${id}-transportRoute`} className="w-full bg-white dark:bg-zinc-900">
-                      <SelectValue placeholder="-- Select Transit Route --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {transportRoutes.map((r) => (
-                        <SelectItem key={r._id} value={r._id}>
-                          {r.routeName} ({r.vehicleId?.busNumber || "Bus pending"})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${id}-transportStop`} className="text-xs font-semibold text-foreground">
-                    Designated Stop & Pickup Time *
-                  </Label>
-                  {selectedRouteStops.length > 0 ? (
-                    <Select
-                      value={selectedTransportStopName || ""}
-                      onValueChange={(val) => setSelectedTransportStopName(val)}
+              <div className="mt-5 pt-4 border-t border-blue-100/90 dark:border-blue-900/40 space-y-4 animate-in fade-in-50 slide-in-from-top-1 duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Field 1: Assigned Transit Route */}
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor={`${id}-transportRoute`}
+                      className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5"
                     >
-                      <SelectTrigger id={`${id}-transportStop`} className="w-full bg-white dark:bg-zinc-900">
-                        <SelectValue placeholder="-- Select Stop --" />
+                      <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                      Assigned Transit Route <span className="text-rose-500">*</span>
+                    </Label>
+                    <Select
+                      value={selectedTransportRouteId || ""}
+                      onValueChange={(rId) => {
+                        setSelectedTransportRouteId(rId);
+                        const r = transportRoutes.find((rt) => rt._id === rId);
+                        setSelectedTransportStopName(r?.stops?.[0]?.stopName || "");
+                      }}
+                    >
+                      <SelectTrigger
+                        id={`${id}-transportRoute`}
+                        className="w-full h-11 bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs hover:border-blue-400 focus:ring-2 focus:ring-blue-500/20 text-xs font-medium px-3.5 [&>[data-slot=select-value]]:w-full [&>[data-slot=select-value]]:flex-1"
+                      >
+                        <SelectValue placeholder="-- Select Transit Route --">
+                          {selectedRoute ? (
+                            <div className="flex items-center justify-between w-full pr-1 overflow-hidden gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                {selectedRoute.routeName}
+                              </span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 flex-shrink-0 font-mono">
+                                {cleanBusNumber(selectedRoute.vehicleId?.busNumber)}
+                              </span>
+                            </div>
+                          ) : undefined}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        {selectedRouteStops.map((s, idx) => (
-                          <SelectItem key={s._id || idx} value={s.stopName}>
-                            {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
-                          </SelectItem>
-                        ))}
+                        {transportRoutes.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-slate-500 dark:text-zinc-400 space-y-1">
+                            <p className="font-semibold text-slate-700 dark:text-zinc-300">No transit routes found.</p>
+                            <p className="text-[11px]">Register transit routes in the Transport Directory first.</p>
+                          </div>
+                        ) : (
+                          transportRoutes.map((r) => (
+                            <SelectItem key={r._id} value={r._id} className="py-2.5 px-3 cursor-pointer">
+                              <div className="flex items-center justify-between gap-4 w-full">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-7 h-7 rounded-lg bg-blue-100/80 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center flex-shrink-0">
+                                    <Navigation className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                  <div className="flex flex-col min-w-0 text-left">
+                                    <span className="font-semibold text-slate-900 dark:text-zinc-100 text-xs truncate">
+                                      {r.routeName}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+                                      <span>{r.stops?.length || 0} designated stop{r.stops?.length === 1 ? "" : "s"}</span>
+                                      {r.vehicleId?.model ? <span>• {r.vehicleId.model}</span> : null}
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 flex-shrink-0 font-mono">
+                                  {cleanBusNumber(r.vehicleId?.busNumber)}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <input
-                      id={`${id}-transportStop`}
-                      name="transportStop"
-                      className="flex h-9 w-full rounded-md border border-input bg-white dark:bg-zinc-900 px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder={selectedTransportRouteId ? "e.g. Stop 2: Market" : "Select a transit route first"}
-                      value={selectedTransportStopName}
-                      disabled={!selectedTransportRouteId}
-                      onChange={(e) => setSelectedTransportStopName(e.target.value)}
-                    />
-                  )}
+                  </div>
+
+                  {/* Field 2: Designated Stop & Pickup Time */}
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor={`${id}-transportStop`}
+                      className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                      Designated Stop &amp; Pickup Time <span className="text-rose-500">*</span>
+                    </Label>
+                    {selectedRouteStops.length > 0 ? (
+                      <Select
+                        value={selectedTransportStopName || ""}
+                        onValueChange={(val) => setSelectedTransportStopName(val)}
+                      >
+                        <SelectTrigger
+                          id={`${id}-transportStop`}
+                          className="w-full h-11 bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs hover:border-blue-400 focus:ring-2 focus:ring-blue-500/20 text-xs font-medium px-3.5 [&>[data-slot=select-value]]:w-full [&>[data-slot=select-value]]:flex-1"
+                        >
+                          <SelectValue placeholder="-- Select Designated Stop --">
+                            {selectedStop ? (
+                              <div className="flex items-center justify-between w-full pr-1 overflow-hidden gap-2">
+                                <span className="font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                  {selectedStop.stopName}
+                                </span>
+                                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60 flex-shrink-0 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-amber-500" />
+                                  {selectedStop.pickupTime || "07:15 AM"}
+                                </span>
+                              </div>
+                            ) : undefined}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectedRouteStops.map((s, idx) => (
+                            <SelectItem key={s._id || idx} value={s.stopName} className="py-2.5 px-3 cursor-pointer">
+                              <div className="flex items-center justify-between gap-4 w-full">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-6 h-6 rounded-full bg-amber-100/80 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-bold text-[10px] flex items-center justify-center flex-shrink-0">
+                                    {s.order != null ? s.order : idx + 1}
+                                  </div>
+                                  <div className="flex flex-col min-w-0 text-left">
+                                    <span className="font-semibold text-slate-900 dark:text-zinc-100 text-xs truncate">
+                                      {s.stopName}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">
+                                      Designated student pickup location
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-900/50 flex-shrink-0 font-medium">
+                                  <Clock className="w-3 h-3 text-amber-500" />
+                                  <span>{s.pickupTime || "07:15 AM"}</span>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          id={`${id}-transportStop`}
+                          name="transportStop"
+                          className="flex h-11 w-full rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3.5 py-1 text-xs shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-slate-100/70 dark:disabled:bg-zinc-900/60 disabled:text-slate-400 font-medium"
+                          placeholder={
+                            selectedTransportRouteId
+                              ? "Enter custom stop name (e.g. Stop 2: Market)..."
+                              : "Select a transit route first..."
+                          }
+                          value={selectedTransportStopName}
+                          disabled={!selectedTransportRouteId}
+                          onChange={(e) => setSelectedTransportStopName(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Executive 3-Card Manifest Preview */}
+                {selectedRoute ? (
+                  <div className="space-y-2.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 flex items-center gap-1.5">
+                        <Bus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        Commute Manifest Preview
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        Ready to Assign
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Card 1: Fleet Vehicle */}
+                      <div className="p-3.5 rounded-xl bg-white/90 dark:bg-zinc-950/80 border border-blue-200/80 dark:border-blue-900/50 shadow-2xs flex flex-col justify-between space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                            <Bus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            Fleet Vehicle
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60 font-mono">
+                            {cleanBusNumber(selectedRoute.vehicleId?.busNumber)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
+                            {selectedRoute.vehicleId?.model || "Toyota Coaster"}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono mt-0.5 flex items-center gap-1.5">
+                            <span>{selectedRoute.vehicleId?.plateNumber ? `Plate: ${selectedRoute.vehicleId.plateNumber}` : "Campus Fleet"}</span>
+                            {selectedRoute.vehicleId?.capacity ? (
+                              <>
+                                <span>•</span>
+                                <span>{selectedRoute.vehicleId.capacity} Seats</span>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card 2: Designated Stop */}
+                      <div className="p-3.5 rounded-xl bg-white/90 dark:bg-zinc-950/80 border border-amber-200/80 dark:border-amber-900/50 shadow-2xs flex flex-col justify-between space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                            Designated Stop
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
+                            {selectedStop
+                              ? `Stop #${selectedRouteStops.findIndex((s) => s.stopName === selectedStop.stopName) + 1 || 1}`
+                              : "Selected"}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
+                            {selectedTransportStopName || "Primary Route Stop"}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
+                            Via {selectedRoute.routeName}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card 3: Commute Timing */}
+                      <div className="p-3.5 rounded-xl bg-white/90 dark:bg-zinc-950/80 border border-emerald-200/80 dark:border-emerald-900/50 shadow-2xs flex flex-col justify-between space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            Pickup Schedule
+                          </span>
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+                            Morning
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold font-mono text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
+                            <span>{selectedStop?.pickupTime || "07:15 AM"}</span>
+                            {selectedStop?.dropoffTime && (
+                              <span className="text-slate-400 dark:text-zinc-500 font-normal">
+                                (Drop: {selectedStop.dropoffTime})
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1">
+                            <span>Scheduled daily pickup</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-dashed border-blue-200/80 dark:border-blue-900/40 text-center">
+                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center justify-center gap-2">
+                      <Bus className="w-4 h-4 text-blue-500" />
+                      <span>Select a transit route and pickup stop above to preview the commute manifest.</span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
