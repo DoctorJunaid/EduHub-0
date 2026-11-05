@@ -155,7 +155,7 @@ export default function StudentAttendance({ matchTimetable, rateMode }) {
   const presentCount = rows.filter((r) => r.record?.status === 'Present' || r.status === 'Present').length;
   const absentCount = rows.filter((r) => r.record?.status === 'Absent' || r.status === 'Absent').length;
   const markedCount = rows.filter((r) => r.record?.status).length;
-  const rateDisplay = markedCount > 0 ? `${((presentCount / markedCount) * 100).toFixed(1)}%` : totalStudents > 0 ? '96.2%' : '0%';
+  const rateDisplay = markedCount > 0 ? `${((presentCount / markedCount) * 100).toFixed(1)}%` : '0.0%';
 
   return (
     <section className="campus-tab-page student-attendance" aria-label="Student Attendance Management">

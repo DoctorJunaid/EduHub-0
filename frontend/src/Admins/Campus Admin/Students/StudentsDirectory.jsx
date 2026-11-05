@@ -67,6 +67,15 @@ export default function StudentsDirectory() {
   const rawStudents = useSelector(selectStudents);
   const students = useMemo(() => rawStudents || [], [rawStudents]);
 
+  const avgAttendanceRate = useMemo(() => {
+    const withAttendance = students.filter(
+      (s) => s.totalAttendanceRecords > 0 || (s.attendanceRate !== null && s.attendanceRate !== undefined)
+    );
+    if (withAttendance.length === 0) return "N/A";
+    const sum = withAttendance.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0);
+    return `${(sum / withAttendance.length).toFixed(1)}%`;
+  }, [students]);
+
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({
     search: "",
@@ -224,7 +233,7 @@ export default function StudentsDirectory() {
             </div>
             <div className="kpi-info">
               <span className="kpi-label">{isSchool ? "Student Attendance" : "Average Attendance"}</span>
-              <strong className="kpi-value">96.4%</strong>
+              <strong className="kpi-value">{avgAttendanceRate}</strong>
             </div>
           </div>
         </div>
@@ -392,7 +401,7 @@ export default function StudentsDirectory() {
                     >
                       {isSchool
                         ? `Guardian: ${student.guardian || "Parent on file"} (${student.guardianPhone || student.phone || student.studentPhone || "—"})`
-                        : `${student.attendance || "94.2%"} Attendance · ${student.cgpa ? `${student.cgpa} CGPA` : "Good Standing"}`}
+                        : `${student.totalAttendanceRecords > 0 || (student.attendanceRate !== null && student.attendanceRate !== undefined) ? `${student.attendanceRate}%` : (student.attendance && !student.attendance.includes("94.2") ? student.attendance : "N/A")} Attendance · ${student.cgpa ? `${student.cgpa} CGPA` : "Good Standing"}`}
                     </span>
                   </div>
                 </TableCell>

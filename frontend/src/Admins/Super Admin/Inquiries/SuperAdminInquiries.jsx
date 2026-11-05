@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import { Spinner } from "@/components/ui/spinner";
+import ConvertLeadModal from "./ConvertLeadModal";
 import toast from "react-hot-toast";
 import "./SuperAdminInquiries.css";
 
@@ -75,6 +76,8 @@ export default function SuperAdminInquiries() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [convertingId, setConvertingId] = useState(null);
+  const [selectedLeadToConvert, setSelectedLeadToConvert] = useState(null);
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
 
   const fetchInquiries = async () => {
     setLoading(true);
@@ -116,20 +119,20 @@ export default function SuperAdminInquiries() {
     }
   };
 
-  const handleConvert = async (inquiry) => {
-    if (!window.confirm(`Convert "${inquiry.instituteName}" into a registered institute on EduHub? This will create the institute and generate admin invite credentials.`)) {
-      return;
-    }
+  const handleConfirmConversion = async () => {
+    if (!selectedLeadToConvert) return;
 
-    setConvertingId(inquiry._id);
+    setConvertingId(selectedLeadToConvert._id);
     try {
-      await axiosInstance.post(`/super-admin/inquiries/${inquiry._id}/convert`);
+      await axiosInstance.post(`/super-admin/inquiries/${selectedLeadToConvert._id}/convert`);
       toast.success("Institute successfully registered from lead!");
       setInquiries((prev) =>
         prev.map((inq) =>
-          inq._id === inquiry._id ? { ...inq, status: "Converted" } : inq
+          inq._id === selectedLeadToConvert._id ? { ...inq, status: "Converted" } : inq
         )
       );
+      setIsConvertModalOpen(false);
+      setSelectedLeadToConvert(null);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to convert inquiry");
     } finally {
@@ -350,7 +353,10 @@ export default function SuperAdminInquiries() {
                       <button
                         type="button"
                         className="convert-btn"
-                        onClick={() => handleConvert(inq)}
+                        onClick={() => {
+                          setSelectedLeadToConvert(inq);
+                          setIsConvertModalOpen(true);
+                        }}
                         disabled={isConverting}
                       >
                         {isConverting ? (
@@ -373,6 +379,18 @@ export default function SuperAdminInquiries() {
           </div>
         )}
       </div>
+      {/* Convert Lead Confirmation Modal */}
+      <ConvertLeadModal
+        open={isConvertModalOpen && !!selectedLeadToConvert}
+        lead={selectedLeadToConvert}
+        loading={convertingId === selectedLeadToConvert?._id}
+        onConfirm={handleConfirmConversion}
+        onCancel={() => {
+          if (convertingId) return;
+          setIsConvertModalOpen(false);
+          setSelectedLeadToConvert(null);
+        }}
+      />
     </div>
   );
 }

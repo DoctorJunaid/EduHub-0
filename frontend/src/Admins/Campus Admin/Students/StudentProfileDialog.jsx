@@ -383,7 +383,11 @@ export default function StudentProfileDialog({ student, onClose }) {
                 <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#71717a", display: "block", marginBottom: "4px" }}>
                   Attendance Record
                 </span>
-                <strong style={{ fontSize: "14px", color: "#09090b" }}>{student.attendance || "96.4%"}</strong>
+                <strong style={{ fontSize: "14px", color: "#09090b" }}>
+                  {student.totalAttendanceRecords > 0 || (student.attendanceRate !== null && student.attendanceRate !== undefined)
+                    ? `${student.attendanceRate}%`
+                    : (student.attendance && !student.attendance.includes("96.4") ? student.attendance : "N/A")}
+                </strong>
               </div>
 
               <div style={{ padding: "10px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#fafafa" }}>

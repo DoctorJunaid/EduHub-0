@@ -20,17 +20,59 @@ import axiosInstance from "@/api/axiosInstance";
 import { normalizeImageUrl } from "@/utils/imageUrl";
 
 /**
- * Auto-repair payload if hardware scanner dropped leading/trailing braces
+ * Auto-repair payload if hardware scanner dropped leading/trailing braces, quotes, or inverted case
  */
 function repairPayload(raw) {
-  if (!raw || typeof raw !== "string") return raw;
-  let str = raw.trim();
-  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"'))) {
+  if (!raw) return "";
+  let str = (typeof raw === "object" ? JSON.stringify(raw) : String(raw)).trim();
+
+  // Strip AIM barcode symbology identifiers (]Q1, ]C1, ]e0, ]d1) and ASCII control chars
+  str = str.replace(/^\][A-Za-z0-9]{2}/, "").replace(/[\x00-\x1F\x7F]/g, " ").trim();
+
+  // Handle multiple concatenated scans in buffer: take the last segment
+  if ((str.match(/studentId|studentid|STUDENT/gi) || []).length > 1) {
+    const parts = str.split(/(?=\{|\bV:|\bv:)/i).filter(Boolean);
+    if (parts.length > 0) str = parts[parts.length - 1].trim();
+  }
+
+  // Check if string contains structured key-values (with or without quotes/braces/capslock)
+  const studentIdMatch = str.match(
+    /["']?(?:student[_-]?id|studentid|user[_-]?id|userid)["']?\s*[:=]\s*["']?([0-9a-fA-F]{24})["']?/i
+  );
+  if (studentIdMatch) {
+    const campusIdMatch = str.match(
+      /["']?(?:campus[_-]?id|campusid)["']?\s*[:=]\s*["']?([0-9a-fA-F]{24})["']?/i
+    );
+    const rollNoMatch = str.match(
+      /["']?(?:roll[_-]?no|rollno|roll[_-]?number|rollnumber|roll)["']?\s*[:=]\s*["']?([^"',;}\r\n\s]+)["']?/i
+    );
+    const sigMatch = str.match(
+      /["']?(?:sig|signature|token)["']?\s*[:=]\s*["']?([0-9a-fA-F]+)["']?/i
+    );
+    const vMatch = str.match(/\b(?:v|version)\s*[:=]\s*["']?(\d+)["']?/i);
+
+    return JSON.stringify({
+      app: "EduHub",
+      v: vMatch ? parseInt(vMatch[1], 10) : 1,
+      type: "STUDENT_ATTENDANCE",
+      studentId: studentIdMatch[1].toLowerCase(),
+      campusId: campusIdMatch ? campusIdMatch[1].toLowerCase() : "",
+      rollNo: rollNoMatch ? rollNoMatch[1].trim() : "",
+      sig: sigMatch ? sigMatch[1].toLowerCase() : "",
+    });
+  }
+
+  // Auto-repair missing braces on JSON strings
+  if (!str.startsWith("{") && (str.includes('"app"') || str.includes('"studentId"') || str.includes("studentId"))) {
     str = "{" + str;
   }
   if (str.startsWith("{") && !str.endsWith("}")) {
     str = str + "}";
   }
+  if (str.includes('"type"') && !str.includes('"type":"STUDENT_ATTENDANCE"')) {
+    str = str.replace(/"type"\s*:\s*"[^"]*"/, '"type":"STUDENT_ATTENDANCE"');
+  }
+
   return str;
 }
 

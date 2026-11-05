@@ -29,8 +29,8 @@ export const NewTicketDialog = ({
   isPending = false,
   isAdmin = false,
 }) => {
-  const { categories = [] } = useSupportCategories();
-  const { contacts = [] } = useSupportContacts();
+  const { categories = [] } = useSupportCategories({ enabled: Boolean(open) });
+  const { contacts = [] } = useSupportContacts({ enabled: Boolean(open) });
 
   const [category, setCategory] = useState("Academic");
   const [subject, setSubject] = useState("");

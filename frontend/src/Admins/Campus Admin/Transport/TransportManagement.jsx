@@ -2003,7 +2003,7 @@ export default function TransportManagement() {
             </div>
           </div>
 
-          <div className="transport-modal-body py-5">
+          <div className="transport-modal-body py-4 space-y-3">
             <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
               Are you sure you want to permanently delete{" "}
               <strong className="text-zinc-900 dark:text-zinc-100 font-semibold bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
@@ -2011,6 +2011,10 @@ export default function TransportManagement() {
               </strong>
               ?
             </p>
+            <div className="p-3 rounded-xl bg-red-50/70 dark:bg-red-950/30 border border-red-200/80 dark:border-red-900/40 text-xs text-red-700 dark:text-red-300 flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <span>This record will be permanently removed. Any routes, schedules, or transit rosters linked to it will need to be reallocated.</span>
+            </div>
           </div>
 
           <div className="transport-modal-footer">
@@ -2029,15 +2033,18 @@ export default function TransportManagement() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleDeleteConfirm}
-                className="px-5 py-2 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="btn-modal-danger"
               >
                 {isSubmitting ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Deleting...
+                    <span>Deleting...</span>
                   </>
                 ) : (
-                  "Delete Record"
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Record</span>
+                  </>
                 )}
               </button>
             </div>

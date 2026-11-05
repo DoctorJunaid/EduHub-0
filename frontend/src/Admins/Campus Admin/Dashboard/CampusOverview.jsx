@@ -6,8 +6,6 @@ import toast from 'react-hot-toast';
 import { selectStudents, selectStudentsStatus, addStudent, fetchStudents } from '@/store/Slices/studentsSlice.js';
 import { selectFaculty, selectFacultyStatus, addFaculty, fetchFaculty } from '@/store/Slices/facultySlice.js';
 import { selectTimetable, fetchSchedules } from '@/store/Slices/timetableSlice.js';
-import { fetchExams } from '@/store/Slices/examsSlice.js';
-import { fetchFees } from '@/store/Slices/feesSlice.js';
 import { fetchActivityLogs, selectActivityLogs } from '@/store/Slices/activityLogSlice.js';
 
 import { selectCurrentUser } from '@/store/Slices/authSlice.js';
@@ -38,34 +36,34 @@ export default function CampusOverview() {
   const facultyStatus = useSelector(selectFacultyStatus);
   const activityLogs = useSelector(selectActivityLogs);
 
-  React.useEffect(() => {
-    // Tier 1: Core campus operational records - always fetch live from database
-    dispatch(fetchStudents());
-    dispatch(fetchFaculty());
-    dispatch(fetchSchedules());
+  // Modal Dialog & Card states
+  const [addingStudent, setAddingStudent] = useState(false);
+  const [addingTeacher, setAddingTeacher] = useState(false);
+  const [inspectingStudent, setInspectingStudent] = useState(null);
+  const [activeCardId, setActiveCardId] = useState('students-card');
 
-    // Tier 2: Staggered non-critical records (500ms delay) to keep initial paint fast
-    const tier2Timer = setTimeout(() => {
-      dispatch(fetchExams());
-      dispatch(fetchFees());
-      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
-    }, 500);
+  React.useEffect(() => {
+    // Only fetch students for the default view if not already cached
+    if (!rawStudents || rawStudents.length === 0) {
+      dispatch(fetchStudents());
+    }
 
     const handleCampusChange = () => {
-      dispatch(fetchStudents());
-      dispatch(fetchFaculty());
-      dispatch(fetchSchedules());
-      dispatch(fetchExams());
-      dispatch(fetchFees());
-      dispatch(fetchActivityLogs({ page: 1, limit: 8, append: false }));
+      // When explicitly switching campus, refresh only the currently selected view
+      if (activeCardId === 'faculty-card') {
+        dispatch(fetchFaculty(true));
+      } else if (activeCardId === 'timetable-card') {
+        dispatch(fetchSchedules(true));
+      } else {
+        dispatch(fetchStudents(true));
+      }
     };
 
     window.addEventListener("campusContextChange", handleCampusChange);
     return () => {
-      clearTimeout(tier2Timer);
       window.removeEventListener("campusContextChange", handleCampusChange);
     };
-  }, [dispatch]);
+  }, [dispatch, activeCardId, rawStudents]);
 
   // Strictly use real API records - no mock fallbacks
   const students = useMemo(() => rawStudents || [], [rawStudents]);
@@ -73,12 +71,6 @@ export default function CampusOverview() {
   const timetable = useMemo(() => rawTimetable || [], [rawTimetable]);
 
   const realUserCampus = currentUser?.campusId?.name || currentUser?.campus || '';
-
-  // Modal Dialog states
-  const [addingStudent, setAddingStudent] = useState(false);
-  const [addingTeacher, setAddingTeacher] = useState(false);
-  const [inspectingStudent, setInspectingStudent] = useState(null);
-  const [activeCardId, setActiveCardId] = useState('students-card');
 
   // Dynamic select options for faculty modal
   const facultyOptions = useMemo(() => {
@@ -131,11 +123,16 @@ export default function CampusOverview() {
   // Export summary
   const handleExportSummary = () => {
     const activeCampusName = realUserCampus || 'Main Campus';
+    const studentsWithRecords = students.filter((s) => s.totalAttendanceRecords > 0 || (s.attendanceRate !== null && s.attendanceRate !== undefined));
+    const avgRate = studentsWithRecords.length > 0
+      ? `${(studentsWithRecords.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / studentsWithRecords.length).toFixed(1)}%`
+      : 'N/A';
+
     const csvContent = isSchool
       ? [
         'Category,Metric,Details',
         `School,"${currentUser?.instituteId?.name || 'School Campus'}","${activeCampusName}"`,
-        `Enrolled Students,"${students.length}","95.4% Attendance"`,
+        `Enrolled Students,"${students.length}","${avgRate} Attendance"`,
         `Teaching Staff,"${faculty.length}","100% On Duty"`,
         'Classes & Sections,"10 Grades • 24 Sections","Grade 1 to 10 (A, B, C)"',
         'Academic Routine,"7 Daily Periods","Assembly + 7 Periods + Recess"',
@@ -143,7 +140,7 @@ export default function CampusOverview() {
       : [
         'Category,Metric,Details',
         `Campus,"${activeCampusName}","Active Operations"`,
-        `Enrolled Students,"${students.length}","94.2% Attendance"`,
+        `Enrolled Students,"${students.length}","${avgRate} Attendance"`,
         `Faculty Members,"${faculty.length}","98% On Duty"`,
         `Active Classes,"${timetable.length}","Active Labs"`,
         `Programs,"${studentPrograms.length} Programs","${studentPrograms.slice(0, 4).join(', ')}"`,
@@ -167,6 +164,17 @@ export default function CampusOverview() {
     'timetable-card': 'timetable',
   };
 
+  const handleSelectCard = (id) => {
+    setActiveCardId(id);
+    if (id === 'students-card') {
+      if (!rawStudents?.length) dispatch(fetchStudents());
+    } else if (id === 'faculty-card') {
+      if (!rawFaculty?.length) dispatch(fetchFaculty());
+    } else if (id === 'timetable-card') {
+      if (!rawTimetable?.length) dispatch(fetchSchedules());
+    }
+  };
+
   return (
     <div className="campus-overview" aria-label="Campus Executive Command Center">
       {/* 1. 4 Clean KPI Cards Touching Border-to-Border */}
@@ -175,7 +183,7 @@ export default function CampusOverview() {
         faculty={faculty}
         timetable={timetable}
         activeCardId={activeCardId}
-        onSelectCard={(id) => setActiveCardId(id)}
+        onSelectCard={handleSelectCard}
       />
 
       {/* 2. Operations Hub & Right Activity Sidebar (Nil Gap) */}

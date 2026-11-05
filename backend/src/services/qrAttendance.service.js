@@ -383,7 +383,16 @@ export async function processQrAttendanceScan(requester, body, req = null) {
  */
 export async function getGateKioskStats(campusId, targetDate = null) {
   const { dateStr } = normalizeDate(targetDate || new Date());
-  const campusFilter = campusId ? { campusId } : {};
+  const isValidCampusId =
+    campusId &&
+    mongoose.Types.ObjectId.isValid(String(campusId)) &&
+    String(campusId) !== "undefined" &&
+    String(campusId) !== "null" &&
+    String(campusId) !== "all";
+
+  const campusFilter = isValidCampusId
+    ? { campusId: new mongoose.Types.ObjectId(String(campusId)) }
+    : {};
 
   // 1. Total enrolled active students for this campus
   const totalEnrolled = await User.countDocuments({
@@ -460,7 +469,16 @@ export async function getGateKioskStats(campusId, targetDate = null) {
  * Diagnostic & Health Check for QR Attendance and Card Consistency
  */
 export async function getAttendanceSystemDiagnostics(campusId) {
-  const query = campusId ? { campusId } : {};
+  const isValidCampusId =
+    campusId &&
+    mongoose.Types.ObjectId.isValid(String(campusId)) &&
+    String(campusId) !== "undefined" &&
+    String(campusId) !== "null" &&
+    String(campusId) !== "all";
+
+  const query = isValidCampusId
+    ? { campusId: new mongoose.Types.ObjectId(String(campusId)) }
+    : {};
 
   const totalStudents = await User.countDocuments({ ...query, role: "student" });
   const totalStudentCards = await Student.countDocuments(query);

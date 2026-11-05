@@ -84,6 +84,29 @@ async function runTests() {
     const tamperedParsed = parseQrPayload(JSON.stringify(tamperedJson));
     assert(tamperedParsed.isSigned === false, "Tampered QR payload signature mismatch is detected");
 
+    // --- TEST 1.5: Hardware Barcode Scanner Robustness & Edge Cases ---
+    console.log("\n--- TEST 1.5: Scanner Edge Cases (CapsLock, Concatenation, AIM prefixes) ---");
+    // Edge Case A: CapsLock inverted casing, dropped quotes, missing opening brace (Exact User Report)
+    const userReportedPayload = `V:1,TYPE:student_attendance,STUDENTiD:${sampleStudent.userId._id.toString().toUpperCase()},CAMPUSiD:${campusId.toString().toUpperCase()},ROLLnO:${sampleStudent.rollNo},SIG:68A05A094881CA4E}`;
+    const parsedUserReport = parseQrPayload(userReportedPayload);
+    assert(parsedUserReport.success === true, "CapsLock unquoted payload parses successfully");
+    assert(
+      parsedUserReport.studentId === sampleStudent.userId._id.toString().toLowerCase(),
+      "CapsLock studentId normalized to lowercase hex"
+    );
+
+    // Edge Case B: Concatenated double scan in keyboard buffer
+    const doubleScanPayload = `${payload}${payload}`;
+    const parsedDouble = parseQrPayload(doubleScanPayload);
+    assert(parsedDouble.success === true, "Concatenated double-scan in buffer parses successfully");
+    assert(parsedDouble.studentId === sampleStudent.userId._id.toString(), "Double-scan extracts valid studentId");
+
+    // Edge Case C: AIM Barcode prefix (]Q1) and missing closing brace
+    const aimPayload = `]Q1{"app":"EduHub","v":1,"type":"STUDENT_ATTENDANCE","studentId":"${sampleStudent.userId._id}","campusId":"${campusId}","rollNo":"${sampleStudent.rollNo}"`;
+    const parsedAim = parseQrPayload(aimPayload);
+    assert(parsedAim.success === true, "AIM prefix and unclosed brace payload parses successfully");
+    assert(parsedAim.studentId === sampleStudent.userId._id.toString(), "AIM payload resolves correct studentId");
+
     // --- TEST 2: Student Resolution & Campus Multi-Tenancy ---
     console.log("\n--- TEST 2: Student Resolution & Campus Multi-Tenancy ---");
     const resolved = await resolveStudentFromPayload(payload, { campusId });

@@ -139,6 +139,9 @@ export const fetchFees = createAsyncThunk(
       if (fees?.status === 'loading') {
         return false;
       }
+      if (force !== true && fees?.records?.length > 0 && fees?.status === 'succeeded') {
+        return false;
+      }
     },
   }
 );

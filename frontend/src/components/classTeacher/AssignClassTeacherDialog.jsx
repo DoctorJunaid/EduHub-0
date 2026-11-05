@@ -1,18 +1,6 @@
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/Badge";
+import { UserCheck, Search, X, CheckCircle2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { UserCheck, Search, ShieldAlert, Award, Mail, Phone } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import * as classTeacherApi from "@/api/classTeacher.api";
 import toast from "react-hot-toast";
@@ -26,9 +14,9 @@ export default function AssignClassTeacherDialog({
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [teacherSearch, setTeacherSearch] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
-  const [note, setNote] = useState("Assigned for 2026-2027 academic year");
+  const [assignmentNote, setAssignmentNote] = useState("Assigned for 2026-2027 academic year");
 
   useEffect(() => {
     if (isOpen) {
@@ -43,14 +31,14 @@ export default function AssignClassTeacherDialog({
       const res = await axiosInstance.get("/campus/faculty?limit=100");
       const list = res.data?.faculty || res.data?.teachers || res.data?.data || res.data || [];
       setTeachers(Array.isArray(list) ? list : []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load teachers list");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAssign = async () => {
+  const handleConfirmAssignment = async () => {
     if (!selectedTeacherId) {
       toast.error("Please select a teacher to assign");
       return;
@@ -67,7 +55,7 @@ export default function AssignClassTeacherDialog({
       const res = await classTeacherApi.assignClassTeacher(
         classId,
         profileId,
-        note
+        assignmentNote
       );
       toast.success(res.message || "Class Teacher assigned successfully!");
       if (onSuccess) onSuccess(res.data);
@@ -79,111 +67,138 @@ export default function AssignClassTeacherDialog({
     }
   };
 
+  if (!isOpen) return null;
+
   const filteredTeachers = teachers.filter((t) => {
     const name = t.name || t.user?.name || "";
     const email = t.email || t.user?.email || "";
     const dept = t.department || "";
-    const q = searchQuery.toLowerCase();
+    const q = teacherSearch.toLowerCase();
     return name.toLowerCase().includes(q) || email.toLowerCase().includes(q) || dept.toLowerCase().includes(q);
   });
 
-  const selectedTeacher = teachers.find(
-    (t) => (t._id || t.id) === selectedTeacherId || (t.profileId === selectedTeacherId)
-  );
+  const selectedSectionName =
+    classSection?.className ||
+    `${classSection?.gradeName || "Class"} - ${classSection?.name || classSection?.sectionName || ""}`;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl bg-slate-900 border border-slate-800 text-white rounded-2xl shadow-2xl p-6">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <UserCheck size={24} />
+    <div
+      className="fixed inset-0 z-50 bg-neutral-900/50 backdrop-blur-xs flex items-center justify-center"
+      style={{ padding: "16px", boxSizing: "border-box" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      {/* Modal Dialog Box — Clean White Enterprise Theme */}
+      <div
+        className="w-full max-w-lg bg-white border border-neutral-200 rounded-2xl shadow-xl overflow-hidden flex flex-col"
+        style={{ boxSizing: "border-box" }}
+      >
+        {/* 1. Modal Header */}
+        <div
+          className="flex items-start justify-between border-b border-neutral-200 bg-white"
+          style={{ padding: "20px 24px", gap: "12px", boxSizing: "border-box" }}
+        >
+          <div className="flex items-center" style={{ gap: "12px" }}>
+            <div
+              className="rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0"
+              style={{ width: "40px", height: "40px" }}
+            >
+              <UserCheck className="w-5 h-5 text-neutral-700" />
             </div>
-            <div>
-              <DialogTitle className="text-xl font-bold text-white">
+            <div className="flex flex-col" style={{ gap: "2px" }}>
+              <h3 className="text-base font-bold text-neutral-900 tracking-tight">
                 Assign Class Teacher
-              </DialogTitle>
-              <DialogDescription className="text-slate-400 text-sm">
+              </h3>
+              <p className="text-xs text-neutral-500">
                 Assign a dedicated Class Teacher for{" "}
-                <span className="text-indigo-400 font-semibold">
-                  {classSection?.className || `${classSection?.gradeName || "Class"} - ${classSection?.name || classSection?.sectionName || ""}`}
+                <span className="font-semibold text-neutral-900">
+                  {selectedSectionName}
                 </span>
-              </DialogDescription>
+              </p>
             </div>
           </div>
-        </DialogHeader>
 
-        <div className="space-y-4 my-2">
-          {/* Search Box */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-3 text-slate-400" size={18} />
-            <Input
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-neutral-200 bg-white hover:bg-neutral-100 text-neutral-500 hover:text-neutral-800 flex items-center justify-center transition-colors shrink-0"
+            style={{ width: "32px", height: "32px" }}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* 2. Modal Body */}
+        <div
+          className="flex flex-col bg-white"
+          style={{ padding: "20px 24px", gap: "16px", boxSizing: "border-box" }}
+        >
+          {/* Teacher Search Input (Fixed Left Padding & Single Clean Border) */}
+          <div className="relative w-full">
+            <Search
+              className="w-4 h-4 text-neutral-400 absolute top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ left: "12px" }}
+            />
+            <input
               type="text"
+              value={teacherSearch}
+              onChange={(e) => setTeacherSearch(e.target.value)}
               placeholder="Search teacher by name, email, or department..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500 focus:border-indigo-500 rounded-xl"
+              className="w-full rounded-lg border border-neutral-300 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-900"
+              style={{
+                height: "38px",
+                paddingLeft: "36px",
+                paddingRight: "12px",
+                boxSizing: "border-box",
+              }}
             />
           </div>
 
-          {/* Teacher Selection List */}
-          <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+          {/* Selectable Teacher List (Clean Neutral Rows & Dark Avatars — NO Purple!) */}
+          <div
+            className="w-full border border-neutral-200 rounded-xl overflow-y-auto bg-white divide-y divide-neutral-100"
+            style={{ maxHeight: "200px", boxSizing: "border-box" }}
+          >
             {loading ? (
-              <div className="flex items-center justify-center py-8 text-slate-400 gap-2">
+              <div className="flex items-center justify-center py-8 text-neutral-500 text-xs gap-2">
                 <Spinner size="sm" /> Loading faculty directory...
               </div>
             ) : filteredTeachers.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-sm">
+              <div className="text-center py-8 text-neutral-500 text-xs">
                 No teachers found matching your search.
               </div>
             ) : (
               filteredTeachers.map((teacher) => {
                 const tId = teacher._id || teacher.id || teacher.profileId;
                 const isSelected = selectedTeacherId === tId;
-                const name = teacher.name || teacher.user?.name || "Teacher";
-                const email = teacher.email || teacher.user?.email || "";
-                const dept = teacher.department || "General Faculty";
-                const isAssignedElsewhere =
-                  teacher.isClassTeacher &&
-                  teacher.classTeacherOf &&
-                  String(teacher.classTeacherOf) !== String(classSection?._id || classSection?.classId);
-
                 return (
                   <div
                     key={tId}
                     onClick={() => setSelectedTeacherId(tId)}
-                    className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-indigo-600/20 border-indigo-500/80 ring-1 ring-indigo-500/50 shadow-md"
-                        : "bg-slate-800/50 border-slate-800 hover:bg-slate-800/90 hover:border-slate-700"
+                    className={`w-full flex items-center justify-between cursor-pointer transition-colors ${
+                      isSelected ? "bg-neutral-100/90" : "bg-white hover:bg-neutral-50"
                     }`}
+                    style={{ padding: "10px 14px", gap: "12px", boxSizing: "border-box" }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white shadow">
-                        {name.charAt(0).toUpperCase()}
+                    <div className="flex items-center min-w-0" style={{ gap: "12px" }}>
+                      <div
+                        className="rounded-full bg-neutral-900 text-white text-xs font-semibold flex items-center justify-center shrink-0"
+                        style={{ width: "34px", height: "34px" }}
+                      >
+                        {teacher.name?.charAt(0)?.toUpperCase() || "T"}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-white text-sm">
-                            {name}
-                          </span>
-                          {isSelected && (
-                            <Badge className="bg-indigo-500 text-white text-xs px-1.5 py-0.5">
-                              Selected
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                          <span>{dept}</span>
-                          {email && <span>• {email}</span>}
-                        </div>
+                      <div className="flex flex-col min-w-0" style={{ gap: "2px" }}>
+                        <span className="text-xs font-bold text-neutral-900 truncate">
+                          {teacher.name}
+                        </span>
+                        <span className="text-[11px] text-neutral-500 truncate">
+                          {teacher.department || "General Faculty"} • {teacher.email}
+                        </span>
                       </div>
                     </div>
-
-                    {isAssignedElsewhere && (
-                      <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
-                        Has other class
-                      </Badge>
+                    {isSelected && (
+                      <CheckCircle2 className="w-4 h-4 text-neutral-900 shrink-0" />
                     )}
                   </div>
                 );
@@ -191,56 +206,50 @@ export default function AssignClassTeacherDialog({
             )}
           </div>
 
-          {/* Note Input */}
-          <div className="space-y-1.5 pt-2 border-t border-slate-800">
-            <Label className="text-xs text-slate-300 font-medium">
+          {/* Assignment Note Field */}
+          <div className="flex flex-col w-full" style={{ gap: "6px" }}>
+            <label className="text-xs font-semibold text-neutral-700">
               Assignment Note / Academic Year (Optional)
-            </Label>
-            <Input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Assigned for 2026-2027 Academic Session"
-              className="bg-slate-800/80 border-slate-700 text-white rounded-xl text-sm"
+            </label>
+            <input
+              type="text"
+              value={assignmentNote}
+              onChange={(e) => setAssignmentNote(e.target.value)}
+              placeholder="Assigned for 2026-2027 academic year"
+              className="w-full rounded-lg border border-neutral-300 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-900"
+              style={{
+                height: "38px",
+                padding: "0 12px",
+                boxSizing: "border-box",
+              }}
             />
           </div>
-
-          {selectedTeacher && (
-            <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-start gap-3">
-              <Award className="text-indigo-400 shrink-0 mt-0.5" size={18} />
-              <div className="text-xs text-slate-300">
-                <span className="font-medium text-white">
-                  {selectedTeacher.name || selectedTeacher.user?.name}
-                </span>{" "}
-                will receive owner permissions to take daily attendance, review all subject marks, write report card remarks, and compile results for this class section.
-              </div>
-            </div>
-          )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-800">
-          <Button
-            variant="ghost"
+        {/* 3. Modal Footer (Clean Neutral Buttons — NO Neon Blue Pill!) */}
+        <div
+          className="flex items-center justify-end border-t border-neutral-200 bg-neutral-50"
+          style={{ padding: "14px 24px", gap: "10px", boxSizing: "border-box" }}
+        >
+          <button
+            type="button"
             onClick={onClose}
-            disabled={submitting}
-            className="text-slate-400 hover:text-white hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white hover:bg-neutral-100 text-xs font-medium text-neutral-700 transition-colors whitespace-nowrap"
+            style={{ height: "36px", padding: "0 16px", boxSizing: "border-box" }}
           >
             Cancel
-          </Button>
-          <Button
-            onClick={handleAssign}
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirmAssignment}
             disabled={submitting || !selectedTeacherId}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 rounded-xl shadow-lg shadow-indigo-600/30"
+            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-white transition-colors shadow-xs whitespace-nowrap disabled:opacity-50"
+            style={{ height: "36px", padding: "0 18px", boxSizing: "border-box" }}
           >
-            {submitting ? (
-              <>
-                <Spinner size="sm" className="mr-2" /> Assigning...
-              </>
-            ) : (
-              "Confirm Assignment"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {submitting ? "Assigning..." : "Confirm Assignment"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
