@@ -286,19 +286,18 @@
 
 .campus-table-container {
   width: 100%;
-  overflow-x: hidden !important;
   flex: 1;
+  min-width: 0;
 }
 
 .campus-table-container [data-slot="table-container"] {
-  overflow-x: hidden !important;
-  width: 100% !important;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .campus-table-container table {
-  width: 100% !important;
-  min-width: 0 !important;
-  table-layout: fixed !important;
+  width: 100%;
   font-size: 12px;
   border-collapse: collapse;
 }
@@ -617,13 +616,14 @@
     justify-content: center !important;
   }
 
-  .campus-table-container {
+  .campus-table-container,
+  .campus-table-container [data-slot="table-container"] {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
   }
 
   .campus-table-container table {
-    min-width: 620px !important;
+    min-width: 880px !important;
     table-layout: auto !important;
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Users,
@@ -52,6 +52,13 @@ export default function StudentsDirectory() {
   const status = useSelector(selectStudentsStatus);
   const isLoading = status === "loading";
   const [isDeleting, setIsDeleting] = useState(false);
+  const tableContainerRef = useRef(null);
+  const scrollTable = (dir) => {
+    if (tableContainerRef.current) {
+      const offset = dir === "left" ? -300 : 300;
+      tableContainerRef.current.scrollBy({ left: offset, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchStudents());
@@ -292,17 +299,43 @@ export default function StudentsDirectory() {
         </div>
       </div>
 
-      {/* 3. Fixed Table Container with Zero Overflow */}
+      {/* 3. Responsive Table Container with Persistent Horizontal Scrollbar on Mobile */}
       <div className="campus-table-container relative">
-        <Table>
+        {/* Mobile Horizontal Scroll Navigation Banner */}
+        <div className="md:hidden flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-neutral-800 border-b border-slate-200 dark:border-neutral-700 text-xs text-slate-700 dark:text-neutral-200 select-none">
+          <div className="flex items-center gap-1.5 font-medium">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Side scroll for full details &amp; actions</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => scrollTable("left")}
+              className="px-2.5 py-1 rounded bg-white dark:bg-neutral-700 border border-slate-300 dark:border-neutral-600 text-xs font-semibold hover:bg-slate-50 active:scale-95 shadow-xs transition-all"
+              aria-label="Scroll table left"
+            >
+              &larr; Left
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTable("right")}
+              className="px-2.5 py-1 rounded bg-white dark:bg-neutral-700 border border-slate-300 dark:border-neutral-600 text-xs font-semibold hover:bg-slate-50 active:scale-95 shadow-xs transition-all"
+              aria-label="Scroll table right"
+            >
+              Right &rarr;
+            </button>
+          </div>
+        </div>
+
+        <Table containerRef={tableContainerRef}>
           <TableHeader>
             <TableRow>
-              <TableHead style={{ width: "24%" }}>{isSchool ? "Student Name & Roll" : "Student Member"}</TableHead>
-              <TableHead style={{ width: "22%" }}>{isSchool ? "Class & Enrolled Subjects" : "Program & Specialization"}</TableHead>
-              <TableHead style={{ width: "24%" }}>{isSchool ? "Section & Guardian Contact" : "Semester & Academics"}</TableHead>
-              <TableHead style={{ width: "13%" }}>Campus Branch</TableHead>
-              <TableHead className="text-center" style={{ width: "9%" }}>Status</TableHead>
-              <TableHead className="text-center" style={{ width: "8%" }}>Actions</TableHead>
+              <TableHead style={{ minWidth: "210px", width: "23%" }}>{isSchool ? "Student Name & Roll" : "Student Member"}</TableHead>
+              <TableHead style={{ minWidth: "220px", width: "22%" }}>{isSchool ? "Class & Enrolled Subjects" : "Program & Specialization"}</TableHead>
+              <TableHead style={{ minWidth: "240px", width: "23%" }}>{isSchool ? "Section & Guardian Contact" : "Semester & Academics"}</TableHead>
+              <TableHead style={{ minWidth: "160px", width: "14%" }}>Campus Branch</TableHead>
+              <TableHead className="text-center" style={{ minWidth: "100px", width: "9%" }}>Status</TableHead>
+              <TableHead className="text-center" style={{ minWidth: "120px", width: "9%" }}>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -315,7 +348,7 @@ export default function StudentsDirectory() {
             ) : result.records.length > 0 ? (
               result.records.map((student) => (
               <TableRow key={student.id || student.roll}>
-                <TableCell style={{ width: "24%", overflow: "hidden" }}>
+                <TableCell style={{ minWidth: "210px" }}>
                   <div
                     style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", minWidth: 0, overflow: "hidden" }}
                     onClick={() => setModal({ mode: "view", id: student.id || student._id })}
@@ -333,7 +366,7 @@ export default function StudentsDirectory() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell style={{ width: "22%", overflow: "hidden" }}>
+                <TableCell style={{ minWidth: "220px" }}>
                   <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
                     <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
                       {isSchool ? (student.gradeOrClass || student.program?.replace(/BS\s+/i, "Grade 10 - ") || "Grade 10") : student.program}
@@ -346,11 +379,11 @@ export default function StudentsDirectory() {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell style={{ width: "24%", overflow: "hidden" }}>
+                <TableCell style={{ minWidth: "240px" }}>
                   <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
                     <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
                       {isSchool
-                        ? `Section ${student.section || "A"} · Session ${student.semester || student.session || "2024-2025"}`
+                        ? `Section ${(student.section || "A").replace(/^Section\s+/i, "")} · Session ${student.semester || student.session || "2024-2025"}`
                         : `${student.semester || "4th Semester"} · ${student.section || "CS-4A"}`}
                     </strong>
                     <span
@@ -363,7 +396,7 @@ export default function StudentsDirectory() {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell style={{ width: "13%", overflow: "hidden" }}>
+                <TableCell style={{ minWidth: "160px" }}>
                   <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: "2px", overflow: "hidden" }}>
                     <strong style={{ fontSize: "12px", fontWeight: "600", color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25, display: "block" }}>
                       {student.campus || "Main Campus"}
@@ -373,7 +406,7 @@ export default function StudentsDirectory() {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="text-center" style={{ width: "9%", overflow: "hidden" }}>
+                <TableCell className="text-center" style={{ minWidth: "100px" }}>
                   <span
                     className={`campus-status-pill ${
                       student.status === "Active"
@@ -387,7 +420,7 @@ export default function StudentsDirectory() {
                     {student.status || "Active"}
                   </span>
                 </TableCell>
-                <TableCell className="text-center" style={{ width: "8%", overflow: "hidden" }}>
+                <TableCell className="text-center" style={{ minWidth: "120px" }}>
                   <div className="campus-action-icons">
                     <button
                       type="button"
@@ -395,7 +428,7 @@ export default function StudentsDirectory() {
                       title="Student ID Card (View & Edit)"
                       onClick={() => setModal({ mode: "id_card", id: student.id || student._id })}
                     >
-                      <QrCode size={13} />
+                      <QrCode size={15} />
                     </button>
                     <button
                       type="button"
@@ -403,7 +436,7 @@ export default function StudentsDirectory() {
                       title="Edit student"
                       onClick={() => setModal({ mode: "edit", id: student.id || student._id })}
                     >
-                      <Pencil size={13} />
+                      <Pencil size={15} />
                     </button>
                     <button
                       type="button"
@@ -411,7 +444,7 @@ export default function StudentsDirectory() {
                       title="Delete student"
                       onClick={() => setModal({ mode: "delete", id: student.id || student._id })}
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </TableCell>

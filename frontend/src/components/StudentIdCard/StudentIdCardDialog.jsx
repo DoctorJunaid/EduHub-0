@@ -18,7 +18,7 @@ export default function StudentIdCardDialog({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-6 overflow-hidden flex flex-col items-center"
+        className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-3 sm:p-6 max-h-[92vh] overflow-y-auto flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

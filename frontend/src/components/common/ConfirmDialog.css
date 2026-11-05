@@ -13,3 +13,18 @@
   background: #b91c1c;
   border-color: #b91c1c;
 }
+@media (max-width: 480px) {
+  .confirmation-dialog {
+    padding: 20px 16px;
+    width: calc(100% - 24px);
+  }
+  .confirmation-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+    width: 100%;
+  }
+  .confirmation-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

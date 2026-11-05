@@ -214,7 +214,7 @@ export default function StudentIdCard({
       `}</style>
 
       {/* Controls Bar */}
-      <div className="flex items-center justify-between w-full print:hidden" style={{ padding: "0 4px" }}>
+      <div className="flex flex-wrap items-center justify-between w-full print:hidden gap-2" style={{ padding: "0 4px" }}>
         <div className="flex items-center" style={{ gap: "6px" }}>
           <button
             type="button"
@@ -293,8 +293,9 @@ export default function StudentIdCard({
       <div
         className="student-id-card-printable w-full bg-white border border-neutral-200 rounded-2xl shadow-md overflow-hidden relative flex flex-col justify-between"
         style={{
-          width: "340px",
-          height: "540px",
+          width: "100%",
+          maxWidth: "340px",
+          minHeight: "520px",
           boxSizing: "border-box",
         }}
       >

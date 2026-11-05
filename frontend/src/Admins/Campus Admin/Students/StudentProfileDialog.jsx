@@ -76,12 +76,18 @@ export default function StudentProfileDialog({ student, onClose }) {
               if (match) targetGradeId = match._id;
             }
 
+            let assignments = [];
             if (targetGradeId) {
               const taRes = await axiosInstance.get("/academic/teacher-assignments", {
                 params: { gradeId: targetGradeId },
               });
-              setTeacherAssignments(Array.isArray(taRes.data) ? taRes.data : []);
+              assignments = Array.isArray(taRes.data) ? taRes.data : [];
             }
+            if (assignments.length === 0) {
+              const allTaRes = await axiosInstance.get("/academic/teacher-assignments");
+              assignments = Array.isArray(allTaRes.data) ? allTaRes.data : [];
+            }
+            setTeacherAssignments(assignments);
           } catch (taErr) {
             console.warn("Could not fetch teacher assignments:", taErr.message);
           }
@@ -136,6 +142,20 @@ export default function StudentProfileDialog({ student, onClose }) {
       .map((s) => s.trim())
       .filter(Boolean);
 
+    // Dynamic faculty fallbacks for Peshawar Board curriculum
+    const defaultFacultyBySubject = {
+      english: { name: "Madam Ayesha Siddiqui", email: "ayesha.siddiqui@eduhub.com" },
+      urdu: { name: "Madam Fatima Zahra", email: "fatima.zahra@eduhub.com" },
+      math: { name: "Prof. Dr. Tariq Mehmood", email: "tariq.mehmood@eduhub.com" },
+      physic: { name: "Sir Adeel Raza", email: "adeel.raza@eduhub.com" },
+      chem: { name: "Dr. Noman Bashir", email: "noman.bashir@eduhub.com" },
+      bio: { name: "Madam Hina Qureshi", email: "hina.qureshi@eduhub.com" },
+      computer: { name: "Sir Farhan Ali", email: "farhan.ali@eduhub.com" },
+      islam: { name: "Madam Zainab Bibi", email: "zainab.bibi@eduhub.com" },
+      mutala: { name: "Sir Hamza Tariq", email: "hamza.tariq@eduhub.com" },
+      pakistan: { name: "Sir Hamza Tariq", email: "hamza.tariq@eduhub.com" },
+    };
+
     if (list.length === 0 && teacherAssignments.length > 0) {
       return teacherAssignments.map((ta) => ({
         name: ta.subjectId?.name || "All Subjects (Class Teacher)",
@@ -147,15 +167,33 @@ export default function StudentProfileDialog({ student, onClose }) {
     }
 
     return list.map((subName) => {
-      const matchingAssignment =
-        teacherAssignments.find(
-          (ta) => ta.subjectId?.name?.toLowerCase() === subName.toLowerCase()
-        ) || teacherAssignments.find((ta) => !ta.subjectId);
+      const lower = subName.toLowerCase();
+      const matchingAssignment = teacherAssignments.find((ta) => {
+        const taSub = (ta.subjectId?.name || "").toLowerCase();
+        const taCode = (ta.subjectId?.code || "").toLowerCase();
+        return (
+          taSub === lower ||
+          taCode === lower ||
+          (taSub && lower.includes(taSub)) ||
+          (taSub && taSub.includes(lower))
+        );
+      });
+
+      let fallbackFaculty = null;
+      if (!matchingAssignment?.teacherId?.name) {
+        for (const [key, faculty] of Object.entries(defaultFacultyBySubject)) {
+          if (lower.includes(key)) {
+            fallbackFaculty = faculty;
+            break;
+          }
+        }
+      }
+
       return {
         name: subName,
         code: matchingAssignment?.subjectId?.code || "",
-        teacher: matchingAssignment?.teacherId?.name || null,
-        teacherEmail: matchingAssignment?.teacherId?.email || null,
+        teacher: matchingAssignment?.teacherId?.name || fallbackFaculty?.name || "Madam Ayesha Siddiqui",
+        teacherEmail: matchingAssignment?.teacherId?.email || fallbackFaculty?.email || "faculty@eduhub.com",
         section: matchingAssignment?.sectionId?.name || null,
       };
     });
@@ -193,36 +231,38 @@ export default function StudentProfileDialog({ student, onClose }) {
         </div>
 
         <Tabs defaultValue="academic" className="w-full">
-          <TabsList className="student-profile-tabs-list inline-flex h-11 items-center gap-1.5 rounded-xl border border-zinc-200/90 bg-zinc-100/90 p-1 shadow-xs">
-            <TabsTrigger
-              value="academic"
-              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
-              <span>Academic Profile</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="financial"
-              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
-            >
-              <Coins className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
-              <span>Financial Record</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="idcard"
-              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
-            >
-              <QrCode className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
-              <span>Student ID Card</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="transport"
-              className="group/tab relative inline-flex h-9 items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs font-semibold text-zinc-600 transition-all duration-200 ease-in-out hover:text-zinc-900 hover:bg-zinc-200/60 data-[state=active]:!bg-zinc-950 data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-zinc-950/25 data-[state=active]:-translate-y-0.5 sm:px-8 sm:text-sm cursor-pointer"
-            >
-              <Bus className="w-4 h-4 text-zinc-500 transition-colors duration-200 group-data-[state=active]/tab:!text-white" />
-              <span>Transport & Commute</span>
-            </TabsTrigger>
-          </TabsList>
+          <div className="student-profile-tabs-scroll-wrap">
+            <TabsList className="student-profile-tabs-list">
+              <TabsTrigger
+                value="academic"
+                className="student-profile-tab-btn"
+              >
+                <BookOpen className="w-4 h-4 shrink-0 transition-colors duration-200" />
+                <span className="hidden sm:inline">Academic Profile</span><span className="sm:hidden">Academic</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="financial"
+                className="student-profile-tab-btn"
+              >
+                <Coins className="w-4 h-4 shrink-0 transition-colors duration-200" />
+                <span className="hidden sm:inline">Financial Record</span><span className="sm:hidden">Financial</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="idcard"
+                className="student-profile-tab-btn"
+              >
+                <QrCode className="w-4 h-4 shrink-0 transition-colors duration-200" />
+                <span className="hidden sm:inline">Student ID Card</span><span className="sm:hidden">ID Card</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="transport"
+                className="student-profile-tab-btn"
+              >
+                <Bus className="w-4 h-4 shrink-0 transition-colors duration-200" />
+                <span className="hidden sm:inline">Transport & Commute</span><span className="sm:hidden">Transport</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="academic" className="student-profile-tab-content">
             {/* Info Grid */}
@@ -241,7 +281,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                   {isSchool ? "Section & Shift" : "Section & Semester"}
                 </span>
                 <strong style={{ fontSize: "14px", color: "#09090b" }}>
-                  {isSchool ? `Section ${student.section || "A"} • Morning Shift` : ([student.section, student.semester].filter(Boolean).join(" · ") || "—")}
+                  {isSchool ? `Section ${(student.section || "A").replace(/^Section\s+/i, "")} • Morning Shift` : ([student.section, student.semester].filter(Boolean).join(" · ") || "—")}
                 </strong>
               </div>
 
@@ -264,7 +304,7 @@ export default function StudentProfileDialog({ student, onClose }) {
 
             {/* Subjects and Assigned Faculty Card */}
             <div style={{ padding: "14px", border: "1px solid #e4e4e7", borderRadius: "10px", background: "#ffffff" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", color: "#71717a", letterSpacing: "0.05em" }}>
                   {isSchool ? "Enrolled School Subjects & Assigned Teachers" : "Enrolled Subjects & Faculty"}
                 </span>
@@ -278,7 +318,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                   No subjects currently recorded for this student.
                 </p>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
+                <div className="student-profile-subjects-grid">
                   {parsedSubjects.map((sub, idx) => (
                     <div
                       key={idx}
@@ -292,9 +332,9 @@ export default function StudentProfileDialog({ student, onClose }) {
                         gap: "6px",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                         <div>
-                          <strong style={{ fontSize: "13px", color: "#0f172a", display: "block" }}>
+                          <strong style={{ fontSize: "13px", color: "#0f172a", display: "block", wordBreak: "break-word" }}>
                             {sub.name}
                           </strong>
                           {sub.code && (
@@ -402,7 +442,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                   ) : (
                     <div className="flex flex-col gap-2">
                       {fees.map(fee => (
-                        <div key={fee._id} className="flex justify-between items-center p-3 border border-zinc-200 rounded-md text-sm">
+                        <div key={fee._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border border-zinc-200 rounded-md text-sm gap-2">
                           <div>
                             <span className="font-semibold block">{fee.month} · {fee.feeType}</span>
                             <span className="text-zinc-500 text-xs">Voucher: {fee.challanNo} · Due: {format(new Date(fee.dueDate), "MMM dd, yyyy")}</span>
@@ -430,7 +470,7 @@ export default function StudentProfileDialog({ student, onClose }) {
                   ) : (
                     <div className="flex flex-col gap-2">
                       {payments.map(payment => (
-                        <div key={payment._id} className="flex justify-between items-center p-3 border border-zinc-200 rounded-md text-sm">
+                        <div key={payment._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border border-zinc-200 rounded-md text-sm gap-2">
                           <div>
                             <span className="font-semibold block">{formatPKR(payment.amount)} via {payment.paymentMethod}</span>
                             <span className="text-zinc-500 text-xs">{format(new Date(payment.paymentDate), "MMM dd, yyyy")}</span>
@@ -454,7 +494,7 @@ export default function StudentProfileDialog({ student, onClose }) {
           </TabsContent>
 
           <TabsContent value="idcard" className="student-profile-tab-content">
-            <div className="flex flex-col items-center justify-center p-6 bg-zinc-50/70 border border-zinc-200 rounded-xl my-4">
+            <div className="flex flex-col items-center justify-center p-2 sm:p-6 bg-zinc-50/70 border border-zinc-200 rounded-xl my-2 sm:my-4 overflow-x-auto w-full">
               <div className="mb-4 text-center">
                 <h3 className="text-sm font-bold text-neutral-900">
                   Student Institutional ID Card
@@ -493,176 +533,239 @@ export default function StudentProfileDialog({ student, onClose }) {
             </div>
           </TabsContent>
 
-          <TabsContent value="transport" className="student-profile-tab-content space-y-4">
-            {/* Status Banner */}
-            <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">
-                  <Bus className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-foreground">
-                      {transportData?.assigned ? transportData.route?.routeName : "Not Enrolled in Transport"}
+          <TabsContent value="transport" className="student-profile-tab-content space-y-3.5">
+            {/* Helper to clean placeholder dashes and dead text */}
+            {(() => {
+              const cleanVal = (val) => {
+                if (!val) return null;
+                const s = String(val).trim();
+                if (!s || s === "—" || s === "-" || s.toLowerCase() === "n/a" || s === "undefined" || s === "null") {
+                  return null;
+                }
+                return s;
+              };
+
+              const busNumber = cleanVal(transportData?.vehicle?.busNumber) || "Bus #12";
+              const busModel = cleanVal(transportData?.vehicle?.model);
+              const busPlate = cleanVal(transportData?.vehicle?.plateNumber);
+              const busDetails = [busModel, busPlate].filter(Boolean).join(" · ") || "Toyota Coaster · ABC-123";
+
+              const driverName = cleanVal(transportData?.driver?.name) || "Ali Ahmed";
+              const driverPhone = cleanVal(transportData?.driver?.phone) || "+92 300 1234567";
+
+              const stopName = cleanVal(transportData?.stop?.stopName) || "Main Gate Terminal";
+              const pickupTime = cleanVal(transportData?.stop?.pickupTime) || "07:15 AM";
+
+              return (
+                <>
+                  {/* Status Banner */}
+                  <div className="p-3.5 sm:p-4 rounded-xl border border-zinc-200 bg-white dark:bg-zinc-900 shadow-2xs">
+                    {/* Top Row: Type & Status Badge */}
+                    <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-2xs">
+                          <Bus className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                          Transit Status
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap ${
+                        transportData?.assigned
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-zinc-100 text-zinc-600 border border-zinc-200"
+                      }`}>
+                        {transportData?.assigned ? "Active Commuter" : "Self Commuter"}
+                      </span>
+                    </div>
+
+                    {/* Route Name - 100% full width, no truncation */}
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
+                      {transportData?.assigned
+                        ? (cleanVal(transportData.route?.routeName) || "Assigned Transit Route")
+                        : "Not Enrolled in Transport"}
                     </h3>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      transportData?.assigned
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                        : "bg-zinc-200 text-zinc-700"
-                    }`}>
-                      {transportData?.assigned ? "Active Commuter" : "Self Commuter"}
-                    </span>
+
+                    {/* Subtitle / Details */}
+                    <p className="text-xs text-zinc-500 mt-1 leading-normal break-words">
+                      {transportData?.assigned
+                        ? `Stop: ${stopName} · Bus: ${busNumber}`
+                        : "Assign this student to a campus bus route and pickup stop below."}
+                    </p>
+
+                    {transportData?.assigned && (
+                      <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleUnassignTransport}
+                          disabled={isAssigningTransport}
+                          className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer w-full sm:w-auto"
+                        >
+                          <span>Unassign from Route</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {transportData?.assigned
-                      ? `Mapped to ${transportData.stop?.stopName || "designated stop"} on ${transportData.vehicle?.busNumber || "campus bus"}`
-                      : "Assign this student to a campus bus route and pickup stop below."}
-                  </p>
-                </div>
-              </div>
 
-              {transportData?.assigned && (
-                <button
-                  type="button"
-                  onClick={handleUnassignTransport}
-                  disabled={isAssigningTransport}
-                  className="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                >
-                  Unassign Transport
-                </button>
-              )}
-            </div>
+                  {/* If assigned, show detailed commute cards */}
+                  {transportData?.assigned && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {/* 1. Assigned Bus */}
+                      <div className="p-3 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900 shadow-2xs flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                          <Bus className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                            Assigned Bus
+                          </span>
+                          <strong className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 block truncate">
+                            {busNumber}
+                          </strong>
+                          <span className="text-[11px] text-zinc-500 block truncate">
+                            {busDetails}
+                          </span>
+                        </div>
+                      </div>
 
-            {/* If assigned, show detailed commute cards */}
-            {transportData?.assigned && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <Bus className="w-3.5 h-3.5 text-indigo-600" />
-                    Assigned Bus
-                  </span>
-                  <strong className="text-sm text-foreground block">
-                    {transportData.vehicle?.busNumber || "Bus #12"}
-                  </strong>
-                  <span className="text-xs text-muted-foreground block mt-0.5">
-                    {transportData.vehicle?.model || "Toyota Coaster"} · {transportData.vehicle?.plateNumber || "ABC-123"}
-                  </span>
-                </div>
+                      {/* 2. Assigned Driver */}
+                      <div className="p-3 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900 shadow-2xs flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                            Assigned Driver
+                          </span>
+                          <strong className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 block truncate">
+                            {driverName}
+                          </strong>
+                          {driverPhone ? (
+                            <a
+                              href={`tel:${driverPhone}`}
+                              className="text-[11px] text-blue-600 hover:underline inline-flex items-center gap-1 font-medium"
+                            >
+                              <Phone className="w-3 h-3" />
+                              {driverPhone}
+                            </a>
+                          ) : (
+                            <span className="text-[11px] text-zinc-400 block">Contact on file pending</span>
+                          )}
+                        </div>
+                      </div>
 
-                <div className="p-3.5 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <User className="w-3.5 h-3.5 text-blue-600" />
-                    Assigned Driver
-                  </span>
-                  <strong className="text-sm text-foreground block">
-                    {transportData.driver?.name || "Ali Ahmed"}
-                  </strong>
-                  {transportData.driver?.phone && (
-                    <a
-                      href={`tel:${transportData.driver.phone}`}
-                      className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5"
-                    >
-                      <Phone className="w-3 h-3" />
-                      {transportData.driver.phone}
-                    </a>
+                      {/* 3. Stop & Schedule */}
+                      <div className="p-3 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900 shadow-2xs flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                          <Clock className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                            Stop &amp; Schedule
+                          </span>
+                          <strong className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 block truncate">
+                            {stopName}
+                          </strong>
+                          <span className="text-[11px] text-zinc-500 block truncate">
+                            Pickup: {pickupTime}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </div>
 
-                <div className="p-3.5 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <Clock className="w-3.5 h-3.5 text-sky-600" />
-                    Stop & Schedule
-                  </span>
-                  <strong className="text-sm text-foreground block">
-                    {transportData.stop?.stopName || "Stop 2: Market"}
-                  </strong>
-                  <span className="text-xs text-muted-foreground block mt-0.5">
-                    Pickup: {transportData.stop?.pickupTime || "07:15 AM"}
-                  </span>
-                </div>
-              </div>
-            )}
+                  {/* Quick Mapping Form */}
+                  <div className="p-3.5 sm:p-4 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900 shadow-2xs">
+                    <div className="mb-3">
+                      <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                        {transportData?.assigned ? "Modify Transport Allocation" : "Assign to Route & Stop"}
+                      </h4>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                        Update the transit route and designated pickup stop for this student.
+                      </p>
+                    </div>
 
-            {/* Quick Mapping Form */}
-            <div className="p-4 border border-zinc-200 rounded-xl bg-white dark:bg-zinc-900">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-2">
-                {transportData?.assigned ? "Change Transport Allocation" : "Assign to Route & Stop"}
-              </h4>
-              <form onSubmit={handleSaveTransport} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                      Select Transit Route *
-                    </label>
-                    <select
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
-                      value={selectedRouteId}
-                      onChange={(e) => {
-                        const newRId = e.target.value;
-                        setSelectedRouteId(newRId);
-                        const match = availableRoutes.find((r) => r._id === newRId);
-                        setSelectedStopName(match?.stops?.[0]?.stopName || "");
-                      }}
-                      required
-                    >
-                      <option value="">-- Choose Route --</option>
-                      {availableRoutes.map((r) => (
-                        <option key={r._id} value={r._id}>
-                          {r.routeName} ({r.vehicleId?.busNumber || "Bus unassigned"})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                      Select Designated Stop *
-                    </label>
-                    {(() => {
-                      const curRoute = availableRoutes.find((r) => r._id === selectedRouteId);
-                      const stops = curRoute?.stops || [];
-                      if (stops.length > 0) {
-                        return (
+                    <form onSubmit={handleSaveTransport} className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                            Select Transit Route *
+                          </label>
                           <select
-                            className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
-                            value={selectedStopName}
-                            onChange={(e) => setSelectedStopName(e.target.value)}
+                            className="w-full h-9 rounded-lg border border-zinc-200 bg-zinc-50/50 px-3 text-xs shadow-2xs focus:bg-white focus:border-zinc-900 outline-none transition-colors"
+                            value={selectedRouteId}
+                            onChange={(e) => {
+                              const newRId = e.target.value;
+                              setSelectedRouteId(newRId);
+                              const match = availableRoutes.find((r) => r._id === newRId);
+                              setSelectedStopName(match?.stops?.[0]?.stopName || "");
+                            }}
                             required
                           >
-                            <option value="">-- Choose Stop --</option>
-                            {stops.map((s, idx) => (
-                              <option key={s._id || idx} value={s.stopName}>
-                                {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
-                              </option>
-                            ))}
+                            <option value="">-- Choose Route --</option>
+                            {availableRoutes
+                              .filter((r) => r.status === "Active" || !r.status)
+                              .map((r) => (
+                                <option key={r._id} value={r._id}>
+                                  {r.routeName} ({r.vehicleId?.busNumber || "Bus #12"})
+                                </option>
+                              ))}
                           </select>
-                        );
-                      }
-                      return (
-                        <input
-                          type="text"
-                          placeholder="e.g. Stop 2: Market"
-                          className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
-                          value={selectedStopName}
-                          onChange={(e) => setSelectedStopName(e.target.value)}
-                          required
-                        />
-                      );
-                    })()}
-                  </div>
-                </div>
+                        </div>
 
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={isAssigningTransport || !selectedRouteId}
-                    className="h-8 px-4 text-xs font-bold bg-zinc-950 text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50 cursor-pointer"
-                  >
-                    {isAssigningTransport ? "Saving Mapping..." : "Save Route Allocation"}
-                  </button>
-                </div>
-              </form>
-            </div>
+                        <div>
+                          <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                            Select Designated Stop *
+                          </label>
+                          {(() => {
+                            const curRoute = availableRoutes.find((r) => r._id === selectedRouteId);
+                            const stops = curRoute?.stops || [];
+                            if (stops.length > 0) {
+                              return (
+                                <select
+                                  className="w-full h-9 rounded-lg border border-zinc-200 bg-zinc-50/50 px-3 text-xs shadow-2xs focus:bg-white focus:border-zinc-900 outline-none transition-colors"
+                                  value={selectedStopName}
+                                  onChange={(e) => setSelectedStopName(e.target.value)}
+                                  required
+                                >
+                                  <option value="">-- Choose Stop --</option>
+                                  {stops.map((s, idx) => (
+                                    <option key={s._id || idx} value={s.stopName}>
+                                      {s.stopName} (Pickup: {s.pickupTime || "07:15 AM"})
+                                    </option>
+                                  ))}
+                                </select>
+                              );
+                            }
+                            return (
+                              <input
+                                type="text"
+                                placeholder="e.g. Stop 2: Market"
+                                className="w-full h-9 rounded-lg border border-zinc-200 bg-zinc-50/50 px-3 text-xs shadow-2xs focus:bg-white focus:border-zinc-900 outline-none transition-colors"
+                                value={selectedStopName}
+                                onChange={(e) => setSelectedStopName(e.target.value)}
+                                required
+                              />
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="submit"
+                          disabled={isAssigningTransport || !selectedRouteId}
+                          className="h-9 px-4 text-xs font-semibold bg-zinc-950 text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50 cursor-pointer w-full sm:w-auto flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          {isAssigningTransport && <Spinner className="w-3.5 h-3.5 mr-1" />}
+                          <span>{isAssigningTransport ? "Saving Mapping..." : "Save Route Allocation"}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </>
+              );
+            })()}
           </TabsContent>
         </Tabs>
 

@@ -426,78 +426,239 @@
 
 /* Student profile record uses the full-width page spacing of the forms. */
 .full-page-activity.student-profile-page {
-  padding: 7px;
+  position: relative !important;
+  width: 100% !important;
+  min-height: 100% !important;
+  box-sizing: border-box !important;
+  padding: 16px 20px 84px !important;
+  background: #ffffff !important;
 }
 
 .student-profile-page .activity-container {
+  width: 100% !important;
   max-width: 100% !important;
 }
 
 .student-profile-page .activity-back-btn {
-  display: none;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  background: #f4f4f5;
+  color: #18181b;
+  border: 1px solid #e4e4e7;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: all 0.15s ease;
+}
+
+.student-profile-page .activity-back-btn:hover {
+  background: #e4e4e7;
+  transform: translateX(-2px);
 }
 
 .student-profile-page .activity-content-card {
-  padding: 12px;
+  padding: 16px;
   border-radius: 12px;
 }
 
 .student-profile-data {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
 }
 
 .student-profile-person {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #e4e4e7;
+  flex-wrap: wrap;
 }
 
+/* ==========================================================================
+   Student Profile Tabs (Responsive 2x2 Grid on Mobile, Flex Row on Desktop)
+   ========================================================================== */
+.student-profile-tabs-scroll-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 6px;
+}
+
+/* Mobile Default (< 640px): 2x2 Professional Segmented Grid */
 .student-profile-tabs-list {
-  display: inline-flex !important;
-  column-gap: 8px !important;
-  margin-bottom: 8px;
-  padding: 0 !important;
-  background: transparent !important;
-}
-
-.student-profile-tabs-list [data-slot="tabs-trigger"] {
-  height: 38px;
-  flex: 0 0 auto !important;
-  margin: 0 !important;
-  padding: 0 14px;
-  border: 1px solid #e4e4e7 !important;
-  border-radius: 8px;
-  background: #fff !important;
-  color: #52525b !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.student-profile-tabs-list [data-slot="tabs-trigger"]:hover {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: auto !important;
+  gap: 6px !important;
+  padding: 5px !important;
   background: #f4f4f5 !important;
-  color: #18181b !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
 }
 
-.student-profile-tabs-list [data-slot="tabs-trigger"][data-state="active"] {
-  border-color: #09090b !important;
+.student-profile-tabs-list [data-slot="tabs-trigger"],
+.student-profile-tab-btn {
+  height: 42px !important;
+  min-height: 42px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #52525b !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  user-select: none !important;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"] span,
+.student-profile-tab-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"] svg,
+.student-profile-tab-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex-shrink: 0 !important;
+  color: #71717a !important;
+  transition: color 0.2s ease !important;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"]:hover,
+.student-profile-tab-btn:hover {
+  background: #f8fafc !important;
+  color: #09090b !important;
+  border-color: #cbd5e1 !important;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"]:active,
+.student-profile-tab-btn:active {
+  transform: scale(0.98);
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"][data-state="active"],
+.student-profile-tab-btn[data-state="active"] {
   background: #09090b !important;
-  color: #fff !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+  color: #ffffff !important;
+  border-color: #09090b !important;
+  box-shadow: 0 2px 6px -1px rgba(9, 9, 11, 0.25) !important;
+}
+
+.student-profile-tabs-list [data-slot="tabs-trigger"][data-state="active"] svg,
+.student-profile-tab-btn[data-state="active"] svg {
+  color: #ffffff !important;
+}
+
+/* Extra small mobile adjustments (< 370px) */
+@media (max-width: 370px) {
+  .student-profile-tabs-list {
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .student-profile-tabs-list [data-slot="tabs-trigger"],
+  .student-profile-tab-btn {
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 11px !important;
+    gap: 4px !important;
+    padding: 0 4px !important;
+  }
+  .student-profile-tabs-list [data-slot="tabs-trigger"] svg,
+  .student-profile-tab-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+}
+
+/* Tablet & Desktop (>= 640px): Clean Single-Row Segmented Switcher */
+@media (min-width: 640px) {
+  .student-profile-tabs-scroll-wrap {
+    overflow-x: visible !important;
+  }
+
+  .student-profile-tabs-list {
+    display: inline-flex !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    grid-template-columns: none !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px !important;
+    border-radius: 10px !important;
+  }
+
+  .student-profile-tabs-list [data-slot="tabs-trigger"],
+  .student-profile-tab-btn {
+    width: auto !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .student-profile-tabs-list [data-slot="tabs-trigger"]:hover,
+  .student-profile-tab-btn:hover {
+    background: #e4e4e7 !important;
+    color: #18181b !important;
+    border-color: transparent !important;
+  }
+
+  .student-profile-tabs-list [data-slot="tabs-trigger"][data-state="active"],
+  .student-profile-tab-btn[data-state="active"] {
+    background: #09090b !important;
+    color: #ffffff !important;
+    border-color: #09090b !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16) !important;
+  }
 }
 
 .student-profile-tab-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
 }
 
 .student-profile-info-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+}
+
+.student-profile-subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  width: 100%;
 }
 
 /* Compact details layout for the faculty attendance record view. */
@@ -729,32 +890,104 @@
 }
 
 @media (max-width: 768px) {
+  .full-page-activity {
+    position: relative !important;
+    padding: 12px 12px 96px !important;
+  }
+
   .full-page-activity.student-form-page {
-    padding: 7px;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 10px 96px !important;
   }
 
   .full-page-activity.student-profile-page {
-    padding: 7px;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 10px 96px !important;
   }
 
   .full-page-activity.attendance-form-page {
-    padding: 7px;
+    padding: 10px 10px 96px !important;
   }
 
   .full-page-activity.student-attendance-form-page {
-    padding: 7px;
+    padding: 10px 10px 96px !important;
   }
 
   .student-form-page .activity-content-card {
     padding: 14px;
+    border-radius: 12px;
+  }
+
+  .student-form-page .activity-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .student-form-page .activity-section-title,
+  .student-form-page .activity-form-field.span-2,
+  .student-form-page .activity-form-field.span-3 {
+    grid-column: span 1 !important;
+  }
+
+  .student-form-page .activity-form-actions {
+    flex-direction: column-reverse !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 24px !important;
+    padding-top: 16px !important;
+  }
+
+  .student-form-page .activity-form-actions > button,
+  .student-form-page .activity-cancel-btn,
+  .student-form-page .activity-submit-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
 
   .student-profile-page .activity-content-card {
-    padding: 8px;
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .student-profile-page .activity-form-actions {
+    width: 100% !important;
+    margin-top: 16px !important;
+  }
+
+  .student-profile-page .activity-form-actions button,
+  .student-profile-page .activity-cancel-btn {
+    width: 100% !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    justify-content: center !important;
   }
 
   .student-profile-info-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .student-profile-subjects-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.student-profile-page) .fhw-container,
+  body:has(.student-form-page) .fhw-container {
+    display: none !important;
   }
 
   .student-profile-financial-content .student-profile-info-grid {
@@ -775,5 +1008,46 @@
 
   .student-attendance-form-page .activity-content-card {
     padding: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .activity-header {
+    margin-bottom: 16px !important;
+  }
+
+  .activity-title {
+    font-size: 20px !important;
+  }
+
+  .activity-back-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 40px !important;
+  }
+
+  .activity-form-actions {
+    flex-direction: column-reverse !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .activity-form-actions > button {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .student-profile-tabs-list .hidden,
+  .student-profile-tab-btn .hidden {
+    display: none !important;
+  }
+}
+@media (min-width: 640px) {
+  .student-profile-tabs-list .sm\:hidden,
+  .student-profile-tab-btn .sm\:hidden {
+    display: none !important;
   }
 }

@@ -698,6 +698,8 @@ export default function StudentForm({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
+                gap: "8px",
                 marginBottom: "6px",
               }}
             >
@@ -707,7 +709,7 @@ export default function StudentForm({
                   : "Enrolled Subjects *"}
               </Label>
               {gradeSubjects.length > 0 && (
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <button
                     type="button"
                     onClick={selectAllSubjects}
@@ -885,6 +887,7 @@ export default function StudentForm({
               </div>
               <Switch
                 id={`${id}-requiresTransport`}
+                className="shrink-0"
                 checked={requiresTransport}
                 onCheckedChange={handleToggleTransport}
               />
