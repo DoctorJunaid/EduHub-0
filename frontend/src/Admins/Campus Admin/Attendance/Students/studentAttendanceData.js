@@ -218,14 +218,14 @@ export function studentAttendanceSummary(rows, rateMode) {
   const marked = Object.values(counts).reduce((sum, value) => sum + value, 0);
   const denominator = rateMode === 'include-late-exclude-leave' ? marked - counts['On Leave'] : marked;
   const numerator = counts.Present + (rateMode === 'include-late-exclude-leave' ? counts.Late : 0);
-  const calcRate = denominator > 0 ? (numerator / denominator) * 100 : (marked > 0 ? (counts.Present / marked) * 100 : 100);
+  const calcRate = denominator > 0 ? (numerator / denominator) * 100 : (marked > 0 ? (counts.Present / marked) * 100 : 0);
   return {
     total: new Set((rows || []).map(({ student }) => student?.id || student?._id)).size,
     ...counts,
     marked,
     denominator,
     numerator,
-    rate: marked > 0 ? Number(calcRate.toFixed(1)) : 100,
+    rate: marked > 0 ? Number(calcRate.toFixed(1)) : 0,
   };
 }
 

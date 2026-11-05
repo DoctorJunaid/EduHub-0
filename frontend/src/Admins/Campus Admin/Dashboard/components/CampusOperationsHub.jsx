@@ -533,7 +533,9 @@ export default function CampusOperationsHub({
                     <div className="hub-card-meta-item">
                       <span className="hub-meta-label">Attendance</span>
                       <span className="hub-meta-val hub-meta-attendance">
-                        {student.attendance || (isSchool ? '96.2%' : '94.2%')}
+                        {student.totalAttendanceRecords > 0 || (student.attendanceRate !== null && student.attendanceRate !== undefined)
+                          ? `${student.attendanceRate}%`
+                          : (student.attendance && !student.attendance.includes('96.2') && !student.attendance.includes('94.2') ? student.attendance : <span className="text-neutral-400 font-normal">N/A</span>)}
                       </span>
                     </div>
                   </div>
@@ -906,7 +908,11 @@ export default function CampusOperationsHub({
                       </TableCell>
                     )}
                     <TableCell className="text-center">
-                      <span className="hub-attendance-rate">{student.attendance || (isSchool ? '96.2%' : '94.2%')}</span>
+                      <span className="hub-attendance-rate">
+                        {student.totalAttendanceRecords > 0 || (student.attendanceRate !== null && student.attendanceRate !== undefined)
+                          ? `${student.attendanceRate}%`
+                          : (student.attendance && !student.attendance.includes('96.2') && !student.attendance.includes('94.2') ? student.attendance : <span className="text-neutral-400 font-normal">N/A</span>)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-center">
                       <span

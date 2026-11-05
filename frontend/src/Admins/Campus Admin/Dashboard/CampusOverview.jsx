@@ -123,11 +123,16 @@ export default function CampusOverview() {
   // Export summary
   const handleExportSummary = () => {
     const activeCampusName = realUserCampus || 'Main Campus';
+    const studentsWithRecords = students.filter((s) => s.totalAttendanceRecords > 0 || (s.attendanceRate !== null && s.attendanceRate !== undefined));
+    const avgRate = studentsWithRecords.length > 0
+      ? `${(studentsWithRecords.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / studentsWithRecords.length).toFixed(1)}%`
+      : 'N/A';
+
     const csvContent = isSchool
       ? [
         'Category,Metric,Details',
         `School,"${currentUser?.instituteId?.name || 'School Campus'}","${activeCampusName}"`,
-        `Enrolled Students,"${students.length}","95.4% Attendance"`,
+        `Enrolled Students,"${students.length}","${avgRate} Attendance"`,
         `Teaching Staff,"${faculty.length}","100% On Duty"`,
         'Classes & Sections,"10 Grades • 24 Sections","Grade 1 to 10 (A, B, C)"',
         'Academic Routine,"7 Daily Periods","Assembly + 7 Periods + Recess"',
@@ -135,7 +140,7 @@ export default function CampusOverview() {
       : [
         'Category,Metric,Details',
         `Campus,"${activeCampusName}","Active Operations"`,
-        `Enrolled Students,"${students.length}","94.2% Attendance"`,
+        `Enrolled Students,"${students.length}","${avgRate} Attendance"`,
         `Faculty Members,"${faculty.length}","98% On Duty"`,
         `Active Classes,"${timetable.length}","Active Labs"`,
         `Programs,"${studentPrograms.length} Programs","${studentPrograms.slice(0, 4).join(', ')}"`,

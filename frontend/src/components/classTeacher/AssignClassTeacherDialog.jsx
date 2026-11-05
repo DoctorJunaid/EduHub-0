@@ -2,17 +2,13 @@ import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/spinner";
-import { UserCheck, Search, ShieldAlert, Award, Mail, Phone } from "lucide-react";
+import { UserCheck, Search, Award, X } from "lucide-react";
 import axiosInstance from "@/api/axiosInstance";
 import * as classTeacherApi from "@/api/classTeacher.api";
 import toast from "react-hot-toast";
@@ -43,7 +39,7 @@ export default function AssignClassTeacherDialog({
       const res = await axiosInstance.get("/campus/faculty?limit=100");
       const list = res.data?.faculty || res.data?.teachers || res.data?.data || res.data || [];
       setTeachers(Array.isArray(list) ? list : []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load teachers list");
     } finally {
       setLoading(false);
@@ -93,47 +89,60 @@ export default function AssignClassTeacherDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl bg-slate-900 border border-slate-800 text-white rounded-2xl shadow-2xl p-6">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <UserCheck size={24} />
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-lg bg-white border border-neutral-200 text-neutral-900 rounded-2xl shadow-xl p-0 overflow-hidden"
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-neutral-100 flex items-start justify-between bg-white">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0">
+              <UserCheck size={18} />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-white">
+              <DialogTitle className="text-base font-bold text-neutral-900 tracking-tight">
                 Assign Class Teacher
               </DialogTitle>
-              <DialogDescription className="text-slate-400 text-sm">
+              <DialogDescription className="text-xs text-neutral-500 mt-0.5">
                 Assign a dedicated Class Teacher for{" "}
-                <span className="text-indigo-400 font-semibold">
+                <span className="font-semibold text-neutral-800">
                   {classSection?.className || `${classSection?.gradeName || "Class"} - ${classSection?.name || classSection?.sectionName || ""}`}
                 </span>
               </DialogDescription>
             </div>
           </div>
-        </DialogHeader>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 inline-flex items-center justify-center transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
 
-        <div className="space-y-4 my-2">
+        {/* Body */}
+        <div className="p-6 space-y-4 bg-white">
           {/* Search Box */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-3 text-slate-400" size={18} />
-            <Input
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
               type="text"
               placeholder="Search teacher by name, email, or department..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500 focus:border-indigo-500 rounded-xl"
+              className="h-10 pl-9 pr-3 w-full rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 transition-colors"
             />
           </div>
 
           {/* Teacher Selection List */}
           <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
             {loading ? (
-              <div className="flex items-center justify-center py-8 text-slate-400 gap-2">
+              <div className="flex items-center justify-center py-8 text-neutral-500 text-xs gap-2">
                 <Spinner size="sm" /> Loading faculty directory...
               </div>
             ) : filteredTeachers.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-sm">
+              <div className="text-center py-8 text-neutral-500 text-xs">
                 No teachers found matching your search.
               </div>
             ) : (
@@ -152,36 +161,36 @@ export default function AssignClassTeacherDialog({
                   <div
                     key={tId}
                     onClick={() => setSelectedTeacherId(tId)}
-                    className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                    className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                       isSelected
-                        ? "bg-indigo-600/20 border-indigo-500/80 ring-1 ring-indigo-500/50 shadow-md"
-                        : "bg-slate-800/50 border-slate-800 hover:bg-slate-800/90 hover:border-slate-700"
+                        ? "bg-neutral-100/90 border-neutral-300 ring-1 ring-neutral-300 shadow-xs"
+                        : "bg-neutral-50/50 border-neutral-200/80 hover:bg-neutral-100/60 hover:border-neutral-300"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white shadow">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-neutral-900 text-white text-xs font-semibold flex items-center justify-center shrink-0">
                         {name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-white text-sm">
+                          <span className="text-xs font-bold text-neutral-900 truncate">
                             {name}
                           </span>
                           {isSelected && (
-                            <Badge className="bg-indigo-500 text-white text-xs px-1.5 py-0.5">
+                            <Badge className="bg-neutral-900 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
                               Selected
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                          <span>{dept}</span>
-                          {email && <span>• {email}</span>}
+                        <div className="text-[11px] text-neutral-500 flex items-center gap-2 mt-0.5 truncate">
+                          <span className="truncate">{dept}</span>
+                          {email && <span className="truncate">• {email}</span>}
                         </div>
                       </div>
                     </div>
 
                     {isAssignedElsewhere && (
-                      <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200/60 text-[10px] px-1.5 py-0.5 rounded shrink-0">
                         Has other class
                       </Badge>
                     )}
@@ -192,23 +201,24 @@ export default function AssignClassTeacherDialog({
           </div>
 
           {/* Note Input */}
-          <div className="space-y-1.5 pt-2 border-t border-slate-800">
-            <Label className="text-xs text-slate-300 font-medium">
+          <div className="space-y-1.5 pt-2 border-t border-neutral-100">
+            <label className="text-xs font-semibold text-neutral-700 block mb-1.5">
               Assignment Note / Academic Year (Optional)
-            </Label>
-            <Input
+            </label>
+            <input
+              type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Assigned for 2026-2027 Academic Session"
-              className="bg-slate-800/80 border-slate-700 text-white rounded-xl text-sm"
+              placeholder="e.g. Assigned for 2026-2027 academic year"
+              className="w-full rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 p-2.5 focus:outline-none focus:ring-1 focus:ring-neutral-400 transition-colors"
             />
           </div>
 
           {selectedTeacher && (
-            <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-start gap-3">
-              <Award className="text-indigo-400 shrink-0 mt-0.5" size={18} />
-              <div className="text-xs text-slate-300">
-                <span className="font-medium text-white">
+            <div className="p-3 rounded-lg border border-neutral-200 bg-neutral-50/70 flex items-start gap-3">
+              <Award className="text-neutral-700 shrink-0 mt-0.5" size={18} />
+              <div className="text-xs text-neutral-600 leading-relaxed">
+                <span className="font-semibold text-neutral-900">
                   {selectedTeacher.name || selectedTeacher.user?.name}
                 </span>{" "}
                 will receive owner permissions to take daily attendance, review all subject marks, write report card remarks, and compile results for this class section.
@@ -217,19 +227,22 @@ export default function AssignClassTeacherDialog({
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-800">
+        {/* Footer Actions */}
+        <div className="px-6 py-4 bg-neutral-50/60 border-t border-neutral-100 flex items-center justify-end gap-2.5">
           <Button
+            type="button"
             variant="ghost"
             onClick={onClose}
             disabled={submitting}
-            className="text-slate-400 hover:text-white hover:bg-slate-800"
+            className="h-9 px-4 text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg transition-colors"
           >
             Cancel
           </Button>
           <Button
+            type="button"
             onClick={handleAssign}
             disabled={submitting || !selectedTeacherId}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 rounded-xl shadow-lg shadow-indigo-600/30"
+            className="h-9 px-4 text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors shadow-xs inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
             {submitting ? (
               <>
@@ -239,7 +252,7 @@ export default function AssignClassTeacherDialog({
               "Confirm Assignment"
             )}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

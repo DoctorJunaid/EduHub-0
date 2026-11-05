@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Campus from "../models/campus.model.js";
 import Institute from "../models/institute.model.js";
-import { StudentProfile, TeacherProfile } from "../models/profile.model.js";
+import { StudentProfile, TeacherProfile, StudentAttendance } from "../models/profile.model.js";
 import { Grade, Section, Subject, GradeSubject } from "../models/academic.model.js";
 import { Route } from "../models/transport.model.js";
 import { logActivity } from "../models/activityLog.model.js";
@@ -72,15 +72,68 @@ export const getCampusStudents = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const formatted = students.map((s) => ({
-      ...s,
-      campus: s.campusId?.name || s.campus || "",
-      institute: s.instituteId?.name || s.institute || "",
-      gradeOrClass: s.gradeId?.name || s.gradeOrClass || "",
-      section: s.sectionId?.name || s.section || "",
-      usesTransport: Boolean(s.usesTransport),
-      transportDetails: s.transportDetails || null,
-    }));
+    const studentUserIds = students.map((s) => s._id);
+
+    // Compute dynamic attendance metrics strictly from marked records in database
+    const attendanceMap = new Map();
+    if (studentUserIds.length > 0) {
+      const attendanceStats = await StudentAttendance.aggregate([
+        {
+          $match: {
+            studentId: { $in: studentUserIds },
+          },
+        },
+        {
+          $group: {
+            _id: "$studentId",
+            totalSessions: { $sum: 1 },
+            presentSessions: {
+              $sum: {
+                $cond: [
+                  { $in: ["$status", ["Present", "Late", "present", "late"]] },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]);
+
+      for (const stat of attendanceStats) {
+        const totalSessions = stat.totalSessions || 0;
+        const presentSessions = stat.presentSessions || 0;
+        let attendancePercentage = null;
+        if (totalSessions > 0) {
+          attendancePercentage = Math.round((presentSessions / totalSessions) * 100 * 10) / 10;
+        }
+        attendanceMap.set(String(stat._id), {
+          totalAttendanceRecords: totalSessions,
+          attendanceRate: attendancePercentage,
+          attendance: attendancePercentage !== null ? `${attendancePercentage}%` : null,
+        });
+      }
+    }
+
+    const formatted = students.map((s) => {
+      const att = attendanceMap.get(String(s._id));
+      const totalAttendanceRecords = att ? att.totalAttendanceRecords : 0;
+      const attendanceRate = att ? att.attendanceRate : null;
+      const attendance = att ? att.attendance : null;
+
+      return {
+        ...s,
+        campus: s.campusId?.name || s.campus || "",
+        institute: s.instituteId?.name || s.institute || "",
+        gradeOrClass: s.gradeId?.name || s.gradeOrClass || "",
+        section: s.sectionId?.name || s.section || "",
+        usesTransport: Boolean(s.usesTransport),
+        transportDetails: s.transportDetails || null,
+        totalAttendanceRecords,
+        attendanceRate,
+        attendance,
+      };
+    });
 
     return res.status(200).json({
       success: true,

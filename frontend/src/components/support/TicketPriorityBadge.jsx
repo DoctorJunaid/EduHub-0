@@ -5,25 +5,25 @@ export const PRIORITY_CONFIG = {
   Urgent: {
     label: "Urgent (2h SLA)",
     shortLabel: "Urgent",
-    className: "bg-rose-50 text-rose-700 border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
+    className: "bg-rose-50 text-rose-700 border-rose-200/70",
     icon: AlertCircle,
   },
   High: {
     label: "High (8h SLA)",
     shortLabel: "High",
-    className: "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+    className: "bg-amber-50 text-amber-700 border-amber-200/70",
     icon: Clock,
   },
   Medium: {
     label: "Medium (24h SLA)",
     shortLabel: "Medium",
-    className: "bg-neutral-100 text-neutral-700 border-neutral-200/70 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+    className: "bg-neutral-100 text-neutral-700 border-neutral-200/70",
     icon: Clock,
   },
   Low: {
     label: "Low (72h SLA)",
     shortLabel: "Low",
-    className: "bg-neutral-100 text-neutral-600 border-neutral-200/70 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700",
+    className: "bg-neutral-100 text-neutral-600 border-neutral-200/70",
     icon: Clock,
   },
 };
@@ -34,10 +34,9 @@ export const TicketPriorityBadge = ({ priority = "Medium", showSla = false, clas
 
   return (
     <span
-      className={`isu-ticket-badge inline-flex items-center gap-1.5 h-6 px-2.5 py-1 rounded-full text-xs font-medium border shrink-0 whitespace-nowrap leading-none ${config.className} ${className}`}
-      style={{ padding: "3px 10px" }}
+      className={`isu-ticket-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium border shrink-0 whitespace-nowrap leading-none ${config.className} ${className}`}
     >
-      <Icon className="w-3.5 h-3.5 shrink-0" />
+      <Icon className="w-3 h-3 shrink-0" />
       <span>{showSla ? config.label : config.shortLabel}</span>
     </span>
   );
