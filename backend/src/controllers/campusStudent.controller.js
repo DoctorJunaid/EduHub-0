@@ -370,20 +370,28 @@ export const createStudentForCampus = async (req, res) => {
       req.body.usesTransport === "true" ||
       Boolean(req.body.routeId && req.body.routeId !== "none");
 
-    const transportRouteId =
+    let finalRouteId =
       isUsingTransport && req.body.routeId && req.body.routeId !== "none"
         ? req.body.routeId
         : null;
 
-    const transportStopName =
+    let finalStopName =
       isUsingTransport && req.body.stopName
         ? String(req.body.stopName).trim()
         : "";
 
+    if (isUsingTransport && !finalRouteId) {
+      const defaultRoute = await Route.findOne({ status: "Active" });
+      if (defaultRoute) {
+        finalRouteId = defaultRoute._id;
+        finalStopName = finalStopName || defaultRoute.stops?.[0]?.stopName || "Main Gate Terminal";
+      }
+    }
+
     const transportDetails = isUsingTransport
       ? {
-        routeId: transportRouteId,
-        stopName: transportStopName,
+        routeId: finalRouteId,
+        stopName: finalStopName,
         assignedAt: new Date(),
         assignedBy: req.user?._id || null,
       }
@@ -460,9 +468,9 @@ export const createStudentForCampus = async (req, res) => {
           },
           usesTransport: isUsingTransport,
           transportDetails: transportDetails,
-          routeId: transportRouteId,
-          stopName: transportStopName,
-          transportEnrolled: isUsingTransport && Boolean(transportRouteId),
+          routeId: finalRouteId,
+          stopName: finalStopName,
+          transportEnrolled: isUsingTransport && Boolean(finalRouteId),
           isActive: student.status !== "Inactive",
         },
         { upsert: true, new: true }

@@ -24,14 +24,70 @@
 .students-directory select:disabled {
   cursor: not-allowed;
 }
-.students-directory [data-slot="table-container"] {
-  width: 100%;
-  overflow-x: hidden !important;
-}
-.students-directory table {
+.students-directory .campus-table-container {
   width: 100% !important;
-  min-width: 0 !important;
-  table-layout: fixed !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.students-directory .campus-table-container [data-slot="table-container"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  display: block !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #64748b #f1f5f9 !important;
+}
+
+/* Force visible, prominent horizontal scrollbar on mobile and touch devices */
+.students-directory .campus-table-container [data-slot="table-container"]::-webkit-scrollbar {
+  height: 9px !important;
+  display: block !important;
+}
+
+.students-directory .campus-table-container [data-slot="table-container"]::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 9999px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.students-directory .campus-table-container [data-slot="table-container"]::-webkit-scrollbar-thumb {
+  background: #64748b !important;
+  border-radius: 9999px !important;
+  border: 2px solid #f1f5f9 !important;
+}
+
+.students-directory .campus-table-container [data-slot="table-container"]::-webkit-scrollbar-thumb:hover {
+  background: #334155 !important;
+}
+
+@media (min-width: 1025px) {
+  .students-directory .campus-table-container table {
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .students-directory .campus-table-container table {
+    width: max-content !important;
+    min-width: 1050px !important;
+    table-layout: auto !important;
+  }
+
+  .students-directory .campus-table-container [data-slot="table-container"] {
+    padding-bottom: 4px !important;
+  }
+}
+
+/* Ensure no overlap with bottom-right floating help widget */
+.students-directory [aria-label="Table pagination"],
+.students-directory .students-footer {
+  padding-right: 80px !important;
+  padding-bottom: 16px !important;
 }
 .students-directory th {
   padding: 8px 14px !important;
@@ -449,5 +505,102 @@
   }
   .student-profile-heading p {
     font-size: 13px;
+  }
+}
+
+
+/* ==========================================================================
+   Mobile Responsive Enhancements for Students Directory
+   ========================================================================== */
+@media (max-width: 768px) {
+  .students-directory [aria-label="Table pagination"],
+  .students-directory .students-footer {
+    padding-right: 16px !important;
+    padding-bottom: 84px !important;
+  }
+
+  .students-directory .campus-toolbar {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 10px 12px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .students-directory .toolbar-left {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .students-directory .toolbar-search {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .students-directory .toolbar-search input {
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+  }
+
+  .students-directory select.toolbar-select {
+    flex: 1 1 calc(33.333% - 6px) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 11.5px !important;
+    border-radius: 7px !important;
+  }
+
+  .students-directory .toolbar-actions {
+    width: 100% !important;
+    display: flex !important;
+    margin-left: 0 !important;
+    margin-top: 4px !important;
+  }
+
+  .students-directory .toolbar-actions .toolbar-btn-primary {
+    width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+  }
+
+  .students-directory .campus-action-icons {
+    gap: 6px !important;
+  }
+
+  .students-directory .campus-icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+    background: #f4f4f5 !important;
+    border: 1px solid #e4e4e7 !important;
+    color: #09090b !important;
+  }
+
+  .students-directory .campus-icon-btn.is-delete {
+    color: #ef4444 !important;
+    background: #fef2f2 !important;
+    border-color: #fee2e2 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .students-directory select.toolbar-select {
+    flex: 1 1 calc(50% - 6px) !important;
+  }
+
+  .students-directory select.toolbar-select:last-of-type {
+    flex: 1 1 100% !important;
   }
 }

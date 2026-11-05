@@ -1723,6 +1723,13 @@ tbody tr:hover {
   }
 }
 
+@media (max-width: 639px) {
+  .header .breadcrumbs,
+  nav.breadcrumbs.hidden {
+    display: none !important;
+  }
+}
+
 @media (max-width: 480px) {
   .header {
     padding: 0 10px;

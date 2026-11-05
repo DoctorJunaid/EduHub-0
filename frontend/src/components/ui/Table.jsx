@@ -3,10 +3,12 @@ import { cn } from "@/lib/utils"
 
 function Table({
   className,
+  containerRef,
   ...props
 }) {
   return (
     <div
+      ref={containerRef}
       data-slot="table-container"
       className="relative w-full overflow-x-auto"
     >
