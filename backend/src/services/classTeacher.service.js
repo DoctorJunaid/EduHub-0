@@ -865,7 +865,7 @@ export async function markClassAttendance(
     attendanceRate:
       records.length > 0
         ? Math.round(((presentCount + lateCount) / records.length) * 100)
-        : 100,
+        : 0,
     date: dateStr,
     markedAt: new Date(),
   };

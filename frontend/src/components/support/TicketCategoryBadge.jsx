@@ -15,25 +15,35 @@ export const CATEGORY_ICONS = {
   "Feature Request": { icon: "💡", label: "Feature Request" },
 };
 
-export const TicketCategoryBadge = ({ category = "Other", showIconOnly = false, className = "" }) => {
+export const TicketCategoryBadge = ({
+  category = "Other",
+  showIconOnly = false,
+  className = "",
+}) => {
   const label = getCategoryLabel(category);
   const CategoryIcon = getCategoryIcon(category);
 
   if (showIconOnly) {
     return (
-      <span className={`inline-flex items-center justify-center text-zinc-600 ${className}`} title={label}>
-        {React.createElement(CategoryIcon, { className: "w-3.5 h-3.5 text-muted-foreground shrink-0" })}
+      <span
+        className={`inline-flex items-center justify-center text-zinc-600 ${className}`}
+        title={label}
+      >
+        {React.createElement(CategoryIcon, {
+          className: "w-3.5 h-3.5 text-muted-foreground shrink-0",
+        })}
       </span>
     );
   }
 
   return (
     <span
-      className={`isu-ticket-badge inline-flex items-center rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 text-[11px] font-medium whitespace-nowrap ${className}`}
-      style={{ padding: "2px 8px", gap: "6px" }}
+      className={`isu-ticket-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 border border-neutral-200/80 text-[11px] font-medium text-neutral-700 whitespace-nowrap ${className}`}
       title={label}
     >
-      {React.createElement(CategoryIcon, { className: "w-3.5 h-3.5 text-neutral-600 shrink-0" })}
+      {React.createElement(CategoryIcon, {
+        className: "w-3.5 h-3.5 text-neutral-500 shrink-0",
+      })}
       <span className="truncate">{label}</span>
     </span>
   );

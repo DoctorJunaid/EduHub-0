@@ -574,76 +574,76 @@ export default function AcademicsConfig() {
             return (
               <>
                 {/* 1. Flush 4-Card KPI Track */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 w-full">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6">
                   {/* TOTAL SECTIONS */}
-                  <div className="bg-white border border-neutral-200/90 rounded-xl p-4 shadow-xs flex items-center justify-between">
+                  <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-none flex items-start justify-between">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block truncate">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
                         Total Sections
                       </span>
-                      <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+                      <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
                         {totalSections}
                       </span>
-                      <span className="text-[11px] text-neutral-500 truncate block mt-0.5">
+                      <span className="text-xs text-neutral-500 truncate block mt-1">
                         Configured classes
                       </span>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-neutral-100 border border-neutral-200/80 flex items-center justify-center text-neutral-800 shrink-0">
-                      <GraduationCap className="w-5 h-5 text-neutral-700" />
+                    <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0">
+                      <GraduationCap className="w-5 h-5 text-neutral-600" />
                     </div>
                   </div>
 
                   {/* ASSIGNED TEACHERS */}
-                  <div className="bg-white border border-neutral-200/90 rounded-xl p-4 shadow-xs flex items-center justify-between">
+                  <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-none flex items-start justify-between">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block truncate">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
                         Assigned Incharges
                       </span>
-                      <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+                      <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
                         {assignedCount}
                       </span>
-                      <span className="text-[11px] text-emerald-600 font-medium truncate block mt-0.5">
+                      <span className="text-xs text-neutral-500 truncate block mt-1">
                         {coveragePercent}% Staffed
                       </span>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-700 shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0">
+                      <CheckCircle2 className="w-5 h-5 text-neutral-600" />
                     </div>
                   </div>
 
                   {/* VACANT SECTIONS */}
-                  <div className="bg-white border border-neutral-200/90 rounded-xl p-4 shadow-xs flex items-center justify-between">
+                  <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-none flex items-start justify-between">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block truncate">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
                         Vacant Sections
                       </span>
-                      <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+                      <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
                         {unassignedCount}
                       </span>
-                      <span className="text-[11px] text-amber-600 font-medium truncate block mt-0.5">
+                      <span className="text-xs text-neutral-500 truncate block mt-1">
                         Requires Incharge
                       </span>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 shrink-0">
-                      <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-neutral-600" />
                     </div>
                   </div>
 
                   {/* ATTENDANCE MARKED TODAY */}
-                  <div className="bg-white border border-neutral-200/90 rounded-xl p-4 shadow-xs flex items-center justify-between">
+                  <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-none flex items-start justify-between">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block truncate">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
                         Attendance Today
                       </span>
-                      <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+                      <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
                         {markedTodayCount}
                       </span>
-                      <span className="text-[11px] text-neutral-500 truncate block mt-0.5">
+                      <span className="text-xs text-neutral-500 truncate block mt-1">
                         Sections rolled call
                       </span>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-700 shrink-0">
-                      <ClipboardList className="w-5 h-5 text-blue-600" />
+                    <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600 shrink-0">
+                      <ClipboardList className="w-5 h-5 text-neutral-600" />
                     </div>
                   </div>
                 </div>
@@ -653,32 +653,32 @@ export default function AcademicsConfig() {
                   {/* Header Title + Coverage Overview */}
                   <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <GraduationCap className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0">
+                        <GraduationCap className="w-5 h-5 text-neutral-700" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <h3 className="text-base font-bold text-neutral-900 tracking-tight">
                             Class Teacher Roles &amp; Section Ownership
                           </h3>
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 text-xs font-medium border border-neutral-200">
                             {filtered.length} {filtered.length === 1 ? "Section" : "Sections"}
                           </span>
                         </div>
-                        <p className="text-xs text-neutral-500 mt-1">
+                        <p className="text-xs text-neutral-500 mt-0.5">
                           Every class section has one primary Class Teacher responsible for daily roll call, student records, and compiling term results.
                         </p>
                       </div>
                     </div>
 
                     {/* Progress indicator */}
-                    <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200/70 rounded-xl px-4 py-2.5 self-start md:self-auto shrink-0">
-                      <div className="flex flex-col gap-1 min-w-[120px]">
-                        <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-3 self-start md:self-auto shrink-0">
+                      <div className="flex flex-col gap-1 min-w-[128px]">
+                        <div className="flex items-center justify-between text-xs">
                           <span className="text-neutral-500 font-medium">Incharge Coverage</span>
                           <span className="text-neutral-900 font-bold">{coveragePercent}%</span>
                         </div>
-                        <div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-32 rounded-full bg-neutral-100 overflow-hidden">
                           <div
                             className="h-full bg-emerald-600 rounded-full transition-all duration-300"
                             style={{ width: `${coveragePercent}%` }}
@@ -695,17 +695,17 @@ export default function AcademicsConfig() {
                   <div className="p-4 sm:px-6 bg-neutral-50/60 border-b border-neutral-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1">
                       {/* Search Input */}
-                      <div className="relative flex-1 max-w-md">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                      <div className="relative w-full sm:w-80">
+                        <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="text"
-                          placeholder="Search class, section, teacher, or department..."
+                          placeholder="Search class, section, teacher..."
                           value={classTeacherSearch}
                           onChange={(e) => {
                             setClassTeacherSearch(e.target.value);
                             setClassTeacherPage(1);
                           }}
-                          className="h-9 w-full pl-9 pr-8 text-xs rounded-lg border border-neutral-200 bg-white placeholder:text-neutral-400 text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-colors"
+                          className="h-9 w-full pl-9 pr-8 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 transition-colors"
                         />
                         {classTeacherSearch && (
                           <button
@@ -723,16 +723,16 @@ export default function AcademicsConfig() {
                       </div>
 
                       {/* Status Segmented Buttons */}
-                      <div className="flex items-center rounded-lg bg-neutral-200/60 p-0.5 border border-neutral-200 shrink-0 self-start sm:self-auto">
+                      <div className="bg-neutral-100 p-1 rounded-lg inline-flex items-center gap-1 shrink-0 self-start sm:self-auto border border-neutral-200/80">
                         <button
                           type="button"
                           onClick={() => {
                             setClassTeacherStatusFilter("all");
                             setClassTeacherPage(1);
                           }}
-                          className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                          className={`text-xs px-3 py-1 rounded-md transition-colors ${
                             classTeacherStatusFilter === "all"
-                              ? "bg-white text-neutral-900 shadow-xs"
+                              ? "bg-white text-neutral-900 font-medium shadow-xs"
                               : "text-neutral-600 hover:text-neutral-900"
                           }`}
                         >
@@ -744,13 +744,12 @@ export default function AcademicsConfig() {
                             setClassTeacherStatusFilter("assigned");
                             setClassTeacherPage(1);
                           }}
-                          className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                          className={`text-xs px-3 py-1 rounded-md transition-colors ${
                             classTeacherStatusFilter === "assigned"
-                              ? "bg-white text-emerald-800 shadow-xs"
+                              ? "bg-white text-neutral-900 font-medium shadow-xs"
                               : "text-neutral-600 hover:text-neutral-900"
                           }`}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           Assigned ({assignedCount})
                         </button>
                         <button
@@ -759,13 +758,12 @@ export default function AcademicsConfig() {
                             setClassTeacherStatusFilter("unassigned");
                             setClassTeacherPage(1);
                           }}
-                          className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                          className={`text-xs px-3 py-1 rounded-md transition-colors ${
                             classTeacherStatusFilter === "unassigned"
-                              ? "bg-white text-amber-800 shadow-xs"
+                              ? "bg-white text-neutral-900 font-medium shadow-xs"
                               : "text-neutral-600 hover:text-neutral-900"
                           }`}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           Vacant ({unassignedCount})
                         </button>
                       </div>
@@ -779,7 +777,7 @@ export default function AcademicsConfig() {
                           setClassTeacherGradeFilter(e.target.value);
                           setClassTeacherPage(1);
                         }}
-                        className="h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer font-medium"
+                        className="h-9 px-3 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
                       >
                         <option value="all">All Grades ({gradeOptions.length})</option>
                         {gradeOptions.map((g) => (
@@ -846,7 +844,7 @@ export default function AcademicsConfig() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                         {paginatedItems.map((ct) => {
                           const hasTeacher = !!ct.classTeacher;
                           const teacherName = ct.classTeacher?.name || "";
@@ -856,125 +854,97 @@ export default function AcademicsConfig() {
                           return (
                             <div
                               key={ct._id || ct.classId}
-                              className={`bg-white rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden relative group hover:shadow-md ${
-                                hasTeacher
-                                  ? "border-neutral-200 hover:border-neutral-300"
-                                  : "border-amber-200/70 hover:border-amber-300/90 shadow-xs"
-                              }`}
-                              style={{ minHeight: "265px" }}
+                              className="bg-white border border-neutral-200 rounded-xl p-4 shadow-none flex flex-col justify-between hover:border-neutral-300 transition-colors"
                             >
-                              {/* Top accent line */}
-                              <div
-                                className={`h-1 w-full ${
-                                  hasTeacher ? "bg-emerald-500" : "bg-amber-400"
-                                }`}
-                              />
+                              <div>
+                                {/* Card Header */}
+                                <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+                                  <h4 className="text-sm font-bold text-neutral-900 truncate pr-2">
+                                    {ct.className}
+                                  </h4>
+                                  {hasTeacher ? (
+                                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[11px] font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1 shrink-0">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                      Assigned
+                                    </span>
+                                  ) : (
+                                    <span className="bg-amber-50 text-amber-700 border border-amber-200/60 text-[11px] font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1 shrink-0">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                      Vacant
+                                    </span>
+                                  )}
+                                </div>
 
-                              {/* Card Header Bar */}
-                              <div className="px-4 py-3 bg-neutral-50/50 border-b border-neutral-100 flex items-center justify-between">
-                                <h4 className="font-bold text-sm text-neutral-900 tracking-tight truncate pr-2">
-                                  {ct.className}
-                                </h4>
-                                {hasTeacher ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    Assigned
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                    Vacant
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Card Body */}
-                              <div className="p-4 flex-1 flex flex-col justify-between gap-3.5">
-                                {hasTeacher ? (
-                                  <>
-                                    {/* Teacher Identity Block */}
-                                    <div className="p-3 rounded-xl bg-neutral-50/80 border border-neutral-200/60 flex items-start gap-3">
-                                      <div className="w-9 h-9 rounded-full bg-neutral-900 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-xs ring-2 ring-white">
+                                {/* Teacher Profile Row */}
+                                <div className="py-3.5">
+                                  {hasTeacher ? (
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-9 h-9 rounded-full bg-neutral-900 text-white flex items-center justify-center text-xs font-semibold shrink-0">
                                         {teacherInitial.toUpperCase()}
                                       </div>
                                       <div className="min-w-0 flex-1">
-                                        <span className="font-bold text-xs sm:text-sm text-neutral-900 block truncate leading-tight">
+                                        <span className="text-xs font-semibold text-neutral-900 block truncate leading-tight">
                                           {ct.classTeacher.name}
                                         </span>
-                                        <span className="text-[11px] font-medium text-neutral-500 block truncate mt-0.5">
+                                        <span className="text-[11px] text-neutral-500 block truncate mt-0.5">
                                           {ct.classTeacher.department || ct.classTeacher.designation || "Teaching Staff"}
                                         </span>
                                         {ct.classTeacher.email && (
-                                          <div className="text-neutral-400 truncate flex items-center gap-1.5 text-[11px] mt-1">
+                                          <div className="text-neutral-500 truncate flex items-center gap-1.5 text-[11px] mt-1">
                                             <Mail className="w-3 h-3 text-neutral-400 shrink-0" />
                                             <span className="truncate">{ct.classTeacher.email}</span>
                                           </div>
                                         )}
                                       </div>
                                     </div>
-
-                                    {/* Class Vitals Row */}
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-neutral-50/60 border border-neutral-200/70 text-neutral-600">
-                                        <Users className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                                        <span className="truncate">
-                                          <strong className="text-neutral-900 font-bold">{ct.studentCount || 0}</strong> Students
+                                  ) : (
+                                    <div className="flex items-center gap-3 py-1">
+                                      <div className="w-9 h-9 rounded-full bg-neutral-100 text-neutral-600 border border-neutral-200 flex items-center justify-center text-xs font-semibold shrink-0">
+                                        <UserPlus className="w-4 h-4" />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <span className="text-xs font-semibold text-neutral-900 block truncate">
+                                          No Class Teacher Assigned
+                                        </span>
+                                        <span className="text-[11px] text-neutral-500 block truncate mt-0.5">
+                                          Assign an incharge for roll call & reports
                                         </span>
                                       </div>
-                                      <div
-                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold truncate ${
-                                          isAttendanceMarked
-                                            ? "bg-emerald-50/70 border-emerald-200/60 text-emerald-800"
-                                            : "bg-amber-50/70 border-amber-200/60 text-amber-800"
-                                        }`}
-                                      >
-                                        {isAttendanceMarked ? (
-                                          <>
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                            <span className="truncate">Marked Today</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                            <span className="truncate">Roll Call Pending</span>
-                                          </>
-                                        )}
-                                      </div>
                                     </div>
-                                  </>
-                                ) : (
-                                  /* Modern Vacant State (No wireframe dashes!) */
-                                  <div className="p-4 rounded-xl bg-amber-50/20 border border-amber-100/90 flex flex-col items-center justify-center text-center py-5 flex-1">
-                                    <div className="w-9 h-9 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200/60 flex items-center justify-center mb-2 shadow-xs">
-                                      <UserPlus className="w-4 h-4" />
-                                    </div>
-                                    <p className="text-xs font-bold text-neutral-900">
-                                      No Class Teacher Assigned
-                                    </p>
-                                    <p className="text-[11px] text-neutral-500 mt-0.5 max-w-[210px] leading-relaxed">
-                                      Assign a dedicated teacher to supervise daily roll call, student records, and class reports.
-                                    </p>
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-neutral-500 mt-2.5 px-2 py-0.5 rounded-md bg-white border border-neutral-200/70">
-                                      <Users className="w-3 h-3 text-neutral-400" />
-                                      <strong>{ct.studentCount || 0}</strong> Enrolled Students
-                                    </span>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
 
-                              {/* Card Action Footer */}
-                              <div className="px-4 py-3 bg-neutral-50/40 border-t border-neutral-100 flex items-center justify-between">
-                                <Button
-                                  size="sm"
-                                  variant={hasTeacher ? "outline" : "default"}
+                              {/* Card Footer */}
+                              <div>
+                                <div className="flex items-center justify-between text-xs text-neutral-500 pt-3 border-t border-neutral-100">
+                                  <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
+                                    <Users className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                                    <span><strong>{ct.studentCount || 0}</strong> Students</span>
+                                  </span>
+                                  {isAttendanceMarked ? (
+                                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                      Marked Today
+                                    </span>
+                                  ) : (
+                                    <span className="bg-amber-50 text-amber-700 border border-amber-200/60 text-[10px] font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                                      <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                                      Roll Call Pending
+                                    </span>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
                                   onClick={() => {
                                     setSelectedSectionForAssign(ct);
                                     setIsAssignDialogOpen(true);
                                   }}
-                                  className={`w-full text-xs font-semibold h-9 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-xs ${
+                                  className={`w-full mt-3 h-8 text-xs font-medium rounded-lg inline-flex items-center justify-center gap-1.5 transition-colors ${
                                     hasTeacher
-                                      ? "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50 hover:text-neutral-900"
-                                      : "bg-neutral-900 hover:bg-neutral-800 text-white"
+                                      ? "border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700"
+                                      : "bg-neutral-900 hover:bg-neutral-800 text-white shadow-xs"
                                   }`}
                                 >
                                   {hasTeacher ? (
@@ -988,7 +958,7 @@ export default function AcademicsConfig() {
                                       <span>Assign Class Teacher</span>
                                     </>
                                   )}
-                                </Button>
+                                </button>
                               </div>
                             </div>
                           );

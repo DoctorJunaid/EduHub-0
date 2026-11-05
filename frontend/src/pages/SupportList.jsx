@@ -187,36 +187,30 @@ export const SupportList = () => {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 sm:space-y-5 pb-16">
       {/* 1. Flush 4-Card KPI Overview Track (Interactive Filter Buttons) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 w-full">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6">
         {/* TOTAL TICKETS */}
         <button
           type="button"
           onClick={() => handleFilterChange("status", "all")}
-          className={`bg-white border rounded-xl p-4 shadow-xs flex items-center justify-between text-left transition-all cursor-pointer ${
+          className={`bg-white border rounded-xl p-4 shadow-none flex items-start justify-between text-left transition-all cursor-pointer ${
             filters.status === "all"
-              ? "border-neutral-900 ring-2 ring-neutral-900/10 shadow-sm"
-              : "border-neutral-200/90 hover:border-neutral-300 hover:bg-neutral-50/50"
+              ? "border-neutral-900 ring-1 ring-neutral-900/10 shadow-xs"
+              : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/50"
           }`}
         >
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block truncate">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
               Total Tickets
             </span>
-            <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
               {totalTickets}
             </span>
-            <span className="text-[11px] text-neutral-500 truncate block mt-0.5">
+            <span className="text-xs text-neutral-500 truncate block mt-1">
               {isStaff ? "Institutional logs" : "Help conversations"}
             </span>
           </div>
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              filters.status === "all"
-                ? "bg-neutral-900 text-white shadow-xs"
-                : "bg-neutral-100 border border-neutral-200/80 text-neutral-700"
-            }`}
-          >
-            <Headphones className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200/80 flex items-center justify-center text-neutral-600 shrink-0">
+            <Headphones className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </button>
 
@@ -224,31 +218,25 @@ export const SupportList = () => {
         <button
           type="button"
           onClick={() => handleFilterChange("status", "Open")}
-          className={`bg-white border rounded-xl p-4 shadow-xs flex items-center justify-between text-left transition-all cursor-pointer ${
+          className={`bg-white border rounded-xl p-4 shadow-none flex items-start justify-between text-left transition-all cursor-pointer ${
             filters.status === "Open"
-              ? "border-rose-600 ring-2 ring-rose-600/15 shadow-sm"
-              : "border-neutral-200/90 hover:border-rose-200 hover:bg-rose-50/30"
+              ? "border-neutral-900 ring-1 ring-neutral-900/10 shadow-xs"
+              : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/50"
           }`}
         >
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 block truncate">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
               Action Required
             </span>
-            <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
               {openTickets}
             </span>
-            <span className="text-[11px] text-rose-600 font-medium truncate block mt-0.5">
+            <span className="text-xs text-neutral-500 truncate block mt-1">
               Awaiting triage / reply
             </span>
           </div>
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              filters.status === "Open"
-                ? "bg-rose-600 text-white shadow-xs"
-                : "bg-rose-50 border border-rose-200/80 text-rose-600"
-            }`}
-          >
-            <AlertCircle className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200/80 flex items-center justify-center text-neutral-600 shrink-0">
+            <AlertCircle className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </button>
 
@@ -256,31 +244,25 @@ export const SupportList = () => {
         <button
           type="button"
           onClick={() => handleFilterChange("status", "In Progress")}
-          className={`bg-white border rounded-xl p-4 shadow-xs flex items-center justify-between text-left transition-all cursor-pointer ${
+          className={`bg-white border rounded-xl p-4 shadow-none flex items-start justify-between text-left transition-all cursor-pointer ${
             filters.status === "In Progress"
-              ? "border-amber-600 ring-2 ring-amber-600/15 shadow-sm"
-              : "border-neutral-200/90 hover:border-amber-200 hover:bg-amber-50/30"
+              ? "border-neutral-900 ring-1 ring-neutral-900/10 shadow-xs"
+              : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/50"
           }`}
         >
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block truncate">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
               In Progress
             </span>
-            <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
               {inProgressTickets}
             </span>
-            <span className="text-[11px] text-amber-600 font-medium truncate block mt-0.5">
+            <span className="text-xs text-neutral-500 truncate block mt-1">
               Under investigation
             </span>
           </div>
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              filters.status === "In Progress"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-amber-50 border border-amber-200/80 text-amber-600"
-            }`}
-          >
-            <Clock className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200/80 flex items-center justify-center text-neutral-600 shrink-0">
+            <Clock className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </button>
 
@@ -288,120 +270,112 @@ export const SupportList = () => {
         <button
           type="button"
           onClick={() => handleFilterChange("status", "Resolved")}
-          className={`bg-white border rounded-xl p-4 shadow-xs flex items-center justify-between text-left transition-all cursor-pointer ${
+          className={`bg-white border rounded-xl p-4 shadow-none flex items-start justify-between text-left transition-all cursor-pointer ${
             filters.status === "Resolved" || filters.status === "Closed"
-              ? "border-emerald-600 ring-2 ring-emerald-600/15 shadow-sm"
-              : "border-neutral-200/90 hover:border-emerald-200 hover:bg-emerald-50/30"
+              ? "border-neutral-900 ring-1 ring-neutral-900/10 shadow-xs"
+              : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/50"
           }`}
         >
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block truncate">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 block truncate">
               Resolved &amp; Closed
             </span>
-            <span className="text-2xl font-black text-neutral-900 tracking-tight block mt-0.5">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight block mt-1">
               {resolvedTickets}
             </span>
-            <span className="text-[11px] text-emerald-600 font-medium truncate block mt-0.5">
+            <span className="text-xs text-neutral-500 truncate block mt-1">
               Completed resolutions
             </span>
           </div>
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              filters.status === "Resolved" || filters.status === "Closed"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-emerald-50 border border-emerald-200/80 text-emerald-600"
-            }`}
-          >
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200/80 flex items-center justify-center text-neutral-600 shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-neutral-600 stroke-[1.75]" />
           </div>
         </button>
       </div>
 
-      {/* 2. Main Executive Card Container */}
-      <div className="w-full bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-        {/* Header Title + Action Buttons */}
-        <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <Headphones className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight">
-                  {isStaff ? "Manage Support Tickets" : "Manage Conversations"}
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200">
-                  {total} {total === 1 ? "Record" : "Records"}
-                </span>
-                {overdueTickets > 0 && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1 shadow-2xs">
-                    <AlertCircle className="w-3 h-3 text-rose-600" />
-                    {overdueTickets} Overdue SLA
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-neutral-500 mt-1">
-                {isStaff
-                  ? "Triage, assign, escalate, and resolve institutional support requests."
-                  : isTeacherPortal
-                    ? "Ask questions, submit requests regarding schedules, classes, or account support, and track replies."
-                    : "Ask questions, get help with your studies, fees, or account, and track replies."}
-              </p>
-            </div>
+      {/* 2. Sub-header & Action Buttons Card */}
+      <div className="w-full bg-white border border-neutral-200 rounded-xl p-5 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-none">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-700 shrink-0">
+            <Headphones className="w-5 h-5 text-neutral-700 stroke-[1.75]" />
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0 self-start md:self-auto flex-wrap sm:flex-nowrap">
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  navigate(
-                    role === "super_admin"
-                      ? "/super-admin/support"
-                      : role === "institute_admin"
-                        ? "/institute-admin/support"
-                        : "/support/manage",
-                  )
-                }
-                className="h-9 px-3 rounded-lg border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50 text-xs font-semibold gap-1.5 shadow-2xs"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-600" />
-                <span>Manage All</span>
-              </Button>
-            )}
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="h-9 px-3 rounded-lg border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 text-xs font-semibold gap-1.5 shadow-2xs shrink-0"
-              title="Refresh list"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-neutral-900" : "text-neutral-500"}`}
-              />
-              <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
-            </Button>
-
-            <Button
-              type="button"
-              onClick={() => setIsNewDialogOpen(true)}
-              className="h-9 px-4 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{isStaff ? "New Ticket" : "Ask for Help"}</span>
-            </Button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight inline-flex items-center gap-2.5">
+                {isStaff ? "Manage Support Tickets" : "Manage Conversations"}
+              </h3>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-700">
+                {total} {total === 1 ? "Record" : "Records"}
+              </span>
+              {overdueTickets > 0 && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200/70 text-xs font-medium">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                  {overdueTickets} Overdue SLA
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              {isStaff
+                ? "Triage, assign, escalate, and resolve institutional support requests."
+                : isTeacherPortal
+                  ? "Ask questions, submit requests regarding schedules, classes, or account support, and track replies."
+                  : "Ask questions, get help with your studies, fees, or account, and track replies."}
+            </p>
           </div>
         </div>
 
-        {/* Unified Responsive Filter Toolbar (Search + Segmented Status Pills + Dropdowns on ONE cohesive row) */}
-        <div className="p-3.5 sm:px-6 bg-neutral-50/70 border-b border-neutral-200 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto flex-wrap sm:flex-nowrap">
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  role === "super_admin"
+                    ? "/super-admin/support"
+                    : role === "institute_admin"
+                      ? "/institute-admin/support"
+                      : "/support/manage",
+                )
+              }
+              className="h-9 px-3.5 text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Manage All</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="h-9 px-3.5 text-xs font-medium border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+            title="Refresh list"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-neutral-900" : "text-neutral-500"}`}
+            />
+            <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsNewDialogOpen(true)}
+            className="h-9 px-4 text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg inline-flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isStaff ? "New Ticket" : "Ask for Help"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Tickets Table & Unified Filter Toolbar */}
+      <div className="w-full bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-none">
+        {/* Unified Responsive Filter Toolbar */}
+        <div className="p-3.5 sm:px-5 bg-neutral-50/70 border-b border-neutral-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 min-w-0">
-            {/* Search Input - explicit fixed width so it NEVER collapses! */}
-            <div className="relative w-full sm:w-[280px] shrink-0">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72 shrink-0">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
               <input
                 type="text"
@@ -412,13 +386,13 @@ export const SupportList = () => {
                 }
                 value={filters.search || ""}
                 onChange={(e) => handleFilterChange("search", e.target.value)}
-                className="h-9 w-full pl-9 pr-8 text-xs rounded-lg border border-neutral-200 bg-white placeholder:text-neutral-400 text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-colors shadow-2xs"
+                className="h-9 pl-9 pr-8 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 w-full"
               />
               {filters.search && (
                 <button
                   type="button"
                   onClick={() => handleFilterChange("search", "")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -426,8 +400,8 @@ export const SupportList = () => {
               )}
             </div>
 
-            {/* Segmented Status Buttons (All, Open, In Progress, Resolved, Closed) */}
-            <div className="flex items-center rounded-lg bg-neutral-200/60 p-0.5 border border-neutral-200 shrink-0 overflow-x-auto scrollbar-none">
+            {/* Status Segmented Tabs */}
+            <div className="bg-neutral-100 p-1 rounded-lg inline-flex items-center gap-1 overflow-x-auto scrollbar-none shrink-0 border border-neutral-200/80">
               {tabs.map((tab) => {
                 const isActive = filters.status === tab.id;
                 return (
@@ -435,22 +409,15 @@ export const SupportList = () => {
                     key={tab.id}
                     type="button"
                     onClick={() => handleFilterChange("status", tab.id)}
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                    className={`text-xs px-3 py-1 rounded-md inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
                       isActive
-                        ? "bg-white text-neutral-900 shadow-xs"
-                        : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/40"
+                        ? "bg-white text-neutral-900 font-semibold shadow-xs"
+                        : "text-neutral-600 hover:text-neutral-900"
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${tab.dotColor}`} />
                     <span>{tab.shortLabel || tab.label}</span>
                     {typeof tab.count === "number" && (
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                          isActive
-                            ? "bg-neutral-900 text-white"
-                            : "bg-neutral-200 text-neutral-600"
-                        }`}
-                      >
+                      <span className="px-1.5 py-0.2 rounded-full bg-neutral-200/80 text-[10px] text-neutral-700 font-semibold">
                         {tab.count}
                       </span>
                     )}
@@ -460,13 +427,13 @@ export const SupportList = () => {
             </div>
           </div>
 
-          {/* Dropdowns & Reset Button */}
-          <div className="flex items-center gap-2 shrink-0 self-start xl:self-auto flex-wrap">
+          {/* Dropdowns & Reset */}
+          <div className="flex items-center gap-2.5 shrink-0 self-start lg:self-auto flex-wrap sm:flex-nowrap">
             {/* Category Dropdown */}
             <select
               value={filters.category || "all"}
               onChange={(e) => handleFilterChange("category", e.target.value)}
-              className="h-9 px-3 text-xs font-semibold rounded-lg border border-neutral-200 bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-colors cursor-pointer shadow-2xs"
+              className="h-9 px-3 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400 min-w-[130px] cursor-pointer"
             >
               <option value="all">All Categories</option>
               {categories.map((c) => (
@@ -482,7 +449,7 @@ export const SupportList = () => {
               <select
                 value={filters.priority || "all"}
                 onChange={(e) => handleFilterChange("priority", e.target.value)}
-                className="h-9 px-3 text-xs font-semibold rounded-lg border border-neutral-200 bg-white text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-colors cursor-pointer shadow-2xs"
+                className="h-9 px-3 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-400 min-w-[130px] cursor-pointer"
               >
                 <option value="all">All Priorities</option>
                 <option value="Urgent">Urgent</option>
@@ -494,23 +461,22 @@ export const SupportList = () => {
 
             {/* Reset Filters */}
             {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={handleResetFilters}
-                className="text-xs h-9 px-2.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 font-semibold"
+                className="text-xs h-9 px-2.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 font-medium inline-flex items-center gap-1 rounded-lg transition-colors cursor-pointer"
               >
-                <X className="w-3.5 h-3.5 mr-1" />
-                Reset
-              </Button>
+                <X className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
             )}
           </div>
         </div>
 
         {/* Content Section */}
-        <div className="p-4 sm:p-6 space-y-4">
+        <div>
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 rounded-xl border border-neutral-200 bg-neutral-50/50">
+            <div className="flex flex-col items-center justify-center py-20 bg-white">
               <Spinner className="w-8 h-8 text-neutral-900" />
               <p className="text-xs text-neutral-500 mt-3 font-medium">
                 Loading support tickets...
@@ -522,15 +488,17 @@ export const SupportList = () => {
               onNewTicket={() => setIsNewDialogOpen(true)}
             />
           ) : (
-            <ConversationList
-              conversations={tickets}
-              onNewConversation={() => setIsNewDialogOpen(true)}
-            />
+            <div className="p-4 sm:p-6">
+              <ConversationList
+                conversations={tickets}
+                onNewConversation={() => setIsNewDialogOpen(true)}
+              />
+            </div>
           )}
 
           {/* Standardized DataPagination Footer */}
           {!isLoading && total > 0 && (
-            <div className="pt-2 border-t border-neutral-100">
+            <div className="p-4 border-t border-neutral-100 bg-white">
               <DataPagination
                 currentPage={page}
                 totalPages={pageCount}

@@ -168,7 +168,11 @@ export default function InstituteStudentProfile({ student, onClose }) {
 
             <div className="iasp-info-grid">
               <InfoCard label="Attendance Record">
-                {displayValue(student.attendance || "96.4%")}
+                {displayValue(
+                  student.totalAttendanceRecords > 0 || (student.attendanceRate !== null && student.attendanceRate !== undefined)
+                    ? `${student.attendanceRate}%`
+                    : (student.attendance && !student.attendance.includes("96.4") ? student.attendance : "N/A")
+                )}
               </InfoCard>
               <InfoCard label="Terminal Evaluation & Rank">
                 {evaluation}
