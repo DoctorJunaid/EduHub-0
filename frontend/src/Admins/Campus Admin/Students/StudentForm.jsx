@@ -702,57 +702,6 @@ export default function StudentForm({
             }
           )}
 
-          {/* Enrolled Subjects with Interactive Chips */}
-          <div className="activity-form-field span-2">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "8px",
-                marginBottom: "6px",
-              }}
-            >
-              <Label htmlFor={`${id}-subjects`} style={{ margin: 0 }}>
-                {isSchool
-                  ? "Enrolled School Subjects *"
-                  : "Enrolled Subjects *"}
-              </Label>
-              {gradeSubjects.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  <button
-                    type="button"
-                    onClick={selectAllSubjects}
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#0284c7",
-                      background: "#f0f9ff",
-                      border: "1px solid #bae6fd",
-                      borderRadius: "6px",
-                      padding: "2px 8px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Select All ({gradeSubjects.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearSubjects}
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#dc2626",
-                      background: "#fef2f2",
-                      border: "1px solid #fecaca",
-                      borderRadius: "6px",
-                      padding: "2px 8px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Clear All
-                  </button>
           {/* Enrolled Subjects with Responsive Tiles */}
           <div className="activity-form-field span-2 col-span-full">
             <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800 space-y-3.5">
